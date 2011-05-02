@@ -12,3 +12,9 @@ class FluiditySpec(unittest.TestCase):
         machine |should| have(3).states
         machine.states |should| include_all_of(['unread', 'read', 'closed'])
 
+    def it_has_an_initial_state(self):
+        class MyMachine(StateMachine):
+            initial_state = 'closed'
+        machine = MyMachine()
+        machine.initial_state |should| equal_to('closed')
+
