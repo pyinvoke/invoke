@@ -1,0 +1,14 @@
+import unittest
+from should_dsl import should, should_not, matcher
+from fluidity.machine import StateMachine
+
+
+class FluiditySpec(unittest.TestCase):
+
+    def it_defines_states(self):
+        class MyMachine(StateMachine):
+            states = ['unread', 'read', 'closed']
+        machine = MyMachine()
+        machine |should| have(3).states
+        machine.states |should| include_all_of(['unread', 'read', 'closed'])
+

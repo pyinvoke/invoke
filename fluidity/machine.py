@@ -1,0 +1,3 @@
+class StateMachine(object):
+    pass
+
