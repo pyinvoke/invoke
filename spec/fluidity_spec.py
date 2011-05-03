@@ -3,7 +3,7 @@ from should_dsl import should
 from fluidity.machine import StateMachine, InvalidConfiguration
 
 
-class FluiditySpec(unittest.TestCase):
+class FluidityStates(unittest.TestCase):
 
     def it_defines_states(self):
         class MyMachine(StateMachine):
@@ -19,6 +19,9 @@ class FluiditySpec(unittest.TestCase):
             states = ['open', 'closed']
         machine = MyMachine()
         machine.initial_state |should| equal_to('closed')
+
+
+class FluidityConfigurationValidation(unittest.TestCase):
 
     def it_requires_at_least_two_states(self):
         class MyMachine(StateMachine):
