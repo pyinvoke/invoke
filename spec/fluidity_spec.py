@@ -1,6 +1,6 @@
 import unittest
 from should_dsl import should
-from fluidity.machine import StateMachine, InvalidConfiguration
+from fluidity.machine import StateMachine, InvalidConfiguration, event
 
 
 class FluidityStates(unittest.TestCase):
@@ -44,4 +44,17 @@ class FluidityConfigurationValidation(unittest.TestCase):
             initial_state = None
         AnotherMachine |should| throw(InvalidConfiguration,
             message="There must exist an initial state")
+
+
+class FluidityEventsAndTransitions(unittest.TestCase):
+
+    def it_creates_methods_for_events(self):
+        class MyMachine(StateMachine):
+             initial_state = 'created'
+             states = ['created', 'waiting', 'processed']
+             event('queue', from_='created', to='waiting')
+             event('process', from_='waiting', to='processed')
+        machine = MyMachine()
+        machine |should| respond_to('queue')
+        machine |should| respond_to('process')
 
