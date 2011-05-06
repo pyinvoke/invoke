@@ -1,3 +1,5 @@
+# metaclass implementation idea from
+# http://blog.ianbicking.org/more-on-python-metaprogramming-comment-14.html
 _event_gatherer = []
 
 def event(name, from_, to):
