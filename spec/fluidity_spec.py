@@ -3,7 +3,7 @@ from should_dsl import should
 from fluidity.machine import StateMachine, InvalidConfiguration, event
 
 
-class FluidityStates(unittest.TestCase):
+class FluidityStateMachine(unittest.TestCase):
 
     def it_defines_states(self):
         class MyMachine(StateMachine):
@@ -53,9 +53,9 @@ class MyMachine(StateMachine):
      event('process', from_='waiting', to='processed')
 
 
-class FluidityEventsAndTransitions(unittest.TestCase):
+class FluidityEvent(unittest.TestCase):
 
-    def it_creates_methods_for_events(self):
+    def its_declaration_creates_a_method_with_its_name(self):
         machine = MyMachine()
         machine |should| respond_to('queue')
         machine |should| respond_to('process')
