@@ -33,6 +33,11 @@ class StateMachine(object):
     @classmethod
     def event(cls, name, from_, to):
         cls._events[name] = _Event(name, from_, to)
+        this_event = cls._generate_event(name)
+        setattr(cls, this_event.__name__, this_event)
+
+    @classmethod
+    def _generate_event(cls, name):
         def generated_event(self):
             this_event = cls._events[generated_event.__name__]
             if self.current_state not in this_event.from_:
@@ -41,7 +46,7 @@ class StateMachine(object):
             self.current_state = cls._events[generated_event.__name__].to
         generated_event.__doc__ = 'event %s' % name
         generated_event.__name__ = name
-        setattr(cls, generated_event.__name__, generated_event)
+        return generated_event
 
 
 class _Event(object):
