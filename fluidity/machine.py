@@ -34,6 +34,10 @@ class StateMachine(object):
     def event(cls, name, from_, to):
         cls._events[name] = _Event(name, from_, to)
         def generated_event(self):
+            this_event = cls._events[generated_event.__name__]
+            if self.current_state not in this_event.from_:
+                raise InvalidTransition("Cannot change from %s to %s" % (
+                    self.current_state, this_event.to))
             self.current_state = cls._events[generated_event.__name__].to
         generated_event.__doc__ = 'event %s' % name
         generated_event.__name__ = name
@@ -49,5 +53,9 @@ class _Event(object):
 
 
 class InvalidConfiguration(Exception):
+    pass
+
+
+class InvalidTransition(Exception):
     pass
 

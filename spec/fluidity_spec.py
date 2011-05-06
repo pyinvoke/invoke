@@ -1,6 +1,7 @@
 import unittest
-from should_dsl import should
-from fluidity.machine import StateMachine, InvalidConfiguration, event
+from should_dsl import should, should_not
+from fluidity.machine import StateMachine, event
+from fluidity.machine import InvalidTransition, InvalidConfiguration
 
 
 class FluidityStateMachine(unittest.TestCase):
@@ -67,4 +68,11 @@ class FluidityEvent(unittest.TestCase):
         machine.current_state |should| equal_to('waiting')
         machine.process()
         machine.current_state |should| equal_to('processed')
+
+    def it_ensures_event_order(self):
+        machine = MyMachine()
+        machine.process |should| throw(InvalidTransition)
+        machine.queue()
+        machine.queue |should| throw(InvalidTransition)
+        machine.process |should_not| throw(Exception)
 
