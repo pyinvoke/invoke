@@ -19,6 +19,7 @@ class FluidityStates(unittest.TestCase):
             states = ['open', 'closed']
         machine = MyMachine()
         machine.initial_state |should| equal_to('closed')
+        machine.current_state |should| equal_to('closed')
 
 
 class FluidityConfigurationValidation(unittest.TestCase):
