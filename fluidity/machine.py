@@ -19,11 +19,14 @@ class StateMachine(object):
     __metaclass__ = MetaStateMachine
 
     def __init__(self):
+        self._validate()
+        self.current_state = self.initial_state
+
+    def _validate(self):
         if not getattr(self, 'states', None) or len(self.states) < 2:
             raise InvalidConfiguration('There must be at least two states')
         if not getattr(self, 'initial_state', None):
             raise InvalidConfiguration('There must exist an initial state')
-        self.current_state = self.initial_state
 
     @classmethod
     def event(cls, name, from_, to):
