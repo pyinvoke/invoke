@@ -46,15 +46,25 @@ class FluidityConfigurationValidation(unittest.TestCase):
             message="There must exist an initial state")
 
 
+class MyMachine(StateMachine):
+     initial_state = 'created'
+     states = ['created', 'waiting', 'processed']
+     event('queue', from_='created', to='waiting')
+     event('process', from_='waiting', to='processed')
+
+
 class FluidityEventsAndTransitions(unittest.TestCase):
 
     def it_creates_methods_for_events(self):
-        class MyMachine(StateMachine):
-             initial_state = 'created'
-             states = ['created', 'waiting', 'processed']
-             event('queue', from_='created', to='waiting')
-             event('process', from_='waiting', to='processed')
         machine = MyMachine()
         machine |should| respond_to('queue')
         machine |should| respond_to('process')
+
+    def it_changes_machine_state(self):
+        machine = MyMachine()
+        machine.current_state |should| equal_to('created')
+        machine.queue()
+        machine.current_state |should| equal_to('waiting')
+        machine.process()
+        machine.current_state |should| equal_to('processed')
 

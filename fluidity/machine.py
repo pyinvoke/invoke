@@ -18,6 +18,8 @@ class StateMachine(object):
 
     __metaclass__ = MetaStateMachine
 
+    _events = {}
+
     def __init__(self):
         self._validate()
         self.current_state = self.initial_state
@@ -30,11 +32,20 @@ class StateMachine(object):
 
     @classmethod
     def event(cls, name, from_, to):
+        cls._events[name] = _Event(name, from_, to)
         def generated_event(self):
-            pass
+            self.current_state = cls._events[generated_event.__name__].to
         generated_event.__doc__ = 'event %s' % name
         generated_event.__name__ = name
         setattr(cls, generated_event.__name__, generated_event)
+
+
+class _Event(object):
+
+    def __init__(self, name, from_, to):
+        self.name = name
+        self.from_ = from_
+        self.to = to
 
 
 class InvalidConfiguration(Exception):
