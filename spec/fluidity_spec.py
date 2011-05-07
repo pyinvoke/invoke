@@ -52,6 +52,7 @@ class MyMachine(StateMachine):
      states = ['created', 'waiting', 'processed']
      event('queue', from_='created', to='waiting')
      event('process', from_='waiting', to='processed')
+     event('cancel', from_=['waiting', 'created'], to='canceled')
 
 
 class FluidityEvent(unittest.TestCase):
@@ -75,4 +76,17 @@ class FluidityEvent(unittest.TestCase):
         machine.queue()
         machine.queue |should| throw(InvalidTransition)
         machine.process |should_not| throw(Exception)
+
+    def it_accepts_multiple_origin_states(self):
+        machine = MyMachine()
+        machine.cancel |should_not| throw(Exception)
+
+        machine = MyMachine()
+        machine.queue()
+        machine.cancel |should_not| throw(Exception)
+
+        machine = MyMachine()
+        machine.queue()
+        machine.process()
+        machine.cancel |should| throw(Exception)
 
