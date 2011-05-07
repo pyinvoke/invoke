@@ -1,6 +1,6 @@
 import unittest
 from should_dsl import should, should_not
-from fluidity.machine import StateMachine, event
+from fluidity.machine import StateMachine, event, state
 from fluidity.machine import InvalidTransition, InvalidConfiguration
 
 
@@ -21,6 +21,17 @@ class FluidityStateMachine(unittest.TestCase):
         machine = MyMachine()
         machine.initial_state |should| equal_to('closed')
         machine.current_state |should| equal_to('closed')
+
+    def it_defines_states_using_method_calls(self):
+        class MyMachine(StateMachine):
+            state('unread')
+            state('read')
+            state('closed')
+            initial_state = 'read'
+        machine = MyMachine()
+        machine |should| have(3).states
+        machine.states |should| include_all_of(['unread', 'read', 'closed'])
+
 
 
 class FluidityConfigurationValidation(unittest.TestCase):

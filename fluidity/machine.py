@@ -5,14 +5,22 @@ _event_gatherer = []
 def event(name, from_, to):
     _event_gatherer.append([name, from_, to])
 
+_state_gatherer = []
+
+def state(name):
+    _state_gatherer.append(name)
+
 class MetaStateMachine(type):
 
     def __new__(cls, name, bases, dictionary):
-        global _event_gatherer
+        global _event_gatherer, _state_gatherer
         Machine = super(MetaStateMachine, cls).__new__(cls, name, bases, dictionary)
         for i in _event_gatherer:
             Machine.event(*i)
+        for s in _state_gatherer:
+            Machine.state(s)
         _event_gatherer = []
+        _state_gatherer = []
         return Machine
 
 
@@ -21,6 +29,8 @@ class StateMachine(object):
     __metaclass__ = MetaStateMachine
 
     _events = {}
+
+    states = []
 
     def __init__(self):
         self._validate()
@@ -31,6 +41,10 @@ class StateMachine(object):
             raise InvalidConfiguration('There must be at least two states')
         if not getattr(self, 'initial_state', None):
             raise InvalidConfiguration('There must exist an initial state')
+
+    @classmethod
+    def state(cls, name):
+        cls.states.append(name)
 
     @classmethod
     def event(cls, name, from_, to):
