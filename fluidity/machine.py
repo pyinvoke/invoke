@@ -15,6 +15,7 @@ class MetaStateMachine(type):
     def __new__(cls, name, bases, dictionary):
         global _event_gatherer, _state_gatherer
         Machine = super(MetaStateMachine, cls).__new__(cls, name, bases, dictionary)
+        Machine._events = {}
         for i in _event_gatherer:
             Machine.event(*i)
         for s in _state_gatherer:
@@ -28,10 +29,6 @@ class StateMachine(object):
 
     __metaclass__ = MetaStateMachine
 
-    _events = {}
-
-    states = []
-
     def __init__(self):
         self._validate()
         self.current_state = self.initial_state
@@ -44,6 +41,8 @@ class StateMachine(object):
 
     @classmethod
     def state(cls, name):
+        if not getattr(cls, 'states', None):
+            cls.states = []
         cls.states.append(name)
 
     @classmethod

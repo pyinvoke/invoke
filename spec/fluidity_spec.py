@@ -27,11 +27,21 @@ class FluidityStateMachine(unittest.TestCase):
             state('unread')
             state('read')
             state('closed')
-            initial_state = 'read'
+            initial_state = 'unread'
+            event('read', from_='unread', to='read')
+            event('close', from_='read', to='closed')
         machine = MyMachine()
         machine |should| have(3).states
         machine.states |should| include_all_of(['unread', 'read', 'closed'])
 
+        class OtherMachine(StateMachine):
+            state('idle')
+            state('working')
+            initial_state = 'idle'
+            event('work', from_='idle', to='working')
+        machine = OtherMachine()
+        machine |should| have(2).states
+        machine.states |should| include_all_of(['idle', 'working'])
 
 
 class FluidityConfigurationValidation(unittest.TestCase):
