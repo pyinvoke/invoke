@@ -8,7 +8,9 @@ class FluidityStateMachine(unittest.TestCase):
 
     def it_defines_states(self):
         class MyMachine(StateMachine):
-            states = ['unread', 'read', 'closed']
+            state('unread')
+            state('read')
+            state('closed')
             initial_state = 'read'
         machine = MyMachine()
         machine |should| have(3).states
@@ -17,7 +19,8 @@ class FluidityStateMachine(unittest.TestCase):
     def it_has_an_initial_state(self):
         class MyMachine(StateMachine):
             initial_state = 'closed'
-            states = ['open', 'closed']
+            state('open')
+            state('closed')
         machine = MyMachine()
         machine.initial_state |should| equal_to('closed')
         machine.current_state |should| equal_to('closed')
@@ -52,17 +55,19 @@ class FluidityConfigurationValidation(unittest.TestCase):
         MyMachine |should| throw(InvalidConfiguration,
             message="There must be at least two states")
         class OtherMachine(StateMachine):
-            states = ['open']
+            state('open')
         OtherMachine |should| throw(InvalidConfiguration,
             message="There must be at least two states")
 
     def it_requires_an_initial_state(self):
         class MyMachine(StateMachine):
-            states = ['open', 'closed']
+            state('open')
+            state('closed')
         MyMachine |should| throw(InvalidConfiguration,
             message="There must exist an initial state")
         class AnotherMachine(StateMachine):
-            states = ['open', 'closed']
+            state('open')
+            state('closed')
             initial_state = None
         AnotherMachine |should| throw(InvalidConfiguration,
             message="There must exist an initial state")
@@ -70,7 +75,9 @@ class FluidityConfigurationValidation(unittest.TestCase):
 
 class MyMachine(StateMachine):
      initial_state = 'created'
-     states = ['created', 'waiting', 'processed']
+     state('created')
+     state('waiting')
+     state('processed')
      event('queue', from_='created', to='waiting')
      event('process', from_='waiting', to='processed')
      event('cancel', from_=['waiting', 'created'], to='canceled')
