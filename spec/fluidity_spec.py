@@ -121,15 +121,18 @@ class FluidityEvent(unittest.TestCase):
 
 
 class ActionMachine(StateMachine):
-      state('created')
-      state('waiting', enter='pre_create')
+      state('created', exit='post_create')
+      state('waiting', enter='pre_wait')
       initial_state = 'created'
       event('queue', from_='created', to='waiting')
       def __init__(self):
           super(ActionMachine, self).__init__()
           self.is_enter_aware = False
-      def pre_create(self):
+          self.is_exit_aware = False
+      def pre_wait(self):
           self.is_enter_aware = True
+      def post_create(self):
+          self.is_exit_aware = True
 
 
 class FluidityAction(unittest.TestCase):
@@ -137,6 +140,12 @@ class FluidityAction(unittest.TestCase):
       def it_runs_enter_action_before_machine_enters_a_given_state(self):
           machine = ActionMachine()
           machine |should_not| be_enter_aware
+          machine.queue()
+          machine |should| be_enter_aware
+
+      def it_runs_exit_action_after_machine_exits_a_given_state(self):
+          machine = ActionMachine()
+          machine |should_not| be_exit_aware
           machine.queue()
           machine |should| be_enter_aware
 

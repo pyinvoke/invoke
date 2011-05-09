@@ -7,8 +7,8 @@ def event(name, from_, to):
 
 _state_gatherer = []
 
-def state(name, enter=None):
-    _state_gatherer.append([name, enter])
+def state(name, enter=None, exit=None):
+    _state_gatherer.append([name, enter, exit])
 
 class MetaStateMachine(type):
 
@@ -40,10 +40,10 @@ class StateMachine(object):
             raise InvalidConfiguration('There must exist an initial state')
 
     @classmethod
-    def state(cls, name, enter=None):
+    def state(cls, name, enter=None, exit=None):
         if not getattr(cls, '_state_objects', None):
             cls._state_objects = {}
-        cls._state_objects[name] = _State(name, enter)
+        cls._state_objects[name] = _State(name, enter, exit)
 
     @classmethod
     def states(cls):
@@ -65,6 +65,7 @@ class StateMachine(object):
             if self.current_state not in from_:
                 raise InvalidTransition("Cannot change from %s to %s" % (
                     self.current_state, this_event.to))
+            self._handle_exit(self.current_state)
             self._handle_enter(this_event.to)
             self.current_state = this_event.to
         generated_event.__doc__ = 'event %s' % name
@@ -75,6 +76,11 @@ class StateMachine(object):
         enter = self._state_objects[state].enter
         if enter:
             getattr(self, enter)()
+
+    def _handle_exit(self, state):
+        exit = self._state_objects[state].exit
+        if exit:
+            getattr(self, exit)()
 
 
 class _Event(object):
@@ -87,9 +93,10 @@ class _Event(object):
 
 class _State(object):
 
-    def __init__(self, name, enter):
+    def __init__(self, name, enter, exit):
         self.name = name
         self.enter = enter
+        self.exit = exit
 
 
 class InvalidConfiguration(Exception):
