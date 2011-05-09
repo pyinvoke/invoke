@@ -14,7 +14,7 @@ class FluidityStateMachine(unittest.TestCase):
             initial_state = 'read'
         machine = MyMachine()
         machine |should| have(3).states
-        machine.states |should| include_all_of(['unread', 'read', 'closed'])
+        machine.states() |should| include_all_of(['unread', 'read', 'closed'])
 
     def it_has_an_initial_state(self):
         class MyMachine(StateMachine):
@@ -35,7 +35,7 @@ class FluidityStateMachine(unittest.TestCase):
             event('close', from_='read', to='closed')
         machine = MyMachine()
         machine |should| have(3).states
-        machine.states |should| include_all_of(['unread', 'read', 'closed'])
+        machine.states() |should| include_all_of(['unread', 'read', 'closed'])
 
         class OtherMachine(StateMachine):
             state('idle')
@@ -44,7 +44,7 @@ class FluidityStateMachine(unittest.TestCase):
             event('work', from_='idle', to='working')
         machine = OtherMachine()
         machine |should| have(2).states
-        machine.states |should| include_all_of(['idle', 'working'])
+        machine.states() |should| include_all_of(['idle', 'working'])
 
 
 class FluidityConfigurationValidation(unittest.TestCase):
@@ -78,6 +78,7 @@ class MyMachine(StateMachine):
      state('created')
      state('waiting')
      state('processed')
+     state('canceled')
      event('queue', from_='created', to='waiting')
      event('process', from_='waiting', to='processed')
      event('cancel', from_=['waiting', 'created'], to='canceled')
@@ -117,4 +118,25 @@ class FluidityEvent(unittest.TestCase):
         machine.queue()
         machine.process()
         machine.cancel |should| throw(Exception)
+
+
+class ActionMachine(StateMachine):
+      state('created')
+      state('waiting', enter='pre_create')
+      initial_state = 'created'
+      event('queue', from_='created', to='waiting')
+      def __init__(self):
+          super(ActionMachine, self).__init__()
+          self.is_enter_aware = False
+      def pre_create(self):
+          self.is_enter_aware = True
+
+
+class FluidityAction(unittest.TestCase):
+
+      def it_runs_enter_action_before_machine_enters_a_given_state(self):
+          machine = ActionMachine()
+          machine |should_not| be_enter_aware
+          machine.queue()
+          machine |should| be_enter_aware
 

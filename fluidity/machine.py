@@ -7,8 +7,8 @@ def event(name, from_, to):
 
 _state_gatherer = []
 
-def state(name):
-    _state_gatherer.append(name)
+def state(name, enter=None):
+    _state_gatherer.append([name, enter])
 
 class MetaStateMachine(type):
 
@@ -19,7 +19,7 @@ class MetaStateMachine(type):
         for i in _event_gatherer:
             Machine.event(*i)
         for s in _state_gatherer:
-            Machine.state(s)
+            Machine.state(*s)
         _event_gatherer = []
         _state_gatherer = []
         return Machine
@@ -34,16 +34,20 @@ class StateMachine(object):
         self.current_state = self.initial_state
 
     def _validate(self):
-        if not getattr(self, 'states', None) or len(self.states) < 2:
+        if not getattr(self, '_state_objects', None) or len(self.states()) < 2:
             raise InvalidConfiguration('There must be at least two states')
         if not getattr(self, 'initial_state', None):
             raise InvalidConfiguration('There must exist an initial state')
 
     @classmethod
-    def state(cls, name):
-        if not getattr(cls, 'states', None):
-            cls.states = []
-        cls.states.append(name)
+    def state(cls, name, enter=None):
+        if not getattr(cls, '_state_objects', None):
+            cls._state_objects = {}
+        cls._state_objects[name] = _State(name, enter)
+
+    @classmethod
+    def states(cls):
+        return cls._state_objects.keys()
 
     @classmethod
     def event(cls, name, from_, to):
@@ -61,10 +65,16 @@ class StateMachine(object):
             if self.current_state not in from_:
                 raise InvalidTransition("Cannot change from %s to %s" % (
                     self.current_state, this_event.to))
-            self.current_state = cls._events[generated_event.__name__].to
+            self._handle_enter(this_event.to)
+            self.current_state = this_event.to
         generated_event.__doc__ = 'event %s' % name
         generated_event.__name__ = name
         return generated_event
+
+    def _handle_enter(self, state):
+        enter = self._state_objects[state].enter
+        if enter:
+            getattr(self, enter)()
 
 
 class _Event(object):
@@ -73,6 +83,13 @@ class _Event(object):
         self.name = name
         self.from_ = from_
         self.to = to
+
+
+class _State(object):
+
+    def __init__(self, name, enter):
+        self.name = name
+        self.enter = enter
 
 
 class InvalidConfiguration(Exception):
