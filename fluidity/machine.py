@@ -1,9 +1,9 @@
 # metaclass implementation idea from
 # http://blog.ianbicking.org/more-on-python-metaprogramming-comment-14.html
-_event_gatherer = []
+_transition_gatherer = []
 
-def event(name, from_, to):
-    _event_gatherer.append([name, from_, to])
+def transition(event, from_, to):
+    _transition_gatherer.append([event, from_, to])
 
 _state_gatherer = []
 
@@ -13,14 +13,14 @@ def state(name, enter=None, exit=None):
 class MetaStateMachine(type):
 
     def __new__(cls, name, bases, dictionary):
-        global _event_gatherer, _state_gatherer
+        global _transition_gatherer, _state_gatherer
         Machine = super(MetaStateMachine, cls).__new__(cls, name, bases, dictionary)
-        Machine._events = {}
-        for i in _event_gatherer:
-            Machine.event(*i)
+        Machine._transitions = {}
+        for i in _transition_gatherer:
+            Machine.transition(*i)
         for s in _state_gatherer:
             Machine.state(*s)
-        _event_gatherer = []
+        _transition_gatherer = []
         _state_gatherer = []
         return Machine
 
@@ -50,24 +50,24 @@ class StateMachine(object):
         return cls._state_objects.keys()
 
     @classmethod
-    def event(cls, name, from_, to):
-        cls._events[name] = _Event(name, from_, to)
-        this_event = cls._generate_event(name)
+    def transition(cls, event, from_, to):
+        cls._transitions[event] = _Transition(event, from_, to)
+        this_event = cls._generate_event(event)
         setattr(cls, this_event.__name__, this_event)
 
     @classmethod
     def _generate_event(cls, name):
         def generated_event(self):
-            this_event = cls._events[generated_event.__name__]
-            from_ = this_event.from_
+            this_transition = cls._transitions[generated_event.__name__]
+            from_ = this_transition.from_
             if type(from_) == str:
                 from_ = [from_]
             if self.current_state not in from_:
                 raise InvalidTransition("Cannot change from %s to %s" % (
-                    self.current_state, this_event.to))
+                    self.current_state, this_transition.to))
             self._handle_exit(self.current_state)
-            self._handle_enter(this_event.to)
-            self.current_state = this_event.to
+            self._handle_enter(this_transition.to)
+            self.current_state = this_transition.to
         generated_event.__doc__ = 'event %s' % name
         generated_event.__name__ = name
         return generated_event
@@ -83,10 +83,10 @@ class StateMachine(object):
             getattr(self, exit)()
 
 
-class _Event(object):
+class _Transition(object):
 
-    def __init__(self, name, from_, to):
-        self.name = name
+    def __init__(self, event, from_, to):
+        self.event = event
         self.from_ = from_
         self.to = to
 

@@ -1,6 +1,6 @@
 import unittest
 from should_dsl import should
-from fluidity.machine import StateMachine, event, state
+from fluidity.machine import StateMachine, transition, state
 
 
 class FluidityState(unittest.TestCase):
@@ -30,8 +30,8 @@ class FluidityState(unittest.TestCase):
             state('read')
             state('closed')
             initial_state = 'unread'
-            event('read', from_='unread', to='read')
-            event('close', from_='read', to='closed')
+            transition(from_='unread', event='read', to='read')
+            transition(from_='read', event='close', to='closed')
         machine = MyMachine()
         machine |should| have(3).states
         machine.states() |should| include_all_of(['unread', 'read', 'closed'])
@@ -40,7 +40,7 @@ class FluidityState(unittest.TestCase):
             state('idle')
             state('working')
             initial_state = 'idle'
-            event('work', from_='idle', to='working')
+            transition(from_='idle', event='work', to='working')
         machine = OtherMachine()
         machine |should| have(2).states
         machine.states() |should| include_all_of(['idle', 'working'])

@@ -1,7 +1,7 @@
 import unittest
 import new
 from should_dsl import should, should_not
-from fluidity.machine import StateMachine, state, event
+from fluidity.machine import StateMachine, state, transition
 
 
 class ActionMachine(StateMachine):
@@ -9,7 +9,7 @@ class ActionMachine(StateMachine):
       state('created', exit='post_create')
       state('waiting', enter='pre_wait')
       initial_state = 'created'
-      event('queue', from_='created', to='waiting')
+      transition(from_='created', event='queue', to='waiting')
 
       def __init__(self):
           super(ActionMachine, self).__init__()

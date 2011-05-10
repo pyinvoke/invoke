@@ -1,6 +1,6 @@
 import unittest
 from should_dsl import should, should_not
-from fluidity.machine import StateMachine, state, event
+from fluidity.machine import StateMachine, state, transition
 from fluidity.machine import InvalidTransition
 
 
@@ -13,9 +13,9 @@ class MyMachine(StateMachine):
      state('processed')
      state('canceled')
 
-     event('queue', from_='created', to='waiting')
-     event('process', from_='waiting', to='processed')
-     event('cancel', from_=['waiting', 'created'], to='canceled')
+     transition(from_='created', event='queue', to='waiting')
+     transition(from_='waiting', event='process', to='processed')
+     transition(from_=['waiting', 'created'], event='cancel', to='canceled')
 
 
 class FluidityEvent(unittest.TestCase):
