@@ -1,0 +1,7 @@
+ v0.1.0, 2011-05-11
+
+Main features for this initial release:
+* definition of states, transitions and events
+* support to entry and exit actions
+* support to guards
+
