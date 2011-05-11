@@ -2,8 +2,8 @@
 # http://blog.ianbicking.org/more-on-python-metaprogramming-comment-14.html
 _transition_gatherer = []
 
-def transition(event, from_, to):
-    _transition_gatherer.append([event, from_, to])
+def transition(event, from_, to, guard=None):
+    _transition_gatherer.append([event, from_, to, guard])
 
 _state_gatherer = []
 
@@ -50,8 +50,8 @@ class StateMachine(object):
         return cls._state_objects.keys()
 
     @classmethod
-    def transition(cls, event, from_, to):
-        cls._transitions[event] = _Transition(event, from_, to)
+    def transition(cls, event, from_, to, guard):
+        cls._transitions[event] = _Transition(event, from_, to, guard)
         this_event = cls._generate_event(event)
         setattr(cls, this_event.__name__, this_event)
 
@@ -65,6 +65,8 @@ class StateMachine(object):
             if self.current_state not in from_:
                 raise InvalidTransition("Cannot change from %s to %s" % (
                     self.current_state, this_transition.to))
+            if not self._check_guard(this_transition.guard):
+                raise GuardNotSatisfied("Guard is not satisfied for this transition")
             self._handle_exit(self.current_state)
             self._handle_enter(this_transition.to)
             self.current_state = this_transition.to
@@ -82,13 +84,19 @@ class StateMachine(object):
         if exit:
             getattr(self, exit)()
 
+    def _check_guard(self, guard_name):
+        if guard_name is None:
+            return True
+        return getattr(self, guard_name)()
+
 
 class _Transition(object):
 
-    def __init__(self, event, from_, to):
+    def __init__(self, event, from_, to, guard):
         self.event = event
         self.from_ = from_
         self.to = to
+        self.guard = guard
 
 
 class _State(object):
@@ -104,5 +112,9 @@ class InvalidConfiguration(Exception):
 
 
 class InvalidTransition(Exception):
+    pass
+
+
+class GuardNotSatisfied(Exception):
     pass
 

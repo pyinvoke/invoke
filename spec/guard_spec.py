@@ -1,0 +1,31 @@
+import unittest
+from should_dsl import should, should_not
+from fluidity.machine import StateMachine, state, transition
+from fluidity.machine import GuardNotSatisfied
+
+
+class FallingMachine(StateMachine):
+    state('looking')
+    state('falling')
+    initial_state = 'looking'
+    transition(from_='looking', event='jump', to='falling', guard='ready_to_fly')
+
+    def __init__(self, ready=True):
+        StateMachine.__init__(self)
+        self.ready = ready
+
+    def ready_to_fly(self):
+        return self.ready
+
+
+class FluidityGuard(unittest.TestCase):
+
+    def it_allows_transition_if_satisfied(self):
+        machine = FallingMachine()
+        machine.jump |should_not| throw(Exception)
+        machine.current_state |should| equal_to('falling')
+
+    def it_forbids_transition_if_not_satisfied(self):
+        machine = FallingMachine(ready=False)
+        machine.jump |should| throw(GuardNotSatisfied)
+
