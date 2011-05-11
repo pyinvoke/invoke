@@ -29,3 +29,13 @@ class FluidityGuard(unittest.TestCase):
         machine = FallingMachine(ready=False)
         machine.jump |should| throw(GuardNotSatisfied)
 
+    def it_may_be_an_attribute(self):
+        '''it may be an attribute, not only a method'''
+        machine = FallingMachine()
+        machine.ready_to_fly = False
+        machine.jump |should| throw(GuardNotSatisfied)
+
+        machine.ready_to_fly = True
+        machine.jump |should_not| throw(Exception)
+        machine.current_state |should| equal_to('falling')
+

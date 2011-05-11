@@ -87,7 +87,11 @@ class StateMachine(object):
     def _check_guard(self, guard_name):
         if guard_name is None:
             return True
-        return getattr(self, guard_name)()
+        guard = getattr(self, guard_name)
+        if callable(guard):
+            return guard()
+        else:
+            return guard
 
 
 class _Transition(object):
