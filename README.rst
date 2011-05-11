@@ -55,7 +55,12 @@ For demonstrating more advanced capabilities, a "slightly more complex example" 
 How to install
 --------------
 
-First version will be released very soon.
+Just run::
+
+    pip install fluidity-sm
+
+
+**Note**: the Pypi package is called *fluidity-sm*, not *fluidity*.
 
 
 How to run tests
