@@ -1,4 +1,5 @@
 import unittest
+import time
 from should_dsl import should
 from fluidity.machine import StateMachine, transition, state
 
@@ -44,4 +45,21 @@ class FluidityState(unittest.TestCase):
         machine = OtherMachine()
         machine |should| have(2).states
         machine.states() |should| include_all_of(['idle', 'working'])
+
+    def its_initial_state_may_be_a_callable(self):
+        def is_business_hours():
+            return True
+        class Person(StateMachine):
+            initial_state = lambda person: (person.worker and is_business_hours()) and 'awake' or 'sleeping'
+            state('awake')
+            state('sleeping')
+            def __init__(self, worker):
+                self.worker = worker
+                StateMachine.__init__(self)
+
+        person = Person(worker=True)
+        person.current_state |should| equal_to('awake')
+
+        person = Person(worker=False)
+        person.current_state |should| equal_to('sleeping')
 

@@ -31,6 +31,8 @@ class StateMachine(object):
 
     def __init__(self):
         self._validate()
+        if callable(self.initial_state):
+            self.initial_state = self.initial_state()
         self.current_state = self.initial_state
 
     def _validate(self):
