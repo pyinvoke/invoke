@@ -1,7 +1,7 @@
 import unittest
 import time
 from should_dsl import should
-from fluidity.machine import StateMachine, transition, state
+from fluidity import StateMachine, transition, state
 
 
 class FluidityState(unittest.TestCase):

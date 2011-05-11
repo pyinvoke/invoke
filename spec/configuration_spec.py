@@ -1,6 +1,6 @@
 import unittest
 from should_dsl import should
-from fluidity.machine import StateMachine, state, InvalidConfiguration
+from fluidity import StateMachine, state, InvalidConfiguration
 
 
 class FluidityConfigurationValidation(unittest.TestCase):

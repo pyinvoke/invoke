@@ -1,7 +1,7 @@
 import unittest
 from should_dsl import should, should_not
-from fluidity.machine import StateMachine, state, transition
-from fluidity.machine import InvalidTransition
+from fluidity import StateMachine, state, transition
+from fluidity import InvalidTransition
 
 
 class MyMachine(StateMachine):
