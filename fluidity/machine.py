@@ -2,8 +2,8 @@
 # http://blog.ianbicking.org/more-on-python-metaprogramming-comment-14.html
 _transition_gatherer = []
 
-def transition(event, from_, to, guard=None):
-    _transition_gatherer.append([event, from_, to, guard])
+def transition(event, from_, to, action=None, guard=None):
+    _transition_gatherer.append([event, from_, to, action, guard])
 
 _state_gatherer = []
 
@@ -52,8 +52,8 @@ class StateMachine(object):
         return cls._state_objects.keys()
 
     @classmethod
-    def transition(cls, event, from_, to, guard):
-        cls._transitions[event] = _Transition(event, from_, to, guard)
+    def transition(cls, event, from_, to, action, guard):
+        cls._transitions[event] = _Transition(event, from_, to, action, guard)
         this_event = cls._generate_event(event)
         setattr(cls, this_event.__name__, this_event)
 
@@ -72,6 +72,7 @@ class StateMachine(object):
             self._handle_exit(self.current_state)
             self._handle_enter(this_transition.to)
             self.current_state = this_transition.to
+            self._handle_action(this_transition.action)
         generated_event.__doc__ = 'event %s' % name
         generated_event.__name__ = name
         return generated_event
@@ -86,6 +87,10 @@ class StateMachine(object):
         if exit:
             getattr(self, exit)()
 
+    def _handle_action(self, action_name):
+        if action_name:
+            getattr(self, action_name)()
+
     def _check_guard(self, guard_name):
         if guard_name is None:
             return True
@@ -98,10 +103,11 @@ class StateMachine(object):
 
 class _Transition(object):
 
-    def __init__(self, event, from_, to, guard):
+    def __init__(self, event, from_, to, action, guard):
         self.event = event
         self.from_ = from_
         self.to = to
+        self.action = action
         self.guard = guard
 
 
