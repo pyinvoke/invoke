@@ -34,7 +34,7 @@ class StateMachine(object):
         if callable(self.initial_state):
             self.initial_state = self.initial_state()
         self.current_state = self.initial_state
-        self._handle_enter(self.initial_state)
+        self._handle_state_action(self.initial_state, 'enter')
 
     def _validate(self):
         if not getattr(self, '_state_objects', None) or len(self.states()) < 2:
@@ -76,28 +76,19 @@ class StateMachine(object):
         return generated_event
 
     def _run_transition(self, transition):
-      self._handle_exit(self.current_state)
+      self._handle_state_action(self.current_state, 'exit')
       self.current_state = transition.to
-      self._handle_enter(transition.to)
+      self._handle_state_action(transition.to, 'enter')
       self._handle_action(transition.action)
 
-    def _handle_enter(self, state):
-        enter = self._state_objects[state].enter
-        if not enter:
+    def _handle_state_action(self, state, kind):
+        action = getattr(self._state_objects[state], kind)
+        if not action:
             return
-        if type(enter) == str:
-            enter = [enter]
-        for enter_action_name in enter:
-            getattr(self, enter_action_name)()
-
-    def _handle_exit(self, state):
-        exit = self._state_objects[state].exit
-        if not exit:
-            return
-        if type(exit) == str:
-            exit = [exit]
-        for exit_action_name in exit:
-            getattr(self, exit_action_name)()
+        if type(action) == str:
+            action = [action]
+        for action_name in action:
+            getattr(self, action_name)()
 
     def _handle_action(self, action_name):
         if action_name:
