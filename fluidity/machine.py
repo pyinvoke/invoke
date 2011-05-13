@@ -88,12 +88,11 @@ class StateMachine(object):
     def _handle_action(self, action):
         self._run_action_or_list(action)
 
-    def _run_action_or_list(self, action):
-        if not action:
+    def _run_action_or_list(self, action_param):
+        if not action_param:
             return
-        if type(action) == str:
-            action = [action]
-        for action_name in action:
+        action_names = type(action_param) == str and [action_param] or action_param
+        for action_name in action_names:
             getattr(self, action_name)()
 
     def _check_guard(self, guard_param):
