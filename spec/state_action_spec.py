@@ -6,7 +6,8 @@ from fluidity import StateMachine, state, transition
 
 class ActionMachine(StateMachine):
 
-      state('created', enter='about_to_create', exit='post_create')
+      state('created', enter='about_to_create',
+                       exit=['other_post_create', 'post_create'])
       state('waiting', enter=['pre_wait', 'other_pre_wait'])
       initial_state = 'created'
       transition(from_='created', event='queue', to='waiting')
@@ -18,6 +19,8 @@ class ActionMachine(StateMachine):
           self.is_exit_aware = False
           self.pre_wait_aware = False
           self.other_pre_wait_aware = False
+          self.post_create_aware = False
+          self.other_post_create_aware = False
           self.count = 0
 
       def pre_wait(self):
@@ -28,6 +31,7 @@ class ActionMachine(StateMachine):
 
       def post_create(self):
           self.is_exit_aware = True
+          self.post_create_aware = True
           if getattr(self, 'post_create_expectation', None):
               self.post_create_expectation()
 
@@ -36,6 +40,9 @@ class ActionMachine(StateMachine):
 
       def other_pre_wait(self):
           self.other_pre_wait_aware = True
+
+      def other_post_create(self):
+          self.other_post_create_aware = True
 
 
 
@@ -78,4 +85,12 @@ class FluidityAction(unittest.TestCase):
           machine.queue()
           machine |should| be_pre_wait_aware
           machine |should| be_other_pre_wait_aware
+
+      def it_accepts_exit_actions(self):
+          machine = ActionMachine()
+          machine |should_not| be_post_create_aware
+          machine |should_not| be_other_post_create_aware
+          machine.queue()
+          machine |should| be_post_create_aware
+          machine |should| be_other_post_create_aware
 
