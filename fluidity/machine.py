@@ -96,14 +96,18 @@ class StateMachine(object):
         for action_name in action:
             getattr(self, action_name)()
 
-    def _check_guard(self, guard_name):
-        if guard_name is None:
+    def _check_guard(self, guard_param):
+        if guard_param is None:
             return True
-        guard = getattr(self, guard_name)
-        if callable(guard):
-            return guard()
-        else:
-            return guard
+        guard_names = type(guard_param) == str and [guard_param] or guard_param
+        result = True
+        for guard_name in guard_names:
+            guard = getattr(self, guard_name)
+            if callable(guard):
+                result = result and guard()
+            else:
+                result = result and guard
+        return result
 
 
 class _Transition(object):
