@@ -7,7 +7,7 @@ from fluidity import StateMachine, state, transition
 class ActionMachine(StateMachine):
 
       state('created', enter='about_to_create', exit='post_create')
-      state('waiting', enter='pre_wait')
+      state('waiting', enter=['pre_wait', 'other_pre_wait'])
       initial_state = 'created'
       transition(from_='created', event='queue', to='waiting')
 
@@ -16,10 +16,13 @@ class ActionMachine(StateMachine):
           super(ActionMachine, self).__init__()
           self.is_enter_aware = False
           self.is_exit_aware = False
+          self.pre_wait_aware = False
+          self.other_pre_wait_aware = False
           self.count = 0
 
       def pre_wait(self):
           self.is_enter_aware = True
+          self.pre_wait_aware = True
           if getattr(self, 'pre_wait_expectation', None):
               self.pre_wait_expectation()
 
@@ -30,6 +33,10 @@ class ActionMachine(StateMachine):
 
       def about_to_create(self):
           self.enter_create = True
+
+      def other_pre_wait(self):
+          self.other_pre_wait_aware = True
+
 
 
 class FluidityAction(unittest.TestCase):
@@ -63,4 +70,12 @@ class FluidityAction(unittest.TestCase):
 
       def it_runs_enter_action_for_initial_state_at_creation(self):
           ActionMachine().enter_create |should| be(True)
+
+      def it_accepts_many_enter_actions(self):
+          machine = ActionMachine()
+          machine |should_not| be_pre_wait_aware
+          machine |should_not| be_other_pre_wait_aware
+          machine.queue()
+          machine |should| be_pre_wait_aware
+          machine |should| be_other_pre_wait_aware
 

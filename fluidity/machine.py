@@ -83,8 +83,13 @@ class StateMachine(object):
 
     def _handle_enter(self, state):
         enter = self._state_objects[state].enter
-        if enter:
-            getattr(self, enter)()
+        if not enter:
+            return
+        if type(enter) == str:
+            enter = [enter]
+        for enter_action_name in enter:
+            print enter_action_name
+            getattr(self, enter_action_name)()
 
     def _handle_exit(self, state):
         exit = self._state_objects[state].exit
