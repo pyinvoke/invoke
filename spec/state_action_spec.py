@@ -6,12 +6,13 @@ from fluidity import StateMachine, state, transition
 
 class ActionMachine(StateMachine):
 
-      state('created', exit='post_create')
+      state('created', enter='about_to_create', exit='post_create')
       state('waiting', enter='pre_wait')
       initial_state = 'created'
       transition(from_='created', event='queue', to='waiting')
 
       def __init__(self):
+          self.enter_create = False
           super(ActionMachine, self).__init__()
           self.is_enter_aware = False
           self.is_exit_aware = False
@@ -26,6 +27,9 @@ class ActionMachine(StateMachine):
           self.is_exit_aware = True
           if getattr(self, 'post_create_expectation', None):
               self.post_create_expectation()
+
+      def about_to_create(self):
+          self.enter_create = True
 
 
 class FluidityAction(unittest.TestCase):
@@ -56,4 +60,7 @@ class FluidityAction(unittest.TestCase):
           machine.pre_wait_expectation = new.instancemethod(
               pre_wait_expectation, machine, ActionMachine)
           machine.queue()
+
+      def it_runs_enter_action_for_initial_state_at_creation(self):
+          ActionMachine().enter_create |should| be(True)
 

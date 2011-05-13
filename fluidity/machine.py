@@ -34,6 +34,7 @@ class StateMachine(object):
         if callable(self.initial_state):
             self.initial_state = self.initial_state()
         self.current_state = self.initial_state
+        self._handle_enter(self.initial_state)
 
     def _validate(self):
         if not getattr(self, '_state_objects', None) or len(self.states()) < 2:
