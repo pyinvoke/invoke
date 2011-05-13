@@ -70,13 +70,16 @@ class StateMachine(object):
                     self.current_state, this_transition.to))
             if not self._check_guard(this_transition.guard):
                 raise GuardNotSatisfied("Guard is not satisfied for this transition")
-            self._handle_exit(self.current_state)
-            self._handle_enter(this_transition.to)
-            self.current_state = this_transition.to
-            self._handle_action(this_transition.action)
+            self._run_transition(this_transition)
         generated_event.__doc__ = 'event %s' % name
         generated_event.__name__ = name
         return generated_event
+
+    def _run_transition(self, transition):
+      self._handle_exit(self.current_state)
+      self.current_state = transition.to
+      self._handle_enter(transition.to)
+      self._handle_action(transition.action)
 
     def _handle_enter(self, state):
         enter = self._state_objects[state].enter
