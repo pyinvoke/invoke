@@ -83,14 +83,12 @@ class StateMachine(object):
 
     def _handle_state_action(self, state, kind):
         action = getattr(self._state_objects[state], kind)
-        if not action:
-            return
-        if type(action) == str:
-            action = [action]
-        for action_name in action:
-            getattr(self, action_name)()
+        self._run_action_or_list(action)
 
     def _handle_action(self, action):
+        self._run_action_or_list(action)
+
+    def _run_action_or_list(self, action):
         if not action:
             return
         if type(action) == str:
