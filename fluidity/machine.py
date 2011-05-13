@@ -91,20 +91,25 @@ class StateMachine(object):
     def _run_action_or_list(self, action_param):
         if not action_param:
             return
-        action_names = type(action_param) == str and [action_param] or action_param
-        for action_name in action_names:
-            getattr(self, action_name)()
+        action_items = type(action_param) == list and action_param or [action_param]
+        for action_item in action_items:
+            if callable(action_item):
+                action_item(self)
+            else:
+                getattr(self, action_item)()
 
     def _check_guard(self, guard_param):
         if guard_param is None:
             return True
-        guard_names = type(guard_param) == str and [guard_param] or guard_param
+        guard_items = type(guard_param) == list and guard_param or [guard_param]
         result = True
-        for guard_name in guard_names:
-            guard = getattr(self, guard_name)
-            if callable(guard):
-                result = result and guard()
+        for guard_item in guard_items:
+            if callable(guard_item):
+                guard_item(self)
             else:
+                guard = getattr(self, guard_item)
+                if callable(guard):
+                    guard = guard()
                 result = result and guard
         return result
 
