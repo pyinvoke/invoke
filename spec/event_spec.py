@@ -6,16 +6,16 @@ from fluidity import InvalidTransition
 
 class MyMachine(StateMachine):
 
-     initial_state = 'created'
+    initial_state = 'created'
 
-     state('created')
-     state('waiting')
-     state('processed')
-     state('canceled')
+    state('created')
+    state('waiting')
+    state('processed')
+    state('canceled')
 
-     transition(from_='created', event='queue', to='waiting')
-     transition(from_='waiting', event='process', to='processed')
-     transition(from_=['waiting', 'created'], event='cancel', to='canceled')
+    transition(from_='created', event='queue', to='waiting')
+    transition(from_='waiting', event='process', to='processed')
+    transition(from_=['waiting', 'created'], event='cancel', to='canceled')
 
 
 class FluidityEvent(unittest.TestCase):
