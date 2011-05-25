@@ -1,3 +1,5 @@
+import new
+
 # metaclass implementation idea from
 # http://blog.ianbicking.org/more-on-python-metaprogramming-comment-14.html
 _transition_gatherer = []
@@ -37,6 +39,12 @@ class StateMachine(object):
         self.current_state = self.initial_state
         self._handle_state_action(self.initial_state, 'enter')
 
+    def __new__(cls, *args, **kwargs):
+        obj = super(StateMachine, cls).__new__(cls)
+        obj._states = {}
+        obj._transitions = {}
+        return obj
+
     @classmethod
     def _validate_machine_definitions(cls):
         if not getattr(cls, '_class_states', None) or len(cls._class_states) < 2:
@@ -57,6 +65,15 @@ class StateMachine(object):
         cls._class_transitions[event] = _Transition(event, from_, to, action, guard)
         this_event = cls._generate_event(event)
         setattr(cls, this_event.__name__, this_event)
+
+    def add_state(self, name, enter=None, exit=None):
+        self._states[name] = _State(name, enter, exit)
+
+    def add_transition(self, event, from_, to, action=None, guard=None):
+        self._transitions[event] = _Transition(event, from_, to, action, guard)
+        this_event = self.__class__._generate_event(event)
+        setattr(self, this_event.__name__,
+            new.instancemethod(this_event, self, self.__class__))
 
     @classmethod
     def _generate_event(cls, name):
