@@ -16,6 +16,7 @@ class MetaStateMachine(type):
         global _transition_gatherer, _state_gatherer
         Machine = super(MetaStateMachine, cls).__new__(cls, name, bases, dictionary)
         Machine._class_transitions = {}
+        Machine._class_states = {}
         for i in _transition_gatherer:
             Machine._add_class_transition(*i)
         for s in _state_gatherer:
@@ -44,9 +45,7 @@ class StateMachine(object):
             raise InvalidConfiguration('There must exist an initial state')
 
     @classmethod
-    def _add_class_state(cls, name, enter=None, exit=None):
-        if not getattr(cls, '_class_states', None):
-            cls._class_states = {}
+    def _add_class_state(cls, name, enter, exit):
         cls._class_states[name] = _State(name, enter, exit)
 
     @classmethod
