@@ -13,9 +13,15 @@ class Door(StateMachine):
 class IndividuationSpec(unittest.TestCase):
     '''Fluidity object (individuation)'''
 
+    def setUp(self):
+        self.door = Door()
+        self.door.add_state('broken')
+        self.door.add_transition(from_='closed', event='crack', to='broken')
+
     def it_responds_to_an_event(self):
-        door = Door()
-        door.add_state('broken')
-        door.add_transition(from_='closed', event='crack', to='broken')
-        door |should| respond_to('crack')
+        self.door |should| respond_to('crack')
+
+    def its_event_changes_its_state_when_called(self):
+        self.door.crack()
+        self.door.current_state |should| equal_to('broken')
 

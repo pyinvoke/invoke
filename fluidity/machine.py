@@ -78,7 +78,11 @@ class StateMachine(object):
     @classmethod
     def _generate_event(cls, name):
         def generated_event(self):
-            this_transition = cls._class_transitions[generated_event.__name__]
+            name = generated_event.__name__
+            try:
+                this_transition = cls._class_transitions[name]
+            except KeyError:
+                this_transition = self._transitions[name]
             from_ = this_transition.from_
             if type(from_) == str:
                 from_ = [from_]
@@ -99,7 +103,10 @@ class StateMachine(object):
       self._handle_action(transition.action)
 
     def _handle_state_action(self, state, kind):
-        action = getattr(self._class_states[state], kind)
+        try:
+            action = getattr(self._class_states[state], kind)
+        except KeyError:
+            action = getattr(self._states[state], kind)
         self._run_action_or_list(action)
 
     def _handle_action(self, action):
