@@ -15,11 +15,11 @@ class MetaStateMachine(type):
     def __new__(cls, name, bases, dictionary):
         global _transition_gatherer, _state_gatherer
         Machine = super(MetaStateMachine, cls).__new__(cls, name, bases, dictionary)
-        Machine._transitions = {}
+        Machine._class_transitions = {}
         for i in _transition_gatherer:
-            Machine.transition(*i)
+            Machine._add_class_transition(*i)
         for s in _state_gatherer:
-            Machine.state(*s)
+            Machine._add_class_state(*s)
         _transition_gatherer = []
         _state_gatherer = []
         return Machine
@@ -30,38 +30,39 @@ class StateMachine(object):
     __metaclass__ = MetaStateMachine
 
     def __init__(self):
-        self._validate()
+        self.__class__._validate_machine_definitions()
         if callable(self.initial_state):
             self.initial_state = self.initial_state()
         self.current_state = self.initial_state
         self._handle_state_action(self.initial_state, 'enter')
 
-    def _validate(self):
-        if not getattr(self, '_state_objects', None) or len(self.states()) < 2:
+    @classmethod
+    def _validate_machine_definitions(cls):
+        if not getattr(cls, '_class_states', None) or len(cls._class_states) < 2:
             raise InvalidConfiguration('There must be at least two states')
-        if not getattr(self, 'initial_state', None):
+        if not getattr(cls, 'initial_state', None):
             raise InvalidConfiguration('There must exist an initial state')
 
     @classmethod
-    def state(cls, name, enter=None, exit=None):
-        if not getattr(cls, '_state_objects', None):
-            cls._state_objects = {}
-        cls._state_objects[name] = _State(name, enter, exit)
+    def _add_class_state(cls, name, enter=None, exit=None):
+        if not getattr(cls, '_class_states', None):
+            cls._class_states = {}
+        cls._class_states[name] = _State(name, enter, exit)
 
     @classmethod
     def states(cls):
-        return cls._state_objects.keys()
+        return cls._class_states
 
     @classmethod
-    def transition(cls, event, from_, to, action, guard):
-        cls._transitions[event] = _Transition(event, from_, to, action, guard)
+    def _add_class_transition(cls, event, from_, to, action, guard):
+        cls._class_transitions[event] = _Transition(event, from_, to, action, guard)
         this_event = cls._generate_event(event)
         setattr(cls, this_event.__name__, this_event)
 
     @classmethod
     def _generate_event(cls, name):
         def generated_event(self):
-            this_transition = cls._transitions[generated_event.__name__]
+            this_transition = cls._class_transitions[generated_event.__name__]
             from_ = this_transition.from_
             if type(from_) == str:
                 from_ = [from_]
@@ -82,7 +83,7 @@ class StateMachine(object):
       self._handle_action(transition.action)
 
     def _handle_state_action(self, state, kind):
-        action = getattr(self._state_objects[state], kind)
+        action = getattr(self._class_states[state], kind)
         self._run_action_or_list(action)
 
     def _handle_action(self, action):
