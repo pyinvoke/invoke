@@ -25,3 +25,7 @@ class IndividuationSpec(unittest.TestCase):
         self.door.crack()
         self.door.current_state |should| equal_to('broken')
 
+    def it_informs_all_its_states(self):
+        self.door |should| have(3).states
+        self.door.states() |should| include_all_of(['open', 'closed', 'broken'])
+

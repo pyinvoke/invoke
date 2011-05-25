@@ -56,9 +56,8 @@ class StateMachine(object):
     def _add_class_state(cls, name, enter, exit):
         cls._class_states[name] = _State(name, enter, exit)
 
-    @classmethod
-    def states(cls):
-        return cls._class_states
+    def states(self):
+        return self.__class__._class_states.keys() + self._states.keys()
 
     @classmethod
     def _add_class_transition(cls, event, from_, to, action, guard):
