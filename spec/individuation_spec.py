@@ -1,5 +1,5 @@
 import unittest
-from should_dsl import should
+from should_dsl import should, should_not
 from fluidity import StateMachine, state, transition
 
 
@@ -28,4 +28,8 @@ class IndividuationSpec(unittest.TestCase):
     def it_informs_all_its_states(self):
         self.door |should| have(3).states
         self.door.states() |should| include_all_of(['open', 'closed', 'broken'])
+
+    def its_individuation_does_not_affect_other_objects_from_the_same_class(self):
+        another_door = Door()
+        another_door |should_not| respond_to('crack')
 
