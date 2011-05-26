@@ -23,17 +23,17 @@ class CrazyGuy(StateMachine):
 
 class FluidityTransitionAction(unittest.TestCase):
 
-      def it_runs_when_transition_occurs(self):
-          guy = CrazyGuy()
-          guy |should_not| be_at_risk
-          guy.jump()
-          guy |should| be_at_risk
+    def it_runs_when_transition_occurs(self):
+        guy = CrazyGuy()
+        guy |should_not| be_at_risk
+        guy.jump()
+        guy |should| be_at_risk
 
-      def it_supports_multiple_transition_actions(self):
-          guy = CrazyGuy()
-          guy |should_not| be_at_risk
-          guy |should_not| be_accelerating
-          guy.jump()
-          guy |should| be_at_risk
-          guy |should| be_accelerating
+    def it_supports_multiple_transition_actions(self):
+        guy = CrazyGuy()
+        guy |should_not| be_at_risk
+        guy |should_not| be_accelerating
+        guy.jump()
+        guy |should| be_at_risk
+        guy |should| be_accelerating
 
