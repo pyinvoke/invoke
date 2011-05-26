@@ -1,6 +1,7 @@
 import unittest
 from should_dsl import should
 from fluidity import StateMachine, state, transition
+from fluidity import GuardNotSatisfied
 
 
 class JumperGuy(StateMachine):
@@ -28,4 +29,18 @@ class CallableSupport(unittest.TestCase):
         guy.footsteps |should| include_all_of([
             'enter looking', 'exit looking', 'enter falling',
             'action jump', 'guard jump'])
+
+    def it_should_deny_state_change_if_guard_callable_returns_false(self):
+        class Door(StateMachine):
+            state('open')
+            state('closed')
+            initial_state = 'closed'
+            transition(from_='closed', event='open', to='open',
+                       guard=lambda d: not door.locked)
+            def locked(self):
+                return self.locked
+
+        door = Door()
+        door.locked = True
+        door.open |should| throw(GuardNotSatisfied)
 

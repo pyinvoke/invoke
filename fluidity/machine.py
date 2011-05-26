@@ -105,7 +105,7 @@ class StateMachine(object):
         result = True
         for guard_item in guard_items:
             if callable(guard_item):
-                guard_item(self)
+                result = result and guard_item(self)
             else:
                 guard = getattr(self, guard_item)
                 if callable(guard):
