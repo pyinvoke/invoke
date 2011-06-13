@@ -57,6 +57,9 @@ class StateMachine(object):
     def _add_class_state(cls, name, enter, exit):
         cls._class_states[name] = _State(name, enter, exit)
 
+    def add_state(self, name, enter=None, exit=None):
+        self._states[name] = _State(name, enter, exit)
+
     def states(self):
         return self.__class__._class_states.keys() + self._states.keys()
 
@@ -65,9 +68,6 @@ class StateMachine(object):
         cls._class_transitions[event] = _Transition(event, from_, to, action, guard)
         this_event = cls._generate_event(event)
         setattr(cls, this_event.__name__, this_event)
-
-    def add_state(self, name, enter=None, exit=None):
-        self._states[name] = _State(name, enter, exit)
 
     def add_transition(self, event, from_, to, action=None, guard=None):
         self._transitions[event] = _Transition(event, from_, to, action, guard)
@@ -79,20 +79,30 @@ class StateMachine(object):
     def _generate_event(cls, name):
         def generated_event(self):
             name = generated_event.__name__
-            try:
-                this_transition = cls._class_transitions[name]
-            except KeyError:
-                this_transition = self._transitions[name]
+            this_transition = self._transition_by_name(name)
             from_ = _listize(this_transition.from_)
-            if self.current_state not in from_:
-                raise InvalidTransition("Cannot change from %s to %s" % (
-                    self.current_state, this_transition.to))
-            if not self._check_guard(this_transition.guard):
-                raise GuardNotSatisfied("Guard is not satisfied for this transition")
+            self._validate_from_state(from_, this_transition)
+            self._run_guard(this_transition)
             self._run_transition(this_transition)
         generated_event.__doc__ = 'event %s' % name
         generated_event.__name__ = name
         return generated_event
+
+    def _transition_by_name(self, name):
+        try:
+            this_transition = self.__class__._class_transitions[name]
+        except KeyError:
+            this_transition = self._transitions[name]
+        return this_transition
+
+    def _validate_from_state(self, from_state, transition):
+        if self.current_state not in from_state:
+            raise InvalidTransition("Cannot change from %s to %s" % (
+                self.current_state, transition.to))
+
+    def _run_guard(self, transition):
+        if not self._check_guard(transition.guard):
+            raise GuardNotSatisfied("Guard is not satisfied for this transition")
 
     def _run_transition(self, transition):
       self._handle_state_action(self.current_state, 'exit')
