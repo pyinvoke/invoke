@@ -12,6 +12,7 @@ _state_gatherer = []
 def state(name, enter=None, exit=None):
     _state_gatherer.append([name, enter, exit])
 
+
 class MetaStateMachine(type):
 
     def __new__(cls, name, bases, dictionary):
@@ -82,9 +83,7 @@ class StateMachine(object):
                 this_transition = cls._class_transitions[name]
             except KeyError:
                 this_transition = self._transitions[name]
-            from_ = this_transition.from_
-            if type(from_) == str:
-                from_ = [from_]
+            from_ = _listize(this_transition.from_)
             if self.current_state not in from_:
                 raise InvalidTransition("Cannot change from %s to %s" % (
                     self.current_state, this_transition.to))
@@ -114,7 +113,7 @@ class StateMachine(object):
     def _run_action_or_list(self, action_param):
         if not action_param:
             return
-        action_items = type(action_param) == list and action_param or [action_param]
+        action_items = _listize(action_param)
         for action_item in action_items:
             if callable(action_item):
                 action_item(self)
@@ -124,7 +123,7 @@ class StateMachine(object):
     def _check_guard(self, guard_param):
         if guard_param is None:
             return True
-        guard_items = type(guard_param) == list and guard_param or [guard_param]
+        guard_items = _listize(guard_param)
         result = True
         for guard_item in guard_items:
             if callable(guard_item):
@@ -165,4 +164,8 @@ class InvalidTransition(Exception):
 
 class GuardNotSatisfied(Exception):
     pass
+
+
+def _listize(value):
+    return type(value) in [list, tuple] and value or [value]
 
