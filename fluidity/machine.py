@@ -1,3 +1,5 @@
+import new
+
 # metaclass implementation idea from
 # http://blog.ianbicking.org/more-on-python-metaprogramming-comment-14.html
 _transition_gatherer = []
@@ -37,6 +39,12 @@ class StateMachine(object):
         self.current_state = self.initial_state
         self._handle_state_action(self.initial_state, 'enter')
 
+    def __new__(cls, *args, **kwargs):
+        obj = super(StateMachine, cls).__new__(cls)
+        obj._states = {}
+        obj._transitions = {}
+        return obj
+
     @classmethod
     def _validate_machine_definitions(cls):
         if not getattr(cls, '_class_states', None) or len(cls._class_states) < 2:
@@ -48,9 +56,8 @@ class StateMachine(object):
     def _add_class_state(cls, name, enter, exit):
         cls._class_states[name] = _State(name, enter, exit)
 
-    @classmethod
-    def states(cls):
-        return cls._class_states
+    def states(self):
+        return self.__class__._class_states.keys() + self._states.keys()
 
     @classmethod
     def _add_class_transition(cls, event, from_, to, action, guard):
@@ -58,10 +65,23 @@ class StateMachine(object):
         this_event = cls._generate_event(event)
         setattr(cls, this_event.__name__, this_event)
 
+    def add_state(self, name, enter=None, exit=None):
+        self._states[name] = _State(name, enter, exit)
+
+    def add_transition(self, event, from_, to, action=None, guard=None):
+        self._transitions[event] = _Transition(event, from_, to, action, guard)
+        this_event = self.__class__._generate_event(event)
+        setattr(self, this_event.__name__,
+            new.instancemethod(this_event, self, self.__class__))
+
     @classmethod
     def _generate_event(cls, name):
         def generated_event(self):
-            this_transition = cls._class_transitions[generated_event.__name__]
+            name = generated_event.__name__
+            try:
+                this_transition = cls._class_transitions[name]
+            except KeyError:
+                this_transition = self._transitions[name]
             from_ = this_transition.from_
             if type(from_) == str:
                 from_ = [from_]
@@ -82,7 +102,10 @@ class StateMachine(object):
       self._handle_action(transition.action)
 
     def _handle_state_action(self, state, kind):
-        action = getattr(self._class_states[state], kind)
+        try:
+            action = getattr(self._class_states[state], kind)
+        except KeyError:
+            action = getattr(self._states[state], kind)
         self._run_action_or_list(action)
 
     def _handle_action(self, action):
