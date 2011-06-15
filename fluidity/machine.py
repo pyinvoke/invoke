@@ -1,4 +1,4 @@
-import new
+import types
 
 # metaclass implementation idea from
 # http://blog.ianbicking.org/more-on-python-metaprogramming-comment-14.html
@@ -73,7 +73,7 @@ class StateMachine(object):
         self._transitions[event] = _Transition(event, from_, to, action, guard)
         this_event = self.__class__._generate_event(event)
         setattr(self, this_event.__name__,
-            new.instancemethod(this_event, self, self.__class__))
+            types.MethodType(this_event, self, self.__class__))
 
     @classmethod
     def _generate_event(cls, name):
@@ -179,7 +179,6 @@ class InvalidTransition(Exception):
 
 class GuardNotSatisfied(Exception):
     pass
-
 
 
 def _listize(value):
