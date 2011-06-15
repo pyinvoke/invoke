@@ -91,10 +91,13 @@ class StateMachine(object):
             return
         action_items = _listize(action_param)
         for action_item in action_items:
-            if callable(action_item):
-                action_item(self)
-            else:
-                getattr(self, action_item)()
+            self._run_action(action_item)
+
+    def _run_action(self, action):
+        if callable(action):
+            action(self)
+        else:
+            getattr(self, action)()
 
     def _check_guard(self, guard_param):
         if guard_param is None:
