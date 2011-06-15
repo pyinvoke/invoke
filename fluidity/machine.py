@@ -62,16 +62,22 @@ class StateMachine(object):
     def _generate_event(cls, name):
         def generated_event(self):
             this_transition = cls._class_transitions[generated_event.__name__]
-            from_ = _listize(this_transition.from_)
-            if self.current_state not in from_:
-                raise InvalidTransition("Cannot change from %s to %s" % (
-                    self.current_state, this_transition.to))
-            if not self._check_guard(this_transition.guard):
-                raise GuardNotSatisfied("Guard is not satisfied for this transition")
+            self._ensure_from_validity(this_transition)
+            self._ensure_guards_passing(this_transition)
             self._run_transition(this_transition)
         generated_event.__doc__ = 'event %s' % name
         generated_event.__name__ = name
         return generated_event
+
+    def _ensure_from_validity(self, transition):
+        from_ = _listize(transition.from_)
+        if self.current_state not in from_:
+            raise InvalidTransition("Cannot change from %s to %s" % (
+                self.current_state, transition.to))
+
+    def _ensure_guards_passing(self, transition):
+        if not self._check_guard(transition.guard):
+            raise GuardNotSatisfied("Guard is not satisfied for this transition")
 
     def _run_transition(self, transition):
       self._handle_state_action(self.current_state, 'exit')
