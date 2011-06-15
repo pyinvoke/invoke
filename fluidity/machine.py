@@ -102,14 +102,17 @@ class StateMachine(object):
         guard_items = _listize(guard_param)
         result = True
         for guard_item in guard_items:
-            if callable(guard_item):
-                result = result and guard_item(self)
-            else:
-                guard = getattr(self, guard_item)
-                if callable(guard):
-                    guard = guard()
-                result = result and guard
+            result = result and self._evaluate_guard(guard_item)
         return result
+
+    def _evaluate_guard(self, guard):
+        if callable(guard):
+            return guard(self)
+        else:
+            guard = getattr(self, guard)
+            if callable(guard):
+                guard = guard()
+            return guard
 
 
 class _Transition(object):
