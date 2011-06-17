@@ -77,11 +77,11 @@ class StateMachine(object):
 
     @classmethod
     def _generate_event(cls, name):
-        def generated_event(self):
+        def generated_event(self, *args, **kwargs):
             this_transition = self._transition_by_name(generated_event.__name__)
             self._ensure_from_validity(this_transition)
             self._ensure_guards_passing(this_transition)
-            self._run_transition(this_transition)
+            self._run_transition(this_transition, *args, **kwargs)
         generated_event.__doc__ = 'event %s' % name
         generated_event.__name__ = name
         return generated_event
@@ -103,11 +103,11 @@ class StateMachine(object):
         if not self._check_guard(transition.guard):
             raise GuardNotSatisfied("Guard is not satisfied for this transition")
 
-    def _run_transition(self, transition):
+    def _run_transition(self, transition, *args, **kwargs):
       self._handle_state_action(self.current_state, 'exit')
       self.current_state = transition.to
       self._handle_state_action(transition.to, 'enter')
-      self._handle_action(transition.action)
+      self._handle_action(transition.action, *args, **kwargs)
 
     def _handle_state_action(self, state, kind):
         try:
@@ -116,21 +116,30 @@ class StateMachine(object):
             action = getattr(self._states[state], kind)
         self._run_action_or_list(action)
 
-    def _handle_action(self, action):
-        self._run_action_or_list(action)
+    def _handle_action(self, action, *args, **kwargs):
+        self._run_action_or_list(action, *args, **kwargs)
 
-    def _run_action_or_list(self, action_param):
+    def _run_action_or_list(self, action_param, *args, **kwargs):
         if not action_param:
             return
         action_items = _listize(action_param)
         for action_item in action_items:
-            self._run_action(action_item)
+            self._run_action(action_item, *args, **kwargs)
 
-    def _run_action(self, action):
+    def _run_action(self, action, *args, **kwargs):
         if callable(action):
-            action(self)
+            self._try_to_run_with_args(action, self, *args, **kwargs)
         else:
-            getattr(self, action)()
+            self._try_to_run_with_args(getattr(self, action), *args, **kwargs)
+
+    def _try_to_run_with_args(self, action, *args, **kwargs):
+        try:
+            action(*args, **kwargs)
+        except TypeError:
+            if len(args) > 0 and args[0] == self:
+                action(self)
+            else:
+                action()
 
     def _check_guard(self, guard_param):
         if guard_param is None:
