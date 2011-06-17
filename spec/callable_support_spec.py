@@ -30,7 +30,7 @@ class CallableSupport(unittest.TestCase):
             'enter looking', 'exit looking', 'enter falling',
             'action jump', 'guard jump'])
 
-    def it_should_deny_state_change_if_guard_callable_returns_false(self):
+    def test_it_should_deny_state_change_if_guard_callable_returns_false(self):
         class Door(StateMachine):
             state('open')
             state('closed')
@@ -43,4 +43,8 @@ class CallableSupport(unittest.TestCase):
         door = Door()
         door.locked = True
         door.open |should| throw(GuardNotSatisfied)
+
+
+if __name__ == '__main__':
+    unittest.main()
 

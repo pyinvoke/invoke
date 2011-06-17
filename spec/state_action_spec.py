@@ -48,19 +48,19 @@ class ActionMachine(StateMachine):
 
 class FluidityAction(unittest.TestCase):
 
-    def it_runs_enter_action_before_machine_enters_a_given_state(self):
+    def test_it_runs_enter_action_before_machine_enters_a_given_state(self):
         machine = ActionMachine()
         machine |should_not| be_enter_aware
         machine.queue()
         machine |should| be_enter_aware
 
-    def it_runs_exit_action_after_machine_exits_a_given_state(self):
+    def test_it_runs_exit_action_after_machine_exits_a_given_state(self):
         machine = ActionMachine()
         machine |should_not| be_exit_aware
         machine.queue()
         machine |should| be_enter_aware
 
-    def it_runs_exit_action_before_enter_action(self):
+    def test_it_runs_exit_action_before_enter_action(self):
         '''it runs old state's exit action before new state's enter action'''
         machine = ActionMachine()
         def post_create_expectation(_self):
@@ -75,10 +75,10 @@ class FluidityAction(unittest.TestCase):
               pre_wait_expectation, machine, ActionMachine)
         machine.queue()
 
-    def it_runs_enter_action_for_initial_state_at_creation(self):
+    def test_it_runs_enter_action_for_initial_state_at_creation(self):
         ActionMachine().enter_create |should| be(True)
 
-    def it_accepts_many_enter_actions(self):
+    def test_it_accepts_many_enter_actions(self):
         machine = ActionMachine()
         machine |should_not| be_pre_wait_aware
         machine |should_not| be_other_pre_wait_aware
@@ -86,11 +86,15 @@ class FluidityAction(unittest.TestCase):
         machine |should| be_pre_wait_aware
         machine |should| be_other_pre_wait_aware
 
-    def it_accepts_exit_actions(self):
+    def test_it_accepts_exit_actions(self):
         machine = ActionMachine()
         machine |should_not| be_post_create_aware
         machine |should_not| be_other_post_create_aware
         machine.queue()
         machine |should| be_post_create_aware
         machine |should| be_other_post_create_aware
+
+
+if __name__ == '__main__':
+    unittest.main()
 

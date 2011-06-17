@@ -20,12 +20,12 @@ class MyMachine(StateMachine):
 
 class FluidityEvent(unittest.TestCase):
 
-    def its_declaration_creates_a_method_with_its_name(self):
+    def test_its_declaration_creates_a_method_with_its_name(self):
         machine = MyMachine()
         machine |should| respond_to('queue')
         machine |should| respond_to('process')
 
-    def it_changes_machine_state(self):
+    def test_it_changes_machine_state(self):
         machine = MyMachine()
         machine.current_state |should| equal_to('created')
         machine.queue()
@@ -33,14 +33,14 @@ class FluidityEvent(unittest.TestCase):
         machine.process()
         machine.current_state |should| equal_to('processed')
 
-    def it_ensures_event_order(self):
+    def test_it_ensures_event_order(self):
         machine = MyMachine()
         machine.process |should| throw(InvalidTransition)
         machine.queue()
         machine.queue |should| throw(InvalidTransition)
         machine.process |should_not| throw(Exception)
 
-    def it_accepts_multiple_origin_states(self):
+    def test_it_accepts_multiple_origin_states(self):
         machine = MyMachine()
         machine.cancel |should_not| throw(Exception)
 
@@ -52,4 +52,8 @@ class FluidityEvent(unittest.TestCase):
         machine.queue()
         machine.process()
         machine.cancel |should| throw(Exception)
+
+
+if __name__ == '__main__':
+    unittest.main()
 

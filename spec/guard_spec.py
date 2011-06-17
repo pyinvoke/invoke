@@ -25,16 +25,16 @@ class FallingMachine(StateMachine):
 
 class FluidityGuard(unittest.TestCase):
 
-    def it_allows_transition_if_satisfied(self):
+    def test_it_allows_transition_if_satisfied(self):
         machine = FallingMachine()
         machine.jump |should_not| throw(Exception)
         machine.current_state |should| equal_to('falling')
 
-    def it_forbids_transition_if_not_satisfied(self):
+    def test_it_forbids_transition_if_not_satisfied(self):
         machine = FallingMachine(ready=False)
         machine.jump |should| throw(GuardNotSatisfied)
 
-    def it_may_be_an_attribute(self):
+    def test_it_may_be_an_attribute(self):
         '''it may be an attribute, not only a method'''
         machine = FallingMachine()
         machine.ready_to_fly = False
@@ -44,7 +44,7 @@ class FluidityGuard(unittest.TestCase):
         machine.jump |should_not| throw(Exception)
         machine.current_state |should| equal_to('falling')
 
-    def it_allows_transition_only_if_all_are_satisfied(self):
+    def test_it_allows_transition_only_if_all_are_satisfied(self):
         machine = FallingMachine()
         machine.ready_to_fly = True
         machine.high_enough_flag = True
@@ -59,4 +59,8 @@ class FluidityGuard(unittest.TestCase):
         machine.ready_to_fly = True
         machine.high_enough_flag = False
         machine.jump |should| throw(GuardNotSatisfied)
+
+
+if __name__ == '__main__':
+    unittest.main()
 

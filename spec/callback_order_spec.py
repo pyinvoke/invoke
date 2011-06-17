@@ -37,19 +37,23 @@ class CallbackOrder(unittest.TestCase):
         guy.jump()
         self.callbacks = guy.callbacks
 
-    def it_runs_guard_first(self):
+    def test_it_runs_guard_first(self):
         '''(1) guard'''
         self.callbacks[0] |should| equal_to('guard')
 
-    def it_and_then_old_state_exit(self):
+    def test_it_and_then_old_state_exit(self):
         '''(2) old state exit action'''
         self.callbacks[1] |should| equal_to('old exit')
 
-    def it_and_then_new_state_exit(self):
+    def test_it_and_then_new_state_exit(self):
         '''(3) new state enter action'''
         self.callbacks[2] |should| equal_to('new enter')
 
-    def it_and_then_transaction_action(self):
+    def test_it_and_then_transaction_action(self):
         '''(4) transaction action'''
         self.callbacks[3] |should| equal_to('action')
+
+
+if __name__ == '__main__':
+    unittest.main()
 

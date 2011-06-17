@@ -5,7 +5,7 @@ from fluidity import StateMachine, state, InvalidConfiguration
 
 class FluidityConfigurationValidation(unittest.TestCase):
 
-    def it_requires_at_least_two_states(self):
+    def test_it_requires_at_least_two_states(self):
         class MyMachine(StateMachine):
             pass
         MyMachine |should| throw(InvalidConfiguration,
@@ -15,7 +15,7 @@ class FluidityConfigurationValidation(unittest.TestCase):
         OtherMachine |should| throw(InvalidConfiguration,
             message="There must be at least two states")
 
-    def it_requires_an_initial_state(self):
+    def test_it_requires_an_initial_state(self):
         class MyMachine(StateMachine):
             state('open')
             state('closed')
@@ -27,4 +27,8 @@ class FluidityConfigurationValidation(unittest.TestCase):
             initial_state = None
         AnotherMachine |should| throw(InvalidConfiguration,
             message="There must exist an initial state")
+
+
+if __name__ == '__main__':
+    unittest.main()
 

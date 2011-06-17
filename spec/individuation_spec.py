@@ -18,18 +18,22 @@ class IndividuationSpec(unittest.TestCase):
         self.door.add_state('broken')
         self.door.add_transition(from_='closed', event='crack', to='broken')
 
-    def it_responds_to_an_event(self):
+    def test_it_responds_to_an_event(self):
         self.door |should| respond_to('crack')
 
-    def its_event_changes_its_state_when_called(self):
+    def test_its_event_changes_its_state_when_called(self):
         self.door.crack()
         self.door.current_state |should| equal_to('broken')
 
-    def it_informs_all_its_states(self):
+    def test_it_informs_all_its_states(self):
         self.door |should| have(3).states
         self.door.states() |should| include_all_of(['open', 'closed', 'broken'])
 
-    def its_individuation_does_not_affect_other_objects_from_the_same_class(self):
+    def test_its_individuation_does_not_affect_other_objects_from_the_same_class(self):
         another_door = Door()
         another_door |should_not| respond_to('crack')
+
+
+if __name__ == '__main__':
+    unittest.main()
 
