@@ -1,6 +1,6 @@
 import unittest
 from should_dsl import should, should_not
-from fluidity import StateMachine, state, transition
+from fluidity import StateMachine, state, transition, ForkedTransition
 
 
 class LoanRequest(StateMachine):
@@ -19,10 +19,10 @@ class LoanRequest(StateMachine):
         self.accepted = accepted
 
     def was_loan_accepted(self):
-        return self.accepted
+        return self.accepted or getattr(self, 'truify', False)
 
     def was_loan_refused(self):
-        return not self.accepted
+        return not self.accepted or getattr(self, 'truify', False)
 
 
 class FluidityEventSupportsMultipleTransitions(unittest.TestCase):
@@ -38,6 +38,14 @@ class FluidityEventSupportsMultipleTransitions(unittest.TestCase):
         request.analyze(accepted=False)
         request.forward_analysis_result()
         request.current_state |should| equal_to('refused')
+
+    def test_it_raises_error_if_more_than_one_guard_passes(self):
+        request = LoanRequest()
+        request.analyze()
+        request.truify = True
+        request.forward_analysis_result |should| throw(
+            ForkedTransition, message="More than one transition was allowed for this event")
+
 
 
 if __name__ == '__main__':

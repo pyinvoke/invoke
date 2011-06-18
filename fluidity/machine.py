@@ -102,10 +102,15 @@ class StateMachine(object):
         return valid_transitions
 
     def _check_guards(self, transitions):
+        allowed_transitions = []
         for transition in transitions:
             if self._check_guard(transition.guard):
-                return transition
-        raise GuardNotSatisfied("Guard is not satisfied for this transition")
+                allowed_transitions.append(transition)
+        if len(allowed_transitions) == 0:
+            raise GuardNotSatisfied("Guard is not satisfied for this transition")
+        elif len(allowed_transitions) > 1:
+            raise ForkedTransition("More than one transition was allowed for this event")
+        return allowed_transitions[0]
 
     def _run_transition(self, transition, *args, **kwargs):
         self._handle_state_action(self.current_state, 'exit')
@@ -191,6 +196,10 @@ class InvalidTransition(Exception):
 
 
 class GuardNotSatisfied(Exception):
+    pass
+
+
+class ForkedTransition(Exception):
     pass
 
 
