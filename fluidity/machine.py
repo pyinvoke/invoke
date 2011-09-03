@@ -1,4 +1,5 @@
 import types
+from fluidity.backwardscompat import callable
 
 # metaclass implementation idea from
 # http://blog.ianbicking.org/more-on-python-metaprogramming-comment-14.html
