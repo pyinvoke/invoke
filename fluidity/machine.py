@@ -62,7 +62,7 @@ class StateMachine(StateMachineBase):
         self._states[name] = _State(name, enter, exit)
 
     def states(self):
-        return self.__class__._class_states.keys() + self._states.keys()
+        return list(self.__class__._class_states.keys()) + list(self._states.keys())
 
     @classmethod
     def _add_class_transition(cls, event, from_, to, action, guard):
