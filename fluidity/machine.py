@@ -29,9 +29,10 @@ class MetaStateMachine(type):
         return Machine
 
 
-class StateMachine(object):
+StateMachineBase = MetaStateMachine('StateMachineBase', (object, ), {})
 
-    __metaclass__ = MetaStateMachine
+
+class StateMachine(StateMachineBase):
 
     def __init__(self):
         self.__class__._validate_machine_definitions()
