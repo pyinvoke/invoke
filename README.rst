@@ -25,6 +25,8 @@ A very simple example taken from specs::
          transition(from_=['waiting', 'created'], event='cancel', to='canceled')
 
 
+"A slightly more complex example"
+---------------------------------
 
 For demonstrating more advanced capabilities, a "slightly more complex example" from `AASM <https://github.com/rubyist/aasm>`_, the Ruby's most popular state machine implementation, is reproduced below, using Fluidity::
 
