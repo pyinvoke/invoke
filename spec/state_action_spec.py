@@ -1,5 +1,4 @@
 import unittest
-import new
 from should_dsl import should, should_not
 from fluidity import StateMachine, state, transition
 
@@ -69,10 +68,10 @@ class FluidityAction(unittest.TestCase):
         def pre_wait_expectation(_self):
             _self.count += 1
             _self.count |should| be(2)
-        machine.post_create_expectation = new.instancemethod(
-              post_create_expectation, machine, ActionMachine)
-        machine.pre_wait_expectation = new.instancemethod(
-              pre_wait_expectation, machine, ActionMachine)
+        machine.post_create_expectation = \
+            post_create_expectation.__get__(machine, ActionMachine)
+        machine.pre_wait_expectation = \
+              pre_wait_expectation.__get__(machine, ActionMachine)
         machine.queue()
 
     def test_it_runs_enter_action_for_initial_state_at_creation(self):
