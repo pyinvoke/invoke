@@ -53,6 +53,51 @@ For demonstrating more advanced capabilities, a "slightly more complex example" 
         def buy_exotic_car_and_buy_a_combover(self): pass
 
 
+States
+------
+
+A Fluidity state machine must have one initial state and at least two states.
+
+A state may have enter and exit callbacks, for running some code on state enter
+and exit, respectively. These params can be method names (as strings),
+callables, or arrays of method names or callables.
+
+
+Transitions
+-----------
+
+Transitions lead the machine from a state to another. Transitions must have
+"from\_", "to", and "action" parameters. "from\_" is one or more (as array) states
+from which the transition can be started. "to" is the state to which the
+transition will lead the machine. "event" is the method that have to be called
+to launch the transition. This method is automatically created by the Fluidity
+engine.
+
+A transition can have optional "action" and "guard" parameters. "action" is a
+method (or callable) that will be called when transition is launched. If
+parameters are passed to the event method, they are passed to the "action"
+method, if it accepts these parameters. "guard" is a method (or callable) that
+is called to allow or deny the transition, depending on the result of its
+execution. Both "action" and "guard" can be arrays.
+
+The same event can be in multiple transitions, going to different states, having
+their respective guards as selectors. For the transitions having the same event,
+only one guard should return a true value at a time.
+
+
+Individuation
+-------------
+
+States and transitions are defined in a class-wide mode. However, one can define
+states and transitions for individual objects. For example, having "door" as a
+state machine::
+
+    door.add_state('broken')
+    door.add_transition(from_='closed', event='crack', to='broken')
+
+
+These additions only affect the target object.
+
 
 How to install
 --------------
