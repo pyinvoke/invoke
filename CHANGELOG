@@ -1,4 +1,16 @@
- v0.1.0, 2011-05-11
+0.2.0, 2011-09-03
+
+* support to multiple entry and exit actions
+* support to transition actions (accepts multiple actions)
+* support to multiple guards
+* support to callables on all callbacks (entry, exit, action, guards)
+* support to define states and transactions for an individual object
+* support event parameters, passing them to the actions
+* support to one event to choose among multiple possible transitions, based on their guards
+* compatibility to python 2.4, 2.5, 2.6, 2.7, 3.1, and 3.2
+
+
+0.1.0, 2011-05-11
 
 Main features for this initial release:
 * definition of states, transitions and events
