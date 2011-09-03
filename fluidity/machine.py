@@ -1,4 +1,3 @@
-import types
 from fluidity.backwardscompat import callable
 
 # metaclass implementation idea from
@@ -75,7 +74,7 @@ class StateMachine(StateMachineBase):
         self._transitions.append(_Transition(event, from_, to, action, guard))
         this_event = self.__class__._generate_event(event)
         setattr(self, this_event.__name__,
-            types.MethodType(this_event, self, self.__class__))
+            this_event.__get__(self, self.__class__))
 
     @classmethod
     def _generate_event(cls, name):
