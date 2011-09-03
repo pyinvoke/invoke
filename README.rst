@@ -60,25 +60,25 @@ A Fluidity state machine must have one initial state and at least two states.
 
 A state may have enter and exit callbacks, for running some code on state enter
 and exit, respectively. These params can be method names (as strings),
-callables, or arrays of method names or callables.
+callables, or lists of method names or callables.
 
 
 Transitions
 -----------
 
 Transitions lead the machine from a state to another. Transitions must have
-"from\_", "to", and "action" parameters. "from\_" is one or more (as array) states
-from which the transition can be started. "to" is the state to which the
-transition will lead the machine. "event" is the method that have to be called
+*from\_*, *to*, and *action* parameters. *from\_* is one or more (as list) states
+from which the transition can be started. *to* is the state to which the
+transition will lead the machine. *event* is the method that have to be called
 to launch the transition. This method is automatically created by the Fluidity
 engine.
 
-A transition can have optional "action" and "guard" parameters. "action" is a
+A transition can have optional *action* and *guard* parameters. *action* is a
 method (or callable) that will be called when transition is launched. If
-parameters are passed to the event method, they are passed to the "action"
-method, if it accepts these parameters. "guard" is a method (or callable) that
+parameters are passed to the event method, they are passed to the *action*
+method, if it accepts these parameters. *guard* is a method (or callable) that
 is called to allow or deny the transition, depending on the result of its
-execution. Both "action" and "guard" can be arrays.
+execution. Both "action" and *guard* can be lists.
 
 The same event can be in multiple transitions, going to different states, having
 their respective guards as selectors. For the transitions having the same event,
