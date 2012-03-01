@@ -16,7 +16,7 @@ To find out what's new in this version of Invoke, please see `the changelog
 <http://docs.pyinvoke.org/en/%s/changelog.html>`_.
 
 %s
-""" % (v, open('README').read())
+""" % (v, open('README.rst').read())
 
 setup(
     name='invoke',
