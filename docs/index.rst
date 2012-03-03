@@ -17,12 +17,10 @@ Features
     * Captures & prints output
     * Allows interaction
 
-* Namespaces
-    * Module-based
-    * Class-based
+* Nested namespaces/collections, defined as packages, modules or classes
 * (Per-namespace) default tasks
+* Task aliases
 * Before/after hooks
-* Aliases
 * Color support
 * Logging integration
 * Execute multiple instances of a task in parallel
@@ -35,3 +33,12 @@ Installation
 Invoke is best installed via `pip <http://pip-installer.org>`_::
 
     $ pip install invoke
+
+
+Concepts
+========
+
+.. toctree::
+    :glob:
+
+    concepts/*
