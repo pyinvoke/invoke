@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+import sys
+
 # Support setuptools or distutils
 try:
     from setuptools import setup
@@ -18,6 +20,10 @@ To find out what's new in this version of Invoke, please see `the changelog
 %s
 """ % (v, open('README.rst').read())
 
+requirements = []
+if sys.version_info[:2] == (2, 6):
+    requirements.append("argparse>=1.2.1")
+
 setup(
     name='invoke',
     version=v,
@@ -29,6 +35,7 @@ setup(
     author_email='jeff@bitprophet.org',
     url='http://pyinvoke.org',
 
+    install_requires=requirements,
     packages=["invoke"],
     entry_points={
         'console_scripts': [
