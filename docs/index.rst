@@ -18,11 +18,14 @@ Features
     * Allows interaction
 
 * Namespaces
+    * Module-based
+    * Class-based
+* (Per-namespace) default tasks
 * Before/after hooks
 * Aliases
-* (Per-namespace-level) default tasks
 * Color support
 * Logging integration
+* Execute multiple instances of a task in parallel
 * First-class library support
 
 
