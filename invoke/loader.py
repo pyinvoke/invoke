@@ -3,7 +3,14 @@ import sys
 
 
 class Loader(object):
-    pass
+    def __init__(self, collections=None, root=None):
+        """
+        Stores given ``collections`` list and/or ``root`` path string.
+
+        If either is ``None``, appropriate default values will be substituted.
+        """
+        self.collections = collections or ['tasks']
+        self.root = root or os.getcwd()
 
 
 class ModuleImporter(object):
@@ -11,7 +18,7 @@ class ModuleImporter(object):
         self.parent_directory = os.path.dirname(os.path.abspath(path))
         self.module_name = os.path.splitext(os.path.basename(path))[0]
 
-    def lol(self):
+    def load(self):
         """
         Import ``path`` as a Python module and create a Collection from it.
         """
