@@ -3,13 +3,10 @@ import os
 from spec import Spec, skip, eq_
 
 from invoke.loader import Loader
+from invoke.collection import Collection
 
 
 class Loader_(Spec):
-    def exposes_requested_collection_names(self):
-        names = ['web', 'deploy']
-        eq_(Loader(collections=names).collections, names)
-
     def exposes_discovery_root(self):
         root = '/tmp/'
         eq_(Loader(root=root).root, root)
@@ -17,12 +14,10 @@ class Loader_(Spec):
     def has_a_default_discovery_root(self):
         eq_(Loader().root, os.getcwd())
 
-    def has_a_default_name_list(self):
-        eq_(Loader().collections, ['tasks'])
-
     class load_collection:
         def returns_collection_object_if_name_found(self):
-            skip()
+            result = Loader(root='_support/').load_collection('foo')
+            eq_(type(result), Collection)
 
         def raises_CollectionNotFound_if_not_found(self):
             skip()

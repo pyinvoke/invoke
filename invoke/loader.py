@@ -3,14 +3,16 @@ import sys
 
 
 class Loader(object):
-    def __init__(self, collections=None, root=None):
+    def __init__(self, root=None):
         """
-        Stores given ``collections`` list and/or ``root`` path string.
+        Creates a loader object with search root directory of ``root``.
 
-        If either is ``None``, appropriate default values will be substituted.
+        If not given, ``root`` defaults to ``os.getcwd``.
         """
-        self.collections = collections or ['tasks']
         self.root = root or os.getcwd()
+
+    def load_collection(self, name):
+        pass
 
 
 class ModuleImporter(object):
