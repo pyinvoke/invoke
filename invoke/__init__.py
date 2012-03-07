@@ -27,7 +27,3 @@ def run(command):
         print stderr
         print "=================="
     return Result(stdout=stdout, stderr=stderr)
-
-
-def task(func):
-    return func

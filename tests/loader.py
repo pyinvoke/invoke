@@ -1,9 +1,10 @@
 import os
 
-from spec import Spec, skip, eq_
+from spec import Spec, skip, eq_, raises
 
 from invoke.loader import Loader
 from invoke.collection import Collection
+from invoke.exceptions import CollectionNotFound
 
 
 class Loader_(Spec):
@@ -19,13 +20,20 @@ class Loader_(Spec):
             result = Loader(root='_support/').load_collection('foo')
             eq_(type(result), Collection)
 
+        @raises(CollectionNotFound)
         def raises_CollectionNotFound_if_not_found(self):
-            skip()
+            Loader(root='_support').load_collection('nope')
 
         def raises_InvalidCollection_if_invalid(self):
             skip()
 
         def honors_discovery_root_option(self):
+            skip()
+
+        def only_adds_valid_task_objects(self):
+            skip()
+
+        def adds_valid_subcollection_objects(self):
             skip()
 
     class load:

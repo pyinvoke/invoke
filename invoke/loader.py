@@ -1,6 +1,9 @@
 import os
 import sys
 
+from collection import Collection
+from exceptions import CollectionNotFound
+
 
 class Loader(object):
     def __init__(self, root=None):
@@ -12,19 +15,24 @@ class Loader(object):
         self.root = root or os.getcwd()
 
     def load_collection(self, name):
-        pass
-
-
-class ModuleImporter(object):
-    def __init__(self, path):
-        self.parent_directory = os.path.dirname(os.path.abspath(path))
-        self.module_name = os.path.splitext(os.path.basename(path))[0]
-
-    def load(self):
-        """
-        Import ``path`` as a Python module and create a Collection from it.
-        """
+        c = Collection()
+        parent = os.path.abspath(self.root)
+        # If we want to auto-strip .py:
+        # os.path.splitext(os.path.basename(name))[0]
         # TODO: copy over rest of path munging from fabric.main
-        if self.parent_directory not in sys.path:
-            sys.path.insert(0, self.parent_directory)
-        return __import__(self.module_name)
+        if parent not in sys.path:
+            sys.path.insert(0, parent)
+        try:
+            module = __import__(name)
+            candidates = filter(
+                lambda x: getattr(x[1], 'is_invoke_task', False),
+                vars(module).items()
+            )
+            if not candidates:
+                # Recurse downwards towards FS
+                pass
+            for name, task in candidates:
+                c.add_task(name, task)
+            return c
+        except ImportError, e:
+            raise CollectionNotFound(name=name, root=self.root, error=e)

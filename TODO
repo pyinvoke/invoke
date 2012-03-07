@@ -1,4 +1,9 @@
-In no particular order.
+Specific things to improve:
+
+* Loader.load_collection should get broken up into multiple smaller
+  methods.
+
+Big questions:
 
 * How to go from subprocess.PIPE to something custom which is capable of
   middleware-type functionality (e.g. logging, mutating etc)?

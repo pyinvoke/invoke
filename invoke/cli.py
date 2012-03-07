@@ -17,7 +17,10 @@ def go(args):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--file', '-f')
+    # TODO: make it create a list, not a string
+    # TODO: default to ['tasks']
+    parser.add_argument('--collection', '-c')
+    # TODO: Take 1+ tasks
     parser.add_argument('task')
 
     args = parser.parse_args()
