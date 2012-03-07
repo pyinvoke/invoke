@@ -6,8 +6,7 @@ from invoke.loader import Loader
 from invoke.collection import Collection
 from invoke.exceptions import CollectionNotFound
 
-
-support = os.path.join(os.path.dirname(__file__), '_support')
+from _utils import support
 
 
 class Loader_(Spec):
