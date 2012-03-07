@@ -50,4 +50,5 @@ class Collection_(Spec):
             skip()
 
         def is_aliased_to_dunder_getitem(self):
+            "is aliased to __getitem__"
             skip()
