@@ -12,5 +12,5 @@ class Integration(object):
     # Yo dogfood, I heard you like invoking
     def basic_invocation(self):
         os.chdir(support)
-        result = run("invoke -f integration.py print_foo")
+        result = run("invoke -c integration print_foo")
         eq_(result.stdout, "foo\n")

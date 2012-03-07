@@ -1,4 +1,5 @@
-from invoke import run, task
+from invoke import run
+from invoke.task import task
 
 
 @task
