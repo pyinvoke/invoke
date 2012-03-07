@@ -7,6 +7,9 @@ from invoke.collection import Collection
 from invoke.exceptions import CollectionNotFound
 
 
+support = os.path.join(os.path.dirname(__file__), '_support')
+
+
 class Loader_(Spec):
     def exposes_discovery_root(self):
         root = '/tmp/'
@@ -17,12 +20,12 @@ class Loader_(Spec):
 
     class load_collection:
         def returns_collection_object_if_name_found(self):
-            result = Loader(root='_support/').load_collection('foo')
+            result = Loader(root=support).load_collection('foo')
             eq_(type(result), Collection)
 
         @raises(CollectionNotFound)
         def raises_CollectionNotFound_if_not_found(self):
-            Loader(root='_support').load_collection('nope')
+            Loader(root=support).load_collection('nope')
 
         def raises_InvalidCollection_if_invalid(self):
             skip()
