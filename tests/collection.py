@@ -8,6 +8,20 @@ def _mytask():
 
 
 class Collection_(Spec):
+    class add_alias:
+        def allows_task_to_be_called_by_another_name(self):
+            c = Collection()
+            c.add_task('foo', _mytask)
+            c.add_alias(from_='bar', to='foo')
+            eq_(c.get('bar'), _mytask)
+
+        def allows_recursion(self):
+            c = Collection()
+            c.add_task('foo', _mytask)
+            c.add_alias(from_='bar', to='foo')
+            c.add_alias(from_='biz', to='bar')
+            eq_(c.get('biz'), _mytask)
+
     class add_task:
         def associates_given_callable_with_given_name(self):
             c = Collection()
@@ -15,7 +29,15 @@ class Collection_(Spec):
             eq_(c.get('foo'), _mytask)
 
         def allows_specifying_aliases(self):
-            skip()
+            c = Collection()
+            c.add_task('foo', _mytask, aliases=('bar',))
+            eq_(c.get('bar'), _mytask)
+
+        def allows_specifying_multiple_aliases(self):
+            c = Collection()
+            c.add_task('foo', _mytask, aliases=('bar', 'biz'))
+            eq_(c.get('bar'), _mytask)
+            eq_(c.get('biz'), _mytask)
 
         def allows_flagging_as_default(self):
             skip()
