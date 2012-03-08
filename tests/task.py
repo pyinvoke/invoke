@@ -18,3 +18,9 @@ class task_(Spec):
         dummy = _Dummy()
         assert hasattr(task(dummy), 'is_invoke_task')
         assert getattr(task(dummy), 'is_invoke_task') is True
+
+    def allows_alias_specification(self):
+        dummy = _Dummy()
+
+    def has_aliases_argument(self):
+        skip()

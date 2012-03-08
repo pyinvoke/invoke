@@ -3,6 +3,18 @@ Specific things to improve:
 * Loader.load_collection should get broken up into multiple smaller
   methods.
 
+API design questions:
+
+* How to handle 1-to-N things like task aliases?
+    * Single iterable argument only, eg @task(aliases=('foo', 'bar'))
+        * Plus: simple implementation, simple API
+        * Minus: requires users to do more work in base case of one alias
+    * Singular and plural forms coexisting, e.g. alias='foo' AND
+      aliases=('foo', 'bar')
+        * Plus: Base case is now handled
+        * Minus: complicates implementation, API, adds concerns like "what
+          happens if both are given?"
+
 Big questions:
 
 * How to go from subprocess.PIPE to something custom which is capable of
