@@ -60,7 +60,9 @@ class Collection_(Spec):
             skip()
 
         def honors_aliases_in_own_tasks(self):
-            skip()
+            c = Collection()
+            c.add_task('foo', _mytask, aliases=('bar',))
+            eq_(c.get('bar'), _mytask)
 
         def honors_subcollection_aliases(self):
             skip()

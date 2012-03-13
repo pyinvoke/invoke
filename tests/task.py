@@ -20,3 +20,6 @@ class task_(Spec):
     def allows_alias_specification(self):
         c = Loader(root=support).load_collection('decorator')
         eq_(c.get('foo'), c.get('bar'))
+
+    def allows_default_specification(self):
+        skip()
