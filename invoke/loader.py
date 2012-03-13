@@ -1,8 +1,9 @@
 import os
 import sys
 
-from collection import Collection
-from exceptions import CollectionNotFound
+from .collection import Collection
+from .exceptions import CollectionNotFound
+from .task import Task
 
 
 class Loader(object):

@@ -1,6 +1,6 @@
 import argparse
 
-from invoke.loader import Loader
+from .loader import Loader
 
 
 def main():
