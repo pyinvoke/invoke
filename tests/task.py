@@ -1,6 +1,9 @@
 from spec import Spec, skip, eq_
 
 from invoke.task import task
+from invoke.loader import Loader
+
+from _utils import support
 
 
 class _Dummy(object):
@@ -10,17 +13,10 @@ class _Dummy(object):
 class task_(Spec):
     "@task"
 
-    def returns_original_object(self):
+    def allows_access_to_wrapped_object(self):
         dummy = _Dummy()
-        eq_(task(dummy), dummy)
-
-    def annotates_object_with_invoke_task_flag(self):
-        dummy = _Dummy()
-        assert hasattr(task(dummy), 'is_invoke_task')
-        assert getattr(task(dummy), 'is_invoke_task') is True
+        eq_(task(dummy).body, dummy)
 
     def allows_alias_specification(self):
-        dummy = _Dummy()
-
-    def has_aliases_argument(self):
-        skip()
+        c = Loader(root=support).load_collection('decorator')
+        eq_(c.get('foo'), c.get('bar'))

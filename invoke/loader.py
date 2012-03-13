@@ -26,14 +26,14 @@ class Loader(object):
         try:
             module = __import__(name)
             candidates = filter(
-                lambda x: getattr(x[1], 'is_invoke_task', False),
+                lambda x: isinstance(x[1], Task),
                 vars(module).items()
             )
             if not candidates:
                 # Recurse downwards towards FS
                 pass
             for name, task in candidates:
-                c.add_task(name, task)
+                c.add_task(name, task.body, task.aliases)
             return c
         except ImportError, e:
             raise CollectionNotFound(name=name, root=self.root, error=e)
