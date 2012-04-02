@@ -14,3 +14,10 @@ class Integration(object):
         os.chdir(support)
         result = run("invoke -c integration print_foo")
         eq_(result.stdout, "foo\n")
+
+    def implicit_task_module(self):
+        # Contains tasks.py
+        os.chdir(support + '/implicit/')
+        # Doesn't specify --collection
+        result = run("invoke foo")
+        eq_(result.stdout, "Hm\n")

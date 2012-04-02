@@ -15,7 +15,15 @@ class Loader(object):
         """
         self.root = root or os.getcwd()
 
-    def load_collection(self, name):
+    def load_collection(self, name=None):
+        """
+        Load collection named ``name``.
+
+        If not given, looks for a ``"tasks"`` collection by default.
+        """
+        if name is None:
+            # TODO: make this configurable
+            name = 'tasks'
         c = Collection()
         parent = os.path.abspath(self.root)
         # If we want to auto-strip .py:

@@ -38,6 +38,11 @@ class Loader_(Spec):
         def adds_valid_subcollection_objects(self):
             skip()
 
+        def defaults_to_tasks_collection(self):
+            "defaults to 'tasks' collection"
+            result = Loader(root=support + '/implicit/').load_collection()
+            eq_(type(result), Collection)
+
     class load:
         def returns_nested_collection_from_all_given_names(self):
             skip()
