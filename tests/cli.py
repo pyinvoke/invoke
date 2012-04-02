@@ -8,7 +8,9 @@ from _utils import support
 
 
 # Yea, it's not really object-oriented, but whatever :)
-class Integration(object):
+class CLI(object):
+    "Command-line interface"
+
     # Yo dogfood, I heard you like invoking
     def basic_invocation(self):
         os.chdir(support)
