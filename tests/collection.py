@@ -1,4 +1,4 @@
-from spec import Spec, skip, eq_
+from spec import Spec, skip, eq_, raises
 
 from invoke.collection import Collection
 
@@ -44,8 +44,11 @@ class Collection_(Spec):
             c.add_task('foo', _mytask, default=True)
             eq_(c.get(), _mytask)
 
+        @raises(ValueError)
         def raises_ValueError_on_multiple_defaults(self):
-            skip()
+            c = Collection()
+            c.add_task('foo', _mytask, default=True)
+            c.add_task('bar', _mytask, default=True)
 
     class add_collection:
         def adds_collection_as_subcollection_of_self(self):
