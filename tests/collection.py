@@ -40,7 +40,9 @@ class Collection_(Spec):
             eq_(c.get('biz'), _mytask)
 
         def allows_flagging_as_default(self):
-            skip()
+            c = Collection()
+            c.add_task('foo', _mytask, default=True)
+            eq_(c.get(), _mytask)
 
         def raises_ValueError_on_multiple_defaults(self):
             skip()
@@ -67,7 +69,7 @@ class Collection_(Spec):
         def honors_subcollection_aliases(self):
             skip()
 
-        def honors_own_default_task_on_empty_string(self):
+        def honors_own_default_task_with_no_args(self):
             skip()
 
         def honors_subcollection_default_tasks_on_subcollection_name(self):
