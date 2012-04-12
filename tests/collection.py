@@ -73,7 +73,9 @@ class Collection_(Spec):
             skip()
 
         def honors_own_default_task_with_no_args(self):
-            skip()
+            c = Collection()
+            c.add_task('foo', _mytask, default=True)
+            eq_(c.get(), _mytask)
 
         def honors_subcollection_default_tasks_on_subcollection_name(self):
             skip()
