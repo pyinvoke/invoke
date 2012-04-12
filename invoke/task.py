@@ -25,6 +25,9 @@ def task(*args, **kwargs):
         return obj
     # @task(options)
     def inner(obj):
-        obj = Task(obj, aliases=kwargs.get('aliases', ()))
+        obj = Task(
+            obj,
+            aliases=kwargs.get('aliases', ()),
+        )
         return obj
     return inner

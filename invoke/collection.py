@@ -17,10 +17,11 @@ class Collection(object):
         self.tasks[name] = task
         for alias in aliases:
             self.add_alias(from_=alias, to=name)
-        if self.default:
-            msg = "'%s' cannot be the default because '%s' already is!"
-            raise ValueError(msg % (name, self.default))
-        self.default = name
+        if default:
+            if self.default:
+                msg = "'%s' cannot be the default because '%s' already is!"
+                raise ValueError(msg % (name, self.default))
+            self.default = name
 
     def add_alias(self, from_, to):
         """
