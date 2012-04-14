@@ -1,7 +1,8 @@
 class Task(object):
-    def __init__(self, body, aliases=()):
+    def __init__(self, body, aliases=(), default=False):
         self.body = body
         self.aliases = aliases
+        self.is_default = default
 
 
 def task(*args, **kwargs):
@@ -17,6 +18,9 @@ def task(*args, **kwargs):
       with a simple ``@task`` wrapper may only be invoked as ``"mytask"``.
       Changing the decorator to be ``@task(aliases=['myothertask'])`` allows
       invocation as ``"mytask"`` *or* ``"myothertask"``.
+    * ``default``: Boolean option specifying whether this task should be its
+      collection's default task (i.e. called if the collection's own name is
+      given.)
     """
     # @task -- no options
     if len(args) == 1:
@@ -28,6 +32,7 @@ def task(*args, **kwargs):
         obj = Task(
             obj,
             aliases=kwargs.get('aliases', ()),
+            default=kwargs.get('default', False)
         )
         return obj
     return inner

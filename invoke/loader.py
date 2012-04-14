@@ -41,7 +41,12 @@ class Loader(object):
                 # Recurse downwards towards FS
                 pass
             for name, task in candidates:
-                c.add_task(name, task.body, task.aliases)
+                c.add_task(
+                    name=name,
+                    task=task.body,
+                    aliases=task.aliases,
+                    default=task.is_default
+                )
             return c
         except ImportError, e:
             raise CollectionNotFound(name=name, root=self.root, error=e)
