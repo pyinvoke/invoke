@@ -2,49 +2,95 @@
 CLI invocation
 ==============
 
+Introduction
+============
+
 Invoke's command line invocation utilizes traditional style command-line flags
-and task name arguments. Some examples before we dive into the dry details:
+and task name arguments, subject to the following rules:
 
-* Empty invocation: ``invoke``. This will print out help information.
-* Explicit help: ``invoke -h``, ``invoke --help``. Same as above.
-* Listing available tasks: ``invoke --list``. Prints out a task list but takes
-  no other action.
-* Other "core" options: ``invoke -c mytasks -c myothertasks --list``. Alters or
-  parameterizes core behavior, in this case loading non-default task
-  collections, which alters what gets listed.
-* Basic task invocation: ``invoke mytaskname``. Just calls any top level task
-  named ``mytaskname``.
-* Task arguments: ``invoke build --format=html``, ``invoke build --format
-  html``, ``invoke build -f pdf``.  Calls ``build`` with its ``format``
-  argument set to the value ``"html"``.  Note that arguments may have
-  alternative shorthand, and that the equals sign is optional in the longhand
-  format (but is not allowed at all in the shorthand.)
-* Task boolean arguments (flags): ``invoke build --clean --browse``. Calls
-  ``build`` with its ``clean`` and ``browse`` arguments set to ``True``.
-* Mixing core and task options/arguments, no overlap: ``invoke -c buildtasks
-  build --format=html``.
+* Core options modifying Invoke's own behavior must come first, before any task
+  names.
+* Task names are specified as simple string arguments.
+* Tasks may be parameterized by specifying flags following the task name.
+* Multiple tasks may be given (in the order to be executed).
 
-Open questions
+Some examples will make this clear.
+
+
+Basic invocation & core options
+===============================
+
+The most basic form is just Invoke by
+itself, which behaves the same as ``-h``/``--help``::
+
+    $ invoke
+    Usage: invoke [core options] [task [task-options], ...]
+    ...
+
+ Core options with no tasks can either cause administrative actions, like
+ listing available tasks::
+
+    $ invoke --list
+    Available tasks:
+
+        foo
+        bar
+        ...
+
+Or they can modify behavior, such as overriding the default task collections
+searched for::
+
+    $ invoke --collection mytasks --list
+    Available tasks:
+
+        mytask
+        ...
+
+
+Tasks and task options
+======================
+
+The simplest task invocation, for a task requiring no parameterization::
+
+    $ invoke mytask
+
+Tasks may take parameters in the form of flag arguments::
+
+    $ invoke build --format=html
+    $ invoke build --format html
+    $ invoke build -f pdf
+    $ invoke build -f=pdf
+
+Note that both long and short style flags are supported, and that equals signs
+are optional.
+
+Boolean options are simple flags with no arguments, which turn the Python level
+values from ``False`` to ``True``::
+
+    $ invoke build --progress-bar
+
+
+Multiple tasks
 ==============
 
-* Should users be allowed to repurpose "core" flags for use as task arguments,
-  or should e.g. ``-c``/``--collection`` become "reserved"? In other words, in
-  ``invoke mytask -c foo``, should ``-c foo`` be used as an argument to
-  ``mytask`` (overriding the core ``-c``/``--collection`` flag) or should it
-  always go to the core Invoke program, and the creator of ``mytask`` would
-  have to come up with some other flag to use besides ``-c``?
+More than one task may be given at the same time, and they will be executed in
+order. When a new task is encountered, option processing for the previous task
+stops, so there is no ambiguity about which option/flag belongs to which task.
+For example, this invocation specifies two tasks, ``clean`` and ``build``, both
+parameterized::
 
-  * Allowing re-use requires 100% strict ordering (core options **must** come
-    before any tasks/task options) vs a more GNU style "you can put core
-    options anywhere".
-  * But if we don't allow reuse then users have to pay attention to a list of
-    things they can't use, which is especially problematic for the shorthand
-    options like ``-c``.
-  * Using "reserved" core options also presents a backward compatibility
-    barrier: can't add new core options easily without potentially screwing
-    people over.
-  * The "reserved" option might still make sense if the number of core options
-    is always small. However, for client libraries like Fabric, which have a
-    lot of flags, the problem gets worse.
-  * Comedy option: pass the value to both the core option and the task. I
-    think this is ugly/dirty/confusing.
+    $ invoke clean -t all build -f pdf
+
+Another example with no parameterizing::
+
+    $ invoke clean build
+
+
+Mixing things up
+================
+
+Core options are similar to task options, in that they must be specified before any
+tasks are given. This invoke says to load the ``mytasks`` collection and call
+that collection's ``foo`` task::
+
+    $ invoke --collection mytasks foo --foo-args
