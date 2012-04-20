@@ -35,6 +35,15 @@ Invoke is best installed via `pip <http://pip-installer.org>`_::
     $ pip install invoke
 
 
+Documentation
+=============
+
+.. toctree::
+    :glob:
+
+    *
+
+
 Concepts
 ========
 
