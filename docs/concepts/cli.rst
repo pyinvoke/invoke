@@ -40,3 +40,5 @@ Open questions
   * But if we don't allow reuse then users have to pay attention to a list of
     things they can't use, which is especially problematic for the shorthand
     options like ``-c``.
+  * Comedy option: pass the value to both the core option and the task. I
+    think this is ugly/dirty/confusing.
