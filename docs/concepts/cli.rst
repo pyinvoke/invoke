@@ -40,5 +40,11 @@ Open questions
   * But if we don't allow reuse then users have to pay attention to a list of
     things they can't use, which is especially problematic for the shorthand
     options like ``-c``.
+  * Using "reserved" core options also presents a backward compatibility
+    barrier: can't add new core options easily without potentially screwing
+    people over.
+  * The "reserved" option might still make sense if the number of core options
+    is always small. However, for client libraries like Fabric, which have a
+    lot of flags, the problem gets worse.
   * Comedy option: pass the value to both the core option and the task. I
     think this is ugly/dirty/confusing.
