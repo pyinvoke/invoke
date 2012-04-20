@@ -28,7 +28,12 @@ Open questions
 ==============
 
 * Should users be allowed to repurpose "core" flags for use as task arguments,
-  or should e.g. ``-c``/``--collection`` become "reserved"?
+  or should e.g. ``-c``/``--collection`` become "reserved"? In other words, in
+  ``invoke mytask -c foo``, should ``-c foo`` be used as an argument to
+  ``mytask`` (overriding the core ``-c``/``--collection`` flag) or should it
+  always go to the core Invoke program, and the creator of ``mytask`` would
+  have to come up with some other flag to use besides ``-c``?
+
   * Allowing re-use requires 100% strict ordering (core options **must** come
     before any tasks/task options) vs a more GNU style "you can put core
     options anywhere".
