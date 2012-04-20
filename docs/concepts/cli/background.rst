@@ -49,7 +49,7 @@ The multiple tasks vs positional args problem
 This is the meat. Invoke really wanted to have multiple tasks in the spirit of
 Fabric 1.x, which supported invocations like::
 
-    $ fab task1:args, task2:args
+    $ fab task1:arg1,arg2=val2 task2:args
 
 though we didn't want to continue using that specific invoke style. Instead we
 wanted something that looked like this::
