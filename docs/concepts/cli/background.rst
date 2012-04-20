@@ -96,9 +96,9 @@ arguments, each with pluses/minuses:
 
 * Give the parser deep knowledge of the flags involved so that when it
   encounters ``--flag value task`` it knows that ``--flag`` is supposed to have
-  a value after it. This can be done 100% explicitly, as with ``argparse``, or
-  can be inferred from the task definition. We can't hand off any work to
-  ``argparse``, though, as we must do all parsing ourselves.
+  a value after it. This can be done explicitly (as with ``argparse``) or can
+  be inferred from the task definition. We can't hand off any work to an
+  existing parser lib, though, as we must do all parsing ourselves.
 * Add special syntax to denote task names, e.g.::
 
     $ invoke --global-opts task1: --kwarg value task2: --task2-opts
