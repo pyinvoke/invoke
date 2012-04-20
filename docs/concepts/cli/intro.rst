@@ -77,3 +77,13 @@ tasks are given. This invoke says to load the ``mytasks`` collection and call
 that collection's ``foo`` task::
 
     $ invoke --collection mytasks foo --foo-args
+
+More
+====
+
+**TO COME:** detailed spec, once we've written a POC implementation (very
+soon!) Will probably live in its own document and linked at the end of this
+one. (This is a "tutorial" for CLI invocations, the spec would be more of an
+"API". The actual in-Python level API might be a third document, not sure yet.)
+
+**SEE ALSO:** :doc:`type_mapping` for thoughts on variable type operations.

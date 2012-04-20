@@ -3,7 +3,10 @@ Type mapping
 ============
 
 Some loose thoughts on bridging the "shell is strings, Python wants
-lists/dicts/integers/bools/etc" problem. Methodologies available:
+lists/dicts/integers/bools/etc" problem.
+
+Methodologies
+=============
 
 * Explicit mapping, as with ``argparse``: this particular flag turns into a
   list/boolean/int/whatever. Because we're specifically mapping to function
@@ -40,6 +43,17 @@ lists/dicts/integers/bools/etc" problem. Methodologies available:
   would on the Python end turn into a call like this::
 
     mytask(items=['a', 'b', 'c'])
+
+What to do?
+-----------
+
+We haven't decided exactly how many of these to use -- we may end up using all
+three of them as appropriate, with some useful/sensible default and the option
+to enable/disable things for power users. The trick is to balance
+power/features with becoming overly complicated to understand or utilize.
+
+Other types
+===========
 
 Those examples cover integers/numbers, and lists/iterables. Strings are
 obviously easy/the default. What else is there?
