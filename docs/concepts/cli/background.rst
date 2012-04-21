@@ -99,6 +99,10 @@ arguments, each with pluses/minuses:
   a value after it. This can be done explicitly (as with ``argparse``) or can
   be inferred from the task definition. We can't hand off any work to an
   existing parser lib, though, as we must do all parsing ourselves.
+* Force users to avoid using spaces between flags and their arguments, i.e.
+  always doing ``--flag=value`` or ``-fvalue``. This makes tasks unambiguous,
+  at the cost of cutting out a very common technique in other CLI tools' flag
+  styles. (Because of that, we're almost definitely not doing this.)
 * Add special syntax to denote task names, e.g.::
 
     $ invoke --global-opts task1: --kwarg value task2: --task2-opts
