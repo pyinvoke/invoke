@@ -96,13 +96,25 @@ arguments, each with pluses/minuses:
 
 * Give the parser deep knowledge of the flags involved so that when it
   encounters ``--flag value task`` it knows that ``--flag`` is supposed to have
-  a value after it. This can be done explicitly (as with ``argparse``) or can
-  be inferred from the task definition. We can't hand off any work to an
-  existing parser lib, though, as we must do all parsing ourselves.
+  a value after it. This can be done explicitly (think ``argparse`` style
+  argument definitions) or can be inferred from the task definition.
+  
+    * Unfortunately, we can't use ``argparse`` or ``optparse`` to do this as
+      they are unable to cope with various potential edge cases that arise in a
+      multi-task situation.
+      
+    * For example, while ``optparse`` is capable of being told to stop at the
+      first unknown positional arg (in our case, the next task name) and could
+      be used in a loop, it still thinks about the flags it encounters
+      globally. Two tasks using the same keyword argument name would make
+      setting up an ``optparse`` parser impossible. Requiring globally unique
+      kwarg names would solve this, but is too user-hostile.
+
 * Force users to avoid using spaces between flags and their arguments, i.e.
   always doing ``--flag=value`` or ``-fvalue``. This makes tasks unambiguous,
   at the cost of cutting out a very common technique in other CLI tools' flag
-  styles. (Because of that, we're almost definitely not doing this.)
+  styles. This is also unacceptable as it falls into the trap of looking very
+  similar to, but not behaving like, regular flags.
 * Add special syntax to denote task names, e.g.::
 
     $ invoke --global-opts task1: --kwarg value task2: --task2-opts
