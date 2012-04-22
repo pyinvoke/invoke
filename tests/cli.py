@@ -60,10 +60,14 @@ class CLI(object):
         cmd = "task1 -f mytask mytask"
         skip()
 
-    def complex_multitask_invocation(self):
-        cmd = "-c integration task1 --bool_arg --val_arg=value task2 --val_arg othervalue"
-        skip()
-
     def three_tasks_with_args(self):
         cmd = "task1 --task1_bool task2 --task2_arg task2_arg_value task3"
+        skip()
+
+    def tasks_with_duplicately_named_kwargs(self):
+        cmd = "task1 --myarg=value task2 --myarg=othervalue"
+        skip()
+
+    def complex_multitask_invocation(self):
+        cmd = "-c integration task1 --bool_arg --val_arg=value task2 --val_arg othervalue -b"
         skip()
