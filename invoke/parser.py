@@ -1,0 +1,2 @@
+class Parser(object):
+    pass

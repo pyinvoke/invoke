@@ -1,6 +1,6 @@
 import os
 
-from spec import eq_, skip
+from spec import eq_, skip, Spec
 
 from invoke import run
 
@@ -8,7 +8,7 @@ from _utils import support
 
 
 # Yea, it's not really object-oriented, but whatever :)
-class CLI(object):
+class CLI(Spec):
     "Command-line interface"
 
     # Yo dogfood, I heard you like invoking
