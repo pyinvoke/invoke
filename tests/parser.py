@@ -33,18 +33,16 @@ class Parser_(Spec):
 
 
 class Argument_(Spec):
-    def may_have_long_name(self):
-        skip()
+    def may_have_multiple_names(self):
+        '-f' in Argument(names=('--foo', '-f', '-F')).names
 
-    def may_have_short_name(self):
-        skip()
-
+    @raises(TypeError)
     def must_have_at_least_one_name(self):
-        skip()
+        Argument(names=())
 
     class answers_to:
         def returns_True_if_given_name_matches(self):
-            skip()
+            ok_(Argument(names=('--foo',)).answers_to('--foo'))
 
     class coerce:
         def transforms_string_value_to_Python_object(self):
@@ -55,14 +53,14 @@ class Context_(Spec):
     class add_arg:
         def can_take_Argument_instance(self):
             c = Context()
-            a = Argument(long_name='foo')
+            a = Argument(names=('foo',))
             c.add_arg(a)
             eq_(c.get_arg('foo'), a)
 
         def can_take_kwargs(self):
             c = Context()
-            c.add_arg(long_name='foo')
-            eq_(c.get_arg('foo').long_name, 'foo')
+            c.add_arg(names=('foo',))
+            ok_('foo' in c.get_arg('foo').names)
 
         def raises_some_Exception_on_duplicate(self):
             skip()
@@ -70,11 +68,11 @@ class Context_(Spec):
     class has_arg:
         def returns_True_if_flag_is_valid_arg(self):
             c = Context()
-            c.add_arg(Argument(long_name='foo'))
+            c.add_arg(Argument(names=('foo',)))
             eq_(c.has_arg('foo'), True)
 
     class needs_value:
         def returns_whether_given_flag_needs_a_value(self):
             c = Context()
-            c.add_arg(Argument(long_name='foo', needs_value=True))
+            c.add_arg(Argument(names=('foo',), needs_value=True))
             eq_(c.needs_value('foo'), True)

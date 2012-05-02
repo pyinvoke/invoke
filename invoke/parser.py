@@ -2,13 +2,14 @@ import re
 
 
 class Argument(object):
-    def __init__(self, long_name=None, short_name=None, needs_value=False):
-        self.long_name = long_name
-        self.short_name = short_name
+    def __init__(self, names=(), needs_value=False):
+        self.names = names
+        if not names:
+            raise TypeError("An Argument must have at least one name.")
         self.needs_value = needs_value
 
-    def answers_to(self, arg):
-        return arg in (self.long_name, self.short_name)
+    def answers_to(self, name):
+        return name in self.names
 
 
 class Context(object):
