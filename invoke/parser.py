@@ -34,10 +34,17 @@ class Context(object):
         """
         Adds given ``Argument`` (or constructor args for one) to this context.
         """
+        # Normalize
         if len(args) == 1 and isinstance(args[0], Argument):
-            self.args.append(args[0])
+            arg = args[0]
         else:
-            self.args.append(Argument(*args, **kwargs))
+            arg = Argument(*args, **kwargs)
+        # Test
+        for name in arg.names:
+            if self.has_arg(name):
+                raise ValueError("Tried to add an argument named %r but one already exists!" % name)
+        # Add
+        self.args.append(arg)
 
     def has_arg(self, arg):
         """

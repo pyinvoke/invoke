@@ -30,32 +30,3 @@ class Parser_(Spec):
         def returns_remainder(self):
             "returns -- style remainder string chunk"
             skip()
-
-
-class Context_(Spec):
-    class add_arg:
-        def can_take_Argument_instance(self):
-            c = Context()
-            a = Argument(names=('foo',))
-            c.add_arg(a)
-            eq_(c.get_arg('foo'), a)
-
-        def can_take_kwargs(self):
-            c = Context()
-            c.add_arg(names=('foo',))
-            ok_('foo' in c.get_arg('foo').names)
-
-        def raises_some_Exception_on_duplicate(self):
-            skip()
-
-    class has_arg:
-        def returns_True_if_flag_is_valid_arg(self):
-            c = Context()
-            c.add_arg(Argument(names=('foo',)))
-            eq_(c.has_arg('foo'), True)
-
-    class needs_value:
-        def returns_whether_given_flag_needs_a_value(self):
-            c = Context()
-            c.add_arg(Argument(names=('foo',), needs_value=True))
-            eq_(c.needs_value('foo'), True)
