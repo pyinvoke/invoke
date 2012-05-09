@@ -27,6 +27,11 @@ class Argument_(Spec):
         def returns_True_if_given_name_matches(self):
             assert Argument(names=('--foo',)).answers_to('--foo')
 
+    class names:
+        def returns_tuple_of_all_names(self):
+            eq_(Argument(names=('--foo', '-b')).names, ('--foo', '-b'))
+            eq_(Argument(name='--foo').names, ('--foo',))
+
     class needs_value:
         def returns_True_if_this_argument_needs_a_value(self):
             assert Argument(name='-b', value=str).needs_value
