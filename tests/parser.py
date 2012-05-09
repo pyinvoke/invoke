@@ -32,23 +32,6 @@ class Parser_(Spec):
             skip()
 
 
-class Argument_(Spec):
-    def may_have_multiple_names(self):
-        '-f' in Argument(names=('--foo', '-f', '-F')).names
-
-    @raises(TypeError)
-    def must_have_at_least_one_name(self):
-        Argument(names=())
-
-    class answers_to:
-        def returns_True_if_given_name_matches(self):
-            ok_(Argument(names=('--foo',)).answers_to('--foo'))
-
-    class coerce:
-        def transforms_string_value_to_Python_object(self):
-            skip()
-
-
 class Context_(Spec):
     class add_arg:
         def can_take_Argument_instance(self):
