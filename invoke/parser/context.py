@@ -13,6 +13,9 @@ class Context(object):
     def __init__(self):
         self.args = []
 
+    def __str__(self):
+        return "Context: %r" % (self.args,)
+
     def add_arg(self, *args, **kwargs):
         """
         Adds given ``Argument`` (or constructor args for one) to this context.

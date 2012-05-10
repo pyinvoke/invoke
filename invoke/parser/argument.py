@@ -8,6 +8,10 @@ class Argument(object):
         self.names = names if names else (name,)
         self.value_factory = value
 
+    def __str__(self):
+        valfact = (" %r" % (self.value_factory)) if self.value_factory else ""
+        return "Arg: %r%s" % (self.names, valfact)
+
     def answers_to(self, name):
         return name in self.names
 
