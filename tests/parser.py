@@ -5,18 +5,16 @@ from invoke.collection import Collection
 
 
 class Parser_(Spec):
-    class init:
-        "__init__"
-        def requires_initial_context(self):
-            c = Context()
-            p = Parser(initial=c)
-            eq_(p.initial, c)
+    def requires_initial_context(self):
+        c = Context()
+        p = Parser(initial=c)
+        eq_(p.initial, c)
 
-        def may_also_take_additional_contexts(self):
-            c1 = Context()
-            c2 = Context()
-            p = Parser(initial=c1, contexts=[c2])
-            eq_(p.contexts[0], c2)
+    def may_also_take_additional_contexts(self):
+        c1 = Context()
+        c2 = Context()
+        p = Parser(initial=c1, contexts=[c2])
+        eq_(p.contexts[0], c2)
 
     class parse_argv:
         def parses_sys_argv_style_list_of_strings(self):
