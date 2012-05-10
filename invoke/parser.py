@@ -4,7 +4,8 @@ import re
 class Argument(object):
     def __init__(self, name=None, names=(), value=None):
         if name and names:
-            raise TypeError("Cannot give both 'name' and 'names' arguments! Pick one.")
+            msg = "Cannot give both 'name' and 'names' arguments! Pick one."
+            raise TypeError(msg)
         if not (name or names):
             raise TypeError("An Argument must have at least one name.")
         self.names = names if names else (name,)
@@ -42,7 +43,8 @@ class Context(object):
         # Test
         for name in arg.names:
             if self.has_arg(name):
-                raise ValueError("Tried to add an argument named %r but one already exists!" % name)
+                msg = "Tried to add an argument named %r but one already exists!"
+                raise ValueError(msg % name)
         # Add
         self.args.append(arg)
 

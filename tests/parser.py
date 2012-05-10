@@ -22,7 +22,8 @@ class Parser_(Spec):
         def parses_sys_argv_style_list_of_strings(self):
             "parses sys.argv-style list of strings"
             # Doesn't-blow-up tests FTL
-            Parser(initial=Context(), contexts=[Context()]).parse_argv(['mytask', '--arg'])
+            p = Parser(initial=Context(), contexts=[Context()])
+            p.parse_argv(['mytask', '--arg'])
 
         def returns_ordered_list_of_tasks_and_their_args(self):
             skip()
