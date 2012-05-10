@@ -16,11 +16,20 @@ class Parser_(Spec):
         p = Parser(initial=c1, contexts=[c2])
         eq_(p.contexts[0], c2)
 
+    class get_context(self):
+        def looks_up_context_by_name(self):
+            skip()
+
+        def honors_context_aliases(self):
+            skip()
+
     class parse_argv:
         def parses_sys_argv_style_list_of_strings(self):
             "parses sys.argv-style list of strings"
             # Doesn't-blow-up tests FTL
-            p = Parser(initial=Context(), contexts=[Context()])
+            mytask = Context()
+            mytask.add_arg(name='--arg')
+            p = Parser(initial=Context(), contexts=[mytask])
             p.parse_argv(['mytask', '--arg'])
 
         def returns_ordered_list_of_tasks_and_their_args(self):

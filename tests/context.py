@@ -4,6 +4,12 @@ from invoke.parser import Argument, Context
 
 
 class Context_(Spec):
+    def may_have_a_name(self):
+        skip()
+
+    def may_have_aliases(self):
+        skip()
+
     class add_arg:
         def can_take_Argument_instance(self):
             c = Context()
