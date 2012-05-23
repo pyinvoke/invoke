@@ -17,6 +17,11 @@ class Context_(Spec):
             c.add_arg(a)
             assert c.get_arg('foo') is a
 
+        def can_take_name_arg(self):
+            c = Context()
+            c.add_arg('foo')
+            assert c.get_arg('foo').answers_to('foo')
+
         def can_take_kwargs(self):
             c = Context()
             c.add_arg(names=('foo', 'bar'))

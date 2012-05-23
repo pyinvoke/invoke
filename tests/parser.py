@@ -5,7 +5,7 @@ from invoke.collection import Collection
 
 
 class Parser_(Spec):
-    def requires_initial_context(self):
+    def has_and_requires_initial_context(self):
         c = Context()
         p = Parser(initial=c)
         eq_(p.initial, c)
@@ -28,7 +28,7 @@ class Parser_(Spec):
             "parses sys.argv-style list of strings"
             # Doesn't-blow-up tests FTL
             mytask = Context()
-            mytask.add_arg(name='--arg')
+            mytask.add_arg('--arg')
             p = Parser(initial=Context(), contexts=[mytask])
             p.parse_argv(['mytask', '--arg'])
 
