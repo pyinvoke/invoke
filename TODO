@@ -21,3 +21,5 @@ Big questions:
   middleware-type functionality (e.g. logging, mutating etc)?
 * How to handle global settings without requiring all functionality to be
   method calls on an object?
+    * Require all functionality to be calls on an object, and allow users to
+      use an implicit module-global object as the default target?
