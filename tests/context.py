@@ -5,10 +5,12 @@ from invoke.parser import Argument, Context
 
 class Context_(Spec):
     def may_have_a_name(self):
-        skip()
+        c = Context(name='taskname')
+        eq_(c.name, 'taskname')
 
     def may_have_aliases(self):
-        skip()
+        c = Context(name='realname', aliases=('othername', 'yup'))
+        assert 'othername' in c.aliases
 
     class add_arg:
         def can_take_Argument_instance(self):

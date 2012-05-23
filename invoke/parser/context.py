@@ -10,11 +10,26 @@ class Context(object):
     When run through a parser, will also hold runtime values filled in by the
     parser.
     """
-    def __init__(self):
+    def __init__(self, name=None, aliases=()):
+        """
+        Create a new ``Context`` named ``name``, with ``aliases``.
+
+        ``name`` is optional, and should be a string if given. It's used to
+        tell Context objects apart, and for use in a Parser when determining
+        what chunk of input might belong to a given Context.
+
+        ``aliases`` is also optional and should be an iterable containing
+        strings. Parsing will honor any aliases when trying to "find" a given
+        context in its input.
+        """
         self.args = []
+        self.name = name
+        self.aliases = aliases
 
     def __str__(self):
-        return "Context: %r" % (self.args,)
+        aliases = (" (%s)" % ', '.join(self.aliases)) if self.aliases else ""
+        name = (" %s%s" % (self.name, aliases)) if self.name else ""
+        return "Context%s: %r" % (name, self.args)
 
     def add_arg(self, *args, **kwargs):
         """
