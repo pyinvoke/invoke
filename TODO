@@ -1,3 +1,7 @@
+Next up:
+
+* Keep hammering on parser.parse_argv now that contexts is a Lexicon
+
 Specific things to improve:
 
 * Loader.load_collection should get broken up into multiple smaller

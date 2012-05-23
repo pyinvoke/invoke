@@ -1,3 +1,5 @@
+from lexicon import Lexicon
+
 from .context import Context
 from .argument import Argument # Mostly for importing via invoke.parser.<x>
 from ..util import debug
@@ -5,9 +7,15 @@ from ..util import debug
 
 class Parser(object):
     def __init__(self, initial, contexts=()):
-        # TODO: what should contexts be? name-based dict?
         self.initial = initial
-        self.contexts = contexts
+        self.contexts = Lexicon()
+        for context in contexts:
+            debug("Adding context %s" % context)
+            if not context.name:
+                raise ValueError("Non-initial contexts must have names.")
+            self.contexts[context.name] = context
+            for alias in context.aliases:
+                self.contexts.alias(alias, to=context.name)
 
     def parse_argv(self, argv):
         # Assumes any program name has already been stripped out.
@@ -23,7 +31,6 @@ class Parser(object):
                 current_flag = context.get_arg(arg)
             # Otherwise, it's either a flag arg or a task name.
             else:
-                # TODO: this needs to be the Argument obj
                 debug("Current context does not have this as a flag")
                 # If previous flag takes an arg, this is the arg
                 # TODO: this needs to test the Argument obj
@@ -34,11 +41,9 @@ class Parser(object):
                     current_flag.set_value(arg)
                 # If not, it's the first task name (or invalid)
                 else:
-                    debug("That pevious flag needs no value")
-                    # TODO: how best to associate task name with contexts?
-                    # (esp given a task can have N names)
-                    # TODO: brings in the usual question of the root ctx
-                    if arg in [x.name for x in self.contexts]:
+                    debug("Not currently looking for a flag arg, or no flag context")
+                    debug("Current contexts: %r" % self.contexts)
+                    if arg in self.contexts:
                         debug("Looks like a valid task name")
                         context = self.contexts[arg]
                         context_index = index

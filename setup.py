@@ -20,7 +20,7 @@ To find out what's new in this version of Invoke, please see `the changelog
 %s
 """ % (v, open('README.rst').read())
 
-requirements = []
+requirements = ['lexicon']
 if sys.version_info[:2] == (2, 6):
     requirements.append("argparse>=1.2.1")
 

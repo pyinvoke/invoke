@@ -11,23 +11,21 @@ class Parser_(Spec):
         eq_(p.initial, c)
 
     def may_also_take_additional_contexts(self):
-        c1 = Context()
-        c2 = Context()
-        p = Parser(initial=c1, contexts=[c2])
-        eq_(p.contexts[0], c2)
+        c1 = Context('foo')
+        c2 = Context('bar')
+        p = Parser(initial=Context(), contexts=[c1, c2])
+        eq_(p.contexts['foo'], c1)
+        eq_(p.contexts['bar'], c2)
 
-    class get_context(self):
-        def looks_up_context_by_name(self):
-            skip()
-
-        def honors_context_aliases(self):
-            skip()
+    @raises(ValueError)
+    def raises_ValueError_for_unnamed_Contexts_in_contexts(self):
+        Parser(initial=Context(), contexts=[Context()])
 
     class parse_argv:
         def parses_sys_argv_style_list_of_strings(self):
             "parses sys.argv-style list of strings"
             # Doesn't-blow-up tests FTL
-            mytask = Context()
+            mytask = Context(name='mytask')
             mytask.add_arg('--arg')
             p = Parser(initial=Context(), contexts=[mytask])
             p.parse_argv(['mytask', '--arg'])
