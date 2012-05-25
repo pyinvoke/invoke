@@ -1,3 +1,5 @@
+from lexicon import Lexicon
+
 from .argument import Argument
 
 
@@ -22,7 +24,7 @@ class Context(object):
         strings. Parsing will honor any aliases when trying to "find" a given
         context in its input.
         """
-        self.args = []
+        self.args = Lexicon()
         self.name = name
         self.aliases = aliases
 
@@ -42,32 +44,25 @@ class Context(object):
             arg = Argument(*args, **kwargs)
         # Test
         for name in arg.names:
-            if self.has_arg(name):
+            if name in self.args:
                 msg = "Tried to add an argument named %r but one already exists!"
                 raise ValueError(msg % name)
         # Add
-        self.args.append(arg)
+        main = arg.names[0]
+        self.args[main] = arg
+        for name in arg.names[1:]:
+            self.args.alias(name, to=main)
 
     def has_arg(self, arg):
         """
         Is this string (``argv`` list member) a valid flag for this context?
         """
-        # TODO: maybe just use a dict after all, same value multiple times
-        # TODO: this is shitty/brittle/dumb
-        try:
-            return self.get_arg(arg) is not None
-        except ValueError:
-            return False
+        return arg in self.args
 
     def get_arg(self, arg):
-        match = None
-        for argument in self.args:
-            if argument.answers_to(arg):
-                match = argument
-                break
-        if match is not None:
-            return match
-        else:
+        try:
+            return self.args[arg]
+        except KeyError:
             raise ValueError, "Argument %r not found" % arg
 
     def needs_value(self, arg):
