@@ -18,7 +18,19 @@ class Parser(object):
                 self.contexts.alias(alias, to=context.name)
 
     def parse_argv(self, argv):
-        # Assumes any program name has already been stripped out.
+        """
+        Parse an argv-style token list ``argv``.
+
+        Returns an ordered list of ``ParsedContext`` objects.
+
+        Assumes any program name has already been stripped out. Good::
+
+            Parser(...).parse_argv(['--core-opt', 'task', '--task-opt'])
+
+        Bad::
+
+            Parser(...).parse_argv(['invoke', '--core-opt', ...])
+        """
         context = self.initial
         context_index = 0
         current_flag = None
@@ -32,8 +44,11 @@ class Parser(object):
             # Otherwise, it's either a flag arg or a task name.
             else:
                 debug("Current context does not have this as a flag")
-                # If previous flag takes an arg, this is the arg
-                # TODO: this needs to test the Argument obj
+                # If currently being handled flag takes an arg, this should be
+                # it.
+                # TODO: can we handle the case where somebody forgot the value?
+                # I.e. if they try to do invoke --needs-arg --lol, and --lol is
+                # a valid flag, should we error?
                 if current_flag and current_flag.needs_value:
                     debug("Previous flag needed a value, this is it")
                     # TODO: type coercion? or should that happen on access

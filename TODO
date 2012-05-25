@@ -1,6 +1,10 @@
 Next up:
 
-* Keep hammering on parser.parse_argv now that contexts is a Lexicon
+* Handle returning results of parsing:
+    * Mutate existing Context + their Argument values? This is how the API is
+      currently set up
+    * Construct new values and return those? Much cleaner...
+    * Possibly use existing API but rip out all setting methods to a subclass.
 
 Specific things to improve:
 
