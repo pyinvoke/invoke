@@ -6,3 +6,6 @@ install:
   # Build/test dependencies
   - pip install -r requirements.txt --use-mirrors
 script: spec
+notifications:
+  email:
+    on_failure: change
