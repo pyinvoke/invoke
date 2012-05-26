@@ -14,9 +14,10 @@ def _parse(argstr, parser=None, collection=None):
     # TODO: Replace with actual objects at that time.
     # Set up a parser
     if parser is None:
-        parser = Parser(initial=Context())
+        parser = Parser()
     # Naive string-to-argv: split on whitespace.
-    # Tests should not require using spaces in arg values, so...
+    # It's probably safe to assume most tests won't be using spaces in flag
+    # values and stuff (e.g. "invoke --foo='biz baz'")
     argv = argstr.split()
     return parser.parse_argv(argv)
 
