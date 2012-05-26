@@ -22,12 +22,12 @@ class Context_(Spec):
         def can_take_name_arg(self):
             c = Context()
             c.add_arg('foo')
-            assert c.get_arg('foo').answers_to('foo')
+            assert c.has_arg('foo')
 
         def can_take_kwargs(self):
             c = Context()
             c.add_arg(names=('foo', 'bar'))
-            assert c.get_arg('foo').answers_to('bar')
+            assert c.has_arg('foo') and c.has_arg('bar')
 
         @raises(ValueError)
         def raises_ValueError_on_duplicate(self):

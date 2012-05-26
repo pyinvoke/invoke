@@ -7,11 +7,12 @@ class Argument_(Spec):
     def may_take_names_list(self):
         names = ('--foo', '-f')
         a = Argument(names=names)
+        # herp a derp
         for name in names:
-            assert a.answers_to(name)
+            assert name in a.names
 
     def may_take_name_arg(self):
-        assert Argument(name='-b').answers_to('-b')
+        assert '-b' in Argument(name='-b').names
 
     @raises(TypeError)
     def must_have_at_least_one_name(self):
@@ -22,10 +23,6 @@ class Argument_(Spec):
 
     def may_specify_value_factory(self):
         assert Argument(name='a', value=str).needs_value
-
-    class answers_to:
-        def returns_True_if_given_name_matches(self):
-            assert Argument(names=('--foo',)).answers_to('--foo')
 
     class names:
         def returns_tuple_of_all_names(self):

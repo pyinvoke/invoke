@@ -12,9 +12,6 @@ class Argument(object):
         valfact = (" %r" % (self.value_factory)) if self.value_factory else ""
         return "Arg: %r%s" % (self.names, valfact)
 
-    def answers_to(self, name):
-        return name in self.names
-
     @property
     def needs_value(self):
         return self.value_factory is not None
