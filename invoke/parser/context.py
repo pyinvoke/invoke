@@ -12,7 +12,7 @@ class Context(object):
     When run through a parser, will also hold runtime values filled in by the
     parser.
     """
-    def __init__(self, name=None, aliases=()):
+    def __init__(self, name=None, aliases=(), args=()):
         """
         Create a new ``Context`` named ``name``, with ``aliases``.
 
@@ -23,10 +23,15 @@ class Context(object):
         ``aliases`` is also optional and should be an iterable containing
         strings. Parsing will honor any aliases when trying to "find" a given
         context in its input.
+
+        May give one or more ``args``, which is a quick alternative to calling
+        ``for arg in args: self.add_arg(arg)`` after initialization.
         """
         self.args = Lexicon()
         self.name = name
         self.aliases = aliases
+        for arg in args:
+            self.add_arg(arg)
 
     def __str__(self):
         aliases = (" (%s)" % ', '.join(self.aliases)) if self.aliases else ""

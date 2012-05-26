@@ -12,6 +12,12 @@ class Context_(Spec):
         c = Context(name='realname', aliases=('othername', 'yup'))
         assert 'othername' in c.aliases
 
+    def may_give_arg_list_at_init_time(self):
+        a1 = Argument('foo')
+        a2 = Argument('bar')
+        c = Context(name='name', args=(a1, a2))
+        assert c.get_arg('foo') is a1
+
     class add_arg:
         def can_take_Argument_instance(self):
             c = Context()
