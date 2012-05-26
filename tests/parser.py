@@ -27,7 +27,7 @@ class Parser_(Spec):
             # Doesn't-blow-up tests FTL
             mytask = Context(name='mytask')
             mytask.add_arg('--arg')
-            p = Parser(initial=Context(), contexts=[mytask])
+            p = Parser(contexts=[mytask])
             p.parse_argv(['mytask', '--arg'])
 
         def returns_ordered_list_of_tasks_and_their_args(self):

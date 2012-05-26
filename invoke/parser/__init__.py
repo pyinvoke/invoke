@@ -6,7 +6,7 @@ from ..util import debug
 
 
 class Parser(object):
-    def __init__(self, initial, contexts=()):
+    def __init__(self, initial=None, contexts=()):
         self.initial = initial
         self.contexts = Lexicon()
         for context in contexts:
@@ -38,7 +38,8 @@ class Parser(object):
         debug("Starting with context %s" % context)
         for index, arg in enumerate(argv):
             debug("Testing string arg %r at index %r" % (arg, index))
-            if context.has_arg(arg):
+            # Handle null contexts, e.g. no core/initial context
+            if context and context.has_arg(arg):
                 debug("Current context has this as a flag")
                 current_flag = context.get_arg(arg)
             # Otherwise, it's either a flag arg or a task name.
