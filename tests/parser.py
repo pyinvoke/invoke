@@ -5,17 +5,22 @@ from invoke.collection import Collection
 
 
 class Parser_(Spec):
-    def has_and_requires_initial_context(self):
+    def can_take_initial_context(self):
         c = Context()
         p = Parser(initial=c)
         eq_(p.initial, c)
 
-    def may_also_take_additional_contexts(self):
+    def can_take_initial_and_other_contexts(self):
         c1 = Context('foo')
         c2 = Context('bar')
         p = Parser(initial=Context(), contexts=[c1, c2])
         eq_(p.contexts['foo'], c1)
         eq_(p.contexts['bar'], c2)
+
+    def can_take_just_other_contexts(self):
+        c = Context('foo')
+        p = Parser(contexts=[c])
+        eq_(p.contexts['foo'], c)
 
     @raises(ValueError)
     def raises_ValueError_for_unnamed_Contexts_in_contexts(self):
