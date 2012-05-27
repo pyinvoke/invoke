@@ -6,7 +6,7 @@ from ..util import debug
 
 
 class Parser(object):
-    def __init__(self, initial=None, contexts=()):
+    def __init__(self, contexts=(), initial=None):
         self.initial = initial
         self.contexts = Lexicon()
         for context in contexts:

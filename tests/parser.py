@@ -22,6 +22,11 @@ class Parser_(Spec):
         p = Parser(contexts=[c])
         eq_(p.contexts['foo'], c)
 
+    def can_take_just_contexts_as_non_keyword_arg(self):
+        c = Context('foo')
+        p = Parser([c])
+        eq_(p.contexts['foo'], c)
+
     @raises(ValueError)
     def raises_ValueError_for_unnamed_Contexts_in_contexts(self):
         Parser(initial=Context(), contexts=[Context()])
