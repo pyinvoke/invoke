@@ -23,7 +23,9 @@ class Parser(object):
         """
         Parse an argv-style token list ``argv``.
 
-        Returns an ordered list of ``ParsedContext`` objects.
+        Returns a list of ``Context`` objects matching the order they were
+        found in the ``argv`` and containing ``Argument`` objects with updated
+        values based on any flags given.
 
         Assumes any program name has already been stripped out. Good::
 
@@ -58,10 +60,10 @@ class Parser(object):
                     # TODO: type coercion? or should that happen on access
                     # (probably yes)
                     current_flag.set_value(arg)
-                # If not, it's the first task name (or invalid)
+                # If not, it's the next contex/task name, or it's invalid
                 else:
                     debug("Not currently looking for a flag arg, or no flag context")
-                    debug("Current contexts: %r" % self.contexts)
+                    debug("Possible contexts available: %r" % self.contexts)
                     if arg in self.contexts:
                         debug("%r looks like a valid context name, switching to it" % arg)
                         # Add current context to result, it's done
