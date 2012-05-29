@@ -46,6 +46,10 @@ class Parser(object):
             # Handle null contexts, e.g. no core/initial context
             if context and context.has_arg(arg):
                 debug("Current context has this as a flag")
+                if current_flag and current_flag.kind == bool:
+                    debug("Previous flag was bool type, setting it to True")
+                    current_flag.value = True
+                debug("Switching current_flag to %r" % arg)
                 current_flag = context.get_arg(arg)
             # Otherwise, it's either a flag arg or a task name.
             else:
@@ -76,6 +80,14 @@ class Parser(object):
                         # TODO: what error to raise?
                         debug("Not a flag, a flag arg or a task: invalid")
                         raise ValueError("lol")
+        # Wrap-up: did we leave off with a boolean flag?
+        if current_flag and current_flag.kind == bool:
+            debug("Previous flag was bool type, setting it to True")
+            current_flag.value = True
+        # TODO: mutating state like this feels messy.
+        # TODO: did we leave off with a value-taking flag? Then something's
+        # wrong.
+        # TODO: this logic all needs to be in one place :(
         # Wrap-up: most recent context probably won't have been added to the
         # result yet.
         if context not in result:
