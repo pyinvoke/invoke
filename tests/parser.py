@@ -49,6 +49,14 @@ class Parser_(Spec):
             p.parse_argv(['mytask', '--arg'])
 
         def returns_only_contexts_mentioned(self):
+            task1 = Context('mytask')
+            task2 = Context('othertask')
+            result = Parser((task1, task2)).parse_argv(['othertask'])
+            eq_(len(result), 1)
+            eq_(result[0].name, 'othertask')
+
+        def always_includes_initial_context_if_one_was_given(self):
+            # Even if no core/initial flags were seen
             skip()
 
         def returned_contexts_are_in_order_given(self):

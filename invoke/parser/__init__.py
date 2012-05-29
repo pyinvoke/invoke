@@ -1,3 +1,5 @@
+import copy
+
 from lexicon import Lexicon
 
 from .context import Context
@@ -31,7 +33,8 @@ class Parser(object):
 
             Parser(...).parse_argv(['invoke', '--core-opt', ...])
         """
-        context = self.initial
+        result = ParseResult()
+        context = copy.deepcopy(self.initial)
         context_index = 0
         current_flag = None
         debug("Parsing argv %r" % (argv,))
@@ -60,11 +63,29 @@ class Parser(object):
                     debug("Not currently looking for a flag arg, or no flag context")
                     debug("Current contexts: %r" % self.contexts)
                     if arg in self.contexts:
-                        debug("Looks like a valid task name")
-                        context = self.contexts[arg]
+                        debug("%r looks like a valid context name, switching to it" % arg)
+                        # Add current context to result, it's done
+                        if context is not None:
+                            result.append(context)
+                        # Bind current context to new seen context
+                        context = copy.deepcopy(self.contexts[arg])
                         context_index = index
                     else:
                         # TODO: what error to raise?
                         debug("Not a flag, a flag arg or a task: invalid")
                         raise ValueError("lol")
-        return self.contexts
+        # Wrap-up: most recent context probably won't have been added to the
+        # result yet.
+        if context not in result:
+            result.append(context)
+        return result
+
+
+class ParseResult(list):
+    """
+    List-like object with some extra parse-related attributes.
+
+    Specifically, a ``.remainder`` attribute, which is a list of the tokens
+    found after a ``--`` in any parsed argv list.
+    """
+    pass
