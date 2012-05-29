@@ -69,8 +69,3 @@ class Context(object):
             return self.args[arg]
         except KeyError:
             raise ValueError, "Argument %r not found" % arg
-
-    def needs_value(self, arg):
-        return self.get_arg(arg).needs_value
-
-
