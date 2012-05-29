@@ -65,11 +65,11 @@ class Parser_(Spec):
 
         def returned_contexts_are_in_order_given(self):
             t1, t2 = Context('t1'), Context('t2')
-            r = Parser((t1, t2)).parse_argv(['t2 t1'])
+            r = Parser((t1, t2)).parse_argv(['t2', 't1'])
             eq_([x.name for x in r], ['t2', 't1'])
 
         def returned_context_member_arguments_contain_given_values(self):
-            c = Context('mytask', args=('--boolean'))
+            c = Context('mytask', args=('--boolean',))
             result = Parser((c,)).parse_argv(['mytask', '--boolean'])
             eq_(result[0].args['--boolean'].value, True)
 
