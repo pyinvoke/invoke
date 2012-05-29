@@ -1,3 +1,5 @@
+import copy
+
 from spec import Spec, eq_, skip, ok_, raises
 
 from invoke.parser import Argument, Context
@@ -53,3 +55,28 @@ class Context_(Spec):
             a = Argument(name='foo')
             c.add_arg(a)
             assert c.get_arg('foo') is a
+
+    class deepcopy:
+        "__deepcopy__"
+        def returns_correct_copy(self):
+            orig = Context(name='foo', aliases=('bar',))
+            new = copy.deepcopy(orig)
+            assert new is not orig
+            eq_(new.name, 'foo')
+            assert 'bar' in new.aliases
+
+        def includes_arguments(self):
+            arg = Argument('--boolean')
+            orig = Context(name='mytask', args=(arg,))
+            new = copy.deepcopy(orig)
+            eq_(len(new.args), 1)
+            assert new.args['--boolean'] is not arg
+
+        def modifications_to_copied_arguments_do_not_touch_originals(self):
+            arg = Argument('--boolean')
+            orig = Context('mytask', args=(arg,))
+            new = copy.deepcopy(orig)
+            new_arg = new.args['--boolean']
+            new_arg.value = True
+            assert new_arg.value
+            assert not arg.value
