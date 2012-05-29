@@ -33,10 +33,14 @@ class Parser_(Spec):
 
     @raises(ValueError)
     def raises_error_for_context_name_clashes(self):
+        # e.g. if Context('foo', aliases=('bar',)) and Context('bar') are both
+        # added, the 2nd one should blow up due to ambiguity.
         skip()
 
     @raises(ValueError)
     def raises_error_for_context_alias_and_name_clashes(self):
+        # Same as above, but ensuring the clash is between a name and an alias
+        # and not just two real names
         skip()
 
     class parse_argv:
@@ -60,12 +64,30 @@ class Parser_(Spec):
             skip()
 
         def returned_contexts_are_in_order_given(self):
-            skip()
+            t1, t2 = Context('t1'), Context('t2')
+            r = Parser((t1, t2)).parse_argv(['t2 t1'])
+            eq_([x.name for x in r], ['t2', 't1'])
 
         def returned_context_member_arguments_contain_given_values(self):
-            skip()
+            c = Context('mytask', args=('--boolean'))
+            result = Parser((c,)).parse_argv(['mytask', '--boolean'])
+            eq_(result[0].args['--boolean'].value, True)
 
         def returned_arguments_not_given_contain_default_values(self):
+            # I.e. a Context with args A and B, invoked with no mention of B,
+            # should result in B existing in the result, with its default value
+            # intact, and not e.g. None, or the arg not existing.
+            a = Argument('--name', kind=str)
+            b = Argument('--age', default=7)
+            c = Context('mytask', args=(a, b))
+            result = Parser((c,)).parse_argv(['mytask', '--name', 'blah'])
+            eq_(c.args['--age'].value, 7)
+
+        def returned_arguments_have_seen_flag(self):
+            # Ctxt with A and B args, B not given in invoke, B.seen == False
+            skip()
+
+        def seen_arguments_specify_which_name_was_given(self):
             skip()
 
         def returns_remainder(self):
