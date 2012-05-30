@@ -87,13 +87,6 @@ class Parser_(Spec):
             result = Parser((c,)).parse_argv(['mytask', '--name', 'blah'])
             eq_(c.args['--age'].value, 7)
 
-        def returned_arguments_have_seen_flag(self):
-            # Ctxt with A and B args, B not given in invoke, B.seen == False
-            skip()
-
-        def seen_arguments_specify_which_name_was_given(self):
-            skip()
-
         def returns_remainder(self):
             "returns -- style remainder string chunk"
             skip()
