@@ -61,7 +61,11 @@ class Parser_(Spec):
 
         def always_includes_initial_context_if_one_was_given(self):
             # Even if no core/initial flags were seen
-            skip()
+            t1 = Context('t1')
+            init = Context()
+            result = Parser((t1,), initial=init).parse_argv(['t1'])
+            eq_(result[0].name, None)
+            eq_(result[1].name, 't1')
 
         def returned_contexts_are_in_order_given(self):
             t1, t2 = Context('t1'), Context('t2')
