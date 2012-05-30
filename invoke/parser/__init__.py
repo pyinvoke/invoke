@@ -59,11 +59,9 @@ class Parser(object):
                 # TODO: can we handle the case where somebody forgot the value?
                 # I.e. if they try to do invoke --needs-arg --lol, and --lol is
                 # a valid flag, should we error?
-                if current_flag and current_flag.needs_value:
+                if current_flag and current_flag.takes_value:
                     debug("Previous flag needed a value, this is it")
-                    # TODO: type coercion? or should that happen on access
-                    # (probably yes)
-                    current_flag.set_value(arg)
+                    current_flag.value = arg
                 # If not, it's the next contex/task name, or it's invalid
                 else:
                     debug("Not currently looking for a flag arg, or no flag context")
@@ -82,12 +80,15 @@ class Parser(object):
                         raise ValueError("lol")
         # Wrap-up: did we leave off with a boolean flag?
         if current_flag and current_flag.kind == bool:
-            debug("Previous flag was bool type, setting it to True")
+            debug("(Wrap-up) Previous flag was bool type, setting it to True")
             current_flag.value = True
-        # TODO: mutating state like this feels messy.
-        # TODO: did we leave off with a value-taking flag? Then something's
-        # wrong.
-        # TODO: this logic all needs to be in one place :(
+        # Wrap-up: did we leave off handling a flag argument?
+        if current_flag and current_flag.takes_value:
+            debug("(Wrap-up) Previous flag needed a value, this is it")
+            # TODO: find better way to do this than mutate state?
+            # This only works if we assume current_flag points to an Argument
+            # object in a Context that's going to end up in 'result'.
+            current_flag.value = arg
         # Wrap-up: most recent context probably won't have been added to the
         # result yet.
         if context not in result:
