@@ -1,10 +1,18 @@
 Next up:
 
-* Handle returning results of parsing:
-    * Mutate existing Context + their Argument values? This is how the API is
-      currently set up
-    * Construct new values and return those? Much cleaner...
-    * Possibly use existing API but rip out all setting methods to a subclass.
+* Connect Parser/Context with Collection/Task
+    * CLI test is just a stub right now, uses empty parser, does nothing with
+      collection given
+    * Need one Context created per Task, and added to the Parser
+        * Perhaps Task.to_context()? (Context should not know about Task
+        ideally)
+            * Or Collection.contexts()?
+        * Needs to go from kwargs to Argument objects
+        * And handle name/alias/etc
+    * Also need to handle initial Context for e.g. `-c`.
+        * Stored in the main cli module?
+        * Allow users to override/modify this at some point, this would be how
+        they add new core options or whatever
 
 Specific things to improve:
 
@@ -31,3 +39,5 @@ Big questions:
   method calls on an object?
     * Require all functionality to be calls on an object, and allow users to
       use an implicit module-global object as the default target?
+
+<!-- vim:set ft=markdown : -->
