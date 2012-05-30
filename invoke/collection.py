@@ -1,7 +1,9 @@
+from lexicon import Lexicon
+
+
 class Collection(object):
     def __init__(self):
-        self.tasks = {}
-        self.aliases = {}
+        self.tasks = Lexicon()
         self.default = None
 
     def add_task(self, name, task, aliases=(), default=False):
@@ -16,29 +18,16 @@ class Collection(object):
         """
         self.tasks[name] = task
         for alias in aliases:
-            self.add_alias(from_=alias, to=name)
+            self.tasks.alias(alias, to=name)
         if default:
             if self.default:
                 msg = "'%s' cannot be the default because '%s' already is!"
                 raise ValueError(msg % (name, self.default))
             self.default = name
 
-    def add_alias(self, from_, to):
-        """
-        Add an alias from ``from_`` to ``to``.
-
-        Aliases may be recursive, i.e. ``to`` may itself point to an alias
-        name.
-        """
-        self.aliases[from_] = to
-
     def get(self, name=None):
         """
-        Returns task named ``name``.
-
-        Honors aliases. In the event that a task has a non-alias name ``X``
-        **and** some task has an alias ``X``, the "real" non-aliased task will
-        win.
+        Returns task named ``name``. Honors aliases.
 
         If this collection has a default task, it is returned when ``name`` is
         empty or ``None``. If empty input is given and no task has been
@@ -49,9 +38,4 @@ class Collection(object):
                 return self.get(self.default)
             else:
                 raise ValueError("This collection has no default task.")
-        while name not in self.tasks:
-            try:
-                name = self.aliases[name]
-            except KeyError:
-                break
         return self.tasks[name]
