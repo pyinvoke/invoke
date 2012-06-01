@@ -43,6 +43,14 @@ class Parser_(Spec):
         # and not just two real names
         skip()
 
+    def clones_initial_context(self):
+        # Mods to initial context or its Args do not affect passed-in Context
+        # obj
+        skip()
+
+    def clones_noninitial_contexts(self):
+        skip()
+
     class parse_argv:
         def parses_sys_argv_style_list_of_strings(self):
             "parses sys.argv-style list of strings"
