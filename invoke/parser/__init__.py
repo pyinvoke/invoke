@@ -16,8 +16,13 @@ class Parser(object):
             debug("Adding %s" % context)
             if not context.name:
                 raise ValueError("Non-initial contexts must have names.")
+            exists = "A context named/aliased %r is already in this parser!"
+            if context.name in self.contexts:
+                raise ValueError(exists % context.name)
             self.contexts[context.name] = context
             for alias in context.aliases:
+                if alias in self.contexts:
+                    raise ValueError(exists % alias)
                 self.contexts.alias(alias, to=context.name)
 
     def parse_argv(self, argv):

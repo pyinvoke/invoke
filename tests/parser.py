@@ -33,15 +33,11 @@ class Parser_(Spec):
 
     @raises(ValueError)
     def raises_error_for_context_name_clashes(self):
-        # e.g. if Context('foo', aliases=('bar',)) and Context('bar') are both
-        # added, the 2nd one should blow up due to ambiguity.
-        Parser(contexts=(Context('foo', aliases=('bar',)), Context('bar')))
+        Parser(contexts=(Context('foo'), Context('foo')))
 
     @raises(ValueError)
     def raises_error_for_context_alias_and_name_clashes(self):
-        # Same as above, but ensuring the clash is between a name and an alias
-        # and not just two real names
-        skip()
+        Parser(contexts=(Context('foo', aliases=('bar',)), Context('bar')))
 
     def clones_initial_context(self):
         # Mods to initial context or its Args do not affect passed-in Context
