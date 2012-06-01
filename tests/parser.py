@@ -35,7 +35,7 @@ class Parser_(Spec):
     def raises_error_for_context_name_clashes(self):
         # e.g. if Context('foo', aliases=('bar',)) and Context('bar') are both
         # added, the 2nd one should blow up due to ambiguity.
-        skip()
+        Parser(contexts=(Context('foo', aliases=('bar',)), Context('bar')))
 
     @raises(ValueError)
     def raises_error_for_context_alias_and_name_clashes(self):
