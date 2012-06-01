@@ -42,7 +42,15 @@ class Parser(object):
             Parser(...).parse_argv(['invoke', '--core-opt', ...])
         """
         machine = ParseMachine(initial=self.initial, contexts=self.contexts)
-        for token in argv:
+        for index, token in enumerate(argv):
+            # Handle x=y style opts, but only if the machine isn't in the
+            # "waiting for a flag value" state. (When it *is* in that state, it
+            # should be given the value as-is, since it will be used as the
+            # value for the preceding flag.)
+            is_combo_flag = token.startswith('-') and '=' in token
+            if not machine.waiting_for_flag_value and is_combo_flag:
+                token, _, value = token.partition('=')
+                argv.insert(index + 1, value)
             machine.handle(token)
         machine.finish()
         return machine.result

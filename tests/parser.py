@@ -126,11 +126,11 @@ class Parser_(Spec):
             eq_(a2.value, True)
 
         def handles_equals_style_long_flags(self):
-            c = Context('mytask', args=('--foo',))
+            c = Context('mytask', args=(Argument('--foo', kind=str),))
             r = Parser((c,)).parse_argv(['mytask', '--foo=bar'])
             eq_(r[0].args['--foo'].value, 'bar')
 
         def handles_equals_style_short_flags(self):
-            c = Context('mytask', args=('-f',))
+            c = Context('mytask', args=(Argument('-f', kind=str),))
             r = Parser((c,)).parse_argv(['mytask', '-f=bar'])
             eq_(r[0].args['-f'].value, 'bar')

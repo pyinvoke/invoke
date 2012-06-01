@@ -138,3 +138,37 @@ enable support for per-task positional arguments, e.g.::
 
 The first approach is unable to do this without adding even more complexity to
 both the user-facing task signature specification, and to the parser.
+
+
+Ambiguities
+===========
+
+A discussion on some potential ambiguities which arise in most styles of
+argument parsing.
+
+Space-delimited flag values that look like flags themselves
+-----------------------------------------------------------
+
+I.e.::
+
+    $ invoke --takes-a-value --some-other-valid-flag
+
+The above can be interpreted in two ways:
+
+* ``--takes-a-value`` having its value set to ``"--some-other-flag"``
+    * Pluses: allows specifying flag-like values, which would otherwise have to
+      be escaped in some fashion.
+    * Minuses: can obscure user error.
+* ``--some-other-valid-flag`` being interpreted as an actual flag, and an error
+  being generated because ``--takes-a-value`` is then missing a value.
+    * Has the inverse tradeoff to the above: fast-fails on user error, but
+      would require escaping for actual flag-like values to be treated as flag
+      arguments.
+
+A related issue is the possibility of **invalid** flag-like values, e.g.::
+
+    $ invoke --takes-a-value --not-even-a-valid-flag
+
+This doesn't even make sense in the 2nd approach above, because now we've both
+got a "missing value" error *and* a "unknown flag" error, whereas the 1st
+approach still works as the user probably intended.
