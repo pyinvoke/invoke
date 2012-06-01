@@ -77,6 +77,14 @@ class Parser_(Spec):
             result = Parser((c,)).parse_argv(['mytask', '--boolean'])
             eq_(result[0].args['--boolean'].value, True)
 
+        def arguments_which_take_values_get_defaults_overridden_correctly(self):
+            args = (Argument('--arg', kind=str), Argument('--arg2', kind=int))
+            c = Context('mytask', args=args)
+            argv = ['mytask', '--arg', 'myval', '--arg2', '25']
+            result = Parser((c,)).parse_argv(argv)
+            eq_(result[0].args['--arg'].value, 'myval')
+            eq_(result[0].args['--arg2'].value, 25)
+
         def returned_arguments_not_given_contain_default_values(self):
             # I.e. a Context with args A and B, invoked with no mention of B,
             # should result in B existing in the result, with its default value
