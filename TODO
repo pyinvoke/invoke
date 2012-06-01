@@ -13,36 +13,6 @@ Next up:
         * Stored in the main cli module?
         * Allow users to override/modify this at some point, this would be how
         they add new core options or whatever
-* Make parsing flow suck less. State machine-y?
-    * QUESTION: should state transitions cycle back to the current state
-    objects' state cells after transitions automatically (and thus
-    current-context or current-flag is always referencing the current state),
-    or do we keep using current-context and current-flag variables?
-    * State changes predicated on "next item in argv":
-        * nothing: end
-        * flaglike string: flag
-        * non-flaglike string: context/task or flag arg
-    * Start
-        * Set initial context as current-context, move to the 'context' state
-    * Context / task name
-        * task name: add current-context to results, set current-context to
-          this task, or error if not valid
-        * flag: set current-flag to this flag
-        * end: add current-context to results
-    * Flag
-        * flag: if current-flag takes value, error. else, set current-flag
-        value to True and move on
-        * task name: if current-flag takes value, error. else, set current-flag
-        value to True and move on
-        * end: if current-flag takes value, error. else, set current-flag
-        value to True and move on
-        * flag arg: if current-flag takes value, ok, keep going. if not, error
-    * Flag arg
-        * flag: set current-flag value to this value
-        * task name: set current-flag value to this value
-        * end: you guessed it, set current-flag value to this value
-    * Nothing more to parse / end
-        * return parse results
 
 Specific things to improve:
 

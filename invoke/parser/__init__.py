@@ -1,5 +1,6 @@
 import copy
 
+from fluidity import StateMachine, state, transition
 from lexicon import Lexicon
 
 from .context import Context
@@ -35,65 +36,80 @@ class Parser(object):
 
             Parser(...).parse_argv(['invoke', '--core-opt', ...])
         """
-        result = ParseResult()
-        context = copy.deepcopy(self.initial)
-        context_index = 0
-        current_flag = None
-        debug("Parsing argv %r" % (argv,))
-        debug("Starting with context %s" % context)
-        for index, arg in enumerate(argv):
-            debug("Testing string arg %r at index %r" % (arg, index))
-            # Handle null contexts, e.g. no core/initial context
-            if context and context.has_arg(arg):
-                debug("Current context has this as a flag")
-                if current_flag and current_flag.kind == bool:
-                    debug("Previous flag was bool type, setting it to True")
-                    current_flag.value = True
-                debug("Switching current_flag to %r" % arg)
-                current_flag = context.get_arg(arg)
-            # Otherwise, it's either a flag arg or a task name.
-            else:
-                debug("Current context does not have this as a flag")
-                # If currently being handled flag takes an arg, this should be
-                # it.
-                # TODO: can we handle the case where somebody forgot the value?
-                # I.e. if they try to do invoke --needs-arg --lol, and --lol is
-                # a valid flag, should we error?
-                if current_flag and current_flag.takes_value:
-                    debug("Previous flag needed a value, this is it")
-                    current_flag.value = arg
-                # If not, it's the next contex/task name, or it's invalid
-                else:
-                    debug("Not currently looking for a flag arg, or no flag context")
-                    debug("Possible contexts available: %r" % self.contexts)
-                    if arg in self.contexts:
-                        debug("%r looks like a valid context name, switching to it" % arg)
-                        # Add current context to result, it's done
-                        if context is not None:
-                            result.append(context)
-                        # Bind current context to new seen context
-                        context = copy.deepcopy(self.contexts[arg])
-                        context_index = index
-                    else:
-                        # TODO: what error to raise?
-                        debug("Not a flag, a flag arg or a task: invalid")
-                        raise ValueError("lol")
-        # Wrap-up: did we leave off with a boolean flag?
-        if current_flag and current_flag.kind == bool:
-            debug("(Wrap-up) Previous flag was bool type, setting it to True")
-            current_flag.value = True
-        # Wrap-up: did we leave off handling a flag argument?
-        if current_flag and current_flag.takes_value:
-            debug("(Wrap-up) Previous flag needed a value, this is it")
-            # TODO: find better way to do this than mutate state?
-            # This only works if we assume current_flag points to an Argument
-            # object in a Context that's going to end up in 'result'.
-            current_flag.value = arg
-        # Wrap-up: most recent context probably won't have been added to the
-        # result yet.
-        if context not in result:
-            result.append(context)
-        return result
+        machine = ParseMachine(initial=self.initial, contexts=self.contexts)
+        for token in argv:
+            machine.handle(token)
+        machine.finish()
+        return machine.result
+
+
+class ParseMachine(StateMachine):
+    initial_state = 'context'
+
+    state('context', enter=['complete_flag', 'complete_context'])
+    state('end', enter=['complete_flag', 'complete_context'])
+
+    transition(from_='context', event='finish', to='end')
+    transition(from_='context', event='switch', to='context')
+
+    def changing_state(self, from_, to):
+        debug("ParseMachine: %r => %r" % (from_, to))
+
+    def __init__(self, initial, contexts):
+        # Initialize
+        self.context = copy.deepcopy(initial)
+        debug("Initialized with context: %r" % self.context)
+        self.flag = None
+        self.result = ParseResult()
+        self.contexts = contexts
+        debug("Available contexts: %r" % self.contexts)
+        # In case StateMachine does anything in __init__
+        super(ParseMachine, self).__init__()
+
+    def handle(self, token):
+        debug("Handling token: %r" % token)
+        if self.context and self.context.has_arg(token):
+            self.see_flag(token)
+        elif self.flag and self.flag.takes_value:
+            self.see_value(token)
+        elif token in self.contexts:
+            self.see_context(token)
+        else:
+            raise ParseError("No idea what %r is!" % token)
+
+    def complete_context(self):
+        debug("Wrapping up context %r" % (self.context.name if self.context else self.context))
+        if self.context and self.context not in self.result:
+            self.result.append(self.context)
+
+    def see_context(self, name):
+        try:
+            self.context = self.contexts[name]
+            debug("Moving to context %r" % name)
+            self.switch()
+        except KeyError:
+            raise ParseError("Task %r not found!" % name)
+
+    def complete_flag(self):
+        if self.flag is None:
+            return
+        if self.flag.takes_value:
+            if self.flag.raw_value is None:
+                raise ParseError("Flag %r needed value and was not given one!" % self.flag)
+        else:
+            debug("Marking seen flag %r as True" % self.flag)
+            self.flag.value = True
+
+    def see_flag(self, flag):
+        self.flag = self.context.args[flag]
+        debug("Moving to flag %r" % self.flag)
+
+    def see_value(self, value):
+        if self.flag.takes_value:
+            debug("Setting flag %r to value %r" % (self.flag, value))
+            self.flag.value = value
+        else:
+            raise ParseError("Flag %r doesn't take any value!" % self.flag)
 
 
 class ParseResult(list):
@@ -103,4 +119,8 @@ class ParseResult(list):
     Specifically, a ``.remainder`` attribute, which is a list of the tokens
     found after a ``--`` in any parsed argv list.
     """
+    pass
+
+
+class ParseError(Exception):
     pass
