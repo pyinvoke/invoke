@@ -66,7 +66,7 @@ class ParseMachine(StateMachine):
         debug("Initialized with context: %r" % self.context)
         self.flag = None
         self.result = ParseResult()
-        self.contexts = contexts
+        self.contexts = copy.deepcopy(contexts)
         debug("Available contexts: %r" % self.contexts)
         # In case StateMachine does anything in __init__
         super(ParseMachine, self).__init__()
