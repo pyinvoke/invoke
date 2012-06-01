@@ -71,11 +71,15 @@ class ParseMachine(StateMachine):
         # In case StateMachine does anything in __init__
         super(ParseMachine, self).__init__()
 
+    @property
+    def waiting_for_flag_value(self):
+        return self.flag and self.flag.takes_value
+
     def handle(self, token):
         debug("Handling token: %r" % token)
         if self.context and token in self.context.args:
             self.see_flag(token)
-        elif self.flag and self.flag.takes_value:
+        elif self.waiting_for_flag_value:
             self.see_value(token)
         elif token in self.contexts:
             self.see_context(token)
