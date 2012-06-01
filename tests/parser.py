@@ -39,14 +39,6 @@ class Parser_(Spec):
     def raises_error_for_context_alias_and_name_clashes(self):
         Parser(contexts=(Context('foo', aliases=('bar',)), Context('bar')))
 
-    def clones_initial_context(self):
-        # Mods to initial context or its Args do not affect passed-in Context
-        # obj
-        skip()
-
-    def clones_noninitial_contexts(self):
-        skip()
-
     class parse_argv:
         def parses_sys_argv_style_list_of_strings(self):
             "parses sys.argv-style list of strings"
@@ -101,4 +93,22 @@ class Parser_(Spec):
 
         def returns_remainder(self):
             "returns -- style remainder string chunk"
+            skip()
+
+        def clones_initial_context(self):
+            a = Argument('--foo')
+            eq_(a.value, None)
+            c = Context(args=(a,))
+            p = Parser(initial=c)
+            assert p.initial is c
+            r = p.parse_argv(['--foo'])
+            assert p.initial is c
+            c2 = r[0]
+            assert c2 is not c
+            a2 = c2.args['--foo']
+            assert a2 is not a
+            eq_(a.value, None)
+            eq_(a2.value, True)
+
+        def clones_noninitial_contexts(self):
             skip()
