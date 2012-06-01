@@ -57,15 +57,3 @@ class Context(object):
         self.args[main] = arg
         for name in arg.names[1:]:
             self.args.alias(name, to=main)
-
-    def has_arg(self, arg):
-        """
-        Is this string (``argv`` list member) a valid flag for this context?
-        """
-        return arg in self.args
-
-    def get_arg(self, arg):
-        try:
-            return self.args[arg]
-        except KeyError:
-            raise ValueError, "Argument %r not found" % arg
