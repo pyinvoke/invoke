@@ -134,3 +134,8 @@ class Parser_(Spec):
             c = Context('mytask', args=(Argument('-f', kind=str),))
             r = Parser((c,)).parse_argv(['mytask', '-f=bar'])
             eq_(r[0].args['-f'].value, 'bar')
+
+        def does_not_require_escaping_equals_signs_in_value(self):
+            c = Context('mytask', args=(Argument('-f', kind=str),))
+            r = Parser((c,)).parse_argv(['mytask', '-f=biz=baz'])
+            eq_(r[0].args['-f'].value, 'biz=baz')
