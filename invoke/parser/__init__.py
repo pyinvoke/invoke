@@ -13,7 +13,7 @@ class Parser(object):
         self.initial = initial
         self.contexts = Lexicon()
         for context in contexts:
-            debug("Adding context %s" % context)
+            debug("Adding %s" % context)
             if not context.name:
                 raise ValueError("Non-initial contexts must have names.")
             self.contexts[context.name] = context
