@@ -50,7 +50,7 @@ class ParseMachine(StateMachine):
     state('end', enter=['complete_flag', 'complete_context'])
 
     transition(from_='context', event='finish', to='end')
-    transition(from_='context', event='switch', to='context')
+    transition(from_='context', event='see_context', action='switch_to_context', to='context')
 
     def changing_state(self, from_, to):
         debug("ParseMachine: %r => %r" % (from_, to))
@@ -82,11 +82,10 @@ class ParseMachine(StateMachine):
         if self.context and self.context not in self.result:
             self.result.append(self.context)
 
-    def see_context(self, name):
+    def switch_to_context(self, name):
         try:
             self.context = self.contexts[name]
             debug("Moving to context %r" % name)
-            self.switch()
         except KeyError:
             raise ParseError("Task %r not found!" % name)
 
