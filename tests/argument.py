@@ -77,3 +77,8 @@ class Argument_(Spec):
         def returns_default_if_not_set(self):
             a = Argument('a', default=25)
             eq_(a.value, 25)
+
+    class raw_value:
+        def is_None_when_no_value_was_actually_seen(self):
+            a = Argument('a', kind=int)
+            eq_(a.raw_value, None)
