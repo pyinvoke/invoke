@@ -111,4 +111,16 @@ class Parser_(Spec):
             eq_(a2.value, True)
 
         def clones_noninitial_contexts(self):
-            skip()
+            a = Argument('--foo')
+            eq_(a.value, None)
+            c = Context(name='mytask', args=(a,))
+            p = Parser(contexts=(c,))
+            assert p.contexts['mytask'] is c
+            r = p.parse_argv(['mytask', '--foo'])
+            assert p.contexts['mytask'] is c
+            c2 = r[0]
+            assert c2 is not c
+            a2 = c2.args['--foo']
+            assert a2 is not a
+            eq_(a.value, None)
+            eq_(a2.value, True)
