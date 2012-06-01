@@ -73,7 +73,7 @@ class ParseMachine(StateMachine):
 
     def handle(self, token):
         debug("Handling token: %r" % token)
-        if self.context and self.context.has_arg(token):
+        if self.context and token in self.context.args:
             self.see_flag(token)
         elif self.flag and self.flag.takes_value:
             self.see_value(token)
