@@ -17,7 +17,7 @@ class Loader_(Spec):
     def has_a_default_discovery_root(self):
         eq_(Loader().root, os.getcwd())
 
-    class load_collection:
+    class load_collection(object):
         def returns_collection_object_if_name_found(self):
             result = Loader(root=support).load_collection('foo')
             eq_(type(result), Collection)
@@ -43,7 +43,7 @@ class Loader_(Spec):
             result = Loader(root=support + '/implicit/').load_collection()
             eq_(type(result), Collection)
 
-    class load:
+    class load(object):
         def returns_nested_collection_from_all_given_names(self):
             skip()
 
