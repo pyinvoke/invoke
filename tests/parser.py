@@ -93,7 +93,8 @@ class Parser_(Spec):
 
         def returns_remainder(self):
             "returns -- style remainder string chunk"
-            skip()
+            r = Parser((Context('foo'),)).parse_argv(['foo', '--', 'bar', 'biz'])
+            eq_(r.remainder, "bar biz")
 
         def clones_initial_context(self):
             a = Argument('--foo')
