@@ -71,8 +71,13 @@ class Collection_(Spec):
             skip()
 
     class to_contexts:
+        def setup(self):
+            @task
+            def mytask(text):
+                print text
+            self.c = Collection()
+            self.c.add_task('mytask', mytask)
+            self.context = self.c.to_contexts()[0]
+
         def returns_iterable_of_Contexts_corresponding_to_tasks(self):
-            c = Collection()
-            c.add_task('foo', _mytask)
-            contexts = c.to_contexts()
-            eq_(contexts[0].name, 'foo')
+            eq_(self.context.name, 'mytask')
