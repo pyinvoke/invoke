@@ -13,18 +13,20 @@ class _Dummy(object):
 class task_(Spec):
     "@task"
 
+    def setup(self):
+        self.loader = Loader(root=support)
+        self.vanilla = self.loader.load_collection('decorator')
+
     def allows_access_to_wrapped_object(self):
         dummy = _Dummy()
         eq_(task(dummy).body, dummy)
 
     def allows_alias_specification(self):
-        c = Loader(root=support).load_collection('decorator')
-        eq_(c.get('foo'), c.get('bar'))
+        eq_(self.vanilla.get('foo'), self.vanilla.get('bar'))
 
     def allows_default_specification(self):
-        c = Loader(root=support).load_collection('decorator')
-        eq_(c.get(), c.get('biz'))
+        eq_(self.vanilla.get(), self.vanilla.get('biz'))
 
     @raises(ValueError)
     def raises_ValueError_on_multiple_defaults(self):
-        c = Loader(root=support).load_collection('decorator_multi_default')
+        self.loader.load_collection('decorator_multi_default')
