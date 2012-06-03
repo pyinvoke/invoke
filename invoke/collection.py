@@ -48,6 +48,8 @@ class Collection(object):
         """
         result = []
         for name, task in self.tasks.iteritems():
-            c = Context(name=name, aliases=task.aliases)
-            result.append(c)
+            context = Context(name=name, aliases=task.aliases)
+            for name in task.argspec:
+                context.add_arg(name)
+            result.append(context)
         return result

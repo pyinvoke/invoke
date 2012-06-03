@@ -1,8 +1,15 @@
+import inspect
+
+
 class Task(object):
     def __init__(self, body, aliases=(), default=False):
         self.body = body
         self.aliases = aliases
         self.is_default = default
+
+    @property
+    def argspec(self):
+        return inspect.getargspec(self.body).args
 
 
 def task(*args, **kwargs):

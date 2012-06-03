@@ -30,3 +30,13 @@ class task_(Spec):
     @raises(ValueError)
     def raises_ValueError_on_multiple_defaults(self):
         self.loader.load_collection('decorator_multi_default')
+
+
+class Task_(Spec):
+    class args:
+        def setup(self):
+            def mytask(arg1, arg2): pass
+            self.task = task(mytask)
+
+        def returns_argument_names(self):
+            assert 'arg1' in self.task.argspec
