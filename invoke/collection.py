@@ -1,5 +1,7 @@
 from lexicon import Lexicon
 
+from .parser import Context, Argument
+
 
 class Collection(object):
     def __init__(self):
@@ -39,3 +41,13 @@ class Collection(object):
             else:
                 raise ValueError("This collection has no default task.")
         return self.tasks[name]
+
+    def to_contexts(self):
+        """
+        Returns all contained tasks and subtasks as a list of parser contexts.
+        """
+        result = []
+        for name, task in self.tasks.iteritems():
+            c = Context(name=name, aliases=task.aliases)
+            result.append(c)
+        return result

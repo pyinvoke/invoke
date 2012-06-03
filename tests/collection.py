@@ -69,3 +69,10 @@ class Collection_(Spec):
         def is_aliased_to_dunder_getitem(self):
             "is aliased to __getitem__"
             skip()
+
+    class to_contexts:
+        def returns_iterable_of_Contexts_corresponding_to_tasks(self):
+            c = Collection()
+            c.add_task('foo', _mytask)
+            contexts = c.to_contexts()
+            eq_(contexts[0].name, 'foo')
