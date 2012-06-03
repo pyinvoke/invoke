@@ -44,7 +44,7 @@ class Parser_(Spec):
             "parses sys.argv-style list of strings"
             # Doesn't-blow-up tests FTL
             mytask = Context(name='mytask')
-            mytask.add_arg('--arg')
+            mytask.add_arg('arg')
             p = Parser(contexts=[mytask])
             p.parse_argv(['mytask', '--arg'])
 
@@ -69,27 +69,27 @@ class Parser_(Spec):
             eq_([x.name for x in r], ['t2', 't1'])
 
         def returned_context_member_arguments_contain_given_values(self):
-            c = Context('mytask', args=('--boolean',))
+            c = Context('mytask', args=('boolean',))
             result = Parser((c,)).parse_argv(['mytask', '--boolean'])
-            eq_(result[0].args['--boolean'].value, True)
+            eq_(result[0].args['boolean'].value, True)
 
         def arguments_which_take_values_get_defaults_overridden_correctly(self):
-            args = (Argument('--arg', kind=str), Argument('--arg2', kind=int))
+            args = (Argument('arg', kind=str), Argument('arg2', kind=int))
             c = Context('mytask', args=args)
             argv = ['mytask', '--arg', 'myval', '--arg2', '25']
             result = Parser((c,)).parse_argv(argv)
-            eq_(result[0].args['--arg'].value, 'myval')
-            eq_(result[0].args['--arg2'].value, 25)
+            eq_(result[0].args['arg'].value, 'myval')
+            eq_(result[0].args['arg2'].value, 25)
 
         def returned_arguments_not_given_contain_default_values(self):
             # I.e. a Context with args A and B, invoked with no mention of B,
             # should result in B existing in the result, with its default value
             # intact, and not e.g. None, or the arg not existing.
-            a = Argument('--name', kind=str)
-            b = Argument('--age', default=7)
+            a = Argument('name', kind=str)
+            b = Argument('age', default=7)
             c = Context('mytask', args=(a, b))
             result = Parser((c,)).parse_argv(['mytask', '--name', 'blah'])
-            eq_(c.args['--age'].value, 7)
+            eq_(c.args['age'].value, 7)
 
         def returns_remainder(self):
             "returns -- style remainder string chunk"
@@ -97,7 +97,7 @@ class Parser_(Spec):
             eq_(r.remainder, "bar biz")
 
         def clones_initial_context(self):
-            a = Argument('--foo')
+            a = Argument('foo')
             eq_(a.value, None)
             c = Context(args=(a,))
             p = Parser(initial=c)
@@ -106,13 +106,13 @@ class Parser_(Spec):
             assert p.initial is c
             c2 = r[0]
             assert c2 is not c
-            a2 = c2.args['--foo']
+            a2 = c2.args['foo']
             assert a2 is not a
             eq_(a.value, None)
             eq_(a2.value, True)
 
         def clones_noninitial_contexts(self):
-            a = Argument('--foo')
+            a = Argument('foo')
             eq_(a.value, None)
             c = Context(name='mytask', args=(a,))
             p = Parser(contexts=(c,))
@@ -121,15 +121,15 @@ class Parser_(Spec):
             assert p.contexts['mytask'] is c
             c2 = r[0]
             assert c2 is not c
-            a2 = c2.args['--foo']
+            a2 = c2.args['foo']
             assert a2 is not a
             eq_(a.value, None)
             eq_(a2.value, True)
 
         def handles_equals_style_long_flags(self):
-            c = Context('mytask', args=(Argument('--foo', kind=str),))
+            c = Context('mytask', args=(Argument('foo', kind=str),))
             r = Parser((c,)).parse_argv(['mytask', '--foo=bar'])
-            eq_(r[0].args['--foo'].value, 'bar')
+            eq_(r[0].args['foo'].value, 'bar')
 
         def handles_equals_style_short_flags(self):
             c = Context('mytask', args=(Argument('-f', kind=str),))
