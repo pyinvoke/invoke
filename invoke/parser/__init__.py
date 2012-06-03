@@ -42,7 +42,19 @@ class Parser(object):
             Parser(...).parse_argv(['invoke', '--core-opt', ...])
         """
         machine = ParseMachine(initial=self.initial, contexts=self.contexts)
-        for index, token in enumerate(argv):
+        # FIXME: Why isn't there str.partition for lists? There must be a
+        # better way to do this. Split argv around the double-dash remainder
+        # sentinel.
+        debug("Starting argv: %r" % (argv,))
+        try:
+            ddash = argv.index('--')
+        except ValueError:
+            ddash = len(argv) # No remainder == body gets all
+        body = argv[:ddash]
+        remainder = argv[ddash:][1:] # [1:] to strip off remainder itself
+        if remainder:
+            debug("Remainder: argv[%r:][1:] => %r" % (ddash, remainder))
+        for index, token in enumerate(body):
             # Handle x=y style opts, but only if the machine isn't in the
             # "waiting for a flag value" state. (When it *is* in that state, it
             # should be given the value as-is, since it will be used as the
@@ -50,10 +62,12 @@ class Parser(object):
             is_combo_flag = token.startswith('-') and '=' in token
             if not machine.waiting_for_flag_value and is_combo_flag:
                 token, _, value = token.partition('=')
-                argv.insert(index + 1, value)
+                body.insert(index + 1, value)
             machine.handle(token)
         machine.finish()
-        return machine.result
+        result = machine.result
+        result.remainder = ' '.join(remainder)
+        return result
 
 
 class ParseMachine(StateMachine):
