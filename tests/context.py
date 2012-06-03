@@ -45,25 +45,26 @@ class Context_(Spec):
 
     class deepcopy:
         "__deepcopy__"
+        def setup(self):
+            self.arg = Argument('--boolean')
+            self.orig = Context(
+                name='mytask',
+                args=(self.arg,),
+                aliases=('othername',)
+            )
+            self.new = copy.deepcopy(self.orig)
+
         def returns_correct_copy(self):
-            orig = Context(name='foo', aliases=('bar',))
-            new = copy.deepcopy(orig)
-            assert new is not orig
-            eq_(new.name, 'foo')
-            assert 'bar' in new.aliases
+            assert self.new is not self.orig
+            eq_(self.new.name, 'mytask')
+            assert 'othername' in self.new.aliases
 
         def includes_arguments(self):
-            arg = Argument('--boolean')
-            orig = Context(name='mytask', args=(arg,))
-            new = copy.deepcopy(orig)
-            eq_(len(new.args), 1)
-            assert new.args['--boolean'] is not arg
+            eq_(len(self.new.args), 1)
+            assert self.new.args['--boolean'] is not self.arg
 
         def modifications_to_copied_arguments_do_not_touch_originals(self):
-            arg = Argument('--boolean')
-            orig = Context('mytask', args=(arg,))
-            new = copy.deepcopy(orig)
-            new_arg = new.args['--boolean']
+            new_arg = self.new.args['--boolean']
             new_arg.value = True
             assert new_arg.value
-            assert not arg.value
+            assert not self.arg.value
