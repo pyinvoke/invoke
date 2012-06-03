@@ -8,7 +8,7 @@ def _mytask():
 
 
 class Collection_(Spec):
-    class add_task:
+    class add_task(object):
         def setup(self):
             self.c = Collection()
 
@@ -34,11 +34,11 @@ class Collection_(Spec):
             self.c.add_task('foo', _mytask, default=True)
             self.c.add_task('bar', _mytask, default=True)
 
-    class add_collection:
+    class add_collection(object):
         def adds_collection_as_subcollection_of_self(self):
             skip()
 
-    class get:
+    class get(object):
         def setup(self):
             self.c = Collection()
 

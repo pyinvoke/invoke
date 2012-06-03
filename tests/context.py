@@ -20,7 +20,7 @@ class Context_(Spec):
         c = Context(name='name', args=(a1, a2))
         assert c.args['foo'] is a1
 
-    class add_arg:
+    class add_arg(object):
         def can_take_Argument_instance(self):
             c = Context()
             a = Argument(names=('foo',))
@@ -43,7 +43,7 @@ class Context_(Spec):
             c.add_arg(names=('foo', 'bar'))
             c.add_arg(name='bar')
 
-    class deepcopy:
+    class deepcopy(object):
         "__deepcopy__"
         def returns_correct_copy(self):
             orig = Context(name='foo', aliases=('bar',))

@@ -4,7 +4,7 @@ from invoke.parser import Argument
 
 
 class Argument_(Spec):
-    class init:
+    class init:(object)
         "__init__"
         def may_take_names_list(self):
             names = ('--foo', '-f')
@@ -20,7 +20,7 @@ class Argument_(Spec):
         def must_get_at_least_one_name(self):
             Argument()
 
-    class kind_kwarg:
+    class kind_kwarg(object):
         "'kind' kwarg"
 
         def is_optional(self):
@@ -40,19 +40,19 @@ class Argument_(Spec):
         def may_validate_on_set(self):
             Argument('a', kind=int).value = 'five'
 
-    class names:
+    class names(object):
         def returns_tuple_of_all_names(self):
             eq_(Argument(names=('--foo', '-b')).names, ('--foo', '-b'))
             eq_(Argument(name='--foo').names, ('--foo',))
 
-    class takes_value:
+    class takes_value(object):
         def False_for_basic_args(self):
             assert not Argument(name='a').takes_value
 
         def True_if_kind_is_set(self):
             assert Argument(name='-b', kind=str).takes_value
 
-    class value_set:
+    class value_set(object):
         "value="
         def available_as_dot_raw_value(self):
             "available as .raw_value"
@@ -73,12 +73,12 @@ class Argument_(Spec):
             eq_(a.value, 5)
             eq_(a.raw_value, '5')
 
-    class value:
+    class value(object):
         def returns_default_if_not_set(self):
             a = Argument('a', default=25)
             eq_(a.value, 25)
 
-    class raw_value:
+    class raw_value(object):
         def is_None_when_no_value_was_actually_seen(self):
             a = Argument('a', kind=int)
             eq_(a.raw_value, None)
