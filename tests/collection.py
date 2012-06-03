@@ -81,3 +81,7 @@ class Collection_(Spec):
 
         def returns_iterable_of_Contexts_corresponding_to_tasks(self):
             eq_(self.context.name, 'mytask')
+
+        def turns_function_signature_into_Arguments(self):
+            eq_(len(self.context.args), 1)
+            assert 'text' in self.context.args.keys()
