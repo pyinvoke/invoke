@@ -87,3 +87,8 @@ one. (This is a "tutorial" for CLI invocations, the spec would be more of an
 "API". The actual in-Python level API might be a third document, not sure yet.)
 
 **SEE ALSO:** :doc:`type_mapping` for thoughts on variable type operations.
+
+Also also:
+
+* Auto changing arguments eg. ``taskname(argname=default)`` turns into the
+  Argument ``--argname``.

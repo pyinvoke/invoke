@@ -50,6 +50,6 @@ class Collection(object):
         for name, task in self.tasks.iteritems():
             context = Context(name=name, aliases=task.aliases)
             for name in task.argspec:
-                context.add_arg(name)
+                context.add_arg('--' + name)
             result.append(context)
         return result
