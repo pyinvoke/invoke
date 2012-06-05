@@ -144,12 +144,15 @@ class Parser_(Spec):
 
 class ParseResult_(Spec):
     "ParseResult"
+    def setup(self):
+        self.context = Context('mytask',
+            args=(Argument('foo', kind=str), Argument('bar')))
+        argv = ['mytask', '--foo', 'foo-val', '--', 'my', 'remainder']
+        self.result = Parser((self.context,)).parse_argv(argv)
+
     def acts_as_a_list_of_parsed_contexts(self):
-        c = Context('mytask')
-        r = Parser((c,)).parse_argv(['mytask'])
-        eq_(len(r), 1)
-        eq_(r[0].name, c.name)
+        eq_(len(self.result), 1)
+        eq_(self.result[0].name, 'mytask')
 
     def exhibits_remainder_attribute(self):
-        r = Parser().parse_argv(['--', 'foo', 'bar'])
-        eq_(r.remainder, 'foo bar')
+        eq_(self.result.remainder, 'my remainder')
