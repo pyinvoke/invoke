@@ -10,7 +10,10 @@ class Task(object):
     @property
     def argspec(self):
         spec = inspect.getargspec(self.body)
-        ret = dict(zip(spec.args[-len(spec.defaults):], spec.defaults))
+        if spec.defaults is not None:
+            ret = dict(zip(spec.args[-len(spec.defaults):], spec.defaults))
+        else:
+            ret = {}
         ret.update((x, None) for x in spec.args if x not in ret)
         return ret
 
