@@ -1,5 +1,5 @@
 class Argument(object):
-    def __init__(self, name=None, names=(), kind=bool, default=None):
+    def __init__(self, name=None, names=(), kind=str, default=None):
         if name and names:
             msg = "Cannot give both 'name' and 'names' arguments! Pick one."
             raise TypeError(msg)

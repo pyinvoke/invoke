@@ -27,8 +27,8 @@ class Argument_(Spec):
             Argument(name='a')
             Argument(name='b', kind=int)
 
-        def defaults_to_bool(self):
-            eq_(Argument('a').kind, bool)
+        def defaults_to_str(self):
+            eq_(Argument('a').kind, str)
 
         def non_bool_implies_value_needed(self):
             assert Argument(name='a', kind=int).takes_value
@@ -46,11 +46,11 @@ class Argument_(Spec):
             eq_(Argument(name='--foo').names, ('--foo',))
 
     class takes_value:
-        def False_for_basic_args(self):
-            assert not Argument(name='a').takes_value
+        def True_by_default(self):
+            assert Argument(name='a').takes_value
 
-        def True_if_kind_is_set(self):
-            assert Argument(name='-b', kind=str).takes_value
+        def False_if_kind_is_bool(self):
+            assert not Argument(name='-b', kind=bool).takes_value
 
     class value_set:
         "value="

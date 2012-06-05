@@ -46,7 +46,7 @@ class Parser_(Spec):
             mytask = Context(name='mytask')
             mytask.add_arg('arg')
             p = Parser(contexts=[mytask])
-            p.parse_argv(['mytask', '--arg'])
+            p.parse_argv(['mytask', '--arg', 'value'])
 
         def returns_only_contexts_mentioned(self):
             task1 = Context('mytask')
@@ -69,7 +69,7 @@ class Parser_(Spec):
             eq_([x.name for x in r], ['t2', 't1'])
 
         def returned_context_member_arguments_contain_given_values(self):
-            c = Context('mytask', args=('boolean',))
+            c = Context('mytask', args=(Argument('boolean', kind=bool),))
             result = Parser((c,)).parse_argv(['mytask', '--boolean'])
             eq_(result[0].args['boolean'].value, True)
 
@@ -97,7 +97,7 @@ class Parser_(Spec):
             eq_(r.remainder, "bar biz")
 
         def clones_initial_context(self):
-            a = Argument('foo')
+            a = Argument('foo', kind=bool)
             eq_(a.value, None)
             c = Context(args=(a,))
             p = Parser(initial=c)
@@ -117,14 +117,14 @@ class Parser_(Spec):
             c = Context(name='mytask', args=(a,))
             p = Parser(contexts=(c,))
             assert p.contexts['mytask'] is c
-            r = p.parse_argv(['mytask', '--foo'])
+            r = p.parse_argv(['mytask', '--foo', 'val'])
             assert p.contexts['mytask'] is c
             c2 = r[0]
             assert c2 is not c
             a2 = c2.args['foo']
             assert a2 is not a
             eq_(a.value, None)
-            eq_(a2.value, True)
+            eq_(a2.value, 'val')
 
         def handles_equals_style_long_flags(self):
             c = Context('mytask', args=(Argument('foo', kind=str),))
