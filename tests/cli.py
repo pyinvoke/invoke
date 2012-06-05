@@ -69,8 +69,11 @@ class CLI(Spec):
         skip()
 
     def flag_value_then_task(self):
-        "task1 -f notatask task2"
-        skip()
+        r = self._parser().parse_argv("mytask -s value mytask2".split())
+        eq_(len(r), 2)
+        eq_(r[0].name, 'mytask')
+        eq_(r[0].args.s.value, 'value')
+        eq_(r[1].name, 'mytask2')
 
     def flag_value_same_as_task_name(self):
         "task1 -f mytask mytask"
