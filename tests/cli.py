@@ -54,21 +54,27 @@ class CLI(Spec):
         eq_(result.stdout, "Hm\n")
 
     def boolean_args(self):
+        "mytask --boolean"
         self._compare("--boolean", 'boolean', True)
 
     def flag_then_space_then_value(self):
+        "mytask --mystring foo"
         self._compare("--mystring foo", 'mystring', 'foo')
 
     def flag_then_equals_sign_then_value(self):
+        "mytask --mystring=foo"
         self._compare("--mystring=foo", 'mystring', 'foo')
 
     def short_boolean_flag(self):
+        "mytask -b"
         self._compare("-b", 'b', True)
 
     def short_flag_then_space_then_value(self):
+        "mytask -s value"
         self._compare("-s value", 's', 'value')
 
     def short_flag_then_equals_sign_then_value(self):
+        "mytask -s=value"
         self._compare("-s=value", 's', 'value')
 
     def short_flag_with_adjacent_value(self):
@@ -83,12 +89,15 @@ class CLI(Spec):
         eq_(r[1].name, 'mytask2')
 
     def flag_value_then_task(self):
+        "mytask -s value mytask2"
         self._flag_value_task('value')
 
     def flag_value_same_as_task_name(self):
+        "mytask -s mytask2 mytask2"
         self._flag_value_task('mytask2')
 
     def three_tasks_with_args(self):
+        "mytask --boolean mytask3 --mystring foo mytask2"
         r = self._parse("mytask --boolean mytask3 --mystring foo mytask2")
         eq_(len(r), 3)
         eq_([x.name for x in r], ['mytask', 'mytask3', 'mytask2'])
@@ -96,6 +105,7 @@ class CLI(Spec):
         eq_(r[1].args.mystring.value, 'foo')
 
     def tasks_with_duplicately_named_kwargs(self):
+        "mytask --mystring foo mytask3 --mystring bar"
         r = self._parse("mytask --mystring foo mytask3 --mystring bar")
         eq_(r[0].name, 'mytask')
         eq_(r[0].args.mystring.value, 'foo')
