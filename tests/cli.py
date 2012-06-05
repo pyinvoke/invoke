@@ -90,3 +90,7 @@ class CLI(Spec):
     def complex_multitask_invocation(self):
         "-c integration task1 --bool_arg --val_arg=value task2 --val_arg othervalue -b"
         skip()
+
+    def multiple_short_flags_adjacent(self):
+        "task1 -abc => equiv to task1 -a -b -c"
+        skip()
