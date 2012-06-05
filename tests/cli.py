@@ -20,9 +20,13 @@ class CLI(Spec):
         @task
         def mytask2():
             pass
+        @task
+        def mytask3(mystring):
+            pass
         c = Collection()
         c.add_task('mytask', mytask)
         c.add_task('mytask2', mytask2)
+        c.add_task('mytask3', mytask3)
         self.c = c
 
     def _parser(self):
@@ -86,7 +90,11 @@ class CLI(Spec):
 
     def three_tasks_with_args(self):
         "task1 --task1_bool task2 --task2_arg task2_arg_value task3"
-        skip()
+        r = self._parse("mytask --boolean mytask3 --mystring foo mytask2")
+        eq_(len(r), 3)
+        eq_([x.name for x in r], ['mytask', 'mytask3', 'mytask2'])
+        eq_(r[0].args.boolean.value, True)
+        eq_(r[1].args.mystring.value, 'foo')
 
     def tasks_with_duplicately_named_kwargs(self):
         "task1 --myarg=value task2 --myarg=othervalue"
