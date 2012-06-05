@@ -53,7 +53,8 @@ class CLI(Spec):
 
     def flag_then_space_then_value(self):
         "taskname --flag value"
-        skip()
+        r = _parse("mytask --mystring foo", self.c)
+        eq_(r.to_dict()['mytask']['mystring'], 'foo')
 
     def flag_then_equals_sign_then_value(self):
         "taskname --flag=value"
