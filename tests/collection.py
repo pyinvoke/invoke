@@ -84,4 +84,7 @@ class Collection_(Spec):
 
         def turns_function_signature_into_Arguments(self):
             eq_(len(self.context.args), 1)
-            assert 'text' in self.context.args.keys()
+            assert 'text' in self.context.args
+
+        def allows_flaglike_access_via_flags(self):
+            assert '--text' in self.context.flags

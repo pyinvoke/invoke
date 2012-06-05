@@ -21,27 +21,42 @@ class Context_(Spec):
         assert c.args['foo'] is a1
 
     class add_arg:
+        def setup(self):
+            self.c = Context()
+
         def can_take_Argument_instance(self):
-            c = Context()
             a = Argument(names=('foo',))
-            c.add_arg(a)
-            assert c.args['foo'] is a
+            self.c.add_arg(a)
+            assert self.c.args['foo'] is a
 
         def can_take_name_arg(self):
-            c = Context()
-            c.add_arg('foo')
-            assert 'foo' in c.args
+            self.c.add_arg('foo')
+            assert 'foo' in self.c.args
 
         def can_take_kwargs(self):
-            c = Context()
-            c.add_arg(names=('foo', 'bar'))
-            assert 'foo' in c.args and 'bar' in c.args
+            self.c.add_arg(names=('foo', 'bar'))
+            assert 'foo' in self.c.args and 'bar' in self.c.args
 
         @raises(ValueError)
         def raises_ValueError_on_duplicate(self):
-            c = Context()
-            c.add_arg(names=('foo', 'bar'))
-            c.add_arg(name='bar')
+            self.c.add_arg(names=('foo', 'bar'))
+            self.c.add_arg(name='bar')
+
+        def adds_flaglike_name_to_dot_flags(self):
+            "adds flaglike name to .flags"
+            self.c.add_arg('foo')
+            assert '--foo' in self.c.flags
+
+        def adds_all_names_to_dot_flags(self):
+            "adds all names to .flags"
+            self.c.add_arg(names=('foo', 'bar'))
+            assert '--foo' in self.c.flags
+            assert '--bar' in self.c.flags
+
+        def turns_single_character_names_into_short_flags(self):
+            self.c.add_arg('f')
+            assert '-f' in self.c.flags
+            assert '--f' not in self.c.flags
 
     class deepcopy:
         "__deepcopy__"

@@ -99,7 +99,7 @@ class ParseMachine(StateMachine):
 
     def handle(self, token):
         debug("Handling token: %r" % token)
-        if self.context and token in self.context.args:
+        if self.context and token in self.context.flags:
             self.see_flag(token)
         elif self.waiting_for_flag_value:
             self.see_value(token)
@@ -131,7 +131,7 @@ class ParseMachine(StateMachine):
             self.flag.value = True
 
     def see_flag(self, flag):
-        self.flag = self.context.args[flag]
+        self.flag = self.context.flags[flag]
         debug("Moving to flag %r" % self.flag)
 
     def see_value(self, value):

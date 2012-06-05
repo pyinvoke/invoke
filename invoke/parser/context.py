@@ -3,6 +3,12 @@ from lexicon import Lexicon
 from .argument import Argument
 
 
+def to_flag(name):
+    if len(name) == 1:
+        return '-' + name
+    return '--' + name
+
+
 class Context(object):
     """
     Parsing context with knowledge of flags & their format.
@@ -28,6 +34,7 @@ class Context(object):
         ``for arg in args: self.add_arg(arg)`` after initialization.
         """
         self.args = Lexicon()
+        self.flags = Lexicon()
         self.name = name
         self.aliases = aliases
         for arg in args:
@@ -41,6 +48,13 @@ class Context(object):
     def add_arg(self, *args, **kwargs):
         """
         Adds given ``Argument`` (or constructor args for one) to this context.
+
+        The Argument in question is added to two dict attributes:
+
+        * ``args``: "normal" access, i.e. the given names are directly exposed
+          as keys.
+        * ``flags``: "flaglike" access, i.e. the given names are translated
+          into CLI flags, e.g. ``"foo"`` is accessible via ``flags['--foo']``.
         """
         # Normalize
         if len(args) == 1 and isinstance(args[0], Argument):
@@ -55,5 +69,7 @@ class Context(object):
         # Add
         main = arg.names[0]
         self.args[main] = arg
+        self.flags[to_flag(main)] = arg
         for name in arg.names[1:]:
             self.args.alias(name, to=main)
+            self.flags.alias(to_flag(name), to=to_flag(main))
