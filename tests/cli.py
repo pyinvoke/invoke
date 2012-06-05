@@ -25,6 +25,15 @@ def _parse(argstr, collection):
 class CLI(Spec):
     "Command-line interface"
 
+    def setup(self):
+        @task
+        def mytask(mystring, boolean=False):
+            pass
+        self.mytask = mytask
+        c = Collection()
+        c.add_task('mytask', mytask)
+        self.c = c
+
     # Yo dogfood, I heard you like invoking
     def basic_invocation(self):
         os.chdir(support)
@@ -39,13 +48,8 @@ class CLI(Spec):
         eq_(result.stdout, "Hm\n")
 
     def boolean_args(self):
-        @task
-        def mytask(boolean=False):
-            pass
-        c = Collection()
-        c.add_task('mytask', mytask)
-        r = _parse("mytask --boolean", collection=c)
-        eq_(r.to_dict(), {'mytask': {'boolean': True}})
+        r = _parse("mytask --boolean", self.c)
+        eq_(r.to_dict()['mytask']['boolean'], True)
 
     def flag_then_space_then_value(self):
         "taskname --flag value"
