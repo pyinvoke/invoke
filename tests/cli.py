@@ -28,9 +28,12 @@ class CLI(Spec):
     def _parser(self):
         return Parser(self.c.to_contexts())
 
+    def _parse(self, argstr):
+        return self._parser().parse_argv(argstr.split())
+
     def _compare(self, invoke, flagname, value):
         invoke = "mytask " + invoke
-        result = self._parser().parse_argv(invoke.split())
+        result = self._parse(invoke)
         eq_(result.to_dict()['mytask'][flagname], value)
 
     # Yo dogfood, I heard you like invoking
@@ -69,7 +72,7 @@ class CLI(Spec):
         skip()
 
     def flag_value_then_task(self):
-        r = self._parser().parse_argv("mytask -s value mytask2".split())
+        r = self._parse("mytask -s value mytask2")
         eq_(len(r), 2)
         eq_(r[0].name, 'mytask')
         eq_(r[0].args.s.value, 'value')
