@@ -160,5 +160,5 @@ class ParseResult_(Spec):
     def to_dict_returns_parsed_contexts_and_args_as_nested_dicts(self):
         eq_(
             self.result.to_dict(),
-            {'mytask': {'foo': 'foo-val', 'bar': False}}
+            {'mytask': {'foo': 'foo-val', 'bar': None}}
         )

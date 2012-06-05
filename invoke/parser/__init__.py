@@ -149,7 +149,16 @@ class ParseResult(list):
     Specifically, a ``.remainder`` attribute, which is a list of the tokens
     found after a ``--`` in any parsed argv list.
     """
-    pass
+    remainder = ""
+
+    def to_dict(self):
+        d = {}
+        for context in self:
+            argd = {}
+            for name, arg in context.args.iteritems():
+                argd[name] = arg.value
+            d[context.name] = argd
+        return d
 
 
 class ParseError(Exception):
