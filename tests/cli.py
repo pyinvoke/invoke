@@ -45,8 +45,7 @@ class CLI(Spec):
         c = Collection()
         c.add_task('mytask', mytask)
         r = _parse("mytask --boolean", collection=c)
-        eq_(r[0].args.boolean.value, True)
-        eq_(len(r), 1)
+        eq_(r.to_dict(), {'mytask': {'boolean': True}})
 
     def flag_then_space_then_value(self):
         "taskname --flag value"
