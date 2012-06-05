@@ -51,8 +51,8 @@ class Collection(object):
             context = Context(name=name, aliases=task.aliases)
             for name, default in task.argspec.iteritems():
                 opts = {}
-                if isinstance(default, bool):
-                    opts['kind'] = bool
+                if default is not None:
+                    opts['kind'] = type(default)
                 context.add_arg(name, **opts)
             result.append(context)
         return result

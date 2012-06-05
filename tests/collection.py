@@ -73,7 +73,7 @@ class Collection_(Spec):
     class to_contexts:
         def setup(self):
             @task
-            def mytask(text, boolean=False):
+            def mytask(text, boolean=False, number=5):
                 print text
             self.c = Collection()
             self.c.add_task('mytask', mytask)
@@ -83,11 +83,13 @@ class Collection_(Spec):
             eq_(self.context.name, 'mytask')
 
         def turns_function_signature_into_Arguments(self):
-            eq_(len(self.context.args), 2)
+            eq_(len(self.context.args), 3)
             assert 'text' in self.context.args
 
         def boolean_default_arg_values_inform_Argument_kind_kwarg(self):
-            eq_(self.context.args.boolean.kind, bool)
+            a = self.context.args
+            eq_(a.boolean.kind, bool)
+            eq_(a.number.kind, int)
 
         def allows_flaglike_access_via_flags(self):
             assert '--text' in self.context.flags
