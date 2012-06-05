@@ -15,16 +15,22 @@ class CLI(Spec):
 
     def setup(self):
         @task
-        def mytask(mystring, boolean=False):
+        def mytask(mystring, s, boolean=False, b=False):
             pass
-        self.mytask = mytask
+        @task
+        def mytask2():
+            pass
         c = Collection()
         c.add_task('mytask', mytask)
+        c.add_task('mytask2', mytask2)
         self.c = c
+
+    def _parser(self):
+        return Parser(self.c.to_contexts())
 
     def _compare(self, invoke, flagname, value):
         invoke = "mytask " + invoke
-        result = Parser(self.c.to_contexts()).parse_argv(invoke.split())
+        result = self._parser().parse_argv(invoke.split())
         eq_(result.to_dict()['mytask'][flagname], value)
 
     # Yo dogfood, I heard you like invoking
@@ -44,24 +50,19 @@ class CLI(Spec):
         self._compare("--boolean", 'boolean', True)
 
     def flag_then_space_then_value(self):
-        "taskname --flag value"
         self._compare("--mystring foo", 'mystring', 'foo')
 
     def flag_then_equals_sign_then_value(self):
-        "taskname --flag=value"
-        skip()
+        self._compare("--mystring=foo", 'mystring', 'foo')
 
     def short_boolean_flag(self):
-        "taskname -f"
-        skip()
+        self._compare("-b", 'b', True)
 
     def short_flag_then_space_then_value(self):
-        "taskname -f value"
-        skip()
+        self._compare("-s value", 's', 'value')
 
     def short_flag_then_equals_sign_then_value(self):
-        "taskname -f=value"
-        skip()
+        self._compare("-s=value", 's', 'value')
 
     def short_flag_with_adjacent_value(self):
         "taskname -fvalue"
