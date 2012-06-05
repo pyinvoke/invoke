@@ -140,3 +140,16 @@ class Parser_(Spec):
             c = Context('mytask', args=(Argument('f', kind=str),))
             r = Parser((c,)).parse_argv(['mytask', '-f=biz=baz'])
             eq_(r[0].args['f'].value, 'biz=baz')
+
+
+class ParseResult_(Spec):
+    "ParseResult"
+    def acts_as_a_list_of_parsed_contexts(self):
+        c = Context('mytask')
+        r = Parser((c,)).parse_argv(['mytask'])
+        eq_(len(r), 1)
+        eq_(r[0].name, c.name)
+
+    def exhibits_remainder_attribute(self):
+        r = Parser().parse_argv(['--', 'foo', 'bar'])
+        eq_(r.remainder, 'foo bar')
