@@ -5,16 +5,15 @@ from spec import eq_, skip, Spec
 from invoke import run
 from invoke.parser import Parser, Context
 from invoke.collection import Collection
+from invoke.task import task
 
 from _utils import support
 
 
-def _parse(argstr, parser=None, collection=None):
+def _parse(argstr, collection):
     # TODO: this will clearly turn into the actual main cli stub sometime.
     # TODO: Replace with actual objects at that time.
-    # Set up a parser
-    if parser is None:
-        parser = Parser()
+    parser = Parser(contexts=collection.to_contexts())
     # Naive string-to-argv: split on whitespace.
     # It's probably safe to assume most tests won't be using spaces in flag
     # values and stuff (e.g. "invoke --foo='biz baz'")
@@ -40,6 +39,7 @@ class CLI(Spec):
         eq_(result.stdout, "Hm\n")
 
     def boolean_args(self):
+        @task
         def mytask(boolean=False):
             pass
         c = Collection()

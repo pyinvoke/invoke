@@ -132,11 +132,11 @@ class Parser_(Spec):
             eq_(r[0].args['foo'].value, 'bar')
 
         def handles_equals_style_short_flags(self):
-            c = Context('mytask', args=(Argument('-f', kind=str),))
+            c = Context('mytask', args=(Argument('f', kind=str),))
             r = Parser((c,)).parse_argv(['mytask', '-f=bar'])
-            eq_(r[0].args['-f'].value, 'bar')
+            eq_(r[0].args['f'].value, 'bar')
 
         def does_not_require_escaping_equals_signs_in_value(self):
-            c = Context('mytask', args=(Argument('-f', kind=str),))
+            c = Context('mytask', args=(Argument('f', kind=str),))
             r = Parser((c,)).parse_argv(['mytask', '-f=biz=baz'])
-            eq_(r[0].args['-f'].value, 'biz=baz')
+            eq_(r[0].args['f'].value, 'biz=baz')
