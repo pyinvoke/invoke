@@ -95,7 +95,7 @@ class ParseMachine(StateMachine):
 
     @property
     def waiting_for_flag_value(self):
-        return self.flag and self.flag.takes_value
+        return self.flag and self.flag.takes_value and self.flag.raw_value is None
 
     def handle(self, token):
         debug("Handling token: %r" % token)
