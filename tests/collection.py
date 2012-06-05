@@ -75,12 +75,18 @@ class Collection_(Spec):
             @task
             def mytask(text, boolean=False, number=5):
                 print text
+            @task
+            def mytask2():
+                pass
             self.c = Collection()
             self.c.add_task('mytask', mytask)
-            self.context = self.c.to_contexts()[0]
+            self.c.add_task('mytask2', mytask2)
+            self.contexts = self.c.to_contexts()
+            self.context = self.contexts[1]
 
         def returns_iterable_of_Contexts_corresponding_to_tasks(self):
             eq_(self.context.name, 'mytask')
+            eq_(len(self.contexts), 2)
 
         def turns_function_signature_into_Arguments(self):
             eq_(len(self.context.args), 3)
