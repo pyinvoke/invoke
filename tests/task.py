@@ -33,10 +33,13 @@ class task_(Spec):
 
 
 class Task_(Spec):
-    class args:
+    class argspec:
         def setup(self):
-            def mytask(arg1, arg2): pass
+            def mytask(arg1, arg2=False): pass
             self.task = task(mytask)
 
         def returns_argument_names(self):
             assert 'arg1' in self.task.argspec
+
+        def returns_argument_default_values(self):
+            assert self.task.argspec['arg2'] is False
