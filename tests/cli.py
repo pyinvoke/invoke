@@ -71,16 +71,18 @@ class CLI(Spec):
         "taskname -fvalue"
         skip()
 
-    def flag_value_then_task(self):
-        r = self._parse("mytask -s value mytask2")
+    def _flag_value_task(self, value):
+        r = self._parse("mytask -s %s mytask2" % value)
         eq_(len(r), 2)
         eq_(r[0].name, 'mytask')
-        eq_(r[0].args.s.value, 'value')
+        eq_(r[0].args.s.value, value)
         eq_(r[1].name, 'mytask2')
 
+    def flag_value_then_task(self):
+        self._flag_value_task('value')
+
     def flag_value_same_as_task_name(self):
-        "task1 -f mytask mytask"
-        skip()
+        self._flag_value_task('mytask2')
 
     def three_tasks_with_args(self):
         "task1 --task1_bool task2 --task2_arg task2_arg_value task3"
