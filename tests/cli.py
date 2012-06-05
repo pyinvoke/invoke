@@ -89,7 +89,6 @@ class CLI(Spec):
         self._flag_value_task('mytask2')
 
     def three_tasks_with_args(self):
-        "task1 --task1_bool task2 --task2_arg task2_arg_value task3"
         r = self._parse("mytask --boolean mytask3 --mystring foo mytask2")
         eq_(len(r), 3)
         eq_([x.name for x in r], ['mytask', 'mytask3', 'mytask2'])
@@ -97,8 +96,11 @@ class CLI(Spec):
         eq_(r[1].args.mystring.value, 'foo')
 
     def tasks_with_duplicately_named_kwargs(self):
-        "task1 --myarg=value task2 --myarg=othervalue"
-        skip()
+        r = self._parse("mytask --mystring foo mytask3 --mystring bar")
+        eq_(r[0].name, 'mytask')
+        eq_(r[0].args.mystring.value, 'foo')
+        eq_(r[1].name, 'mytask3')
+        eq_(r[1].args.mystring.value, 'bar')
 
     def complex_multitask_invocation(self):
         "-c integration task1 --bool_arg --val_arg=value task2 --val_arg othervalue -b"
