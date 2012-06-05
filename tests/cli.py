@@ -10,18 +10,6 @@ from invoke.task import task
 from _utils import support
 
 
-def _parse(argstr, collection):
-    # TODO: this will clearly turn into the actual main cli stub sometime.
-    # TODO: Replace with actual objects at that time.
-    parser = Parser(contexts=collection.to_contexts())
-    # Naive string-to-argv: split on whitespace.
-    # It's probably safe to assume most tests won't be using spaces in flag
-    # values and stuff (e.g. "invoke --foo='biz baz'")
-    argv = argstr.split()
-    return parser.parse_argv(argv)
-
-
-# Yea, it's not really object-oriented, but whatever :)
 class CLI(Spec):
     "Command-line interface"
 
@@ -33,6 +21,11 @@ class CLI(Spec):
         c = Collection()
         c.add_task('mytask', mytask)
         self.c = c
+
+    def _compare(self, invoke, flagname, value):
+        invoke = "mytask " + invoke
+        result = Parser(self.c.to_contexts()).parse_argv(invoke.split())
+        eq_(result.to_dict()['mytask'][flagname], value)
 
     # Yo dogfood, I heard you like invoking
     def basic_invocation(self):
@@ -48,13 +41,11 @@ class CLI(Spec):
         eq_(result.stdout, "Hm\n")
 
     def boolean_args(self):
-        r = _parse("mytask --boolean", self.c)
-        eq_(r.to_dict()['mytask']['boolean'], True)
+        self._compare("--boolean", 'boolean', True)
 
     def flag_then_space_then_value(self):
         "taskname --flag value"
-        r = _parse("mytask --mystring foo", self.c)
-        eq_(r.to_dict()['mytask']['mystring'], 'foo')
+        self._compare("--mystring foo", 'mystring', 'foo')
 
     def flag_then_equals_sign_then_value(self):
         "taskname --flag=value"
