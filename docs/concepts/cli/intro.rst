@@ -54,6 +54,14 @@ values from ``False`` to ``True``::
 
     $ invoke build --progress-bar
 
+Boolean short flags may be combined into one flag expression, so that e.g.::
+
+    $ invoke build -qv
+
+is equivalent to (and expanded into, during parsing)::
+
+    $ invoke build -q -v
+
 Multiple tasks
 ==============
 
