@@ -141,6 +141,15 @@ class Parser_(Spec):
             def does_not_require_escaping_equals_signs_in_value(self):
                 self._compare('f', '-f=biz=baz', 'biz=baz')
 
+        def handles_multiple_boolean_flags_per_context(self):
+            c = Context('mytask', args=(
+                Argument('foo', kind=bool), Argument('bar', kind=bool)
+            ))
+            r = Parser((c,)).parse_argv(['mytask', '--foo', '--bar'])
+            a = r[0].args
+            eq_(a.foo.value, True)
+            eq_(a.bar.value, True)
+
 
 class ParseResult_(Spec):
     "ParseResult"
