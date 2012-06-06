@@ -126,20 +126,20 @@ class Parser_(Spec):
             eq_(a.value, None)
             eq_(a2.value, 'val')
 
-        def handles_equals_style_long_flags(self):
-            c = Context('mytask', args=(Argument('foo', kind=str),))
-            r = Parser((c,)).parse_argv(['mytask', '--foo=bar'])
-            eq_(r[0].args['foo'].value, 'bar')
+        class equals_signs:
+            def _compare(self, argname, invoke, value):
+                c = Context('mytask', args=(Argument(argname, kind=str),))
+                r = Parser((c,)).parse_argv(['mytask', invoke])
+                eq_(r[0].args[argname].value, value)
 
-        def handles_equals_style_short_flags(self):
-            c = Context('mytask', args=(Argument('f', kind=str),))
-            r = Parser((c,)).parse_argv(['mytask', '-f=bar'])
-            eq_(r[0].args['f'].value, 'bar')
+            def handles_equals_style_long_flags(self):
+                self._compare('foo', '--foo=bar', 'bar')
 
-        def does_not_require_escaping_equals_signs_in_value(self):
-            c = Context('mytask', args=(Argument('f', kind=str),))
-            r = Parser((c,)).parse_argv(['mytask', '-f=biz=baz'])
-            eq_(r[0].args['f'].value, 'biz=baz')
+            def handles_equals_style_short_flags(self):
+                self._compare('f', '-f=bar', 'bar')
+
+            def does_not_require_escaping_equals_signs_in_value(self):
+                self._compare('f', '-f=biz=baz', 'biz=baz')
 
 
 class ParseResult_(Spec):
