@@ -20,10 +20,6 @@ To find out what's new in this version of Invoke, please see `the changelog
 %s
 """ % (v, open('README.rst').read())
 
-requirements = ['lexicon']
-if sys.version_info[:2] == (2, 6):
-    requirements.append("argparse>=1.2.1")
-
 setup(
     name='invoke',
     version=v,
@@ -35,7 +31,7 @@ setup(
     author_email='jeff@bitprophet.org',
     url='http://docs.pyinvoke.org',
 
-    install_requires=requirements,
+    install_requires=('lexicon',),
     packages=["invoke"],
     entry_points={
         'console_scripts': [
