@@ -4,7 +4,7 @@ interface easily with Python codebases, and of course write your tasks
 themselves in straight-up Python.
 
 For documentation, including detailed installation information, please see
-http://pyinvoke.org. Post-install usage information may be found in ``invoke
+http://docs.pyinvoke.org. Post-install usage information may be found in ``invoke
 --help``.
 
 You can install the `development version

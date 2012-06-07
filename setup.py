@@ -33,7 +33,7 @@ setup(
     long_description=long_description,
     author='Jeff Forcier',
     author_email='jeff@bitprophet.org',
-    url='http://pyinvoke.org',
+    url='http://docs.pyinvoke.org',
 
     install_requires=requirements,
     packages=["invoke"],
