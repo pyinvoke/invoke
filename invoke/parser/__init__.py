@@ -64,7 +64,7 @@ class Parser(object):
                     token, _, value = token.partition('=')
                     debug("Splitting %r into tokens %r and %r" % (orig, token, value))
                     body.insert(index + 1, value)
-                # Contiguous booleans hort flags, e.g. -qv
+                # Contiguous boolean short flags, e.g. -qv
                 elif not token.startswith('--') and len(token) > 2:
                     rest, token = token[2:], token[:2]
                     rest = map(lambda x: '-%s' % x, rest)
