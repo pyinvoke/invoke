@@ -54,6 +54,9 @@ values from ``False`` to ``True``::
 
     $ invoke build --progress-bar
 
+Globbed short flags
+-------------------
+
 Boolean short flags may be combined into one flag expression, so that e.g.::
 
     $ invoke build -qv
@@ -61,6 +64,20 @@ Boolean short flags may be combined into one flag expression, so that e.g.::
 is equivalent to (and expanded into, during parsing)::
 
     $ invoke build -q -v
+
+If the first flag in a globbed short flag token is not a boolean but takes a
+value, the rest of the glob is taken to be the value instead. E.g.::
+
+    $ invoke -fpdf
+
+is expanded into::
+
+    $ invoke -f pdf
+
+and **not**::
+
+    $ invoke -f -p -d -f
+
 
 Multiple tasks
 ==============
