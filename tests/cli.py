@@ -78,8 +78,9 @@ class CLI(Spec):
         self._compare("-s=value", 's', 'value')
 
     def short_flag_with_adjacent_value(self):
-        "taskname -fvalue"
-        skip()
+        "mytask -svalue"
+        r = self._parse("mytask -svalue")
+        eq_(r[0].args.s.value, 'value')
 
     def _flag_value_task(self, value):
         r = self._parse("mytask -s %s mytask2" % value)
