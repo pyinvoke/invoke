@@ -67,10 +67,15 @@ class Parser(object):
                 # Contiguous boolean short flags, e.g. -qv
                 elif not token.startswith('--') and len(token) > 2:
                     rest, token = token[2:], token[:2]
-                    rest = map(lambda x: '-%s' % x, rest)
-                    debug("Splitting %r into %r and %r" % (orig, token, rest))
-                    for item in reversed(rest):
-                        body.insert(index + 1, item)
+                    # Handle boolean flag block vs short-flag + value
+                    have_flag = token in machine.context.flags
+                    if have_flag and machine.context.flags[token].takes_value:
+                        body.insert(index + 1, rest)
+                    else:
+                        rest = map(lambda x: '-%s' % x, rest)
+                        debug("Splitting %r into %r and %r" % (orig, token, rest))
+                        for item in reversed(rest):
+                            body.insert(index + 1, item)
             machine.handle(token)
         machine.finish()
         result = machine.result
