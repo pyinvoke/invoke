@@ -86,6 +86,7 @@ class ParseMachine(StateMachine):
 
     transition(from_='context', event='finish', to='end')
     transition(from_='context', event='see_context', action='switch_to_context', to='context')
+    transition(from_='context', event='see_flag', action='switch_to_flag', to='context')
 
     def changing_state(self, from_, to):
         debug("ParseMachine: %r => %r" % (from_, to))
@@ -138,7 +139,7 @@ class ParseMachine(StateMachine):
             debug("Marking seen flag %r as True" % self.flag)
             self.flag.value = True
 
-    def see_flag(self, flag):
+    def switch_to_flag(self, flag):
         self.flag = self.context.flags[flag]
         debug("Moving to flag %r" % self.flag)
 
