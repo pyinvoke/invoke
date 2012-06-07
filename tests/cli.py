@@ -15,7 +15,7 @@ class CLI(Spec):
 
     def setup(self):
         @task
-        def mytask(mystring, s, boolean=False, b=False):
+        def mytask(mystring, s, boolean=False, b=False, v=False):
             pass
         @task
         def mytask2():
@@ -113,5 +113,8 @@ class CLI(Spec):
         eq_(r[1].args.mystring.value, 'bar')
 
     def multiple_short_flags_adjacent(self):
-        "task1 -abc => equiv to task1 -a -b -c"
-        skip()
+        "mytask -bv"
+        r = self._parse("mytask -bv")
+        a = r[0].args
+        eq_(a.b.value, True)
+        eq_(a.v.value, True)

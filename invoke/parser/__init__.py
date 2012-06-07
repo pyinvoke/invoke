@@ -55,14 +55,22 @@ class Parser(object):
         if remainder:
             debug("Remainder: argv[%r:][1:] => %r" % (ddash, remainder))
         for index, token in enumerate(body):
-            # Handle x=y style opts, but only if the machine isn't in the
-            # "waiting for a flag value" state. (When it *is* in that state, it
-            # should be given the value as-is, since it will be used as the
-            # value for the preceding flag.)
-            is_combo_flag = token.startswith('-') and '=' in token
-            if not machine.waiting_for_flag_value and is_combo_flag:
-                token, _, value = token.partition('=')
-                body.insert(index + 1, value)
+            # Handle non-space-delimited forms, if not currently expecting a
+            # flag value.
+            if not machine.waiting_for_flag_value and token.startswith('-'):
+                orig = token
+                # Equals-sign-delimited flags, eg --foo=bar or -f=bar
+                if '=' in token:
+                    token, _, value = token.partition('=')
+                    debug("Splitting %r into tokens %r and %r" % (orig, token, value))
+                    body.insert(index + 1, value)
+                # Contiguous booleans hort flags, e.g. -qv
+                elif not token.startswith('--') and len(token) > 2:
+                    rest, token = token[2:], token[:2]
+                    rest = map(lambda x: '-%s' % x, rest)
+                    debug("Splitting %r into %r and %r" % (orig, token, rest))
+                    for item in reversed(rest):
+                        body.insert(index + 1, item)
             machine.handle(token)
         machine.finish()
         result = machine.result
