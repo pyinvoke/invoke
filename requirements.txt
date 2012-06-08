@@ -2,6 +2,6 @@
 Sphinx>=1.1.2
 # Testing
 nose>=1.1.2
-spec>=0.9.5
+spec>=0.9.6
 # Need ourselves installed to test.
 -e .
