@@ -20,6 +20,9 @@ class Argument_(Spec):
         def must_get_at_least_one_name(self):
             Argument()
 
+        def default_arg_is_name_not_names(self):
+            assert 'b' in Argument('b').names
+
     class kind_kwarg:
         "'kind' kwarg"
 
