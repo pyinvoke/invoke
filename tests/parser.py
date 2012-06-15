@@ -39,6 +39,12 @@ class Parser_(Spec):
     def raises_error_for_context_alias_and_name_clashes(self):
         Parser(contexts=(Context('foo', aliases=('bar',)), Context('bar')))
 
+    def takes_ignore_unknown_kwarg(self):
+        Parser(ignore_unknown=True)
+
+    def ignore_unknown_defaults_to_False(self):
+        eq_(Parser().ignore_unknown, False)
+
     class parse_argv:
         def parses_sys_argv_style_list_of_strings(self):
             "parses sys.argv-style list of strings"
