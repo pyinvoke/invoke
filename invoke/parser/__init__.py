@@ -19,10 +19,17 @@ class Parser(object):
 
     ``initial`` is optional and will be used to determine validity of "core"
     options/flags at the start of the parse run, if any are encountered.
+
+    ``ignore_unknown`` determines what to do when contexts are found which do
+    not map to any members of ``contexts``. By default it is ``False``, meaning
+    any unknown contexts result in a parse error exception. If ``True``,
+    encountering an unknown context halts parsing and populates the return
+    value's ``.unparsed`` attribute with the remaining parse tokens.
     """
-    def __init__(self, contexts=(), initial=None):
+    def __init__(self, contexts=(), initial=None, ignore_unknown=False):
         self.initial = initial
         self.contexts = Lexicon()
+        self.ignore_unknown = ignore_unknown
         for context in contexts:
             debug("Adding %s" % context)
             if not context.name:
