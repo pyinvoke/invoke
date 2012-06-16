@@ -1,6 +1,6 @@
 from spec import Spec, skip, ok_, eq_, raises
 
-from invoke.parser import Parser, Context, Argument
+from invoke.parser import Parser, Context, Argument, ParseError
 from invoke.collection import Collection
 
 
@@ -37,7 +37,12 @@ class Parser_(Spec):
 
     @raises(ValueError)
     def raises_error_for_context_alias_and_name_clashes(self):
-        Parser(contexts=(Context('foo', aliases=('bar',)), Context('bar')))
+        Parser((Context('foo', aliases=('bar',)), Context('bar')))
+
+    @raises(ValueError)
+    def raises_error_for_context_name_and_alias_clashes(self):
+        # I.e. inverse of the above, which is a different code path.
+        Parser((Context('foo'), Context('bar', aliases=('foo',))))
 
     def takes_ignore_unknown_kwarg(self):
         Parser(ignore_unknown=True)
@@ -60,6 +65,10 @@ class Parser_(Spec):
             result = Parser((task1, task2)).parse_argv(['othertask'])
             eq_(len(result), 1)
             eq_(result[0].name, 'othertask')
+
+        @raises(ParseError)
+        def raises_error_if_unknown_contexts_found(self):
+            Parser().parse_argv(['foo'])
 
         def always_includes_initial_context_if_one_was_given(self):
             # Even if no core/initial flags were seen

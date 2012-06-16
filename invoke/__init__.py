@@ -18,7 +18,7 @@ def run(command):
         stderr=PIPE
     )
     stdout, stderr = process.communicate()
-    if False:
+    if False: # pragma: no cover
         print "===== stdout ====="
         print stdout
         print "=================="

@@ -32,6 +32,9 @@ class Loader_(Spec):
         def honors_discovery_root_option(self):
             skip()
 
+        def searches_towards_root_of_filesystem(self):
+            skip()
+
         def only_adds_valid_task_objects(self):
             skip()
 

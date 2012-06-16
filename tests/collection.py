@@ -70,6 +70,10 @@ class Collection_(Spec):
             "is aliased to __getitem__"
             skip()
 
+        @raises(ValueError)
+        def raises_ValueError_for_no_name_and_no_default(self):
+            self.c.get()
+
     class to_contexts:
         def setup(self):
             @task
