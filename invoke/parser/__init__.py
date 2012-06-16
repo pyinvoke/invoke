@@ -9,6 +9,17 @@ from ..util import debug
 
 
 class Parser(object):
+    """
+    Create parser conscious of ``contexts`` and optional ``initial`` context.
+
+    ``contexts`` should be an iterable of ``Context`` instances which will be
+    searched when new context names are encountered during a parse. These
+    Contexts determine what flags may follow them, as well as whether given
+    flags take values.
+
+    ``initial`` is optional and will be used to determine validity of "core"
+    options/flags at the start of the parse run, if any are encountered.
+    """
     def __init__(self, contexts=(), initial=None):
         self.initial = initial
         self.contexts = Lexicon()
