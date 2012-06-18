@@ -146,11 +146,8 @@ class ParseMachine(StateMachine):
             self.result.append(self.context)
 
     def switch_to_context(self, name):
-        try:
-            self.context = self.contexts[name]
-            debug("Moving to context %r" % name)
-        except KeyError:
-            raise ParseError("Task %r not found!" % name)
+        self.context = self.contexts[name]
+        debug("Moving to context %r" % name)
 
     def complete_flag(self):
         if self.flag is None:
