@@ -131,12 +131,16 @@ class ParseMachine(StateMachine):
 
     def handle(self, token):
         debug("Handling token: %r" % token)
+        # Known flag for current context
         if self.context and token in self.context.flags:
             self.see_flag(token)
+        # Value for current flag
         elif self.waiting_for_flag_value:
             self.see_value(token)
+        # New context
         elif token in self.contexts:
             self.see_context(token)
+        # Unknown
         else:
             raise ParseError("No idea what %r is!" % token)
 
