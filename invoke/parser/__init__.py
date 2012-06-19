@@ -135,6 +135,8 @@ class ParseMachine(StateMachine):
 
     def handle(self, token):
         debug("Handling token: %r" % token)
+        # Handle unknown state at the top: we don't care about even
+        # possibly-valid input if we've encountered unknown input.
         if self.current_state == 'unknown':
             debug("Top-of-handle() see_unknown(%r)" % token)
             self.see_unknown(token)
