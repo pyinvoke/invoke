@@ -43,7 +43,7 @@ class Loader(object):
             for name, task in candidates:
                 c.add_task(
                     name=name,
-                    task=task.body,
+                    task=task,
                     aliases=task.aliases,
                     default=task.is_default
                 )
