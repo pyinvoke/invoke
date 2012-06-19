@@ -59,7 +59,8 @@ class Parser(object):
 
             Parser(...).parse_argv(['invoke', '--core-opt', ...])
         """
-        machine = ParseMachine(initial=self.initial, contexts=self.contexts)
+        machine = ParseMachine(initial=self.initial, contexts=self.contexts,
+            ignore_unknown=self.ignore_unknown)
         # FIXME: Why isn't there str.partition for lists? There must be a
         # better way to do this. Split argv around the double-dash remainder
         # sentinel.
@@ -114,8 +115,9 @@ class ParseMachine(StateMachine):
     def changing_state(self, from_, to):
         debug("ParseMachine: %r => %r" % (from_, to))
 
-    def __init__(self, initial, contexts):
+    def __init__(self, initial, contexts, ignore_unknown):
         # Initialize
+        self.ignore_unknown = ignore_unknown
         self.context = copy.deepcopy(initial)
         debug("Initialized with context: %r" % self.context)
         self.flag = None
