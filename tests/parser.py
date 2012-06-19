@@ -68,11 +68,11 @@ class Parser_(Spec):
 
         @raises(ParseError)
         def raises_error_if_unknown_contexts_found(self):
-            Parser().parse_argv(['foo'])
+            Parser().parse_argv(['foo', 'bar'])
 
         def ignore_unknown_returns_unparsed_argv_instead(self):
-            r = Parser(ignore_unknown=True).parse_argv(['foo'])
-            eq_(r.unparsed, ['foo'])
+            r = Parser(ignore_unknown=True).parse_argv(['foo', 'bar', '--baz'])
+            eq_(r.unparsed, ['foo', 'bar', '--baz'])
 
         def always_includes_initial_context_if_one_was_given(self):
             # Even if no core/initial flags were seen

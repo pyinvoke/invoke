@@ -106,11 +106,13 @@ class ParseMachine(StateMachine):
     initial_state = 'context'
 
     state('context', enter=['complete_flag', 'complete_context'])
+    state('unknown', enter=['complete_flag', 'complete_context'])
     state('end', enter=['complete_flag', 'complete_context'])
 
-    transition(from_='context', event='finish', to='end')
+    transition(from_=('context', 'unknown'), event='finish', to='end')
     transition(from_='context', event='see_context', action='switch_to_context', to='context')
     transition(from_='context', event='see_flag', action='switch_to_flag', to='context')
+    transition(from_=('context', 'unknown'), event='see_unknown', action='store_only', to='unknown')
 
     def changing_state(self, from_, to):
         debug("ParseMachine: %r => %r" % (from_, to))
@@ -133,6 +135,10 @@ class ParseMachine(StateMachine):
 
     def handle(self, token):
         debug("Handling token: %r" % token)
+        if self.current_state == 'unknown':
+            debug("Top-of-handle() see_unknown(%r)" % token)
+            self.see_unknown(token)
+            return
         # Known flag for current context
         if self.context and token in self.context.flags:
             self.see_flag(token)
@@ -144,7 +150,15 @@ class ParseMachine(StateMachine):
             self.see_context(token)
         # Unknown
         else:
-            raise ParseError("No idea what %r is!" % token)
+            if not self.ignore_unknown:
+                raise ParseError("No idea what %r is!" % token)
+            else:
+                debug("Bottom-of-handle() see_unknown(%r)" % token)
+                self.see_unknown(token)
+
+    def store_only(self, token):
+        # Start off the unparsed list
+        self.result.unparsed.append(token)
 
     def complete_context(self):
         debug("Wrapping up context %r" % (self.context.name if self.context else self.context))
