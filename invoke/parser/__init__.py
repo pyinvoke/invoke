@@ -181,10 +181,12 @@ class ParseResult(list):
     """
     List-like object with some extra parse-related attributes.
 
-    Specifically, a ``.remainder`` attribute, which is a list of the tokens
-    found after a ``--`` in any parsed argv list.
+    Specifically, a ``.remainder`` attribute, which is the string found after a
+    ``--`` in any parsed argv list; and an ``.unparsed`` attribute, a list of
+    tokens that were unable to be parsed.
     """
     remainder = ""
+    unparsed = []
 
     def to_dict(self):
         d = {}
