@@ -38,6 +38,9 @@ class Loader_(Spec):
         def only_adds_valid_task_objects(self):
             skip()
 
+        def adds_actual_tasks_not_just_task_bodies(self):
+            skip()
+
         def adds_valid_subcollection_objects(self):
             skip()
 
