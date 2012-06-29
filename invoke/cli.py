@@ -23,8 +23,10 @@ def parse(argv):
 
     # Now we can take action based on 'core' options and the 'tasks' found
     for context in tasks:
-        # TODO: args/kwargs
-        collection.get(context.name).body()
+        kwargs = {}
+        for name, arg in context.args.iteritems():
+            kwargs[name] = arg.value
+        collection.get(context.name).body(**kwargs)
 
 
 def main():
