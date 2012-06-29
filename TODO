@@ -1,23 +1,8 @@
-Next up:
-
-* Connect Parser/Context with Collection/Task
-    * CLI test is just a stub right now, uses empty parser, does nothing with
-      collection given
-    * Need one Context created per Task, and added to the Parser
-        * Perhaps Task.to_context()? (Context should not know about Task
-        ideally)
-            * Or Collection.contexts()?
-        * Needs to go from kwargs to Argument objects
-        * And handle name/alias/etc
-    * Also need to handle initial Context for e.g. `-c`.
-        * Stored in the main cli module?
-        * Allow users to override/modify this at some point, this would be how
-        they add new core options or whatever
-
 Specific things to improve:
 
 * Loader.load_collection should get broken up into multiple smaller
   methods.
+* Decide whether Collection.get(name) should turn into __getitem__
 
 API design questions:
 
