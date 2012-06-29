@@ -36,6 +36,7 @@ setup(
     entry_points={
         'console_scripts': [
             'invoke = invoke.cli:main',
+            'inv = invoke.cli:main',
         ]
     },
 

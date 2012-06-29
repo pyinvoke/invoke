@@ -58,6 +58,11 @@ class CLI(Spec):
         result = run("invoke -c integration print_name --name whatevs")
         eq_(result.stdout, "whatevs\n")
 
+    def shorthand_binary_name(self):
+        os.chdir(support)
+        result = run("inv -c integration print_foo")
+        eq_(result.stdout, "foo\n")
+
     def boolean_args(self):
         "mytask --boolean"
         self._compare("--boolean", 'boolean', True)
