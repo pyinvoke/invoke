@@ -6,7 +6,8 @@ __version__ = "0.1.0"
 
 
 class Result(object):
-    def __init__(self, stdout=None, stderr=None):
+    def __init__(self, stdout=None, stderr=None, exited=None):
+        self.exited = self.return_code = exited
         self.stdout = stdout
         self.stderr = stderr
 
@@ -18,4 +19,4 @@ def run(command):
         stderr=PIPE
     )
     stdout, stderr = process.communicate()
-    return Result(stdout=stdout, stderr=stderr)
+    return Result(stdout=stdout, stderr=stderr, exited=process.returncode)

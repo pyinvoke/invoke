@@ -63,6 +63,20 @@ class CLI(Spec):
         result = run("inv -c integration print_foo")
         eq_(result.stdout, "foo\n")
 
+    def return_code_in_result(self):
+        os.chdir(support)
+        result = run("inv -c integration print_foo")
+        eq_(result.stdout, "foo\n")
+        eq_(result.return_code, 0)
+        eq_(result.exited, 0)
+
+    def nonzero_return_code_for_failures(self):
+        os.chdir(support)
+        result = run("false")
+        eq_(result.exited, 1)
+        result = run("goobypls")
+        eq_(result.exited, 127)
+
     def boolean_args(self):
         "mytask --boolean"
         self._compare("--boolean", 'boolean', True)
