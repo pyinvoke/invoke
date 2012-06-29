@@ -12,39 +12,34 @@ from _utils import support
 
 class CLI(Spec):
     "Command-line behavior"
+    def setup(self):
+        os.chdir(support)
+        self.result = run("invoke -c integration print_foo")
 
     # Yo dogfood, I heard you like invoking
     def basic_invocation(self):
-        os.chdir(support)
-        result = run("invoke -c integration print_foo")
-        eq_(result.stdout, "foo\n")
+        eq_(self.result.stdout, "foo\n")
 
     def implicit_task_module(self):
         # Contains tasks.py
-        os.chdir(support + '/implicit/')
+        os.chdir('implicit')
         # Doesn't specify --collection
         result = run("invoke foo")
         eq_(result.stdout, "Hm\n")
 
     def invocation_with_args(self):
-        os.chdir(support)
         result = run("invoke -c integration print_name --name whatevs")
         eq_(result.stdout, "whatevs\n")
 
     def shorthand_binary_name(self):
-        os.chdir(support)
-        result = run("inv -c integration print_foo")
-        eq_(result.stdout, "foo\n")
+        eq_(self.result.stdout, "foo\n")
 
     def return_code_in_result(self):
-        os.chdir(support)
-        result = run("inv -c integration print_foo")
-        eq_(result.stdout, "foo\n")
-        eq_(result.return_code, 0)
-        eq_(result.exited, 0)
+        eq_(self.result.stdout, "foo\n")
+        eq_(self.result.return_code, 0)
+        eq_(self.result.exited, 0)
 
     def nonzero_return_code_for_failures(self):
-        os.chdir(support)
         result = run("false")
         eq_(result.exited, 1)
         result = run("goobypls")
