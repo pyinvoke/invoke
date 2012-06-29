@@ -10,12 +10,12 @@ class Result(object):
         self.stdout = stdout
         self.stderr = stderr
 
+# TODO: put this in another module?
 def run(command):
     process = Popen(command,
         shell=True,
         stdout=PIPE,
         stderr=PIPE
     )
-
     stdout, stderr = process.communicate()
     return Result(stdout=stdout, stderr=stderr)
