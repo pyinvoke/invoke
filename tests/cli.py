@@ -53,6 +53,11 @@ class CLI(Spec):
         result = run("invoke foo")
         eq_(result.stdout, "Hm\n")
 
+    def invocation_with_args(self):
+        os.chdir(support)
+        result = run("invoke -c integration print_name --name whatevs")
+        eq_(result.stdout, "whatevs\n")
+
     def boolean_args(self):
         "mytask --boolean"
         self._compare("--boolean", 'boolean', True)
