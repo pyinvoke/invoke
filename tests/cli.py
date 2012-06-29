@@ -11,34 +11,7 @@ from _utils import support
 
 
 class CLI(Spec):
-    "Command-line interface"
-
-    def setup(self):
-        @task
-        def mytask(mystring, s, boolean=False, b=False, v=False):
-            pass
-        @task
-        def mytask2():
-            pass
-        @task
-        def mytask3(mystring):
-            pass
-        c = Collection()
-        c.add_task('mytask', mytask)
-        c.add_task('mytask2', mytask2)
-        c.add_task('mytask3', mytask3)
-        self.c = c
-
-    def _parser(self):
-        return Parser(self.c.to_contexts())
-
-    def _parse(self, argstr):
-        return self._parser().parse_argv(argstr.split())
-
-    def _compare(self, invoke, flagname, value):
-        invoke = "mytask " + invoke
-        result = self._parse(invoke)
-        eq_(result.to_dict()['mytask'][flagname], value)
+    "Command-line behavior"
 
     # Yo dogfood, I heard you like invoking
     def basic_invocation(self):
@@ -76,6 +49,41 @@ class CLI(Spec):
         eq_(result.exited, 1)
         result = run("goobypls")
         eq_(result.exited, 127)
+
+    def fast_failures(self):
+        skip()
+
+
+class CLIParsing(Spec):
+    """
+    High level parsing tests
+    """
+    def setup(self):
+        @task
+        def mytask(mystring, s, boolean=False, b=False, v=False):
+            pass
+        @task
+        def mytask2():
+            pass
+        @task
+        def mytask3(mystring):
+            pass
+        c = Collection()
+        c.add_task('mytask', mytask)
+        c.add_task('mytask2', mytask2)
+        c.add_task('mytask3', mytask3)
+        self.c = c
+
+    def _parser(self):
+        return Parser(self.c.to_contexts())
+
+    def _parse(self, argstr):
+        return self._parser().parse_argv(argstr.split())
+
+    def _compare(self, invoke, flagname, value):
+        invoke = "mytask " + invoke
+        result = self._parse(invoke)
+        eq_(result.to_dict()['mytask'][flagname], value)
 
     def boolean_args(self):
         "mytask --boolean"
