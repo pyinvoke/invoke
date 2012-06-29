@@ -1,4 +1,6 @@
 import os
+import sys
+import StringIO
 
 from spec import eq_, skip, Spec
 
@@ -14,7 +16,13 @@ class CLI(Spec):
     "Command-line behavior"
     def setup(self):
         os.chdir(support)
+        sys.stdout, self.orig_stdout = StringIO.StringIO(), sys.stdout
+        sys.stderr, self.orig_stderr = StringIO.StringIO(), sys.stderr
         self.result = run("invoke -c integration print_foo")
+
+    def teardown(self):
+        sys.stdout = self.orig_stdout
+        sys.stderr = self.orig_stderr
 
     # Yo dogfood, I heard you like invoking
     def basic_invocation(self):
