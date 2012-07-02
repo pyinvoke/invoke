@@ -7,6 +7,10 @@ Specific things to improve:
 * Decide whether Collection.get(name) should turn into __getitem__
 * Split up tests/cli.py more, e.g. run() and its result obj should get their
   own module
+* rename `run`? Kinda stinks to have to rename shit to copy/paste it between
+  Fab and Invoke
+  * Unless we have Fab 2 rename `run` to e.g. `remote`? (would be less
+  confusing, and more feasible given planned merging of run/sudo)
 
 API design questions:
 
