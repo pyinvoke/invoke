@@ -1,8 +1,12 @@
+* Why the hell isn't this shit in Issues already?
+
 Specific things to improve:
 
 * Loader.load_collection should get broken up into multiple smaller
   methods.
 * Decide whether Collection.get(name) should turn into __getitem__
+* Split up tests/cli.py more, e.g. run() and its result obj should get their
+  own module
 
 API design questions:
 
@@ -20,9 +24,25 @@ Big questions:
 
 * How to go from subprocess.PIPE to something custom which is capable of
   middleware-type functionality (e.g. logging, mutating etc)?
+    * For now, have ugly overridden Popen object which handles printing in the
+    case of stdin/err=PIPE (which normally just stores.)
+    * Could update this to call single new subroutine instead of doing the
+    print inline; then that subroutine is our hook for all new stuff like
+    logging, etc.
 * How to handle global settings without requiring all functionality to be
   method calls on an object?
     * Require all functionality to be calls on an object, and allow users to
       use an implicit module-global object as the default target?
+* Failure handling?!
+    * Fabric/Make/etc have fast-failure behavior
+    * Need simple/easy way to disable that
+        * Fab uses context manager
+        * Would need to also add decorator and run kwarg to capture all
+        possible desired levels of scope
+    * Shell has e.g. `foo || whatevs`
+    * We can't do this (e.g. `run('foo') or whatevs()`) without breaking
+    fast-fail...can we?
+        * Would have to use eg `run('foo')` or whatevs()` and ensure `run()`
+        returns an object that acts Boolean based on failure, not stdout
 
 <!-- vim:set ft=markdown : -->
