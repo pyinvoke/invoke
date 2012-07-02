@@ -2,12 +2,13 @@ import os
 import sys
 import StringIO
 
-from spec import eq_, skip, Spec
+from spec import eq_, skip, Spec, raises
 
 from invoke import run
 from invoke.parser import Parser, Context
 from invoke.collection import Collection
 from invoke.task import task
+from invoke.exceptions import Failure
 
 from _utils import support
 
@@ -53,8 +54,9 @@ class CLI(Spec):
         result = run("goobypls")
         eq_(result.exited, 127)
 
+    @raises(Failure)
     def fast_failures(self):
-        skip()
+        run("false")
 
 
 class CLIParsing(Spec):

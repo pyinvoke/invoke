@@ -1,5 +1,7 @@
 from subprocess import PIPE
+
 from .monkey import Popen
+from .exceptions import Failure
 
 
 __version__ = "0.1.0"
@@ -19,4 +21,7 @@ def run(command):
         stderr=PIPE
     )
     stdout, stderr = process.communicate()
-    return Result(stdout=stdout, stderr=stderr, exited=process.returncode)
+    result = Result(stdout=stdout, stderr=stderr, exited=process.returncode)
+    if result.exited != 0:
+        raise Failure(result)
+    return result
