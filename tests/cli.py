@@ -58,6 +58,13 @@ class CLI(Spec):
     def fast_failures(self):
         run("false")
 
+    def run_acts_as_success_boolean(self):
+        eq_(run("false", warn=True), False)
+        eq_(run("true"), True)
+
+    def non_one_return_codes_still_act_as_False(self):
+        eq_(run("goobypls", warn=True), False)
+
 
 class CLIParsing(Spec):
     """
