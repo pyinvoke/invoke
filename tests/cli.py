@@ -43,28 +43,6 @@ class CLI(Spec):
     def shorthand_binary_name(self):
         eq_(self.result.stdout, "foo\n")
 
-    def return_code_in_result(self):
-        eq_(self.result.stdout, "foo\n")
-        eq_(self.result.return_code, 0)
-        eq_(self.result.exited, 0)
-
-    def nonzero_return_code_for_failures(self):
-        result = run("false", warn=True)
-        eq_(result.exited, 1)
-        result = run("goobypls", warn=True)
-        eq_(result.exited, 127)
-
-    @raises(Failure)
-    def fast_failures(self):
-        run("false")
-
-    def run_acts_as_success_boolean(self):
-        ok_(not run("false", warn=True))
-        ok_(run("true"))
-
-    def non_one_return_codes_still_act_as_False(self):
-        ok_(not run("goobypls", warn=True))
-
 
 class CLIParsing(Spec):
     """
