@@ -14,7 +14,13 @@ class Result(object):
         self.stderr = stderr
 
 # TODO: put this in another module?
-def run(command):
+def run(command, warn=False):
+    """
+    Execute ``command`` in a local subprocess.
+
+    By default, raises an exception if the subprocess terminates with a nonzero
+    return code. This may be disabled by setting ``warn=True``.
+    """
     process = Popen(command,
         shell=True,
         stdout=PIPE,
@@ -22,6 +28,6 @@ def run(command):
     )
     stdout, stderr = process.communicate()
     result = Result(stdout=stdout, stderr=stderr, exited=process.returncode)
-    if result.exited != 0:
+    if result.exited != 0 and not warn:
         raise Failure(result)
     return result
