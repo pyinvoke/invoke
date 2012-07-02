@@ -2,7 +2,7 @@ import os
 import sys
 import StringIO
 
-from spec import eq_, skip, Spec, raises
+from spec import eq_, skip, Spec, raises, ok_
 
 from invoke import run
 from invoke.parser import Parser, Context
@@ -49,9 +49,9 @@ class CLI(Spec):
         eq_(self.result.exited, 0)
 
     def nonzero_return_code_for_failures(self):
-        result = run("false")
+        result = run("false", warn=True)
         eq_(result.exited, 1)
-        result = run("goobypls")
+        result = run("goobypls", warn=True)
         eq_(result.exited, 127)
 
     @raises(Failure)
@@ -59,11 +59,11 @@ class CLI(Spec):
         run("false")
 
     def run_acts_as_success_boolean(self):
-        eq_(run("false", warn=True), False)
-        eq_(run("true"), True)
+        ok_(not run("false", warn=True))
+        ok_(run("true"))
 
     def non_one_return_codes_still_act_as_False(self):
-        eq_(run("goobypls", warn=True), False)
+        ok_(not run("goobypls", warn=True))
 
 
 class CLIParsing(Spec):

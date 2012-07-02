@@ -13,6 +13,11 @@ class Result(object):
         self.stdout = stdout
         self.stderr = stderr
 
+    def __nonzero__(self):
+        # Holy mismatch between name and implementation, Batman!
+        return self.exited == 0
+
+
 # TODO: put this in another module?
 def run(command, warn=False):
     """
@@ -28,6 +33,6 @@ def run(command, warn=False):
     )
     stdout, stderr = process.communicate()
     result = Result(stdout=stdout, stderr=stderr, exited=process.returncode)
-    if result.exited != 0 and not warn:
+    if not (result or warn):
         raise Failure(result)
     return result
