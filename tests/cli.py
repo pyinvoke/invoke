@@ -4,7 +4,7 @@ import StringIO
 
 from spec import eq_, skip, Spec, raises, ok_
 
-from invoke import run
+from invoke.run import run
 from invoke.parser import Parser, Context
 from invoke.collection import Collection
 from invoke.task import task

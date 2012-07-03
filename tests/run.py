@@ -1,6 +1,6 @@
 from spec import eq_, skip, Spec, raises, ok_
 
-from invoke import run
+from invoke.run import run
 from invoke.exceptions import Failure
 
 
