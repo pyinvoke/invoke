@@ -30,9 +30,8 @@ Big questions:
   middleware-type functionality (e.g. logging, mutating etc)?
     * For now, have ugly overridden Popen object which handles printing in the
     case of stdin/err=PIPE (which normally just stores.)
-    * Could update this to call single new subroutine instead of doing the
-    print inline; then that subroutine is our hook for all new stuff like
-    logging, etc.
+    * Via broken-out subroutine which we can use to layer on logging, hiding
+    etc.
 * How to handle global settings without requiring all functionality to be
   method calls on an object?
     * Require all functionality to be calls on an object, and allow users to

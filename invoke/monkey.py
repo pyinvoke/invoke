@@ -5,6 +5,11 @@ import select, errno, os, sys
 from subprocess import Popen as OriginalPopen, mswindows
 
 
+def handle(stream, data):
+    stream.write(data)
+    stream.flush()
+
+
 class Popen(OriginalPopen):
     if mswindows:
         def _readerthread(self, fh, buffer):
@@ -57,7 +62,7 @@ class Popen(OriginalPopen):
                     if data == "":
                         self.stdout.close()
                         read_set.remove(self.stdout)
-                    sys.stdout.write(data); sys.stdout.flush()
+                    handle(sys.stdout, data)
                     stdout.append(data)
 
                 if self.stderr in rlist:
@@ -65,7 +70,7 @@ class Popen(OriginalPopen):
                     if data == "":
                         self.stderr.close()
                         read_set.remove(self.stderr)
-                    sys.stderr.write(data); sys.stderr.flush()
+                    handle(sys.stderr, data)
                     stderr.append(data)
 
             # All data exchanged.  Translate lists into strings.
