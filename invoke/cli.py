@@ -2,6 +2,7 @@ import sys
 
 from .loader import Loader
 from .parser import Parser, Context, Argument
+from .exceptions import Failure, CollectionNotFound
 
 
 def parse(argv):
@@ -21,13 +22,19 @@ def parse(argv):
     collection = loader.load_collection(args.collection.value)
     tasks = Parser(contexts=collection.to_contexts()).parse_argv(core.unparsed)
 
-    # Now we can take action based on 'core' options and the 'tasks' found
+    return args, collection, tasks
+
+
+def main():
+    # Parse command line
+    args, collection, tasks = parse(sys.argv[1:])
+
+    # Take action based on 'core' options and the 'tasks' found
     for context in tasks:
         kwargs = {}
         for name, arg in context.args.iteritems():
             kwargs[name] = arg.value
-        collection.get(context.name).body(**kwargs)
-
-
-def main():
-    parse(sys.argv[1:])
+        try:
+            collection.get(context.name).body(**kwargs)
+        except Failure, f:
+            sys.exit(f.result.exited)
