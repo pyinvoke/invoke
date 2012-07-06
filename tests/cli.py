@@ -44,6 +44,23 @@ class CLI(Spec):
         eq_(self.result.stdout, "foo\n")
 
 
+class HighLevelFailures(Spec):
+    def command_failure(self):
+        """
+        Command failure doesn't show tracebacks
+        """
+        result = run("inv -c fail fail", warn=True)
+        sentinel = 'Traceback (most recent call last)'
+        assert sentinel not in result.stderr
+        assert result.exited != 0
+
+    def parse_failure(self):
+        skip()
+
+    def load_failure(self):
+        skip()
+
+
 class CLIParsing(Spec):
     """
     High level parsing tests
