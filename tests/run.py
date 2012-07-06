@@ -28,3 +28,6 @@ class Run(Spec):
 
     def non_one_return_codes_still_act_as_False(self):
         ok_(not run("goobypls", warn=True))
+
+    def warn_kwarg_allows_continuing_past_failures(self):
+        eq_(run("false", warn=True).exited, 1)
