@@ -14,6 +14,14 @@ class Result(object):
         # Holy mismatch between name and implementation, Batman!
         return self.exited == 0
 
+    def __str__(self):
+        ret = ["Command exited with status %s." % self.exited]
+        for x in ('stdout', 'stderr'):
+            val = getattr(self, x)
+            ret.append("""=== %s ===
+%s
+""" % (x, val.rstrip()) if val else "(no %s)" % x)
+        return "\n".join(ret)
 
 def run(command, warn=False):
     """
