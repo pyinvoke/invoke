@@ -2,7 +2,7 @@ import os
 import sys
 import StringIO
 
-from spec import eq_, skip, Spec, raises, ok_
+from spec import eq_, skip, Spec, ok_
 
 from invoke.run import run
 from invoke.parser import Parser, Context
