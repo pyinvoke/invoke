@@ -1,15 +1,3 @@
-* Why the hell isn't this shit in Issues already?
-
-Specific things to improve:
-
-* Loader.load_collection should get broken up into multiple smaller
-  methods.
-* Decide whether Collection.get(name) should turn into __getitem__
-* rename `run`? Kinda stinks to have to rename shit to copy/paste it between
-  Fab and Invoke
-  * Unless we have Fab 2 rename `run` to e.g. `remote`? (would be less
-  confusing, and more feasible given planned merging of run/sudo)
-
 API design questions:
 
 * How to handle 1-to-N things like task aliases?
