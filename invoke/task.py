@@ -1,5 +1,7 @@
 import inspect
 
+from lexicon import Lexicon
+
 
 class Task(object):
     def __init__(self, body, aliases=(), default=False):
@@ -10,10 +12,12 @@ class Task(object):
     @property
     def argspec(self):
         spec = inspect.getargspec(self.body)
+        # Associate default values with their respective arg names
         if spec.defaults is not None:
-            ret = dict(zip(spec.args[-len(spec.defaults):], spec.defaults))
+            ret = Lexicon(zip(spec.args[-len(spec.defaults):], spec.defaults))
         else:
-            ret = {}
+            ret = Lexicon()
+        # Pull in args that have no default values
         ret.update((x, None) for x in spec.args if x not in ret)
         return ret
 
