@@ -53,3 +53,7 @@ class Task_(Spec):
 
         def works_for_empty_argspecs(self):
             eq_(self.task2.argspec, {})
+
+        def autocreates_short_flags(self):
+            assert 'a' in self.task.argspec
+            eq_(self.task.argspec['a'], self.task.argspec['arg1'])
