@@ -108,3 +108,10 @@ class Collection_(Spec):
             a = self.context.args
             assert 't' in a
             eq_(a['t'], a['text'])
+
+        def autocreated_short_flags_can_be_disabled(self):
+            skip()
+
+        def autocreated_short_flags_dont_clash_with_existing_flags(self):
+            # But instead move up the long flag to find the next valid char
+            skip()
