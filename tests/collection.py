@@ -67,9 +67,12 @@ class Collection_(Spec):
             skip()
 
         def is_aliased_to_dunder_getitem(self):
-            "is aliased to __getitem__"
             self.c.add_task('foo', _mytask)
             eq_(self.c['foo'], _mytask)
+
+        def honors_own_default_task_getitem(self):
+            self.c.add_task('foo', _mytask, default=True)
+            eq_(self.c[''], _mytask)
 
         @raises(ValueError)
         def raises_ValueError_for_no_name_and_no_default(self):
