@@ -54,6 +54,16 @@ class Collection(object):
                 opts = {}
                 if default is not None:
                     opts['kind'] = type(default)
-                context.add_arg(name, **opts)
+                names = [name]
+                # Handle auto short flags
+                for char in name:
+                    if not (
+                        char in context.args
+                        or char in names
+                        or char in argspec
+                    ):
+                        names.append(char)
+                        break
+                context.add_arg(names=names, **opts)
             result.append(context)
         return result

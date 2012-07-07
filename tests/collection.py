@@ -103,3 +103,8 @@ class Collection_(Spec):
 
         def allows_flaglike_access_via_flags(self):
             assert '--text' in self.context.flags
+
+        def autocreates_short_flags(self):
+            a = self.context.args
+            assert 't' in a
+            eq_(a['t'], a['text'])
