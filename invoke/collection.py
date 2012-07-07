@@ -49,7 +49,8 @@ class Collection(object):
         result = []
         for name, task in self.tasks.iteritems():
             context = Context(name=name, aliases=task.aliases)
-            for name, default in task.argspec.iteritems():
+            argspec = task.argspec
+            for name, default in argspec.iteritems():
                 opts = {}
                 if default is not None:
                     opts['kind'] = type(default)
