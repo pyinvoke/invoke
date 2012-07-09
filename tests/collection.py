@@ -113,5 +113,15 @@ class Collection_(Spec):
             skip()
 
         def autocreated_short_flags_dont_clash_with_existing_flags(self):
-            # But instead move up the long flag to find the next valid char
-            skip()
+            @task
+            def mytask(arg1, arg2, barg):
+                pass
+            col = Collection()
+            col.add_task('mytask', mytask)
+            args = col.to_contexts()[0].args
+            assert 'a' in args
+            assert args['a'] is args['arg1']
+            assert 'r' in args
+            assert args['r'] is args['arg2']
+            assert 'b' in args
+            assert args['b'] is args['barg']
