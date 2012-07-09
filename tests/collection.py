@@ -107,7 +107,7 @@ class Collection_(Spec):
         def autocreates_short_flags(self):
             a = self.context.args
             assert 't' in a
-            eq_(a['t'], a['text'])
+            assert a['t'] is a['text']
 
         def autocreated_short_flags_can_be_disabled(self):
             skip()
