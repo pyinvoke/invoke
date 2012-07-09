@@ -45,11 +45,18 @@ def task(*args, **kwargs):
         obj = Task(obj)
         return obj
     # @task(options)
+    aliases = kwargs.pop('aliases', ())
+    default = kwargs.pop('default', False)
+    # Handle unknown args/kwargs
+    if args or kwargs:
+        arg = (" unknown args %r" % (args,)) if args else ""
+        kwarg = (" unknown kwargs %r" % (kwargs,)) if kwargs else ""
+        raise TypeError("@task was called with" + arg + kwarg)
     def inner(obj):
         obj = Task(
             obj,
-            aliases=kwargs.get('aliases', ()),
-            default=kwargs.get('default', False)
+            aliases=aliases,
+            default=default
         )
         return obj
     return inner
