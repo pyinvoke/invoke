@@ -31,7 +31,9 @@ setup(
     author_email='jeff@bitprophet.org',
     url='http://docs.pyinvoke.org',
 
-    install_requires=('lexicon',),
+    install_requires=(
+        'lexicon>=0.1.2',
+    ),
     packages=["invoke"],
     entry_points={
         'console_scripts': [
