@@ -110,7 +110,14 @@ class Collection_(Spec):
             assert a['t'] is a['text']
 
         def autocreated_short_flags_can_be_disabled(self):
-            skip()
+            @task(auto_shortflags=False)
+            def mytask(arg):
+                pass
+            col = Collection()
+            col.add_task('mytask', mytask)
+            args = col.to_contexts()[0].args
+            assert 'a' not in args
+            assert 'arg' in args
 
         def autocreated_short_flags_dont_clash_with_existing_flags(self):
             @task

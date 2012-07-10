@@ -51,19 +51,14 @@ class Collection(object):
             context = Context(name=name, aliases=task.aliases)
             argspec = task.argspec
             for name, default in argspec.iteritems():
+                # Handle arg options
                 opts = {}
                 if default is not None:
                     opts['kind'] = type(default)
+                # Handle aliases (auto shortflags, etc)
                 names = [name]
-                # Handle auto short flags
-                for char in name:
-                    if not (
-                        char in context.args
-                        or char in names
-                        or char in argspec
-                    ):
-                        names.append(char)
-                        break
+                names.extend(argspec.aliases_of(name))
+                # Create/add the argument
                 context.add_arg(names=names, **opts)
             result.append(context)
         return result
