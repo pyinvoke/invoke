@@ -1,4 +1,4 @@
-from spec import eq_, skip, Spec, raises, ok_
+from spec import eq_, skip, Spec, raises, ok_, trap
 
 from invoke.run import run
 from invoke.exceptions import Failure
@@ -27,7 +27,12 @@ class Run(Spec):
         ok_(run("true"))
 
     def non_one_return_codes_still_act_as_False(self):
-        ok_(not run("goobypls", warn=True))
+        ok_(not run("goobypls", warn=True, hide=True))
 
     def warn_kwarg_allows_continuing_past_failures(self):
         eq_(run("false", warn=True).exited, 1)
+
+    @trap
+    def hide_kwarg_allows_hiding_output(self):
+        run("echo 'foo'", hide=True)
+        eq_(sys.stdall.getvalue(), "")
