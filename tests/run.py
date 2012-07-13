@@ -7,7 +7,7 @@ from invoke.exceptions import Failure
 class Run(Spec):
     """run()"""
     def return_code_in_result(self):
-        r = run("echo 'foo'")
+        r = run("echo 'foo'", hide=True)
         eq_(r.stdout, "foo\n")
         eq_(r.return_code, 0)
         eq_(r.exited, 0)
@@ -15,7 +15,7 @@ class Run(Spec):
     def nonzero_return_code_for_failures(self):
         result = run("false", warn=True)
         eq_(result.exited, 1)
-        result = run("goobypls", warn=True)
+        result = run("goobypls", warn=True, hide=True)
         eq_(result.exited, 127)
 
     @raises(Failure)
