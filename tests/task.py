@@ -22,10 +22,10 @@ class task_(Spec):
         eq_(task(dummy).body, dummy)
 
     def allows_alias_specification(self):
-        eq_(self.vanilla.get('foo'), self.vanilla.get('bar'))
+        eq_(self.vanilla['foo'], self.vanilla['bar'])
 
     def allows_default_specification(self):
-        eq_(self.vanilla.get(), self.vanilla.get('biz'))
+        eq_(self.vanilla[''], self.vanilla['biz'])
 
     @raises(ValueError)
     def raises_ValueError_on_multiple_defaults(self):

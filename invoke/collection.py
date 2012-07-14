@@ -27,7 +27,7 @@ class Collection(object):
                 raise ValueError(msg % (name, self.default))
             self.default = name
 
-    def get(self, name=None):
+    def __getitem__(self, name=None):
         """
         Returns task named ``name``. Honors aliases.
 
@@ -37,10 +37,11 @@ class Collection(object):
         """
         if not name:
             if self.default:
-                return self.get(self.default)
+                return self[self.default]
             else:
                 raise ValueError("This collection has no default task.")
         return self.tasks[name]
+
 
     def to_contexts(self):
         """
