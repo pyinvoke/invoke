@@ -5,12 +5,23 @@ import select, errno, os, sys
 from subprocess import Popen as OriginalPopen, mswindows
 
 
-def handle(stream, data):
-    stream.write(data)
-    stream.flush()
-
-
 class Popen(OriginalPopen):
+    #
+    # Custom code
+    #
+    def __init__(self, *args, **kwargs):
+        hide = kwargs.pop('hide', False)
+        super(Popen, self).__init__(*args, **kwargs)
+        self.hide = hide
+
+    def handle(self, stream, data):
+        if not self.hide:
+            stream.write(data)
+            stream.flush()
+
+    #
+    # Copy/modified code from upstream
+    #
     if mswindows:
         def _readerthread(self, fh, buffer):
             # TODO: How to determine which sys.std(out|err) to use?
@@ -62,7 +73,7 @@ class Popen(OriginalPopen):
                     if data == "":
                         self.stdout.close()
                         read_set.remove(self.stdout)
-                    handle(sys.stdout, data)
+                    self.handle(sys.stdout, data)
                     stdout.append(data)
 
                 if self.stderr in rlist:
@@ -70,7 +81,7 @@ class Popen(OriginalPopen):
                     if data == "":
                         self.stderr.close()
                         read_set.remove(self.stderr)
-                    handle(sys.stderr, data)
+                    self.handle(sys.stderr, data)
                     stderr.append(data)
 
             # All data exchanged.  Translate lists into strings.

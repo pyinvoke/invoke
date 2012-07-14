@@ -46,9 +46,7 @@ class CLI(Spec):
 
 class HighLevelFailures(Spec):
     def command_failure(self):
-        """
-        Command failure doesn't show tracebacks
-        """
+        "Command failure doesn't show tracebacks"
         result = run("inv -c fail fail", warn=True)
         sentinel = 'Traceback (most recent call last)'
         assert sentinel not in result.stderr

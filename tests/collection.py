@@ -107,3 +107,32 @@ class Collection_(Spec):
 
         def allows_flaglike_access_via_flags(self):
             assert '--text' in self.context.flags
+
+        def autocreates_short_flags(self):
+            a = self.context.args
+            assert 't' in a
+            assert a['t'] is a['text']
+
+        def autocreated_short_flags_can_be_disabled(self):
+            @task(auto_shortflags=False)
+            def mytask(arg):
+                pass
+            col = Collection()
+            col.add_task('mytask', mytask)
+            args = col.to_contexts()[0].args
+            assert 'a' not in args
+            assert 'arg' in args
+
+        def autocreated_short_flags_dont_clash_with_existing_flags(self):
+            @task
+            def mytask(arg1, arg2, barg):
+                pass
+            col = Collection()
+            col.add_task('mytask', mytask)
+            args = col.to_contexts()[0].args
+            assert 'a' in args
+            assert args['a'] is args['arg1']
+            assert 'r' in args
+            assert args['r'] is args['arg2']
+            assert 'b' in args
+            assert args['b'] is args['barg']
