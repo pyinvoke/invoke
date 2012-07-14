@@ -16,20 +16,20 @@ class Collection_(Spec):
 
         def associates_given_callable_with_given_name(self):
             self.c.add_task('foo', _mytask)
-            eq_(self.c.get('foo'), _mytask)
+            eq_(self.c['foo'], _mytask)
 
         def allows_specifying_aliases(self):
             self.c.add_task('foo', _mytask, aliases=('bar',))
-            eq_(self.c.get('bar'), _mytask)
+            eq_(self.c['bar'], _mytask)
 
         def allows_specifying_multiple_aliases(self):
             self.c.add_task('foo', _mytask, aliases=('bar', 'biz'))
-            eq_(self.c.get('bar'), _mytask)
-            eq_(self.c.get('biz'), _mytask)
+            eq_(self.c['bar'], _mytask)
+            eq_(self.c['biz'], _mytask)
 
         def allows_flagging_as_default(self):
             self.c.add_task('foo', _mytask, default=True)
-            eq_(self.c.get(), _mytask)
+            eq_(self.c[''], _mytask)
 
         @raises(ValueError)
         def raises_ValueError_on_multiple_defaults(self):
@@ -47,21 +47,21 @@ class Collection_(Spec):
         def finds_own_tasks_by_name(self):
             # TODO: duplicates an add_task test above, fix?
             self.c.add_task('foo', _mytask)
-            eq_(self.c.get('foo'), _mytask)
+            eq_(self.c['foo'], _mytask)
 
         def finds_subcollection_tasks_by_dotted_name(self):
             skip()
 
         def honors_aliases_in_own_tasks(self):
             self.c.add_task('foo', _mytask, aliases=('bar',))
-            eq_(self.c.get('bar'), _mytask)
+            eq_(self.c['bar'], _mytask)
 
         def honors_subcollection_aliases(self):
             skip()
 
         def honors_own_default_task_with_no_args(self):
             self.c.add_task('foo', _mytask, default=True)
-            eq_(self.c.get(), _mytask)
+            eq_(self.c[''], _mytask)
 
         def honors_subcollection_default_tasks_on_subcollection_name(self):
             skip()
@@ -76,7 +76,7 @@ class Collection_(Spec):
 
         @raises(ValueError)
         def raises_ValueError_for_no_name_and_no_default(self):
-            self.c.get()
+            self.c['']
 
     class to_contexts:
         def setup(self):
