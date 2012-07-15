@@ -15,6 +15,14 @@ class Loader(object):
         """
         self.root = root or os.getcwd()
 
+    def add_parent_to_path(self):
+        """Adds ``root`` to the first location of the system path."""
+        parent = os.path.abspath(self.root)
+        # If we want to auto-strip .py:
+        # os.path.splitext(os.path.basename(name))[0]
+        # TODO: copy over rest of path munging from fabric.main
+        if parent not in sys.path:
+            sys.path.insert(0, parent)
 
     def  get_collections(self, name, collection):
         """
@@ -56,12 +64,8 @@ class Loader(object):
             # TODO: make this configurable
             name = 'tasks'
         c = Collection()
-        parent = os.path.abspath(self.root)
-        # If we want to auto-strip .py:
-        # os.path.splitext(os.path.basename(name))[0]
-        # TODO: copy over rest of path munging from fabric.main
-        if parent not in sys.path:
-            sys.path.insert(0, parent)
-
-        collection = self.get_collection(name, c)
+        # adding root to system path
+        self.add_parent_to_path()
+        # adding task candidates to collection
+        collection = self.get_collections(name, c)
         return collection

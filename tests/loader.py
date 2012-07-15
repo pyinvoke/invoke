@@ -1,4 +1,5 @@
 import os
+import sys
 
 from spec import Spec, skip, eq_, raises
 
@@ -21,6 +22,23 @@ class Loader_(Spec):
         def returns_collection_object_if_name_found(self):
             result = Loader(root=support).load_collection('foo')
             eq_(type(result), Collection)
+
+        def adds_parent_to_path(self):
+            loader = Loader(root=support)
+            loader.add_parent_to_path()
+            eq_(sys.path[0], os.path.abspath(support))
+
+        def gets_collection_object_if_name_found(self):
+            c = Collection()
+            loader = Loader(root=support)
+            loader.add_parent_to_path()
+            result = loader.get_collections('foo', c)
+            eq_(type(result), Collection)
+
+        @raises(CollectionNotFound)
+        def get_collection_raises_CollectioNotFound(self):
+            c = Collection()
+            result = Loader(root=support).get_collections('nope', c)
 
         @raises(CollectionNotFound)
         def raises_CollectionNotFound_if_not_found(self):
