@@ -15,6 +15,37 @@ class Loader(object):
         """
         self.root = root or os.getcwd()
 
+
+    def  get_collections(self, name, collection):
+        """
+        Loads all the given task from the module determined by `name` if we are
+        unable to import name CollectionNotFound exception is raised.
+
+        Otherwise we proceed to iterate over candidate and add them
+        to collection.
+
+        """
+        try:
+            module = __import__(name)
+            candidates = filter(
+                lambda x: isinstance(x[1], Task),
+                vars(module).items()
+            )
+            if not candidates:
+                # Recurse downwards towards FS
+                pass
+            for name, task in candidates:
+                collection.add_task(
+                    name=name,
+                    task=task,
+                    aliases=task.aliases,
+                    default=task.is_default
+                )
+            return collection
+        except ImportError, e:
+            raise CollectionNotFound(name=name, root=self.root, error=e)
+
+
     def load_collection(self, name=None):
         """
         Load collection named ``name``.
@@ -31,22 +62,6 @@ class Loader(object):
         # TODO: copy over rest of path munging from fabric.main
         if parent not in sys.path:
             sys.path.insert(0, parent)
-        try:
-            module = __import__(name)
-            candidates = filter(
-                lambda x: isinstance(x[1], Task),
-                vars(module).items()
-            )
-            if not candidates:
-                # Recurse downwards towards FS
-                pass
-            for name, task in candidates:
-                c.add_task(
-                    name=name,
-                    task=task,
-                    aliases=task.aliases,
-                    default=task.is_default
-                )
-            return c
-        except ImportError, e:
-            raise CollectionNotFound(name=name, root=self.root, error=e)
+
+        collection = self.get_collection(name, c)
+        return collection
