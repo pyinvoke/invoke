@@ -1,5 +1,5 @@
 
-{<img src="https://secure.travis-ci.org/pyinvoke/invoke.png?branch=master" alt="Build Status" />}[http://travis-ci.org/pyinvoke/invoke]
+.. image:: https://secure.travis-ci.org/pyinvoke/invoke.png?branch=master
 
 Invoke is a Python (2.6+) task execution and management tool. It's similar to
 pre-existing tools in other languages (such as Make or Rake) but lets you
