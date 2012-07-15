@@ -35,6 +35,6 @@ def main():
         for name, arg in context.args.iteritems():
             kwargs[name] = arg.value
         try:
-            collection.get(context.name).body(**kwargs)
+            collection[context.name].body(**kwargs)
         except Failure, f:
             sys.exit(f.result.exited)
