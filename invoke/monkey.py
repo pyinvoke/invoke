@@ -10,12 +10,13 @@ class Popen(OriginalPopen):
     # Custom code
     #
     def __init__(self, *args, **kwargs):
-        hide = kwargs.pop('hide', False)
+        hide = kwargs.pop('hide', [])
         super(Popen, self).__init__(*args, **kwargs)
         self.hide = hide
 
     def handle(self, stream, data):
-        if not self.hide:
+        stream_name = 'out' if stream is sys.stdout else 'err'
+        if stream_name not in self.hide:
             stream.write(data)
             stream.flush()
 
