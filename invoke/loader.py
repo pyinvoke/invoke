@@ -26,12 +26,9 @@ class Loader(object):
 
     def get_collections(self, name, collection):
         """
-        Loads all the given task from the module determined by `name` if we are
-        unable to import name CollectionNotFound exception is raised.
+        Load all valid tasks from module ``name``, adding to ``collection``.
 
-        Otherwise we proceed to iterate over candidate and add them
-        to collection.
-
+        Raises ``CollectionNotFound`` if the module is unable to be imported.
         """
         try:
             module = __import__(name)
