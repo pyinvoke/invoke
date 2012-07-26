@@ -15,7 +15,7 @@ class Loader(object):
         """
         self.root = root or os.getcwd()
 
-    def add_parent_to_path(self):
+    def update_sys_path(self):
         """Adds ``root`` to the first location of the system path."""
         parent = os.path.abspath(self.root)
         # If we want to auto-strip .py:
