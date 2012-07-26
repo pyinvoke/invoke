@@ -60,8 +60,8 @@ class Loader(object):
             # TODO: make this configurable
             name = 'tasks'
         c = Collection()
-        # adding root to system path
+        # add root to system path
         self.add_parent_to_path()
-        # adding task candidates to collection
+        # add task candidates to collection
         collection = self.get_collections(name, c)
         return collection
