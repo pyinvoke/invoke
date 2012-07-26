@@ -24,7 +24,7 @@ class Loader(object):
         if parent not in sys.path:
             sys.path.insert(0, parent)
 
-    def  get_collections(self, name, collection):
+    def get_collections(self, name, collection):
         """
         Loads all the given task from the module determined by `name` if we are
         unable to import name CollectionNotFound exception is raised.
@@ -52,7 +52,6 @@ class Loader(object):
             return collection
         except ImportError, e:
             raise CollectionNotFound(name=name, root=self.root, error=e)
-
 
     def load_collection(self, name=None):
         """
