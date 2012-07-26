@@ -79,3 +79,15 @@ class Loader_(Spec):
 
         def raises_InvalidCollection_if_any_found_modules_invalid(self):
             skip()
+
+    class update_path:
+        def does_not_modify_argument(self):
+            skip()
+
+        def inserts_self_root_parent_at_front_of_path(self):
+            "Inserts self.root's parent at front of path"
+            skip()
+
+        def does_not_insert_if_exists(self):
+            "Doesn't insert self.root if it's already in the path"
+            skip()
