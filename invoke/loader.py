@@ -15,16 +15,22 @@ class Loader(object):
         """
         self.root = root or os.getcwd()
 
-    def update_sys_path(self):
-        """Adds ``root`` to the first location of the system path."""
+    def update_path(self, path):
+        """
+        Ensures ``self.root`` is added to a copy of the given ``path`` iterable.
+
+        It is up to the caller to assign the return value to e.g. ``sys.path``.
+        """
         parent = os.path.abspath(self.root)
+        our_path = path[:]
         # If we want to auto-strip .py:
         # os.path.splitext(os.path.basename(name))[0]
         # TODO: copy over rest of path munging from fabric.main
-        if parent not in sys.path:
-            sys.path.insert(0, parent)
+        if parent not in our_path:
+            our_path.insert(0, parent)
+        return our_path
 
-    def get_collections(self, name, collection):
+    def add_to_collection(self, name, collection):
         """
         Load all valid tasks from module ``name``, adding to ``collection``.
 
@@ -61,7 +67,7 @@ class Loader(object):
             name = 'tasks'
         c = Collection()
         # add root to system path
-        self.add_parent_to_path()
+        sys.path = self.update_path(sys.path)
         # add task candidates to collection
-        collection = self.get_collections(name, c)
+        collection = self.add_to_collection(name, c)
         return collection

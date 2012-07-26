@@ -23,23 +23,6 @@ class Loader_(Spec):
             result = Loader(root=support).load_collection('foo')
             eq_(type(result), Collection)
 
-        def adds_parent_to_path(self):
-            loader = Loader(root=support)
-            loader.add_parent_to_path()
-            eq_(sys.path[0], os.path.abspath(support))
-
-        def gets_collection_object_if_name_found(self):
-            c = Collection()
-            loader = Loader(root=support)
-            loader.add_parent_to_path()
-            result = loader.get_collections('foo', c)
-            eq_(type(result), Collection)
-
-        @raises(CollectionNotFound)
-        def get_collection_raises_CollectioNotFound(self):
-            c = Collection()
-            result = Loader(root=support).get_collections('nope', c)
-
         @raises(CollectionNotFound)
         def raises_CollectionNotFound_if_not_found(self):
             Loader(root=support).load_collection('nope')
@@ -67,6 +50,12 @@ class Loader_(Spec):
             result = Loader(root=support + '/implicit/').load_collection()
             eq_(type(result), Collection)
 
+    class add_to_collection:
+        @raises(CollectionNotFound)
+        def raises_CollectionNotFound_for_missing_collections(self):
+            c = Collection()
+            result = Loader(root=support).add_to_collection('nope', c)
+
     class load:
         def returns_nested_collection_from_all_given_names(self):
             skip()
@@ -81,13 +70,20 @@ class Loader_(Spec):
             skip()
 
     class update_path:
+        def setup(self):
+            self.l = Loader(root=support)
+
         def does_not_modify_argument(self):
-            skip()
+            path = []
+            new_path = self.l.update_path(path)
+            eq_(path, [])
+            assert len(new_path) > 0
 
         def inserts_self_root_parent_at_front_of_path(self):
-            "Inserts self.root's parent at front of path"
-            skip()
+            "Inserts self.root at front of path"
+            eq_(self.l.update_path([])[0], self.l.root)
 
         def does_not_insert_if_exists(self):
             "Doesn't insert self.root if it's already in the path"
-            skip()
+            new_path = self.l.update_path([self.l.root])
+            eq_(len(new_path), 1) # not 2
