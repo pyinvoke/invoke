@@ -13,6 +13,10 @@ from invoke.exceptions import Failure
 from _utils import support
 
 
+def _output_eq(cmd, expected):
+    return eq_(run(cmd).stdout, expected)
+
+
 class CLI(Spec):
     "Command-line behavior"
     def setup(self):
@@ -21,26 +25,25 @@ class CLI(Spec):
     # Yo dogfood, I heard you like invoking
     @trap
     def basic_invocation(self):
-        result = run("invoke -c integration print_foo")
-        eq_(result.stdout, "foo\n")
+        _output_eq("invoke -c integration print_foo", "foo\n")
 
     @trap
     def implicit_task_module(self):
         # Contains tasks.py
         os.chdir('implicit')
         # Doesn't specify --collection
-        result = run("invoke foo")
-        eq_(result.stdout, "Hm\n")
+        _output_eq("invoke foo", "Hm\n")
 
     @trap
     def invocation_with_args(self):
-        result = run("invoke -c integration print_name --name whatevs")
-        eq_(result.stdout, "whatevs\n")
+        _output_eq(
+            "invoke -c integration print_name --name whatevs",
+            "whatevs\n"
+        )
 
     @trap
     def shorthand_binary_name(self):
-        result = run("invoke -c integration print_foo")
-        eq_(result.stdout, "foo\n")
+        _output_eq("invoke -c integration print_foo", "foo\n")
 
 
 class HighLevelFailures(Spec):
