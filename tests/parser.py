@@ -170,6 +170,47 @@ class Parser_(Spec):
             eq_(a.bar.value, True)
 
 
+class ParserHelp_(Spec):
+    def setup(self):
+        self.parser = Parser(args=(
+            Argument('foo'),
+            Argument('bar', help="bar the baz")
+        ))
+        self.help = ParserHelp(self.parser)
+
+    def header(self):
+        # TODO: change dynamically based on parser contents?
+        # e.g. no core args == no [--core-args],
+        # no tasks == no task stuff?
+        eq_(
+            self.help.header(),
+            "inv[oke] [--core-args] task1 [--task1-args] ... taskN [--taskN-args]"
+        )
+
+    def for_arg_no_helpstr(self):
+        "for_arg: no helpstr"
+        eq_(
+            self.help.for_arg('foo'),
+            "--foo=STRING, -f STRING" # no helpstr
+        )
+
+    def for_arg_helpstr(self):
+        "for_arg: helpstr"
+        eq_(
+            self.help.for_arg('bar'),
+            "--bar=STRING, -b STRING        bar the baz"
+        )
+
+    def help(self):
+        eq_(
+            self.help.help(),
+            "inv[oke] [--core-args] task1 [--task1-args] ... taskN [--taskN-args]"
+            ""
+            "--foo=STRING, -f STRING"
+            "--bar=STRING, -b STRING        bar the baz"
+            ""
+        )
+
 class ParseResult_(Spec):
     "ParseResult"
     def setup(self):

@@ -45,6 +45,20 @@ class CLI(Spec):
     def shorthand_binary_name(self):
         _output_eq("invoke -c integration print_foo", "foo\n")
 
+    def help_option_prints_help(self):
+        expected = """
+Usage: inv[oke] [--core-opts] task1 [--task1-opts] ... taskN [--taskN-opts]
+
+Core options:
+    -h, --help      Show this help message and exit
+    -r, --root      Change root directory used for finding task modules
+    -c, --collection    Specify collection name to load. May be given >1 time.
+
+"""
+        result = run("inv -h", warn=True)
+        fd = open('/tmp/wtf.log', 'a')
+        eq_(result.stderr, expected)
+
 
 class HighLevelFailures(Spec):
     def command_failure(self):

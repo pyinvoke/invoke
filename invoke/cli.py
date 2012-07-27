@@ -10,7 +10,8 @@ def parse(argv):
     initial_context = Context(args=(
         # TODO: make collection a list-building arg, not a string
         Argument(names=('collection', 'c')),
-        Argument(names=('root', 'r'))
+        Argument(names=('root', 'r')),
+        Argument(names=('help', 'h')),
     ))
     # 'core' will result an .unparsed attribute with what was left over.
     parser = Parser(initial=initial_context, ignore_unknown=True)
