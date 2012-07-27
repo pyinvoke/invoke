@@ -2,7 +2,7 @@ import os
 import sys
 import StringIO
 
-from spec import eq_, skip, Spec, ok_
+from spec import eq_, skip, Spec, ok_, trap
 
 from invoke.run import run
 from invoke.parser import Parser, Context
@@ -17,18 +17,14 @@ class CLI(Spec):
     "Command-line behavior"
     def setup(self):
         os.chdir(support)
-        sys.stdout, self.orig_stdout = StringIO.StringIO(), sys.stdout
-        sys.stderr, self.orig_stderr = StringIO.StringIO(), sys.stderr
-        self.result = run("invoke -c integration print_foo")
-
-    def teardown(self):
-        sys.stdout = self.orig_stdout
-        sys.stderr = self.orig_stderr
 
     # Yo dogfood, I heard you like invoking
+    @trap
     def basic_invocation(self):
-        eq_(self.result.stdout, "foo\n")
+        result = run("invoke -c integration print_foo")
+        eq_(result.stdout, "foo\n")
 
+    @trap
     def implicit_task_module(self):
         # Contains tasks.py
         os.chdir('implicit')
@@ -36,12 +32,15 @@ class CLI(Spec):
         result = run("invoke foo")
         eq_(result.stdout, "Hm\n")
 
+    @trap
     def invocation_with_args(self):
         result = run("invoke -c integration print_name --name whatevs")
         eq_(result.stdout, "whatevs\n")
 
+    @trap
     def shorthand_binary_name(self):
-        eq_(self.result.stdout, "foo\n")
+        result = run("invoke -c integration print_foo")
+        eq_(result.stdout, "foo\n")
 
 
 class HighLevelFailures(Spec):
