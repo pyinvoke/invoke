@@ -1,6 +1,6 @@
 from spec import Spec, skip, ok_, eq_, raises, trap
 
-from invoke.parser import Parser, Context, Argument, ParseError, ParserHelp
+from invoke.parser import Parser, Context, Argument, ParseError
 from invoke.collection import Collection
 
 
