@@ -81,6 +81,12 @@ class Parser_(Spec):
             r = Parser(ignore_unknown=True).parse_argv(['foo', 'bar', '--baz'])
             eq_(r.unparsed, ['foo', 'bar', '--baz'])
 
+        def ignore_unknown_does_not_mutate_rest_of_argv(self):
+            p = Parser([Context('ugh')], ignore_unknown=True)
+            r = p.parse_argv(['ugh', 'what', '-nowai'])
+            # NOT: ['what', '-n', '-w', '-a', '-i']
+            eq_(r.unparsed, ['what', '-nowai'])
+
         def always_includes_initial_context_if_one_was_given(self):
             # Even if no core/initial flags were seen
             t1 = Context('t1')
