@@ -3,6 +3,7 @@ import sys
 from .loader import Loader
 from .parser import Parser, Context, Argument
 from .exceptions import Failure, CollectionNotFound
+from .util import debug
 
 
 def parse(argv):
@@ -16,6 +17,7 @@ def parse(argv):
     # 'core' will result an .unparsed attribute with what was left over.
     parser = Parser(initial=initial_context, ignore_unknown=True)
     core = parser.parse_argv(argv)
+    debug("After core-args pass, leftover argv: %r" % (core.unparsed,))
     args = core[0].args
 
     # Load collection (default or specified) and parse leftovers
@@ -28,8 +30,9 @@ def parse(argv):
 
 def main():
     # Parse command line
-    args, collection, tasks = parse(sys.argv[1:])
-
+    argv = sys.argv[1:]
+    debug("Base argv from sys: %r" % (argv,))
+    args, collection, tasks = parse(argv)
     # Take action based on 'core' options and the 'tasks' found
     for context in tasks:
         kwargs = {}
