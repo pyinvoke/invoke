@@ -93,13 +93,13 @@ class Context_(Spec):
 
         def no_helpstr(self):
             eq_(
-                self.help_for('foo'),
+                self.ctx.help_for('foo'),
                 "--foo=STRING, -f STRING"
             )
 
         def with_helpstr(self):
             eq_(
-                self.help_for('bar'),
+                self.ctx.help_for('bar'),
                 "--bar=STRING, -b STRING        bar the baz"
             )
 
