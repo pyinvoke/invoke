@@ -1,5 +1,5 @@
 class Argument(object):
-    def __init__(self, name=None, names=(), kind=str, default=None):
+    def __init__(self, name=None, names=(), kind=str, default=None, help=None):
         if name and names:
             msg = "Cannot give both 'name' and 'names' arguments! Pick one."
             raise TypeError(msg)
@@ -9,6 +9,7 @@ class Argument(object):
         self.kind = kind
         self.raw_value = self._value = None
         self.default = default
+        self.help = help
 
     def __str__(self):
         return "Arg: %r (%s)" % (self.names, self.kind)
