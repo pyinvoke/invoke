@@ -83,3 +83,46 @@ class Context_(Spec):
             new_arg.value = True
             assert new_arg.value
             assert not self.arg.value
+
+    class help_for:
+        def setup(self):
+            self.ctx = Context(args=(
+                Argument('foo'),
+                Argument('bar', help="bar the baz")
+            ))
+
+        def no_helpstr(self):
+            eq_(
+                self.help_for('foo'),
+                "--foo=STRING, -f STRING"
+            )
+
+        def with_helpstr(self):
+            eq_(
+                self.help_for('bar'),
+                "--bar=STRING, -b STRING        bar the baz"
+            )
+
+    class help_lines:
+        def returns_list_of_help_output_strings(self):
+            # Walks own list of flags/args, ensures resulting map to help_for()
+            skip()
+
+        def sorts_alphabetically_by_shortflag_first(self):
+            # Where shortflags exist, they take precedence
+            skip()
+
+        def sorts_alphabetically_by_longflag_when_no_shortflag(self):
+            # Where no shortflag, sorts by longflag
+            skip()
+
+        def sorts_heterogenous_help_output_with_longflag_only_options_first(self):
+            # When both types of options exist, long flag only options come
+            # first.
+            # E.g.:
+            #   --alpha
+            #   --beta
+            #   -a, --aaaagh
+            #   -b, --bah
+            #   -c
+            skip()

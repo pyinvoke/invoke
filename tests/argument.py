@@ -85,3 +85,4 @@ class Argument_(Spec):
         def is_None_when_no_value_was_actually_seen(self):
             a = Argument('a', kind=int)
             eq_(a.raw_value, None)
+

@@ -73,3 +73,31 @@ class Context(object):
         for name in arg.names[1:]:
             self.args.alias(name, to=main)
             self.flags.alias(to_flag(name), to=to_flag(main))
+
+    def help_for(self, name):
+        """
+        Return help line(s) for given flag/option ``name``.
+
+        Will accept either "real" name ('foo') or flag style name ('--foo',
+        '-f').
+        """
+
+    def help_lines(self):
+        """
+        Return sorted iterable of help lines for all member Arguments.
+
+        Sorts like so:
+
+        * General sort is alphanumerically
+        * Short flags win over long flags
+        * But Arguments with *only* long flags and *no* short flags will come
+          first.
+
+        This will result in a help list like so:
+
+            --alpha
+            --beta
+            -a, --aaaagh
+            -b, --bah
+            -c
+        """
