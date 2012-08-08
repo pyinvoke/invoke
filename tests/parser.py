@@ -70,6 +70,13 @@ class Parser_(Spec):
         def raises_error_if_unknown_contexts_found(self):
             Parser().parse_argv(['foo', 'bar'])
 
+        def unparsed_does_not_share_state(self):
+            r = Parser(ignore_unknown=True).parse_argv(['self'])
+            eq_(r.unparsed, ['self'])
+            r2 = Parser(ignore_unknown=True).parse_argv(['contained'])
+            eq_(r.unparsed, ['self']) # NOT ['self', 'contained']
+            eq_(r2.unparsed, ['contained']) # NOT ['self', 'contained']
+
         def ignore_unknown_returns_unparsed_argv_instead(self):
             r = Parser(ignore_unknown=True).parse_argv(['foo', 'bar', '--baz'])
             eq_(r.unparsed, ['foo', 'bar', '--baz'])

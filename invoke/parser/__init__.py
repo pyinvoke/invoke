@@ -201,8 +201,10 @@ class ParseResult(list):
     ``--`` in any parsed argv list; and an ``.unparsed`` attribute, a list of
     tokens that were unable to be parsed.
     """
-    remainder = ""
-    unparsed = []
+    def __init__(self, *args, **kwargs):
+        list.__init__(self, *args, **kwargs)
+        self.remainder = ""
+        self.unparsed = []
 
     def to_dict(self):
         d = {}
