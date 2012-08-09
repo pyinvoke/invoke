@@ -75,8 +75,10 @@ class Parser(object):
             debug("Remainder: argv[%r:][1:] => %r" % (ddash, remainder))
         for index, token in enumerate(body):
             # Handle non-space-delimited forms, if not currently expecting a
-            # flag value.
-            if not machine.waiting_for_flag_value and token.startswith('-'):
+            # flag value and still in valid parsing territory (i.e. not in
+            # "unknown" state which implies store-only)
+            if not machine.waiting_for_flag_value and token.startswith('-') \
+                and not machine.result.unparsed:
                 orig = token
                 # Equals-sign-delimited flags, eg --foo=bar or -f=bar
                 if '=' in token:
@@ -162,6 +164,7 @@ class ParseMachine(StateMachine):
 
     def store_only(self, token):
         # Start off the unparsed list
+        debug("Storing unknown token %r" % token)
         self.result.unparsed.append(token)
 
     def complete_context(self):
