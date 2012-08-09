@@ -81,7 +81,8 @@ class Parser(object):
                 # Equals-sign-delimited flags, eg --foo=bar or -f=bar
                 if '=' in token:
                     token, _, value = token.partition('=')
-                    debug("Splitting %r into tokens %r and %r" % (orig, token, value))
+                    debug("Splitting x=y expr %r into tokens %r and %r" % (
+                        orig, token, value))
                     body.insert(index + 1, value)
                 # Contiguous boolean short flags, e.g. -qv
                 elif not token.startswith('--') and len(token) > 2:
@@ -92,7 +93,8 @@ class Parser(object):
                         body.insert(index + 1, rest)
                     else:
                         rest = map(lambda x: '-%s' % x, rest)
-                        debug("Splitting %r into %r and %r" % (orig, token, rest))
+                        debug("Splitting multi-flag glob %r into %r and %r" % (
+                            orig, token, rest))
                         for item in reversed(rest):
                             body.insert(index + 1, item)
             machine.handle(token)
