@@ -14,6 +14,9 @@ class Task(object):
 
     @property
     def argspec(self):
+        """
+        Introspect wrapped function for arg names, default values etc.
+        """
         spec = inspect.getargspec(self.body)
         # Associate default values with their respective arg names
         if spec.defaults is not None:
