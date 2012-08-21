@@ -118,31 +118,35 @@ class Context_(Spec):
                 "--bar=STRING        bar the baz"
             )
 
-        def task_driven_no_helpstr(self):
-            eq_(
-                self.tasked.help_for('--myarg'),
-                "-m STRING, --myarg=STRING"
-            )
-
         def task_driven_with_helpstr(self):
             eq_(
                 self.tasked.help_for('--otherarg'),
                 "-o STRING, --otherarg=STRING        other help"
             )
 
-        def kind_to_placeholder_map(self):
-            # str=STRING, int=INT, etc etc
-            skip()
+        # Yes, the next 3 tests are identical in form, but technically they
+        # test different behaviors. HERPIN' AN' DERPIN'
+        def task_driven_no_helpstr(self):
+            eq_(
+                self.tasked.help_for('--myarg'),
+                "-m STRING, --myarg=STRING"
+            )
 
         def short_form_before_long_form(self):
-            # -f,--foo NOT --foo,-f 
-            skip()
+            eq_(
+                self.tasked.help_for('--myarg'),
+                "-m STRING, --myarg=STRING"
+            )
 
         def equals_sign_for_long_form_only(self):
             eq_(
                 self.tasked.help_for('--myarg'),
                 "-m STRING, --myarg=STRING"
             )
+
+        def kind_to_placeholder_map(self):
+            # str=STRING, int=INT, etc etc
+            skip()
 
 
     class help_lines:
