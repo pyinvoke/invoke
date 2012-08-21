@@ -121,7 +121,7 @@ class Context_(Spec):
         def task_driven_no_helpstr(self):
             eq_(
                 self.tasked.help_for('--myarg'),
-                "--myarg=STRING, -m=STRING"
+                "-m STRING, --myarg=STRING"
             )
 
         def task_driven_with_helpstr(self):
@@ -132,9 +132,13 @@ class Context_(Spec):
             # str=STRING, int=INT, etc etc
             skip()
 
-        def long_form_before_short_form(self):
-            # --foo,-f NOT -f,--foo
+        def short_form_before_long_form(self):
+            # -f,--foo NOT --foo,-f 
             # (or vice versa??)
+            skip()
+
+        def equals_sign_for_long_form_only(self):
+            # aka --foo=BAR, -f BAR
             skip()
 
     class help_lines:

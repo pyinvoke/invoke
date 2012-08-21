@@ -88,9 +88,12 @@ class Context(object):
         value = {
             str: 'STRING',
         }.get(arg.kind)
-        valstr = ("=%s" % value) if value else ""
         # Format & go
-        namestr = ", ".join(map(lambda x: x + "=" + value, names))
+        full_names = []
+        for name in names:
+            sep = " " if len(name.strip('-')) == 1 else "="
+            full_names.append(name + ((sep + value) if value else ""))
+        namestr = ", ".join(sorted(full_names, key=len))
         helpstr = ((" " * 8) + arg.help) if arg.help else ""
         return namestr + helpstr
 
