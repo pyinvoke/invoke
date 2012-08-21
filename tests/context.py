@@ -3,6 +3,8 @@ import copy
 from spec import Spec, eq_, skip, ok_, raises
 
 from invoke.parser import Argument, Context
+from invoke.task import task
+from invoke.collection import Collection
 
 
 class Context_(Spec):
@@ -86,22 +88,54 @@ class Context_(Spec):
 
     class help_for:
         def setup(self):
-            self.ctx = Context(args=(
+            # Normal, non-task/collection related Context
+            self.vanilla = Context(args=(
                 Argument('foo'),
                 Argument('bar', help="bar the baz")
             ))
+            # Task/Collection generated Context
+            # (will expose flags n such)
+            @task
+            def mytask(myarg, otherarg):
+                pass
+            col = Collection()
+            col.add_task('mytask', mytask)
+            self.tasked = col.to_contexts()[0]
 
-        def no_helpstr(self):
+        @raises(ValueError)
+        def raises_ValueError_for_non_flag_values(self):
+            self.vanilla.help_for('foo')
+
+        def vanilla_no_helpstr(self):
             eq_(
-                self.ctx.help_for('foo'),
-                "--foo=STRING, -f STRING"
+                self.vanilla.help_for('--foo'),
+                "--foo=STRING"
             )
 
-        def with_helpstr(self):
+        def vanilla_with_helpstr(self):
             eq_(
-                self.ctx.help_for('bar'),
-                "--bar=STRING, -b STRING        bar the baz"
+                self.vanilla.help_for('--bar'),
+                "--bar=STRING        bar the baz"
             )
+
+        def task_driven_no_helpstr(self):
+            eq_(
+                self.tasked.help_for('--myarg'),
+                "--myarg=STRING, -m=STRING"
+            )
+
+        def task_driven_with_helpstr(self):
+            # TODO: how to specify helpstr for @task??
+            skip()
+
+        def kind_to_placeholder_map(self):
+            # str=STRING, int=INT, etc etc
+            skip()
+
+        def long_form_before_short_form(self):
+            # --foo,-f NOT -f,--foo
+            # (or vice versa??)
+            skip()
 
     class help_lines:
         def returns_list_of_help_output_strings(self):

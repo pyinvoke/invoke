@@ -74,13 +74,25 @@ class Context(object):
             self.args.alias(name, to=main)
             self.flags.alias(to_flag(name), to=to_flag(main))
 
-    def help_for(self, name):
+    def help_for(self, flag):
         """
-        Return help line(s) for given flag/option ``name``.
-
-        Will accept either "real" name ('foo') or flag style name ('--foo',
-        '-f').
+        Return help line string for given ``flag``.
         """
+        # Obtain arg obj
+        if flag not in self.flags:
+            raise ValueError("%r is not a valid flag for this context" % flag)
+        arg = self.flags[flag]
+        # Show all potential names for this flag in the output
+        names = list(set([flag] + self.flags.aliases_of(flag)))
+        # Determine expected value type, if any
+        value = {
+            str: 'STRING',
+        }.get(arg.kind)
+        valstr = ("=%s" % value) if value else ""
+        # Format & go
+        namestr = ", ".join(map(lambda x: x + "=" + value, names))
+        helpstr = ((" " * 8) + arg.help) if arg.help else ""
+        return namestr + helpstr
 
     def help_lines(self):
         """
