@@ -95,7 +95,7 @@ class Context_(Spec):
             ))
             # Task/Collection generated Context
             # (will expose flags n such)
-            @task
+            @task(help={'otherarg': 'other help'})
             def mytask(myarg, otherarg):
                 pass
             col = Collection()
@@ -125,8 +125,10 @@ class Context_(Spec):
             )
 
         def task_driven_with_helpstr(self):
-            # TODO: how to specify helpstr for @task??
-            skip()
+            eq_(
+                self.tasked.help_for('--otherarg'),
+                "-o STRING, --otherarg=STRING        other help"
+            )
 
         def kind_to_placeholder_map(self):
             # str=STRING, int=INT, etc etc

@@ -54,6 +54,7 @@ class Collection(object):
             for name, default in argspec.iteritems():
                 # Handle arg options
                 opts = {}
+                opts['help'] = task.helps.get(name)
                 if default is not None:
                     opts['kind'] = type(default)
                 # Handle aliases (auto shortflags, etc)

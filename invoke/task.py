@@ -6,11 +6,13 @@ from lexicon import Lexicon
 class Task(object):
     # TODO: store these kwarg defaults central, refer to those values both here
     # and in @task
-    def __init__(self, body, aliases=(), default=False, auto_shortflags=True):
+    def __init__(self, body, aliases=(), default=False, auto_shortflags=True,
+        helps={}):
         self.body = body
         self.aliases = aliases
         self.is_default = default
         self.auto_shortflags = auto_shortflags
+        self.helps = helps
 
     @property
     def argspec(self):
@@ -56,6 +58,8 @@ def task(*args, **kwargs):
       given.)
     * ``auto_shortflags``: Whether or not to :ref:`automatically create short
       flags <automatic-shortflags>` from task options; defaults to True.
+    * ``help``: Dict mapping argument names to their help strings. Will be
+      displayed in ``--help`` output.
     """
     # @task -- no options
     if len(args) == 1:
@@ -66,6 +70,7 @@ def task(*args, **kwargs):
     aliases = kwargs.pop('aliases', ())
     default = kwargs.pop('default', False)
     auto_shortflags = kwargs.pop('auto_shortflags', True)
+    helps = kwargs.pop('help', {})
     # Handle unknown args/kwargs
     if args or kwargs:
         arg = (" unknown args %r" % (args,)) if args else ""
@@ -76,7 +81,8 @@ def task(*args, **kwargs):
             obj,
             aliases=aliases,
             default=default,
-            auto_shortflags=auto_shortflags
+            auto_shortflags=auto_shortflags,
+            helps=helps,
         )
         return obj
     return inner

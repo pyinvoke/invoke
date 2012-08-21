@@ -8,3 +8,7 @@ def foo():
 @task(default=True)
 def biz():
     pass
+
+@task(help={'why': 'Motive'})
+def punch(who, why):
+    pass

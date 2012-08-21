@@ -31,6 +31,12 @@ class task_(Spec):
     def raises_ValueError_on_multiple_defaults(self):
         self.loader.load_collection('decorator_multi_default')
 
+    def sets_arg_help(self):
+        eq_(self.vanilla['punch'].helps['why'], 'Motive')
+
+    def sets_arg_kind(self):
+        skip()
+
 
 class Task_(Spec):
     class argspec:
