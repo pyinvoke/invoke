@@ -136,12 +136,14 @@ class Context_(Spec):
 
         def short_form_before_long_form(self):
             # -f,--foo NOT --foo,-f 
-            # (or vice versa??)
             skip()
 
         def equals_sign_for_long_form_only(self):
-            # aka --foo=BAR, -f BAR
-            skip()
+            eq_(
+                self.tasked.help_for('--myarg'),
+                "-m STRING, --myarg=STRING"
+            )
+
 
     class help_lines:
         def returns_list_of_help_output_strings(self):
