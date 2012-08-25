@@ -10,6 +10,20 @@ def _mytask():
 
 
 class Collection_(Spec):
+    class init:
+        "__init__"
+        def can_accept_task_varargs(self):
+            "can accept tasks as *args"
+            @task
+            def task1():
+                pass
+            @task
+            def task2():
+                pass
+            c = Collection(task1, task2)
+            assert 'task1' in c
+            assert 'task2' in c
+
     class add_task:
         def setup(self):
             self.c = Collection()

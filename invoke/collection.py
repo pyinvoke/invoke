@@ -4,9 +4,11 @@ from .parser import Context, Argument
 
 
 class Collection(object):
-    def __init__(self):
+    def __init__(self, *tasks):
         self.tasks = Lexicon()
         self.default = None
+        for task in tasks:
+            self.add_task(task)
 
     def add_task(self, task, name=None, aliases=(), default=False):
         """
