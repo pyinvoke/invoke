@@ -8,7 +8,7 @@ class Collection(object):
         self.tasks = Lexicon()
         self.default = None
 
-    def add_task(self, name, task, aliases=(), default=False):
+    def add_task(self, task, name, aliases=(), default=False):
         """
         Adds callable object ``task`` to this collection under name ``name``.
 

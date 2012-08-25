@@ -99,7 +99,7 @@ class Context_(Spec):
             def mytask(myarg, otherarg):
                 pass
             col = Collection()
-            col.add_task('mytask', mytask)
+            col.add_task(mytask, 'mytask')
             self.tasked = col.to_contexts()[0]
 
         @raises(ValueError)

@@ -93,9 +93,9 @@ class CLIParsing(Spec):
         def mytask3(mystring):
             pass
         c = Collection()
-        c.add_task('mytask', mytask)
-        c.add_task('mytask2', mytask2)
-        c.add_task('mytask3', mytask3)
+        c.add_task(mytask, 'mytask')
+        c.add_task(mytask, 'mytask2')
+        c.add_task(mytask, 'mytask3')
         self.c = c
 
     def _parser(self):
