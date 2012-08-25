@@ -8,9 +8,12 @@ class Collection(object):
         self.tasks = Lexicon()
         self.default = None
 
-    def add_task(self, task, name, aliases=(), default=False):
+    def add_task(self, task, name=None, aliases=(), default=False):
         """
-        Adds callable object ``task`` to this collection under name ``name``.
+        Adds callable object ``task`` to this collection.
+
+        If ``name`` is not explicitly given (recommended) the ``.func_name`` of
+        the given callable will be used instead.
 
         If ``aliases`` is given, will be used to set up additional aliases for
         this task.
@@ -18,6 +21,11 @@ class Collection(object):
         ``default`` may be set to ``True`` to set the task as this collection's
         default invocation.
         """
+        if name is None:
+            if hasattr(task.body, 'func_name'):
+                name = task.body.func_name
+            else:
+                raise ValueError("'name' may only be empty if 'task' wraps an object exposing .func_name")
         self.tasks[name] = task
         for alias in aliases:
             self.tasks.alias(alias, to=name)
@@ -42,6 +50,8 @@ class Collection(object):
                 raise ValueError("This collection has no default task.")
         return self.tasks[name]
 
+    def __contains__(self, name):
+        return name in self.tasks
 
     def to_contexts(self):
         """

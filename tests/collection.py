@@ -1,7 +1,7 @@
 from spec import Spec, skip, eq_, raises
 
 from invoke.collection import Collection
-from invoke.task import task
+from invoke.task import task, Task
 
 
 @task
@@ -18,9 +18,13 @@ class Collection_(Spec):
             self.c.add_task(_mytask, 'foo')
             eq_(self.c['foo'], _mytask)
 
-        #def uses_function_name_as_implicit_name(self):
-        #    self.c.add_task(_mytask)
-        #    assert '_mytask' in self.c
+        def uses_function_name_as_implicit_name(self):
+            self.c.add_task(_mytask)
+            assert '_mytask' in self.c
+
+        @raises(ValueError)
+        def raises_ValueError_if_no_name_and_non_function(self):
+            self.c.add_task(Task(object()))
 
         def allows_specifying_aliases(self):
             self.c.add_task(_mytask, 'foo', aliases=('bar',))
