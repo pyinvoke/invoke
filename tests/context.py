@@ -153,8 +153,7 @@ class Context_(Spec):
             @task(help={'otherarg': 'other help'})
             def mytask(myarg, otherarg):
                 pass
-            col = Collection(mytask)
-            self.c = col.to_contexts()[0]
+            self.c = Collection(mytask).to_contexts()[0]
 
         def returns_list_of_help_output_strings(self):
             # Walks own list of flags/args, ensures resulting map to help_for()
