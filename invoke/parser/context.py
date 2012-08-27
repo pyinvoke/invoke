@@ -116,3 +116,4 @@ class Context(object):
             -b, --bah
             -c
         """
+        return map(self.help_for, sorted(self.flags))

@@ -149,9 +149,21 @@ class Context_(Spec):
 
 
     class help_lines:
+        def setup(self):
+            @task(help={'otherarg': 'other help'})
+            def mytask(myarg, otherarg):
+                pass
+            col = Collection(mytask)
+            self.c = col.to_contexts()[0]
+
         def returns_list_of_help_output_strings(self):
             # Walks own list of flags/args, ensures resulting map to help_for()
-            skip()
+            # TODO: consider redoing help_for to be more flexible on input --
+            # arg value or flag; or even Argument objects. ?
+            eq_(
+                self.c.help_lines(),
+                [self.c.help_for('--myarg'), self.c.help_for('--otherarg')]
+            )
 
         def sorts_alphabetically_by_shortflag_first(self):
             # Where shortflags exist, they take precedence
