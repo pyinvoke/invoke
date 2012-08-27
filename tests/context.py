@@ -166,7 +166,13 @@ class Context_(Spec):
 
         def sorts_alphabetically_by_shortflag_first(self):
             # Where shortflags exist, they take precedence
-            skip()
+            first = Argument(names=('zarg', 'a'))
+            second = Argument(names=('arg', 'z'))
+            ctx = Context(args=(second, first))
+            eq_(
+                ctx.help_lines(),
+                [ctx.help_for('--zarg'), ctx.help_for('--arg')]
+            )
 
         def sorts_alphabetically_by_longflag_when_no_shortflag(self):
             # Where no shortflag, sorts by longflag
