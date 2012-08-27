@@ -108,9 +108,7 @@ class Collection_(Spec):
             @task
             def mytask2():
                 pass
-            self.c = Collection()
-            self.c.add_task(mytask, 'mytask')
-            self.c.add_task(mytask2, 'mytask2')
+            self.c = Collection(mytask, mytask2)
             self.contexts = self.c.to_contexts()
             self.context = self.contexts[1]
 
@@ -139,8 +137,7 @@ class Collection_(Spec):
             @task(auto_shortflags=False)
             def mytask(arg):
                 pass
-            col = Collection()
-            col.add_task(mytask, 'mytask')
+            col = Collection(mytask)
             args = col.to_contexts()[0].args
             assert 'a' not in args
             assert 'arg' in args
@@ -149,8 +146,7 @@ class Collection_(Spec):
             @task
             def mytask(arg1, arg2, barg):
                 pass
-            col = Collection()
-            col.add_task(mytask, 'mytask')
+            col = Collection(mytask)
             args = col.to_contexts()[0].args
             assert 'a' in args
             assert args['a'] is args['arg1']

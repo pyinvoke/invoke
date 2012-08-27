@@ -92,11 +92,7 @@ class CLIParsing(Spec):
         @task
         def mytask3(mystring):
             pass
-        c = Collection()
-        c.add_task(mytask, 'mytask')
-        c.add_task(mytask2, 'mytask2')
-        c.add_task(mytask3, 'mytask3')
-        self.c = c
+        self.c = Collection(mytask, mytask2, mytask3)
 
     def _parser(self):
         return Parser(self.c.to_contexts())
