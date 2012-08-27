@@ -8,6 +8,16 @@ def to_flag(name):
         return '-' + name
     return '--' + name
 
+def sort_candidate(arg):
+    names = arg.names
+    # TODO: is there no "split into two buckets on predicate" builtin?
+    shorts = filter(lambda x: len(x.strip('-')) == 1, names)
+    longs = filter(lambda x: x not in shorts, names)
+    return sorted(shorts if shorts else longs)[0]
+
+def cmp_args(a1, a2):
+    return cmp(*map(sort_candidate, (a1, a2)))
+
 
 class Context(object):
     """
@@ -118,4 +128,5 @@ class Context(object):
             -b, --argh
             -c
         """
-        return map(self.help_for, sorted(self.flags))
+        # TODO: argument/flag API must change :(
+        return map(lambda x: self.help_for(to_flag(x.names[0])), sorted(self.flags.values(), cmp=cmp_args))
