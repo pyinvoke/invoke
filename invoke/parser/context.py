@@ -105,15 +105,17 @@ class Context(object):
 
         * General sort is alphanumerically
         * Short flags win over long flags
-        * But Arguments with *only* long flags and *no* short flags will come
+        * Arguments with *only* long flags and *no* short flags will come
           first.
+        * When an Argument has multiple long or short flags, it will sort using
+          the most favorable (lowest alphabetically) candidate.
 
         This will result in a help list like so:
 
-            --alpha
+            --alpha, --zeta # 'alpha' wins
             --beta
-            -a, --aaaagh
-            -b, --bah
+            -a, --query # short flag wins
+            -b, --argh
             -c
         """
         return map(self.help_for, sorted(self.flags))
