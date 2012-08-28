@@ -177,7 +177,11 @@ class Context_(Spec):
 
         def sorts_alphabetically_by_longflag_when_no_shortflag(self):
             # Where no shortflag, sorts by longflag
-            skip()
+            ctx = self._from_args(('otherarg',), ('longarg',))
+            eq_(
+                ctx.help_lines(),
+                [ctx.help_for('--longarg'), ctx.help_for('--otherarg')]
+            )
 
         def sorts_heterogenous_help_output_with_longflag_only_options_first(self):
             # When both types of options exist, long flag only options come
