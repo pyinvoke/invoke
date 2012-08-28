@@ -162,23 +162,22 @@ class Context_(Spec):
                 [c.help_for('--myarg'), c.help_for('--otherarg')]
             )
 
-        def _from_args(self, *name_tuples):
-            return Context(args=map(lambda x: Argument(names=x), name_tuples))
+        def _assert_order(self, name_tuples, expected_flag_order):
+            ctx = Context(args=map(lambda x: Argument(names=x), name_tuples))
+            return eq_(ctx.help_lines(), map(ctx.help_for, expected_flag_order))
 
         def sorts_alphabetically_by_shortflag_first(self):
             # Where shortflags exist, they take precedence
-            ctx = self._from_args(('zarg', 'a'), ('arg', 'z') )
-            eq_(
-                ctx.help_lines(),
-                [ctx.help_for('--zarg'), ctx.help_for('--arg')]
+            self._assert_order(
+                [('zarg', 'a'), ('arg', 'z')],
+                ['--zarg', '--arg']
             )
 
         def sorts_alphabetically_by_longflag_when_no_shortflag(self):
             # Where no shortflag, sorts by longflag
-            ctx = self._from_args(('otherarg',), ('longarg',))
-            eq_(
-                ctx.help_lines(),
-                [ctx.help_for('--longarg'), ctx.help_for('--otherarg')]
+            self._assert_order(
+                [('otherarg',), ('longarg',)],
+                ['--longarg', '--otherarg']
             )
 
         def sorts_heterogenous_help_output_with_longflag_only_options_first(self):
