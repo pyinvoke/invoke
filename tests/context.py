@@ -149,19 +149,17 @@ class Context_(Spec):
 
 
     class help_lines:
-        def setup(self):
-            @task(help={'otherarg': 'other help'})
-            def mytask(myarg, otherarg):
-                pass
-            self.c = Collection(mytask).to_contexts()[0]
-
         def returns_list_of_help_output_strings(self):
             # Walks own list of flags/args, ensures resulting map to help_for()
             # TODO: consider redoing help_for to be more flexible on input --
             # arg value or flag; or even Argument objects. ?
+            @task(help={'otherarg': 'other help'})
+            def mytask(myarg, otherarg):
+                pass
+            c = Collection(mytask).to_contexts()[0]
             eq_(
-                self.c.help_lines(),
-                [self.c.help_for('--myarg'), self.c.help_for('--otherarg')]
+                c.help_lines(),
+                [c.help_for('--myarg'), c.help_for('--otherarg')]
             )
 
         def _from_args(self, *name_tuples):
