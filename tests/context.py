@@ -164,11 +164,12 @@ class Context_(Spec):
                 [self.c.help_for('--myarg'), self.c.help_for('--otherarg')]
             )
 
+        def _from_args(self, *name_tuples):
+            return Context(args=map(lambda x: Argument(names=x), name_tuples))
+
         def sorts_alphabetically_by_shortflag_first(self):
             # Where shortflags exist, they take precedence
-            first = Argument(names=('zarg', 'a'))
-            second = Argument(names=('arg', 'z'))
-            ctx = Context(args=(second, first))
+            ctx = self._from_args(('zarg', 'a'), ('arg', 'z') )
             eq_(
                 ctx.help_lines(),
                 [ctx.help_for('--zarg'), ctx.help_for('--arg')]
