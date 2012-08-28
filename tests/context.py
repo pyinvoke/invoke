@@ -181,12 +181,15 @@ class Context_(Spec):
             )
 
         def sorts_heterogenous_help_output_with_longflag_only_options_first(self):
-            # When both types of options exist, long flag only options come
-            # first.
+            # When both of the above mix, long-flag-only options come first.
             # E.g.:
             #   --alpha
             #   --beta
             #   -a, --aaaagh
             #   -b, --bah
             #   -c
-            skip()
+            #   TODO: Why does self.flags['-a'] != self.flags['--aaagh']?!?!
+            self._assert_order(
+                [('c',), ('a', 'aaagh'), ('b', 'bah'), ('beta',), ('alpha',)],
+                ['--alpha', '--beta', '-a', '-b', '-c']
+            )
