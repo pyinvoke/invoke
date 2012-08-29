@@ -47,7 +47,7 @@ class CLI(Spec):
 
     def help_option_prints_help(self):
         # TODO: change dynamically based on parser contents?
-        # e.g. no core args == no [--core-args],
+        # e.g. no core args == no [--core-opts],
         # no tasks == no task stuff?
         expected = """
 Usage: inv[oke] [--core-opts] task1 [--task1-opts] ... taskN [--taskN-opts]

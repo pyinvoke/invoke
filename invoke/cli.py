@@ -9,7 +9,7 @@ from .util import debug
 def parse(argv):
     # Initial/core parsing (core options can affect the rest of the parsing)
     initial_context = Context(args=(
-        # TODO: make collection a list-building arg, not a string
+        # TODO: make '--collection' a list-building arg, not a string
         Argument(names=('collection', 'c')),
         Argument(names=('root', 'r')),
         Argument(names=('help', 'h')),
