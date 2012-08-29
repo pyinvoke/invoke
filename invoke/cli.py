@@ -12,7 +12,7 @@ def parse(argv):
         # TODO: make '--collection' a list-building arg, not a string
         Argument(names=('collection', 'c')),
         Argument(names=('root', 'r')),
-        Argument(names=('help', 'h')),
+        Argument(names=('help', 'h'), kind=bool),
     ))
     # 'core' will result an .unparsed attribute with what was left over.
     parser = Parser(initial=initial_context, ignore_unknown=True)

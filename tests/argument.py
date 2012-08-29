@@ -39,6 +39,14 @@ class Argument_(Spec):
         def bool_implies_no_value_needed(self):
             assert not Argument(name='a', kind=bool).takes_value
 
+        def bool_implies_default_False_not_None(self):
+            # Right now, parsing a bool flag not given results in None
+            # TODO: may want more nuance here -- False when a --no-XXX flag is
+            # given, True if --XXX, None if not seen?
+            # Only makes sense if we add automatic --no-XXX stuff (think
+            # ./configure)
+            skip()
+
         @raises(ValueError)
         def may_validate_on_set(self):
             Argument('a', kind=int).value = 'five'
