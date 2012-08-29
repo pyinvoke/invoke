@@ -15,8 +15,16 @@ def sort_candidate(arg):
     longs = filter(lambda x: x not in shorts, names)
     return sorted(shorts if shorts else longs)[0]
 
-def cmp_args(a1, a2):
-    return cmp(*map(sort_candidate, (a1, a2)))
+def cmp_args(a, b):
+    a, b = map(sort_candidate, (a, b))
+    # Long flags win over short flags
+    if len(a) == 1 and len(b) != 1:
+        return 1
+    elif len(a) != 1 and len(b) == 1:
+        return -1
+    # Equal sized flags get cmp'd normally
+    else:
+        return cmp(a, b)
 
 
 class Context(object):
@@ -129,4 +137,10 @@ class Context(object):
             -c
         """
         # TODO: argument/flag API must change :(
-        return map(lambda x: self.help_for(to_flag(x.names[0])), sorted(self.flags.values(), cmp=cmp_args))
+        # having to call to_flag on 1st name of an Argument is just dumb.
+        # To pass in an Argument object to help_for may require moderate
+        # changes?
+        return map(
+            lambda x: self.help_for(to_flag(x.names[0])),
+            sorted(self.flags.values(), cmp=cmp_args)
+        )

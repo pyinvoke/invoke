@@ -147,6 +147,9 @@ class Context_(Spec):
             # str=STRING, int=INT, etc etc
             skip()
 
+        def shortflag_inputs_work_too(self):
+            eq_(self.tasked.help_for('-m'), self.tasked.help_for('--myarg'))
+
 
     class help_lines:
         def returns_list_of_help_output_strings(self):
@@ -188,7 +191,6 @@ class Context_(Spec):
             #   -a, --aaaagh
             #   -b, --bah
             #   -c
-            #   TODO: Why does self.flags['-a'] != self.flags['--aaagh']?!?!
             self._assert_order(
                 [('c',), ('a', 'aaagh'), ('b', 'bah'), ('beta',), ('alpha',)],
                 ['--alpha', '--beta', '-a', '-b', '-c']
