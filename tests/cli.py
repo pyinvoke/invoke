@@ -53,14 +53,13 @@ class CLI(Spec):
 Usage: inv[oke] [--core-opts] task1 [--task1-opts] ... taskN [--taskN-opts]
 
 Core options:
-    -h, --help      Show this help message and exit
-    -r, --root      Change root directory used for finding task modules
-    -c, --collection    Specify collection name to load. May be given >1 time.
+    -c STRING, --collection=STRING        Specify collection name to load. May be given >1 time.
+    -h, --help        Show this help message and exit.
+    -r STRING, --root=STRING        Change root directory used for finding task modules.
 
-"""
-        result = run("inv -h", warn=True)
-        fd = open('/tmp/wtf.log', 'a')
-        eq_(result.stderr, expected)
+""".lstrip()
+        result = run("inv -h", warn=True, hide='out')
+        eq_(result.stdout, expected)
 
 
 class HighLevelFailures(Spec):
