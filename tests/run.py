@@ -20,6 +20,12 @@ class Run(Spec):
         result = run("goobypls", warn=True, hide='both')
         eq_(result.exited, 127)
 
+    def stdout_attribute_contains_stdout(self):
+        skip()
+
+    def stderr_attribute_contains_stderr(self):
+        skip()
+
     @raises(Failure)
     def fast_failures(self):
         run("false")
@@ -60,3 +66,6 @@ class Run(Spec):
     @raises(ValueError)
     def hide_unknown_vals_raises_ValueError(self):
         run("command", hide="what")
+
+    def hide_does_not_affect_capturing(self):
+        skip()
