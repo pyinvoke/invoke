@@ -1,6 +1,9 @@
-from subprocess import PIPE
+import os
+import pty
+import select
+import sys
+from subprocess import Popen
 
-from .monkey import Popen
 from .exceptions import Failure
 
 
@@ -50,14 +53,38 @@ def run(command, warn=False, hide=None):
         The stdout and stderr are always captured and stored in the result
         object, regardless of this setting's value.
     """
+    parent, child = pty.openpty()
+    # TODO: branch, using PIPE + communicate(), if distinct stderr desired &
+    # interactivity not required. (You cannot have both.)
+    # TODO: that requires using custom hide-enabled Popen subclass.
     process = Popen(command,
         shell=True,
-        stdout=PIPE,
-        stderr=PIPE,
-        hide=normalize_hide(hide)
+        stdout=child,
+        stderr=child,
+        close_fds=True,
     )
-    stdout, stderr = process.communicate()
-    result = Result(stdout=stdout, stderr=stderr, exited=process.returncode)
+    stdout = []
+    stderr = []
+    # Attempt reading until we read EOF, regardless of exit code status.
+    while True:
+        rlist, wlist, xlist = select.select([parent], [], [parent], 0.01)
+        if parent in rlist:
+            data = os.read(parent, 1)
+            if data == "":
+                os.close(parent)
+            if hide is None:
+                sys.stdout.write(data)
+            stdout.append(data)
+        else:
+            # Here, we are unable to read (implying the child process has no
+            # more output for us) AND the return code has been "filed" with
+            # subprocess (implying the child process is not only not printing
+            # anything, but has terminated.)
+            if process.poll() is not None:
+                break
+    # Can't read any more; wait for exit code.
+    exitcode = process.wait()
+    result = Result(stdout="".join(stdout), stderr="".join(stderr), exited=exitcode)
     if not (result or warn):
         raise Failure(result)
     return result
