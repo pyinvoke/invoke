@@ -9,6 +9,9 @@ from invoke.exceptions import Failure
 class Run(Spec):
     "run()"
     def return_code_in_result(self):
+        """
+        Result has .return_code (and .exited) containing exit code int
+        """
         r = run("echo 'foo'", hide='both')
         eq_(r.stdout, "foo\n")
         eq_(r.return_code, 0)
@@ -26,6 +29,12 @@ class Run(Spec):
     def stderr_attribute_contains_stderr(self):
         skip()
 
+    def stdout_contains_both_streams_under_pty(self):
+        skip()
+
+    def stderr_is_empty_under_pty(self):
+        skip()
+
     @raises(Failure)
     def fast_failures(self):
         run("false")
@@ -41,9 +50,13 @@ class Run(Spec):
         eq_(run("false", warn=True).exited, 1)
 
     @trap
-    def hide_kwarg_allows_hiding_output(self):
+    def hide_both_hides_everything(self):
         run("echo 'foo'", hide='both')
         eq_(sys.stdall.getvalue(), "")
+
+    @trap
+    def hide_both_hides_everything_under_pty(self):
+        skip()
 
     @trap
     def hide_out_only_hides_stdout(self):
@@ -52,10 +65,18 @@ class Run(Spec):
         eq_(sys.stderr.getvalue().strip(), "bar")
 
     @trap
+    def hide_out_hides_both_when_pty_on(self):
+        skip()
+
+    @trap
     def hide_err_only_hides_stderr(self):
         run("echo 'foo' && echo 'bar' 1>&2", hide='err')
         eq_(sys.stdout.getvalue().strip(), "foo")
         eq_(sys.stderr.getvalue().strip(), "")
+
+    @trap
+    def hide_err_has_no_effect_when_pty_on(self):
+        skip()
 
     @trap
     def hide_None_hides_nothing(self):
