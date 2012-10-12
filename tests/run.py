@@ -90,3 +90,10 @@ class Run(Spec):
 
     def hide_does_not_affect_capturing(self):
         skip()
+
+    def return_value_indicates_whether_pty_was_used(self):
+        eq_(run("true").pty, False)
+        eq_(run("true", pty=True).pty, True)
+
+    def pty_defaults_to_off(self):
+        eq_(run("true").pty, False)
