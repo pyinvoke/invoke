@@ -54,6 +54,9 @@ class Loader(object):
                 )
             return collection
         except ImportError, e:
+            # TODO: Handle ImportErrors that aren't "<name does not exist>"
+            # I.e. if there is some inner ImportError or similar raising from
+            # the attempt to import 'name' module.
             raise CollectionNotFound(name=name, root=self.root, error=e)
 
     def load_collection(self, name=None):

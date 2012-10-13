@@ -2,9 +2,9 @@ import os
 import pty
 import select
 import sys
-from subprocess import Popen
 import pexpect
 
+from .monkey import Popen, PIPE
 from .exceptions import Failure
 
 
@@ -25,10 +25,12 @@ class Result(object):
     * ``pty``: A boolean describing whether the subprocess was invoked with a
       pty or not; see `run`.
     """
-    def __init__(self, stdout=None, stderr=None, exited=None):
+    # TODO: inherit from namedtuple instead? heh
+    def __init__(self, stdout, stderr, exited, pty):
         self.exited = self.return_code = exited
         self.stdout = stdout
         self.stderr = stderr
+        self.pty = pty
 
     def __nonzero__(self):
         # Holy mismatch between name and implementation, Batman!
@@ -42,6 +44,14 @@ class Result(object):
 %s
 """ % (x, val.rstrip()) if val else "(no %s)" % x)
         return "\n".join(ret)
+
+    @property
+    def ok(self):
+        return self.exited == 0
+
+    @property
+    def failed(self):
+        return not self.ok
 
 
 def normalize_hide(val):
@@ -86,38 +96,30 @@ def run(command, warn=False, hide=None, pty=False):
         into the ``stdout`` result attribute. Stderr and ``stderr`` will always
         be empty when ``pty=True``.
     """
-    parent, child = pty.openpty()
-    # TODO: branch, using PIPE + communicate(), if distinct stderr desired &
-    # interactivity not required. (You cannot have both.)
-    # TODO: that requires using custom hide-enabled Popen subclass.
-    process = Popen(command,
-        shell=True,
-        stdout=child,
-        stderr=child,
-        close_fds=True,
-    )
-    stdout = []
-    stderr = []
-    # Attempt reading until we read EOF, regardless of exit code status.
-    while True:
-        rlist, wlist, xlist = select.select([parent], [], [parent], 0.01)
-        if parent in rlist:
-            data = os.read(parent, 1)
-            if data == "":
-                os.close(parent)
-            if hide is None:
-                sys.stdout.write(data)
-            stdout.append(data)
-        else:
-            # Here, we are unable to read (implying the child process has no
-            # more output for us) AND the return code has been "filed" with
-            # subprocess (implying the child process is not only not printing
-            # anything, but has terminated.)
-            if process.poll() is not None:
-                break
-    # Can't read any more; wait for exit code.
-    exitcode = process.wait()
-    result = Result(stdout="".join(stdout), stderr="".join(stderr), exited=exitcode)
+    if pty:
+        hide = normalize_hide(hide)
+        out = []
+        def out_filter(text):
+            out.append(text)
+            if 'out' not in hide:
+                return text
+            else:
+                return ""
+        wrapped_cmd = "/bin/bash -c \"%s\"" % command
+        p = pexpect.spawn(wrapped_cmd)
+        p.interact(output_filter=out_filter)
+        result = Result(stdout="".join(out), stderr="", exited=p.exitstatus,
+            pty=pty)
+    else:
+        process = Popen(command,
+            shell=True,
+            stdout=PIPE,
+            stderr=PIPE,
+            hide=normalize_hide(hide)
+        )
+        stdout, stderr = process.communicate()
+        result = Result(stdout=stdout, stderr=stderr,
+            exited=process.returncode, pty=pty)
     if not (result or warn):
         raise Failure(result)
     return result

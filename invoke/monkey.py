@@ -2,7 +2,7 @@
 
 import select, errno, os, sys
 
-from subprocess import Popen as OriginalPopen, mswindows
+from subprocess import Popen as OriginalPopen, mswindows, PIPE
 
 
 class Popen(OriginalPopen):
@@ -69,7 +69,8 @@ class Popen(OriginalPopen):
                     if data == "":
                         self.stdout.close()
                         read_set.remove(self.stdout)
-                    sys.stdout.write(data)
+                    if 'out' not in self.hide:
+                        sys.stdout.write(data)
                     stdout.append(data)
 
                 if self.stderr in rlist:
@@ -77,7 +78,8 @@ class Popen(OriginalPopen):
                     if data == "":
                         self.stderr.close()
                         read_set.remove(self.stderr)
-                    sys.stderr.write(data)
+                    if 'err' not in self.hide:
+                        sys.stderr.write(data)
                     stderr.append(data)
 
             # All data exchanged.  Translate lists into strings.
