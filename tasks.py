@@ -4,4 +4,9 @@ from invoke.run import run
 
 @task
 def test(module=None):
-    run("spec" + ((" --tests=tests/%s.py" % module) if module else ""))
+    base = "spec"
+    # Allow selecting specific submodule
+    specific_module = " --tests=tests/%s.py" % module
+    args = (specific_module if module else "")
+    # Use pty so the spec/nose/Python process buffers "correctly"
+    run(base + args, pty=True)
