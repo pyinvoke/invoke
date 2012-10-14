@@ -17,6 +17,7 @@ class Run(Spec):
         self.both = "echo foo && ./err bar"
         self.out = "echo foo"
         self.err = "./err bar"
+        self.sub = "inv -c pty_output hide_%s"
 
     def return_code_in_result(self):
         """
@@ -66,21 +67,10 @@ class Run(Spec):
         eq_(sys.stdall.getvalue(), "")
 
     @trap
-    def hide_both_hides_everything_under_pty(self):
-        run(self.both, hide='both', pty=True)
-        eq_(sys.stdall.getvalue(), "")
-
-    @trap
     def hide_out_only_hides_stdout(self):
         run(self.both, hide='out')
         eq_(sys.stdout.getvalue().strip(), "")
         eq_(sys.stderr.getvalue().strip(), "bar")
-
-    @trap
-    def hide_out_hides_both_when_pty_on(self):
-        run(self.both, hide='out', pty=True)
-        eq_(sys.stdout.getvalue().strip(), "")
-        eq_(sys.stderr.getvalue().strip(), "")
 
     @trap
     def hide_err_only_hides_stderr(self):
@@ -88,14 +78,24 @@ class Run(Spec):
         eq_(sys.stdout.getvalue().strip(), "foo")
         eq_(sys.stderr.getvalue().strip(), "")
 
-    @trap
-    def hide_err_has_no_effect_when_pty_on(self):
-        run(self.both, hide='err', pty=True)
-        eq_(sys.stdout.getvalue().strip(), "foo\r\nbar")
+    def hide_both_hides_both_under_pty(self):
+        r = run(self.sub % 'both', hide='both')
+        eq_(r.stdout, "")
+        eq_(r.stderr, "")
+
+    def hide_out_hides_both_under_pty(self):
+        r = run(self.sub % 'out', hide='both')
+        eq_(r.stdout, "")
+        eq_(r.stderr, "")
+
+    def hide_err_has_no_effect_under_pty(self):
+        r = run(self.sub % 'err', hide='both')
+        eq_(r.stdout, "foo\r\nbar\r\n")
+        eq_(r.stderr, "")
 
     @trap
     def hide_None_hides_nothing(self):
-        run(self.both, hide=None)
+        r = run(self.both, hide=None)
         eq_(sys.stdout.getvalue().strip(), "foo")
         eq_(sys.stderr.getvalue().strip(), "bar")
 
