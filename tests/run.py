@@ -103,6 +103,17 @@ class Run(Spec):
     def hide_unknown_vals_raises_ValueError(self):
         run("command", hide="what")
 
+    def hide_unknown_vals_mention_value_given_in_error(self):
+        value = "penguinmints"
+        try:
+            run("command", hide=value)
+        except ValueError, e:
+            msg = "Error from run(hide=xxx) did not tell user what the bad value was!"
+            msg += "\nException msg: %s" % e
+            ok_(value in str(e), msg)
+        else:
+            assert False, "run() did not raise ValueError for bad hide= value"
+
     def hide_does_not_affect_capturing(self):
         eq_(run(self.out, hide='both').stdout, 'foo\n')
 
