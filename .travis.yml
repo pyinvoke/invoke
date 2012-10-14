@@ -10,3 +10,7 @@ script: "spec"
 notifications:
   email:
     on_failure: change
+  irc:
+    channels: "irc.freenode.org#fabric"
+    on_success: change
+    on_failure: change
