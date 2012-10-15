@@ -1,7 +1,7 @@
 # Docs
 Sphinx>=1.1.2
-# Testing
-nose>=1.1.2
+# Testing (explicit dependencies to get around a Travis/pip issue)
+nose==1.1.2
 spec>=0.9.7
 # Fluidity (for now)
 https://github.com/nsi-iff/fluidity/tarball/468627ea

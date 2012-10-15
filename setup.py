@@ -34,7 +34,7 @@ setup(
     install_requires=(
         'lexicon>=0.1.2',
     ),
-    packages=["invoke"],
+    packages=["invoke", "invoke.parser"],
     entry_points={
         'console_scripts': [
             'invoke = invoke.cli:main',

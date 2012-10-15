@@ -6,7 +6,11 @@ install:
   # Build/test dependencies
   - pip install -r requirements.txt --use-mirrors
   - pip install -e git+https://github.com/nsi-iff/fluidity@468627ea13ed4c3043dc67ccc1ff16089fdb7b25#egg=fluidity-dev
-script: spec
+script: "spec"
 notifications:
   email:
+    on_failure: change
+  irc:
+    channels: "irc.freenode.org#fabric"
+    on_success: change
     on_failure: change

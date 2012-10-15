@@ -12,12 +12,6 @@ API design questions:
 
 Big questions:
 
-* How to go from subprocess.PIPE to something custom which is capable of
-  middleware-type functionality (e.g. logging, mutating etc)?
-    * For now, have ugly overridden Popen object which handles printing in the
-    case of stdin/err=PIPE (which normally just stores.)
-    * Via broken-out subroutine which we can use to layer on logging, hiding
-    etc.
 * How to handle global settings without requiring all functionality to be
   method calls on an object?
     * Require all functionality to be calls on an object, and allow users to
