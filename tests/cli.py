@@ -45,7 +45,7 @@ class CLI(Spec):
     def shorthand_binary_name(self):
         _output_eq("invoke -c integration print_foo", "foo\n")
 
-    def help_option_prints_help(self):
+    def core_help_option_prints_core_help(self):
         # TODO: change dynamically based on parser contents?
         # e.g. no core args == no [--core-opts],
         # no tasks == no task stuff?
@@ -58,8 +58,10 @@ Core options:
     -r STRING, --root=STRING        Change root directory used for finding task modules.
 
 """.lstrip()
-        result = run("inv -h", warn=True, hide='out')
-        eq_(result.stdout, expected)
+        r1 = run("inv -h", hide='out')
+        r2 = run("inv --help", hide='out')
+        eq_(r1.stdout, expected)
+        eq_(r2.stdout, expected)
 
 
 class HighLevelFailures(Spec):
