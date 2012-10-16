@@ -33,7 +33,7 @@ class Context_(Spec):
             self.c.add_arg('foo')
             assert 'foo' in self.c.args
 
-        def can_take_kwargs(self):
+        def can_take_kwargs_for_single_Argument(self):
             self.c.add_arg(names=('foo', 'bar'))
             assert 'foo' in self.c.args and 'bar' in self.c.args
 
@@ -57,6 +57,24 @@ class Context_(Spec):
             self.c.add_arg('f')
             assert '-f' in self.c.flags
             assert '--f' not in self.c.flags
+
+        def does_not_add_positional_arg_to_flags(self):
+            self.c.add_arg(name='pos', positional=True)
+            assert '--pos' not in self.c.flags
+            assert '-p' not in self.c.flags
+
+        def adds_positional_args_to_positional_args(self):
+            self.c.add_arg(name='pos', positional=True)
+            eq_(self.c.positional_args[0].name, 'pos')
+
+        def positional_args_empty_when_none_given(self):
+            eq_(len(self.c.positional_args), 0)
+
+        def positional_args_filled_in_order(self):
+            self.c.add_arg(name='pos1', positional=True)
+            eq_(self.c.positional_args[0].name, 'pos1')
+            self.c.add_arg(name='abc', positional=True)
+            eq_(self.c.positional_args[1].name, 'abc')
 
     class deepcopy:
         "__deepcopy__"

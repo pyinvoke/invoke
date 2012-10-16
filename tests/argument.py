@@ -23,6 +23,12 @@ class Argument_(Spec):
         def default_arg_is_name_not_names(self):
             assert 'b' in Argument('b').names
 
+        def can_declare_positional(self):
+            eq_(Argument(name='foo', positional=True).positional, True)
+
+        def positional_is_False_by_default(self):
+            eq_(Argument(name='foo').positional, False)
+
     class kind_kwarg:
         "'kind' kwarg"
 

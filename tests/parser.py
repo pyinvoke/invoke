@@ -145,6 +145,15 @@ class Parser_(Spec):
             eq_(a.value, None)
             eq_(a2.value, 'val')
 
+        class positional_arguments:
+            def single_positional_arg(self):
+                arg = Argument('pos', positional=True)
+                mytask = Context(name='mytask', args=[arg])
+                argv = ['mytask', 'posval']
+                r = Parser(contexts=[mytask]).parse_argv(argv)
+                eq_(r[0].args['pos'], 'posval')
+
+
         class equals_signs:
             def _compare(self, argname, invoke, value):
                 c = Context('mytask', args=(Argument(argname, kind=str),))
