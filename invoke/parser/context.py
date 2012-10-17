@@ -34,6 +34,7 @@ class Context(object):
         ``for arg in args: self.add_arg(arg)`` after initialization.
         """
         self.args = Lexicon()
+        self.positional_args = []
         self.flags = Lexicon()
         self.name = name
         self.aliases = aliases
@@ -67,9 +68,12 @@ class Context(object):
                 msg = "Tried to add an argument named %r but one already exists!"
                 raise ValueError(msg % name)
         # Add
-        main = arg.names[0]
+        main = arg.name
         self.args[main] = arg
-        self.flags[to_flag(main)] = arg
-        for name in arg.names[1:]:
+        if not arg.positional:
+            self.flags[to_flag(main)] = arg
+        self.positional_args.append(arg)
+        for name in arg.nicknames:
             self.args.alias(name, to=main)
-            self.flags.alias(to_flag(name), to=to_flag(main))
+            if not arg.positional:
+                self.flags.alias(to_flag(name), to=to_flag(main))
