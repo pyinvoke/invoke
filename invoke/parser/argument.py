@@ -5,13 +5,25 @@ class Argument(object):
             raise TypeError(msg)
         if not (name or names):
             raise TypeError("An Argument must have at least one name.")
-        self.names = names if names else (name,)
+        self.names = tuple(names if names else (name,))
         self.kind = kind
         self.raw_value = self._value = None
         self.default = default
 
     def __str__(self):
-        return "Arg: %r (%s)" % (self.names, self.kind)
+        return "<%s: %s (%s)>" % (
+            self.__class__.__name__,
+            self.name,
+            ", ".join(self.nicknames)
+        )
+
+    @property
+    def name(self):
+        return self.names[0]
+
+    @property
+    def nicknames(self):
+        return self.names[1:]
 
     @property
     def takes_value(self):

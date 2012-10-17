@@ -29,6 +29,15 @@ class Argument_(Spec):
         def positional_is_False_by_default(self):
             eq_(Argument(name='foo').positional, False)
 
+    class string:
+        "__str__"
+
+        def shows_useful_info(self):
+            eq_(
+                str(Argument(names=('name', 'nick1', 'nick2'))),
+                "<Argument: %s (%s)>" % ('name', 'nick1, nick2')
+            )
+
     class kind_kwarg:
         "'kind' kwarg"
 
@@ -53,6 +62,17 @@ class Argument_(Spec):
         def returns_tuple_of_all_names(self):
             eq_(Argument(names=('--foo', '-b')).names, ('--foo', '-b'))
             eq_(Argument(name='--foo').names, ('--foo',))
+
+        def is_normalized_to_a_tuple(self):
+            ok_(isinstance(Argument(names=('a', 'b')).names, tuple))
+
+    class name:
+        def returns_first_name(self):
+            eq_(Argument(names=('a', 'b')).name, 'a')
+
+    class nicknames:
+        def returns_rest_of_names(self):
+            eq_(Argument(names=('a', 'b')).nicknames, ('b',))
 
     class takes_value:
         def True_by_default(self):
