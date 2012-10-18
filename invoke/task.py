@@ -1,4 +1,5 @@
 import inspect
+from itertools import izip_longest
 
 from lexicon import Lexicon
 
@@ -16,14 +17,13 @@ class Task(object):
         self.is_default = default
         self.auto_shortflags = auto_shortflags
 
-    def arg_opts(self, name, default, others):
+    def arg_opts(self, name, default, taken_names):
         # Argument name(s)
         names = [name]
         if self.auto_shortflags and name not in self.positional:
             # Must know what short names are available
-            taken = reduce(lambda x, y: x + list(y.names), others, [])
             for char in name:
-                if not (char == name or char in taken):
+                if not (char == name or char in taken_names):
                     names.append(char)
                     break
         opts = {'names': names}
@@ -39,25 +39,34 @@ class Task(object):
         """
         Return a list of Argument objects representing this task's signature.
         """
-        # TODO: there are 2 shitty methods of handling data structures in this
-        # method. Can you spot & fix both of them?
+        # Get argspec in dict format for easy name=>default lookup during list
+        # construction
         spec = inspect.getargspec(self.body)
+        arg_names = spec.args[:]
+        matched_args = [reversed(x) for x in [spec.args, spec.defaults or []]]
+        spec_dict = dict(izip_longest(*matched_args, fillvalue=None))
+        # Obtain ordered list of args + their default values (if any).
+        # Order should be: positionals, in order given in decorator, followed
+        # by non-positionals, in order declared (i.e. exposed by
+        # getargspect()).
+        tuples = []
+        # Positionals first, removing from base list of arg names
+        for posarg in self.positional:
+            tuples.append((posarg, spec_dict[posarg]))
+            arg_names.remove(posarg)
+        # Now arg_names contains just the non-positional args, in order.
+        tuples.extend((x, spec_dict[x]) for x in arg_names)
+        # Prime the list of all already-taken names (mostly for help in
+        # choosing auto shortflags)
+        taken_names = set(x[0] for x in tuples)
+        # Build + return arg list
         args = []
-        # Associate default values with their respective arg names
-        defaults = {}
-        if spec.defaults is not None:
-            defaults.update(zip(spec.args[-len(spec.defaults):], spec.defaults))
-        # Pull in args that have no default values
-        defaults.update((x, None) for x in spec.args if x not in defaults)
-        # Build Argument objects (positionals first so they're added in order
-        # by anybody consuming our result set.)
-        for name in self.positional:
-            default = defaults.pop(name)
-            args.append(Argument(**self.arg_opts(name, default, args)))
-        for name, default in defaults.iteritems():
-            if name in self.positional:
-                continue
-            args.append(Argument(**self.arg_opts(name, default, args)))
+        for name, default in tuples:
+            new_arg = Argument(**self.arg_opts(name, default, taken_names))
+            args.append(new_arg)
+            # Update taken_names list with new argument's full name list
+            # (which may include new shortflags)
+            taken_names.update(set(new_arg.names))
         return args
 
 
