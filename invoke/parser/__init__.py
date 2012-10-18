@@ -141,8 +141,13 @@ class ParseMachine(StateMachine):
             debug("Top-of-handle() see_unknown(%r)" % token)
             self.see_unknown(token)
             return
-        # Known flag for current context
-        if self.context and token in self.context.flags:
+        # Positional args (must come above flag check in case a pos arg value
+        # happens to match a valid flag name)
+        if self.context and self.context.needs_positional_arg:
+            debug("Context %r requires positional args, eating %r" % (self.context, token))
+            self.see_positional_arg(token)
+        # Flag
+        elif self.context and token in self.context.flags:
             self.see_flag(token)
         # Value for current flag
         elif self.waiting_for_flag_value:
@@ -191,6 +196,12 @@ class ParseMachine(StateMachine):
             self.flag.value = value
         else:
             raise ParseError("Flag %r doesn't take any value!" % self.flag)
+
+    def see_positional_arg(self, value):
+        for arg in self.context.positional_args:
+            if arg.value is None:
+                arg.value = value
+                break
 
 
 class ParseResult(list):

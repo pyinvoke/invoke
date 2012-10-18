@@ -76,6 +76,12 @@ class Context_(Spec):
             self.c.add_arg(name='abc', positional=True)
             eq_(self.c.positional_args[1].name, 'abc')
 
+        def positional_arg_modifications_affect_args_copy(self):
+            self.c.add_arg(name='hrm', positional=True)
+            eq_(self.c.args['hrm'].value, self.c.positional_args[0].value)
+            self.c.positional_args[0].value = 17
+            eq_(self.c.args['hrm'].value, self.c.positional_args[0].value)
+
     class deepcopy:
         "__deepcopy__"
         def setup(self):
@@ -101,3 +107,16 @@ class Context_(Spec):
             new_arg.value = True
             assert new_arg.value
             assert not self.arg.value
+
+    class needs_positional_arg:
+        def represents_whether_all_positional_args_have_values(self):
+            c = Context(name='foo', args=(
+                Argument('arg1', positional=True),
+                Argument('arg2', positional=False),
+                Argument('arg3', positional=True),
+            ))
+            eq_(c.needs_positional_arg, True)
+            c.positional_args[0].value = 'wat'
+            eq_(c.needs_positional_arg, True)
+            c.positional_args[1].value = 'hrm'
+            eq_(c.needs_positional_arg, False)

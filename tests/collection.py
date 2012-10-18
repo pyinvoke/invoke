@@ -136,3 +136,22 @@ class Collection_(Spec):
             assert args['r'] is args['arg2']
             assert 'b' in args
             assert args['b'] is args['barg']
+
+        def positional_list_translates_to_Argument_positional_attribute(self):
+            @task(positional=('bar',))
+            def mytask(foo, bar):
+                pass
+            c = Collection()
+            c.add_task('mytask', mytask)
+            args = c.to_contexts()[0].args
+            eq_(args['foo'].positional, False)
+            eq_(args['bar'].positional, True)
+
+        def positional_arglist_preserves_order_given(self):
+            @task(positional=('second', 'first'))
+            def mytask(first, second, third):
+                pass
+            c = Collection()
+            c.add_task('mytask', mytask)
+            ctx = c.to_contexts()[0]
+            eq_(ctx.positional_args, [ctx.args['second'], ctx.args['first']])

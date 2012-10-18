@@ -151,7 +151,7 @@ class Parser_(Spec):
                 mytask = Context(name='mytask', args=[arg])
                 argv = ['mytask', 'posval']
                 r = Parser(contexts=[mytask]).parse_argv(argv)
-                eq_(r[0].args['pos'], 'posval')
+                eq_(r[0].args['pos'].value, 'posval')
 
 
         class equals_signs:

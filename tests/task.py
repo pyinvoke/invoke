@@ -31,25 +31,34 @@ class task_(Spec):
     def raises_ValueError_on_multiple_defaults(self):
         self.loader.load_collection('decorator_multi_default')
 
+    def allows_annotating_args_as_positional(self):
+        eq_(self.vanilla['one_positional'].positional, ('pos',))
+        eq_(self.vanilla['two_positionals'].positional, ('pos1', 'pos2'))
+
 
 class Task_(Spec):
-    class argspec:
+    class get_arguments:
         def setup(self):
-            @task
-            def mytask(arg1, arg2=False):
+            @task(positional=['arg3', 'arg1'])
+            def mytask(arg1, arg2=False, arg3=5):
                 pass
             self.task = mytask
+            self.args = self.task.get_arguments()
 
-            @task
-            def mytask2():
-                pass
-            self.task2 = mytask2
+        def positional_args_come_first(self):
+            eq_(self.args[0].name, 'arg3')
+            eq_(self.args[1].name, 'arg1')
+            eq_(self.args[2].name, 'arg2')
 
-        def returns_argument_names(self):
-            assert 'arg1' in self.task.argspec
+        def kinds_are_preserved(self):
+            eq_(
+                map(lambda x: x.kind, self.args),
+                # Remember that the default 'kind' is a string.
+                [int, str, bool]
+            )
 
-        def returns_argument_default_values(self):
-            assert self.task.argspec['arg2'] is False
-
-        def works_for_empty_argspecs(self):
-            eq_(self.task2.argspec, {})
+        def positional_flag_is_preserved(self):
+            eq_(
+                map(lambda x: x.positional, self.args),
+                [True, True, False]
+            )
