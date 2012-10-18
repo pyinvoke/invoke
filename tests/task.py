@@ -108,4 +108,11 @@ class Task_(Spec):
         def early_auto_shortflags_shouldnt_lock_out_real_shortflags(self):
             # I.e. "task --foo -f" => --foo should NOT get to pick '-f' for its
             # shortflag or '-f' is totally fucked.
-            skip()
+            @task
+            def mytask(longarg, l):
+                pass
+            args = self._task_to_dict(mytask)
+            assert 'longarg' in args
+            assert 'o' in args
+            assert args['o'] is args['longarg']
+            assert 'l' in args
