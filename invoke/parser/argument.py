@@ -13,11 +13,14 @@ class Argument(object):
         self.positional = positional
 
     def __str__(self):
-        return "<%s: %s (%s)>" % (
+        return "<%s: %s%s>" % (
             self.__class__.__name__,
             self.name,
-            ", ".join(self.nicknames)
+            " (%s)" % (", ".join(self.nicknames)) if self.nicknames else ""
         )
+
+    def __repr__(self):
+        return str(self)
 
     @property
     def name(self):

@@ -38,6 +38,19 @@ class Argument_(Spec):
                 "<Argument: %s (%s)>" % ('name', 'nick1, nick2')
             )
 
+        def does_not_show_nickname_parens_if_no_nicknames(self):
+            eq_(
+                str(Argument('name')),
+                "<Argument: %s>" % 'name'
+            )
+
+    class repr:
+        "__repr__"
+
+        def just_aliases_dunder_str(self):
+            a = Argument(names=('name', 'name2'))
+            eq_(str(a), repr(a))
+
     class kind_kwarg:
         "'kind' kwarg"
 
