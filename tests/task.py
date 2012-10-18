@@ -44,6 +44,18 @@ class Task_(Spec):
                 pass
             self.task = mytask
             self.args = self.task.get_arguments()
+            self.argdict = self._arglist_to_dict(self.args)
+
+        def _arglist_to_dict(self, arglist):
+            # This kinda duplicates Context.add_arg(x) for x in arglist :(
+            ret = {}
+            for arg in arglist:
+                for name in arg.names:
+                    ret[name] = arg
+            return ret
+
+        def _task_to_dict(self, task):
+            return self._arglist_to_dict(task.get_arguments())
 
         def positional_args_come_first(self):
             eq_(self.args[0].name, 'arg3')
@@ -62,3 +74,38 @@ class Task_(Spec):
                 map(lambda x: x.positional, self.args),
                 [True, True, False]
             )
+
+        def turns_function_signature_into_Arguments(self):
+            eq_(len(self.args), 3, str(self.args))
+            assert 'arg2' in self.argdict
+
+        def shortflags_created_by_default(self):
+            assert 'a' in self.argdict
+            # arg2 is only non positional flag
+            assert self.argdict['a'] is self.argdict['arg2']
+
+        def autocreated_short_flags_can_be_disabled(self):
+            @task(auto_shortflags=False)
+            def mytask(arg):
+                pass
+            args = self._task_to_dict(mytask)
+            assert 'a' not in args
+            assert 'arg' in args
+
+        def autocreated_shortflags_dont_collide(self):
+            "auto-created short flags don't collide"
+            @task
+            def mytask(arg1, arg2, barg):
+                pass
+            args = self._task_to_dict(mytask)
+            assert 'a' in args
+            assert args['a'] is args['arg1']
+            assert 'r' in args
+            assert args['r'] is args['arg2']
+            assert 'b' in args
+            assert args['b'] is args['barg']
+
+        def early_auto_shortflags_shouldnt_lock_out_real_shortflags(self):
+            # I.e. "task --foo -f" => --foo should NOT get to pick '-f' for its
+            # shortflag or '-f' is totally fucked.
+            skip()

@@ -96,56 +96,8 @@ class Collection_(Spec):
             eq_(self.context.name, 'mytask')
             eq_(len(self.contexts), 2)
 
-        def turns_function_signature_into_Arguments(self):
-            eq_(len(self.context.args), 3)
-            assert 'text' in self.context.args
-
-        def boolean_default_arg_values_inform_Argument_kind_kwarg(self):
-            a = self.context.args
-            eq_(a.boolean.kind, bool)
-            eq_(a.number.kind, int)
-
         def allows_flaglike_access_via_flags(self):
             assert '--text' in self.context.flags
-
-        def autocreates_short_flags(self):
-            a = self.context.args
-            assert 't' in a
-            assert a['t'] is a['text']
-
-        def autocreated_short_flags_can_be_disabled(self):
-            @task(auto_shortflags=False)
-            def mytask(arg):
-                pass
-            col = Collection()
-            col.add_task('mytask', mytask)
-            args = col.to_contexts()[0].args
-            assert 'a' not in args
-            assert 'arg' in args
-
-        def autocreated_short_flags_dont_clash_with_existing_flags(self):
-            @task
-            def mytask(arg1, arg2, barg):
-                pass
-            col = Collection()
-            col.add_task('mytask', mytask)
-            args = col.to_contexts()[0].args
-            assert 'a' in args
-            assert args['a'] is args['arg1']
-            assert 'r' in args
-            assert args['r'] is args['arg2']
-            assert 'b' in args
-            assert args['b'] is args['barg']
-
-        def positional_list_translates_to_Argument_positional_attribute(self):
-            @task(positional=('bar',))
-            def mytask(foo, bar):
-                pass
-            c = Collection()
-            c.add_task('mytask', mytask)
-            args = c.to_contexts()[0].args
-            eq_(args['foo'].positional, False)
-            eq_(args['bar'].positional, True)
 
         def positional_arglist_preserves_order_given(self):
             @task(positional=('second', 'first'))
