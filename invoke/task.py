@@ -6,16 +6,47 @@ from lexicon import Lexicon
 from .parser import Argument
 
 
+# Non-None sentinel
+NO_DEFAULT = object()
+
+
 class Task(object):
     # TODO: store these kwarg defaults central, refer to those values both here
-    # and in @task
-    def __init__(self, body, aliases=(), positional=(), default=False, 
+    # and in @task.
+    # TODO: allow central per-session / per-taskmodule control over some of
+    # them, e.g. (auto_)positional, auto_shortflags.
+    def __init__(self, body, aliases=(), positional=None, default=False, 
         auto_shortflags=True):
         self.body = body
         self.aliases = aliases
-        self.positional = positional
+        self.positional = self.fill_implicit_positionals(positional)
         self.is_default = default
         self.auto_shortflags = auto_shortflags
+
+    def argspec(self, body):
+        """
+        Returns two-tuple:
+
+        * First item is list of arg names, in order defined.
+        * Second item is dict mapping arg names to default values or
+          task.NO_DEFAULT (i.e. an 'empty' value distinct from None).
+        """
+        spec = inspect.getargspec(body)
+        arg_names = spec.args[:]
+        matched_args = [reversed(x) for x in [spec.args, spec.defaults or []]]
+        spec_dict = dict(izip_longest(*matched_args, fillvalue=NO_DEFAULT))
+        return arg_names, spec_dict
+
+    def fill_implicit_positionals(self, positional):
+        _, spec_dict = self.argspec(self.body)
+        # If positionals is None, everything lacking a default
+        # value will be automatically considered positional.
+        if positional is None:
+            positional = []
+            for name, default in spec_dict.iteritems():
+                if default is NO_DEFAULT:
+                    positional.append(name)
+        return positional
 
     def arg_opts(self, name, default, taken_names):
         # Argument name(s)
@@ -27,8 +58,8 @@ class Task(object):
                     names.append(char)
                     break
         opts = {'names': names}
-        # Handle default value & kind
-        if default is not None:
+        # Handle default value & kind if possible
+        if default not in (None, NO_DEFAULT):
             # TODO: allow setting 'kind' explicitly.
             opts['kind'] = type(default)
             opts['default'] = default
@@ -39,12 +70,7 @@ class Task(object):
         """
         Return a list of Argument objects representing this task's signature.
         """
-        # Get argspec in dict format for easy name=>default lookup during list
-        # construction
-        spec = inspect.getargspec(self.body)
-        arg_names = spec.args[:]
-        matched_args = [reversed(x) for x in [spec.args, spec.defaults or []]]
-        spec_dict = dict(izip_longest(*matched_args, fillvalue=None))
+        arg_names, spec_dict = self.argspec(self.body)
         # Obtain ordered list of args + their default values (if any).
         # Order should be: positionals, in order given in decorator, followed
         # by non-positionals, in order declared (i.e. exposed by
@@ -83,8 +109,11 @@ def task(*args, **kwargs):
       with a simple ``@task`` wrapper may only be invoked as ``"mytask"``.
       Changing the decorator to be ``@task(aliases=['myothertask'])`` allows
       invocation as ``"mytask"`` *or* ``"myothertask"``.
-    * ``positional``: Iterable informing the parser that the given argument
-      name(s) are to be treated as positional arugments and not flags.
+    * ``positional``: Iterable overriding the parser's automatic "args with no
+      default value are considered positional" behavior. If a list of arg
+      names, no args besides those named in this iterable will be considered
+      positional. (This means that an empty list will force all arguments to be
+      given as explicit flags.)
     * ``default``: Boolean option specifying whether this task should be its
       collection's default task (i.e. called if the collection's own name is
       given.)
@@ -93,13 +122,11 @@ def task(*args, **kwargs):
     """
     # @task -- no options
     if len(args) == 1:
-        obj = args[0]
-        obj = Task(obj)
-        return obj
+        return Task(args[0])
     # @task(options)
     # TODO: pull in centrally defined defaults here (see Task)
     aliases = kwargs.pop('aliases', ())
-    positional = kwargs.pop('positional', ())
+    positional = kwargs.pop('positional', None)
     default = kwargs.pop('default', False)
     auto_shortflags = kwargs.pop('auto_shortflags', True)
     # Handle unknown args/kwargs

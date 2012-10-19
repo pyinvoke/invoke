@@ -64,13 +64,13 @@ class CLIParsing(Spec):
     High level parsing tests
     """
     def setup(self):
-        @task
+        @task(positional=[])
         def mytask(mystring, s, boolean=False, b=False, v=False):
             pass
         @task
         def mytask2():
             pass
-        @task
+        @task(positional=[])
         def mytask3(mystring):
             pass
         c = Collection()

@@ -6,10 +6,6 @@ from invoke.loader import Loader
 from _utils import support
 
 
-class _Dummy(object):
-    pass
-
-
 class task_(Spec):
     "@task"
 
@@ -18,8 +14,9 @@ class task_(Spec):
         self.vanilla = self.loader.load_collection('decorator')
 
     def allows_access_to_wrapped_object(self):
-        dummy = _Dummy()
-        eq_(task(dummy).body, dummy)
+        def lolcats():
+            pass
+        eq_(task(lolcats).body, lolcats)
 
     def allows_alias_specification(self):
         eq_(self.vanilla['foo'], self.vanilla['bar'])
@@ -32,8 +29,11 @@ class task_(Spec):
         self.loader.load_collection('decorator_multi_default')
 
     def allows_annotating_args_as_positional(self):
-        eq_(self.vanilla['one_positional'].positional, ('pos',))
-        eq_(self.vanilla['two_positionals'].positional, ('pos1', 'pos2'))
+        eq_(self.vanilla['one_positional'].positional, ['pos'])
+        eq_(self.vanilla['two_positionals'].positional, ['pos1', 'pos2'])
+
+    def when_positional_arg_missing_all_non_default_args_are_positional(self):
+        eq_(self.vanilla['implicit_positionals'].positional, ['pos1', 'pos2'])
 
 
 class Task_(Spec):
@@ -94,7 +94,7 @@ class Task_(Spec):
 
         def autocreated_shortflags_dont_collide(self):
             "auto-created short flags don't collide"
-            @task
+            @task(positional=[])
             def mytask(arg1, arg2, barg):
                 pass
             args = self._task_to_dict(mytask)
@@ -108,7 +108,7 @@ class Task_(Spec):
         def early_auto_shortflags_shouldnt_lock_out_real_shortflags(self):
             # I.e. "task --foo -f" => --foo should NOT get to pick '-f' for its
             # shortflag or '-f' is totally fucked.
-            @task
+            @task(positional=[])
             def mytask(longarg, l):
                 pass
             args = self._task_to_dict(mytask)

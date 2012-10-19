@@ -80,7 +80,7 @@ class Collection_(Spec):
 
     class to_contexts:
         def setup(self):
-            @task
+            @task(positional=[])
             def mytask(text, boolean=False, number=5):
                 print text
             @task

@@ -5,6 +5,6 @@ from invoke.task import task
 def print_foo():
     print "foo"
 
-@task
+@task(positional=[])
 def print_name(name):
     print name
