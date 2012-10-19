@@ -27,6 +27,11 @@ class Loader_(Spec):
         def raises_CollectionNotFound_if_not_found(self):
             Loader(root=support).load_collection('nope')
 
+        @raises(ImportError)
+        def raises_ImportError_if_found_collection_cannot_be_imported(self):
+            # Instead of masking with a CollectionNotFound
+            Loader(root=support).load_collection('oops')
+
         def raises_InvalidCollection_if_invalid(self):
             skip()
 
