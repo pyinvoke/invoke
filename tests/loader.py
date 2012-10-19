@@ -55,11 +55,10 @@ class Loader_(Spec):
             result = Loader(root=support + '/implicit/').load_collection()
             eq_(type(result), Collection)
 
-    class add_to_collection:
+    class find_collection:
         @raises(CollectionNotFound)
         def raises_CollectionNotFound_for_missing_collections(self):
-            c = Collection()
-            result = Loader(root=support).add_to_collection('nope', c)
+            result = Loader(root=support).find_collection('nope')
 
     class load:
         def returns_nested_collection_from_all_given_names(self):

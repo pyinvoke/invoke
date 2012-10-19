@@ -1,5 +1,6 @@
 import os
 import sys
+import imp
 
 from .collection import Collection
 from .exceptions import CollectionNotFound
@@ -30,38 +31,49 @@ class Loader(object):
             our_path.insert(0, parent)
         return our_path
 
-    def add_to_collection(self, name, collection):
+    def add_to_collection(self, module_tuple, collection):
         """
-        Load all valid tasks from module ``name``, adding to ``collection``.
-
-        Raises ``CollectionNotFound`` if the module is unable to be imported.
+        Import & load tasks from ``module_tuple``, adding to ``collection``.
         """
-        try:
-            module = __import__(name)
-            candidates = filter(
-                lambda x: isinstance(x[1], Task),
-                vars(module).items()
+        # Import. Errors during import will raise normally.
+        module = imp.load_module(*module_tuple)
+        tasks = filter(
+            lambda x: isinstance(x[1], Task),
+            vars(module).items()
+        )
+        for name, task in tasks:
+            collection.add_task(
+                name=name,
+                task=task,
+                aliases=task.aliases,
+                default=task.is_default
             )
-            if not candidates:
-                # Recurse downwards towards FS
-                pass
-            for name, task in candidates:
-                collection.add_task(
-                    name=name,
-                    task=task,
-                    aliases=task.aliases,
-                    default=task.is_default
-                )
-            return collection
-        except ImportError, e:
-            # TODO: Handle ImportErrors that aren't "<name does not exist>"
-            # I.e. if there is some inner ImportError or similar raising from
-            # the attempt to import 'name' module.
-            raise CollectionNotFound(name=name, root=self.root, error=e)
+        return collection
+
+    def find_collection(self, name):
+        """
+        Seek towards FS root from self.root for Python module ``name``.
+
+        Returns a tuple suitable for use in ``imp.load_module``.
+        """
+        # Add root to system path
+        # TODO: decide correct behavior re: leaving sys.path modified.
+        # imp.find_module can take an arbitrary path, after all. But users may
+        # find it useful to have local-to-tasks-module Python code on the
+        # import path.
+        sys.path, old_path = self.update_path(sys.path), sys.path
+        try:
+            # TODO: actually seek towards FS root.
+            return tuple([name] + list(imp.find_module(name, sys.path)))
+        # ImportErrors raised by imp.find_module indicate the requested module
+        # does not exist, not that it exists & couldn't be imported (which is
+        # typically what ImportError means)
+        except ImportError:
+            raise CollectionNotFound(name=name, root=self.root)
 
     def load_collection(self, name=None):
         """
-        Load collection named ``name``.
+        Load and return collection named ``name``.
 
         If not given, looks for a ``"tasks"`` collection by default.
         """
@@ -69,8 +81,6 @@ class Loader(object):
             # TODO: make this configurable
             name = 'tasks'
         c = Collection()
-        # add root to system path
-        sys.path = self.update_path(sys.path)
-        # add task candidates to collection
-        collection = self.add_to_collection(name, c)
+        # add tasks to collection
+        collection = self.add_to_collection(self.find_collection(name), c)
         return collection

@@ -1,8 +1,7 @@
 class CollectionNotFound(Exception):
-    def __init__(self, name, root, error):
+    def __init__(self, name, root):
         self.name = name
         self.root = root
-        self.error = error
 
 
 class Failure(Exception):
