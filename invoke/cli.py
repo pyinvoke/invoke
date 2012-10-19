@@ -21,7 +21,7 @@ def parse(argv):
 
     # Print version & exit if necessary
     if args.version.value:
-        print "Invoke v%s" % __version__
+        print "Invoke %s" % __version__
         sys.exit(0)
 
     # Load collection (default or specified) and parse leftovers

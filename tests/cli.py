@@ -45,7 +45,7 @@ class CLI(Spec):
         eq_(self.result.stdout, "foo\n")
 
     def version_info(self):
-        eq_(run("invoke -V").stdout, "Invoke v%s\n" % invoke.__version__)
+        eq_(run("invoke -V").stdout, "Invoke %s\n" % invoke.__version__)
 
 
 class HighLevelFailures(Spec):
