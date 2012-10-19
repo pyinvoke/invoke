@@ -3,7 +3,7 @@ import os
 
 from spec import eq_, skip, Spec, raises, ok_, trap
 
-from invoke.run import run
+from invoke.runner import run
 from invoke.exceptions import Failure
 
 from _utils import support

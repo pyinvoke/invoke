@@ -3,7 +3,7 @@ import sys
 
 from .collection import Collection
 from .exceptions import CollectionNotFound
-from .task import Task
+from .tasks import Task
 
 
 class Loader(object):

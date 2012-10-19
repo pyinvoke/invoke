@@ -1,7 +1,7 @@
 from spec import Spec, skip, eq_, raises
 
 from invoke.collection import Collection
-from invoke.task import task
+from invoke.tasks import task
 
 
 @task

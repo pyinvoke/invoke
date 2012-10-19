@@ -1,6 +1,6 @@
 from spec import Spec, skip, eq_, raises
 
-from invoke.task import task
+from invoke.tasks import task
 from invoke.loader import Loader
 
 from _utils import support

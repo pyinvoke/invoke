@@ -4,10 +4,10 @@ import StringIO
 
 from spec import eq_, skip, Spec, ok_
 
-from invoke.run import run
+from invoke.runner import run
 from invoke.parser import Parser, Context
 from invoke.collection import Collection
-from invoke.task import task
+from invoke.tasks import task
 from invoke.exceptions import Failure
 
 from _utils import support
