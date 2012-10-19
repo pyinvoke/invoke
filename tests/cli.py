@@ -9,6 +9,7 @@ from invoke.parser import Parser, Context
 from invoke.collection import Collection
 from invoke.tasks import task
 from invoke.exceptions import Failure
+import invoke
 
 from _utils import support
 
@@ -42,6 +43,9 @@ class CLI(Spec):
 
     def shorthand_binary_name(self):
         eq_(self.result.stdout, "foo\n")
+
+    def version_info(self):
+        eq_(run("invoke -V").stdout, "Invoke v%s\n" % invoke.__version__)
 
 
 class HighLevelFailures(Spec):

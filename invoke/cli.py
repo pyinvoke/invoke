@@ -3,6 +3,7 @@ import sys
 from .loader import Loader
 from .parser import Parser, Context, Argument
 from .exceptions import Failure, CollectionNotFound
+from ._version import __version__
 
 
 def parse(argv):
@@ -10,12 +11,18 @@ def parse(argv):
     initial_context = Context(args=(
         # TODO: make collection a list-building arg, not a string
         Argument(names=('collection', 'c')),
-        Argument(names=('root', 'r'))
+        Argument(names=('root', 'r')),
+        Argument(names=('version', 'V'), kind=bool, default=False),
     ))
     # 'core' will result an .unparsed attribute with what was left over.
     parser = Parser(initial=initial_context, ignore_unknown=True)
     core = parser.parse_argv(argv)
     args = core[0].args
+
+    # Print version & exit if necessary
+    if args.version.value:
+        print "Invoke v%s" % __version__
+        sys.exit(0)
 
     # Load collection (default or specified) and parse leftovers
     loader = Loader(root=args.root.value)
