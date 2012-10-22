@@ -56,6 +56,7 @@ class HighLevelFailures(Spec):
         assert result.exited != 0
 
     def parse_failure(self):
+        # E.g. missing positional arg == useful non traceback error
         skip()
 
     def load_failure(self):
