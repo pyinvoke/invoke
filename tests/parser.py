@@ -153,6 +153,14 @@ class Parser_(Spec):
                 r = Parser(contexts=[mytask]).parse_argv(argv)
                 eq_(r[0].args['pos'].value, 'posval')
 
+            def positional_args_eat_otherwise_valid_tokens(self):
+                mytask = Context('mytask', args=[
+                    Argument('pos', positional=True),
+                    Argument('nonpos', default='default')
+                ])
+                r = Parser([mytask]).parse_argv(['mytask', '--nonpos'])
+                eq_(r[0].args['pos'].value, '--nonpos')
+                eq_(r[0].args['nonpos'].value, 'default')
 
         class equals_signs:
             def _compare(self, argname, invoke, value):
