@@ -55,13 +55,17 @@ class Result(object):
 
 
 def normalize_hide(val):
-    hide_vals = (None, 'out', 'err', 'both')
+    hide_vals = (None, 'out', 'stdout', 'err', 'stderr', 'both')
     if val not in hide_vals:
         raise ValueError("'hide' got %r which is not in %r" % (val, hide_vals,))
     if val is None:
         hide = ()
     elif val is 'both':
         hide = ('out', 'err')
+    elif val is 'stdout':
+        hide = ('out',)
+    elif val is 'stderr':
+        hide = ('err',)
     else:
         hide = (val,)
     return hide
