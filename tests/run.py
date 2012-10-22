@@ -78,6 +78,18 @@ class Run(Spec):
         eq_(sys.stdout.getvalue().strip(), "foo")
         eq_(sys.stderr.getvalue().strip(), "")
 
+    @trap
+    def hide_accepts_stderr_alias_for_err(self):
+        run(self.both, hide='stderr')
+        eq_(sys.stdout.getvalue().strip(), "foo")
+        eq_(sys.stderr.getvalue().strip(), "")
+
+    @trap
+    def hide_accepts_stdout_alias_for_out(self):
+        run(self.both, hide='stdout')
+        eq_(sys.stdout.getvalue().strip(), "")
+        eq_(sys.stderr.getvalue().strip(), "bar")
+
     def hide_both_hides_both_under_pty(self):
         r = run(self.sub % 'both', hide='both')
         eq_(r.stdout, "")
