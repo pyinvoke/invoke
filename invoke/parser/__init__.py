@@ -170,6 +170,9 @@ class ParseMachine(StateMachine):
 
     def complete_context(self):
         debug("Wrapping up context %r" % (self.context.name if self.context else self.context))
+        # Ensure all of context's positional args have been given.
+        if self.context and self.context.needs_positional_arg:
+            raise ParseError("'%s' did not receive all required positional arguments!" % self.context.name)
         if self.context and self.context not in self.result:
             self.result.append(self.context)
 
