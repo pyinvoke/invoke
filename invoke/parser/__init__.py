@@ -144,7 +144,8 @@ class ParseMachine(StateMachine):
         # Positional args (must come above flag check in case a pos arg value
         # happens to match a valid flag name)
         if self.context and self.context.needs_positional_arg:
-            debug("Context %r requires positional args, eating %r" % (self.context, token))
+            debug("Context %r requires positional args, eating %r" % (
+                self.context, token))
             self.see_positional_arg(token)
         # Flag
         elif self.context and token in self.context.flags:
