@@ -146,12 +146,18 @@ class Parser_(Spec):
             eq_(a2.value, 'val')
 
         class positional_arguments:
-            def single_positional_arg(self):
+            def setup(self):
                 arg = Argument('pos', positional=True)
                 mytask = Context(name='mytask', args=[arg])
-                argv = ['mytask', 'posval']
-                r = Parser(contexts=[mytask]).parse_argv(argv)
+                self.parser = Parser(contexts=[mytask])
+
+            def single_positional_arg(self):
+                r = self.parser.parse_argv(['mytask', 'posval'])
                 eq_(r[0].args['pos'].value, 'posval')
+
+            @raises(ParseError)
+            def omitted_positional_arg_raises_ParseError(self):
+                self.parser.parse_argv(['mytask'])
 
             def positional_args_eat_otherwise_valid_tokens(self):
                 mytask = Context('mytask', args=[
