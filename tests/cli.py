@@ -57,8 +57,8 @@ class HighLevelFailures(Spec):
         assert result.exited != 0
 
     def parse_failure(self):
-        # E.g. missing positional arg == useful non traceback error
-        skip()
+        result = run("inv -c fail missing_pos", warn=True, hide='both')
+        assert self.sentinel not in result.stderr
 
     def load_failure(self):
         skip()
