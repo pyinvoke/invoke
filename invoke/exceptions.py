@@ -13,3 +13,7 @@ class Failure(Exception):
     """
     def __init__(self, result):
         self.result = result
+
+
+class ParseError(Exception):
+    pass

@@ -6,6 +6,7 @@ from lexicon import Lexicon
 from .context import Context
 from .argument import Argument # Mostly for importing via invoke.parser.<x>
 from ..util import debug
+from ..exceptions import ParseError
 
 
 class Parser(object):
@@ -227,7 +228,3 @@ class ParseResult(list):
                 argd[name] = arg.value
             d[context.name] = argd
         return d
-
-
-class ParseError(Exception):
-    pass
