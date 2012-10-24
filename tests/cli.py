@@ -58,9 +58,15 @@ class HighLevelFailures(Spec):
         assert result.exited != 0
 
     class parsing:
-        def failures_should_not_show_tracebacks(self):
+        def should_not_show_tracebacks(self):
             result = run("inv -c fail missing_pos", warn=True, hide='both')
             assert TB_SENTINEL not in result.stderr
+
+        def should_show_core_usage_on_core_failures(self):
+            skip()
+
+        def should_show_context_usage_on_context_failures(self):
+            skip()
 
     def load_failure(self):
         skip()
