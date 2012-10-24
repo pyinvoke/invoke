@@ -16,4 +16,6 @@ class Failure(Exception):
 
 
 class ParseError(Exception):
-    pass
+    def __init__(self, msg, context=None):
+        super(ParseError, self).__init__(msg)
+        self.context = context

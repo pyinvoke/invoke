@@ -160,7 +160,7 @@ class ParseMachine(StateMachine):
         # Unknown
         else:
             if not self.ignore_unknown:
-                raise ParseError("No idea what %r is!" % token)
+                self.error("No idea what %r is!" % token)
             else:
                 debug("Bottom-of-handle() see_unknown(%r)" % token)
                 self.see_unknown(token)
@@ -173,7 +173,7 @@ class ParseMachine(StateMachine):
         debug("Wrapping up context %r" % (self.context.name if self.context else self.context))
         # Ensure all of context's positional args have been given.
         if self.context and self.context.needs_positional_arg:
-            raise ParseError("'%s' did not receive all required positional arguments!" % self.context.name)
+            self.error("'%s' did not receive all required positional arguments!" % self.context.name)
         if self.context and self.context not in self.result:
             self.result.append(self.context)
 
@@ -186,7 +186,7 @@ class ParseMachine(StateMachine):
             return
         if self.flag.takes_value:
             if self.flag.raw_value is None:
-                raise ParseError("Flag %r needed value and was not given one!" % self.flag)
+                self.error("Flag %r needed value and was not given one!" % self.flag)
         else:
             debug("Marking seen flag %r as True" % self.flag)
             self.flag.value = True
@@ -200,13 +200,16 @@ class ParseMachine(StateMachine):
             debug("Setting flag %r to value %r" % (self.flag, value))
             self.flag.value = value
         else:
-            raise ParseError("Flag %r doesn't take any value!" % self.flag)
+            self.error("Flag %r doesn't take any value!" % self.flag)
 
     def see_positional_arg(self, value):
         for arg in self.context.positional_args:
             if arg.value is None:
                 arg.value = value
                 break
+
+    def error(self, msg):
+        raise ParseError(msg, self.context)
 
 
 class ParseResult(list):
