@@ -153,6 +153,18 @@ class Parser_(Spec):
             def missing_flag_values_raise_ParseError(self):
                 self.p.parse_argv(['foo', '--bar'])
 
+            def attaches_context_to_ParseErrors(self):
+                try:
+                    self.p.parse_argv(['foo', '--bar'])
+                except ParseError, e:
+                    assert e.context is not None
+
+            def attached_context_is_None_outside_contexts(self):
+                try:
+                    Parser().parse_argv(['wat'])
+                except ParseError, e:
+                    assert e.context is None
+
         class positional_arguments:
             def setup(self):
                 arg = Argument('pos', positional=True)
