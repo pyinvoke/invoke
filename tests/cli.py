@@ -47,18 +47,20 @@ class CLI(Spec):
         eq_(run("invoke -V").stdout, "Invoke %s\n" % invoke.__version__)
 
 
+TB_SENTINEL = 'Traceback (most recent call last)'
+
 class HighLevelFailures(Spec):
-    sentinel = 'Traceback (most recent call last)'
 
     def command_failure(self):
         "Command failure doesn't show tracebacks"
         result = run("inv -c fail simple", warn=True, hide='both')
-        assert self.sentinel not in result.stderr
+        assert TB_SENTINEL not in result.stderr
         assert result.exited != 0
 
-    def parse_failure(self):
-        result = run("inv -c fail missing_pos", warn=True, hide='both')
-        assert self.sentinel not in result.stderr
+    class parsing:
+        def failures_should_not_show_tracebacks(self):
+            result = run("inv -c fail missing_pos", warn=True, hide='both')
+            assert TB_SENTINEL not in result.stderr
 
     def load_failure(self):
         skip()
