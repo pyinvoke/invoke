@@ -145,6 +145,14 @@ class Parser_(Spec):
             eq_(a.value, None)
             eq_(a2.value, 'val')
 
+        class parsing_errors:
+            def setup(self):
+                self.p = Parser([Context(name='foo', args=[Argument('bar')])])
+
+            @raises(ParseError)
+            def missing_flag_values_raise_ParseError(self):
+                self.p.parse_argv(['foo', '--bar'])
+
         class positional_arguments:
             def setup(self):
                 arg = Argument('pos', positional=True)
