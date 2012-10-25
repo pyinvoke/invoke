@@ -1,7 +1,8 @@
 import copy
 
-from fluidity import StateMachine, state, transition
 from lexicon import Lexicon
+
+from ..vendor.fluidity import StateMachine, state, transition
 
 from .context import Context
 from .argument import Argument # Mostly for importing via invoke.parser.<x>
