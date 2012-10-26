@@ -1,3 +1,4 @@
+from functools import wraps
 import sys
 import os
 
@@ -7,6 +8,20 @@ from invoke.runner import run
 from invoke.exceptions import Failure
 
 from _utils import support
+
+
+def _needs_pty(func):
+    """
+    Decorator causing tests to autopass if they appear to be running headless.
+
+    Can't really think how else to approach this w/o forking pexpect :(
+
+    This is a no-op when run in a real terminal.
+    """
+    @wraps(func)
+    def inner(*args, **kwargs):
+        print sys.stdin
+        return func(*args, **kwargs)
 
 
 class Run(Spec):
@@ -39,10 +54,12 @@ class Run(Spec):
     def stderr_attribute_contains_stderr(self):
         eq_(run(self.err, hide='both').stderr, 'bar\n')
 
+    @_needs_pty
     def stdout_contains_both_streams_under_pty(self):
         r = run(self.both, hide='both', pty=True)
         eq_(r.stdout, 'foo\r\nbar\r\n')
 
+    @_needs_pty
     def stderr_is_empty_under_pty(self):
         r = run(self.both, hide='both', pty=True)
         eq_(r.stderr, '')
@@ -90,16 +107,19 @@ class Run(Spec):
         eq_(sys.stdout.getvalue().strip(), "")
         eq_(sys.stderr.getvalue().strip(), "bar")
 
+    @_needs_pty
     def hide_both_hides_both_under_pty(self):
         r = run(self.sub % 'both', hide='both')
         eq_(r.stdout, "")
         eq_(r.stderr, "")
 
+    @_needs_pty
     def hide_out_hides_both_under_pty(self):
         r = run(self.sub % 'out', hide='both')
         eq_(r.stdout, "")
         eq_(r.stderr, "")
 
+    @_needs_pty
     def hide_err_has_no_effect_under_pty(self):
         r = run(self.sub % 'err', hide='both')
         eq_(r.stdout, "foo\r\nbar\r\n")
@@ -129,6 +149,7 @@ class Run(Spec):
     def hide_does_not_affect_capturing(self):
         eq_(run(self.out, hide='both').stdout, 'foo\n')
 
+    @_needs_pty
     def return_value_indicates_whether_pty_was_used(self):
         eq_(run("true").pty, False)
         eq_(run("true", pty=True).pty, True)
