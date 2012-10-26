@@ -1,7 +1,6 @@
 import copy
 
-from lexicon import Lexicon
-
+from ..vendor.lexicon import Lexicon
 from ..vendor.fluidity import StateMachine, state, transition
 
 from .context import Context

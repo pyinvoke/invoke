@@ -1,4 +1,4 @@
-from lexicon import Lexicon
+from .vendor.lexicon import Lexicon
 
 from .parser import Context, Argument
 

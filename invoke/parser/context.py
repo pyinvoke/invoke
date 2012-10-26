@@ -1,4 +1,4 @@
-from lexicon import Lexicon
+from ..vendor.lexicon import Lexicon
 
 from .argument import Argument
 
