@@ -1,6 +1,6 @@
 import re
 import inspect
-from fluidity.backwardscompat import callable
+from .backwardscompat import callable
 
 # metaclass implementation idea from
 # http://blog.ianbicking.org/more-on-python-metaprogramming-comment-14.html
