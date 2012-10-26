@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-import sys
-
 # Support setuptools or distutils
 try:
     from setuptools import setup
