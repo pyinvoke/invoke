@@ -1,4 +1,4 @@
-from lexicon import Lexicon
+from .vendor.lexicon import Lexicon
 
 from .parser import Context, Argument
 
@@ -59,20 +59,10 @@ class Collection(object):
         """
         Returns all contained tasks and subtasks as a list of parser contexts.
         """
+        # TODO: this is now a stub, do away w/ it
         result = []
         for name, task in self.tasks.iteritems():
-            context = Context(name=name, aliases=task.aliases)
-            argspec = task.argspec
-            for name, default in argspec.iteritems():
-                # Handle arg options
-                opts = {}
-                opts['help'] = task.helps.get(name)
-                if default is not None:
-                    opts['kind'] = type(default)
-                # Handle aliases (auto shortflags, etc)
-                names = [name]
-                names.extend(argspec.aliases_of(name))
-                # Create/add the argument
-                context.add_arg(names=names, **opts)
-            result.append(context)
+            result.append(Context(
+                name=name, aliases=task.aliases, args=task.get_arguments()
+            ))
         return result

@@ -1,11 +1,12 @@
 import copy
 
-from fluidity import StateMachine, state, transition
-from lexicon import Lexicon
+from ..vendor.lexicon import Lexicon
+from ..vendor.fluidity import StateMachine, state, transition
 
 from .context import Context
 from .argument import Argument # Mostly for importing via invoke.parser.<x>
 from ..util import debug
+from ..exceptions import ParseError
 
 
 class Parser(object):
@@ -145,8 +146,14 @@ class ParseMachine(StateMachine):
             debug("Top-of-handle() see_unknown(%r)" % token)
             self.see_unknown(token)
             return
-        # Known flag for current context
-        if self.context and token in self.context.flags:
+        # Positional args (must come above flag check in case a pos arg value
+        # happens to match a valid flag name)
+        if self.context and self.context.needs_positional_arg:
+            debug("Context %r requires positional args, eating %r" % (
+                self.context, token))
+            self.see_positional_arg(token)
+        # Flag
+        elif self.context and token in self.context.flags:
             self.see_flag(token)
         # Value for current flag
         elif self.waiting_for_flag_value:
@@ -157,7 +164,7 @@ class ParseMachine(StateMachine):
         # Unknown
         else:
             if not self.ignore_unknown:
-                raise ParseError("No idea what %r is!" % token)
+                self.error("No idea what %r is!" % token)
             else:
                 debug("Bottom-of-handle() see_unknown(%r)" % token)
                 self.see_unknown(token)
@@ -169,6 +176,9 @@ class ParseMachine(StateMachine):
 
     def complete_context(self):
         debug("Wrapping up context %r" % (self.context.name if self.context else self.context))
+        # Ensure all of context's positional args have been given.
+        if self.context and self.context.needs_positional_arg:
+            self.error("'%s' did not receive all required positional arguments!" % self.context.name)
         if self.context and self.context not in self.result:
             self.result.append(self.context)
 
@@ -181,7 +191,7 @@ class ParseMachine(StateMachine):
             return
         if self.flag.takes_value:
             if self.flag.raw_value is None:
-                raise ParseError("Flag %r needed value and was not given one!" % self.flag)
+                self.error("Flag %r needed value and was not given one!" % self.flag)
         else:
             debug("Marking seen flag %r as True" % self.flag)
             self.flag.value = True
@@ -195,7 +205,16 @@ class ParseMachine(StateMachine):
             debug("Setting flag %r to value %r" % (self.flag, value))
             self.flag.value = value
         else:
-            raise ParseError("Flag %r doesn't take any value!" % self.flag)
+            self.error("Flag %r doesn't take any value!" % self.flag)
+
+    def see_positional_arg(self, value):
+        for arg in self.context.positional_args:
+            if arg.value is None:
+                arg.value = value
+                break
+
+    def error(self, msg):
+        raise ParseError(msg, self.context)
 
 
 class ParseResult(list):
@@ -219,7 +238,3 @@ class ParseResult(list):
                 argd[name] = arg.value
             d[context.name] = argd
         return d
-
-
-class ParseError(Exception):
-    pass

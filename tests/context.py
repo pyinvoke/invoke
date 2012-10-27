@@ -35,7 +35,7 @@ class Context_(Spec):
             self.c.add_arg('foo')
             assert 'foo' in self.c.args
 
-        def can_take_kwargs(self):
+        def can_take_kwargs_for_single_Argument(self):
             self.c.add_arg(names=('foo', 'bar'))
             assert 'foo' in self.c.args and 'bar' in self.c.args
 
@@ -59,6 +59,30 @@ class Context_(Spec):
             self.c.add_arg('f')
             assert '-f' in self.c.flags
             assert '--f' not in self.c.flags
+
+        def does_not_add_positional_arg_to_flags(self):
+            self.c.add_arg(name='pos', positional=True)
+            assert '--pos' not in self.c.flags
+            assert '-p' not in self.c.flags
+
+        def adds_positional_args_to_positional_args(self):
+            self.c.add_arg(name='pos', positional=True)
+            eq_(self.c.positional_args[0].name, 'pos')
+
+        def positional_args_empty_when_none_given(self):
+            eq_(len(self.c.positional_args), 0)
+
+        def positional_args_filled_in_order(self):
+            self.c.add_arg(name='pos1', positional=True)
+            eq_(self.c.positional_args[0].name, 'pos1')
+            self.c.add_arg(name='abc', positional=True)
+            eq_(self.c.positional_args[1].name, 'abc')
+
+        def positional_arg_modifications_affect_args_copy(self):
+            self.c.add_arg(name='hrm', positional=True)
+            eq_(self.c.args['hrm'].value, self.c.positional_args[0].value)
+            self.c.positional_args[0].value = 17
+            eq_(self.c.args['hrm'].value, self.c.positional_args[0].value)
 
     class deepcopy:
         "__deepcopy__"
@@ -195,3 +219,16 @@ class Context_(Spec):
                 [('c',), ('a', 'aaagh'), ('b', 'bah'), ('beta',), ('alpha',)],
                 ['--alpha', '--beta', '-a', '-b', '-c']
             )
+
+    class needs_positional_arg:
+        def represents_whether_all_positional_args_have_values(self):
+            c = Context(name='foo', args=(
+                Argument('arg1', positional=True),
+                Argument('arg2', positional=False),
+                Argument('arg3', positional=True),
+            ))
+            eq_(c.needs_positional_arg, True)
+            c.positional_args[0].value = 'wat'
+            eq_(c.needs_positional_arg, True)
+            c.positional_args[1].value = 'hrm'
+            eq_(c.needs_positional_arg, False)

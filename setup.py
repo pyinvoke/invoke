@@ -1,28 +1,27 @@
 #!/usr/bin/env python
 
-import sys
-
 # Support setuptools or distutils
 try:
     from setuptools import setup
 except ImportError:
     from distutils.core import setup
 
-# Import ourselves for version info
-import invoke
+# Version info -- read without importing
+_locals = {}
+version_module = execfile('invoke/_version.py', _locals)
+version = _locals['__version__']
 
 # Frankenstein long_description: version-specific changelog note + README
-v = invoke.__version__
 long_description = """
 To find out what's new in this version of Invoke, please see `the changelog
 <http://docs.pyinvoke.org/en/%s/changelog.html>`_.
 
 %s
-""" % (v, open('README.rst').read())
+""" % (version, open('README.rst').read())
 
 setup(
     name='invoke',
-    version=v,
+    version=version,
     description='Pythonic task execution',
     license='BSD',
 
@@ -31,9 +30,6 @@ setup(
     author_email='jeff@bitprophet.org',
     url='http://docs.pyinvoke.org',
 
-    install_requires=(
-        'lexicon>=0.1.2',
-    ),
     packages=["invoke", "invoke.parser"],
     entry_points={
         'console_scripts': [

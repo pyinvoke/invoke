@@ -1,7 +1,7 @@
 from spec import Spec, skip, eq_, raises
 
 from invoke.collection import Collection
-from invoke.task import task, Task
+from invoke.tasks import task, Task
 
 
 @task
@@ -102,7 +102,7 @@ class Collection_(Spec):
 
     class to_contexts:
         def setup(self):
-            @task
+            @task(positional=[])
             def mytask(text, boolean=False, number=5):
                 print text
             @task
@@ -116,41 +116,14 @@ class Collection_(Spec):
             eq_(self.context.name, 'mytask')
             eq_(len(self.contexts), 2)
 
-        def turns_function_signature_into_Arguments(self):
-            eq_(len(self.context.args), 3)
-            assert 'text' in self.context.args
-
-        def boolean_default_arg_values_inform_Argument_kind_kwarg(self):
-            a = self.context.args
-            eq_(a.boolean.kind, bool)
-            eq_(a.number.kind, int)
-
         def allows_flaglike_access_via_flags(self):
             assert '--text' in self.context.flags
 
-        def autocreates_short_flags(self):
-            a = self.context.args
-            assert 't' in a
-            assert a['t'] is a['text']
-
-        def autocreated_short_flags_can_be_disabled(self):
-            @task(auto_shortflags=False)
-            def mytask(arg):
+        def positional_arglist_preserves_order_given(self):
+            @task(positional=('second', 'first'))
+            def mytask(first, second, third):
                 pass
-            col = Collection(mytask)
-            args = col.to_contexts()[0].args
-            assert 'a' not in args
-            assert 'arg' in args
-
-        def autocreated_short_flags_dont_clash_with_existing_flags(self):
-            @task
-            def mytask(arg1, arg2, barg):
-                pass
-            col = Collection(mytask)
-            args = col.to_contexts()[0].args
-            assert 'a' in args
-            assert args['a'] is args['arg1']
-            assert 'r' in args
-            assert args['r'] is args['arg2']
-            assert 'b' in args
-            assert args['b'] is args['barg']
+            c = Collection()
+            c.add_task('mytask', mytask)
+            ctx = c.to_contexts()[0]
+            eq_(ctx.positional_args, [ctx.args['second'], ctx.args['first']])

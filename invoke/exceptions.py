@@ -1,8 +1,7 @@
 class CollectionNotFound(Exception):
-    def __init__(self, name, root, error):
+    def __init__(self, name, root):
         self.name = name
         self.root = root
-        self.error = error
 
 
 class Failure(Exception):
@@ -14,3 +13,9 @@ class Failure(Exception):
     """
     def __init__(self, result):
         self.result = result
+
+
+class ParseError(Exception):
+    def __init__(self, msg, context=None):
+        super(ParseError, self).__init__(msg)
+        self.context = context

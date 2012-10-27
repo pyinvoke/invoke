@@ -158,6 +158,49 @@ class Parser_(Spec):
             eq_(a.value, None)
             eq_(a2.value, 'val')
 
+        class parsing_errors:
+            def setup(self):
+                self.p = Parser([Context(name='foo', args=[Argument('bar')])])
+
+            @raises(ParseError)
+            def missing_flag_values_raise_ParseError(self):
+                self.p.parse_argv(['foo', '--bar'])
+
+            def attaches_context_to_ParseErrors(self):
+                try:
+                    self.p.parse_argv(['foo', '--bar'])
+                except ParseError, e:
+                    assert e.context is not None
+
+            def attached_context_is_None_outside_contexts(self):
+                try:
+                    Parser().parse_argv(['wat'])
+                except ParseError, e:
+                    assert e.context is None
+
+        class positional_arguments:
+            def setup(self):
+                arg = Argument('pos', positional=True)
+                mytask = Context(name='mytask', args=[arg])
+                self.parser = Parser(contexts=[mytask])
+
+            def single_positional_arg(self):
+                r = self.parser.parse_argv(['mytask', 'posval'])
+                eq_(r[0].args['pos'].value, 'posval')
+
+            @raises(ParseError)
+            def omitted_positional_arg_raises_ParseError(self):
+                self.parser.parse_argv(['mytask'])
+
+            def positional_args_eat_otherwise_valid_tokens(self):
+                mytask = Context('mytask', args=[
+                    Argument('pos', positional=True),
+                    Argument('nonpos', default='default')
+                ])
+                r = Parser([mytask]).parse_argv(['mytask', '--nonpos'])
+                eq_(r[0].args['pos'].value, '--nonpos')
+                eq_(r[0].args['nonpos'].value, 'default')
+
         class equals_signs:
             def _compare(self, argname, invoke, value):
                 c = Context('mytask', args=(Argument(argname, kind=str),))

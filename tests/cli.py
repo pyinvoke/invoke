@@ -4,11 +4,12 @@ import StringIO
 
 from spec import eq_, skip, Spec, ok_, trap
 
-from invoke.run import run
+from invoke.runner import run
 from invoke.parser import Parser, Context
 from invoke.collection import Collection
-from invoke.task import task
+from invoke.tasks import task
 from invoke.exceptions import Failure
+import invoke
 
 from _utils import support
 
@@ -21,6 +22,7 @@ class CLI(Spec):
     "Command-line behavior"
     def setup(self):
         os.chdir(support)
+        self.result = run("invoke -c integration print_foo", hide='both')
 
     # Yo dogfood, I heard you like invoking
     @trap
@@ -63,17 +65,31 @@ Core options:
         eq_(r1.stdout, expected)
         eq_(r2.stdout, expected)
 
+    @trap
+    def version_info(self):
+        eq_(run("invoke -V").stdout, "Invoke %s\n" % invoke.__version__)
+
+
+TB_SENTINEL = 'Traceback (most recent call last)'
 
 class HighLevelFailures(Spec):
+
     def command_failure(self):
         "Command failure doesn't show tracebacks"
-        result = run("inv -c fail fail", warn=True)
-        sentinel = 'Traceback (most recent call last)'
-        assert sentinel not in result.stderr
+        result = run("inv -c fail simple", warn=True, hide='both')
+        assert TB_SENTINEL not in result.stderr
         assert result.exited != 0
 
-    def parse_failure(self):
-        skip()
+    class parsing:
+        def should_not_show_tracebacks(self):
+            result = run("inv -c fail missing_pos", warn=True, hide='both')
+            assert TB_SENTINEL not in result.stderr
+
+        def should_show_core_usage_on_core_failures(self):
+            skip()
+
+        def should_show_context_usage_on_context_failures(self):
+            skip()
 
     def load_failure(self):
         skip()
@@ -84,13 +100,13 @@ class CLIParsing(Spec):
     High level parsing tests
     """
     def setup(self):
-        @task
+        @task(positional=[])
         def mytask(mystring, s, boolean=False, b=False, v=False):
             pass
         @task
         def mytask2():
             pass
-        @task
+        @task(positional=[])
         def mytask3(mystring):
             pass
         self.c = Collection(mytask, mytask2, mytask3)

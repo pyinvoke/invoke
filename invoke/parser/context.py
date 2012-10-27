@@ -1,4 +1,4 @@
-from lexicon import Lexicon
+from ..vendor.lexicon import Lexicon
 
 from .argument import Argument
 
@@ -52,6 +52,7 @@ class Context(object):
         ``for arg in args: self.add_arg(arg)`` after initialization.
         """
         self.args = Lexicon()
+        self.positional_args = []
         self.flags = Lexicon()
         self.name = name
         self.aliases = aliases
@@ -84,13 +85,25 @@ class Context(object):
             if name in self.args:
                 msg = "Tried to add an argument named %r but one already exists!"
                 raise ValueError(msg % name)
-        # Add
-        main = arg.names[0]
+        # All arguments added to .args
+        main = arg.name
         self.args[main] = arg
-        self.flags[to_flag(main)] = arg
-        for name in arg.names[1:]:
+        # Positional and nonpositional args get split up between
+        # .positional_args and .flags
+        if arg.positional:
+            self.positional_args.append(arg)
+        else:
+            self.flags[to_flag(main)] = arg
+        # All args get their aliases added to .args too
+        for name in arg.nicknames:
             self.args.alias(name, to=main)
-            self.flags.alias(to_flag(name), to=to_flag(main))
+            # But only alias flags within .flags
+            if not arg.positional:
+                self.flags.alias(to_flag(name), to=to_flag(main))
+
+    @property
+    def needs_positional_arg(self):
+        return any(x.value is None for x in self.positional_args)
 
     def help_for(self, flag):
         """

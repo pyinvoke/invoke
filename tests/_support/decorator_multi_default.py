@@ -1,4 +1,4 @@
-from invoke.task import task
+from invoke.tasks import task
 
 
 @task(default=True)
