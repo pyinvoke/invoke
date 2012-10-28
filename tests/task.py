@@ -29,7 +29,7 @@ class task_(Spec):
         self.loader.load_collection('decorator_multi_default')
 
     def sets_arg_help(self):
-        eq_(self.vanilla['punch'].helps['why'], 'Motive')
+        eq_(self.vanilla['punch'].help['why'], 'Motive')
 
     def sets_arg_kind(self):
         skip()

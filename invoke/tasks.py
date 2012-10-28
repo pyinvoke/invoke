@@ -15,13 +15,15 @@ class Task(object):
     # and in @task.
     # TODO: allow central per-session / per-taskmodule control over some of
     # them, e.g. (auto_)positional, auto_shortflags.
+    # NOTE: we shadow __builtins__.help here. It's purposeful. :(
     def __init__(self, body, aliases=(), positional=None, default=False, 
-        auto_shortflags=True):
+        auto_shortflags=True, help=None):
         self.body = body
         self.aliases = aliases
         self.positional = self.fill_implicit_positionals(positional)
         self.is_default = default
         self.auto_shortflags = auto_shortflags
+        self.help = help or {}
 
     def argspec(self, body):
         """
@@ -64,8 +66,8 @@ class Task(object):
             opts['kind'] = type(default)
             opts['default'] = default
         # Help
-        if name in self.helps:
-            opts['help'] = self.helps[name]
+        if name in self.help:
+            opts['help'] = self.help[name]
         # Whether it's positional or not
         opts['positional'] = name in self.positional
         return opts
@@ -123,6 +125,8 @@ def task(*args, **kwargs):
       given.)
     * ``auto_shortflags``: Whether or not to :ref:`automatically create short
       flags <automatic-shortflags>` from task options; defaults to True.
+    * ``help``: Dict mapping argument names to their help strings. Will be
+      displayed in ``--help`` output.
     """
     # @task -- no options
     if len(args) == 1:
@@ -133,6 +137,7 @@ def task(*args, **kwargs):
     positional = kwargs.pop('positional', None)
     default = kwargs.pop('default', False)
     auto_shortflags = kwargs.pop('auto_shortflags', True)
+    help = kwargs.pop('help', {})
     # Handle unknown args/kwargs
     if args or kwargs:
         arg = (" unknown args %r" % (args,)) if args else ""
@@ -144,7 +149,8 @@ def task(*args, **kwargs):
             aliases=aliases,
             positional=positional,
             default=default,
-            auto_shortflags=auto_shortflags
+            auto_shortflags=auto_shortflags,
+            help=help,
         )
         return obj
     return inner

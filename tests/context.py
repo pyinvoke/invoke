@@ -3,7 +3,7 @@ import copy
 from spec import Spec, eq_, skip, ok_, raises
 
 from invoke.parser import Argument, Context
-from invoke.task import task
+from invoke.tasks import task
 from invoke.collection import Collection
 
 
