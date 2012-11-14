@@ -111,7 +111,7 @@ class Context(object):
         """
         # Obtain arg obj
         if flag not in self.flags:
-            raise ValueError("%r is not a valid flag for this context" % flag)
+            raise ValueError("%r is not a valid flag for this context! Valid flags are: %r" % (flag, self.flags.keys()))
         arg = self.flags[flag]
         # Show all potential names for this flag in the output
         names = list(set([flag] + self.flags.aliases_of(flag)))
