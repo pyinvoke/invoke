@@ -74,8 +74,7 @@ class Context(object):
         # .positional_args and .flags
         if arg.positional:
             self.positional_args.append(arg)
-        else:
-            self.flags[to_flag(main)] = arg
+        self.flags[to_flag(main)] = arg
         # All args get their aliases added to .args too
         for name in arg.nicknames:
             self.args.alias(name, to=main)

@@ -58,11 +58,6 @@ class Context_(Spec):
             assert '-f' in self.c.flags
             assert '--f' not in self.c.flags
 
-        def does_not_add_positional_arg_to_flags(self):
-            self.c.add_arg(name='pos', positional=True)
-            assert '--pos' not in self.c.flags
-            assert '-p' not in self.c.flags
-
         def adds_positional_args_to_positional_args(self):
             self.c.add_arg(name='pos', positional=True)
             eq_(self.c.positional_args[0].name, 'pos')
