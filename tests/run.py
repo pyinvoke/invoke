@@ -143,3 +143,8 @@ class Run(Spec):
     def failed_attr_indicates_failure(self):
         eq_(run("true").failed, False)
         eq_(run("false", warn=True).failed, True)
+
+    def non_stupid_OSErrors_get_captured(self):
+        # Somehow trigger an OSError saying "Input/output error" within
+        # pexpect.spawn().interact() & assert it is in result.exception
+        skip()
