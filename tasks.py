@@ -62,3 +62,8 @@ def vendorize(package, spec, git_url=None, license=None):
     # if license:
     #   cp target/$license invoke/vendor/package/
     # git commit -a -m "Update $package to $spec ($real_spec if different)"
+
+
+@task
+def release():
+    run("python setup.py sdist register upload")

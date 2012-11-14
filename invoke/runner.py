@@ -25,13 +25,17 @@ class Result(object):
       nonzero return code.
     * ``pty``: A boolean describing whether the subprocess was invoked with a
       pty or not; see `run`.
+    * ``pty_exception``: Typically ``None``, but may be an exception object if
+      ``pty`` was ``True`` and ``run()`` had to swallow an apparently-spurious
+      ``OSError``. Solely for sanity checking/debugging purposes.
     """
     # TODO: inherit from namedtuple instead? heh
-    def __init__(self, stdout, stderr, exited, pty):
+    def __init__(self, stdout, stderr, exited, pty, pty_exception=None):
         self.exited = self.return_code = exited
         self.stdout = stdout
         self.stderr = stderr
         self.pty = pty
+        self.pty_exception = pty_exception
 
     def __nonzero__(self):
         # Holy mismatch between name and implementation, Batman!
@@ -112,9 +116,22 @@ def run(command, warn=False, hide=None, pty=False):
                 return ""
         wrapped_cmd = "/bin/bash -c \"%s\"" % command
         p = pexpect.spawn(wrapped_cmd)
-        p.interact(output_filter=out_filter)
+        # Ensure pexpect doesn't barf with OSError if we fall off the end of
+        # the child's input on some platforms (e.g. Linux).
+        exception = None
+        try:
+            p.interact(output_filter=out_filter)
+        except OSError, e:
+            # Only capture the OSError we expect
+            if "Input/output error" not in e:
+                raise
+            # Ensure it ties off the child, sets exitstatus, etc
+            p.close()
+            # Capture the exception in case it's NOT the OSError we think it
+            # is and folks need to debug
+            exception = e
         result = Result(stdout="".join(out), stderr="", exited=p.exitstatus,
-            pty=pty)
+            pty=pty, pty_exception=exception)
     else:
         process = Popen(command,
             shell=True,
