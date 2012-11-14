@@ -166,18 +166,18 @@ class Parser_(Spec):
                     assert e.context is None
 
         class positional_arguments:
-            def setup(self):
+            def _basic(self):
                 arg = Argument('pos', positional=True)
                 mytask = Context(name='mytask', args=[arg])
-                self.parser = Parser(contexts=[mytask])
+                return Parser(contexts=[mytask])
 
             def single_positional_arg(self):
-                r = self.parser.parse_argv(['mytask', 'posval'])
+                r = self._basic().parse_argv(['mytask', 'posval'])
                 eq_(r[0].args['pos'].value, 'posval')
 
             @raises(ParseError)
             def omitted_positional_arg_raises_ParseError(self):
-                self.parser.parse_argv(['mytask'])
+                self._basic().parse_argv(['mytask'])
 
             def positional_args_eat_otherwise_valid_tokens(self):
                 mytask = Context('mytask', args=[
