@@ -94,7 +94,7 @@ class Task_(Spec):
 
         def autocreated_shortflags_dont_collide(self):
             "auto-created short flags don't collide"
-            @task(positional=[])
+            @task
             def mytask(arg1, arg2, barg):
                 pass
             args = self._task_to_dict(mytask)
@@ -108,7 +108,9 @@ class Task_(Spec):
         def early_auto_shortflags_shouldnt_lock_out_real_shortflags(self):
             # I.e. "task --foo -f" => --foo should NOT get to pick '-f' for its
             # shortflag or '-f' is totally fucked.
-            @task(positional=[])
+            @task
+            # FIXME: somehow making these args positional fixes the
+            # brokenness??
             def mytask(longarg, l):
                 pass
             args = self._task_to_dict(mytask)
