@@ -3,6 +3,7 @@ import sys
 from .loader import Loader
 from .parser import Parser, Context, Argument
 from .exceptions import Failure, CollectionNotFound, ParseError
+from .util import debug
 from ._version import __version__
 
 
@@ -31,6 +32,7 @@ def parse(argv):
         Argument(names=('version', 'V'), kind=bool, default=False),
     ))
     # 'core' will result an .unparsed attribute with what was left over.
+    debug("Parsing initial context (core args)")
     parser = Parser(initial=initial_context, ignore_unknown=True)
     core = parse_gracefully(parser, argv)
     args = core[0].args
@@ -44,6 +46,7 @@ def parse(argv):
     loader = Loader(root=args.root.value)
     collection = loader.load_collection(args.collection.value)
     parser = Parser(contexts=collection.to_contexts())
+    debug("Parsing actual tasks")
     tasks = parse_gracefully(parser, core.unparsed)
 
     return args, collection, tasks
