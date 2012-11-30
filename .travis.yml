@@ -10,6 +10,6 @@ notifications:
   email:
     on_failure: change
   irc:
-    channels: "irc.freenode.org#fabric"
+    channels: "irc.freenode.org#invoke"
     on_success: change
     on_failure: change
