@@ -86,10 +86,16 @@ class Parser(object):
                     body.insert(index + 1, value)
                 # Contiguous boolean short flags, e.g. -qv
                 elif not token.startswith('--') and len(token) > 2:
+                    full_token = token[:]
                     rest, token = token[2:], token[:2]
+                    debug("Splitting %r into token %r and rest %r" % (full_token, token, rest))
                     # Handle boolean flag block vs short-flag + value
                     have_flag = token in machine.context.flags
+                    debug("%r %s a flag for context %r" % (
+                        token, "is" if have_flag else "is not", machine.context
+                    ))
                     if have_flag and machine.context.flags[token].takes_value:
+                        debug("%r is a flag & it takes a value, giving it %r" % (token, rest))
                         body.insert(index + 1, rest)
                     else:
                         rest = map(lambda x: '-%s' % x, rest)
