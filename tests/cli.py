@@ -4,6 +4,7 @@ import StringIO
 
 from spec import eq_, skip, Spec, ok_, trap
 
+from invoke.cli import parse
 from invoke.runner import run
 from invoke.parser import Parser, Context
 from invoke.collection import Collection
@@ -175,10 +176,10 @@ class CLIParsing(Spec):
             eq_(a.b.value, True)
             eq_(a.v.value, True)
 
-    def multiple_default_value_boolean_shortflags_together(self):
+    def globbed_shortflags_with_multipass_parsing(self):
         "mytask -cb and -bc"
         for args in ('-bc', '-cb'):
-            r = self._parse("mytask4 %s" % args)
+            _, _, r = parse(['mytask4', args], self.c)
             a = r[0].args
             eq_(a.clean.value, True)
             eq_(a.browse.value, True)

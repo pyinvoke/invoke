@@ -23,7 +23,7 @@ def parse_gracefully(parser, argv):
         sys.exit(1)
 
 
-def parse(argv):
+def parse(argv, collection=None):
     # Initial/core parsing (core options can affect the rest of the parsing)
     initial_context = Context(args=(
         # TODO: make collection a list-building arg, not a string
@@ -43,8 +43,10 @@ def parse(argv):
         sys.exit(0)
 
     # Load collection (default or specified) and parse leftovers
-    loader = Loader(root=args.root.value)
-    collection = loader.load_collection(args.collection.value)
+    # (Skip loading if somebody gave us an explicit task collection.)
+    if not collection:
+        loader = Loader(root=args.root.value)
+        collection = loader.load_collection(args.collection.value)
     parser = Parser(contexts=collection.to_contexts())
     debug("Parsing actual tasks")
     tasks = parse_gracefully(parser, core.unparsed)
