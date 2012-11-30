@@ -7,8 +7,6 @@ install:
   - pip install -r requirements.txt --use-mirrors
 script: "spec"
 notifications:
-  email:
-    on_failure: change
   irc:
     channels: "irc.freenode.org#invoke"
     on_success: change
