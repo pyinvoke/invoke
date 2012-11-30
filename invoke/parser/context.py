@@ -43,8 +43,12 @@ class Context(object):
 
     def __str__(self):
         aliases = (" (%s)" % ', '.join(self.aliases)) if self.aliases else ""
-        name = (" %s%s" % (self.name, aliases)) if self.name else ""
-        return "Context%s: %r" % (name, self.args)
+        name = (" %r%s" % (self.name, aliases)) if self.name else ""
+        args = (": %r" % (self.args,)) if self.args else ""
+        return "<Context%s%s>" % (name, args)
+
+    def __repr__(self):
+        return str(self)
 
     def add_arg(self, *args, **kwargs):
         """
