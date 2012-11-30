@@ -164,8 +164,9 @@ class CLIParsing(Spec):
         eq_(r[1].args.mystring.value, 'bar')
 
     def multiple_short_flags_adjacent(self):
-        "mytask -bv"
-        r = self._parse("mytask -bv")
-        a = r[0].args
-        eq_(a.b.value, True)
-        eq_(a.v.value, True)
+        "mytask -bv (and inverse)"
+        for args in ('-bv', '-vb'):
+            r = self._parse("mytask %s" % args)
+            a = r[0].args
+            eq_(a.b.value, True)
+            eq_(a.v.value, True)
