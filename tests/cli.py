@@ -86,10 +86,14 @@ class CLIParsing(Spec):
         @task(positional=[])
         def mytask3(mystring):
             pass
+        @task
+        def mytask4(clean=False, browse=False):
+            pass
         c = Collection()
         c.add_task('mytask', mytask)
         c.add_task('mytask2', mytask2)
         c.add_task('mytask3', mytask3)
+        c.add_task('mytask4', mytask4)
         self.c = c
 
     def _parser(self):
@@ -170,3 +174,11 @@ class CLIParsing(Spec):
             a = r[0].args
             eq_(a.b.value, True)
             eq_(a.v.value, True)
+
+    def multiple_default_value_boolean_shortflags_together(self):
+        "mytask -cb and -bc"
+        for args in ('-bc', '-cb'):
+            r = self._parse("mytask4 %s" % args)
+            a = r[0].args
+            eq_(a.clean.value, True)
+            eq_(a.browse.value, True)
