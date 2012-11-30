@@ -89,13 +89,14 @@ class Parser(object):
                     full_token = token[:]
                     rest, token = token[2:], token[:2]
                     debug("Splitting %r into token %r and rest %r" % (full_token, token, rest))
-                    # Handle boolean flag block vs short-flag + value
-                    have_flag = token in machine.context.flags
-                    debug("%r %s a flag for context %r" % (
-                        token, "is" if have_flag else "is not", machine.context
-                    ))
+                    # Handle boolean flag block vs short-flag + value. Make
+                    # sure not to test the token as a context flag if we've
+                    # passed into 'storing unknown stuff' territory (e.g. on a
+                    # core-args pass, handling what are going to be task args)
+                    have_flag = (token in machine.context.flags
+                        and machine.current_state != 'unknown')
                     if have_flag and machine.context.flags[token].takes_value:
-                        debug("%r is a flag & it takes a value, giving it %r" % (token, rest))
+                        debug("%r is a flag for current context & it takes a value, giving it %r" % (token, rest))
                         body.insert(index + 1, rest)
                     else:
                         rest = map(lambda x: '-%s' % x, rest)
