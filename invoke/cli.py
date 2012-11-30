@@ -45,10 +45,11 @@ def parse(argv, collection=None):
     # Load collection (default or specified) and parse leftovers
     # (Skip loading if somebody gave us an explicit task collection.)
     if not collection:
+        debug("No collection given, loading from %r" % args.root.value)
         loader = Loader(root=args.root.value)
         collection = loader.load_collection(args.collection.value)
     parser = Parser(contexts=collection.to_contexts())
-    debug("Parsing actual tasks")
+    debug("Parsing actual tasks against collection %r" % collection)
     tasks = parse_gracefully(parser, core.unparsed)
 
     return args, collection, tasks
