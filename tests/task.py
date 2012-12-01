@@ -109,7 +109,7 @@ class Task_(Spec):
             # I.e. "task --foo -f" => --foo should NOT get to pick '-f' for its
             # shortflag or '-f' is totally fucked.
             @task
-            # FIXME: somehow making these args positional fixes the
+            # FIXME: somehow making these args nonpositional fixes the
             # brokenness??
             def mytask(longarg, l):
                 pass
