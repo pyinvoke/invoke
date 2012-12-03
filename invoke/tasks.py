@@ -51,7 +51,7 @@ class Task(object):
     def arg_opts(self, name, default, taken_names):
         # Argument name(s)
         names = [name]
-        if self.auto_shortflags and name not in self.positional:
+        if self.auto_shortflags:
             # Must know what short names are available
             for char in name:
                 if not (char == name or char in taken_names):

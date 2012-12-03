@@ -81,8 +81,16 @@ class Task_(Spec):
 
         def shortflags_created_by_default(self):
             assert 'a' in self.argdict
-            # arg2 is only non positional flag
-            assert self.argdict['a'] is self.argdict['arg2']
+            assert self.argdict['a'] is self.argdict['arg1'], "%r was 'a'" % self.argdict['a']
+
+        def shortflags_dont_care_about_positionals(self):
+            "Positionalness doesn't impact whether shortflags are made"
+            for short, long_ in (
+                ('a', 'arg1'),
+                ('r', 'arg2'),
+                ('g', 'arg3'),
+            ):
+                assert self.argdict[short] is self.argdict[long_]
 
         def autocreated_short_flags_can_be_disabled(self):
             @task(auto_shortflags=False)
