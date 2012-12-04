@@ -77,14 +77,11 @@ class Context(object):
         # Note positionals in distinct, ordered list attribute
         if arg.positional:
             self.positional_args.append(arg)
-        # Everything gets added to flags
+        # Add names & nicknames to flags, args
         self.flags[to_flag(main)] = arg
-        # All args get their aliases added to .args too
         for name in arg.nicknames:
             self.args.alias(name, to=main)
-            # But only alias flags within .flags
-            if not arg.positional:
-                self.flags.alias(to_flag(name), to=to_flag(main))
+            self.flags.alias(to_flag(name), to=to_flag(main))
 
     @property
     def needs_positional_arg(self):
