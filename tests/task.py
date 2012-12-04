@@ -117,8 +117,6 @@ class Task_(Spec):
             # I.e. "task --foo -f" => --foo should NOT get to pick '-f' for its
             # shortflag or '-f' is totally fucked.
             @task
-            # FIXME: somehow making these args nonpositional fixes the
-            # brokenness??
             def mytask(longarg, l):
                 pass
             args = self._task_to_dict(mytask)
