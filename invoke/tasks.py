@@ -71,17 +71,9 @@ class Task(object):
         Return a list of Argument objects representing this task's signature.
         """
         arg_names, spec_dict = self.argspec(self.body)
-        # Obtain ordered list of args + their default values (if any).
-        # Order should be: positionals, in order given in decorator, followed
-        # by non-positionals, in order declared (i.e. exposed by
-        # getargspect()).
-        tuples = []
-        # Positionals first, removing from base list of arg names
-        for posarg in self.positional:
-            tuples.append((posarg, spec_dict[posarg]))
-            arg_names.remove(posarg)
-        # Now arg_names contains just the non-positional args, in order.
-        tuples.extend((x, spec_dict[x]) for x in arg_names)
+        # Obtain list of args + their default values (if any) in
+        # declaration/definition order (i.e. based on getargspec())
+        tuples = [(x, spec_dict[x]) for x in arg_names]
         # Prime the list of all already-taken names (mostly for help in
         # choosing auto shortflags)
         taken_names = set(x[0] for x in tuples)

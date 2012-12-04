@@ -47,6 +47,8 @@ class Collection(object):
         Returns all contained tasks and subtasks as a list of parser contexts.
         """
         # TODO: this is now a stub, do away w/ it
+        # FIXME: need way to preserve order of positionals given to the task
+        # object, inside Context (which needs a similar list internally)
         result = []
         for name, task in self.tasks.iteritems():
             result.append(Context(
