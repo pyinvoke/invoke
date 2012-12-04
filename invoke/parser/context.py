@@ -66,7 +66,7 @@ class Context(object):
             arg = args[0]
         else:
             arg = Argument(*args, **kwargs)
-        # Test
+        # Uniqueness constraint: no name collisions
         for name in arg.names:
             if name in self.args:
                 msg = "Tried to add an argument named %r but one already exists!"
@@ -74,10 +74,10 @@ class Context(object):
         # All arguments added to .args
         main = arg.name
         self.args[main] = arg
-        # Positional and nonpositional args get split up between
-        # .positional_args and .flags
+        # Note positionals in distinct, ordered list attribute
         if arg.positional:
             self.positional_args.append(arg)
+        # Everything gets added to flags
         self.flags[to_flag(main)] = arg
         # All args get their aliases added to .args too
         for name in arg.nicknames:
