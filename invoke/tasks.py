@@ -77,6 +77,9 @@ class Task(object):
         # getargspect()).
         tuples = []
         # Positionals first, removing from base list of arg names
+        # FIXME: WHY are positionals first?
+        # It messes up expected shortflags order now that positionals are flags
+        # again!
         for posarg in self.positional:
             tuples.append((posarg, spec_dict[posarg]))
             arg_names.remove(posarg)
