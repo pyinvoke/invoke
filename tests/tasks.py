@@ -81,7 +81,7 @@ class Task_(Spec):
 
         def shortflags_created_by_default(self):
             assert 'a' in self.argdict
-            assert self.argdict['a'] is self.argdict['arg1'], "%r was 'a'" % self.argdict['a']
+            assert self.argdict['a'] is self.argdict['arg1']
 
         def shortflags_dont_care_about_positionals(self):
             "Positionalness doesn't impact whether shortflags are made"
