@@ -77,14 +77,24 @@ class Task(object):
         # Prime the list of all already-taken names (mostly for help in
         # choosing auto shortflags)
         taken_names = set(x[0] for x in tuples)
-        # Build + return arg list
+        # Build arg list (arg_opts will take care of setting up shortnames,
+        # etc)
         args = []
         for name, default in tuples:
             new_arg = Argument(**self.arg_opts(name, default, taken_names))
             args.append(new_arg)
             # Update taken_names list with new argument's full name list
-            # (which may include new shortflags)
+            # (which may include new shortflags) so subsequent Argument
+            # creation knows what's taken.
             taken_names.update(set(new_arg.names))
+        # Now we need to ensure positionals end up in the front of the list, in
+        # order given in self.positionals, so that when Context consumes them,
+        # this order is preserved.
+        for posarg in reversed(self.positional):
+            for i, arg in enumerate(args):
+                if arg.name == posarg:
+                    args.insert(0, args.pop(i))
+                    break
         return args
 
 
