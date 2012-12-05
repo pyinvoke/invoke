@@ -41,7 +41,13 @@ class Argument_(Spec):
         def does_not_show_nickname_parens_if_no_nicknames(self):
             eq_(
                 str(Argument('name')),
-                "<Argument: %s>" % 'name'
+                "<Argument: name>"
+            )
+
+        def shows_positionalness(self):
+            eq_(
+                str(Argument('name', positional=True)),
+                "<Argument: name*>"
             )
 
     class repr:
