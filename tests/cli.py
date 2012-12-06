@@ -47,6 +47,19 @@ class CLI(Spec):
     def version_info(self):
         eq_(run("invoke -V").stdout, "Invoke %s\n" % invoke.__version__)
 
+    @trap
+    def task_list(self):
+        result = run("invoke -c integration --list")
+        eq_(
+            result.stdout,
+            """
+Available tasks:
+
+    print_foo
+    print_name
+
+""".lstrip())
+
 
 TB_SENTINEL = 'Traceback (most recent call last)'
 

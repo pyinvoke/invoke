@@ -30,6 +30,7 @@ def parse(argv, collection=None):
         Argument(names=('collection', 'c')),
         Argument(names=('root', 'r')),
         Argument(names=('version', 'V'), kind=bool, default=False),
+        Argument(names=('list', '-l'), kind=bool, default=False),
     ))
     # 'core' will result an .unparsed attribute with what was left over.
     debug("Parsing initial context (core args)")
@@ -52,6 +53,12 @@ def parse(argv, collection=None):
     debug("Parsing actual tasks against collection %r" % collection)
     tasks = parse_gracefully(parser, core.unparsed)
 
+    # Print discovered tasks if necessary
+    if args.list.value:
+        print "Available tasks:\n"
+        print "\n".join(map(lambda x: "    " + x, collection.tasks.keys()))
+        print ""
+        sys.exit(0)
     return args, collection, tasks
 
 
