@@ -30,7 +30,7 @@ def parse(argv, collection=None):
         Argument(names=('collection', 'c')),
         Argument(names=('root', 'r')),
         Argument(names=('version', 'V'), kind=bool, default=False),
-        Argument(names=('list', '-l'), kind=bool, default=False),
+        Argument(names=('list', 'l'), kind=bool, default=False),
     ))
     # 'core' will result an .unparsed attribute with what was left over.
     debug("Parsing initial context (core args)")
