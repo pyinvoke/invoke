@@ -49,16 +49,15 @@ class CLI(Spec):
 
     @trap
     def task_list(self):
-        result = run("invoke -c integration --list")
-        eq_(
-            result.stdout,
-            """
+        expected = """
 Available tasks:
 
     print_foo
     print_name
 
-""".lstrip())
+""".lstrip()
+        for flag in ('-l', '--list'):
+            eq_(run("invoke -c integration %s" % flag).stdout, expected)
 
 
 TB_SENTINEL = 'Traceback (most recent call last)'
