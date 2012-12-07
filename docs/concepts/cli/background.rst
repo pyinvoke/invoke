@@ -134,28 +134,39 @@ Per-task positional args
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 An additional benefit of the second two approaches above is that they would
-enable support for per-task positional arguments, e.g.::
+enable support for arbitrary per-task positional arguments, e.g.::
 
     $ invoke --global-opts task1: arg1 arg2 --kwarg=value task2: --kwarg2=value2
 
-The first approach is unable to do this without adding even more complexity to
-both the user-facing task signature specification, and to the parser.
+The first approach -- using knowledge about the tasks involved to determine
+where boundaries start and begin -- requires more complexity in the parser
+engine to handle positional arguments. Even then, it is not possible to have
+truly arbitrary positional args (meaning an undetermined until runtime number)
+due to the ambiguity between "the next positional arg for this task" and "the
+next task name".
 
+Invoke's approach
+~~~~~~~~~~~~~~~~~
 
-Ambiguities
-===========
+At this point in time, Invoke has gone with the first option: relying on rich
+task & argument objects being available to the parser, which uses them to
+determine whether a given token is a flag, a value/argument to a flag, a
+positional argument, or a task name.
 
-A discussion on some potential ambiguities which arise in most styles of
-argument parsing.
+This preserves "traditional" style invocations (no special sigils denoting task
+boundaries) with the only tradeoff being that arbitrary numbers of positional
+arguments are not possible.
+
 
 Space-delimited flag values that look like flags themselves
 -----------------------------------------------------------
 
-I.e.::
+This is an interesting oddity that arises in all types of task/argument
+parsing. Consider this invocation::
 
     $ invoke --takes-a-value --some-other-valid-flag
 
-The above can be interpreted in two ways:
+It can be interpreted in two ways:
 
 * ``--takes-a-value`` having its value set to ``"--some-other-flag"``
 
