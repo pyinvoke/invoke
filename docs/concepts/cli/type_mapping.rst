@@ -36,7 +36,8 @@ Methodologies
   explicit example above.
 * Formatting-based mapping, i.e. having (optional) conventions in the string
   format of an incoming flag argument that cause transformations to occur.
-  E.g. the invocation::
+  E.g. we could say that commas in an argument automatically trigger
+  transformation into a list of strings; thus the invocation::
 
     $ invoke mytask --items a,b,c
 
