@@ -23,8 +23,8 @@ listing available tasks::
         bar
         ...
 
-Or they can modify behavior, such as overriding the default task collections
-searched for::
+Or they can modify behavior, such as overriding the default task collection
+name Invoke looks for::
 
     $ invoke --collection mytasks --list
     Available tasks:
