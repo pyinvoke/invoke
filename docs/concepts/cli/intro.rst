@@ -47,12 +47,16 @@ Tasks may take parameters in the form of flag arguments::
     $ invoke build -f=pdf
 
 Note that both long and short style flags are supported, and that equals signs
-are optional.
+are optional in both cases.
 
 Boolean options are simple flags with no arguments, which turn the Python level
 values from ``False`` to ``True``::
 
     $ invoke build --progress-bar
+
+Naturally, more than one flag may be given at a time::
+
+    $ invoke build --progress-bar -f pdf
 
 Globbed short flags
 -------------------
