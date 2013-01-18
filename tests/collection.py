@@ -128,6 +128,6 @@ class Collection_(Spec):
             def mytask(first, second, third):
                 pass
             c = Collection()
-            c.add_task('mytask', mytask)
+            c.add_task(mytask)
             ctx = c.to_contexts()[0]
             eq_(ctx.positional_args, [ctx.args['second'], ctx.args['first']])
