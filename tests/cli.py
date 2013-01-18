@@ -52,15 +52,22 @@ class CLI(Spec):
         # TODO: change dynamically based on parser contents?
         # e.g. no core args == no [--core-opts],
         # no tasks == no task stuff?
+        # NOTE: test will trigger default pty size of 80x24, so the below
+        # string is formatted appropriately.
+        # TODO: add more unit-y tests for specific behaviors:
+        # * fill terminal w/ columns + spacing
+        # * line-wrap help text in its own column
         expected = """
 Usage: inv[oke] [--core-opts] task1 [--task1-opts] ... taskN [--taskN-opts]
 
 Core options:
     -V, --version                    Show version and exit
-    -c STRING, --collection=STRING   Specify collection name to load. May be given >1 time.
+    -c STRING, --collection=STRING   Specify collection name to load. May be
+                                     given >1 time.
     -h, --help                       Show this help message and exit.
     -l, --list                       List available tasks.
-    -r STRING, --root=STRING         Change root directory used for finding task modules.
+    -r STRING, --root=STRING         Change root directory used for finding
+                                     task modules.
 
 """.lstrip()
         r1 = run("inv -h", hide='out')
