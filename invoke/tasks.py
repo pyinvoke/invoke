@@ -1,5 +1,6 @@
 import inspect
 from itertools import izip_longest
+import types
 
 from .vendor.lexicon import Lexicon
 
@@ -33,7 +34,11 @@ class Task(object):
         * Second item is dict mapping arg names to default values or
           task.NO_DEFAULT (i.e. an 'empty' value distinct from None).
         """
-        spec = inspect.getargspec(body)
+        # Handle callable-but-not-function objects
+        # TODO: __call__ exhibits the 'self' arg; do we manually nix 1st result
+        # in argspec, or is there a way to get the "really callable" spec?
+        func = body if isinstance(body, types.FunctionType) else body.__call__
+        spec = inspect.getargspec(func)
         arg_names = spec.args[:]
         matched_args = [reversed(x) for x in [spec.args, spec.defaults or []]]
         spec_dict = dict(izip_longest(*matched_args, fillvalue=NO_DEFAULT))

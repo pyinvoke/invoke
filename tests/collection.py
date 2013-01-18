@@ -38,7 +38,11 @@ class Collection_(Spec):
 
         @raises(ValueError)
         def raises_ValueError_if_no_name_and_non_function(self):
-            self.c.add_task(Task(object()))
+            # Can't use a lambda here as they are technically real functions.
+            class Callable(object):
+                def __call__(self):
+                    pass
+            self.c.add_task(Task(Callable()))
 
         def allows_specifying_aliases(self):
             self.c.add_task(_mytask, 'foo', aliases=('bar',))
