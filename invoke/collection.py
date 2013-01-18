@@ -12,10 +12,11 @@ class Collection(object):
 
     def add_task(self, task, name=None, aliases=(), default=False):
         """
-        Adds callable object ``task`` to this collection.
+        Adds ``Task`` ``task`` to this collection.
 
         If ``name`` is not explicitly given (recommended) the ``.func_name`` of
-        the given callable will be used instead.
+        the ``Task``'s wrapped callable will be used instead. (If the wrapped
+        callable is not a function, you *must* give ``name``.)
 
         If ``aliases`` is given, will be used to set up additional aliases for
         this task.
