@@ -87,8 +87,16 @@ class Task_(Spec):
 
         def shortflags_created_by_default(self):
             assert 'a' in self.argdict
-            # arg2 is only non positional flag
-            assert self.argdict['a'] is self.argdict['arg2']
+            assert self.argdict['a'] is self.argdict['arg1']
+
+        def shortflags_dont_care_about_positionals(self):
+            "Positionalness doesn't impact whether shortflags are made"
+            for short, long_ in (
+                ('a', 'arg1'),
+                ('r', 'arg2'),
+                ('g', 'arg3'),
+            ):
+                assert self.argdict[short] is self.argdict[long_]
 
         def autocreated_short_flags_can_be_disabled(self):
             @task(auto_shortflags=False)
@@ -100,7 +108,7 @@ class Task_(Spec):
 
         def autocreated_shortflags_dont_collide(self):
             "auto-created short flags don't collide"
-            @task(positional=[])
+            @task
             def mytask(arg1, arg2, barg):
                 pass
             args = self._task_to_dict(mytask)
@@ -114,7 +122,7 @@ class Task_(Spec):
         def early_auto_shortflags_shouldnt_lock_out_real_shortflags(self):
             # I.e. "task --foo -f" => --foo should NOT get to pick '-f' for its
             # shortflag or '-f' is totally fucked.
-            @task(positional=[])
+            @task
             def mytask(longarg, l):
                 pass
             args = self._task_to_dict(mytask)

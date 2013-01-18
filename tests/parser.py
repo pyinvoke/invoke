@@ -179,27 +179,47 @@ class Parser_(Spec):
                     assert e.context is None
 
         class positional_arguments:
-            def setup(self):
+            def _basic(self):
                 arg = Argument('pos', positional=True)
                 mytask = Context(name='mytask', args=[arg])
-                self.parser = Parser(contexts=[mytask])
+                return Parser(contexts=[mytask])
 
             def single_positional_arg(self):
-                r = self.parser.parse_argv(['mytask', 'posval'])
+                r = self._basic().parse_argv(['mytask', 'posval'])
                 eq_(r[0].args['pos'].value, 'posval')
 
             @raises(ParseError)
             def omitted_positional_arg_raises_ParseError(self):
-                self.parser.parse_argv(['mytask'])
+                self._basic().parse_argv(['mytask'])
 
-            def positional_args_eat_otherwise_valid_tokens(self):
+            def positional_args_eat_otherwise_valid_context_names(self):
                 mytask = Context('mytask', args=[
                     Argument('pos', positional=True),
                     Argument('nonpos', default='default')
                 ])
-                r = Parser([mytask]).parse_argv(['mytask', '--nonpos'])
-                eq_(r[0].args['pos'].value, '--nonpos')
-                eq_(r[0].args['nonpos'].value, 'default')
+                othertask = Context('lolwut')
+                result = Parser([mytask]).parse_argv(['mytask', 'lolwut'])
+                r = result[0]
+                eq_(r.args['pos'].value, 'lolwut')
+                eq_(r.args['nonpos'].value, 'default')
+                eq_(len(result), 1) # Not 2
+
+            def positional_args_can_still_be_given_as_flags(self):
+                # AKA "positional args can come anywhere in the context"
+                pos1 = Argument('pos1', positional=True)
+                pos2 = Argument('pos2', positional=True)
+                nonpos = Argument('nonpos', positional=False, default='lol')
+                mytask = Context('mytask', args=[pos1, pos2, nonpos])
+                eq_(mytask.positional_args, [pos1, pos2])
+                r = Parser([mytask]).parse_argv([
+                    'mytask',
+                    '--nonpos', 'wut',
+                    '--pos2', 'pos2val',
+                    'pos1val',
+                ])[0]
+                eq_(r.args['pos1'].value, 'pos1val')
+                eq_(r.args['pos2'].value, 'pos2val')
+                eq_(r.args['nonpos'].value, 'wut')
 
         class equals_signs:
             def _compare(self, argname, invoke, value):
@@ -220,7 +240,7 @@ class Parser_(Spec):
             c = Context('mytask', args=(
                 Argument('foo', kind=bool), Argument('bar', kind=bool)
             ))
-            r = Parser((c,)).parse_argv(['mytask', '--foo', '--bar'])
+            r = Parser([c]).parse_argv(['mytask', '--foo', '--bar'])
             a = r[0].args
             eq_(a.foo.value, True)
             eq_(a.bar.value, True)

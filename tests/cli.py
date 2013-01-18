@@ -4,6 +4,7 @@ import StringIO
 
 from spec import eq_, skip, Spec, ok_, trap
 
+from invoke.cli import parse
 from invoke.runner import run
 from invoke.parser import Parser, Context
 from invoke.collection import Collection
@@ -69,6 +70,18 @@ Core options:
     def version_info(self):
         eq_(run("invoke -V").stdout, "Invoke %s\n" % invoke.__version__)
 
+    @trap
+    def task_list(self):
+        expected = """
+Available tasks:
+
+    print_foo
+    print_name
+
+""".lstrip()
+        for flag in ('-l', '--list'):
+            eq_(run("invoke -c integration %s" % flag).stdout, expected)
+
 
 TB_SENTINEL = 'Traceback (most recent call last)'
 
@@ -106,10 +119,13 @@ class CLIParsing(Spec):
         @task
         def mytask2():
             pass
-        @task(positional=[])
+        @task
         def mytask3(mystring):
             pass
-        self.c = Collection(mytask, mytask2, mytask3)
+        @task
+        def mytask4(clean=False, browse=False):
+            pass
+        self.c = Collection(mytask, mytask2, mytask3, mytask4)
 
     def _parser(self):
         return Parser(self.c.to_contexts())
@@ -183,8 +199,17 @@ class CLIParsing(Spec):
         eq_(r[1].args.mystring.value, 'bar')
 
     def multiple_short_flags_adjacent(self):
-        "mytask -bv"
-        r = self._parse("mytask -bv")
-        a = r[0].args
-        eq_(a.b.value, True)
-        eq_(a.v.value, True)
+        "mytask -bv (and inverse)"
+        for args in ('-bv', '-vb'):
+            r = self._parse("mytask %s" % args)
+            a = r[0].args
+            eq_(a.b.value, True)
+            eq_(a.v.value, True)
+
+    def globbed_shortflags_with_multipass_parsing(self):
+        "mytask -cb and -bc"
+        for args in ('-bc', '-cb'):
+            _, _, r = parse(['mytask4', args], self.c)
+            a = r[0].args
+            eq_(a.clean.value, True)
+            eq_(a.browse.value, True)

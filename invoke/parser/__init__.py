@@ -89,10 +89,17 @@ class Parser(object):
                     body.insert(index + 1, value)
                 # Contiguous boolean short flags, e.g. -qv
                 elif not token.startswith('--') and len(token) > 2:
+                    full_token = token[:]
                     rest, token = token[2:], token[:2]
-                    # Handle boolean flag block vs short-flag + value
-                    have_flag = token in machine.context.flags
+                    debug("Splitting %r into token %r and rest %r" % (full_token, token, rest))
+                    # Handle boolean flag block vs short-flag + value. Make
+                    # sure not to test the token as a context flag if we've
+                    # passed into 'storing unknown stuff' territory (e.g. on a
+                    # core-args pass, handling what are going to be task args)
+                    have_flag = (token in machine.context.flags
+                        and machine.current_state != 'unknown')
                     if have_flag and machine.context.flags[token].takes_value:
+                        debug("%r is a flag for current context & it takes a value, giving it %r" % (token, rest))
                         body.insert(index + 1, rest)
                     else:
                         rest = map(lambda x: '-%s' % x, rest)
@@ -116,7 +123,6 @@ class ParseMachine(StateMachine):
 
     transition(from_=('context', 'unknown'), event='finish', to='end')
     transition(from_='context', event='see_context', action='switch_to_context', to='context')
-    transition(from_='context', event='see_flag', action='switch_to_flag', to='context')
     transition(from_=('context', 'unknown'), event='see_unknown', action='store_only', to='unknown')
 
     def changing_state(self, from_, to):
@@ -146,18 +152,20 @@ class ParseMachine(StateMachine):
             debug("Top-of-handle() see_unknown(%r)" % token)
             self.see_unknown(token)
             return
-        # Positional args (must come above flag check in case a pos arg value
-        # happens to match a valid flag name)
-        if self.context and self.context.needs_positional_arg:
-            debug("Context %r requires positional args, eating %r" % (
-                self.context, token))
-            self.see_positional_arg(token)
         # Flag
-        elif self.context and token in self.context.flags:
-            self.see_flag(token)
+        if self.context and token in self.context.flags:
+            debug("Saw flag %r" % token)
+            self.switch_to_flag(token)
         # Value for current flag
         elif self.waiting_for_flag_value:
             self.see_value(token)
+        # Positional args (must come above context-name check in case we still
+        # need a posarg and the user legitimately wants to give it a value that
+        # just happens to be a valid context name.)
+        elif self.context and self.context.needs_positional_arg:
+            debug("Context %r requires positional args, eating %r" % (
+                self.context, token))
+            self.see_positional_arg(token)
         # New context
         elif token in self.contexts:
             self.see_context(token)
@@ -185,20 +193,21 @@ class ParseMachine(StateMachine):
     def switch_to_context(self, name):
         self.context = self.contexts[name]
         debug("Moving to context %r" % name)
+        debug("Context args: %r" % self.context.args)
+        debug("Context flags: %r" % self.context.flags)
 
     def complete_flag(self):
-        if self.flag is None:
-            return
-        if self.flag.takes_value:
-            if self.flag.raw_value is None:
-                self.error("Flag %r needed value and was not given one!" % self.flag)
-        else:
-            debug("Marking seen flag %r as True" % self.flag)
-            self.flag.value = True
+        if self.flag and self.flag.takes_value and self.flag.raw_value is None:
+            self.error("Flag %r needed value and was not given one!" % self.flag)
 
     def switch_to_flag(self, flag):
+        # Update state
         self.flag = self.context.flags[flag]
         debug("Moving to flag %r" % self.flag)
+        # Handle boolean flags (which can immediately be updated)
+        if not self.flag.takes_value:
+            debug("Marking seen flag %r as True" % self.flag)
+            self.flag.value = True
 
     def see_value(self, value):
         if self.flag.takes_value:
@@ -226,7 +235,7 @@ class ParseResult(list):
     tokens that were unable to be parsed.
     """
     def __init__(self, *args, **kwargs):
-        list.__init__(self, *args, **kwargs)
+        super(ParseResult, self).__init__(*args, **kwargs)
         self.remainder = ""
         self.unparsed = []
 

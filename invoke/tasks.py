@@ -53,7 +53,7 @@ class Task(object):
     def arg_opts(self, name, default, taken_names):
         # Argument name(s)
         names = [name]
-        if self.auto_shortflags and name not in self.positional:
+        if self.auto_shortflags:
             # Must know what short names are available
             for char in name:
                 if not (char == name or char in taken_names):
@@ -77,28 +77,30 @@ class Task(object):
         Return a list of Argument objects representing this task's signature.
         """
         arg_names, spec_dict = self.argspec(self.body)
-        # Obtain ordered list of args + their default values (if any).
-        # Order should be: positionals, in order given in decorator, followed
-        # by non-positionals, in order declared (i.e. exposed by
-        # getargspect()).
-        tuples = []
-        # Positionals first, removing from base list of arg names
-        for posarg in self.positional:
-            tuples.append((posarg, spec_dict[posarg]))
-            arg_names.remove(posarg)
-        # Now arg_names contains just the non-positional args, in order.
-        tuples.extend((x, spec_dict[x]) for x in arg_names)
+        # Obtain list of args + their default values (if any) in
+        # declaration/definition order (i.e. based on getargspec())
+        tuples = [(x, spec_dict[x]) for x in arg_names]
         # Prime the list of all already-taken names (mostly for help in
         # choosing auto shortflags)
         taken_names = set(x[0] for x in tuples)
-        # Build + return arg list
+        # Build arg list (arg_opts will take care of setting up shortnames,
+        # etc)
         args = []
         for name, default in tuples:
             new_arg = Argument(**self.arg_opts(name, default, taken_names))
             args.append(new_arg)
             # Update taken_names list with new argument's full name list
-            # (which may include new shortflags)
+            # (which may include new shortflags) so subsequent Argument
+            # creation knows what's taken.
             taken_names.update(set(new_arg.names))
+        # Now we need to ensure positionals end up in the front of the list, in
+        # order given in self.positionals, so that when Context consumes them,
+        # this order is preserved.
+        for posarg in reversed(self.positional):
+            for i, arg in enumerate(args):
+                if arg.name == posarg:
+                    args.insert(0, args.pop(i))
+                    break
         return args
 
 

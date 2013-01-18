@@ -23,8 +23,8 @@ listing available tasks::
         bar
         ...
 
-Or they can modify behavior, such as overriding the default task collections
-searched for::
+Or they can modify behavior, such as overriding the default task collection
+name Invoke looks for::
 
     $ invoke --collection mytasks --list
     Available tasks:
@@ -47,12 +47,16 @@ Tasks may take parameters in the form of flag arguments::
     $ invoke build -f=pdf
 
 Note that both long and short style flags are supported, and that equals signs
-are optional.
+are optional in both cases.
 
 Boolean options are simple flags with no arguments, which turn the Python level
 values from ``False`` to ``True``::
 
     $ invoke build --progress-bar
+
+Naturally, more than one flag may be given at a time::
+
+    $ invoke build --progress-bar -f pdf
 
 Globbed short flags
 -------------------
@@ -117,3 +121,8 @@ Also also:
 
 * Auto changing arguments eg. ``taskname(argname=default)`` turns into the
   Argument ``--argname``.
+* Debugging: set ``INVOKE_DEBUG=true`` (or any other non-empty value) to
+  trigger debug-level logging to stdout at the very start of the program. This
+  is useful for debugging the earlier stages of the option parsing (e.g. before
+  your tasks module(s) are even loaded, which is usually where users enable
+  debugging.)

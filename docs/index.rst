@@ -40,14 +40,6 @@ Documentation
 
 .. toctree::
     :glob:
+    :maxdepth: 3
 
     *
-
-
-Concepts
-========
-
-.. toctree::
-    :glob:
-
-    concepts/*

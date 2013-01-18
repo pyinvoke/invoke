@@ -102,7 +102,7 @@ class Collection_(Spec):
 
     class to_contexts:
         def setup(self):
-            @task(positional=[])
+            @task
             def mytask(text, boolean=False, number=5):
                 print text
             @task

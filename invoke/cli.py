@@ -23,7 +23,7 @@ def parse_gracefully(parser, argv):
         sys.exit(1)
 
 
-def parse(argv):
+def parse(argv, collection=None):
     # Initial/core parsing (core options can affect the rest of the parsing)
     initial_context = Context(args=(
         # TODO: make '--collection' a list-building arg, not a string
@@ -47,8 +47,15 @@ def parse(argv):
             default=False,
             help="Show version and exit"
         ),
+        Argument(
+            names=('list', 'l'),
+            kind=bool,
+            default=False,
+            help="List available tasks."
+        ),
     ))
     # 'core' will result an .unparsed attribute with what was left over.
+    debug("Parsing initial context (core args)")
     parser = Parser(initial=initial_context, ignore_unknown=True)
     core = parse_gracefully(parser, argv)
     debug("After core-args pass, leftover argv: %r" % (core.unparsed,))
@@ -73,11 +80,21 @@ def parse(argv):
         print
 
     # Load collection (default or specified) and parse leftovers
-    loader = Loader(root=args.root.value)
-    collection = loader.load_collection(args.collection.value)
+    # (Skip loading if somebody gave us an explicit task collection.)
+    if not collection:
+        debug("No collection given, loading from %r" % args.root.value)
+        loader = Loader(root=args.root.value)
+        collection = loader.load_collection(args.collection.value)
     parser = Parser(contexts=collection.to_contexts())
+    debug("Parsing actual tasks against collection %r" % collection)
     tasks = parse_gracefully(parser, core.unparsed)
 
+    # Print discovered tasks if necessary
+    if args.list.value:
+        print "Available tasks:\n"
+        print "\n".join(map(lambda x: "    " + x, collection.tasks.keys()))
+        print ""
+        sys.exit(0)
     return args, collection, tasks
 
 

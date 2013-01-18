@@ -61,8 +61,12 @@ class Context(object):
 
     def __str__(self):
         aliases = (" (%s)" % ', '.join(self.aliases)) if self.aliases else ""
-        name = (" %s%s" % (self.name, aliases)) if self.name else ""
-        return "Context%s: %r" % (name, self.args)
+        name = (" %r%s" % (self.name, aliases)) if self.name else ""
+        args = (": %r" % (self.args,)) if self.args else ""
+        return "<Context%s%s>" % (name, args)
+
+    def __repr__(self):
+        return str(self)
 
     def add_arg(self, *args, **kwargs):
         """
@@ -80,7 +84,7 @@ class Context(object):
             arg = args[0]
         else:
             arg = Argument(*args, **kwargs)
-        # Test
+        # Uniqueness constraint: no name collisions
         for name in arg.names:
             if name in self.args:
                 msg = "Tried to add an argument named %r but one already exists!"
@@ -88,18 +92,14 @@ class Context(object):
         # All arguments added to .args
         main = arg.name
         self.args[main] = arg
-        # Positional and nonpositional args get split up between
-        # .positional_args and .flags
+        # Note positionals in distinct, ordered list attribute
         if arg.positional:
             self.positional_args.append(arg)
-        else:
-            self.flags[to_flag(main)] = arg
-        # All args get their aliases added to .args too
+        # Add names & nicknames to flags, args
+        self.flags[to_flag(main)] = arg
         for name in arg.nicknames:
             self.args.alias(name, to=main)
-            # But only alias flags within .flags
-            if not arg.positional:
-                self.flags.alias(to_flag(name), to=to_flag(main))
+            self.flags.alias(to_flag(name), to=to_flag(main))
 
     @property
     def needs_positional_arg(self):

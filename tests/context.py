@@ -60,11 +60,6 @@ class Context_(Spec):
             assert '-f' in self.c.flags
             assert '--f' not in self.c.flags
 
-        def does_not_add_positional_arg_to_flags(self):
-            self.c.add_arg(name='pos', positional=True)
-            assert '--pos' not in self.c.flags
-            assert '-p' not in self.c.flags
-
         def adds_positional_args_to_positional_args(self):
             self.c.add_arg(name='pos', positional=True)
             eq_(self.c.positional_args[0].name, 'pos')
@@ -232,3 +227,19 @@ class Context_(Spec):
             eq_(c.needs_positional_arg, True)
             c.positional_args[1].value = 'hrm'
             eq_(c.needs_positional_arg, False)
+
+    class str:
+        "__str__"
+        def with_no_args_output_is_simple(self):
+            eq_(str(Context('foo')), "<Context 'foo'>")
+
+        def args_show_as_repr(self):
+            eq_(
+                str(Context('bar', args=[Argument('arg1')])),
+                "<Context 'bar': {'arg1': <Argument: arg1>}>"
+            )
+
+        def repr_is_str(self):
+            "__repr__ mirrors __str__"
+            c = Context('foo')
+            eq_(str(c), repr(c))
