@@ -70,8 +70,8 @@ def parse(argv, collection=None):
     # TODO: if this wants to display context sensitive help (e.g. a combo help
     # and available tasks listing; or core flags modified by plugins/task
     # modules) it will have to move farther down.
-    # TODO: flexible width
-    # TODO: use Clint/etc for indenting
+    # TODO: honor pty size & fill width as needed (with initial indent/offset)
+    # TODO: word-wrap help text within its own column
     if args.help.value:
         print "Usage: inv[oke] [--core-opts] task1 [--task1-opts] ... taskN [--taskN-opts]"
         print
