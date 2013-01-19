@@ -1,4 +1,5 @@
 import sys
+import textwrap
 
 from .loader import Loader
 from .parser import Parser, Context, Argument
@@ -70,20 +71,36 @@ def parse(argv, collection=None):
     # TODO: if this wants to display context sensitive help (e.g. a combo help
     # and available tasks listing; or core flags modified by plugins/task
     # modules) it will have to move farther down.
-    # TODO: honor pty size & fill width as needed (with initial indent/offset)
-    # TODO: word-wrap help text within its own column
     if args.help.value:
         print "Usage: inv[oke] [--core-opts] task1 [--task1-opts] ... taskN [--taskN-opts]"
         print
         print "Core options:"
         indent = 2
         padding = 3
+        # Calculate column sizes: don't wrap flag specs, give what's left over
+        # to the descriptions
         tuples = initial_context.help_tuples()
         flag_width = max(map(lambda x: len(x[0]), tuples))
         desc_width = pty_size()[0] - flag_width - indent - padding - 1
+        wrapper = textwrap.TextWrapper(width=desc_width)
         for flag_spec, help_str in tuples:
+            # Wrap descriptions/help text
+            help_chunks = wrapper.wrap(help_str)
+            # Print flag spec + padding
             flag_padding = flag_width - len(flag_spec)
-            print flag_spec + (flag_padding * ' ') + (padding * ' ') + help_str
+            spec = ''.join((
+                indent * ' ',
+                flag_spec,
+                flag_padding * ' ',
+                padding * ' '
+            ))
+            # Print help text as needed
+            if help_chunks:
+                print spec + help_chunks[0]
+                for chunk in help_chunks[1:]:
+                    print (' ' * len(spec)) + chunk
+            else:
+                print spec
         print
 
     # Load collection (default or specified) and parse leftovers

@@ -66,8 +66,8 @@ Core options:
                                    given >1 time.
   -h, --help                       Show this help message and exit.
   -l, --list                       List available tasks.
-  -r STRING, --root=STRING         Change root directory used for finding
-                                     task modules.
+  -r STRING, --root=STRING         Change root directory used for finding task
+                                   modules.
 
 """.lstrip()
         r1 = run("inv -h", hide='out')
