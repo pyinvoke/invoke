@@ -127,19 +127,19 @@ class Context_(Spec):
         def vanilla_no_helpstr(self):
             eq_(
                 self.vanilla.help_for('--foo'),
-                "--foo=STRING"
+                ("--foo=STRING", "")
             )
 
         def vanilla_with_helpstr(self):
             eq_(
                 self.vanilla.help_for('--bar'),
-                "--bar=STRING        bar the baz"
+                ("--bar=STRING", "bar the baz")
             )
 
         def task_driven_with_helpstr(self):
             eq_(
                 self.tasked.help_for('--otherarg'),
-                "-o STRING, --otherarg=STRING        other help"
+                ("-o STRING, --otherarg=STRING", "other help")
             )
 
         # Yes, the next 3 tests are identical in form, but technically they
@@ -147,19 +147,19 @@ class Context_(Spec):
         def task_driven_no_helpstr(self):
             eq_(
                 self.tasked.help_for('--myarg'),
-                "-m STRING, --myarg=STRING"
+                ("-m STRING, --myarg=STRING", "")
             )
 
         def short_form_before_long_form(self):
             eq_(
                 self.tasked.help_for('--myarg'),
-                "-m STRING, --myarg=STRING"
+                ("-m STRING, --myarg=STRING", "")
             )
 
         def equals_sign_for_long_form_only(self):
             eq_(
                 self.tasked.help_for('--myarg'),
-                "-m STRING, --myarg=STRING"
+                ("-m STRING, --myarg=STRING", "")
             )
 
         def kind_to_placeholder_map(self):

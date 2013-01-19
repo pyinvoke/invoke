@@ -107,7 +107,7 @@ class Context(object):
 
     def help_for(self, flag):
         """
-        Return help line string for given ``flag``.
+        Return 2-tuple of ``(flag-spec, help-string)`` for given ``flag``.
         """
         # Obtain arg obj
         if flag not in self.flags:
@@ -125,8 +125,8 @@ class Context(object):
             sep = " " if len(name.strip('-')) == 1 else "="
             full_names.append(name + ((sep + value) if value else ""))
         namestr = ", ".join(sorted(full_names, key=len))
-        helpstr = ((" " * 8) + arg.help) if arg.help else ""
-        return namestr + helpstr
+        helpstr = arg.help or ""
+        return namestr, helpstr
 
     def help_lines(self):
         """
