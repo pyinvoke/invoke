@@ -61,12 +61,12 @@ class CLI(Spec):
 Usage: inv[oke] [--core-opts] task1 [--task1-opts] ... taskN [--taskN-opts]
 
 Core options:
-    -V, --version                    Show version and exit
-    -c STRING, --collection=STRING   Specify collection name to load. May be
-                                     given >1 time.
-    -h, --help                       Show this help message and exit.
-    -l, --list                       List available tasks.
-    -r STRING, --root=STRING         Change root directory used for finding
+  -V, --version                    Show version and exit
+  -c STRING, --collection=STRING   Specify collection name to load. May be
+                                   given >1 time.
+  -h, --help                       Show this help message and exit.
+  -l, --list                       List available tasks.
+  -r STRING, --root=STRING         Change root directory used for finding
                                      task modules.
 
 """.lstrip()

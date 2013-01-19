@@ -3,7 +3,7 @@ import sys
 from .loader import Loader
 from .parser import Parser, Context, Argument
 from .exceptions import Failure, CollectionNotFound, ParseError
-from .util import debug
+from .util import debug, pty_size
 from ._version import __version__
 
 
@@ -76,7 +76,14 @@ def parse(argv, collection=None):
         print "Usage: inv[oke] [--core-opts] task1 [--task1-opts] ... taskN [--taskN-opts]"
         print
         print "Core options:"
-        print "\n".join(map(lambda x: "    %s    %s" % x, initial_context.help_tuples()))
+        indent = 2
+        padding = 3
+        tuples = initial_context.help_tuples()
+        flag_width = max(map(lambda x: len(x[0]), tuples))
+        desc_width = pty_size()[0] - flag_width - indent - padding - 1
+        for flag_spec, help_str in tuples:
+            flag_padding = flag_width - len(flag_spec)
+            print flag_spec + (flag_padding * ' ') + (padding * ' ') + help_str
         print
 
     # Load collection (default or specified) and parse leftovers
