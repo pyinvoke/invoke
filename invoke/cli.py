@@ -76,7 +76,7 @@ def parse(argv, collection=None):
         print "Usage: inv[oke] [--core-opts] task1 [--task1-opts] ... taskN [--taskN-opts]"
         print
         print "Core options:"
-        print "\n".join(map(lambda x: "    " + x, initial_context.help_lines()))
+        print "\n".join(map(lambda x: "    %s    %s" % x, initial_context.help_tuples()))
         print
 
     # Load collection (default or specified) and parse leftovers

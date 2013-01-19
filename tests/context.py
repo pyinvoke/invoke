@@ -170,8 +170,8 @@ class Context_(Spec):
             eq_(self.tasked.help_for('-m'), self.tasked.help_for('--myarg'))
 
 
-    class help_lines:
-        def returns_list_of_help_output_strings(self):
+    class help_tuples:
+        def returns_list_of_help_tuples(self):
             # Walks own list of flags/args, ensures resulting map to help_for()
             # TODO: consider redoing help_for to be more flexible on input --
             # arg value or flag; or even Argument objects. ?
@@ -180,13 +180,13 @@ class Context_(Spec):
                 pass
             c = Collection(mytask).to_contexts()[0]
             eq_(
-                c.help_lines(),
+                c.help_tuples(),
                 [c.help_for('--myarg'), c.help_for('--otherarg')]
             )
 
         def _assert_order(self, name_tuples, expected_flag_order):
             ctx = Context(args=map(lambda x: Argument(names=x), name_tuples))
-            return eq_(ctx.help_lines(), map(ctx.help_for, expected_flag_order))
+            return eq_(ctx.help_tuples(), map(ctx.help_for, expected_flag_order))
 
         def sorts_alphabetically_by_shortflag_first(self):
             # Where shortflags exist, they take precedence

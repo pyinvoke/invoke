@@ -128,9 +128,9 @@ class Context(object):
         helpstr = arg.help or ""
         return namestr, helpstr
 
-    def help_lines(self):
+    def help_tuples(self):
         """
-        Return sorted iterable of help lines for all member Arguments.
+        Return sorted iterable of help tuples for all member Arguments.
 
         Sorts like so:
 
