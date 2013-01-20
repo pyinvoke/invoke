@@ -57,7 +57,6 @@ class CLI(Spec):
         # TODO: add more unit-y tests for specific behaviors:
         # * fill terminal w/ columns + spacing
         # * line-wrap help text in its own column
-        # * sorts options alphabetically
         expected = """
 Usage: inv[oke] [--core-opts] task1 [--task1-opts] ... taskN [--taskN-opts]
 
