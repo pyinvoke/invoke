@@ -22,9 +22,16 @@ def cmp_args(a, b):
         return 1
     elif len(a) != 1 and len(b) == 1:
         return -1
-    # Equal sized flags get cmp'd normally
+    # Equal sized flags get case-insensitive cmp'd
+    # (with equal case-insensitive values then having lowercase win)
     else:
-        return cmp(a, b)
+        ret = cmp(a.lower(), b.lower())
+        if ret == 0:
+            # Default cmp() thinks uppercase come first (lower) at least for
+            # bytestrings. We want the opposite.
+            return 1 if cmp(a, b) == -1 else -1
+        else:
+            return ret
 
 
 class Context(object):

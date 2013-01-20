@@ -195,6 +195,20 @@ class Context_(Spec):
                 ['--zarg', '--arg']
             )
 
+        def case_ignored_during_sorting(self):
+            self._assert_order(
+                [('a',), ('B',)],
+                # In raw cmp() uppercase would come before lowercase,
+                # and we'd get ['-B', '-a']
+                ['-a', '-B']
+            )
+
+        def lowercase_wins_when_values_identical_otherwise(self):
+            self._assert_order(
+                [('V',), ('v',)],
+                ['-v', '-V']
+            )
+
         def sorts_alphabetically_by_longflag_when_no_shortflag(self):
             # Where no shortflag, sorts by longflag
             self._assert_order(
