@@ -215,6 +215,13 @@ class Context_(Spec):
                 ['--alpha', '--beta', '-a', '-b', '-c']
             )
 
+        def mixed_corelike_options(self):
+            self._assert_order(
+                [('V', 'version'), ('c', 'collection'), ('h', 'help'),
+                    ('l', 'list'), ('r', 'root')],
+                ['-c', '-h', '-l', '-r', '-V']
+            )
+
     class needs_positional_arg:
         def represents_whether_all_positional_args_have_values(self):
             c = Context(name='foo', args=(
