@@ -13,3 +13,4 @@ notifications:
     channels: "irc.freenode.org#invoke"
     on_success: change
     on_failure: change
+  email: false
