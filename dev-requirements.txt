@@ -6,4 +6,4 @@ spec>=0.9.7
 # Need invocations lib to load internal tasks module (for now)
 # NOTE: as invocations itself requires Invoke, make sure you've already run
 # 'pip install -e .' to get Invoke installed.
--e git+https://github.com/pyinvoke/invocations
+-e git+https://github.com/pyinvoke/invocations#egg=invocations
