@@ -3,9 +3,11 @@ python:
   - "2.6"
   - "2.7"
 install:
-  # Build/test dependencies
-  - pip install -r requirements.txt --use-mirrors
-script: "spec"
+  # Install self (we are required for some of our own dev reqs for now)
+  - pip install -e .
+  # Install those dev requirements (test runner, etc)
+  - pip install -r dev-requirements.txt --use-mirrors
+script: "inv test"
 notifications:
   irc:
     channels: "irc.freenode.org#invoke"
