@@ -30,22 +30,23 @@ We split development into two primary branches:
       chance of being otherwise disruptive, may need to go in **master**
       instead. This is a judgement call -- ask the devs!
 
-* **New features** go into **the ``master`` branch**.
+* **New features** go into **the master branch**.
 
     * Note that depending on how long it takes for the dev team to merge your
-      patch, the copy of ``master`` you worked off of may be outdated! If you
-      find yourself 'bumping' a pull request that's been sidelined for a while,
-      **make sure you rebase or merge to latest master** to ensure a speedier
-      resolution.
+      patch, the copy of ``master`` you worked off of may get out of date! If
+      you find yourself 'bumping' a pull request that's been sidelined for a
+      while, **make sure you rebase or merge to latest master** to ensure a
+      speedier resolution.
 
 Code formatting
 ---------------
 
-We follow PEP8 (link TK) whenever it makes sense, which is most of the time. At
-the very least, please make sure you put spaces after your commas within
-list-like syntax (``[this,is,not,ok]`` but ``[this, is, fine]``; ditto for
-``function(calls, like, this)``) and keep your variables
-``lower_cased_and_underscored``, with only classes being ``CamelCased``.
+We follow `PEP-8 <http://www.python.org/dev/peps/pep-0008/>`_ whenever it makes
+sense, which is most of the time. At the very least, please make sure you put
+spaces after your commas within list-like syntax (``[this,is,not,ok]`` but
+``[this, is, fine]``; ditto for ``function(calls, like, this)``) and keep your
+variables ``lower_cased_and_underscored``, with only classes being
+``CamelCased``.
 
 Documentation isn't optional
 ----------------------------
@@ -56,8 +57,14 @@ Specifically, by "documentation" we mean:
 * **Docstrings** must be created or updated for public API
   functions/methods/etc.
 
-    * Don't forget to include ``versionchanged``/``versionadded`` ReST
+    * Don't forget to include `versionadded
+      <http://sphinx-doc.org/markup/para.html#directive-versionadded>`_/`versionchanged
+      <http://sphinx-doc.org/markup/para.html#directive-versionchanged>`_ ReST
       directives at the bottom of any new or changed docstrings!
+    * Use ``versionadded`` for truly new API members -- new methods, functions,
+      classes or modules.
+    * Use ``versionchanged`` when adding/removing new function/method
+      arguments, or whenever behavior changes.
 
 * New features should ideally include updates to **prose documentation**,
   including useful example code snippets.
