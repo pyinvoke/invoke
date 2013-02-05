@@ -2,9 +2,9 @@
 
 # Support setuptools or distutils
 try:
-    from setuptools import setup
+    from setuptools import setup, find_packages
 except ImportError:
-    from distutils.core import setup
+    from distutils.core import setup, find_packages
 
 # Version info -- read without importing
 _locals = {}
@@ -30,7 +30,7 @@ setup(
     author_email='jeff@bitprophet.org',
     url='http://docs.pyinvoke.org',
 
-    packages=["invoke", "invoke.parser"],
+    packages=find_packages(),
     entry_points={
         'console_scripts': [
             'invoke = invoke.cli:main',
