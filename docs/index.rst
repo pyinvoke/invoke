@@ -88,6 +88,13 @@ on our Github at `pyinvoke/invoke
       the command you used to invoke it, and the full output of your run).
 
 
+How can I contribute?
+=====================
+
+Thanks for asking! Please see our :doc:`contribution documentation
+<contributing>` for details.
+
+
 .. _contact:
 
 How can I contact the developers / get help / see announcements?
