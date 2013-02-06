@@ -122,6 +122,21 @@ def parse(argv, collection=None):
     return args, collection, tasks
 
 
+def execute(collection, task_name, kwargs=None):
+    kwargs = kwargs or {}
+    task = collection[task_name]
+    try:
+        prerequisites = [collection[pre] for pre in task.get_prerequisites()]
+    except KeyError:
+        # TODO lol can't find a prerequisite. [DDN]
+        # Reraise a new exception possibly?
+        raise
+    # Let these exceptions bubble up
+    for pre in prerequisites:
+        pre.body(**kwargs)
+    task.body(**kwargs)
+
+
 def main():
     # Parse command line
     argv = sys.argv[1:]
@@ -133,6 +148,6 @@ def main():
         for name, arg in context.args.iteritems():
             kwargs[name] = arg.value
         try:
-            collection[context.name].body(**kwargs)
+            execute(collection, context.name, kwargs)
         except Failure, f:
             sys.exit(f.result.exited)

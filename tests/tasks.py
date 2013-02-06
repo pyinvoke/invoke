@@ -130,3 +130,16 @@ class Task_(Spec):
             assert 'o' in args
             assert args['o'] is args['longarg']
             assert 'l' in args
+
+    class get_prerequisites:
+        def empty_args_has_no_prerequisites(self):
+            @task
+            def mytask():
+                pass
+            eq_((), mytask.get_prerequisites())
+
+        def with_args(self):
+            @task('step1', 'step2')
+            def mytask():
+                pass
+            eq_(('step1', 'step2'), mytask.get_prerequisites())

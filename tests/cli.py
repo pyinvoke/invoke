@@ -48,6 +48,10 @@ class CLI(Spec):
     def shorthand_binary_name(self):
         _output_eq("invoke -c integration print_foo", "foo\n")
 
+    @trap
+    def should_run_prerequisites(self):
+        _output_eq("invoke -c integration print_bar", "foo\nbar\n")
+
     def core_help_option_prints_core_help(self):
         # TODO: change dynamically based on parser contents?
         # e.g. no core args == no [--core-opts],
@@ -86,6 +90,7 @@ Available tasks:
 
     print_foo
     print_name
+    print_bar
 
 """.lstrip()
         for flag in ('-l', '--list'):

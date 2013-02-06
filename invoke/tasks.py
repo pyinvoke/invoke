@@ -17,9 +17,10 @@ class Task(object):
     # TODO: allow central per-session / per-taskmodule control over some of
     # them, e.g. (auto_)positional, auto_shortflags.
     # NOTE: we shadow __builtins__.help here. It's purposeful. :(
-    def __init__(self, body, aliases=(), positional=None, default=False, 
-        auto_shortflags=True, help=None):
+    def __init__(self, body, prerequisites=(), aliases=(), positional=None,
+        default=False, auto_shortflags=True, help=None):
         self.body = body
+        self.prerequisites = prerequisites
         self.aliases = aliases
         self.positional = self.fill_implicit_positionals(positional)
         self.is_default = default
@@ -108,6 +109,17 @@ class Task(object):
                     break
         return args
 
+    def get_prerequisites(self):
+        """
+        Return the list of prequisite tasks.
+
+        Right now, tasks are not self-aware of the collection they are in
+        so there is no validation if the tasks exists or not. Ideally, we'd
+        validate the strings and return the actual Task objects instead of
+        looking them up later.
+        """
+        return self.prerequisites
+
 
 def task(*args, **kwargs):
     """
@@ -117,6 +129,8 @@ def task(*args, **kwargs):
     specified. Otherwise, the following options are allowed in the parenthese'd
     form:
 
+    * ``prerequisites``: Specify tasks that should be executed before this task
+      as plain arguments. Tasks should be referenced as a string.
     * ``aliases``: Specify one or more aliases for this task, allowing it to be
       invoked as multiple different names. For example, a task named ``mytask``
       with a simple ``@task`` wrapper may only be invoked as ``"mytask"``.
@@ -136,7 +150,7 @@ def task(*args, **kwargs):
       displayed in ``--help`` output.
     """
     # @task -- no options
-    if len(args) == 1:
+    if len(args) == 1 and callable(args[0]):
         return Task(args[0])
     # @task(options)
     # TODO: pull in centrally defined defaults here (see Task)
@@ -145,14 +159,17 @@ def task(*args, **kwargs):
     default = kwargs.pop('default', False)
     auto_shortflags = kwargs.pop('auto_shortflags', True)
     help = kwargs.pop('help', {})
-    # Handle unknown args/kwargs
-    if args or kwargs:
-        arg = (" unknown args %r" % (args,)) if args else ""
+    # Handle unknown kwargs
+    if kwargs:
         kwarg = (" unknown kwargs %r" % (kwargs,)) if kwargs else ""
-        raise TypeError("@task was called with" + arg + kwarg)
+        raise TypeError("@task was called with" + kwarg)
+    # Handle unknown args
+    if any([not isinstance(x, basestring) for x in args]):
+        raise TypeError("@task prerequisites must be strings")
     def inner(obj):
         obj = Task(
             obj,
+            prerequisites=args,
             aliases=aliases,
             positional=positional,
             default=default,
