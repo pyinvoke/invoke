@@ -1,10 +1,12 @@
 import inspect
 from itertools import izip_longest
+from functools import partial
 import types
 
 from .vendor.lexicon import Lexicon
 
 from .parser import Argument
+from .exceptions import ParseError
 
 
 # Non-None sentinel
@@ -27,6 +29,36 @@ class Task(object):
         self.is_default = default
         self.auto_shortflags = auto_shortflags
         self.help = help or {}
+
+    def __call__(self, **kwargs):
+        """
+        Execute the task.
+
+        (internal) If a __collection is passed through, we are able to also execute
+        the pre and post tasks. The collection is needed to look them up. Without it,
+        there is no way to determine actual callable that a string relates to.
+        """
+        # Internally, we're using __collection to not conflict with the world
+        # We want to pop it off the stack because passing it through the currently
+        # Executing stack would cause an error
+        collection = kwargs.pop('__collection', None)
+        if collection is not None:
+            # We can't even begin to look up pre and post run tasks
+            # without a collection. Raise?
+            try:
+                # Add back the __collection for the sub-tasks so they know what's up
+                prerun = [partial(collection[pre], __collection=collection) for pre in self.prerun]
+                postrun = [partial(collection[post], __collection=collection) for post in self.postrun]
+            except KeyError, e:
+                raise ParseError("No task %s, needed by '%s'!" % (e, self.body.func_name))
+        else:
+            prerun = []
+            postrun = []
+
+        # Run ALL THE TASKS and let their exceptions bubble up
+        tasks = prerun + [self.body] + postrun
+        for task in tasks:
+            task(**kwargs)
 
     def argspec(self, body):
         """

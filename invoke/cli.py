@@ -125,16 +125,11 @@ def parse(argv, collection=None):
 def execute(collection, task_name, kwargs=None):
     kwargs = kwargs or {}
     task = collection[task_name]
-    try:
-        prerun = [collection[pre] for pre in task.get_prerun()]
-        postrun = [collection[post] for post in task.get_postrun()]
-    except KeyError, e:
-        raise ParseError("No task %s, needed by '%s'!" % (e, task_name))
-
-    # Run ALL THE TASKS and let their exceptions bubble up
-    tasks = prerun + [task] + postrun
-    for task in tasks:
-        task.body(**kwargs)
+    # We are using __collection internally to pass around the collection
+    # To avoid conflicting with real world kwargs
+    kwargs['__collection'] = collection
+    # Fire away!
+    task(**kwargs)
 
 
 def main():
