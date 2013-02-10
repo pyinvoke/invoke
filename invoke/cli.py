@@ -126,15 +126,15 @@ def execute(collection, task_name, kwargs=None):
     kwargs = kwargs or {}
     task = collection[task_name]
     try:
-        prerequisites = [collection[pre] for pre in task.get_prerequisites()]
-    except KeyError:
-        # TODO lol can't find a prerequisite. [DDN]
-        # Reraise a new exception possibly?
-        raise
-    # Let these exceptions bubble up
-    for pre in prerequisites:
-        pre.body(**kwargs)
-    task.body(**kwargs)
+        prerun = [collection[pre] for pre in task.get_prerun()]
+        postrun = [collection[post] for post in task.get_postrun()]
+    except KeyError, e:
+        raise ParseError("No task %s, needed by '%s'!" % (e, task_name))
+
+    # Run ALL THE TASKS and let their exceptions bubble up
+    tasks = prerun + [task] + postrun
+    for task in tasks:
+        task.body(**kwargs)
 
 
 def main():
@@ -149,5 +149,8 @@ def main():
             kwargs[name] = arg.value
         try:
             execute(collection, context.name, kwargs)
+        except ParseError, e:
+            sys.stderr.write(e.message + '\n')
+            sys.exit(1)
         except Failure, f:
             sys.exit(f.result.exited)

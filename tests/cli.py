@@ -49,8 +49,8 @@ class CLI(Spec):
         _output_eq("invoke -c integration print_foo", "foo\n")
 
     @trap
-    def should_run_prerequisites(self):
-        _output_eq("invoke -c integration print_bar", "foo\nbar\n")
+    def should_run_pre_and_post_run(self):
+        _output_eq("invoke -c integration print_bar", "foo\nbar\npost\n")
 
     def core_help_option_prints_core_help(self):
         # TODO: change dynamically based on parser contents?
@@ -90,6 +90,7 @@ Available tasks:
 
     print_foo
     print_name
+    print_post
     print_bar
 
 """.lstrip()

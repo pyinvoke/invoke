@@ -17,10 +17,11 @@ class Task(object):
     # TODO: allow central per-session / per-taskmodule control over some of
     # them, e.g. (auto_)positional, auto_shortflags.
     # NOTE: we shadow __builtins__.help here. It's purposeful. :(
-    def __init__(self, body, prerequisites=(), aliases=(), positional=None,
-        default=False, auto_shortflags=True, help=None):
+    def __init__(self, body, prerun=(), postrun=(), aliases=(),
+        positional=None, default=False, auto_shortflags=True, help=None):
         self.body = body
-        self.prerequisites = prerequisites
+        self.prerun = prerun
+        self.postrun = postrun
         self.aliases = aliases
         self.positional = self.fill_implicit_positionals(positional)
         self.is_default = default
@@ -109,16 +110,27 @@ class Task(object):
                     break
         return args
 
-    def get_prerequisites(self):
+    def get_prerun(self):
         """
-        Return the list of prequisite tasks.
+        Return the list of pre run tasks.
 
         Right now, tasks are not self-aware of the collection they are in
         so there is no validation if the tasks exists or not. Ideally, we'd
         validate the strings and return the actual Task objects instead of
         looking them up later.
         """
-        return self.prerequisites
+        return self.prerun
+
+    def get_postrun(self):
+        """
+        Return the list of post run tasks.
+
+        Right now, tasks are not self-aware of the collection they are in
+        so there is no validation if the tasks exists or not. Ideally, we'd
+        validate the strings and return the actual Task objects instead of
+        looking them up later.
+        """
+        return self.postrun
 
 
 def task(*args, **kwargs):
@@ -129,8 +141,9 @@ def task(*args, **kwargs):
     specified. Otherwise, the following options are allowed in the parenthese'd
     form:
 
-    * ``prerequisites``: Specify tasks that should be executed before this task
-      as plain arguments. Tasks should be referenced as a string.
+    * ``pre``: Specify a list of tasks that should be executed before this task
+      as plain arguments or a kwarg. Tasks should be referenced as a string.
+    * ``post``: Specify a list of tasks that should be executed after this task.
     * ``aliases``: Specify one or more aliases for this task, allowing it to be
       invoked as multiple different names. For example, a task named ``mytask``
       with a simple ``@task`` wrapper may only be invoked as ``"mytask"``.
@@ -152,6 +165,9 @@ def task(*args, **kwargs):
     # @task -- no options
     if len(args) == 1 and callable(args[0]):
         return Task(args[0])
+    if args and 'pre' in kwargs:
+        raise TypeError("@task expects either args or a pre kwarg, not both")
+    prerun = kwargs.pop('pre', args)
     # @task(options)
     # TODO: pull in centrally defined defaults here (see Task)
     aliases = kwargs.pop('aliases', ())
@@ -159,17 +175,28 @@ def task(*args, **kwargs):
     default = kwargs.pop('default', False)
     auto_shortflags = kwargs.pop('auto_shortflags', True)
     help = kwargs.pop('help', {})
+    postrun = kwargs.pop('post', ())
     # Handle unknown kwargs
     if kwargs:
         kwarg = (" unknown kwargs %r" % (kwargs,)) if kwargs else ""
         raise TypeError("@task was called with" + kwarg)
-    # Handle unknown args
-    if any([not isinstance(x, basestring) for x in args]):
-        raise TypeError("@task prerequisites must be strings")
+
+    # Make sure we have some valid input
+    # Yuck, type checking. Better way to handle this safety net?
+    if not isinstance(prerun, (list, tuple)):
+        raise TypeError("@task pre run tasks must be a list of tasks")
+    if not isinstance(postrun, (list, tuple)):
+        raise TypeError("@task post run tasks must be a list of tasks")
+    if any([not isinstance(x, basestring) for x in prerun]):
+        raise TypeError("@task pre run tasks must be strings")
+    if any([not isinstance(x, basestring) for x in postrun]):
+        raise TypeError("@task post run tasks must be strings")
+
     def inner(obj):
         obj = Task(
             obj,
-            prerequisites=args,
+            prerun=prerun,
+            postrun=postrun,
             aliases=aliases,
             positional=positional,
             default=default,

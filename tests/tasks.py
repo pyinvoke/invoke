@@ -131,15 +131,64 @@ class Task_(Spec):
             assert args['o'] is args['longarg']
             assert 'l' in args
 
-    class get_prerequisites:
-        def empty_args_has_no_prerequisites(self):
+    class get_prerun:
+        def empty_args_has_no_prerun(self):
             @task
             def mytask():
                 pass
-            eq_((), mytask.get_prerequisites())
+            eq_((), mytask.get_prerun())
 
         def with_args(self):
             @task('step1', 'step2')
             def mytask():
                 pass
-            eq_(('step1', 'step2'), mytask.get_prerequisites())
+            eq_(('step1', 'step2'), mytask.get_prerun())
+
+        def with_kwarg(self):
+            @task(pre=('step1', 'step2'))
+            def mytask():
+                pass
+            eq_(('step1', 'step2'), mytask.get_prerun())
+
+    class get_postrun:
+        def empty_kwarg_has_no_postrun(self):
+            @task
+            def mytask():
+                pass
+            eq_((), mytask.get_postrun())
+
+        def with_kwarg(self):
+            @task(post=('step1', 'step2'))
+            def mytask():
+                pass
+            eq_(('step1', 'step2'), mytask.get_postrun())
+
+    @raises(TypeError)
+    def should_not_allow_args_and_pre_kwarg(self):
+        @task('task1', pre=['task2'])
+        def my_task():
+            pass
+
+    @raises(TypeError)
+    def should_require_a_list_for_prerun(self):
+        @task(pre='lol')
+        def my_test():
+            pass
+
+    @raises(TypeError)
+    def should_require_a_list_for_postrun(self):
+        @task(post='lol')
+        def my_test():
+            pass
+
+    @raises(TypeError)
+    def should_require_strings_for_prerun(self):
+        @task(pre=[1])
+        def my_test():
+            pass
+
+    @raises(TypeError)
+    def should_require_strings_for_postrun(self):
+        @task(post=[1])
+        def my_test():
+            pass

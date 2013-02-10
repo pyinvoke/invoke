@@ -9,6 +9,10 @@ def print_foo():
 def print_name(name):
     print name
 
-@task('print_foo')
+@task('print_foo', post=['print_post'])
 def print_bar():
     print "bar"
+
+@task
+def print_post():
+    print "post"
