@@ -1,6 +1,5 @@
 import os
 import sys
-import StringIO
 
 from spec import eq_, skip, Spec, ok_, trap
 
