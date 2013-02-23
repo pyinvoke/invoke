@@ -8,7 +8,8 @@ except ImportError:
 
 # Version info -- read without importing
 _locals = {}
-version_module = execfile('invoke/_version.py', _locals)
+with open('invoke/_version.py') as fp:
+    exec(fp.read(), None, _locals)
 version = _locals['__version__']
 
 # Frankenstein long_description: version-specific changelog note + README
