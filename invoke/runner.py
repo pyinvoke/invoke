@@ -109,7 +109,7 @@ def run(command, warn=False, hide=None, pty=False):
         hide = normalize_hide(hide)
         out = []
         def out_filter(text):
-            out.append(text.decode(sys.stdout.encoding))
+            out.append(text.decode("utf-8"))
             if 'out' not in hide:
                 return text
             else:
