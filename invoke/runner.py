@@ -121,7 +121,7 @@ def run(command, warn=False, hide=None, pty=False):
         exception = None
         try:
             p.interact(output_filter=out_filter)
-        except OSError, e:
+        except OSError as e:
             # Only capture the OSError we expect
             if "Input/output error" not in e:
                 raise
