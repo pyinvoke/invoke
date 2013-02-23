@@ -8,29 +8,6 @@ What is Invoke?
 .. include:: ../README.rst
 
 
-What can Invoke do exactly?
-===========================
-
-Below are Invoke's current & planned features/responsibilities.
-
-.. note:: Some of these are still in progress!
-
-* Execute arbitrary Python functions or methods on the CLI
-* Local-command helper function
-
-    * Captures & prints output
-    * Allows interaction
-
-* Nested namespaces/collections, defined as packages, modules or classes
-* (Per-namespace) default tasks
-* Task aliases
-* Before/after hooks
-* Color support
-* Logging integration
-* Execute multiple instances of a task in parallel
-* First-class library support
-
-
 How can I install it?
 =====================
 
@@ -39,12 +16,12 @@ via `pip <http://pip-installer.org>`_::
 
     $ pip install invoke
 
-We currently support **Python 2.6 or newer** (Python 3 support coming soon) so
-users still on Python 2.5 (or 2.4!) are urged to upgrade.
+We currently support **Python 2.6/2.7** and **Python 3.3+**. Users still on
+Python 2.5 or older are urged to upgrade.
 
-As long as you have Python 2.6 (or 2.7), **there are no other dependencies**.
-Invoke is pure-Python, and contains copies of its few dependencies within its
-source tree.
+As long as you have a supported Python interpreter, **there are no other
+dependencies**.  Invoke is pure-Python, and contains copies of its few
+dependencies within its source tree.
 
 .. note:: 
     See `this blog post
@@ -55,7 +32,7 @@ What if I want the bleeding edge?
 ---------------------------------
 
 Users who don't intend to actively develop, but who still want to obtain the
-in-development version (to help test new features, for example, or to cope with
+in-development version (to help test new features or to cope with any
 unfortunate lapses in release schedule) can still use ``pip``, but should give
 the ``==dev`` "version" explicitly::
 
