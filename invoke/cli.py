@@ -163,5 +163,5 @@ def main():
             # config options
             # TODO: friggin dashes vs underscores
             Executor(collection).execute(name=context.name, kwargs=kwargs, dedupe=not args['no-dedupe'])
-        except Failure, f:
+        except Failure as f:
             sys.exit(f.result.exited)
