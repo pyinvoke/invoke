@@ -1,10 +1,15 @@
 import inspect
 import types
 
+from .vendor import six
 from .vendor.lexicon import Lexicon
 
-from .compat import zip_longest
 from .parser import Argument
+
+if six.PY3:
+    from itertools import zip_longest
+else:
+    from itertools import izip_longest as zip_longest
 
 
 # Non-None sentinel
