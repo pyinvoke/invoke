@@ -1,9 +1,9 @@
 import inspect
-from itertools import izip_longest
 import types
 
 from .vendor.lexicon import Lexicon
 
+from .compat import zip_longest
 from .parser import Argument
 
 
@@ -17,7 +17,7 @@ class Task(object):
     # TODO: allow central per-session / per-taskmodule control over some of
     # them, e.g. (auto_)positional, auto_shortflags.
     # NOTE: we shadow __builtins__.help here. It's purposeful. :(
-    def __init__(self, body, aliases=(), positional=None, default=False, 
+    def __init__(self, body, aliases=(), positional=None, default=False,
         auto_shortflags=True, help=None):
         self.body = body
         self.aliases = aliases
@@ -41,7 +41,7 @@ class Task(object):
         spec = inspect.getargspec(func)
         arg_names = spec.args[:]
         matched_args = [reversed(x) for x in [spec.args, spec.defaults or []]]
-        spec_dict = dict(izip_longest(*matched_args, fillvalue=NO_DEFAULT))
+        spec_dict = dict(zip_longest(*matched_args, fillvalue=NO_DEFAULT))
         return arg_names, spec_dict
 
     def fill_implicit_positionals(self, positional):
