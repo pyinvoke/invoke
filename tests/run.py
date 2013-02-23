@@ -119,7 +119,7 @@ class Run(Spec):
         value = "penguinmints"
         try:
             run("command", hide=value)
-        except ValueError, e:
+        except ValueError as e:
             msg = "Error from run(hide=xxx) did not tell user what the bad value was!"
             msg += "\nException msg: %s" % e
             ok_(value in str(e), msg)
