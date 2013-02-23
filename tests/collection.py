@@ -2,11 +2,12 @@ from spec import Spec, skip, eq_, raises
 
 from invoke.collection import Collection
 from invoke.tasks import task, Task
+from invoke.vendor import six
 
 
 @task
 def _mytask():
-    print "woo!"
+    six.print_("woo!")
 
 
 class Collection_(Spec):
@@ -108,7 +109,7 @@ class Collection_(Spec):
         def setup(self):
             @task
             def mytask(text, boolean=False, number=5):
-                print text
+                six.print_(text)
             @task
             def mytask2():
                 pass

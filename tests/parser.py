@@ -169,13 +169,13 @@ class Parser_(Spec):
             def attaches_context_to_ParseErrors(self):
                 try:
                     self.p.parse_argv(['foo', '--bar'])
-                except ParseError, e:
+                except ParseError as e:
                     assert e.context is not None
 
             def attached_context_is_None_outside_contexts(self):
                 try:
                     Parser().parse_argv(['wat'])
-                except ParseError, e:
+                except ParseError as e:
                     assert e.context is None
 
         class positional_arguments:

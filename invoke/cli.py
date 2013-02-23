@@ -1,6 +1,8 @@
 import sys
 import textwrap
 
+from .vendor import six
+
 from .loader import Loader
 from .parser import Parser, Context, Argument
 from .exceptions import Failure, CollectionNotFound, ParseError
@@ -19,9 +21,8 @@ def parse_gracefully(parser, argv):
     """
     try:
         return parser.parse_argv(argv)
-    except ParseError, e:
-        print str(e)
-        sys.exit(1)
+    except ParseError as e:
+        sys.exit(str(e))
 
 
 def parse(argv, collection=None):
@@ -64,7 +65,7 @@ def parse(argv, collection=None):
 
     # Print version & exit if necessary
     if args.version.value:
-        print "Invoke %s" % __version__
+        six.print_("Invoke %s" % __version__)
         sys.exit(0)
 
     # Core --help output
@@ -72,9 +73,9 @@ def parse(argv, collection=None):
     # and available tasks listing; or core flags modified by plugins/task
     # modules) it will have to move farther down.
     if args.help.value:
-        print "Usage: inv[oke] [--core-opts] task1 [--task1-opts] ... taskN [--taskN-opts]"
-        print
-        print "Core options:"
+        six.print_("Usage: inv[oke] [--core-opts] task1 [--task1-opts] ... taskN [--taskN-opts]")
+        six.print_("")
+        six.print_("Core options:")
         indent = 2
         padding = 3
         # Calculate column sizes: don't wrap flag specs, give what's left over
@@ -96,11 +97,11 @@ def parse(argv, collection=None):
             ))
             # Print help text as needed
             if help_chunks:
-                print spec + help_chunks[0]
+                six.print_(spec + help_chunks[0])
                 for chunk in help_chunks[1:]:
-                    print (' ' * len(spec)) + chunk
+                    six.print_((' ' * len(spec)) + chunk)
             else:
-                print spec
+                six.print_(spec)
         print
 
     # Load collection (default or specified) and parse leftovers
@@ -115,9 +116,9 @@ def parse(argv, collection=None):
 
     # Print discovered tasks if necessary
     if args.list.value:
-        print "Available tasks:\n"
-        print "\n".join(map(lambda x: "    " + x, collection.tasks.keys()))
-        print ""
+        six.print_("Available tasks:\n")
+        six.print_("\n".join(map(lambda x: "    " + x, collection.tasks.keys())))
+        six.print_("")
         sys.exit(0)
     return args, collection, tasks
 
@@ -130,9 +131,9 @@ def main():
     # Take action based on 'core' options and the 'tasks' found
     for context in tasks:
         kwargs = {}
-        for name, arg in context.args.iteritems():
+        for name, arg in six.iteritems(context.args):
             kwargs[name] = arg.value
         try:
             collection[context.name].body(**kwargs)
-        except Failure, f:
+        except Failure as f:
             sys.exit(f.result.exited)

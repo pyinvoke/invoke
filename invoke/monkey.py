@@ -48,7 +48,7 @@ class Popen(OriginalPopen):
             while read_set or write_set:
                 try:
                     rlist, wlist, xlist = select.select(read_set, write_set, [])
-                except select.error, e:
+                except select.error as e:
                     if e.args[0] == errno.EINTR:
                         continue
                     raise

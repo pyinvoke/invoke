@@ -1,3 +1,4 @@
+from .vendor import six
 from .vendor.lexicon import Lexicon
 
 from .parser import Context, Argument
@@ -62,7 +63,7 @@ class Collection(object):
         """
         # TODO: this is now a stub, do away w/ it
         result = []
-        for name, task in self.tasks.iteritems():
+        for name, task in six.iteritems(self.tasks):
             result.append(Context(
                 name=name, aliases=task.aliases, args=task.get_arguments()
             ))
