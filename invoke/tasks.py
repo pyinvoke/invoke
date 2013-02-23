@@ -55,7 +55,7 @@ class Task(object):
         # value will be automatically considered positional.
         if positional is None:
             positional = []
-            for name, default in spec_dict.iteritems():
+            for name, default in six.iteritems(spec_dict):
                 if default is NO_DEFAULT:
                     positional.append(name)
         return positional
