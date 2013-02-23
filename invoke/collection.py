@@ -1,6 +1,7 @@
 from operator import add
 import types
 
+from .vendor import six
 from .vendor.lexicon import Lexicon
 
 from .parser import Context, Argument
@@ -198,7 +199,7 @@ class Collection(object):
         Returns all contained tasks and subtasks as a list of parser contexts.
         """
         result = []
-        for primary, aliases in self.task_names.iteritems():
+        for primary, aliases in six.iteritems(self.task_names):
             task = self[primary]
             result.append(Context(
                 name=primary, aliases=aliases, args=task.get_arguments()

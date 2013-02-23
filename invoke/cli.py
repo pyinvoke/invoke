@@ -156,7 +156,7 @@ def main():
     # Take action based on 'core' options and the 'tasks' found
     for context in tasks:
         kwargs = {}
-        for name, arg in context.args.iteritems():
+        for name, arg in six.iteritems(context.args):
             kwargs[name] = arg.value
         try:
             # TODO: allow swapping out of Executor subclasses based on core
