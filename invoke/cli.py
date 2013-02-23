@@ -135,5 +135,5 @@ def main():
             kwargs[name] = arg.value
         try:
             collection[context.name].body(**kwargs)
-        except Failure, f:
+        except Failure as f:
             sys.exit(f.result.exited)
