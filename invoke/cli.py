@@ -19,7 +19,7 @@ def parse_gracefully(parser, argv):
     """
     try:
         return parser.parse_argv(argv)
-    except ParseError, e:
+    except ParseError as e:
         print str(e)
         sys.exit(1)
 
