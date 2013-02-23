@@ -148,7 +148,7 @@ class Context(object):
         * When an Argument has multiple long or short flags, it will sort using
           the most favorable (lowest alphabetically) candidate.
 
-        This will result in a help list like so:
+        This will result in a help list like so::
 
             --alpha, --zeta # 'alpha' wins
             --beta

@@ -39,6 +39,16 @@ the ``==dev`` "version" explicitly::
     $ pip install invoke==dev
 
 
+How do I use it?
+================
+
+.. toctree::
+    :maxdepth: 3
+    :glob:
+
+    concepts
+    api
+
 It's broken, or doesn't do what I want! How can I submit bugs?
 ==============================================================
 
@@ -86,12 +96,8 @@ following ways:
 * Blog: TK
 
 
-
-Documentation
-=============
-
 .. toctree::
+    :hidden:
     :glob:
-    :maxdepth: 3
 
     *

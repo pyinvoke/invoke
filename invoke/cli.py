@@ -10,7 +10,7 @@ from ._version import __version__
 
 def parse_gracefully(parser, argv):
     """
-    Run ``parser.parse_argv(argv)`` & gracefully handle ``ParseError``s.
+    Run ``parser.parse_argv(argv)`` & gracefully handle ``ParseError``.
 
     'Gracefully' meaning to print a useful human-facing error message instead
     of a traceback; the program will still exit if an error is raised.

@@ -13,7 +13,7 @@ class Result(object):
     """
     A container for information about the result of a command execution.
 
-    `Result`s have the following attributes:
+    `Result` instances have the following attributes:
 
     * ``stdout``: The subprocess' standard output, as a multiline string.
     * ``stderr``: Same as ``stdout`` but containing standard error (unless
@@ -98,7 +98,7 @@ def run(command, warn=False, hide=None, pty=False):
     behave differently) in this situation compared to using an actual terminal
     or pty. To use a pty, specify ``pty=True``.
 
-    .. warn::
+    .. warning::
         Due to their nature, ptys have a single output stream, so the ability
         to tell stdout apart from stderr is **not possible** when ``pty=True``.
         As such, all output will appear on your local stdout and be captured

@@ -28,3 +28,6 @@ latex_documents = [
   ('index', 'Invoke.tex', u'Invoke Documentation',
    u'Jeff Forcier', 'manual'),
 ]
+
+# Autodoc settings
+autodoc_default_flags = ['members']
