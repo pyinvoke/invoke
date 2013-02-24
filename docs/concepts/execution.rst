@@ -71,6 +71,8 @@ And ensuring that any given task only runs once per session!
 
     class RunsOnceExecutor(PreHonoringExecutor):
         def execute(self, task):
+            # TODO: change to "obtain expanded run list from pre data" + then
+            # dedupe + filter out already-ran tasks, method, then just iter
             if not self.collection.times_run(task.name):
                 # Use super() to handle pre-run execution
                 super(self, RunsOnceExecutor).execute(task)
@@ -95,6 +97,8 @@ Pretty advanced: one task, parameterized
             # Would be nice to generalize this?
             if parameter:
                 # TODO: handle non-None parameter w/ None values (error)
+                # NOTE: this is where parallelization would occur; probably
+                # need to move into sub-method
                 for value in values:
                     my_kwargs = dict(kwargs)
                     my_kwargs[parameter] = value
