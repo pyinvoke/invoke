@@ -30,7 +30,8 @@ Task execution
           execution proceeds, aka the below serial-vs-parallel stuff. Should be
           overrideable / a class or function that is injected.
             * Also needs to preserve link back to the EC which is the
-              statekeeper for runs-once shit
+              statekeeper for runs-once-globally stuff.
+            * Any parallelization would take place "inside" this class.
         * How to square pre/post with these different run types?
             * May want to differ depending on algorithm, e.g. whether the
               pre/post's run "with" the task (so if task is run N times, so are
@@ -41,7 +42,21 @@ Task execution
             * Default behavior for pre/post should be what? What's least
               surprising? MOST of the time any N!=1 runs would likely not be
               making use of pre/post, but must handle it anyways.
-                * 
+                * Basically it comes down to "run pre/post once" vs "run
+                  pre/post with task". Which is worse to accidentally do to the
+                  other?
+                    * If user expected pre/post to run once and task to run N
+                      times, and pre/post run N times instead, stuff might get
+                      cleaned/compiled/uploaded/etc too many times.
+                    * If user expected pre/post to run N times and task to run
+                      N times, and pre/post run once instead, task might see
+                      state bleed or only one "result" instead of N, etc.
+                    * Feels like the "default to run pre/post's once regardless
+                      of how many times task runs" is somewhat less likely to
+                      have bad results.
+                    * However, "run pre/posts 'with' the task N times" feels
+                      like it might be the more intuitive/unsurprising
+                      behavior? Poll folks.
     * Serial mode (default):
         * For each task
             * It's examined for a 'pre' list of tasks. For each of those:
@@ -64,3 +79,15 @@ Task execution
                   "parameterize over arg 'foo' with values a,b,c" => that only
                   works with the task that has arg 'foo')
 * Done.
+
+More pre/post run crap:
+
+* What does "runs once" really mean? Does it just mean that a given task's call
+  chain, when expanded, shouldn't run any task >1 time? Or does this extend
+  across the entire run of N tasks?
+    * E.g. that 1st case is: 'invoke foo', foo has prereq on bar and biz, bar
+      also has prereq on biz. "runs once" means biz only gets run one time, and
+      this is easy to do because once we expand everything out we can dedupe.
+    * 2nd case is 'invoke foo bar', foo has prereq on (why not) bar. How many
+      times does bar run? What if foo and bar both had prereqs on biz (but foo
+      no longer depends on bar) -- should biz run 2x here or 1x?
