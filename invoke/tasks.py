@@ -16,7 +16,7 @@ NO_DEFAULT = object()
 
 class Task(object):
     """
-    Core object representing an executable task.
+    Core object representing an executable task & its argument specification.
     """
     # TODO: store these kwarg defaults central, refer to those values both here
     # and in @task.
