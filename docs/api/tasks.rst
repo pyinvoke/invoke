@@ -1,0 +1,5 @@
+=====
+Tasks
+=====
+
+.. automodule:: invoke.tasks

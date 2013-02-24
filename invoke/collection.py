@@ -4,7 +4,17 @@ from .parser import Context, Argument
 
 
 class Collection(object):
+    """
+    A collection of executable tasks.
+    """
     def __init__(self, *tasks):
+        """
+        Create new collection.
+
+        May optionally give one or more ``*tasks`` which are passed into a
+        series of `~invoke.collection.Collection.add_task` calls as the first
+        argument.
+        """
         self.tasks = Lexicon()
         self.default = None
         for task in tasks:

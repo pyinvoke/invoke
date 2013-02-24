@@ -1,0 +1,8 @@
+===
+API
+===
+
+.. toctree::
+    :glob:
+
+    api/*

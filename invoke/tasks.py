@@ -1,3 +1,6 @@
+"""
+Task definition & manipulation
+"""
 import inspect
 from itertools import izip_longest
 import types
@@ -12,6 +15,9 @@ NO_DEFAULT = object()
 
 
 class Task(object):
+    """
+    Core object representing an executable task.
+    """
     # TODO: store these kwarg defaults central, refer to those values both here
     # and in @task.
     # TODO: allow central per-session / per-taskmodule control over some of

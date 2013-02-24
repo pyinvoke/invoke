@@ -1,4 +1,7 @@
 class Argument(object):
+    """
+    A command-line argument/flag.
+    """
     def __init__(self, name=None, names=(), kind=str, default=None, help=None,
         positional=False):
         if name and names:
