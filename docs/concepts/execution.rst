@@ -72,7 +72,7 @@ And ensuring that any given task only runs once per session!
     class RunsOnceExecutor(PreHonoringExecutor):
         def execute(self, task):
             # TODO: change to "obtain expanded run list from pre data" + then
-            # dedupe + filter out already-ran tasks, method, then just iter
+            # dedupe + filter out already-ran tasks, method, then just iter.
             if not self.collection.times_run(task.name):
                 # Use super() to handle pre-run execution
                 super(self, RunsOnceExecutor).execute(task)

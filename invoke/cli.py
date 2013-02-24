@@ -3,6 +3,7 @@ import textwrap
 
 from .loader import Loader
 from .parser import Parser, Context, Argument
+from .executor import Executor
 from .exceptions import Failure, CollectionNotFound, ParseError
 from .util import debug, pty_size
 from ._version import __version__
@@ -133,6 +134,8 @@ def main():
         for name, arg in context.args.iteritems():
             kwargs[name] = arg.value
         try:
-            collection[context.name].body(**kwargs)
+            # TODO: allow swapping out of Executor subclasses based on core
+            # config options
+            Executor(collection).execute(name=context.name, kwargs=kwargs)
         except Failure, f:
             sys.exit(f.result.exited)
