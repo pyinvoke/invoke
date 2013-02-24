@@ -14,6 +14,34 @@ Task execution
 * An ExecutionContext object is created and given the Collection and the parse
   result. The rest of this is a method call or calls on the EC object.
 * The requested tasks are invoked with the parsed options:
+    * Specifically, this method call needs to mate each task with some
+      "N-times" structure determining how many times to run the task & allowing
+      parameterization if desired (basically it's just dispatching to the
+      "real" runner as per below)
+        * Default is simply to run one time w/ no parameterization, simply
+          whatever the CLI provided.
+        * Users wanting to parameterize would need to supply a parameterization
+          structure describing the parameters themselves & the values, either
+          the way py.test's @parametrize does it (args only) or via dicts for
+          kwargs.
+            * How to square this with CLI values? Given no clean way of
+              declaring this on the CLI, maybe leave it lib-only for now?
+        * There also needs to be a 'method' of invocation determining how the
+          execution proceeds, aka the below serial-vs-parallel stuff. Should be
+          overrideable / a class or function that is injected.
+            * Also needs to preserve link back to the EC which is the
+              statekeeper for runs-once shit
+        * How to square pre/post with these different run types?
+            * May want to differ depending on algorithm, e.g. whether the
+              pre/post's run "with" the task (so if task is run N times, so are
+              the pre/posts) or independently (pre/posts run once, task runs N
+              times)
+            * So probably a parent class with the default behavior we want,
+              subclassed for serial/parallel, open to user extension.
+            * Default behavior for pre/post should be what? What's least
+              surprising? MOST of the time any N!=1 runs would likely not be
+              making use of pre/post, but must handle it anyways.
+                * 
     * Serial mode (default):
         * For each task
             * It's examined for a 'pre' list of tasks. For each of those:
@@ -27,23 +55,12 @@ Task execution
             * Post tasks are run in the same way as pre tasks were.
             * Return value is stored back into the EC?
     * Parallel mode:
-        * What is the parallelism dimension? Callers need some way of
-          specifying what is different for each individual run. Presume some
-          sort of partial application -- with f(x), execute f for x over [1, 2,
-          3]?
-            * Can't think of useful CLI API for this, probably limited to use
-              of the API within your own 'meta' tasks?
-                * Thinking: @parallel(argname=[list, of, values])
-                * Except, like Fab, this doesn't necessarily imply
-                  parallelization, only multiplication/whatever.
-                * py.test does this doesn't it...see how they treat this
-            * Sans Fab SSH type stuff, can we even offer any benefit over
-              literally using functools.partial?
-            * I guess the before/after chain junk -- but what if they don't
-              want that?
         * How to handle multiple tasks here?
             * Parallel on task 1, then parallel on task 2 (Fabric 1.x style)?
-            * Parallel across all tasks?
+            * Parallel across all tasks (aka task 1 + task 2 for param 1, then
+              task 2 + task 2 for param 2, etc)
                 * How does that reconcile w/ the parallel dimension
-                  specification? Assu
+                  specification, given that's usually per-task (aka
+                  "parameterize over arg 'foo' with values a,b,c" => that only
+                  works with the task that has arg 'foo')
 * Done.
