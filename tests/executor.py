@@ -23,3 +23,10 @@ class Executor_(Spec):
         k = {'foo': 'bar'}
         self.executor.execute(name='func', kwargs=k)
         self.task.body.assert_called_once_with(**k)
+
+    def pre_tasks(self):
+        task2 = Task(Mock(), pre=['func'])
+        # TODO: maybe not use mutation here...
+        self.coll.add_task(task2, 'task2')
+        self.executor.execute(name='task2')
+        assert self.task.body.called

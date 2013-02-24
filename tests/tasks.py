@@ -1,6 +1,6 @@
 from spec import Spec, skip, eq_, raises
 
-from invoke.tasks import task
+from invoke.tasks import task, Task
 from invoke.loader import Loader
 
 from _utils import support
@@ -43,6 +43,11 @@ class task_(Spec):
 
 
 class Task_(Spec):
+    def pre_tasks_stored_as_simple_list_of_strings(self):
+        def func():
+            pass
+        eq_(Task(func, pre=['whatever']).pre, ['whatever'])
+
     class get_arguments:
         def setup(self):
             @task(positional=['arg3', 'arg1'])

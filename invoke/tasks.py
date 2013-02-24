@@ -24,13 +24,14 @@ class Task(object):
     # them, e.g. (auto_)positional, auto_shortflags.
     # NOTE: we shadow __builtins__.help here. It's purposeful. :(
     def __init__(self, body, aliases=(), positional=None, default=False, 
-        auto_shortflags=True, help=None):
+        auto_shortflags=True, help=None, pre=None):
         self.body = body
         self.aliases = aliases
         self.positional = self.fill_implicit_positionals(positional)
         self.is_default = default
         self.auto_shortflags = auto_shortflags
         self.help = help or {}
+        self.pre = pre or []
 
     def argspec(self, body):
         """
