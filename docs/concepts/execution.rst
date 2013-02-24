@@ -102,13 +102,34 @@ Pretty advanced: one task, parameterized
                 for value in values:
                     my_kwargs = dict(kwargs)
                     my_kwargs[parameter] = value
-                    super(self, Executor).execute(task, kwargs=my_kwargs)
+                    super(self, ParameterizedExecutor).execute(task, kwargs=my_kwargs)
             else:
-                super(self, Executor).execute(task, args, kwargs)
+                super(self, ParameterizedExecutor).execute(task, args, kwargs)
 
 
 Getting hairy: one task, with one pre-task, parameterized
 =========================================================
+
+::
+    @task
+    def setup():
+        print("Yay")
+
+    @task(pre=['setup'])
+    def build():
+        print("Woo")
+
+    class OhGodExecutor(Executor):
+        def execute(self, task, args, kwargs, parameter, values):
+            # assume always parameterized meh
+            # Run pretasks once only, instead of once per parameter value
+            for pre in task.pre:
+                self.execute(self.collection[pre])
+            for value in values:
+                my_kwargs = dict(kwargs)
+                my_kwargs[parameter] = value
+                super(self, OhGodExecutor).execute(task, kwargs=my_kwargs)
+
 
 Still hairy: one task, with a pre-task that itself has a pre-task
 =================================================================
