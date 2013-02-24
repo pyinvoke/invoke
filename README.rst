@@ -15,7 +15,7 @@ Invoke is a Python (2.6+ and 3.3+) task execution tool & library, drawing inspir
             patterns += 'docs/_build'
         if bytecode:
             patterns += '**/*.pyc'
-        if extras:
+        if extra:
             patterns += extra
         for pattern in patterns:
             run("rm -rf %s" % pattern)
