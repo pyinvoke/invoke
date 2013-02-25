@@ -122,6 +122,16 @@ def parse(argv, collection=None):
     return args, collection, tasks
 
 
+def execute(collection, task_name, kwargs=None):
+    kwargs = kwargs or {}
+    task = collection[task_name]
+    # We are using __collection internally to pass around the collection
+    # To avoid conflicting with real world kwargs
+    kwargs['__collection'] = collection
+    # Fire away!
+    task(**kwargs)
+
+
 def main():
     # Parse command line
     argv = sys.argv[1:]
@@ -133,6 +143,9 @@ def main():
         for name, arg in context.args.iteritems():
             kwargs[name] = arg.value
         try:
-            collection[context.name].body(**kwargs)
+            execute(collection, context.name, kwargs)
+        except ParseError, e:
+            sys.stderr.write(e.message + '\n')
+            sys.exit(1)
         except Failure, f:
             sys.exit(f.result.exited)

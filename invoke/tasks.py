@@ -3,11 +3,13 @@ Task definition & manipulation
 """
 import inspect
 from itertools import izip_longest
+from functools import partial
 import types
 
 from .vendor.lexicon import Lexicon
 
 from .parser import Argument
+from .exceptions import ParseError
 
 
 # Non-None sentinel
@@ -23,14 +25,46 @@ class Task(object):
     # TODO: allow central per-session / per-taskmodule control over some of
     # them, e.g. (auto_)positional, auto_shortflags.
     # NOTE: we shadow __builtins__.help here. It's purposeful. :(
-    def __init__(self, body, aliases=(), positional=None, default=False, 
-        auto_shortflags=True, help=None):
+    def __init__(self, body, prerun=(), postrun=(), aliases=(),
+        positional=None, default=False, auto_shortflags=True, help=None):
         self.body = body
+        self.prerun = prerun
+        self.postrun = postrun
         self.aliases = aliases
         self.positional = self.fill_implicit_positionals(positional)
         self.is_default = default
         self.auto_shortflags = auto_shortflags
         self.help = help or {}
+
+    def __call__(self, **kwargs):
+        """
+        Execute the task.
+
+        (internal) If a __collection is passed through, we are able to also execute
+        the pre and post tasks. The collection is needed to look them up. Without it,
+        there is no way to determine actual callable that a string relates to.
+        """
+        # Internally, we're using __collection to not conflict with the world
+        # We want to pop it off the stack because passing it through the currently
+        # Executing stack would cause an error
+        collection = kwargs.pop('__collection', None)
+        if collection is not None:
+            # We can't even begin to look up pre and post run tasks
+            # without a collection. Raise?
+            try:
+                # Add back the __collection for the sub-tasks so they know what's up
+                prerun = [partial(collection[pre], __collection=collection) for pre in self.prerun]
+                postrun = [partial(collection[post], __collection=collection) for post in self.postrun]
+            except KeyError, e:
+                raise ParseError("No task %s, needed by '%s'!" % (e, self.body.func_name))
+        else:
+            prerun = []
+            postrun = []
+
+        # Run ALL THE TASKS and let their exceptions bubble up
+        tasks = prerun + [self.body] + postrun
+        for task in tasks:
+            task(**kwargs)
 
     def argspec(self, body):
         """
@@ -114,6 +148,28 @@ class Task(object):
                     break
         return args
 
+    def get_prerun(self):
+        """
+        Return the list of pre run tasks.
+
+        Right now, tasks are not self-aware of the collection they are in
+        so there is no validation if the tasks exists or not. Ideally, we'd
+        validate the strings and return the actual Task objects instead of
+        looking them up later.
+        """
+        return self.prerun
+
+    def get_postrun(self):
+        """
+        Return the list of post run tasks.
+
+        Right now, tasks are not self-aware of the collection they are in
+        so there is no validation if the tasks exists or not. Ideally, we'd
+        validate the strings and return the actual Task objects instead of
+        looking them up later.
+        """
+        return self.postrun
+
 
 def task(*args, **kwargs):
     """
@@ -123,6 +179,9 @@ def task(*args, **kwargs):
     specified. Otherwise, the following options are allowed in the parenthese'd
     form:
 
+    * ``pre``: Specify a list of tasks that should be executed before this task
+      as plain arguments or a kwarg. Tasks should be referenced as a string.
+    * ``post``: Specify a list of tasks that should be executed after this task.
     * ``aliases``: Specify one or more aliases for this task, allowing it to be
       invoked as multiple different names. For example, a task named ``mytask``
       with a simple ``@task`` wrapper may only be invoked as ``"mytask"``.
@@ -142,8 +201,11 @@ def task(*args, **kwargs):
       displayed in ``--help`` output.
     """
     # @task -- no options
-    if len(args) == 1:
+    if len(args) == 1 and callable(args[0]):
         return Task(args[0])
+    if args and 'pre' in kwargs:
+        raise TypeError("@task expects either args or a pre kwarg, not both")
+    prerun = kwargs.pop('pre', args)
     # @task(options)
     # TODO: pull in centrally defined defaults here (see Task)
     aliases = kwargs.pop('aliases', ())
@@ -151,14 +213,28 @@ def task(*args, **kwargs):
     default = kwargs.pop('default', False)
     auto_shortflags = kwargs.pop('auto_shortflags', True)
     help = kwargs.pop('help', {})
-    # Handle unknown args/kwargs
-    if args or kwargs:
-        arg = (" unknown args %r" % (args,)) if args else ""
+    postrun = kwargs.pop('post', ())
+    # Handle unknown kwargs
+    if kwargs:
         kwarg = (" unknown kwargs %r" % (kwargs,)) if kwargs else ""
-        raise TypeError("@task was called with" + arg + kwarg)
+        raise TypeError("@task was called with" + kwarg)
+
+    # Make sure we have some valid input
+    # Yuck, type checking. Better way to handle this safety net?
+    if not isinstance(prerun, (list, tuple)):
+        raise TypeError("@task pre run tasks must be a list of tasks")
+    if not isinstance(postrun, (list, tuple)):
+        raise TypeError("@task post run tasks must be a list of tasks")
+    if any([not isinstance(x, basestring) for x in prerun]):
+        raise TypeError("@task pre run tasks must be strings")
+    if any([not isinstance(x, basestring) for x in postrun]):
+        raise TypeError("@task post run tasks must be strings")
+
     def inner(obj):
         obj = Task(
             obj,
+            prerun=prerun,
+            postrun=postrun,
             aliases=aliases,
             positional=positional,
             default=default,
