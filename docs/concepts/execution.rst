@@ -12,75 +12,137 @@ regardless of whether the tasks were invoked via the command line, or via
 library calls.
 
 
-Base case: one task, nothing but
-================================
+Base case
+=========
 
-::
+In the simplest case, a task with no pre- or post-tasks runs one time. Example::
+
     @task
-    def func():
+    def hello():
         print("Hello, world!")
 
-    class Executor(object):
-        def __init__(self, collection):
-            self.collection = collection
+Execution::
 
-        def execute(self, task, args, kwargs, parameterizations):
-            task()
-
-    coll = Collection(func)
-    coll.execute('func', Executor)
-    # basically is: Executor(<self-the-coll>).execute(self[name], ...)
+    $ invoke hello
+    Hello, world!
 
 
-A bit extra: one task with one pre-task
-=======================================
+Pre-tasks
+=========
 
-::
-    @task
-    def setup():
-        print("Setting up!")
+Tasks may specify that other tasks should always run before they themselves
+run, by giving non-keyword arguments to ``@task`` (or explicitly via the
+``pre`` keyword argument). Example::
 
-    @task(pre=['setup'])
-    def func():
-        print("Hello, world!")
-
-    class PreHonoringExecutor(Executor):
-        def execute(self, task):
-            for pre in task.pre:
-                self.execute(self.collection[pre])
-            task()
-        
-
-Getting more realistic: two tasks, both prerequiring another
-============================================================
-
-And ensuring that any given task only runs once per session!
-
-::
     @task
     def clean():
         print("Cleaning")
 
-    @task(pre=['clean'])
-    def setup():
-        print("Setting up!")
+    @task('clean')
+    def build():
+        print("Building")
 
-    @task(pre=['setup', 'clean'])
-    def func():
-        print("Hello, world!")
+Execution::
 
-    class RunsOnceExecutor(PreHonoringExecutor):
-        def execute(self, task):
-            # TODO: change to "obtain expanded run list from pre data" + then
-            # dedupe + filter out already-ran tasks, method, then just iter.
-            if not self.collection.times_run(task.name):
-                # Use super() to handle pre-run execution
-                super(self, RunsOnceExecutor).execute(task)
-                self.collection.note_run(task.name)
+    $ invoke build
+    Cleaning
+    Building
+        
+
+Task deduplication
+==================
+
+By default, any task that would get run multiple times during a session (e.g.
+if it were required by multiple tasks) will only run the first time it is
+encountered. Example::
+
+    @task
+    def clean():
+        print("Cleaning")
+
+    @task('clean')
+    def build():
+        print("Building")
+
+    @task(pre=['build'])
+    def package():
+        print("Packaging")
+
+Execution::
+
+    $ invoke build package
+    Cleaning
+    Building
+    Packaging
 
 
-Pretty advanced: one task, parameterized
-========================================
+Foregoing deduplication of tasks
+================================
+
+If you prefer your tasks to run every time, regardless of how often they appear
+in ``pre`` or ``post`` options, you can give the ``--no-dedupe`` core option.
+For example, this might be useful if you're running two tasks (or two
+invocations of the sane task) and want them to behave effectively independent,
+instead of building on work done by earlier tasks::
+
+    @task
+    def clean():
+        print("Cleaning")
+
+    @task('clean')
+    def test(module):
+        print("Testing %s" % module)
+
+Execution::
+
+    $ invoke test --module=foo test --module=bar
+    Cleaning
+    Testing foo
+    Cleaning
+    Testing bar
+
+
+Parameterizing tasks
+====================
+
+The previous example had a bit of duplication in how it was invoked; an
+intermediate use case is to bundle up that sort of parameterization into a
+"meta" task that itself invokes other tasks in a parameterized fashion.
+
+TK: API for this? at CLI level would have to be unorthodox invocation, e.g.::
+
+    @task
+    def foo(bar):
+        print(bar)
+
+    $ invoke --parameterize foo --param bar --values 1 2 3 4
+    1
+    2
+    3
+    4
+
+Note how there's no "real" invocation of ``foo`` in the normal sense. How to
+handle partial application (e.g. runtime selection of other non-parameterized
+arguments)? E.g.::
+
+    @task
+    def foo(bar, biz):
+        print("%s %s" % (bar, biz))
+
+    $ invoke --parameterize foo --param bar --values 1 2 3 4 --biz "And a"
+    And a 1
+    And a 2
+    And a 3
+    And a 4
+
+That's pretty clunky and foregoes any multi-task invocation. But how could we
+handle multiple tasks here? If we gave each individual task flags for this,
+like so::
+
+    $ invoke foo --biz "And a" --param foo --values 1 2 3 4
+
+we could do multiple tasks, but then we're stomping on tasks' argument
+namespaces (we've taken over ``param`` and ``values``). Really hate that.
 
 ::
     @task
