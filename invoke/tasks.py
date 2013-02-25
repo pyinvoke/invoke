@@ -121,8 +121,8 @@ def task(*args, **kwargs):
     Marks wrapped callable object as a valid Invoke task.
 
     May be called without any parentheses if no extra options need to be
-    specified. Otherwise, the following options are allowed in the parenthese'd
-    form:
+    specified. Otherwise, the following keyword arguments are allowed in the
+    parenthese'd form:
 
     * ``aliases``: Specify one or more aliases for this task, allowing it to be
       invoked as multiple different names. For example, a task named ``mytask``
@@ -143,10 +143,17 @@ def task(*args, **kwargs):
       displayed in ``--help`` output.
     * ``pre``: List of task names, for tasks that should get run prior to the
       wrapped task whenever it is executed via the command line.
+
+    If any non-keyword arguments are given, they are taken as the value of the
+    ``pre`` kwarg for convenience's sake. (It is an error to give both
+    ``*args`` and ``pre`` at the same time.)
     """
     # @task -- no options
-    if len(args) == 1:
+    if len(args) == 1 and callable(args[0]):
         return Task(args[0])
+    # @task(pre, tasks, here)
+    if args:
+        kwargs['pre'] = args
     # @task(options)
     # TODO: pull in centrally defined defaults here (see Task)
     aliases = kwargs.pop('aliases', ())
@@ -155,11 +162,10 @@ def task(*args, **kwargs):
     auto_shortflags = kwargs.pop('auto_shortflags', True)
     help = kwargs.pop('help', {})
     pre = kwargs.pop('pre', [])
-    # Handle unknown args/kwargs
-    if args or kwargs:
-        arg = (" unknown args %r" % (args,)) if args else ""
+    # Handle unknown kwargs
+    if kwargs:
         kwarg = (" unknown kwargs %r" % (kwargs,)) if kwargs else ""
-        raise TypeError("@task was called with" + arg + kwarg)
+        raise TypeError("@task was called with" + kwarg)
     def inner(obj):
         obj = Task(
             obj,

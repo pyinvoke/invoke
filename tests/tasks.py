@@ -53,7 +53,11 @@ class task_(Spec):
             pass
         eq_(func.pre, ['whatever'])
 
-
+    def allows_star_args_as_shortcut_for_pre(self):
+        @task('my', 'pre', 'tasks')
+        def func():
+            pass
+        eq_(func.pre, ('my', 'pre', 'tasks'))
 
 
 class Task_(Spec):
