@@ -144,6 +144,15 @@ like so::
 we could do multiple tasks, but then we're stomping on tasks' argument
 namespaces (we've taken over ``param`` and ``values``). Really hate that.
 
+**IDEALLY** we'd still limit parameterization to library use since it's an
+advanced-ish feature and frequently the parameterization vector is dynamic (aka
+not the sort of thing you'd give at CLI anyway)
+
+Probably best to leave that in the intermediate docs and keep it lib level;
+it's mostly there for Fabric and advanced users, not something the average
+Invoke-only user would care about. Not worth the effort to make it work on CLI
+at this point.
+
 ::
     @task
     def stuff(var):
