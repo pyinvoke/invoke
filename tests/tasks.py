@@ -6,6 +6,12 @@ from invoke.loader import Loader
 from _utils import support
 
 
+#
+# NOTE: Most Task tests use @task as it's the primary interface and is a very
+# thin wrapper around Task itself. This way we don't have to write 2x tests for
+# both Task and @task. Meh :)
+#
+
 class task_(Spec):
     "@task"
 
@@ -41,13 +47,16 @@ class task_(Spec):
     def when_positional_arg_missing_all_non_default_args_are_positional(self):
         eq_(self.vanilla['implicit_positionals'].positional, ['pos1', 'pos2'])
 
-
-class Task_(Spec):
     def pre_tasks_stored_as_simple_list_of_strings(self):
+        @task(pre=['whatever'])
         def func():
             pass
-        eq_(Task(func, pre=['whatever']).pre, ['whatever'])
+        eq_(func.pre, ['whatever'])
 
+
+
+
+class Task_(Spec):
     class get_arguments:
         def setup(self):
             @task(positional=['arg3', 'arg1'])

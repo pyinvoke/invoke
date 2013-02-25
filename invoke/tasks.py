@@ -141,6 +141,8 @@ def task(*args, **kwargs):
       flags <automatic-shortflags>` from task options; defaults to True.
     * ``help``: Dict mapping argument names to their help strings. Will be
       displayed in ``--help`` output.
+    * ``pre``: List of task names, for tasks that should get run prior to the
+      wrapped task whenever it is executed via the command line.
     """
     # @task -- no options
     if len(args) == 1:
@@ -152,6 +154,7 @@ def task(*args, **kwargs):
     default = kwargs.pop('default', False)
     auto_shortflags = kwargs.pop('auto_shortflags', True)
     help = kwargs.pop('help', {})
+    pre = kwargs.pop('pre', [])
     # Handle unknown args/kwargs
     if args or kwargs:
         arg = (" unknown args %r" % (args,)) if args else ""
@@ -165,6 +168,7 @@ def task(*args, **kwargs):
             default=default,
             auto_shortflags=auto_shortflags,
             help=help,
+            pre=pre
         )
         return obj
     return inner
