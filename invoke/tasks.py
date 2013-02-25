@@ -153,6 +153,8 @@ def task(*args, **kwargs):
         return Task(args[0])
     # @task(pre, tasks, here)
     if args:
+        if 'pre' in kwargs:
+            raise TypeError("May not give *args and 'pre' kwarg simultaneously!")
         kwargs['pre'] = args
     # @task(options)
     # TODO: pull in centrally defined defaults here (see Task)

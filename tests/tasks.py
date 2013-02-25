@@ -59,6 +59,12 @@ class task_(Spec):
             pass
         eq_(func.pre, ('my', 'pre', 'tasks'))
 
+    @raises(TypeError)
+    def no_ambiguity_between_star_args_and_pre_kwarg(self):
+        @task('lol', 'wut', pre=['no', 'wai'])
+        def func():
+            pass
+
 
 class Task_(Spec):
     class get_arguments:
