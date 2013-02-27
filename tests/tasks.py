@@ -67,6 +67,19 @@ class task_(Spec):
 
 
 class Task_(Spec):
+    class callability:
+        def setup(self):
+            @task
+            def foo():
+                return 5
+            self.task = foo
+
+        def dunder_call_wraps_body_call(self):
+            eq_(self.task(), 5)
+
+        def tracks_times_called(self):
+            skip()
+
     class get_arguments:
         def setup(self):
             @task(positional=['arg3', 'arg1'])

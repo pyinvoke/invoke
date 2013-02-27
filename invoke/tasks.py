@@ -33,6 +33,9 @@ class Task(object):
         self.help = help or {}
         self.pre = pre or []
 
+    def __call__(self, *args, **kwargs):
+        return self.body(*args, **kwargs)
+
     def argspec(self, body):
         """
         Returns two-tuple:
