@@ -1,4 +1,4 @@
-from spec import Spec
+from spec import Spec, eq_
 from mock import Mock
 
 from invoke.executor import Executor
@@ -29,4 +29,4 @@ class Executor_(Spec):
         # TODO: maybe not use mutation here...
         self.coll.add_task(task2, 'task2')
         self.executor.execute(name='task2')
-        assert self.task.body.called
+        eq_(self.coll['func'].body.call_count, 1)
