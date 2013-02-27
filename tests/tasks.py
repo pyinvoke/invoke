@@ -78,7 +78,12 @@ class Task_(Spec):
             eq_(self.task(), 5)
 
         def tracks_times_called(self):
-            skip()
+            eq_(self.task.called, False)
+            self.task()
+            eq_(self.task.called, True)
+            eq_(self.task.times_called, 1)
+            self.task()
+            eq_(self.task.times_called, 2)
 
     class get_arguments:
         def setup(self):

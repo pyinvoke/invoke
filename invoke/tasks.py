@@ -32,9 +32,16 @@ class Task(object):
         self.auto_shortflags = auto_shortflags
         self.help = help or {}
         self.pre = pre or []
+        self.times_called = 0
 
     def __call__(self, *args, **kwargs):
-        return self.body(*args, **kwargs)
+        result = self.body(*args, **kwargs)
+        self.times_called += 1
+        return result
+
+    @property
+    def called(self):
+        return self.times_called > 0
 
     def argspec(self, body):
         """
