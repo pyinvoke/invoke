@@ -52,8 +52,8 @@ Execution::
 Task deduplication
 ==================
 
-By default, any task that would get run multiple times during a session (e.g.
-if it were required by multiple tasks) will only run the first time it is
+By default, any task that would get run multiple times during a session due to
+inclusion in ``pre``/``post`` hooks, will only run the first time it is
 encountered. Example::
 
     @task
@@ -75,31 +75,32 @@ Execution::
     Building
     Packaging
 
+We invoked ``build`` and ``package``; ``package`` itself depends on ``build``;
+but we still only ran ``build`` once.
+
+Tasks mentioned on the CLI multiple times will always run that many times, so
+e.g.::
+
+    $ invoke build build
+
+would run ``build`` two times (though ``clean`` would still only run once).
+
 
 Foregoing deduplication of tasks
 ================================
 
 If you prefer your tasks to run every time, regardless of how often they appear
-in ``pre`` or ``post`` options, you can give the ``--no-dedupe`` core option.
-For example, this might be useful if you're running two tasks (or two
-invocations of the sane task) and want them to behave effectively independent,
-instead of building on work done by earlier tasks::
+in ``pre`` or ``post`` options (or on the command line), you can give the
+``--no-dedupe`` core option. While it doesn't make a ton of real-world sense,
+let's imagine we wanted to apply ``--no-dedupe`` to the above example::
 
-    @task
-    def clean():
-        print("Cleaning")
-
-    @task('clean')
-    def test(module):
-        print("Testing %s" % module)
-
-Execution::
-
-    $ invoke --no-dedupe test --module=foo test --module=bar
+    $ invoke build package
     Cleaning
-    Testing foo
-    Cleaning
-    Testing bar
+    Building
+    Building
+    Packaging
+
+The build step is now running twice.
 
 
 Parameterizing tasks
