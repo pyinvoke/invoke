@@ -26,19 +26,23 @@ class Executor(object):
         kwargs = kwargs or {}
         # Expand task list
         all_tasks = self.task_list(name)
-        # Compact (preserving order, so not using list+set)
-        compact_tasks = []
-        for task in all_tasks:
-            if task not in compact_tasks:
-                compact_tasks.append(task)
-        # Remove tasks already called
-        tasks = []
-        for task in compact_tasks:
-            if not task.called:
-                tasks.append(task)
+        # Dedupe if requested
+        if dedupe:
+            # Compact (preserving order, so not using list+set)
+            compact_tasks = []
+            for task in all_tasks:
+                if task not in compact_tasks:
+                    compact_tasks.append(task)
+            # Remove tasks already called
+            tasks = []
+            for task in compact_tasks:
+                if not task.called:
+                    tasks.append(task)
+        else:
+            tasks = all_tasks
         # Execute
         for task in tasks:
-            task.body(**kwargs)
+            task(**kwargs)
 
     def task_list(self, name):
         task = self.collection[name]
