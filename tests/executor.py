@@ -8,44 +8,35 @@ from invoke.tasks import Task
 
 class Executor_(Spec):
     def setup(self):
-        task = Task(Mock())
+        self.task1 = Task(Mock())
+        self.task2 = Task(Mock(), pre=['task1'])
+        self.task3 = Task(Mock(), pre=['task1'])
         coll = Collection()
-        coll.add_task(task, name='func')
+        coll.add_task(self.task1, name='task1')
+        coll.add_task(self.task2, name='task2')
+        coll.add_task(self.task3, name='task3')
         self.executor = Executor(coll)
-        self.task = task
         self.coll = coll
 
     def base_case(self):
-        self.executor.execute('func')
-        assert self.task.body.called
+        self.executor.execute('task1')
+        assert self.task1.body.called
 
     def kwargs(self):
         k = {'foo': 'bar'}
-        self.executor.execute(name='func', kwargs=k)
-        self.task.body.assert_called_once_with(**k)
+        self.executor.execute(name='task1', kwargs=k)
+        self.task1.body.assert_called_once_with(**k)
 
     def pre_tasks(self):
-        task2 = Task(Mock(), pre=['func'])
-        # TODO: maybe not use mutation here...
-        self.coll.add_task(task2, 'task2')
         self.executor.execute(name='task2')
-        eq_(self.coll['func'].body.call_count, 1)
-
-    def _call_chain(self):
-        # Two tasks, both requiring builtin task 'func'
-        task2 = Task(Mock(), pre=['func'])
-        task3 = Task(Mock(), pre=['func'])
-        self.coll.add_task(task2, 'task2')
-        self.coll.add_task(task3, 'task3')
+        eq_(self.task1.body.call_count, 1)
 
     def enabled_deduping(self):
-        self._call_chain()
         self.executor.execute(name='task2')
         self.executor.execute(name='task3')
-        eq_(self.coll['func'].body.call_count, 1)
+        eq_(self.task1.body.call_count, 1)
 
     def disabled_deduping(self):
-        self._call_chain()
         self.executor.execute(name='task2', dedupe=False)
         self.executor.execute(name='task3', dedupe=False)
-        eq_(self.coll['func'].body.call_count, 2)
+        eq_(self.task1.body.call_count, 2)
