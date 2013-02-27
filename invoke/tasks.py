@@ -40,6 +40,14 @@ class Task(object):
         return result
 
     @property
+    def __doc__(self):
+        return self.body.__doc__
+
+    @property
+    def __name__(self):
+        return self.body.__name__
+
+    @property
     def called(self):
         return self.times_called > 0
 

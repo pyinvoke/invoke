@@ -71,6 +71,7 @@ class Task_(Spec):
         def setup(self):
             @task
             def foo():
+                "My docstring"
                 return 5
             self.task = foo
 
@@ -84,6 +85,12 @@ class Task_(Spec):
             eq_(self.task.times_called, 1)
             self.task()
             eq_(self.task.times_called, 2)
+
+        def wraps_body_docstring(self):
+            eq_(self.task.__doc__, "My docstring")
+
+        def wraps_body_name(self):
+            eq_(self.task.__name__, "foo")
 
     class get_arguments:
         def setup(self):
