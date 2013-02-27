@@ -95,7 +95,7 @@ instead of building on work done by earlier tasks::
 
 Execution::
 
-    $ invoke test --module=foo test --module=bar
+    $ invoke --no-dedupe test --module=foo test --module=bar
     Cleaning
     Testing foo
     Cleaning
@@ -141,7 +141,7 @@ like so::
 
     $ invoke foo --biz "And a" --param foo --values 1 2 3 4
 
-we could do multiple tasks, but then we're stomping on tasks' argument
+We could do multiple tasks, but then we're stomping on tasks' argument
 namespaces (we've taken over ``param`` and ``values``). Really hate that.
 
 **IDEALLY** we'd still limit parameterization to library use since it's an
