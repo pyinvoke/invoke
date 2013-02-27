@@ -55,6 +55,12 @@ def parse(argv, collection=None):
             default=False,
             help="List available tasks."
         ),
+        Argument(
+            names=('no-dedupe',),
+            kind=bool,
+            default=False,
+            help="Disable task deduplication"
+        )
     ))
     # 'core' will result an .unparsed attribute with what was left over.
     debug("Parsing initial context (core args)")
@@ -136,6 +142,7 @@ def main():
         try:
             # TODO: allow swapping out of Executor subclasses based on core
             # config options
-            Executor(collection).execute(name=context.name, kwargs=kwargs)
+            # TODO: friggin dashes vs underscores
+            Executor(collection).execute(name=context.name, kwargs=kwargs, dedupe=not args['no-dedupe'])
         except Failure, f:
             sys.exit(f.result.exited)

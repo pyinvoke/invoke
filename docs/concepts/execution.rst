@@ -94,7 +94,7 @@ in ``pre`` or ``post`` options (or on the command line), you can give the
 ``--no-dedupe`` core option. While it doesn't make a ton of real-world sense,
 let's imagine we wanted to apply ``--no-dedupe`` to the above example::
 
-    $ invoke build package
+    $ invoke --no-dedupe build package
     Cleaning
     Building
     Building

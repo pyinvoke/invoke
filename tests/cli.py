@@ -61,6 +61,7 @@ class CLI(Spec):
 Usage: inv[oke] [--core-opts] task1 [--task1-opts] ... taskN [--taskN-opts]
 
 Core options:
+  --no-dedupe                      Disable task deduplication
   -c STRING, --collection=STRING   Specify collection name to load. May be
                                    given >1 time.
   -h, --help                       Show this help message and exit.
@@ -86,10 +87,21 @@ Available tasks:
 
     print_foo
     print_name
+    bar
+    foo
 
 """.lstrip()
         for flag in ('-l', '--list'):
             eq_(run("invoke -c integration %s" % flag).stdout, expected)
+
+    @trap
+    def no_deduping(self):
+        expected = """
+foo
+foo
+bar
+""".lstrip()
+        eq_(run("invoke -c integration --no-dedupe foo bar").stdout, expected)
 
 
 TB_SENTINEL = 'Traceback (most recent call last)'
