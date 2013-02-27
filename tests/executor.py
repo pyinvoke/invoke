@@ -31,12 +31,21 @@ class Executor_(Spec):
         self.executor.execute(name='task2')
         eq_(self.coll['func'].body.call_count, 1)
 
-    def disabled_deduping(self):
+    def _call_chain(self):
         # Two tasks, both requiring builtin task 'func'
         task2 = Task(Mock(), pre=['func'])
         task3 = Task(Mock(), pre=['func'])
         self.coll.add_task(task2, 'task2')
         self.coll.add_task(task3, 'task3')
+
+    def enabled_deduping(self):
+        self._call_chain()
+        self.executor.execute(name='task2')
+        self.executor.execute(name='task3')
+        eq_(self.coll['func'].body.call_count, 1)
+
+    def disabled_deduping(self):
+        self._call_chain()
         self.executor.execute(name='task2', dedupe=False)
         self.executor.execute(name='task3', dedupe=False)
         eq_(self.coll['func'].body.call_count, 2)
