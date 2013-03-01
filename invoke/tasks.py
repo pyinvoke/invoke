@@ -26,6 +26,9 @@ class Task(object):
     def __init__(self, body, aliases=(), positional=None, default=False, 
         auto_shortflags=True, help=None, pre=None):
         self.body = body
+        # Must copy doc/name here because Sphinx is retarded about properties.
+        self.__doc__ = getattr(body, '__doc__', '')
+        self.__name__ = getattr(body, '__name__', '')
         self.aliases = aliases
         self.positional = self.fill_implicit_positionals(positional)
         self.is_default = default
@@ -38,14 +41,6 @@ class Task(object):
         result = self.body(*args, **kwargs)
         self.times_called += 1
         return result
-
-    @property
-    def __doc__(self):
-        return self.body.__doc__
-
-    @property
-    def __name__(self):
-        return self.body.__name__
 
     @property
     def called(self):
