@@ -5,6 +5,7 @@ from spec import Spec, eq_
 import invoke
 import invoke.tasks
 import invoke.runner
+import invoke.collection
 
 
 class Init(Spec):
@@ -27,8 +28,15 @@ class Init(Spec):
         ver_info_part = invoke.__version_info__[0]
         eq_(ver_part, str(ver_info_part))
 
-    def exposes_task_decorator(self):
-        assert invoke.task is invoke.tasks.task
+    class exposes_bindings:
+        def task_decorator(self):
+            assert invoke.task is invoke.tasks.task
 
-    def exposes_run_function(self):
-        assert invoke.run is invoke.runner.run
+        def task_class(self):
+            assert invoke.Task is invoke.tasks.Task
+
+        def run_function(self):
+            assert invoke.run is invoke.runner.run
+
+        def collection_class(self):
+            assert invoke.Collection is invoke.collection.Collection
