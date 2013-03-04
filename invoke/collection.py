@@ -7,13 +7,50 @@ class Collection(object):
     """
     A collection of executable tasks.
     """
-    def __init__(self, *tasks):
+    def __init__(self, *args, **kwargs):
         """
-        Create new collection.
+        Create a new task collection/namespace.
 
-        May optionally give one or more ``*tasks`` which are passed into a
-        series of `~invoke.collection.Collection.add_task` calls as the first
-        argument.
+        May call with no arguments and use e.g. `.add_task`/`.add_collection` to insert objects, e.g.::
+
+            c = Collection()
+            c.add_task(some_task)
+
+        If an initial string argument is given, it is used as the default name
+        for this collection, should it be inserted into another collection as a
+        sub-namespace::
+
+            docs = Collection('docs')
+            docs.add_task(doc_task)
+            ns = Collection()
+            ns.add_task(top_level_task)
+            ns.add_collection(docs)
+            # Valid identifiers are now 'top_level_task' and 'docs.doc_task'
+            # (assuming the task objects were actually named the same as the
+            # variables we're using :))
+
+        Otherwise, all ``*args`` are expected to be `.Task` or `.Collection`
+        instances which will be passed to `.add_task`/`.add_collection` as
+        appropriate. Module objects are also valid (as they are for
+        `.add_collection`). For example, the below snippet results in the same
+        two task identifiers as the one above::
+
+            ns = Collection(top_level_task, Collection('docs', doc_task))
+
+        If any ``**kwargs`` are given, the keywords are used as the initial
+        name arguments for the respective values::
+
+            ns = Collection(
+                top_level_task=some_other_task,
+                docs=Collection(doc_task)
+            )
+
+        That's exactly equivalent to::
+
+            docs = Collection(doc_task)
+            ns = Collection()
+            ns.add_task(some_other_task, 'top_level_task')
+            ns.add_collection(docs, 'docs')
         """
         self.tasks = Lexicon()
         self.default = None

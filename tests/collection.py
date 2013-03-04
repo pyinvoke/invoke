@@ -107,7 +107,10 @@ class Collection_(Spec):
             eq_(self.c['foo'], _mytask)
 
         def finds_subcollection_tasks_by_dotted_name(self):
-            skip()
+            sub = Collection('sub')
+            sub.add_task(_mytask)
+            self.c.add_collection(sub)
+            eq_(self.c['sub._mytask'], _mytask)
 
         def honors_aliases_in_own_tasks(self):
             self.c.add_task(_mytask, 'foo', aliases=('bar',))
