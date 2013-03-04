@@ -148,9 +148,10 @@ case is to use `.Collection.from_module` -- a classmethod
 serving as an alternate ``Collection`` constructor which takes a Python module
 object as its first argument.
 
-Modules given to this method are scanned for any ``Task`` instances, which are
-then added to the new collection automatically.  The collection's name is
-simply taken from the module name (the ``__name__`` attribute).
+Modules given to this method are scanned for any ``Task`` or ``Collection``
+instances, which are then added to the new collection automatically.  The
+collection's name is simply taken from the module name (the ``__name__``
+attribute).
 
 For example, let's reorganize our earlier single-file example into a Python
 package with several submodules. First, ``tasks/release.py``::
@@ -183,9 +184,9 @@ Tying them together is ``tasks/__init__.py``::
     ns.add_collection(Collection.from_module(release))
     ns.add_collection(Collection.from_module(docs))
 
-A little unwieldy in practice. Thankfully there's a shortcut here, which is
-that ``add_collection`` will notice when handed a module object as its first
-argument and call ``Collection.from_module`` for you internally::
+This form of the API is a little unwieldy in practice. Thankfully there's a
+shortcut: ``add_collection`` will notice when handed a module object as its
+first argument and call ``Collection.from_module`` for you internally::
 
     ns = Collection()
     ns.add_collection(release)

@@ -42,7 +42,14 @@ class Collection_(Spec):
             skip()
 
     class from_module:
-        def creates_Collection_from_module_of_tasks(self):
+        def adds_tasks(self):
+            skip()
+
+        def adds_collections(self):
+            skip()
+
+        def skips_non_root_collections(self):
+            # Aka ones not named 'namespace' or 'ns'
             skip()
 
     class add_task:

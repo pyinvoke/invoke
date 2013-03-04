@@ -32,22 +32,10 @@ class Loader_(Spec):
             # Instead of masking with a CollectionNotFound
             Loader(root=support).load_collection('oops')
 
-        def raises_InvalidCollection_if_invalid(self):
-            skip()
-
         def honors_discovery_root_option(self):
             skip()
 
         def searches_towards_root_of_filesystem(self):
-            skip()
-
-        def only_adds_valid_task_objects(self):
-            skip()
-
-        def adds_actual_tasks_not_just_task_bodies(self):
-            skip()
-
-        def adds_valid_subcollection_objects(self):
             skip()
 
         def defaults_to_tasks_collection(self):
@@ -59,19 +47,6 @@ class Loader_(Spec):
         @raises(CollectionNotFound)
         def raises_CollectionNotFound_for_missing_collections(self):
             result = Loader(root=support).find_collection('nope')
-
-    class load:
-        def returns_nested_collection_from_all_given_names(self):
-            skip()
-
-        def uses_first_collection_as_root_namespace(self):
-            skip()
-
-        def raises_CollectionNotFound_if_any_names_not_found(self):
-            skip()
-
-        def raises_InvalidCollection_if_any_found_modules_invalid(self):
-            skip()
 
     class update_path:
         def setup(self):
