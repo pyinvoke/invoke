@@ -24,6 +24,27 @@ class Collection_(Spec):
             assert 'task1' in c
             assert 'task2' in c
 
+        def can_accept_collections_as_varargs_too(self):
+            # Collection(Collection('foo'))
+            skip()
+
+        def kwargs_act_as_name_args_for_given_objects(self):
+            # Collection(somename=mytaskobj) =>
+            #     Collection().add_task(mytaskobj, name='somename')
+            skip()
+
+        def initial_string_arg_acts_as_name(self):
+            # Collection('foo') => Collection(name='foo') => is named foo
+            skip()
+
+        def initial_string_arg_meshes_with_varargs_and_kwargs(self):
+            # Collection('myname', atask, acollection, othertask=taskobj, ...)
+            skip()
+
+    class from_module:
+        def creates_Collection_from_module_of_tasks(self):
+            skip()
+
     class add_task:
         def setup(self):
             self.c = Collection()
@@ -64,6 +85,9 @@ class Collection_(Spec):
 
     class add_collection:
         def adds_collection_as_subcollection_of_self(self):
+            skip()
+
+        def can_take_module_objects(self):
             skip()
 
     class get:
