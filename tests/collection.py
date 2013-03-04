@@ -113,7 +113,7 @@ class Collection_(Spec):
             self.c.add_task(_mytask, 'foo', aliases=('bar',))
             eq_(self.c['bar'], _mytask)
 
-        def honors_subcollection_aliases(self):
+        def honors_subcollection_task_aliases(self):
             skip()
 
         def honors_own_default_task_with_no_args(self):

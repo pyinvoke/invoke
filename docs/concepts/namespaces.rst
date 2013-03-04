@@ -201,6 +201,12 @@ Either way, the result::
         docs.build
         docs.clean
 
+Default tasks
+=============
+
+TK
+
+
 Mix and match
 =============
 
