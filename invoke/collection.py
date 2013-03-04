@@ -1,6 +1,9 @@
+import types
+
 from .vendor.lexicon import Lexicon
 
 from .parser import Context, Argument
+from .tasks import Task
 
 
 class Collection(object):
@@ -52,10 +55,29 @@ class Collection(object):
             ns.add_task(some_other_task, 'top_level_task')
             ns.add_collection(docs, 'docs')
         """
+        # Initialize
         self.tasks = Lexicon()
         self.default = None
-        for task in tasks:
-            self.add_task(task)
+        self.name = None
+        # Name if applicable
+        args = list(args)
+        if args and isinstance(args[0], basestring):
+            self.name = args.pop(0)
+        # Dispatch args/kwargs
+        for arg in args:
+            self._add_object(arg)
+        # Dispatch kwargs
+        for name, obj in kwargs.iteritems():
+            self._add_object(obj, name)
+
+    def _add_object(self, obj, name=None):
+        if isinstance(obj, Task):
+            method = self.add_task
+        elif isinstance(obj, (Collection, types.ModuleType)):
+            method = self.add_collection
+        else:
+            raise TypeError("No idea how to insert %r!" % type(obj))
+        return method(obj, name=name)
 
     def add_task(self, task, name=None, aliases=(), default=False):
         """
@@ -84,6 +106,9 @@ class Collection(object):
                 msg = "'%s' cannot be the default because '%s' already is!"
                 raise ValueError(msg % (name, self.default))
             self.default = name
+
+    def add_collection(self, coll, name=None):
+        pass
 
     def __getitem__(self, name=None):
         """
