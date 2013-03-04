@@ -194,7 +194,7 @@ As with tasks, collections may be explicitly bound to their parents with a
 different name than they were originally given (if any) via a ``name`` kwarg
 (also, as with ``add_task``, the 2nd regular arg)::
 
-    ns.add_collection(docs, 'documentation')
+    ns.add_collection(docs, 'sphinx')
 
 Result::
 
@@ -202,19 +202,142 @@ Result::
     Available tasks:
 
         release
-        documentation.build
-        documentation.clean
+        sphinx.build
+        sphinx.clean
 
-* Load already-imported module object, scan for tasks like the automatic
-  behavior, add to Collection as X-named sub-Collection
-* Load module name string, uses __import__ to obtain module obj, then goes as per above
-* Already-existing add_task API for adding tasks to the Collection's own
-  namespace
-* Make sure collections have names (?)
-* Implement actual sub-collection behaviors re: lookup of tasks by name,
-  listing etc
-* Altering --list display root (can't use --root as that's discovery root; or
-  swap?)
+Importing modules as collections
+--------------------------------
+
+A simple tactic which Invoke itself uses in the trivial, single-module
+case is to use `~invoke.collection.Collection.from_module` -- a classmethod
+serving as an alternate ``Collection`` constructor which takes a Python module
+object as its first argument.
+
+Modules given to this method are scanned for any ``Task`` instances, which are
+then added to the new collection automatically.  The collection's name is
+simply taken from the module name (the ``__name__`` attribute).
+
+For example, let's reorganize our earlier single-file example into a Python
+package with several submodules. First, ``tasks/release.py``::
+
+    from invoke import task, run
+
+    @task
+    def release():
+        run("python setup.py sdist register upload")
+
+And ``tasks/docs.py``::
+
+    from invoke import task, run
+
+    @task
+    def build():
+        run("sphinx-build docs docs/_build")
+
+    @task
+    def clean():
+        run("rm -rf docs/_build")
+
+Tying them together is ``tasks/__init__.py``::
+
+    from invoke import Collection
+
+    import release, docs
+
+    ns = Collection()
+    ns.add_collection(Collection.from_module(release))
+    ns.add_collection(Collection.from_module(docs))
+
+A little unwieldy in practice. Thankfully there's a shortcut here, which is
+that ``add_collection`` will notice when handed a module object as its first
+argument and call ``Collection.from_module`` for you internally::
+
+    ns = Collection()
+    ns.add_collection(release)
+    ns.add_collection(docs)
+
+Either way, the result::
+
+    $ invoke --list
+    Available tasks:
+
+        release.release
+        docs.build
+        docs.clean
+
+Mix and match
+-------------
+
+You're not limited to the specific tactics shown above -- now that you know
+the basic tools of ``add_task`` and ``add_collection``, use whatever approach
+best fits your needs.
+
+For example, let's say you wanted to keep things organized into submodules, but
+wanted to "promote" ``release.release`` back to the top level for convenience's
+sake. Just because it's in a module doesn't mean we must use ``add_collection``
+-- simply import the task itself and use ``add_task`` directly::
+
+    from invoke import Collection
+
+    import docs
+    from release import release
+
+    ns = Collection()
+    ns.add_collection(docs)
+    ns.add_task(release)
+
+Result::
+
+    $ invoke --list
+    Available tasks:
+
+        release
+        docs.build
+        docs.clean
+
+More shortcuts
+--------------
+
+Finally, you can even skip ``add_collection`` and ``add_task`` if your needs
+are simple enough -- `~invoke.collection.Collection`'s constructor will take
+unknown arguments and build the namespace from their values as
+appropriate::
+
+    from invoke import Collection
+
+    import docs, release
+
+    ns = Collection(release.release, docs)
+
+Notice how we gave both a task object (``release.release``) and a module
+containing tasks (``docs``). The result is identical to the above::
+
+    $ invoke --list
+    Available tasks:
+
+        release
+        docs.build
+        docs.clean
+
+If given as keyword arguments, the keywords act like the ``name`` arguments do
+in the ``add_*`` methods. Naturally, both can be mixed together as well::
+
+    ns = Collection(docs, deploy=release.release)
+
+Result::
+
+    $ invoke --list
+    Available tasks:
+
+        deploy
+        docs.build
+        docs.clean
+
+.. note::
+    You can still name these ``Collection`` objects with a leading string
+    argument if desired, which can be handy when building sub-collections.
+
+
 
 Use cases:
 
