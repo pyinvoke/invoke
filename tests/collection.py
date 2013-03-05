@@ -1,7 +1,11 @@
+import sys
+
 from spec import Spec, skip, eq_, raises
 
 from invoke.collection import Collection
 from invoke.tasks import task, Task
+
+from _utils import support
 
 
 @task
@@ -63,7 +67,7 @@ class Collection_(Spec):
 
     class from_module:
         def _load(self, name):
-            sys.path.insert(0, '_support')
+            sys.path.insert(0, support)
             mod = __import__(name)
             sys.path.pop(0)
             return mod

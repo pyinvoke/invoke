@@ -31,25 +31,6 @@ class Loader(object):
             our_path.insert(0, parent)
         return our_path
 
-    def add_to_collection(self, module_tuple, collection):
-        """
-        Import & load tasks from ``module_tuple``, adding to ``collection``.
-        """
-        # Import. Errors during import will raise normally.
-        module = imp.load_module(*module_tuple)
-        tasks = filter(
-            lambda x: isinstance(x[1], Task),
-            vars(module).items()
-        )
-        for name, task in tasks:
-            collection.add_task(
-                name=name,
-                task=task,
-                aliases=task.aliases,
-                default=task.is_default
-            )
-        return collection
-
     def find_collection(self, name):
         """
         Seek towards FS root from self.root for Python module ``name``.
@@ -80,7 +61,6 @@ class Loader(object):
         if name is None:
             # TODO: make this configurable
             name = 'tasks'
-        c = Collection()
-        # add tasks to collection
-        collection = self.add_to_collection(self.find_collection(name), c)
-        return collection
+        # Import. Errors during import will raise normally.
+        module = imp.load_module(*self.find_collection(name))
+        return Collection.from_module(module)

@@ -80,6 +80,28 @@ class Collection(object):
             raise TypeError("No idea how to insert %r!" % type(obj))
         return method(obj, name=name)
 
+    @classmethod
+    def from_module(self, module):
+        """
+        Return a new `.Collection` created from ``module``.
+
+        Inspects ``module`` for any `.Task` or `.Collection` instances and adds
+        them to a new `.Collection`, returning it .
+        """
+        tasks = filter(
+            lambda x: isinstance(x[1], Task),
+            vars(module).items()
+        )
+        collection = Collection()
+        for name, task in tasks:
+            collection.add_task(
+                name=name,
+                task=task,
+                aliases=task.aliases,
+                default=task.is_default
+            )
+        return collection
+
     def add_task(self, task, name=None, aliases=(), default=False):
         """
         Adds ``Task`` ``task`` to this collection.
