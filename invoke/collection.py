@@ -121,6 +121,8 @@ class Collection(object):
                 name = task.body.func_name
             else:
                 raise ValueError("'name' may only be empty if 'task' wraps an object exposing .func_name")
+        if name in self.collections:
+            raise ValueError("Name conflict: this collection has a sub-collection named %r already" % name)
         self.tasks[name] = task
         for alias in aliases:
             self.tasks.alias(alias, to=name)
@@ -138,6 +140,9 @@ class Collection(object):
         name = name or coll.name
         if not name:
             raise ValueError("Non-root collections must have a name!")
+        # Test for conflict
+        if name in self.tasks:
+            raise ValueError("Name conflict: this collection has a task named %r already" % name)
         # Insert
         self.collections[name] = coll
 

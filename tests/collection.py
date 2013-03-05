@@ -115,7 +115,8 @@ class Collection_(Spec):
 
         @raises(ValueError)
         def raises_ValueError_if_task_added_mirrors_subcollection_name(self):
-            skip()
+            self.c.add_collection(Collection('sub'))
+            self.c.add_task(_mytask, 'sub')
 
     class add_collection:
         def setup(self):
@@ -141,7 +142,8 @@ class Collection_(Spec):
 
         @raises(ValueError)
         def raises_ValueError_if_collection_named_same_as_task(self):
-            skip()
+            self.c.add_task(_mytask, 'sub')
+            self.c.add_collection(Collection('sub'))
 
     class getitem:
         "__getitem__"
