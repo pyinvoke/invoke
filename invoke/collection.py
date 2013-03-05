@@ -165,7 +165,11 @@ class Collection(object):
         return self.tasks[name]
 
     def __contains__(self, name):
-        return name in self.tasks
+        try:
+            task = self[name]
+            return True
+        except KeyError:
+            return False
 
     def to_contexts(self):
         """

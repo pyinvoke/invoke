@@ -156,7 +156,8 @@ class Collection_(Spec):
             eq_(self.c['bar'], _mytask)
 
         def honors_subcollection_task_aliases(self):
-            skip()
+            self.c.add_collection(load('decorator'))
+            assert 'decorator.bar' in self.c
 
         def honors_own_default_task_with_no_args(self):
             self.c.add_task(_mytask, 'foo', default=True)
