@@ -25,21 +25,41 @@ class Collection_(Spec):
             assert 'task2' in c
 
         def can_accept_collections_as_varargs_too(self):
-            # Collection(Collection('foo'))
-            skip()
+            sub = Collection('sub')
+            ns = Collection(sub)
+            eq_(ns.collections['sub'], sub)
 
         def kwargs_act_as_name_args_for_given_objects(self):
-            # Collection(somename=mytaskobj) =>
-            #     Collection().add_task(mytaskobj, name='somename')
-            skip()
+            sub = Collection()
+            @task
+            def task1():
+                pass
+            ns = Collection(loltask=task1, notsub=sub)
+            eq_(ns['loltask'], task1)
+            eq_(ns.collections['notsub'], sub)
 
         def initial_string_arg_acts_as_name(self):
-            # Collection('foo') => Collection(name='foo') => is named foo
-            skip()
+            sub = Collection('sub')
+            ns = Collection(sub)
+            eq_(ns.collections['sub'], sub)
 
         def initial_string_arg_meshes_with_varargs_and_kwargs(self):
             # Collection('myname', atask, acollection, othertask=taskobj, ...)
-            skip()
+            @task
+            def task1():
+                pass
+            @task
+            def task2():
+                pass
+            sub = Collection('sub')
+            ns = Collection('root', task1, sub, sometask=task2)
+            for x, y in (
+                (ns.name, 'root'),
+                (ns['task1'], task1),
+                (ns.collections['sub'], sub),
+                (ns['sometask'], task2),
+            ):
+                eq_(x, y)
 
     class from_module:
         def adds_tasks(self):
