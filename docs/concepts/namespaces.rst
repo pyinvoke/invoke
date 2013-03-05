@@ -148,10 +148,9 @@ case is to use `.Collection.from_module` -- a classmethod
 serving as an alternate ``Collection`` constructor which takes a Python module
 object as its first argument.
 
-Modules given to this method are scanned for any ``Task`` or ``Collection``
-instances, which are then added to the new collection automatically.  The
-collection's name is simply taken from the module name (the ``__name__``
-attribute).
+Modules given to this method are scanned for ``Task`` instances, which are
+added to a new ``Collection``. This collection's name is simply taken from the
+module name (the ``__name__`` attribute).
 
 For example, let's reorganize our earlier single-file example into a Python
 package with several submodules. First, ``tasks/release.py``::
@@ -216,8 +215,9 @@ best fits your needs.
 
 For example, let's say you wanted to keep things organized into submodules, but
 wanted to "promote" ``release.release`` back to the top level for convenience's
-sake. Just because it's in a module doesn't mean we must use ``add_collection``
--- simply import the task itself and use ``add_task`` directly::
+sake. Just because it's stored in a module doesn't mean we must use
+``add_collection`` -- simply import the task itself and use ``add_task``
+directly::
 
     from invoke import Collection
 
