@@ -5,7 +5,7 @@ from spec import Spec, skip, eq_, raises
 from invoke.collection import Collection
 from invoke.tasks import task, Task
 
-from _utils import support
+from _utils import load
 
 
 @task
@@ -66,21 +66,11 @@ class Collection_(Spec):
                 eq_(x, y)
 
     class from_module:
-        def _load(self, name):
-            sys.path.insert(0, support)
-            mod = __import__(name)
-            sys.path.pop(0)
-            return mod
-
         def adds_tasks(self):
-            c = Collection.from_module(self._load('integration'))
+            c = Collection.from_module(load('integration'))
             assert 'print_foo' in c
 
-        def adds_collections(self):
-            skip()
-
-        def skips_non_root_collections(self):
-            # Aka ones not named 'namespace' or 'ns'
+        def derives_name_from_module_name(self):
             skip()
 
     class add_task:
