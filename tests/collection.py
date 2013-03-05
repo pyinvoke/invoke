@@ -97,7 +97,17 @@ class Collection_(Spec):
         def can_take_module_objects(self):
             skip()
 
-    class get:
+        @raises(ValueError)
+        def raises_ValueError_if_collection_without_name(self):
+            # Aka non-root collections must either have an explicit name given
+            # via kwarg, have a name attribute set, or be a module with
+            # __name__ defined.
+            root = Collection()
+            sub = Collection()
+            root.add_collection(sub)
+
+    class getitem:
+        "__getitem__"
         def setup(self):
             self.c = Collection()
 

@@ -57,6 +57,7 @@ class Collection(object):
         """
         # Initialize
         self.tasks = Lexicon()
+        self.collections = Lexicon()
         self.default = None
         self.name = None
         # Name if applicable
@@ -108,21 +109,37 @@ class Collection(object):
             self.default = name
 
     def add_collection(self, coll, name=None):
-        pass
+        # Handle module-as-collection
+        if isinstance(coll, types.ModuleType):
+            coll = Collection.from_module(coll)
+        # Ensure we have a name, or die trying
+        name = name or coll.name
+        if not name:
+            raise ValueError("Non-root collections must have a name!")
+        # Insert
+        self.collections[name] = coll
 
     def __getitem__(self, name=None):
         """
-        Returns task named ``name``. Honors aliases.
+        Returns task named ``name``. Honors aliases and subcollections.
 
         If this collection has a default task, it is returned when ``name`` is
         empty or ``None``. If empty input is given and no task has been
         selected as the default, ValueError will be raised.
+
+        Tasks within subcollections should be given in dotted form, e.g.
+        'foo.bar'.
         """
         if not name:
             if self.default:
                 return self[self.default]
             else:
                 raise ValueError("This collection has no default task.")
+        if '.' in name:
+            parts = name.split('.')
+            coll = parts.pop(0)
+            rest = '.'.join(parts)
+            return self.collections[coll][rest]
         return self.tasks[name]
 
     def __contains__(self, name):
