@@ -62,8 +62,15 @@ class Collection_(Spec):
                 eq_(x, y)
 
     class from_module:
+        def _load(self, name):
+            sys.path.insert(0, '_support')
+            mod = __import__(name)
+            sys.path.pop(0)
+            return mod
+
         def adds_tasks(self):
-            skip()
+            c = Collection.from_module(self._load('integration'))
+            assert 'print_foo' in c
 
         def adds_collections(self):
             skip()
