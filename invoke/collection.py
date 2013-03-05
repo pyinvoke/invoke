@@ -150,18 +150,25 @@ class Collection(object):
         selected as the default, ValueError will be raised.
 
         Tasks within subcollections should be given in dotted form, e.g.
-        'foo.bar'.
+        'foo.bar'. Subcollection default tasks will be returned on the
+        subcollection's name.
         """
+        # Default task for this collection itself
         if not name:
             if self.default:
                 return self[self.default]
             else:
                 raise ValueError("This collection has no default task.")
+        # Non-default tasks within subcollections
         if '.' in name:
             parts = name.split('.')
             coll = parts.pop(0)
             rest = '.'.join(parts)
             return self.collections[coll][rest]
+        # Default task for subcollections (via empty-name lookup)
+        if name in self.collections:
+            return self.collections[name]['']
+        # Regular task lookup
         return self.tasks[name]
 
     def __contains__(self, name):
