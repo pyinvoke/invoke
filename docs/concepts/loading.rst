@@ -46,12 +46,12 @@ Additional load options
 The ``-c`` / ``--collection`` command-line argument allows you to override the
 default collection name searched for. It should be a Python module name and not
 a file name (so ``-c mytasks``, not ``-c mytasks.py`` or ``-c mytasks/``.) This
-option is repeatable and may be used to load multiple collections.
+option is repeatable and may be used to load multiple collections at runtime.
 
 .. note::
     When multiple collections are specified, the first collection given will be
     used as the root or default namespace. The rest will be attached to it as
-    sub-collections.
+    sub-collections. See :doc:`namespaces` for details.
 
 If you need to override the default search start point so Invoke no longer
 searches from the current directory, use ``--root``. E.g. if your tasks module
@@ -59,7 +59,3 @@ is in ``/opt/code/myproject/tasks.py`` and your CWD is, say, ``/home/myuser``,
 you might run Invoke as::
 
     $ invoke --root /opt/code/myproject
-
-
-.. _namespaces:
-
