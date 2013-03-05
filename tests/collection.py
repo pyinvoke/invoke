@@ -191,6 +191,12 @@ class Collection_(Spec):
         def raises_ValueError_for_no_name_and_no_default(self):
             self.c['']
 
+        @raises(ValueError)
+        def ValueError_for_empty_subcol_task_name_and_no_default(self):
+            self.c.add_collection(Collection('whatever'))
+            self.c['whatever']
+
+
     class to_contexts:
         def setup(self):
             @task
