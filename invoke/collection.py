@@ -92,7 +92,7 @@ class Collection(object):
             lambda x: isinstance(x[1], Task),
             vars(module).items()
         )
-        collection = Collection()
+        collection = Collection(module.__name__)
         for name, task in tasks:
             collection.add_task(
                 name=name,

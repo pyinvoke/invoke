@@ -66,12 +66,14 @@ class Collection_(Spec):
                 eq_(x, y)
 
     class from_module:
+        def setup(self):
+            self.c = Collection.from_module(load('integration'))
+
         def adds_tasks(self):
-            c = Collection.from_module(load('integration'))
-            assert 'print_foo' in c
+            assert 'print_foo' in self.c
 
         def derives_name_from_module_name(self):
-            skip()
+            eq_(self.c.name, 'integration')
 
     class add_task:
         def setup(self):
