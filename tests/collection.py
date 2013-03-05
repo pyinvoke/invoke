@@ -114,11 +114,17 @@ class Collection_(Spec):
             self.c.add_task(_mytask, 'bar', default=True)
 
     class add_collection:
+        def setup(self):
+            self.c = Collection()
+
         def adds_collection_as_subcollection_of_self(self):
-            skip()
+            c2 = Collection('foo')
+            self.c.add_collection(c2)
+            assert 'foo' in self.c.collections
 
         def can_take_module_objects(self):
-            skip()
+            self.c.add_collection(load('integration'))
+            assert 'integration' in self.c.collections
 
         @raises(ValueError)
         def raises_ValueError_if_collection_without_name(self):
