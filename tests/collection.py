@@ -113,6 +113,10 @@ class Collection_(Spec):
             self.c.add_task(_mytask, 'foo', default=True)
             self.c.add_task(_mytask, 'bar', default=True)
 
+        @raises(ValueError)
+        def raises_ValueError_if_task_added_mirrors_subcollection_name(self):
+            skip()
+
     class add_collection:
         def setup(self):
             self.c = Collection()
@@ -134,6 +138,10 @@ class Collection_(Spec):
             root = Collection()
             sub = Collection()
             root.add_collection(sub)
+
+        @raises(ValueError)
+        def raises_ValueError_if_collection_named_same_as_task(self):
+            skip()
 
     class getitem:
         "__getitem__"
