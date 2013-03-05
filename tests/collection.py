@@ -164,7 +164,12 @@ class Collection_(Spec):
             eq_(self.c[''], _mytask)
 
         def honors_subcollection_default_tasks_on_subcollection_name(self):
-            skip()
+            sub = Collection.from_module(load('decorator'))
+            self.c.add_collection(sub)
+            # Sanity
+            assert self.c['decorator.biz'] is sub['biz']
+            # Real test
+            assert self.c['decorator'] is self.c['decorator.biz']
 
         def is_aliased_to_dunder_getitem(self):
             self.c.add_task(_mytask, 'foo')
