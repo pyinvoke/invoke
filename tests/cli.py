@@ -86,17 +86,22 @@ Core options:
     class task_list:
         "--list"
 
-        @trap
-        def simple_output(self):
-            expected = """
+        def _listing(self, *lines):
+            return ("""
 Available tasks:
 
-    print_foo
-    print_name
-    bar
-    foo
+%s
 
-""".lstrip()
+""" % '\n'.join("    " + x for x in lines)).lstrip()
+
+        @trap
+        def simple_output(self):
+            expected = self._listing(
+                'print_foo',
+                'print_name',
+                'bar',
+                'foo',
+            )
             for flag in ('-l', '--list'):
                 eq_(run("invoke -c integration %s" % flag).stdout, expected)
 
@@ -104,13 +109,10 @@ Available tasks:
         def namespacing(self):
             # TODO: break out the listing behavior into a testable method, down
             # with subprocesses!
-            expected = """
-Available tasks:
-
-    toplevel
-    module.mytask
-
-""".lstrip()
+            expected = self._listing(
+                'toplevel',
+                'module.mytask',
+            )
             eq_(run("invoke -c namespacing --list").stdout, expected)
 
         @trap
