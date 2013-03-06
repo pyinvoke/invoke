@@ -98,6 +98,19 @@ Available tasks:
             eq_(run("invoke -c integration %s" % flag).stdout, expected)
 
     @trap
+    def task_list_with_namespacing(self):
+        # TODO: break out the listing behavior into a testable method, down
+        # with subprocesses!
+        expected = """
+Available tasks:
+
+    toplevel
+    module.mytask
+
+""".lstrip()
+        eq_(run("invoke -c namespacing --list").stdout, expected)
+
+    @trap
     def no_deduping(self):
         expected = """
 foo
