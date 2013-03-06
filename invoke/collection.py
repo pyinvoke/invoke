@@ -85,14 +85,18 @@ class Collection(object):
         """
         Return a new `.Collection` created from ``module``.
 
-        Inspects ``module`` for any `.Task` or `.Collection` instances and adds
-        them to a new `.Collection`, returning it .
+        Inspects ``module`` for any `.Task` instances and adds them to a new
+        `.Collection`, returning it .
+
+        The returned collection will be named after the module's ``__name__``
+        attribute, or its last dotted section if it's a submodule. (I.e. it
+        should usually map to the actual ``.py`` filename.)
         """
         tasks = filter(
             lambda x: isinstance(x[1], Task),
             vars(module).items()
         )
-        collection = Collection(module.__name__)
+        collection = Collection(module.__name__.split('.')[-1])
         for name, task in tasks:
             collection.add_task(
                 name=name,

@@ -81,6 +81,7 @@ class Collection_(Spec):
             c = Collection.from_module(module)
             eq_(module.__name__, 'package.module')
             eq_(c.name, 'module')
+            assert 'mytask' in c # Sanity
 
     class add_task:
         def setup(self):
