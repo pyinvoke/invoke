@@ -1,10 +1,15 @@
 import os, sys
+from contextlib import contextmanager
 
 
 support = os.path.join(os.path.dirname(__file__), '_support')
 
-def load(name):
+@contextmanager
+def support_path():
     sys.path.insert(0, support)
-    mod = __import__(name)
+    yield
     sys.path.pop(0)
-    return mod
+
+def load(name):
+    with support_path():
+        return __import__(name)
