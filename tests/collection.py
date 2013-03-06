@@ -221,7 +221,11 @@ class Collection_(Spec):
             @task
             def mytask2():
                 pass
-            self.c = Collection(mytask, mytask2)
+            @task
+            def subtask():
+                pass
+            sub = Collection('sub', subtask)
+            self.c = Collection(mytask, mytask2, sub)
             self.contexts = self.c.to_contexts()
             self.context = self.contexts[1]
 
@@ -240,6 +244,9 @@ class Collection_(Spec):
             c.add_task(mytask)
             ctx = c.to_contexts()[0]
             eq_(ctx.positional_args, [ctx.args['second'], ctx.args['first']])
+
+        def handles_namespaced_task_names_correctly(self):
+            assert 'sub.subtask' in map(lambda x: x.name, self.contexts)
 
     class task_names:
         def returns_all_task_names_including_subtasks(self):
