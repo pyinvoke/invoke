@@ -91,22 +91,29 @@ class Collection(object):
         exist (named ``ns`` or ``namespace``) they are preferentially loaded
         instead.
 
-        The returned collection will be named after the module's ``__name__``
-        attribute, or its last dotted section if it's a submodule. (I.e. it
-        should usually map to the actual ``.py`` filename.)
+        When the implicit/default collection is generated, it will be named
+        after the module's ``__name__`` attribute, or its last dotted section
+        if it's a submodule. (I.e. it should usually map to the actual ``.py``
+        filename.)
+
+        Explicitly given collections will only be given that module-derived
+        name if they don't already have a valid ``.name`` attribute.
         """
+        module_name = module.__name__.split('.')[-1]
         # See if the module provides a default NS to use in lieu of creating
         # our own collection.
         for candidate in ('ns', 'namespace'):
             obj = getattr(module, candidate, None)
             if obj and isinstance(obj, Collection):
+                if not obj.name:
+                    obj.name = module_name
                 return obj
         # Failing that, make our own collection from the module's tasks.
         tasks = filter(
             lambda x: isinstance(x[1], Task),
             vars(module).items()
         )
-        collection = Collection(module.__name__.split('.')[-1])
+        collection = Collection(module_name)
         for name, task in tasks:
             collection.add_task(
                 name=name,
