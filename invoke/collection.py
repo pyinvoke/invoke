@@ -86,12 +86,21 @@ class Collection(object):
         Return a new `.Collection` created from ``module``.
 
         Inspects ``module`` for any `.Task` instances and adds them to a new
-        `.Collection`, returning it .
+        `.Collection`, returning it. If any explicit namespace collections
+        exist (named ``ns`` or ``namespace``) they are preferentially loaded
+        instead.
 
         The returned collection will be named after the module's ``__name__``
         attribute, or its last dotted section if it's a submodule. (I.e. it
         should usually map to the actual ``.py`` filename.)
         """
+        # See if the module provides a default NS to use in lieu of creating
+        # our own collection.
+        for candidate in ('ns', 'namespace'):
+            obj = getattr(module, candidate, None)
+            if obj and isinstance(obj, Collection):
+                return obj
+        # Failing that, make our own collection from the module's tasks.
         tasks = filter(
             lambda x: isinstance(x[1], Task),
             vars(module).items()

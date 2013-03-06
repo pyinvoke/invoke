@@ -153,6 +153,11 @@ Modules given to this method are scanned for ``Task`` instances, which are
 added to a new ``Collection``. This collection's name is simply taken from the
 module name (the ``__name__`` attribute).
 
+.. note::
+    As with the default task module, you can override this default loading
+    behavior by declaring a ``ns`` or ``namespace`` `.Collection` object at top
+    level in the loaded module.
+
 For example, let's reorganize our earlier single-file example into a Python
 package with several submodules. First, ``tasks/release.py``::
 

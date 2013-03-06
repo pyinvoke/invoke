@@ -63,11 +63,4 @@ class Loader(object):
             name = 'tasks'
         # Import. Errors during import will raise normally.
         module = imp.load_module(*self.find_collection(name))
-        # See if the module provides a default NS to use in lieu of creating
-        # our own collection.
-        for candidate in ('ns', 'namespace'):
-            obj = getattr(module, candidate, None)
-            if obj and isinstance(obj, Collection):
-                return obj
-        # Failing that, make our own collection from the module's tasks.
         return Collection.from_module(module)

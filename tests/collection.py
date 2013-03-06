@@ -83,6 +83,13 @@ class Collection_(Spec):
             eq_(c.name, 'module')
             assert 'mytask' in c # Sanity
 
+        def honors_explicit_collections(self):
+            coll = Collection.from_module(load('explicit_root'))
+            assert 'top_level' in coll.tasks
+            assert 'sub' in coll.collections
+            # The real key test
+            assert 'sub_task' not in coll.tasks
+
     class add_task:
         def setup(self):
             self.c = Collection()
