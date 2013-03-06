@@ -227,7 +227,13 @@ class Collection(object):
         """
         my_tasks = self.tasks.keys()
         subtasks = reduce(add,
-            map(lambda x: x.task_names, self.collections.values()),
+            map(
+                lambda (name, coll): map(
+                    lambda x: "%s.%s" % (name, x),
+                    coll.task_names
+                ),
+                self.collections.iteritems()
+            ),
             []
         )
         return my_tasks + subtasks
