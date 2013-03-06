@@ -209,10 +209,10 @@ class Collection(object):
         Returns all contained tasks and subtasks as a list of parser contexts.
         """
         result = []
-        for name in self.task_names:
-            task = self[name]
+        for primary, aliases in self.task_names.iteritems():
+            task = self[primary]
             result.append(Context(
-                name=name, aliases=task.aliases, args=task.get_arguments()
+                name=primary, aliases=aliases, args=task.get_arguments()
             ))
         return result
 
@@ -222,21 +222,21 @@ class Collection(object):
     @property
     def task_names(self):
         """
-        Return all primary task identifiers for this collection.
+        Return all task identifiers for this collection as a dict.
 
-        Typically, this just means all task names (including namespaced tasks).
-        We say "primary" because it does not list aliases -- there will be only
-        one entry in the resulting list of names per actual task object.
+        Specifically, a dict with the primary/"real" task names as the key, and
+        any aliases as a list value.
         """
-        my_tasks = self.tasks.keys()
-        subtasks = reduce(add,
-            map(
-                lambda (name, coll): map(
-                    lambda x: self.subtask_name(name, x),
-                    coll.task_names
-                ),
-                self.collections.iteritems()
-            ),
-            []
-        )
-        return my_tasks + subtasks
+        ret = {}
+        # Our own tasks get no prefix, just go in as-is: {name: [aliases]}
+        for name, task in self.tasks.iteritems():
+            ret[name] = task.aliases
+        # Subcollection tasks get both name + aliases prefixed
+        for coll_name, coll in self.collections.iteritems():
+            for task_name, aliases in coll.task_names.iteritems():
+                prefixed_aliases = map(
+                    lambda x: self.subtask_name(coll_name, x),
+                    aliases
+                )
+                ret[self.subtask_name(coll_name, task_name)] = prefixed_aliases
+        return ret

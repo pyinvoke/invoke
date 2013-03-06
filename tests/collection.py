@@ -1,3 +1,4 @@
+import operator
 import sys
 
 from spec import Spec, skip, eq_, raises
@@ -221,7 +222,7 @@ class Collection_(Spec):
             @task
             def mytask2():
                 pass
-            @task
+            @task(aliases=['othertask'])
             def subtask():
                 pass
             sub = Collection('sub', subtask)
@@ -248,7 +249,19 @@ class Collection_(Spec):
         def exposes_namespaced_task_names(self):
             assert 'sub.subtask' in map(lambda x: x.name, self.contexts)
 
+        def exposes_namespaced_task_aliases(self):
+            alias_tups = map(lambda x: list(x.aliases), self.contexts)
+            aliases = reduce(operator.add, alias_tups, [])
+            assert 'sub.othertask' in aliases
+
     class task_names:
+        def setup(self):
+            self.c = Collection.from_module(load('explicit_root'))
+
         def returns_all_task_names_including_subtasks(self):
-            c = Collection.from_module(load('explicit_root'))
-            eq_(c.task_names, ['top_level', 'sub.sub_task'])
+            eq_(set(self.c.task_names.keys()), set(['top_level', 'sub.sub_task']))
+
+        def includes_aliases_as_values(self):
+            names = self.c.task_names
+            eq_(names['top_level'], ['othertop'])
+            eq_(names['sub.sub_task'], ['sub.othersub'])
