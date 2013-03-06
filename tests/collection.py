@@ -206,7 +206,6 @@ class Collection_(Spec):
             self.c.add_collection(Collection('whatever'))
             self.c['whatever']
 
-
     class to_contexts:
         def setup(self):
             @task
@@ -234,3 +233,8 @@ class Collection_(Spec):
             c.add_task(mytask)
             ctx = c.to_contexts()[0]
             eq_(ctx.positional_args, [ctx.args['second'], ctx.args['first']])
+
+    class task_names:
+        def returns_all_task_names_including_subtasks(self):
+            c = Collection.from_module(load('explicit_root'))
+            eq_(c.task_names, ['top_level', 'sub.sub_task'])

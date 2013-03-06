@@ -198,3 +198,14 @@ class Collection(object):
                 name=name, aliases=task.aliases, args=task.get_arguments()
             ))
         return result
+
+    @property
+    def task_names(self):
+        """
+        Return all primary task identifiers for this collection.
+
+        Typically, this just means all task names (including namespaced tasks).
+        We say "primary" because it does not list aliases -- there will be only
+        one entry in the resulting list of names per actual task object.
+        """
+
