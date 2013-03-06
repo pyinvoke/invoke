@@ -206,10 +206,33 @@ Either way, the result::
         docs.build
         docs.clean
 
+
 Default tasks
 =============
 
-TK
+Tasks may declare themselves as the default task to invoke for the collection
+they belong to, e.g. by giving ``default=True`` to `@task <.task>`. This is
+useful when you have a bunch of related tasks in a namespace but one of them is
+the most commonly used, and maps well to the namespace as a whole.
+
+For example, in the documentation submodule we've been experimenting with so
+far, the ``build`` task makes sense as a default, so we can say things like
+``invoke docs`` as a shortcut to ``invoke docs.build``. This is easy to do::
+
+    @task(default=True)
+    def build():
+        # ...
+
+When imported into the root namespace (as shown above) this alters the output
+of ``--list``, highlighting the fact that ``docs.build`` can be invoked as
+``docs`` if desired::
+
+    $ invoke --list
+    Available tasks:
+
+        release.release
+        docs.build (docs)
+        docs.clean
 
 
 Mix and match
