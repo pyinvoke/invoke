@@ -5,7 +5,7 @@ from invoke import task, Collection
 def top_level():
     pass
 
-@task(aliases=['othersub'])
+@task(aliases=['othersub'], default=True)
 def sub_task():
     pass
 

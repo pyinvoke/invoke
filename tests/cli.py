@@ -123,7 +123,12 @@ Available tasks:
         @trap
         def default_tasks(self):
             # sub-ns default task display as "real.name (collection name)"
-            skip()
+            expected = self._listing(
+                'top_level',
+                'othertop',
+                'sub.sub_task (sub, sub.othersub)',
+            )
+            eq_(run("invoke -c explicit_root --list").stdout, expected)
 
         @trap
         def top_level_aliases(self):
