@@ -208,13 +208,16 @@ class Collection(object):
         """
         Returns all contained tasks and subtasks as a list of parser contexts.
         """
-        # TODO: this is now a stub, do away w/ it
         result = []
-        for name, task in self.tasks.iteritems():
+        for name in self.task_names:
+            task = self[name]
             result.append(Context(
                 name=name, aliases=task.aliases, args=task.get_arguments()
             ))
         return result
+
+    def subtask_name(self, collection_name, task_name):
+        return "%s.%s" % (collection_name, task_name)
 
     @property
     def task_names(self):
@@ -229,7 +232,7 @@ class Collection(object):
         subtasks = reduce(add,
             map(
                 lambda (name, coll): map(
-                    lambda x: "%s.%s" % (name, x),
+                    lambda x: self.subtask_name(name, x),
                     coll.task_names
                 ),
                 self.collections.iteritems()

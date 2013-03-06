@@ -231,7 +231,7 @@ class Collection_(Spec):
 
         def returns_iterable_of_Contexts_corresponding_to_tasks(self):
             eq_(self.context.name, 'mytask')
-            eq_(len(self.contexts), 2)
+            eq_(len(self.contexts), 3)
 
         def allows_flaglike_access_via_flags(self):
             assert '--text' in self.context.flags
