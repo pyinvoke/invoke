@@ -122,8 +122,9 @@ def parse(argv, collection=None):
 
     # Print discovered tasks if necessary
     if args.list.value:
+        names = collection.tasks.keys()
         print "Available tasks:\n"
-        print "\n".join(map(lambda x: "    " + x, collection.tasks.keys()))
+        print "\n".join(map(lambda x: "    " + x, collection.task_names))
         print ""
         sys.exit(0)
     return args, collection, tasks
