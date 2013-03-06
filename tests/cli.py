@@ -83,9 +83,12 @@ Core options:
     def version_info(self):
         eq_(run("invoke -V").stdout, "Invoke %s\n" % invoke.__version__)
 
-    @trap
-    def task_list(self):
-        expected = """
+    class task_list:
+        "--list"
+
+        @trap
+        def simple_output(self):
+            expected = """
 Available tasks:
 
     print_foo
@@ -94,21 +97,42 @@ Available tasks:
     foo
 
 """.lstrip()
-        for flag in ('-l', '--list'):
-            eq_(run("invoke -c integration %s" % flag).stdout, expected)
+            for flag in ('-l', '--list'):
+                eq_(run("invoke -c integration %s" % flag).stdout, expected)
 
-    @trap
-    def task_list_with_namespacing(self):
-        # TODO: break out the listing behavior into a testable method, down
-        # with subprocesses!
-        expected = """
+        @trap
+        def namespacing(self):
+            # TODO: break out the listing behavior into a testable method, down
+            # with subprocesses!
+            expected = """
 Available tasks:
 
     toplevel
     module.mytask
 
 """.lstrip()
-        eq_(run("invoke -c namespacing --list").stdout, expected)
+            eq_(run("invoke -c namespacing --list").stdout, expected)
+
+        @trap
+        def ordering(self):
+            # Some explicit order
+            skip()
+
+        @trap
+        def default_tasks(self):
+            # sub-ns default task display as "real.name (collection name)"
+            skip()
+
+        @trap
+        def top_level_aliases(self):
+            # top level alias display as "real (alias, es, ...)"
+            skip()
+
+        @trap
+        def subcollection_aliases(self):
+            # subcollection aliases: "sub.task (sub.alias, sub.otheralias,
+            # ...)"
+            skip()
 
     @trap
     def no_deduping(self):
