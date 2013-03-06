@@ -216,9 +216,6 @@ class Collection(object):
             ))
         return result
 
-    def format_name(self, name):
-        return ("%s.%s" % (self.name, name)) if self.name else name
-
     @property
     def task_names(self):
         """
@@ -228,7 +225,7 @@ class Collection(object):
         We say "primary" because it does not list aliases -- there will be only
         one entry in the resulting list of names per actual task object.
         """
-        my_tasks = map(self.format_name, self.tasks.keys())
+        my_tasks = self.tasks.keys()
         subtasks = reduce(add,
             map(lambda x: x.task_names, self.collections.values()),
             []
