@@ -162,7 +162,11 @@ class CLIParsing(Spec):
         @task
         def mytask4(clean=False, browse=False):
             pass
-        self.c = Collection(mytask, mytask2, mytask3, mytask4)
+        @task
+        def subtask():
+            pass
+        subcoll = Collection('sub', subtask)
+        self.c = Collection(mytask, mytask2, mytask3, mytask4, subcoll)
 
     def _parser(self):
         return Parser(self.c.to_contexts())
@@ -174,6 +178,9 @@ class CLIParsing(Spec):
         invoke = "mytask " + invoke
         result = self._parse(invoke)
         eq_(result.to_dict()['mytask'][flagname], value)
+
+    def namespaced_task(self):
+        eq_(self._parse("sub.subtask")[0].name, 'sub.subtask')
 
     def boolean_args(self):
         "mytask --boolean"
