@@ -153,7 +153,7 @@ class CLIParsing(Spec):
         @task(positional=[])
         def mytask(mystring, s, boolean=False, b=False, v=False):
             pass
-        @task
+        @task(aliases=['mytask27'])
         def mytask2():
             pass
         @task
@@ -162,7 +162,7 @@ class CLIParsing(Spec):
         @task
         def mytask4(clean=False, browse=False):
             pass
-        @task
+        @task(aliases=['other'])
         def subtask():
             pass
         subcoll = Collection('sub', subtask)
@@ -179,8 +179,17 @@ class CLIParsing(Spec):
         result = self._parse(invoke)
         eq_(result.to_dict()['mytask'][flagname], value)
 
+    def _compare_names(self, given, real):
+        eq_(self._parse(given)[0].name, real)
+
     def namespaced_task(self):
-        eq_(self._parse("sub.subtask")[0].name, 'sub.subtask')
+        self._compare_names("sub.subtask", "sub.subtask")
+
+    def aliases(self):
+        self._compare_names("mytask27", "mytask2")
+
+    def subcollection_aliases(self):
+        self._compare_names("sub.other", "sub.subtask")
 
     def boolean_args(self):
         "mytask --boolean"

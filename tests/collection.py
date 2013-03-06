@@ -245,7 +245,7 @@ class Collection_(Spec):
             ctx = c.to_contexts()[0]
             eq_(ctx.positional_args, [ctx.args['second'], ctx.args['first']])
 
-        def handles_namespaced_task_names_correctly(self):
+        def exposes_namespaced_task_names(self):
             assert 'sub.subtask' in map(lambda x: x.name, self.contexts)
 
     class task_names:
