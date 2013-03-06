@@ -219,16 +219,18 @@ class Collection_(Spec):
             @task
             def mytask(text, boolean=False, number=5):
                 print text
-            @task
+            @task(aliases=['mytask27'])
             def mytask2():
                 pass
-            @task(aliases=['othertask'])
+            @task(aliases=['othertask'], default=True)
             def subtask():
                 pass
             sub = Collection('sub', subtask)
             self.c = Collection(mytask, mytask2, sub)
             self.contexts = self.c.to_contexts()
             self.context = self.contexts[1]
+            alias_tups = map(lambda x: list(x.aliases), self.contexts)
+            self.aliases = reduce(operator.add, alias_tups, [])
 
         def returns_iterable_of_Contexts_corresponding_to_tasks(self):
             eq_(self.context.name, 'mytask')
@@ -250,9 +252,13 @@ class Collection_(Spec):
             assert 'sub.subtask' in map(lambda x: x.name, self.contexts)
 
         def exposes_namespaced_task_aliases(self):
-            alias_tups = map(lambda x: list(x.aliases), self.contexts)
-            aliases = reduce(operator.add, alias_tups, [])
-            assert 'sub.othertask' in aliases
+            assert 'sub.othertask' in self.aliases
+
+        def exposes_subcollection_default_tasks(self):
+            skip()
+
+        def exposes_aliases(self):
+            assert 'mytask27' in self.aliases
 
     class task_names:
         def setup(self):
