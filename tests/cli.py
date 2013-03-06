@@ -186,7 +186,7 @@ class CLIParsing(Spec):
         @task
         def mytask4(clean=False, browse=False):
             pass
-        @task(aliases=['other'])
+        @task(aliases=['other'], default=True)
         def subtask():
             pass
         subcoll = Collection('sub', subtask)
@@ -214,6 +214,9 @@ class CLIParsing(Spec):
 
     def subcollection_aliases(self):
         self._compare_names("sub.other", "sub.subtask")
+
+    def subcollection_default_tasks(self):
+        self._compare_names("sub", "sub.subtask")
 
     def boolean_args(self):
         "mytask --boolean"
