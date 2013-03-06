@@ -23,11 +23,14 @@ class CLI(Spec):
     "Command-line behavior"
     def setup(self):
         os.chdir(support)
+
+    def _basic(self):
         self.result = run("invoke -c integration print_foo", hide='both')
 
     # Yo dogfood, I heard you like invoking
     @trap
     def basic_invocation(self):
+        self._basic()
         _output_eq("invoke -c integration print_foo", "foo\n")
 
     @trap
