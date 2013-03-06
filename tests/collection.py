@@ -5,7 +5,7 @@ from spec import Spec, skip, eq_, raises
 from invoke.collection import Collection
 from invoke.tasks import task, Task
 
-from _utils import load
+from _utils import load, support_path
 
 
 @task
@@ -74,6 +74,13 @@ class Collection_(Spec):
 
         def derives_name_from_module_name(self):
             eq_(self.c.name, 'integration')
+
+        def submodule_names_are_stripped_to_last_chunk(self):
+            with support_path():
+                from package import module
+            c = Collection.from_module(module)
+            eq_(module.__name__, 'package.module')
+            eq_(c.name, 'module')
 
     class add_task:
         def setup(self):
