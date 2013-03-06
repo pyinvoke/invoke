@@ -234,9 +234,13 @@ class Collection(object):
         # Subcollection tasks get both name + aliases prefixed
         for coll_name, coll in self.collections.iteritems():
             for task_name, aliases in coll.task_names.iteritems():
-                prefixed_aliases = map(
+                aliases = map(
                     lambda x: self.subtask_name(coll_name, x),
                     aliases
                 )
-                ret[self.subtask_name(coll_name, task_name)] = prefixed_aliases
+                # Tack on collection name to alias list if this task is the
+                # collection's default.
+                if coll.default and coll.default == task_name:
+                    aliases += (coll_name,)
+                ret[self.subtask_name(coll_name, task_name)] = aliases
         return ret

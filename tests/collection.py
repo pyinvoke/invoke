@@ -255,7 +255,7 @@ class Collection_(Spec):
             assert 'sub.othertask' in self.aliases
 
         def exposes_subcollection_default_tasks(self):
-            skip()
+            assert 'sub' in self.aliases
 
         def exposes_aliases(self):
             assert 'mytask27' in self.aliases
@@ -267,7 +267,7 @@ class Collection_(Spec):
         def returns_all_task_names_including_subtasks(self):
             eq_(set(self.c.task_names.keys()), set(['top_level', 'sub.sub_task']))
 
-        def includes_aliases_as_values(self):
+        def includes_aliases_and_defaults_as_values(self):
             names = self.c.task_names
             eq_(names['top_level'], ['othertop'])
-            eq_(names['sub.sub_task'], ['sub.othersub'])
+            eq_(names['sub.sub_task'], ['sub.othersub', 'sub'])
