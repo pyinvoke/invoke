@@ -43,6 +43,11 @@ class Loader_(Spec):
             result = Loader(root=support + '/implicit/').load_collection()
             eq_(type(result), Collection)
 
+        def honors_explicit_collections(self):
+            result = Loader(root=support).load_collection('explicit_root')
+            assert 'top_level' in result
+            assert 'sub.sub_task' in result
+
     class find_collection:
         @raises(CollectionNotFound)
         def raises_CollectionNotFound_for_missing_collections(self):

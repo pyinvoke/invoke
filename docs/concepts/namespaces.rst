@@ -20,7 +20,8 @@ Starting out
 
 One unnamed ``Collection`` is always the namespace root; in the implicit base
 case, Invoke creates one for you from the tasks in your tasks module.  Create
-your own, named ``namespace`` or ``ns``, to set up an explicit namespace::
+your own, named ``namespace`` or ``ns``, to set up an explicit namespace (i.e.
+to skip the default "pull in all Task objects" behavior)::
 
     from invoke import Collection
 
