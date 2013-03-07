@@ -1,3 +1,4 @@
+from functools import partial
 import sys
 import textwrap
 
@@ -7,6 +8,15 @@ from .executor import Executor
 from .exceptions import Failure, CollectionNotFound, ParseError
 from .util import debug, pty_size
 from ._version import __version__
+
+
+def depth(name):
+    return len(name.split('.'))
+
+def cmp_task_name(a, b):
+    return cmp(depth(a), depth(b)) or cmp(a, b)
+
+sort_names = partial(sorted, cmp=cmp_task_name)
 
 
 def parse_gracefully(parser, argv):
@@ -122,9 +132,12 @@ def parse(argv, collection=None):
 
     # Print discovered tasks if necessary
     if args.list.value:
-        names = collection.tasks.keys()
         print "Available tasks:\n"
-        for primary, aliases in collection.task_names.iteritems():
+        # Sort in depth, then alpha, order
+        task_names = collection.task_names
+        names = sort_names(task_names.keys())
+        for primary in names:
+            aliases = sort_names(task_names[primary])
             out = primary
             if aliases:
                 out += " (%s)" % ', '.join(aliases)

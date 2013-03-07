@@ -117,7 +117,11 @@ Available tasks:
 
         @trap
         def top_level_tasks_listed_first(self):
-            skip()
+            expected = self._listing(
+                'z_toplevel',
+                'a.subtask'
+            )
+            eq_(run("invoke -c simple_ns_list --list").stdout, expected)
 
         @trap
         def subcollections_sorted_in_depth_order(self):
@@ -131,8 +135,7 @@ Available tasks:
         def default_tasks(self):
             # sub-ns default task display as "real.name (collection name)"
             expected = self._listing(
-                'top_level',
-                'othertop',
+                'top_level (othertop)',
                 'sub.sub_task (sub, sub.othersub)',
             )
             eq_(run("invoke -c explicit_root --list").stdout, expected)
