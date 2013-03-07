@@ -243,7 +243,7 @@ class ParseResult(list):
         d = {}
         for context in self:
             argd = {}
-            for name, arg in context.args.iteritems():
+            for name, arg in six.iteritems(context.args):
                 argd[name] = arg.value
             d[context.name] = argd
         return d
