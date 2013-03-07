@@ -123,15 +123,15 @@ class Collection(object):
         """
         Adds ``Task`` ``task`` to this collection.
 
-        If ``name`` is not explicitly given (recommended) the ``.func_name`` of
+        If ``name`` is not explicitly given (recommended) the ``.__name__`` of
         the ``Task``'s wrapped callable will be used instead. (If the wrapped
         callable is not a function, you *must* give ``name``.)
         """
         if name is None:
-            if hasattr(task.body, 'func_name'):
-                name = task.body.func_name
+            if hasattr(task.body, '__name__'):
+                name = task.body.__name__
             else:
-                raise ValueError("'name' may only be empty if 'task' wraps an object exposing .func_name")
+                raise ValueError("'name' may only be empty if 'task' wraps an object exposing .__name__")
         if name in self.collections:
             raise ValueError("Name conflict: this collection has a sub-collection named %r already" % name)
         self.tasks[name] = task
