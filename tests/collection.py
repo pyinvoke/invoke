@@ -114,15 +114,6 @@ class Collection_(Spec):
                     pass
             self.c.add_task(Task(Callable()))
 
-        def allows_specifying_aliases(self):
-            self.c.add_task(_mytask, 'foo', aliases=('bar',))
-            eq_(self.c['bar'], _mytask)
-
-        def allows_specifying_multiple_aliases(self):
-            self.c.add_task(_mytask, 'foo', aliases=('bar', 'biz'))
-            eq_(self.c['bar'], _mytask)
-            eq_(self.c['biz'], _mytask)
-
         @raises(ValueError)
         def raises_ValueError_on_multiple_defaults(self):
             t1 = Task(_func, default=True)
@@ -179,8 +170,9 @@ class Collection_(Spec):
             eq_(self.c['sub._mytask'], _mytask)
 
         def honors_aliases_in_own_tasks(self):
-            self.c.add_task(_mytask, 'foo', aliases=('bar',))
-            eq_(self.c['bar'], _mytask)
+            t = Task(_func, aliases=['bar'])
+            self.c.add_task(t, 'foo')
+            eq_(self.c['bar'], t)
 
         def honors_subcollection_task_aliases(self):
             self.c.add_collection(load('decorator'))

@@ -30,6 +30,9 @@ class task_(Spec):
     def allows_alias_specification(self):
         eq_(self.vanilla['foo'], self.vanilla['bar'])
 
+    def allows_multiple_aliases(self):
+        eq_(self.vanilla['foo'], self.vanilla['otherbar'])
+
     def allows_default_specification(self):
         eq_(self.vanilla[''], self.vanilla['biz'])
 

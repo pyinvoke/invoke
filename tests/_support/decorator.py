@@ -1,7 +1,7 @@
 from invoke.tasks import task
 
 
-@task(aliases=('bar',))
+@task(aliases=('bar', 'otherbar'))
 def foo():
     pass
 
