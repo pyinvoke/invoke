@@ -97,10 +97,10 @@ Available tasks:
         @trap
         def simple_output(self):
             expected = self._listing(
-                'print_foo',
-                'print_name',
                 'bar',
                 'foo',
+                'print_foo',
+                'print_name',
             )
             for flag in ('-l', '--list'):
                 eq_(run("invoke -c integration %s" % flag).stdout, expected)
