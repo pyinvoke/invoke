@@ -149,17 +149,6 @@ Available tasks:
             )
             eq_(run("invoke -c explicit_root --list").stdout, expected)
 
-        @trap
-        def top_level_aliases(self):
-            # top level alias display as "real (alias, es, ...)"
-            skip()
-
-        @trap
-        def subcollection_aliases(self):
-            # subcollection aliases: "sub.task (sub.alias, sub.otheralias,
-            # ...)"
-            skip()
-
     @trap
     def no_deduping(self):
         expected = """
