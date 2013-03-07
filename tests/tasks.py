@@ -12,6 +12,9 @@ from _utils import support
 # both Task and @task. Meh :)
 #
 
+def _func():
+    pass
+
 class task_(Spec):
     "@task"
 
@@ -67,6 +70,10 @@ class task_(Spec):
 
 
 class Task_(Spec):
+    class attributes:
+        def has_default_flag(self):
+            eq_(Task(_func).is_default, False)
+
     class callability:
         def setup(self):
             @task

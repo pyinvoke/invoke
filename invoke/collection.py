@@ -130,12 +130,6 @@ class Collection(object):
         If ``name`` is not explicitly given (recommended) the ``.func_name`` of
         the ``Task``'s wrapped callable will be used instead. (If the wrapped
         callable is not a function, you *must* give ``name``.)
-
-        If ``aliases`` is given, will be used to set up additional aliases for
-        this task.
-
-        ``default`` may be set to ``True`` to set the task as this collection's
-        default invocation.
         """
         if name is None:
             if hasattr(task.body, 'func_name'):
@@ -145,9 +139,9 @@ class Collection(object):
         if name in self.collections:
             raise ValueError("Name conflict: this collection has a sub-collection named %r already" % name)
         self.tasks[name] = task
-        for alias in aliases:
+        for alias in task.aliases:
             self.tasks.alias(alias, to=name)
-        if default:
+        if task.is_default:
             if self.default:
                 msg = "'%s' cannot be the default because '%s' already is!"
                 raise ValueError(msg % (name, self.default))

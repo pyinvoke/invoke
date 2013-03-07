@@ -13,6 +13,9 @@ from _utils import load, support_path
 def _mytask():
     print "woo!"
 
+def _func():
+    pass
+
 
 class Collection_(Spec):
     class init:
@@ -120,14 +123,12 @@ class Collection_(Spec):
             eq_(self.c['bar'], _mytask)
             eq_(self.c['biz'], _mytask)
 
-        def allows_flagging_as_default(self):
-            self.c.add_task(_mytask, 'foo', default=True)
-            eq_(self.c[''], _mytask)
-
         @raises(ValueError)
         def raises_ValueError_on_multiple_defaults(self):
-            self.c.add_task(_mytask, 'foo', default=True)
-            self.c.add_task(_mytask, 'bar', default=True)
+            t1 = Task(_func, default=True)
+            t2 = Task(_func, default=True)
+            self.c.add_task(t1, 'foo')
+            self.c.add_task(t2, 'bar')
 
         @raises(ValueError)
         def raises_ValueError_if_task_added_mirrors_subcollection_name(self):
@@ -186,8 +187,9 @@ class Collection_(Spec):
             assert 'decorator.bar' in self.c
 
         def honors_own_default_task_with_no_args(self):
-            self.c.add_task(_mytask, 'foo', default=True)
-            eq_(self.c[''], _mytask)
+            t = Task(_func, default=True)
+            self.c.add_task(t, default=True)
+            eq_(self.c[''], t)
 
         def honors_subcollection_default_tasks_on_subcollection_name(self):
             sub = Collection.from_module(load('decorator'))
@@ -196,14 +198,6 @@ class Collection_(Spec):
             assert self.c['decorator.biz'] is sub['biz']
             # Real test
             assert self.c['decorator'] is self.c['decorator.biz']
-
-        def is_aliased_to_dunder_getitem(self):
-            self.c.add_task(_mytask, 'foo')
-            eq_(self.c['foo'], _mytask)
-
-        def honors_own_default_task_getitem(self):
-            self.c.add_task(_mytask, 'foo', default=True)
-            eq_(self.c[''], _mytask)
 
         @raises(ValueError)
         def raises_ValueError_for_no_name_and_no_default(self):
