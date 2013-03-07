@@ -124,7 +124,11 @@ def parse(argv, collection=None):
     if args.list.value:
         names = collection.tasks.keys()
         print "Available tasks:\n"
-        print "\n".join(map(lambda x: "    " + x, collection.task_names))
+        for primary, aliases in collection.task_names.iteritems():
+            out = primary
+            if aliases:
+                out += " (%s)" % ', '.join(aliases)
+            print "    %s" % out
         print ""
         sys.exit(0)
     return args, collection, tasks
