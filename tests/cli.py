@@ -134,7 +134,11 @@ Available tasks:
 
         @trap
         def aliases_sorted_alphabetically(self):
-            skip()
+            expected = self._listing(
+                'toplevel (a, z)',
+            )
+            eq_(run("invoke -c alias_sorting --list").stdout, expected)
+
 
         @trap
         def default_tasks(self):
