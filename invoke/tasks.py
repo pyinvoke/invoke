@@ -24,16 +24,22 @@ class Task(object):
     # them, e.g. (auto_)positional, auto_shortflags.
     # NOTE: we shadow __builtins__.help here. It's purposeful. :(
     def __init__(self, body, aliases=(), positional=None, default=False, 
-        auto_shortflags=True, help=None, pre=None):
+        auto_shortflags=True, help=None, pre=None, name=None):
+        # Real callable
         self.body = body
         # Must copy doc/name here because Sphinx is retarded about properties.
         self.__doc__ = getattr(body, '__doc__', '')
         self.__name__ = getattr(body, '__name__', '')
+        # Default name, alternate names, and whether it should act as the
+        # default for its parent collection
+        self.name = name
         self.aliases = aliases
-        self.positional = self.fill_implicit_positionals(positional)
         self.is_default = default
+        # Arg/flag/parser hints
+        self.positional = self.fill_implicit_positionals(positional)
         self.auto_shortflags = auto_shortflags
         self.help = help or {}
+        # Call chain bidness
         self.pre = pre or []
         self.times_called = 0
 

@@ -77,6 +77,12 @@ class Task_(Spec):
         def has_default_flag(self):
             eq_(Task(_func).is_default, False)
 
+        def has_empty_name(self):
+            eq_(Task(_func).name, None)
+
+        def can_override_name(self):
+            eq_(Task(_func, name='foo').name, 'foo')
+
     class callability:
         def setup(self):
             @task
