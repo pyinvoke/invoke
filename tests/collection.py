@@ -180,7 +180,7 @@ class Collection_(Spec):
 
         def honors_own_default_task_with_no_args(self):
             t = Task(_func, default=True)
-            self.c.add_task(t, default=True)
+            self.c.add_task(t)
             eq_(self.c[''], t)
 
         def honors_subcollection_default_tasks_on_subcollection_name(self):

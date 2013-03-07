@@ -115,15 +115,10 @@ class Collection(object):
         )
         collection = Collection(module_name)
         for name, task in tasks:
-            collection.add_task(
-                name=name,
-                task=task,
-                aliases=task.aliases,
-                default=task.is_default
-            )
+            collection.add_task(name=name, task=task)
         return collection
 
-    def add_task(self, task, name=None, aliases=(), default=False):
+    def add_task(self, task, name=None):
         """
         Adds ``Task`` ``task`` to this collection.
 
