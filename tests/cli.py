@@ -125,7 +125,12 @@ Available tasks:
 
         @trap
         def subcollections_sorted_in_depth_order(self):
-            skip()
+            expected = self._listing(
+                'toplevel',
+                'a.subtask',
+                'a.nother.subtask',
+            )
+            eq_(run("invoke -c deeper_ns_list --list").stdout, expected)
 
         @trap
         def aliases_sorted_alphabetically(self):
