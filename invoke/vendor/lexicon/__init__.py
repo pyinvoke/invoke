@@ -2,9 +2,6 @@ from .attribute_dict import AttributeDict
 from .alias_dict import AliasDict
 
 
-__version__ = "0.1.2"
-
-
 class Lexicon(AttributeDict, AliasDict):
     def __init__(self, *args, **kwargs):
         # Need to avoid combining AliasDict's initial attribute write on

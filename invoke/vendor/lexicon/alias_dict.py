@@ -1,3 +1,6 @@
+import six
+
+
 class AliasDict(dict):
     def __init__(self, *args, **kwargs):
         super(AliasDict, self).__init__(*args, **kwargs)
@@ -31,7 +34,7 @@ class AliasDict(dict):
         # itself. Filter out the original name given.
         names.extend([
             k for k,v
-            in self.aliases.iteritems()
+            in six.iteritems(self.aliases)
             if v == key and k != name
         ])
         return names
@@ -41,7 +44,7 @@ class AliasDict(dict):
         if key in getattr(self, 'aliases', {}):
             target = self.aliases[key]
             # Single-string targets
-            if isinstance(target, basestring):
+            if isinstance(target, six.string_types):
                 return single(self, target, value)
             # Multi-string targets
             else:
@@ -54,7 +57,7 @@ class AliasDict(dict):
             return unaliased(self, key, value)
 
     def _single(self, target):
-        return isinstance(target, basestring)
+        return isinstance(target, six.string_types)
 
     def __setitem__(self, key, value):
         def single(d, target, value): d[target] = value
