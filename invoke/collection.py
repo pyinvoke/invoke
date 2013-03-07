@@ -130,10 +130,12 @@ class Collection(object):
           attribute.
         """
         if name is None:
-            if hasattr(task.body, 'func_name'):
+            if task.name:
+                name = task.name
+            elif hasattr(task.body, 'func_name'):
                 name = task.body.func_name
             else:
-                raise ValueError("'name' may only be empty if 'task' wraps an object exposing .func_name")
+                raise ValueError("Could not obtain a name for this task!")
         if name in self.collections:
             raise ValueError("Name conflict: this collection has a sub-collection named %r already" % name)
         self.tasks[name] = task
