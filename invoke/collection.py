@@ -122,9 +122,12 @@ class Collection(object):
         """
         Adds ``Task`` ``task`` to this collection.
 
-        If ``name`` is not explicitly given (recommended) the ``.func_name`` of
-        the ``Task``'s wrapped callable will be used instead. (If the wrapped
-        callable is not a function, you *must* give ``name``.)
+        The name the task is bound with is taken, in order, from::
+
+        * The ``name`` kwarg;
+        * If that is not given, the task object's ``name`` attribute;
+        * If that is empty, the task object's wrapped callable's ``.func_name``
+          attribute.
         """
         if name is None:
             if hasattr(task.body, 'func_name'):
