@@ -116,8 +116,15 @@ Available tasks:
             eq_(run("invoke -c namespacing --list").stdout, expected)
 
         @trap
-        def ordering(self):
-            # Some explicit order
+        def top_level_tasks_listed_first(self):
+            skip()
+
+        @trap
+        def subcollections_sorted_in_depth_order(self):
+            skip()
+
+        @trap
+        def aliases_sorted_alphabetically(self):
             skip()
 
         @trap
