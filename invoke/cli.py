@@ -12,13 +12,10 @@ from .util import debug, pty_size
 from ._version import __version__
 
 
-def depth(name):
-    return len(name.split('.'))
+def task_name_to_key(x):
+    return (x.count('.'), x)
 
-def cmp_task_name(a, b):
-    return cmp(depth(a), depth(b)) or cmp(a, b)
-
-sort_names = partial(sorted, cmp=cmp_task_name)
+sort_names = partial(sorted, key=task_name_to_key)
 
 
 def parse_gracefully(parser, argv):

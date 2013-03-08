@@ -219,15 +219,17 @@ class Collection(object):
         """
         ret = {}
         # Our own tasks get no prefix, just go in as-is: {name: [aliases]}
-        for name, task in self.tasks.iteritems():
+        for name, task in six.iteritems(self.tasks):
             ret[name] = task.aliases
         # Subcollection tasks get both name + aliases prefixed
-        for coll_name, coll in self.collections.iteritems():
-            for task_name, aliases in coll.task_names.iteritems():
-                aliases = map(
+        for coll_name, coll in six.iteritems(self.collections):
+            for task_name, aliases in six.iteritems(coll.task_names):
+                # Cast to list to handle Py3 map() 'map' return value,
+                # so we can add to it down below if necessary.
+                aliases = list(map(
                     lambda x: self.subtask_name(coll_name, x),
                     aliases
-                )
+                ))
                 # Tack on collection name to alias list if this task is the
                 # collection's default.
                 if coll.default and coll.default == task_name:
