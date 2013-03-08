@@ -64,13 +64,13 @@ class Collection(object):
         self.name = None
         # Name if applicable
         args = list(args)
-        if args and isinstance(args[0], basestring):
+        if args and isinstance(args[0], six.string_types):
             self.name = args.pop(0)
         # Dispatch args/kwargs
         for arg in args:
             self._add_object(arg)
         # Dispatch kwargs
-        for name, obj in kwargs.iteritems():
+        for name, obj in six.iteritems(kwargs):
             self._add_object(obj, name)
 
     def _add_object(self, obj, name=None):
