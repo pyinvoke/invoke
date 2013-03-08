@@ -1,3 +1,5 @@
+from functools import cmp_to_key
+
 from ..vendor.lexicon import Lexicon
 
 from .argument import Argument
@@ -25,11 +27,10 @@ def cmp_args(a, b):
     # Equal sized flags get case-insensitive cmp'd
     # (with equal case-insensitive values then having lowercase win)
     else:
-        ret = cmp(a.lower(), b.lower())
-        if ret == 0:
+        if a.lower() == b.lower():
             # Default cmp() thinks uppercase come first (lower) at least for
             # bytestrings. We want the opposite.
-            return 1 if cmp(a, b) == -1 else -1
+            return 1 if b > a else -1
         else:
             return ret
 
@@ -162,5 +163,5 @@ class Context(object):
         # changes?
         return map(
             lambda x: self.help_for(to_flag(x.names[0])),
-            sorted(self.flags.values(), cmp=cmp_args)
+            sorted(self.flags.values(), key=cmp_to_key(cmp_args))
         )
