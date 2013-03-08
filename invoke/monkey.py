@@ -23,7 +23,9 @@ class Popen(OriginalPopen):
             # TODO: How to determine which sys.std(out|err) to use?
             buffer.append(fh.read())
     else: # Sane operating systems
-        def _communicate(self, input):
+        # endtime + timeout are new for py3; we don't currently use them but
+        # they must exist to be compatible.
+        def _communicate(self, input, endtime, timeout):
             read_set = []
             write_set = []
             stdout = None # Return
