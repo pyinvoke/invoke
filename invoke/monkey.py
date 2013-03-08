@@ -1,8 +1,9 @@
 # Fuckin' A.
 
 import select, errno, os, sys
-
 from subprocess import Popen as OriginalPopen, mswindows, PIPE
+
+import six
 
 
 class Popen(OriginalPopen):
@@ -47,6 +48,7 @@ class Popen(OriginalPopen):
                 stderr = []
 
             input_offset = 0
+            empty_str = six.b("")
             while read_set or write_set:
                 try:
                     rlist, wlist, xlist = select.select(read_set, write_set, [])
@@ -68,27 +70,27 @@ class Popen(OriginalPopen):
 
                 if self.stdout in rlist:
                     data = os.read(self.stdout.fileno(), 1)
-                    if data == "":
+                    if data == empty_str:
                         self.stdout.close()
                         read_set.remove(self.stdout)
                     if 'out' not in self.hide:
-                        sys.stdout.write(data)
+                        sys.stdout.buffer.write(data)
                     stdout.append(data)
 
                 if self.stderr in rlist:
                     data = os.read(self.stderr.fileno(), 1)
-                    if data == "":
+                    if data == empty_str:
                         self.stderr.close()
                         read_set.remove(self.stderr)
                     if 'err' not in self.hide:
-                        sys.stderr.write(data)
+                        sys.stderr.buffer.write(data)
                     stderr.append(data)
 
             # All data exchanged.  Translate lists into strings.
             if stdout is not None:
-                stdout = ''.join(stdout)
+                stdout = empty_str.join(stdout)
             if stderr is not None:
-                stderr = ''.join(stderr)
+                stderr = empty_str.join(stderr)
 
             # Translate newlines, if requested.  We cannot let the file
             # object do the translation: It is based on stdio, which is
