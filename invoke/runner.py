@@ -65,11 +65,11 @@ def normalize_hide(val):
         raise ValueError("'hide' got %r which is not in %r" % (val, hide_vals,))
     if val is None:
         hide = ()
-    elif val is 'both':
+    elif val == 'both':
         hide = ('out', 'err')
-    elif val is 'stdout':
+    elif val == 'stdout':
         hide = ('out',)
-    elif val is 'stderr':
+    elif val == 'stderr':
         hide = ('err',)
     else:
         hide = (val,)
