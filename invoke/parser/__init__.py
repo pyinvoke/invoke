@@ -2,6 +2,7 @@ import copy
 
 from ..vendor.lexicon import Lexicon
 from ..vendor.fluidity import StateMachine, state, transition
+from ..vendor import six
 
 from .context import Context
 from .argument import Argument # Mostly for importing via invoke.parser.<x>
