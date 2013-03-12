@@ -74,7 +74,7 @@ class Popen(OriginalPopen):
                         self.stdout.close()
                         read_set.remove(self.stdout)
                     if 'out' not in self.hide:
-                        sys.stdout.buffer.write(data)
+                        sys.stdout.write(data)
                     stdout.append(data)
 
                 if self.stderr in rlist:
@@ -83,7 +83,7 @@ class Popen(OriginalPopen):
                         self.stderr.close()
                         read_set.remove(self.stderr)
                     if 'err' not in self.hide:
-                        sys.stderr.buffer.write(data)
+                        sys.stderr.write(data)
                     stderr.append(data)
 
             # All data exchanged.  Translate lists into strings.
