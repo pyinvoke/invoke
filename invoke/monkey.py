@@ -26,7 +26,7 @@ class Popen(OriginalPopen):
     else: # Sane operating systems
         # endtime + timeout are new for py3; we don't currently use them but
         # they must exist to be compatible.
-        def _communicate(self, input, endtime, timeout):
+        def _communicate(self, input, endtime=None, timeout=None):
             read_set = []
             write_set = []
             stdout = None # Return
