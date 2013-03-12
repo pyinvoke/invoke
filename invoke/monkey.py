@@ -3,8 +3,6 @@
 import select, errno, os, sys
 from subprocess import Popen as OriginalPopen, mswindows, PIPE
 
-import six
-
 
 class Popen(OriginalPopen):
     #
