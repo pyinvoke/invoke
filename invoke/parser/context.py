@@ -22,9 +22,10 @@ def flag_key(x):
     # Setup
     ret = []
     x = sort_candidate(x)
-    # Long flags win over short flags, so invert the length so longer flags
-    # come before shorter ones when sorted numerically.
-    ret.append(-1 * len(x))
+    # Long-style flags win over short-style ones, so the first item of
+    # comparison is simply whether the flag is a single character long (with
+    # non-length-1 flags coming "first" [lower number])
+    ret.append(1 if len(x) == 1 else 0)
     # Next item of comparison is simply the strings themselves,
     # case-insensitive. They will compare alphabetically if compared at this
     # stage.
