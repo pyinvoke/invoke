@@ -48,7 +48,7 @@ class Popen(OriginalPopen):
                 stderr = []
 
             input_offset = 0
-            empty_str = six.b("")
+            empty_str = b""
             while read_set or write_set:
                 try:
                     rlist, wlist, xlist = select.select(read_set, write_set, [])
