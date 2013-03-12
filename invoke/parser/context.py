@@ -15,23 +15,27 @@ def sort_candidate(arg):
     longs = filter(lambda x: x not in shorts, names)
     return sorted(shorts if shorts else longs)[0]
 
-def cmp_args(a, b):
-    a, b = map(sort_candidate, (a, b))
-    # Long flags win over short flags
-    if len(a) == 1 and len(b) != 1:
-        return 1
-    elif len(a) != 1 and len(b) == 1:
-        return -1
-    # Equal sized flags get case-insensitive cmp'd
-    # (with equal case-insensitive values then having lowercase win)
-    else:
-        ret = cmp(a.lower(), b.lower())
-        if ret == 0:
-            # Default cmp() thinks uppercase come first (lower) at least for
-            # bytestrings. We want the opposite.
-            return 1 if cmp(a, b) == -1 else -1
-        else:
-            return ret
+def flag_key(x):
+    """
+    Obtain useful key list-of-ints for sorting CLI flags.
+    """
+    # Setup
+    ret = []
+    x = sort_candidate(x)
+    # Long flags win over short flags, so invert the length so longer flags
+    # come before shorter ones when sorted numerically.
+    ret.append(-1 * len(x))
+    # Next item of comparison is simply the strings themselves,
+    # case-insensitive. They will compare alphabetically if compared at this
+    # stage.
+    ret.append(x.lower())
+    # Finally, if the case-insensitive test also matched, compare
+    # case-sensitive, but inverse (with lowercase letters coming first)
+    inversed = ''
+    for char in x:
+        inversed += char.lower() if char.isupper() else char.upper()
+    ret.append(inversed)
+    return ret
 
 
 class Context(object):
@@ -162,5 +166,5 @@ class Context(object):
         # changes?
         return map(
             lambda x: self.help_for(to_flag(x.names[0])),
-            sorted(self.flags.values(), key=cmp_args)
+            sorted(self.flags.values(), key=flag_key)
         )
