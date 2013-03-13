@@ -6,6 +6,7 @@ from spec import Spec, skip, eq_, raises
 from invoke.collection import Collection
 from invoke.tasks import task, Task
 from invoke.vendor import six
+from invoke.vendor.six.moves import reduce
 
 from _utils import load, support_path
 
@@ -216,7 +217,7 @@ class Collection_(Spec):
             self.c = Collection(mytask, mytask2, sub)
             self.contexts = self.c.to_contexts()
             self.context = self.contexts[1]
-            alias_tups = map(lambda x: list(x.aliases), self.contexts)
+            alias_tups = [list(x.aliases) for x in self.contexts]
             self.aliases = reduce(operator.add, alias_tups, [])
 
         def returns_iterable_of_Contexts_corresponding_to_tasks(self):
@@ -236,7 +237,7 @@ class Collection_(Spec):
             eq_(ctx.positional_args, [ctx.args['second'], ctx.args['first']])
 
         def exposes_namespaced_task_names(self):
-            assert 'sub.subtask' in map(lambda x: x.name, self.contexts)
+            assert 'sub.subtask' in [x.name for x in self.contexts]
 
         def exposes_namespaced_task_aliases(self):
             assert 'sub.othertask' in self.aliases

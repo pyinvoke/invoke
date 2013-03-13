@@ -129,14 +129,14 @@ class Task_(Spec):
 
         def kinds_are_preserved(self):
             eq_(
-                map(lambda x: x.kind, self.args),
+                [x.kind for x in self.args],
                 # Remember that the default 'kind' is a string.
                 [int, str, bool]
             )
 
         def positional_flag_is_preserved(self):
             eq_(
-                map(lambda x: x.positional, self.args),
+                [x.positional for x in self.args],
                 [True, True, False]
             )
 

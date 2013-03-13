@@ -93,9 +93,9 @@ def parse(argv, collection=None):
         indent = 2
         padding = 3
         # Calculate column sizes: don't wrap flag specs, give what's left over
-        # to the descriptions
+        # to the descriptions.
         tuples = initial_context.help_tuples()
-        flag_width = max(map(lambda x: len(x[0]), tuples))
+        flag_width = max(len(x[0]) for x in tuples)
         desc_width = pty_size()[0] - flag_width - indent - padding - 1
         wrapper = textwrap.TextWrapper(width=desc_width)
         for flag_spec, help_str in tuples:
@@ -116,7 +116,7 @@ def parse(argv, collection=None):
                     six.print_((' ' * len(spec)) + chunk)
             else:
                 six.print_(spec)
-        print
+        six.print_('')
 
     # Load collection (default or specified) and parse leftovers
     # (Skip loading if somebody gave us an explicit task collection.)

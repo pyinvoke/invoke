@@ -185,8 +185,11 @@ class Context_(Spec):
             )
 
         def _assert_order(self, name_tuples, expected_flag_order):
-            ctx = Context(args=map(lambda x: Argument(names=x), name_tuples))
-            return eq_(ctx.help_tuples(), map(ctx.help_for, expected_flag_order))
+            ctx = Context(args=[Argument(names=x) for x in name_tuples])
+            return eq_(
+                ctx.help_tuples(),
+                [ctx.help_for(x) for x in expected_flag_order]
+            )
 
         def sorts_alphabetically_by_shortflag_first(self):
             # Where shortflags exist, they take precedence
