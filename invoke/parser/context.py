@@ -11,8 +11,8 @@ def to_flag(name):
 def sort_candidate(arg):
     names = arg.names
     # TODO: is there no "split into two buckets on predicate" builtin?
-    shorts = filter(lambda x: len(x.strip('-')) == 1, names)
-    longs = filter(lambda x: x not in shorts, names)
+    shorts = set(x for x in names if len(x.strip('-')) == 1)
+    longs = set(x for x in names if x not in shorts)
     return sorted(shorts if shorts else longs)[0]
 
 def flag_key(x):
