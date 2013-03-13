@@ -3,6 +3,14 @@
 import select, errno, os, sys
 from subprocess import Popen as OriginalPopen, mswindows, PIPE
 
+import six
+
+
+def read_byte(file_no):
+    # Read a byte, ensure unicode string output.
+    # Should work on python 2 and 3 equally.
+    return os.read(file_no, 1).decode('utf-8')
+
 
 class Popen(OriginalPopen):
     #
@@ -46,7 +54,7 @@ class Popen(OriginalPopen):
                 stderr = []
 
             input_offset = 0
-            empty_str = b""
+            empty_str = ''
             while read_set or write_set:
                 try:
                     rlist, wlist, xlist = select.select(read_set, write_set, [])
@@ -67,7 +75,7 @@ class Popen(OriginalPopen):
                         write_set.remove(self.stdin)
 
                 if self.stdout in rlist:
-                    data = os.read(self.stdout.fileno(), 1)
+                    data = read_byte(self.stdout.fileno())
                     if data == empty_str:
                         self.stdout.close()
                         read_set.remove(self.stdout)
@@ -76,7 +84,7 @@ class Popen(OriginalPopen):
                     stdout.append(data)
 
                 if self.stderr in rlist:
-                    data = os.read(self.stderr.fileno(), 1)
+                    data = read_byte(self.stderr.fileno())
                     if data == empty_str:
                         self.stderr.close()
                         read_set.remove(self.stderr)
