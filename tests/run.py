@@ -155,4 +155,4 @@ class Run(Spec):
 
     def funky_characters_in_stdout_dont_barf(self):
         # E.g. 'tree'
-        skip()
+        run("cat tree.out")
