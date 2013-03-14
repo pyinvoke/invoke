@@ -148,3 +148,11 @@ class Run(Spec):
         # Somehow trigger an OSError saying "Input/output error" within
         # pexpect.spawn().interact() & assert it is in result.exception
         skip()
+
+    def KeyboardInterrupt_on_stdin_doesnt_flake(self):
+        # E.g. inv test => Ctrl-C halfway => shouldn't get buffer API errors
+        skip()
+
+    def funky_characters_in_stdout_dont_barf(self):
+        # E.g. 'tree'
+        skip()
