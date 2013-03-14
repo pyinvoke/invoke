@@ -41,6 +41,10 @@ class Result(object):
         # Holy mismatch between name and implementation, Batman!
         return self.exited == 0
 
+    # Python 3 ahoy
+    def __bool__(self):
+        return self.__nonzero__()
+
     def __str__(self):
         ret = ["Command exited with status %s." % self.exited]
         for x in ('stdout', 'stderr'):
