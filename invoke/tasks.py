@@ -70,12 +70,13 @@ class Task(object):
         return arg_names, spec_dict
 
     def fill_implicit_positionals(self, positional):
-        _, spec_dict = self.argspec(self.body)
+        args, spec_dict = self.argspec(self.body)
         # If positionals is None, everything lacking a default
         # value will be automatically considered positional.
         if positional is None:
             positional = []
-            for name, default in six.iteritems(spec_dict):
+            for name in args: # Go in defined order, not dict "order"
+                default = spec_dict[name]
                 if default is NO_DEFAULT:
                     positional.append(name)
         return positional
