@@ -216,9 +216,10 @@ class Collection_(Spec):
             sub = Collection('sub', subtask)
             self.c = Collection(mytask, mytask2, sub)
             self.contexts = self.c.to_contexts()
-            self.context = self.contexts[1]
             alias_tups = [list(x.aliases) for x in self.contexts]
             self.aliases = reduce(operator.add, alias_tups, [])
+            # Focus on 'mytask' as it has the more interesting sig
+            self.context = [x for x in self.contexts if x.name == 'mytask'][0]
 
         def returns_iterable_of_Contexts_corresponding_to_tasks(self):
             eq_(self.context.name, 'mytask')
