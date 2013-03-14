@@ -117,7 +117,7 @@ def run(command, warn=False, hide=None, pty=False):
             if 'out' not in hide:
                 return text
             else:
-                return ""
+                return b""
         wrapped_cmd = "/bin/bash -c \"%s\"" % command
         p = pexpect.spawn(wrapped_cmd)
         # Ensure pexpect doesn't barf with OSError if we fall off the end of
