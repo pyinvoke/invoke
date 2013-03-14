@@ -1,7 +1,9 @@
 # Docs
 Sphinx>=1.1.2
 # Testing (explicit dependencies to get around a Travis/pip issue)
-nose==1.1.2
+# For now, need master as 1.3 isn't out yet :(
+#nose>=1.3
+-e git+https://github.com/nose-devs/nose#egg=nose
 spec>=0.9.7
 mock==1.0.1
 # Need invocations lib to load internal tasks module (for now)
