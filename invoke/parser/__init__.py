@@ -103,7 +103,7 @@ class Parser(object):
                         debug("%r is a flag for current context & it takes a value, giving it %r" % (token, rest))
                         body.insert(index + 1, rest)
                     else:
-                        rest = map(lambda x: '-%s' % x, rest)
+                        rest = ['-%s' % x for x in rest]
                         debug("Splitting multi-flag glob %r into %r and %r" % (
                             orig, token, rest))
                         for item in reversed(rest):
