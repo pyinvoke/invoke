@@ -154,5 +154,5 @@ class Run(Spec):
         skip()
 
     def funky_characters_in_stdout_dont_barf(self):
-        # E.g. 'tree'
-        run("cat tree.out")
+        # Crummy "doesn't explode with decode errors" test
+        run("cat tree.out", hide='both')
