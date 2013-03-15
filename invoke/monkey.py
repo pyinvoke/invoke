@@ -7,9 +7,7 @@ import six
 
 
 def read_byte(file_no):
-    # Read a byte, ensure unicode string output.
-    # Should work on python 2 and 3 equally.
-    return os.read(file_no, 1).decode('utf-8')
+    return os.read(file_no, 1)
 
 
 class Popen(OriginalPopen):
@@ -54,7 +52,7 @@ class Popen(OriginalPopen):
                 stderr = []
 
             input_offset = 0
-            empty_str = ''
+            empty_str = b''
             while read_set or write_set:
                 try:
                     rlist, wlist, xlist = select.select(read_set, write_set, [])
@@ -80,7 +78,10 @@ class Popen(OriginalPopen):
                         self.stdout.close()
                         read_set.remove(self.stdout)
                     if 'out' not in self.hide:
-                        sys.stdout.write(data)
+                        stream = sys.stdout
+                        if six.PY3:
+                            stream = stream.buffer
+                        stream.write(data)
                     stdout.append(data)
 
                 if self.stderr in rlist:
@@ -89,14 +90,17 @@ class Popen(OriginalPopen):
                         self.stderr.close()
                         read_set.remove(self.stderr)
                     if 'err' not in self.hide:
-                        sys.stderr.write(data)
+                        stream = sys.stderr
+                        if six.PY3:
+                            stream = stream.buffer
+                        stream.write(data)
                     stderr.append(data)
 
             # All data exchanged.  Translate lists into strings.
             if stdout is not None:
-                stdout = empty_str.join(stdout)
+                stdout = empty_str.join(stdout).decode('utf-8')
             if stderr is not None:
-                stderr = empty_str.join(stderr)
+                stderr = empty_str.join(stderr).decode('utf-8')
 
             # Translate newlines, if requested.  We cannot let the file
             # object do the translation: It is based on stdio, which is
