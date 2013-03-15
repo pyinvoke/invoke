@@ -90,8 +90,9 @@ def run(command, warn=False, hide=None, pty=False):
     ``warn=True``.
 
     To disable copying the subprocess' stdout and/or stderr to the controlling
-    terminal, specify ``hide='out'``, ``hide='err'`` or ``hide='both'``. (The
-    default value is ``None``, meaning to print everything.)
+    terminal, specify ``hide='out'`` (or ``'stdout'``), ``hide='err'`` (or
+    ``'stderr'``) or ``hide='both'`` (or ``True``). The default value is
+    ``None``, meaning to print everything; ``False`` will also disable hiding.
 
     .. note::
         Stdout and stderr are always captured and stored in the ``Result``

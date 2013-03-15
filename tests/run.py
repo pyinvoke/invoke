@@ -62,9 +62,15 @@ class Run(Spec):
         eq_(run("false", warn=True).exited, 1)
 
     @trap
-    def hide_both_hides_everything(self):
-        run(self.both, hide='both')
+    def _hide_both(self, val):
+        run(self.both, hide=val)
         eq_(sys.stdall.getvalue(), "")
+
+    def hide_both_hides_everything(self):
+        self._hide_both('both')
+
+    def hide_True_hides_everything(self):
+        self._hide_both(True)
 
     @trap
     def hide_out_only_hides_stdout(self):
@@ -106,10 +112,16 @@ class Run(Spec):
         eq_(r.stderr, "")
 
     @trap
-    def hide_None_hides_nothing(self):
-        r = run(self.both, hide=None)
+    def _no_hiding(self, val):
+        r = run(self.both, hide=val)
         eq_(sys.stdout.getvalue().strip(), "foo")
         eq_(sys.stderr.getvalue().strip(), "bar")
+
+    def hide_None_hides_nothing(self):
+        self._no_hiding(None)
+
+    def hide_False_hides_nothing(self):
+        self._no_hiding(False)
 
     @raises(ValueError)
     def hide_unknown_vals_raises_ValueError(self):
