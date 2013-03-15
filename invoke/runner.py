@@ -64,12 +64,12 @@ class Result(object):
 
 
 def normalize_hide(val):
-    hide_vals = (None, 'out', 'stdout', 'err', 'stderr', 'both')
+    hide_vals = (None, False, 'out', 'stdout', 'err', 'stderr', 'both', True)
     if val not in hide_vals:
         raise ValueError("'hide' got %r which is not in %r" % (val, hide_vals,))
-    if val is None:
+    if val in (None, False):
         hide = ()
-    elif val == 'both':
+    elif val in ('both', True):
         hide = ('out', 'err')
     elif val == 'stdout':
         hide = ('out',)
