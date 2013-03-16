@@ -31,6 +31,8 @@ setup(
     author_email='jeff@bitprophet.org',
     url='http://docs.pyinvoke.org',
 
+    install_requires=['pexpect-u==2.5.1'],
+
     packages=find_packages(),
     entry_points={
         'console_scripts': [
