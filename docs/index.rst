@@ -46,6 +46,7 @@ How do I use it?
     :maxdepth: 3
     :glob:
 
+    getting_started.rst
     concepts
     api
 
