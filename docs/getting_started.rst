@@ -106,19 +106,19 @@ build a :doc:`nested namespace <concepts/namespaces>`. Here's a quick example.
 
 Let's first rename our ``tasks.py`` to be ``docs.py``; no other changes are
 needed there. Then we create a new ``tasks.py``, and for the sake of brevity
-populate it with a new, truly top level task called ``deploy``::
-
-    @task
-    def deploy():
-        run("python setup.py sdist register upload")
+populate it with a new, truly top level task called ``deploy``.
 
 Then we can use a new API member, the `.Collection` class, to bind this new
 task and the ``docs`` module of tasks, into a single explicit namespace. This
 typically occurs at the bottom of ``tasks.py`` once all the other objects have
-been defined::
+been defined, like so::
 
-    from invoke import Collection
+    from invoke import Collection, task, run
     import docs
+
+    @task
+    def deploy():
+        run("python setup.py sdist register upload")
 
     namespace = Collection(docs, deploy)
 
