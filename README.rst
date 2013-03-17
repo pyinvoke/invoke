@@ -1,5 +1,16 @@
 .. image:: https://secure.travis-ci.org/pyinvoke/invoke.png?branch=master
 
+**BIG HONKIN' DISCLAIMER:** This software is currently in beta. It's
+test-driven and dogfooded, but feature set & documentation has holes & rough
+spots. **Please** make sure you search the `known issues
+<https://github.com/pyinvoke/invoke/issues>`_ before submitting new bug reports
+-- we already know it doesn't do X, Y and Z and will be sprinting to beef
+things up ASAP.
+
+**Thank you!**
+
+----
+
 Invoke is a Python (2.6+ and 3.3+) task execution tool & library, drawing inspiration from various sources to arrive at a powerful & clean feature set.
 
 * Like Ruby's Rake tool and Invoke's own predecessor Fabric 1.x, it provides a
