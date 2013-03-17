@@ -1,4 +1,9 @@
-import six
+# Normal import
+try:
+    import six
+# Horrible, awful hack to work when vendorized
+except ImportError:
+    from .. import six
 
 
 class AliasDict(dict):
