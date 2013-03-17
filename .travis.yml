@@ -5,7 +5,10 @@ python:
   - "3.3"
 install:
   # Install self (we are required for some of our own dev reqs for now)
-  - pip install -e .
+  # NOTE: *do not* use -e as it adds checkout root to sys.path, which prevents
+  # us from having a "pure" install environment like a new user would have.
+  # E.g. it makes our internal test module importable :(
+  - pip install .
   # Install those dev requirements (test runner, etc)
   - pip install -r dev-requirements.txt --use-mirrors
 script: "inv test"
