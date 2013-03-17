@@ -27,6 +27,46 @@ You can then execute that new task by telling Invoke's command line runner,
 
 The function body can be any Python you want -- anything at all.
 
+Parameterizing tasks
+====================
+
+Functions can have arguments, and thus so can tasks. By default, your task
+functions' args/kwargs are mapped automatically to both long and short CLI
+flags, as per :doc:`the CLI docs <concepts/cli/intro>`. For example, if we add
+a ``clean`` argument and give it a boolean default, it will show up as a set of
+toggle flags, ``--clean`` and ``-c``::
+
+    @task
+    def build(clean=False):
+        if clean:
+            print("Cleaning!")
+        print("Building!")
+
+Invocations::
+
+    $ invoke build -c
+    $ invoke build --clean
+
+Naturally, other default argument values will allow giving string or integer
+values. Arguments with no default values are assumed to take strings, and can
+also be given as positional arguments. Take this incredibly contrived snippet
+for example::
+
+    @task
+    def hi(name):
+        print("Hi %s!" % name)
+
+It can be invoked in the following ways, all resulting in "Hi Jeff!"::
+
+    $ invoke hi Jeff
+    $ invoke hi --name Jeff
+    $ invoke hi --name=Jeff
+    $ invoke hi -n Jeff
+    $ invoke hi -nJeff
+
+Again, more details on how all this works can be found in the :doc:`CLI
+concepts <concepts/cli>`.
+
 Listing tasks
 =============
 
