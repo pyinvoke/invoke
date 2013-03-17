@@ -3,7 +3,7 @@
 import select, errno, os, sys
 from subprocess import Popen as OriginalPopen, mswindows, PIPE
 
-import six
+from .vendor import six
 
 
 def read_byte(file_no):
