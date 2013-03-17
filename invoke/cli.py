@@ -117,6 +117,7 @@ def parse(argv, collection=None):
             else:
                 six.print_(spec)
         six.print_('')
+        sys.exit(0)
 
     # Load collection (default or specified) and parse leftovers
     # (Skip loading if somebody gave us an explicit task collection.)
