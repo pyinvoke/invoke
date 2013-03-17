@@ -93,6 +93,9 @@ Now when you ``invoke build``, it will automatically run ``clean`` first.
     names" API, you can simply give the ``pre`` kwarg:
     ``@task(pre=['clean'])``.
 
+Details can be found in the :doc:`execution conceptual docs
+<concepts/execution>`.
+
 Creating namespaces
 ===================
 
