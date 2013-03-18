@@ -58,6 +58,18 @@ Naturally, more than one flag may be given at a time::
 
     $ invoke build --progress-bar -f pdf
 
+Per-task help / printing available flags
+----------------------------------------
+
+To get help for a specific task, just give the task name as an argument to the
+core ``--help``/``-h`` option::
+
+    $ invoke --help build
+
+    'build' options:
+      -f STRING, --format=STRING       Which build format type to use
+      --progress-bar, -p               Display progress bar
+
 Globbed short flags
 -------------------
 
