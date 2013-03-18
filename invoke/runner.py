@@ -3,8 +3,7 @@ import pty
 import select
 import sys
 
-#from .vendor import pexpect
-import pexpect
+from .vendor import pexpect
 
 from .monkey import Popen, PIPE
 from .exceptions import Failure
