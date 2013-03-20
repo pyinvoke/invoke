@@ -68,7 +68,13 @@ def parse(argv, collection=None):
             kind=bool,
             default=False,
             help="Disable task deduplication"
-        )
+        ),
+        Argument(
+            names=('echo', 'e'),
+            kind=bool,
+            default=False,
+            help="Echo executed commands before running",
+        ),
     ))
     # 'core' will result an .unparsed attribute with what was left over.
     debug("Parsing initial context (core args)")
@@ -143,6 +149,8 @@ def parse(argv, collection=None):
             six.print_("    %s" % out)
         six.print_("")
         sys.exit(0)
+
+    # Return to caller so they can handle the results
     return args, collection, tasks
 
 
