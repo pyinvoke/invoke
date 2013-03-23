@@ -7,6 +7,8 @@ What is Invoke?
 
 .. include:: ../README.rst
 
+See :doc:`getting_started` for a quick-start guide.
+
 
 How can I install it?
 =====================
