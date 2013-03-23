@@ -5,6 +5,7 @@ Getting started
 This document presents a whirlwind tour of Invoke's feature set. Please see the
 links throughout for detailed conceptual & API docs.
 
+
 Defining and running task functions
 ===================================
 
@@ -26,6 +27,7 @@ You can then execute that new task by telling Invoke's command line runner,
     Building!
 
 The function body can be any Python you want -- anything at all.
+
 
 Parameterizing tasks
 ====================
@@ -67,6 +69,7 @@ It can be invoked in the following ways, all resulting in "Hi Jeff!"::
 Again, more details on how all this works can be found in the :doc:`CLI
 concepts <concepts/cli>`.
 
+
 Listing tasks
 =============
 
@@ -106,6 +109,7 @@ output, exit code, and so forth; it also allows you to activate a PTY, hide
 output (so it is captured only), and more. See `its API docs <.run>` for
 details.
 
+
 Declaring pre-tasks
 ===================
 
@@ -135,6 +139,7 @@ Now when you ``invoke build``, it will automatically run ``clean`` first.
 
 Details can be found in the :doc:`execution conceptual docs
 <concepts/execution>`.
+
 
 Creating namespaces
 ===================
