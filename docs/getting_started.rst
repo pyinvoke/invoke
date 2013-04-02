@@ -188,8 +188,8 @@ global behavior; for example, controlling whether `.run` defaults to echoing
 its commands, or if nonzero return codes should abort execution.
 
 Some libraries implement this via global module state. That approach works in
-the base case but becomes untenable otherwise, makes testing difficult and
-error prone, and limits concurrency.
+the base case but makes testing difficult and error prone, limits concurrency,
+and just all-around makes the software more complex to use and extend.
 
 Invoke encapsulates core program state in a `.Context` object which can be
 handed to individual tasks. It serves as a configuration vector and implements
