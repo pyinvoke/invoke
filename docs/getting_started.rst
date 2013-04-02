@@ -203,12 +203,12 @@ task definition style seen earlier:
 
 * Tell `@task <.task>` that you want your task to be *contextualized* - given a
   context object - by saying ``contextualized=True``.
-* Define your task function with an initial argument that will hold the
-  context; this argument is not taken into account when setting up command-line
-  parsing and is solely for context handling.
+* Define your task with an initial argument to hold the context; this argument
+  isn't taken into account during command-line parsing and is solely for
+  context handling.
 
-    * You can name this argument anything you want; Invoke passes the context
-      in positionally and not via keyword argument. The convention used in the
+    * You can name it anything you want; Invoke passes the context in
+      positionally, not via keyword argument. The convention used in the
       documentation is typically ``context`` or ``ctx``.
 
 * Replace any mentions of `.run` with ``ctx.run`` (or whatever your context
@@ -222,14 +222,14 @@ Here's a simple example::
     def restart(ctx):
         ctx.run("restart apache2")
 
-Slightly more boilerplate, but now your ``ctx.run`` calls can honor
-command-line flags, config files and so forth.
+We're using slightly more boilerplate (though see below), but now your
+``ctx.run`` calls can honor command-line flags, config files and so forth.
 
 Boilerplate reduction
 ---------------------
 
 Clearly, calling ``contextualized=True`` for every task in your collection
-would get boring fast. Invoke offers a convenience API call, `@ctask <.ctask>`,
+would get old fast. Invoke offers a convenience API call, `@ctask <.ctask>`,
 which is exactly the same as `@task <.task>` but whose ``contextualized`` flag
 defaults to ``True``.
 
