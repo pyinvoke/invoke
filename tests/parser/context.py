@@ -8,6 +8,7 @@ from invoke.collection import Collection
 
 
 class Context_(Spec):
+    "ParserContext" # meh
     def may_have_a_name(self):
         c = Context(name='taskname')
         eq_(c.name, 'taskname')
