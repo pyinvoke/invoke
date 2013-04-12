@@ -72,10 +72,18 @@ class task_(Spec):
             pass
 
 
+class ctask_(Spec):
+    def behaves_like_task_with_contextualized_True(self):
+        skip()
+
+
 class Task_(Spec):
     class attributes:
         def has_default_flag(self):
             eq_(Task(_func).is_default, False)
+
+        def has_contextualized_flag(self):
+            eq_(Task(_func).is_contextualized, False)
 
     class callability:
         def setup(self):
@@ -87,6 +95,14 @@ class Task_(Spec):
 
         def dunder_call_wraps_body_call(self):
             eq_(self.task(), 5)
+
+        @raises(TypeError) # FIXME: right class?
+        def errors_if_contextualized_and_first_arg_not_Context(self):
+            @ctask
+            def mytask(ctx):
+                pass
+            mytask(5)
+            skip()
 
         def tracks_times_called(self):
             eq_(self.task.called, False)
