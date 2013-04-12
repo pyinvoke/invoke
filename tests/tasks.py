@@ -96,7 +96,7 @@ class Task_(Spec):
         def dunder_call_wraps_body_call(self):
             eq_(self.task(), 5)
 
-        @raises(TypeError) # FIXME: right class?
+        @raises(TypeError)
         def errors_if_contextualized_and_first_arg_not_Context(self):
             @ctask
             def mytask(ctx):

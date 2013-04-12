@@ -41,6 +41,7 @@ class Task(object):
         self.help = help or {}
         self.pre = pre or []
         self.times_called = 0
+        self.is_contextualized = False
 
     def __call__(self, *args, **kwargs):
         result = self.body(*args, **kwargs)
