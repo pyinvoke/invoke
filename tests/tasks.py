@@ -1,6 +1,6 @@
 from spec import Spec, skip, eq_, raises
 
-from invoke.tasks import task, Task
+from invoke.tasks import task, ctask, Task
 from invoke.loader import Loader
 
 from _utils import support
@@ -71,10 +71,23 @@ class task_(Spec):
         def func():
             pass
 
+    def passes_in_contextualized_kwarg(self):
+        @task
+        def task1():
+            pass
+        @task(contextualized=True)
+        def task2(ctx):
+            pass
+        assert not task1.contextualized
+        assert task2.contextualized
+
 
 class ctask_(Spec):
     def behaves_like_task_with_contextualized_True(self):
-        skip()
+        @ctask
+        def mytask(ctx):
+            pass
+        assert mytask.contextualized
 
 
 class Task_(Spec):
@@ -83,7 +96,7 @@ class Task_(Spec):
             eq_(Task(_func).is_default, False)
 
         def has_contextualized_flag(self):
-            eq_(Task(_func).is_contextualized, False)
+            eq_(Task(_func).contextualized, False)
 
     class callability:
         def setup(self):
@@ -102,7 +115,6 @@ class Task_(Spec):
             def mytask(ctx):
                 pass
             mytask(5)
-            skip()
 
         def tracks_times_called(self):
             eq_(self.task.called, False)
