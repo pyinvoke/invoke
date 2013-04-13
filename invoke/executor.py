@@ -17,11 +17,29 @@ class Executor(object):
 
     def execute(self, name, kwargs=None, dedupe=True):
         """
-        Execute task named ``name``, optionally passing along ``kwargs``.
+        Execute a named task, honoring pre- or post-tasks and so forth.
 
-        If ``dedupe`` is ``True`` (default), will ensure any given task within
-        ``self.collection`` is only run once per session. To disable this
-        behavior, say ``dedupe=False``.
+        :param name:
+            A string naming which task from the Executor's `.Collection` is to
+            be executed. May contain dotted syntax appropriate for calling
+            namespaced tasks, e.g. ``subcollection.taskname``.
+
+        :param kwargs:
+            A keyword argument dict expanded when calling the requested task. E.g.::
+
+                executor.execute('mytask', {'myarg': 'foo'})
+
+            is (roughly) equivalent to::
+
+                mytask(myarg='foo')
+
+        :param dedupe:
+            Ensures any given task within ``self.collection`` is only run once
+            per session. Set to ``False`` to disable this behavior.
+
+        :returns:
+            The return value of the named task -- regardless of whether pre- or
+            post-tasks are executed.
         """
         kwargs = kwargs or {}
         # Expand task list
