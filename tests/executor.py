@@ -1,4 +1,4 @@
-from spec import Spec, eq_
+from spec import Spec, eq_, skip
 from mock import Mock
 
 from invoke.executor import Executor
@@ -40,3 +40,13 @@ class Executor_(Spec):
         self.executor.execute(name='task2', dedupe=False)
         self.executor.execute(name='task3', dedupe=False)
         eq_(self.task1.body.call_count, 2)
+
+    class returns_return_value_of_specified_task:
+        def base_case(self):
+            skip()
+
+        def with_pre_tasks(self):
+            skip()
+
+        def with_post_tasks(self):
+            skip()
