@@ -2,6 +2,7 @@ import os
 import sys
 
 from spec import eq_, skip, Spec, ok_, trap
+from mock import patch
 
 from invoke.cli import parse, dispatch
 from invoke.context import Context
@@ -165,6 +166,14 @@ foo
 bar
 """.lstrip()
         eq_(run("invoke -c integration --no-dedupe foo bar").stdout, expected)
+
+
+    class run_options:
+        "run() related CLI flags"
+        def warn_only(self):
+            with patch('invoke.context.run') as run:
+                dispatch(['-w', '-c', 'contextualized', 'run'])
+                run.assert_called_with('x', warn=True)
 
 
 TB_SENTINEL = 'Traceback (most recent call last)'
