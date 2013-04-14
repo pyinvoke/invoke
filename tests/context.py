@@ -16,3 +16,6 @@ class Context_(Spec):
 
         def hide(self):
             self._honors('hide', 'both')
+
+        def pty(self):
+            self._honors('pty', True)
