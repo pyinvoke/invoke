@@ -156,6 +156,8 @@ def parse(argv, collection=None):
 
 def dispatch(argv):
     args, collection, tasks = parse(argv)
+    results = []
+    executor = Executor(collection)
     # Take action based on 'core' options and the 'tasks' found
     for context in tasks:
         kwargs = {}
@@ -165,9 +167,14 @@ def dispatch(argv):
             # TODO: allow swapping out of Executor subclasses based on core
             # config options
             # TODO: friggin dashes vs underscores
-            return Executor(collection).execute(name=context.name, kwargs=kwargs, dedupe=not args['no-dedupe'])
+            results.append(executor.execute(
+                name=context.name,
+                kwargs=kwargs,
+                dedupe=not args['no-dedupe']
+            ))
         except Failure as f:
             sys.exit(f.result.exited)
+    return results
 
 
 def main():
