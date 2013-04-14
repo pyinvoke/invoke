@@ -6,7 +6,13 @@ from invoke.context import Context
 
 class Context_(Spec):
     class run_:
-        @patch('invoke.context.run')
-        def honors_warn_state(self, run):
-            Context(run={'warn': True}).run('x')
-            run.assert_called_with('x', warn=True)
+        def _honors(self, kwarg, value):
+            with patch('invoke.context.run') as run:
+                Context(run={kwarg: value}).run('x')
+                run.assert_called_with('x', **{kwarg: value})
+
+        def honors_warn_state(self):
+            self._honors('warn', True)
+
+        def honors_hide_state(self):
+            self._honors('hide', 'both')
