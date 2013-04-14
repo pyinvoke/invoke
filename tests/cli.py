@@ -167,13 +167,15 @@ bar
 """.lstrip()
         eq_(run("invoke -c integration --no-dedupe foo bar").stdout, expected)
 
-
     class run_options:
         "run() related CLI flags"
-        def warn_only(self):
+        def _test_flag(self, flag, kwarg, value):
             with patch('invoke.context.run') as run:
-                dispatch(['-w', '-c', 'contextualized', 'run'])
-                run.assert_called_with('x', warn=True)
+                dispatch([flag, '-c', 'contextualized', 'run'])
+                run.assert_called_with('x', **{kwarg: value})
+
+        def warn_only(self):
+            self._test_flag('-w', 'warn', True)
 
 
 TB_SENTINEL = 'Traceback (most recent call last)'
