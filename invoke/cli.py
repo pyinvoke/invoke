@@ -157,7 +157,7 @@ def parse(argv, collection=None):
 def dispatch(argv):
     args, collection, tasks = parse(argv)
     results = []
-    executor = Executor(collection)
+    executor = Executor(collection, Context())
     # Take action based on 'core' options and the 'tasks' found
     for context in tasks:
         kwargs = {}

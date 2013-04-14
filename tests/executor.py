@@ -1,6 +1,7 @@
 from spec import Spec, eq_, skip
 from mock import Mock
 
+from invoke.context import Context
 from invoke.executor import Executor
 from invoke.collection import Collection
 from invoke.tasks import Task
@@ -15,7 +16,7 @@ class Executor_(Spec):
         coll.add_task(self.task1, name='task1')
         coll.add_task(self.task2, name='task2')
         coll.add_task(self.task3, name='task3')
-        self.executor = Executor(coll)
+        self.executor = Executor(collection=coll, context=Context())
 
     class init:
         "__init__"

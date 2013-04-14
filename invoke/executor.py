@@ -5,15 +5,19 @@ class Executor(object):
     Subclasses may override various extension points to change, add or remove
     behavior.
     """
-    def __init__(self, collection):
+    def __init__(self, collection, context):
         """
-        Create executor with a pointer to the task collection ``collection``.
+        Initialize executor with handles to a task collection & config context.
 
-        This pointer is used for looking up tasks by name and
+        The collection is used for looking up tasks by name and
         storing/retrieving state, e.g. how many times a given task has been run
         this session and so on.
+
+        The context is passed into any tasks that mark themselves as requiring
+        one for operation.
         """
         self.collection = collection
+        self.context = context
 
     def execute(self, name, kwargs=None, dedupe=True):
         """
