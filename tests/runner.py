@@ -160,6 +160,16 @@ class Run(Spec):
         def pty_defaults_to_off(self):
             eq_(run("true").pty, False)
 
+    class command_echo:
+        @trap
+        def does_not_echo_commands_run_by_default(self):
+            run("echo hi")
+            eq_(sys.stdout.getvalue().strip(), "hi")
+
+        def when_echo_True_commands_echoed_in_bold(self):
+            run("echo hi", echo=True)
+            eq_(sys.stdout.getvalue().strip(), "echo hi\nhi")
+
     #
     # Random edge/corner case junk
     #
