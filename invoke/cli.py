@@ -88,6 +88,10 @@ def parse(argv, collection=None):
             default=False,
             help="Use a pty when executing shell commands.",
         ),
+        Argument(
+            names=('hide', 'H'),
+            help="Set default value of run()'s 'hide' kwarg.",
+        )
     ))
     # 'core' will result an .unparsed attribute with what was left over.
     debug("Parsing initial context (core args)")
@@ -174,6 +178,8 @@ def derive_opts(args):
         run['warn'] = True
     if args.pty.value:
         run['pty'] = True
+    if args.hide.value:
+        run['hide'] = args.hide.value
     return {'run': run}
 
 def dispatch(argv):

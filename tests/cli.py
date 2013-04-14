@@ -75,6 +75,7 @@ Core options:
                                    given >1 time.
   -e, --echo                       Echo executed commands before running.
   -h, --help                       Show this help message and exit.
+  -H STRING, --hide=STRING         Set default value of run()'s 'hide' kwarg.
   -l, --list                       List available tasks.
   -p, --pty                        Use a pty when executing shell commands.
   -r STRING, --root=STRING         Change root directory used for finding task
@@ -172,14 +173,17 @@ bar
         "run() related CLI flags"
         def _test_flag(self, flag, kwarg, value):
             with patch('invoke.context.run') as run:
-                dispatch([flag, '-c', 'contextualized', 'run'])
+                dispatch(flag + ['-c', 'contextualized', 'run'])
                 run.assert_called_with('x', **{kwarg: value})
 
         def warn_only(self):
-            self._test_flag('-w', 'warn', True)
+            self._test_flag(['-w'], 'warn', True)
 
         def pty(self):
-            self._test_flag('-p', 'pty', True)
+            self._test_flag(['-p'], 'pty', True)
+
+        def hide(self):
+            self._test_flag(['--hide', 'both'], 'hide', 'both')
 
 
 TB_SENTINEL = 'Traceback (most recent call last)'
