@@ -4,8 +4,9 @@ import textwrap
 
 from .vendor import six
 
+from .context import Context
 from .loader import Loader
-from .parser import Parser, Context, Argument
+from .parser import Parser, Context as ParserContext, Argument
 from .executor import Executor
 from .exceptions import Failure, CollectionNotFound, ParseError
 from .util import debug, pty_size
@@ -35,7 +36,7 @@ def parse_gracefully(parser, argv):
 
 def parse(argv, collection=None):
     # Initial/core parsing (core options can affect the rest of the parsing)
-    initial_context = Context(args=(
+    initial_context = ParserContext(args=(
         # TODO: make '--collection' a list-building arg, not a string
         Argument(
             names=('collection', 'c'),
@@ -68,7 +69,13 @@ def parse(argv, collection=None):
             kind=bool,
             default=False,
             help="Disable task deduplication"
-        )
+        ),
+        Argument(
+            names=('echo', 'e'),
+            kind=bool,
+            default=False,
+            help="Echo executed commands before running",
+        ),
     ))
     # 'core' will result an .unparsed attribute with what was left over.
     debug("Parsing initial context (core args)")
@@ -79,7 +86,7 @@ def parse(argv, collection=None):
 
     # Print version & exit if necessary
     if args.version.value:
-        six.print_("Invoke %s" % __version__)
+        print("Invoke %s" % __version__)
         sys.exit(0)
 
     # Core --help output
@@ -87,9 +94,9 @@ def parse(argv, collection=None):
     # and available tasks listing; or core flags modified by plugins/task
     # modules) it will have to move farther down.
     if args.help.value:
-        six.print_("Usage: inv[oke] [--core-opts] task1 [--task1-opts] ... taskN [--taskN-opts]")
-        six.print_("")
-        six.print_("Core options:")
+        print("Usage: inv[oke] [--core-opts] task1 [--task1-opts] ... taskN [--taskN-opts]")
+        print("")
+        print("Core options:")
         indent = 2
         padding = 3
         # Calculate column sizes: don't wrap flag specs, give what's left over
@@ -111,12 +118,12 @@ def parse(argv, collection=None):
             ))
             # Print help text as needed
             if help_chunks:
-                six.print_(spec + help_chunks[0])
+                print(spec + help_chunks[0])
                 for chunk in help_chunks[1:]:
-                    six.print_((' ' * len(spec)) + chunk)
+                    print((' ' * len(spec)) + chunk)
             else:
-                six.print_(spec)
-        six.print_('')
+                print(spec)
+        print('')
         sys.exit(0)
 
     # Load collection (default or specified) and parse leftovers
@@ -131,7 +138,7 @@ def parse(argv, collection=None):
 
     # Print discovered tasks if necessary
     if args.list.value:
-        six.print_("Available tasks:\n")
+        print("Available tasks:\n")
         # Sort in depth, then alpha, order
         task_names = collection.task_names
         names = sort_names(task_names.keys())
@@ -140,17 +147,18 @@ def parse(argv, collection=None):
             out = primary
             if aliases:
                 out += " (%s)" % ', '.join(aliases)
-            six.print_("    %s" % out)
-        six.print_("")
+            print("    %s" % out)
+        print("")
         sys.exit(0)
+
+    # Return to caller so they can handle the results
     return args, collection, tasks
 
 
-def main():
-    # Parse command line
-    argv = sys.argv[1:]
-    debug("Base argv from sys: %r" % (argv,))
+def dispatch(argv):
     args, collection, tasks = parse(argv)
+    results = []
+    executor = Executor(collection, Context())
     # Take action based on 'core' options and the 'tasks' found
     for context in tasks:
         kwargs = {}
@@ -160,6 +168,18 @@ def main():
             # TODO: allow swapping out of Executor subclasses based on core
             # config options
             # TODO: friggin dashes vs underscores
-            Executor(collection).execute(name=context.name, kwargs=kwargs, dedupe=not args['no-dedupe'])
+            results.append(executor.execute(
+                name=context.name,
+                kwargs=kwargs,
+                dedupe=not args['no-dedupe']
+            ))
         except Failure as f:
             sys.exit(f.result.exited)
+    return results
+
+
+def main():
+    # Parse command line
+    argv = sys.argv[1:]
+    debug("Base argv from sys: %r" % (argv,))
+    dispatch(argv)

@@ -5,6 +5,7 @@ Getting started
 This document presents a whirlwind tour of Invoke's feature set. Please see the
 links throughout for detailed conceptual & API docs.
 
+
 Defining and running task functions
 ===================================
 
@@ -26,6 +27,7 @@ You can then execute that new task by telling Invoke's command line runner,
     Building!
 
 The function body can be any Python you want -- anything at all.
+
 
 Parameterizing tasks
 ====================
@@ -67,6 +69,7 @@ It can be invoked in the following ways, all resulting in "Hi Jeff!"::
 Again, more details on how all this works can be found in the :doc:`CLI
 concepts <concepts/cli>`.
 
+
 Listing tasks
 =============
 
@@ -106,6 +109,7 @@ output, exit code, and so forth; it also allows you to activate a PTY, hide
 output (so it is captured only), and more. See `its API docs <.run>` for
 details.
 
+
 Declaring pre-tasks
 ===================
 
@@ -135,6 +139,7 @@ Now when you ``invoke build``, it will automatically run ``clean`` first.
 
 Details can be found in the :doc:`execution conceptual docs
 <concepts/execution>`.
+
 
 Creating namespaces
 ===================
@@ -173,3 +178,66 @@ The result::
 
 For a more detailed breakdown of how namespacing works, please see :doc:`the
 docs <concepts/namespaces>`.
+
+
+Handling configuration state
+============================
+
+A number of command-line flags and other configuration channels need to affect
+global behavior; for example, controlling whether `.run` defaults to echoing
+its commands, or if nonzero return codes should abort execution.
+
+Some libraries implement this via global module state. That approach works in
+the base case but makes testing difficult and error prone, limits concurrency,
+and just all-around makes the software more complex to use and extend.
+
+Invoke encapsulates core program state in a `.Context` object which can be
+handed to individual tasks. It serves as a configuration vector and implements
+state-aware methods which mirror or wrap the functional parts of the API.
+
+Using contexts in your tasks
+----------------------------
+
+To gain access to Invoke's context-aware API, make the following changes to the
+task definition style seen earlier:
+
+* Tell `@task <.task>` that you want your task to be *contextualized* - given a
+  context object - by saying ``contextualized=True``.
+* Define your task with an initial argument to hold the context; this argument
+  isn't taken into account during command-line parsing and is solely for
+  context handling.
+
+    * You can name it anything you want; Invoke passes the context in
+      positionally, not via keyword argument. The convention used in the
+      documentation is typically ``context`` or ``ctx``.
+
+* Replace any mentions of `.run` with ``ctx.run`` (or whatever your context
+  argument's name was).
+
+Here's a simple example::
+
+    from invoke import task
+
+    @task(contextualized=True)
+    def restart(ctx):
+        ctx.run("restart apache2")
+
+We're using slightly more boilerplate (though see below), but now your
+``ctx.run`` calls can honor command-line flags, config files and so forth.
+
+Boilerplate reduction
+---------------------
+
+Clearly, calling ``contextualized=True`` for every task in your collection
+would get old fast. Invoke offers a convenience API call, `@ctask <.ctask>`,
+which is exactly the same as `@task <.task>` but whose ``contextualized`` flag
+defaults to ``True``.
+
+A common convention is thus to import it "as" ``task`` so things still look
+neat and tidy::
+
+    from invoke import ctask as task
+
+    @task
+    def restart(ctx):
+        ctx.run("restart apache2")

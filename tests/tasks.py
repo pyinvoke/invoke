@@ -1,6 +1,6 @@
 from spec import Spec, skip, eq_, raises
 
-from invoke.tasks import task, Task
+from invoke.tasks import task, ctask, Task
 from invoke.loader import Loader
 
 from _utils import support
@@ -53,6 +53,12 @@ class task_(Spec):
     def when_positional_arg_missing_all_non_default_args_are_positional(self):
         eq_(self.vanilla['implicit_positionals'].positional, ['pos1', 'pos2'])
 
+    def context_arguments_should_not_appear_in_implicit_positional_list(self):
+        @ctask
+        def mytask(ctx):
+            pass
+        eq_(len(mytask.positional), 0)
+
     def pre_tasks_stored_as_simple_list_of_strings(self):
         @task(pre=['whatever'])
         def func():
@@ -71,11 +77,32 @@ class task_(Spec):
         def func():
             pass
 
+    def passes_in_contextualized_kwarg(self):
+        @task
+        def task1():
+            pass
+        @task(contextualized=True)
+        def task2(ctx):
+            pass
+        assert not task1.contextualized
+        assert task2.contextualized
+
+
+class ctask_(Spec):
+    def behaves_like_task_with_contextualized_True(self):
+        @ctask
+        def mytask(ctx):
+            pass
+        assert mytask.contextualized
+
 
 class Task_(Spec):
     class attributes:
         def has_default_flag(self):
             eq_(Task(_func).is_default, False)
+
+        def has_contextualized_flag(self):
+            eq_(Task(_func).contextualized, False)
 
     class callability:
         def setup(self):
@@ -87,6 +114,13 @@ class Task_(Spec):
 
         def dunder_call_wraps_body_call(self):
             eq_(self.task(), 5)
+
+        @raises(TypeError)
+        def errors_if_contextualized_and_first_arg_not_Context(self):
+            @ctask
+            def mytask(ctx):
+                pass
+            mytask(5)
 
         def tracks_times_called(self):
             eq_(self.task.called, False)
@@ -189,3 +223,9 @@ class Task_(Spec):
             assert 'o' in args
             assert args['o'] is args['longarg']
             assert 'l' in args
+
+        def context_arguments_are_not_returned(self):
+            @ctask
+            def mytask(ctx):
+                pass
+            eq_(len(mytask.get_arguments()), 0)

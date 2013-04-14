@@ -7,6 +7,7 @@ import types
 from .vendor import six
 from .vendor.lexicon import Lexicon
 
+from .context import Context
 from .parser import Argument
 
 if six.PY3:
@@ -28,12 +29,21 @@ class Task(object):
     # TODO: allow central per-session / per-taskmodule control over some of
     # them, e.g. (auto_)positional, auto_shortflags.
     # NOTE: we shadow __builtins__.help here. It's purposeful. :(
-    def __init__(self, body, aliases=(), positional=None, default=False, 
-        auto_shortflags=True, help=None, pre=None):
+    def __init__(self,
+        body,
+        contextualized=False,
+        aliases=(),
+        positional=None,
+        default=False,
+        auto_shortflags=True,
+        help=None,
+        pre=None
+    ):
         self.body = body
         # Must copy doc/name here because Sphinx is retarded about properties.
         self.__doc__ = getattr(body, '__doc__', '')
         self.__name__ = getattr(body, '__name__', '')
+        self.contextualized = contextualized
         self.aliases = aliases
         self.positional = self.fill_implicit_positionals(positional)
         self.is_default = default
@@ -43,6 +53,9 @@ class Task(object):
         self.times_called = 0
 
     def __call__(self, *args, **kwargs):
+        # Guard against calling contextualized tasks with no context.
+        if self.contextualized and not isinstance(args[0], Context):
+            raise TypeError("Contextualized task expected a Context, got %s instead!" % type(args[0]))
         result = self.body(*args, **kwargs)
         self.times_called += 1
         return result
@@ -67,6 +80,10 @@ class Task(object):
         arg_names = spec.args[:]
         matched_args = [reversed(x) for x in [spec.args, spec.defaults or []]]
         spec_dict = dict(zip_longest(*matched_args, fillvalue=NO_DEFAULT))
+        # Remove context argument, if applicable
+        if self.contextualized:
+            context_arg = arg_names.pop(0)
+            del spec_dict[context_arg]
         return arg_names, spec_dict
 
     def fill_implicit_positionals(self, positional):
@@ -107,6 +124,7 @@ class Task(object):
         """
         Return a list of Argument objects representing this task's signature.
         """
+        # Core argspec
         arg_names, spec_dict = self.argspec(self.body)
         # Obtain list of args + their default values (if any) in
         # declaration/definition order (i.e. based on getargspec())
@@ -143,6 +161,9 @@ def task(*args, **kwargs):
     specified. Otherwise, the following keyword arguments are allowed in the
     parenthese'd form:
 
+    * ``contextualized``: Hints to callers (especially the CLI) that this task
+      expects to be given a `.Context` object as its first argument when
+      called.
     * ``aliases``: Specify one or more aliases for this task, allowing it to be
       invoked as multiple different names. For example, a task named ``mytask``
       with a simple ``@task`` wrapper may only be invoked as ``"mytask"``.
@@ -167,9 +188,11 @@ def task(*args, **kwargs):
     ``pre`` kwarg for convenience's sake. (It is an error to give both
     ``*args`` and ``pre`` at the same time.)
     """
-    # @task -- no options
+    # @task -- no options were (probably) given.
+    # Also handles ctask's use case when given as @ctask, equivalent to
+    # @task(obj, contextualized=True).
     if len(args) == 1 and callable(args[0]):
-        return Task(args[0])
+        return Task(args[0], **kwargs)
     # @task(pre, tasks, here)
     if args:
         if 'pre' in kwargs:
@@ -177,6 +200,7 @@ def task(*args, **kwargs):
         kwargs['pre'] = args
     # @task(options)
     # TODO: pull in centrally defined defaults here (see Task)
+    contextualized = kwargs.pop('contextualized', False)
     aliases = kwargs.pop('aliases', ())
     positional = kwargs.pop('positional', None)
     default = kwargs.pop('default', False)
@@ -190,6 +214,7 @@ def task(*args, **kwargs):
     def inner(obj):
         obj = Task(
             obj,
+            contextualized=contextualized,
             aliases=aliases,
             positional=positional,
             default=default,
@@ -199,3 +224,8 @@ def task(*args, **kwargs):
         )
         return obj
     return inner
+
+
+def ctask(*args, **kwargs):
+    kwargs.setdefault('contextualized', True)
+    return task(*args, **kwargs)

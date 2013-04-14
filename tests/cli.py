@@ -3,9 +3,10 @@ import sys
 
 from spec import eq_, skip, Spec, ok_, trap
 
-from invoke.cli import parse
+from invoke.cli import parse, dispatch
+from invoke.context import Context
 from invoke.runner import run
-from invoke.parser import Parser, Context
+from invoke.parser import Parser
 from invoke.collection import Collection
 from invoke.tasks import task
 from invoke.exceptions import Failure
@@ -45,6 +46,11 @@ class CLI(Spec):
             "invoke -c integration print_name --name whatevs",
             "whatevs\n"
         )
+
+    def contextualized_tasks_are_given_parser_context_arg(self):
+        # go() in contextualized.py just returns its initial arg
+        retval = dispatch(['-c', 'contextualized', 'go'])[0]
+        assert isinstance(retval, Context)
 
     @trap
     def shorthand_binary_name(self):
