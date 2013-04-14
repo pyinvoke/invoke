@@ -154,10 +154,7 @@ def parse(argv, collection=None):
     return args, collection, tasks
 
 
-def main():
-    # Parse command line
-    argv = sys.argv[1:]
-    debug("Base argv from sys: %r" % (argv,))
+def dispatch(argv):
     args, collection, tasks = parse(argv)
     # Take action based on 'core' options and the 'tasks' found
     for context in tasks:
@@ -168,6 +165,13 @@ def main():
             # TODO: allow swapping out of Executor subclasses based on core
             # config options
             # TODO: friggin dashes vs underscores
-            Executor(collection).execute(name=context.name, kwargs=kwargs, dedupe=not args['no-dedupe'])
+            return Executor(collection).execute(name=context.name, kwargs=kwargs, dedupe=not args['no-dedupe'])
         except Failure as f:
             sys.exit(f.result.exited)
+
+
+def main():
+    # Parse command line
+    argv = sys.argv[1:]
+    debug("Base argv from sys: %r" % (argv,))
+    dispatch(argv)
