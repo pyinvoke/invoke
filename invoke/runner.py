@@ -80,7 +80,7 @@ def normalize_hide(val):
     return hide
 
 
-def run(command, warn=False, hide=None, pty=False, echo=False):
+def run(command, warn=False, hide=None, pty=False):
     """
     Execute ``command`` in a local subprocess, returning a `Result` object.
 
@@ -110,8 +110,6 @@ def run(command, warn=False, hide=None, pty=False, echo=False):
         into the ``stdout`` result attribute. Stderr and ``stderr`` will always
         be empty when ``pty=True``.
     """
-    if echo:
-        print(command)
     if pty:
         hide = normalize_hide(hide)
         out = []
