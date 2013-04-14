@@ -5,8 +5,8 @@ class Context(object):
     """
     Context-aware API wrapper & state-passing object.
 
-    Stores various bits of configuration state internally and uses them to set
-    default kwarg values for various API calls, such as `.run`.
+    Stores various bits of configuration state and uses them to set default
+    kwarg values for its wrappers to API calls such as `.Context.run`.
 
     See method call docstrings for additional details.
     """
