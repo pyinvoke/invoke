@@ -166,9 +166,11 @@ class Run(Spec):
             run("echo hi")
             eq_(sys.stdout.getvalue().strip(), "hi")
 
+        @trap
         def when_echo_True_commands_echoed_in_bold(self):
             run("echo hi", echo=True)
-            eq_(sys.stdout.getvalue().strip(), "echo hi\nhi")
+            expected = "\033[1;37mecho hi\033[0m\nhi"
+            eq_(sys.stdout.getvalue().strip(), expected)
 
     #
     # Random edge/corner case junk

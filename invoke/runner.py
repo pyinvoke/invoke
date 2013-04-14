@@ -80,7 +80,7 @@ def normalize_hide(val):
     return hide
 
 
-def run(command, warn=False, hide=None, pty=False):
+def run(command, warn=False, hide=None, pty=False, echo=False):
     """
     Execute ``command`` in a local subprocess, returning a `Result` object.
 
@@ -109,7 +109,12 @@ def run(command, warn=False, hide=None, pty=False):
         As such, all output will appear on your local stdout and be captured
         into the ``stdout`` result attribute. Stderr and ``stderr`` will always
         be empty when ``pty=True``.
+
+    `.run` does not echo the commands it runs by default; to make it do so, say
+    ``echo=True``.
     """
+    if echo:
+        print("\033[1;37m%s\033[0m" % command)
     if pty:
         hide = normalize_hide(hide)
         out = []
