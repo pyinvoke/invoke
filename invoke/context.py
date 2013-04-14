@@ -11,7 +11,24 @@ class Context(object):
     See method call docstrings for additional details.
     """
     def __init__(self, run=None):
-        pass
+        self.config = {
+            'run': run or {}
+        }
 
     def run(self, *args, **kwargs):
-        return run(*args, **kwargs)
+        """
+        Wrapper for `.run`.
+
+        To set default `.run` keyword argument values, instantiate `.Context`
+        with the ``run`` kwarg set to a dict.
+
+        E.g. to create a `.Context` whose `.Context.run` method always defaults
+        to ``warn=False``::
+
+            ctx = Context(run={'warn': False})
+            ctx.run('command') # behaves like invoke.run('command', warn=False)
+
+        """
+        options = dict(self.config['run'])
+        options.update(kwargs)
+        return run(*args, **options)
