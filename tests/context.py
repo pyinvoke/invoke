@@ -8,5 +8,5 @@ class Context_(Spec):
     class run_:
         @patch('invoke.context.run')
         def honors_warn_state(self, run):
-            Context(run={'warn': False}).run('x')
-            run.assert_called_with('x', warn=False)
+            Context(run={'warn': True}).run('x')
+            run.assert_called_with('x', warn=True)

@@ -23,10 +23,10 @@ class Context(object):
         with the ``run`` kwarg set to a dict.
 
         E.g. to create a `.Context` whose `.Context.run` method always defaults
-        to ``warn=False``::
+        to ``warn=True``::
 
-            ctx = Context(run={'warn': False})
-            ctx.run('command') # behaves like invoke.run('command', warn=False)
+            ctx = Context(run={'warn': True})
+            ctx.run('command') # behaves like invoke.run('command', warn=True)
 
         """
         options = dict(self.config['run'])
