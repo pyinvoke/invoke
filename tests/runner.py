@@ -18,143 +18,152 @@ class Run(Spec):
         self.out = "echo foo"
         self.err = "./err bar"
         self.sub = "inv -c pty_output hide_%s"
+        self.names = ('both', 'out', 'err', 'sub')
 
-    def return_code_in_result(self):
-        """
-        Result has .return_code (and .exited) containing exit code int
-        """
-        r = run(self.out, hide='both')
-        eq_(r.return_code, 0)
-        eq_(r.exited, 0)
+    class return_value:
+        def return_code_in_result(self):
+            """
+            Result has .return_code (and .exited) containing exit code int
+            """
+            r = run(self.out, hide='both')
+            eq_(r.return_code, 0)
+            eq_(r.exited, 0)
 
-    def nonzero_return_code_for_failures(self):
-        result = run("false", warn=True)
-        eq_(result.exited, 1)
-        result = run("goobypls", warn=True, hide='both')
-        eq_(result.exited, 127)
+        def nonzero_return_code_for_failures(self):
+            result = run("false", warn=True)
+            eq_(result.exited, 1)
+            result = run("goobypls", warn=True, hide='both')
+            eq_(result.exited, 127)
 
-    def stdout_attribute_contains_stdout(self):
-        eq_(run(self.out, hide='both').stdout, 'foo\n')
+        def stdout_attribute_contains_stdout(self):
+            eq_(run(self.out, hide='both').stdout, 'foo\n')
 
-    def stderr_attribute_contains_stderr(self):
-        eq_(run(self.err, hide='both').stderr, 'bar\n')
+        def stderr_attribute_contains_stderr(self):
+            eq_(run(self.err, hide='both').stderr, 'bar\n')
 
-    def stdout_contains_both_streams_under_pty(self):
-        r = run(self.both, hide='both', pty=True)
-        eq_(r.stdout, 'foo\r\nbar\r\n')
+        def stdout_contains_both_streams_under_pty(self):
+            r = run(self.both, hide='both', pty=True)
+            eq_(r.stdout, 'foo\r\nbar\r\n')
 
-    def stderr_is_empty_under_pty(self):
-        r = run(self.both, hide='both', pty=True)
-        eq_(r.stderr, '')
+        def stderr_is_empty_under_pty(self):
+            r = run(self.both, hide='both', pty=True)
+            eq_(r.stderr, '')
 
-    @raises(Failure)
-    def fast_failures(self):
-        run("false")
+        def ok_attr_indicates_success(self):
+            eq_(run("true").ok, True)
+            eq_(run("false", warn=True).ok, False)
 
-    def run_acts_as_success_boolean(self):
-        ok_(not run("false", warn=True))
-        ok_(run("true"))
+        def failed_attr_indicates_failure(self):
+            eq_(run("true").failed, False)
+            eq_(run("false", warn=True).failed, True)
 
-    def non_one_return_codes_still_act_as_False(self):
-        ok_(not run("goobypls", warn=True, hide='both'))
+    class failure_handling:
+        @raises(Failure)
+        def fast_failures(self):
+            run("false")
 
-    def warn_kwarg_allows_continuing_past_failures(self):
-        eq_(run("false", warn=True).exited, 1)
+        def run_acts_as_success_boolean(self):
+            ok_(not run("false", warn=True))
+            ok_(run("true"))
 
-    @trap
-    def _hide_both(self, val):
-        run(self.both, hide=val)
-        eq_(sys.stdall.getvalue(), "")
+        def non_one_return_codes_still_act_as_False(self):
+            ok_(not run("goobypls", warn=True, hide='both'))
 
-    def hide_both_hides_everything(self):
-        self._hide_both('both')
+        def warn_kwarg_allows_continuing_past_failures(self):
+            eq_(run("false", warn=True).exited, 1)
 
-    def hide_True_hides_everything(self):
-        self._hide_both(True)
+    class output_controls:
+        @trap
+        def _hide_both(self, val):
+            run(self.both, hide=val)
+            eq_(sys.stdall.getvalue(), "")
 
-    @trap
-    def hide_out_only_hides_stdout(self):
-        run(self.both, hide='out')
-        eq_(sys.stdout.getvalue().strip(), "")
-        eq_(sys.stderr.getvalue().strip(), "bar")
+        def hide_both_hides_everything(self):
+            self._hide_both('both')
 
-    @trap
-    def hide_err_only_hides_stderr(self):
-        run(self.both, hide='err')
-        eq_(sys.stdout.getvalue().strip(), "foo")
-        eq_(sys.stderr.getvalue().strip(), "")
+        def hide_True_hides_everything(self):
+            self._hide_both(True)
 
-    @trap
-    def hide_accepts_stderr_alias_for_err(self):
-        run(self.both, hide='stderr')
-        eq_(sys.stdout.getvalue().strip(), "foo")
-        eq_(sys.stderr.getvalue().strip(), "")
+        @trap
+        def hide_out_only_hides_stdout(self):
+            run(self.both, hide='out')
+            eq_(sys.stdout.getvalue().strip(), "")
+            eq_(sys.stderr.getvalue().strip(), "bar")
 
-    @trap
-    def hide_accepts_stdout_alias_for_out(self):
-        run(self.both, hide='stdout')
-        eq_(sys.stdout.getvalue().strip(), "")
-        eq_(sys.stderr.getvalue().strip(), "bar")
+        @trap
+        def hide_err_only_hides_stderr(self):
+            run(self.both, hide='err')
+            eq_(sys.stdout.getvalue().strip(), "foo")
+            eq_(sys.stderr.getvalue().strip(), "")
 
-    def hide_both_hides_both_under_pty(self):
-        r = run(self.sub % 'both', hide='both')
-        eq_(r.stdout, "")
-        eq_(r.stderr, "")
+        @trap
+        def hide_accepts_stderr_alias_for_err(self):
+            run(self.both, hide='stderr')
+            eq_(sys.stdout.getvalue().strip(), "foo")
+            eq_(sys.stderr.getvalue().strip(), "")
 
-    def hide_out_hides_both_under_pty(self):
-        r = run(self.sub % 'out', hide='both')
-        eq_(r.stdout, "")
-        eq_(r.stderr, "")
+        @trap
+        def hide_accepts_stdout_alias_for_out(self):
+            run(self.both, hide='stdout')
+            eq_(sys.stdout.getvalue().strip(), "")
+            eq_(sys.stderr.getvalue().strip(), "bar")
 
-    def hide_err_has_no_effect_under_pty(self):
-        r = run(self.sub % 'err', hide='both')
-        eq_(r.stdout, "foo\r\nbar\r\n")
-        eq_(r.stderr, "")
+        def hide_both_hides_both_under_pty(self):
+            r = run(self.sub % 'both', hide='both')
+            eq_(r.stdout, "")
+            eq_(r.stderr, "")
 
-    @trap
-    def _no_hiding(self, val):
-        r = run(self.both, hide=val)
-        eq_(sys.stdout.getvalue().strip(), "foo")
-        eq_(sys.stderr.getvalue().strip(), "bar")
+        def hide_out_hides_both_under_pty(self):
+            r = run(self.sub % 'out', hide='both')
+            eq_(r.stdout, "")
+            eq_(r.stderr, "")
 
-    def hide_None_hides_nothing(self):
-        self._no_hiding(None)
+        def hide_err_has_no_effect_under_pty(self):
+            r = run(self.sub % 'err', hide='both')
+            eq_(r.stdout, "foo\r\nbar\r\n")
+            eq_(r.stderr, "")
 
-    def hide_False_hides_nothing(self):
-        self._no_hiding(False)
+        @trap
+        def _no_hiding(self, val):
+            r = run(self.both, hide=val)
+            eq_(sys.stdout.getvalue().strip(), "foo")
+            eq_(sys.stderr.getvalue().strip(), "bar")
 
-    @raises(ValueError)
-    def hide_unknown_vals_raises_ValueError(self):
-        run("command", hide="what")
+        def hide_None_hides_nothing(self):
+            self._no_hiding(None)
 
-    def hide_unknown_vals_mention_value_given_in_error(self):
-        value = "penguinmints"
-        try:
-            run("command", hide=value)
-        except ValueError as e:
-            msg = "Error from run(hide=xxx) did not tell user what the bad value was!"
-            msg += "\nException msg: %s" % e
-            ok_(value in str(e), msg)
-        else:
-            assert False, "run() did not raise ValueError for bad hide= value"
+        def hide_False_hides_nothing(self):
+            self._no_hiding(False)
 
-    def hide_does_not_affect_capturing(self):
-        eq_(run(self.out, hide='both').stdout, 'foo\n')
+        @raises(ValueError)
+        def hide_unknown_vals_raises_ValueError(self):
+            run("command", hide="what")
 
-    def return_value_indicates_whether_pty_was_used(self):
-        eq_(run("true").pty, False)
-        eq_(run("true", pty=True).pty, True)
+        def hide_unknown_vals_mention_value_given_in_error(self):
+            value = "penguinmints"
+            try:
+                run("command", hide=value)
+            except ValueError as e:
+                msg = "Error from run(hide=xxx) did not tell user what the bad value was!"
+                msg += "\nException msg: %s" % e
+                ok_(value in str(e), msg)
+            else:
+                assert False, "run() did not raise ValueError for bad hide= value"
 
-    def pty_defaults_to_off(self):
-        eq_(run("true").pty, False)
+        def hide_does_not_affect_capturing(self):
+            eq_(run(self.out, hide='both').stdout, 'foo\n')
 
-    def ok_attr_indicates_success(self):
-        eq_(run("true").ok, True)
-        eq_(run("false", warn=True).ok, False)
+    class pseudo_terminals:
+        def return_value_indicates_whether_pty_was_used(self):
+            eq_(run("true").pty, False)
+            eq_(run("true", pty=True).pty, True)
 
-    def failed_attr_indicates_failure(self):
-        eq_(run("true").failed, False)
-        eq_(run("false", warn=True).failed, True)
+        def pty_defaults_to_off(self):
+            eq_(run("true").pty, False)
+
+    #
+    # Random edge/corner case junk
+    #
 
     def non_stupid_OSErrors_get_captured(self):
         # Somehow trigger an OSError saying "Input/output error" within
