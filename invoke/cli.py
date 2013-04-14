@@ -76,6 +76,12 @@ def parse(argv, collection=None):
             default=False,
             help="Echo executed commands before running.",
         ),
+        Argument(
+            names=('warn-only', 'w'),
+            kind=bool,
+            default=False,
+            help="Warn, instead of failing, when shell commands fail.",
+        ),
     ))
     # 'core' will result an .unparsed attribute with what was left over.
     debug("Parsing initial context (core args)")

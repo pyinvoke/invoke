@@ -78,6 +78,8 @@ Core options:
   -r STRING, --root=STRING         Change root directory used for finding task
                                    modules.
   -V, --version                    Show version and exit.
+  -w, --warn-only                  Warn, instead of failing, when shell
+                                   commands fail.
 
 """.lstrip()
         r1 = run("inv -h", hide='out')
