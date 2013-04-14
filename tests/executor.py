@@ -19,10 +19,12 @@ class Executor_(Spec):
 
     class init:
         "__init__"
-        def takes_collection_for_pre_and_post_tasks(self):
-            c = Collection()
-            e = Executor(collection=c)
-            assert e.collection is c
+        def needs_collection_and_context(self):
+            coll = Collection()
+            cont = Context()
+            e = Executor(collection=coll, context=cont)
+            assert e.collection is coll
+            assert e.context is cont
 
     class execute:
         def setup(self):
