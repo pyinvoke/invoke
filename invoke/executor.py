@@ -66,7 +66,10 @@ class Executor(object):
         # Execute
         results = {}
         for t in tasks:
-            results[t] = t(**kwargs)
+            args = []
+            if t.contextualized:
+                args.append(self.context)
+            results[t] = t(*args, **kwargs)
         return results[task]
 
     def task_list(self, task):

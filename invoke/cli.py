@@ -4,8 +4,9 @@ import textwrap
 
 from .vendor import six
 
+from .context import Context
 from .loader import Loader
-from .parser import Parser, Context, Argument
+from .parser import Parser, Context as ParserContext, Argument
 from .executor import Executor
 from .exceptions import Failure, CollectionNotFound, ParseError
 from .util import debug, pty_size
@@ -35,7 +36,7 @@ def parse_gracefully(parser, argv):
 
 def parse(argv, collection=None):
     # Initial/core parsing (core options can affect the rest of the parsing)
-    initial_context = Context(args=(
+    initial_context = ParserContext(args=(
         # TODO: make '--collection' a list-building arg, not a string
         Argument(
             names=('collection', 'c'),

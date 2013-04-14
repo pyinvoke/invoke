@@ -55,7 +55,7 @@ class Task(object):
     def __call__(self, *args, **kwargs):
         # Guard against calling contextualized tasks with no context.
         if self.contextualized and not isinstance(args[0], Context):
-            raise TypeError("Contextualized task called without an initial context argument!")
+            raise TypeError("Contextualized task expected a Context, got %s instead!" % type(args[0]))
         result = self.body(*args, **kwargs)
         self.times_called += 1
         return result
