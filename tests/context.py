@@ -11,8 +11,8 @@ class Context_(Spec):
                 Context(run={kwarg: value}).run('x')
                 run.assert_called_with('x', **{kwarg: value})
 
-        def honors_warn_state(self):
+        def warn(self):
             self._honors('warn', True)
 
-        def honors_hide_state(self):
+        def hide(self):
             self._honors('hide', 'both')
