@@ -33,6 +33,9 @@ class Init(Spec):
         def task_decorator(self):
             assert invoke.task is invoke.tasks.task
 
+        def ctask_decorator(self):
+            assert invoke.ctask is invoke.tasks.ctask
+
         def task_class(self):
             assert invoke.Task is invoke.tasks.Task
 
