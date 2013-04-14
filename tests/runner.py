@@ -18,7 +18,6 @@ class Run(Spec):
         self.out = "echo foo"
         self.err = "./err bar"
         self.sub = "inv -c pty_output hide_%s"
-        self.names = ('both', 'out', 'err', 'sub')
 
     class return_value:
         def return_code_in_result(self):
