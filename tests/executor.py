@@ -16,30 +16,42 @@ class Executor_(Spec):
         coll.add_task(self.task2, name='task2')
         coll.add_task(self.task3, name='task3')
         self.executor = Executor(coll)
-        self.coll = coll
 
-    def base_case(self):
-        self.executor.execute('task1')
-        assert self.task1.body.called
+    class init:
+        "__init__"
+        def takes_collection_for_pre_and_post_tasks(self):
+            c = Collection()
+            e = Executor(collection=c)
+            assert e.collection is c
 
-    def kwargs(self):
-        k = {'foo': 'bar'}
-        self.executor.execute(name='task1', kwargs=k)
-        self.task1.body.assert_called_once_with(**k)
+    class execute:
+        def setup(self):
+            parent = self.parent
+            for name in ['executor'] + ['task%s' % x for x in (1, 2, 3)]:
+                setattr(self, name, getattr(parent, name))
 
-    def pre_tasks(self):
-        self.executor.execute(name='task2')
-        eq_(self.task1.body.call_count, 1)
+        def base_case(self):
+            self.executor.execute('task1')
+            assert self.task1.body.called
 
-    def enabled_deduping(self):
-        self.executor.execute(name='task2')
-        self.executor.execute(name='task3')
-        eq_(self.task1.body.call_count, 1)
+        def kwargs(self):
+            k = {'foo': 'bar'}
+            self.executor.execute(name='task1', kwargs=k)
+            self.task1.body.assert_called_once_with(**k)
 
-    def disabled_deduping(self):
-        self.executor.execute(name='task2', dedupe=False)
-        self.executor.execute(name='task3', dedupe=False)
-        eq_(self.task1.body.call_count, 2)
+        def pre_tasks(self):
+            self.executor.execute(name='task2')
+            eq_(self.task1.body.call_count, 1)
+
+        def enabled_deduping(self):
+            self.executor.execute(name='task2')
+            self.executor.execute(name='task3')
+            eq_(self.task1.body.call_count, 1)
+
+        def disabled_deduping(self):
+            self.executor.execute(name='task2', dedupe=False)
+            self.executor.execute(name='task3', dedupe=False)
+            eq_(self.task1.body.call_count, 2)
 
     class returns_return_value_of_specified_task:
         def base_case(self):
