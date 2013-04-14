@@ -82,6 +82,12 @@ def parse(argv, collection=None):
             default=False,
             help="Warn, instead of failing, when shell commands fail.",
         ),
+        Argument(
+            names=('pty', 'p'),
+            kind=bool,
+            default=False,
+            help="Use a pty when executing shell commands.",
+        ),
     ))
     # 'core' will result an .unparsed attribute with what was left over.
     debug("Parsing initial context (core args)")
@@ -164,8 +170,10 @@ def parse(argv, collection=None):
 def derive_opts(args):
     run = {}
     # FIXME: deal with dash to underscore
-    if args['warn-only']:
+    if args['warn-only'].value:
         run['warn'] = True
+    if args.pty.value:
+        run['pty'] = True
     return {'run': run}
 
 def dispatch(argv):

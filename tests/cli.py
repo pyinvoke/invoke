@@ -76,6 +76,7 @@ Core options:
   -e, --echo                       Echo executed commands before running.
   -h, --help                       Show this help message and exit.
   -l, --list                       List available tasks.
+  -p, --pty                        Use a pty when executing shell commands.
   -r STRING, --root=STRING         Change root directory used for finding task
                                    modules.
   -V, --version                    Show version and exit.
@@ -176,6 +177,9 @@ bar
 
         def warn_only(self):
             self._test_flag('-w', 'warn', True)
+
+        def pty(self):
+            self._test_flag('-p', 'pty', True)
 
 
 TB_SENTINEL = 'Traceback (most recent call last)'
