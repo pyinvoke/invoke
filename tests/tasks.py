@@ -53,6 +53,12 @@ class task_(Spec):
     def when_positional_arg_missing_all_non_default_args_are_positional(self):
         eq_(self.vanilla['implicit_positionals'].positional, ['pos1', 'pos2'])
 
+    def context_arguments_should_not_appear_in_implicit_positional_list(self):
+        @ctask
+        def mytask(ctx):
+            pass
+        eq_(len(mytask.positional), 0)
+
     def pre_tasks_stored_as_simple_list_of_strings(self):
         @task(pre=['whatever'])
         def func():
@@ -217,3 +223,9 @@ class Task_(Spec):
             assert 'o' in args
             assert args['o'] is args['longarg']
             assert 'l' in args
+
+        def context_arguments_are_not_returned(self):
+            @ctask
+            def mytask(ctx):
+                pass
+            eq_(len(mytask.get_arguments()), 0)

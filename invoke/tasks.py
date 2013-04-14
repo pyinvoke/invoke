@@ -80,6 +80,10 @@ class Task(object):
         arg_names = spec.args[:]
         matched_args = [reversed(x) for x in [spec.args, spec.defaults or []]]
         spec_dict = dict(zip_longest(*matched_args, fillvalue=NO_DEFAULT))
+        # Remove context argument, if applicable
+        if self.contextualized:
+            context_arg = arg_names.pop(0)
+            del spec_dict[context_arg]
         return arg_names, spec_dict
 
     def fill_implicit_positionals(self, positional):
@@ -120,6 +124,7 @@ class Task(object):
         """
         Return a list of Argument objects representing this task's signature.
         """
+        # Core argspec
         arg_names, spec_dict = self.argspec(self.body)
         # Obtain list of args + their default values (if any) in
         # declaration/definition order (i.e. based on getargspec())
