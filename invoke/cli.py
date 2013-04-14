@@ -161,10 +161,17 @@ def parse(argv, collection=None):
     return args, collection, tasks
 
 
+def derive_opts(args):
+    run = {}
+    # FIXME: deal with dash to underscore
+    if args['warn-only']:
+        run['warn'] = True
+    return {'run': run}
+
 def dispatch(argv):
     args, collection, tasks = parse(argv)
     results = []
-    executor = Executor(collection, Context())
+    executor = Executor(collection, Context(**derive_opts(args)))
     # Take action based on 'core' options and the 'tasks' found
     for context in tasks:
         kwargs = {}
@@ -173,7 +180,7 @@ def dispatch(argv):
         try:
             # TODO: allow swapping out of Executor subclasses based on core
             # config options
-            # TODO: friggin dashes vs underscores
+            # FIXME: friggin dashes vs underscores
             results.append(executor.execute(
                 name=context.name,
                 kwargs=kwargs,
