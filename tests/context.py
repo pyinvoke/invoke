@@ -19,3 +19,6 @@ class Context_(Spec):
 
         def pty(self):
             self._honors('pty', True)
+
+        def echo(self):
+            self._honors('echo', True)

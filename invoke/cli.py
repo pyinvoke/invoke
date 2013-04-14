@@ -180,6 +180,8 @@ def derive_opts(args):
         run['pty'] = True
     if args.hide.value:
         run['hide'] = args.hide.value
+    if args.echo.value:
+        run['echo'] = True
     return {'run': run}
 
 def dispatch(argv):

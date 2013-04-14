@@ -185,6 +185,9 @@ bar
         def hide(self):
             self._test_flag(['--hide', 'both'], 'hide', 'both')
 
+        def echo(self):
+            self._test_flag(['-e'], 'echo', True)
+
 
 TB_SENTINEL = 'Traceback (most recent call last)'
 
