@@ -8,8 +8,8 @@ from invoke.tasks import Task
 
 class Executor_(Spec):
     def setup(self):
-        self.task1 = Task(Mock())
-        self.task2 = Task(Mock(), pre=['task1'])
+        self.task1 = Task(Mock(return_value=7))
+        self.task2 = Task(Mock(return_value=10), pre=['task1'])
         self.task3 = Task(Mock(), pre=['task1'])
         coll = Collection()
         coll.add_task(self.task1, name='task1')
@@ -43,10 +43,10 @@ class Executor_(Spec):
 
     class returns_return_value_of_specified_task:
         def base_case(self):
-            skip()
+            eq_(self.parent.executor.execute(name='task1'), 7)
 
         def with_pre_tasks(self):
-            skip()
+            eq_(self.parent.executor.execute(name='task2'), 10)
 
         def with_post_tasks(self):
             skip()

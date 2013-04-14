@@ -43,7 +43,8 @@ class Executor(object):
         """
         kwargs = kwargs or {}
         # Expand task list
-        all_tasks = self.task_list(name)
+        task = self.collection[name]
+        all_tasks = self.task_list(task)
         # Dedupe if requested
         if dedupe:
             # Compact (preserving order, so not using list+set)
@@ -59,11 +60,12 @@ class Executor(object):
         else:
             tasks = all_tasks
         # Execute
-        for task in tasks:
-            task(**kwargs)
+        results = {}
+        for t in tasks:
+            results[t] = t(**kwargs)
+        return results[task]
 
-    def task_list(self, name):
-        task = self.collection[name]
+    def task_list(self, task):
         tasks = [task]
         prereqs = []
         for pretask in task.pre:
