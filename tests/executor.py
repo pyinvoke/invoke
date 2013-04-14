@@ -28,11 +28,6 @@ class Executor_(Spec):
             assert e.context is cont
 
     class execute:
-        def setup(self):
-            parent = self.parent
-            for name in ['executor'] + ['task%s' % x for x in (1, 2, 3)]:
-                setattr(self, name, getattr(parent, name))
-
         def base_case(self):
             self.executor.execute('task1')
             assert self.task1.body.called
@@ -58,10 +53,10 @@ class Executor_(Spec):
 
     class returns_return_value_of_specified_task:
         def base_case(self):
-            eq_(self.parent.executor.execute(name='task1'), 7)
+            eq_(self.executor.execute(name='task1'), 7)
 
         def with_pre_tasks(self):
-            eq_(self.parent.executor.execute(name='task2'), 10)
+            eq_(self.executor.execute(name='task2'), 10)
 
         def with_post_tasks(self):
             skip()
