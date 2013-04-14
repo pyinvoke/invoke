@@ -69,14 +69,15 @@ class CLI(Spec):
 Usage: inv[oke] [--core-opts] task1 [--task1-opts] ... taskN [--taskN-opts]
 
 Core options:
-  --no-dedupe                      Disable task deduplication
+  --no-dedupe                      Disable task deduplication.
   -c STRING, --collection=STRING   Specify collection name to load. May be
                                    given >1 time.
+  -e, --echo                       Echo executed commands before running.
   -h, --help                       Show this help message and exit.
   -l, --list                       List available tasks.
   -r STRING, --root=STRING         Change root directory used for finding task
                                    modules.
-  -V, --version                    Show version and exit
+  -V, --version                    Show version and exit.
 
 """.lstrip()
         r1 = run("inv -h", hide='out')

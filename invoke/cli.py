@@ -56,7 +56,7 @@ def parse(argv, collection=None):
             names=('version', 'V'),
             kind=bool,
             default=False,
-            help="Show version and exit"
+            help="Show version and exit."
         ),
         Argument(
             names=('list', 'l'),
@@ -68,13 +68,13 @@ def parse(argv, collection=None):
             names=('no-dedupe',),
             kind=bool,
             default=False,
-            help="Disable task deduplication"
+            help="Disable task deduplication."
         ),
         Argument(
             names=('echo', 'e'),
             kind=bool,
             default=False,
-            help="Echo executed commands before running",
+            help="Echo executed commands before running.",
         ),
     ))
     # 'core' will result an .unparsed attribute with what was left over.
