@@ -1,4 +1,4 @@
-from spec import Spec
+from spec import Spec, skip
 from mock import patch
 
 from invoke.context import Context
