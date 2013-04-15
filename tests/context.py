@@ -22,3 +22,10 @@ class Context_(Spec):
 
         def echo(self):
             self._honors('echo', True)
+
+    class clone:
+        def returns_copy_of_self(self):
+            skip()
+
+        def contents_of_dicts_are_distinct(self):
+            skip()
