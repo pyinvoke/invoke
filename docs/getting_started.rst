@@ -88,7 +88,7 @@ Running shell commands
 ======================
 
 Many use cases for Invoke involve running local shell commands, similar to
-programs like Make or Rake. This is done via the `.run` function::
+programs like Make or Rake. This is done via the `~.runner.run` function::
 
     from invoke import task, run
 
@@ -104,10 +104,10 @@ You'll see the command's output in your terminal as it runs::
     ...
     build succeeded, 2 warnings.
 
-`.run` returns a useful `.Result` object providing access to the captured
-output, exit code, and so forth; it also allows you to activate a PTY, hide
-output (so it is captured only), and more. See `its API docs <.run>` for
-details.
+`~.runner.run` returns a useful `.Result` object providing access to the
+captured output, exit code, and so forth; it also allows you to activate a PTY,
+hide output (so it is captured only), and more. See `its API docs
+<~.runner.run>` for details.
 
 
 Declaring pre-tasks
@@ -179,21 +179,23 @@ The result::
 For a more detailed breakdown of how namespacing works, please see :doc:`the
 docs <concepts/namespaces>`.
 
+.. _context-intro:
 
 Handling configuration state
 ============================
 
 A number of command-line flags and other configuration channels need to affect
-global behavior; for example, controlling whether `.run` defaults to echoing
-its commands, or if nonzero return codes should abort execution.
+global behavior; for example, controlling whether `~.runner.run` defaults to
+echoing its commands, or if nonzero return codes should abort execution.
 
 Some libraries implement this via global module state. That approach works in
 the base case but makes testing difficult and error prone, limits concurrency,
 and just all-around makes the software more complex to use and extend.
 
-Invoke encapsulates core program state in a `.Context` object which can be
-handed to individual tasks. It serves as a configuration vector and implements
-state-aware methods which mirror or wrap the functional parts of the API.
+Invoke encapsulates core program state in a `~invoke.context.Context` object
+which can be handed to individual tasks. It serves as a configuration vector
+and implements state-aware methods which mirror or wrap the functional parts of
+the API.
 
 Using contexts in your tasks
 ----------------------------
@@ -211,8 +213,8 @@ task definition style seen earlier:
       positionally, not via keyword argument. The convention used in the
       documentation is typically ``context`` or ``ctx``.
 
-* Replace any mentions of `.run` with ``ctx.run`` (or whatever your context
-  argument's name was).
+* Replace any mentions of `~.runner.run` with ``ctx.run`` (or whatever your
+  context argument's name was).
 
 Here's a simple example::
 

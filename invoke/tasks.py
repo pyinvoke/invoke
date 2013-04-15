@@ -162,8 +162,8 @@ def task(*args, **kwargs):
     parenthese'd form:
 
     * ``contextualized``: Hints to callers (especially the CLI) that this task
-      expects to be given a `.Context` object as its first argument when
-      called.
+      expects to be given a `~invoke.context.Context` object as its first
+      argument when called.
     * ``aliases``: Specify one or more aliases for this task, allowing it to be
       invoked as multiple different names. For example, a task named ``mytask``
       with a simple ``@task`` wrapper may only be invoked as ``"mytask"``.
