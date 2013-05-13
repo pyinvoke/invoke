@@ -5,12 +5,12 @@ from invocations import docs
 from invocations.testing import test
 from invocations.packaging import vendorize, release
 
-from invoke import task, run, Collection
+from invoke import ctask as task, run, Collection
 
 
 @task
-def doctree():
-    run("tree -Ca -I \".git|*.pyc|*.swp|dist|*.egg-info|_static|_build\" docs")
+def doctree(ctx):
+    ctx.run("tree -Ca -I \".git|*.pyc|*.swp|dist|*.egg-info|_static|_build\" docs")
 
 @task
 def vendorize_pexpect(version):
