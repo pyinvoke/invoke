@@ -47,8 +47,11 @@ How do I use it?
 Getting started
 ---------------
 
-Many core ideas & API calls are explained in the tutorial:
-:doc:`getting_started`.
+Many core ideas & API calls are explained in the tutorial/getting-started
+document:
+
+.. toctree::
+    getting_started
 
 Concepts
 --------
