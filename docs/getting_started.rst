@@ -207,8 +207,7 @@ task definition style seen earlier:
   context object - by saying ``contextualized=True``.
 
   .. note::
-    See :ref:`Boilerplate reduction` below; this API is mostly for cleanness'
-    sake.
+    See `Boilerplate reduction`_ below; this API is mostly for cleanness' sake.
 
 * Define your task with an initial argument to hold the context; this argument
   isn't taken into account during command-line parsing and is solely for

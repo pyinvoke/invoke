@@ -1,5 +1,6 @@
 """
-Task definition & manipulation
+This module contains the core `.Task` class & convenience decorators used to
+generate new tasks.
 """
 import inspect
 import types
@@ -227,5 +228,10 @@ def task(*args, **kwargs):
 
 
 def ctask(*args, **kwargs):
+    """
+    Wrapper for `.task` which sets ``contextualized=True`` by default.
+
+    Please see `.task` for documentation.
+    """
     kwargs.setdefault('contextualized', True)
     return task(*args, **kwargs)
