@@ -190,7 +190,7 @@ echoing its commands, or if nonzero return codes should abort execution.
 
 Some libraries implement this via global module state. That approach works in
 the base case but makes testing difficult and error prone, limits concurrency,
-and just all-around makes the software more complex to use and extend.
+and generally makes the software more complex to use and extend.
 
 Invoke encapsulates core program state in a `~invoke.context.Context` object
 which can be handed to individual tasks. It serves as a configuration vector
@@ -205,6 +205,11 @@ task definition style seen earlier:
 
 * Tell `@task <.task>` that you want your task to be *contextualized* - given a
   context object - by saying ``contextualized=True``.
+
+  .. note::
+    See :ref:`Boilerplate reduction` below; this API is mostly for cleanness'
+    sake.
+
 * Define your task with an initial argument to hold the context; this argument
   isn't taken into account during command-line parsing and is solely for
   context handling.

@@ -44,13 +44,34 @@ the ``==dev`` "version" explicitly::
 How do I use it?
 ================
 
+Getting started
+---------------
+
+Many core ideas & API calls are explained in the tutorial:
+:doc:`getting_started`.
+
+Concepts
+--------
+
+Dig deeper into specific topics:
+
 .. toctree::
     :maxdepth: 3
     :glob:
 
-    getting_started
-    concepts
-    api
+    concepts/*
+
+API
+---
+
+Know what you're looking for & just need API details? View our auto-generated
+API documentation:
+
+.. toctree::
+    :maxdepth: 3
+    :glob:
+
+    api/*
 
 It's broken, or doesn't do what I want! How can I submit bugs?
 ==============================================================
