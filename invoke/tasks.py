@@ -178,8 +178,8 @@ def task(*args, **kwargs):
     * ``default``: Boolean option specifying whether this task should be its
       collection's default task (i.e. called if the collection's own name is
       given.)
-    * ``auto_shortflags``: Whether or not to :ref:`automatically create short
-      flags <automatic-shortflags>` from task options; defaults to True.
+    * ``auto_shortflags``: Whether or not to automatically create short
+      flags from task options; defaults to True.
     * ``help``: Dict mapping argument names to their help strings. Will be
       displayed in ``--help`` output.
     * ``pre``: List of task names, for tasks that should get run prior to the
