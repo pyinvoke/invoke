@@ -34,3 +34,4 @@ latex_documents = [
 
 # Autodoc settings
 autodoc_default_flags = ['members']
+autoclass_content = 'both'

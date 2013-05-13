@@ -204,7 +204,7 @@ To gain access to Invoke's context-aware API, make the following changes to the
 task definition style seen earlier:
 
 * Tell `@task <.task>` that you want your task to be *contextualized* - given a
-  context object - by saying ``contextualized=True``.
+  `~invoke.context.Context` object - by saying ``contextualized=True``.
 
   .. note::
     See `Boilerplate reduction`_ below; this API is mostly for cleanness' sake.
