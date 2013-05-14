@@ -94,6 +94,36 @@ and **not**::
 
     $ invoke build -f -p -d -f
 
+Optional flag values
+--------------------
+
+You saw a hint of this with ``--help`` specifically, but non-core options may
+also take optional values. For example, say your task has a ``--log`` flag
+that activates logging::
+
+    $ invoke compile --log
+
+but you also want it to be configurable regarding *where* to log::
+
+    $ invoke compile --log=foo.log
+
+You could implement this with an additional argument (e.g. ``--log`` and
+``--log-location``) but sometimes the concise API is the more useful one.
+
+Resolving ambiguity
+~~~~~~~~~~~~~~~~~~~
+
+There are a number of situations where ambiguity could arise for a flag that
+takes an optional value:
+
+* When a task takes positional arguments and they haven't all been filled in by
+  the time the parser arrives at the optional-value flag;
+* When the token following one of these flags looks like another flag; or
+* When that token has the same name as another task.
+
+In any of these situations, Invoke's parser will `refuse the temptation to
+guess <http://www.python.org/dev/peps/pep-0020/>`_ and raise an error.
+
 
 Multiple tasks
 ==============
