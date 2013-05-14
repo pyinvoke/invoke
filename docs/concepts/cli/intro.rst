@@ -84,15 +84,15 @@ is equivalent to (and expanded into, during parsing)::
 If the first flag in a globbed short flag token is not a boolean but takes a
 value, the rest of the glob is taken to be the value instead. E.g.::
 
-    $ invoke -fpdf
+    $ invoke build -fpdf
 
 is expanded into::
 
-    $ invoke -f pdf
+    $ invoke build -f pdf
 
 and **not**::
 
-    $ invoke -f -p -d -f
+    $ invoke build -f -p -d -f
 
 
 Multiple tasks
