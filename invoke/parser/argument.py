@@ -1,6 +1,26 @@
 class Argument(object):
     """
     A command-line argument/flag.
+
+    :param name:
+        Syntactic sugar for ``names=[<name>]``. Giving both ``name`` and
+        ``names`` is invalid.
+    :param names:
+        List of valid identifiers for this argument. For example, a "help"
+        argument may be defined with a name list of ``['-h', '--help']``.
+    :param kind:
+        Type factory & parser hint. E.g. ``int`` will turn the default text
+        value parsed, into a Python integer; and ``bool`` will tell the
+        parser not to expect an actual value but to treat the argument as a
+        toggle/flag.
+    :param default:
+        Default value made available to the parser if no value is given on the
+        command line.
+    :param help:
+        Help text, intended for use with ``--help``.
+    :param positional:
+        Whether or not this argument's value may be given positionally. When
+        ``False`` (default) arguments must be explicitly named.
     """
     def __init__(self, name=None, names=(), kind=str, default=None, help=None,
         positional=False):
