@@ -245,6 +245,38 @@ class Parser_(Spec):
             eq_(a.foo.value, True)
             eq_(a.bar.value, True)
 
+    class optional_arg_values:
+        def setup(self):
+            self.context = Context('mytask', args=(
+                Argument('foo', optional=True, default='mydefault')
+            ))
+            self.parser = Parser(self.context)
+
+        def _expect(self, argv, expected):
+            result = self.parser.parse_argv(['mytask'] + argv)
+            eq_(result[0].args.foo, expected)
+
+        def no_value_becomes_True(self):
+            self._expect(['--foo'], True)
+
+        def value_given_gets_preserved_normally(self):
+            self._expect(['--foo', 'whatever'], 'whatever')
+
+        def not_given_at_all_uses_default_value(self):
+            self._expect([], 'mydefault')
+
+        def ambiguity_with_unfilled_posargs(self):
+            # mytask --foo value-not-posarg
+            skip()
+
+        def ambiguity_with_flaglike_value(self):
+            # mytask --foo --lolwut
+            skip()
+
+        def ambiguity_with_task_name(self):
+            # mytask --foo myothertask
+            skip()
+
 
 class ParseResult_(Spec):
     "ParseResult"
