@@ -21,6 +21,8 @@ class Argument(object):
     :param positional:
         Whether or not this argument's value may be given positionally. When
         ``False`` (default) arguments must be explicitly named.
+    :param optional:
+        Whether or not this (non-``bool``) argument requires a value.
     """
     def __init__(self, name=None, names=(), kind=str, default=None, help=None,
         positional=False):
