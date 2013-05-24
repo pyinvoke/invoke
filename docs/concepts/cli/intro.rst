@@ -110,6 +110,16 @@ but you also want it to be configurable regarding *where* to log::
 You could implement this with an additional argument (e.g. ``--log`` and
 ``--log-location``) but sometimes the concise API is the more useful one.
 
+When optional flag values are used, the values seen post-parse follow these
+rules:
+
+* If the flag is not given at all (``invoke compile``) the default value
+  (if any) is filled in just as normal.
+* If the flag is given with no value (``invoke compile --log``), it is treated
+  as if it were a ``bool`` and set to ``True``.
+* If it is given with a value (``invoke compile --log=foo.log``) then the value
+  is stored normally (including honoring ``kind`` if it was specified).
+
 Resolving ambiguity
 ~~~~~~~~~~~~~~~~~~~
 
