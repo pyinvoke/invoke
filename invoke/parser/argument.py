@@ -25,7 +25,7 @@ class Argument(object):
         Whether or not this (non-``bool``) argument requires a value.
     """
     def __init__(self, name=None, names=(), kind=str, default=None, help=None,
-        positional=False):
+        positional=False, optional=False):
         if name and names:
             msg = "Cannot give both 'name' and 'names' arguments! Pick one."
             raise TypeError(msg)

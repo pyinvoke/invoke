@@ -248,13 +248,13 @@ class Parser_(Spec):
     class optional_arg_values:
         def setup(self):
             self.context = Context('mytask', args=(
-                Argument('foo', optional=True, default='mydefault')
+                Argument('foo', optional=True, default='mydefault'),
             ))
-            self.parser = Parser(self.context)
+            self.parser = Parser([self.context])
 
         def _expect(self, argv, expected):
             result = self.parser.parse_argv(['mytask'] + argv)
-            eq_(result[0].args.foo, expected)
+            eq_(result[0].args.foo.value, expected)
 
         def no_value_becomes_True(self):
             self._expect(['--foo'], True)
