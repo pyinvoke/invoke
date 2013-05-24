@@ -252,18 +252,25 @@ class Parser_(Spec):
             ))
             self.parser = Parser([self.context])
 
-        def _expect(self, argv, expected):
-            result = self.parser.parse_argv(['mytask'] + argv)
+        def _expect(self, argstr, expected):
+            result = self.parser.parse_argv(['mytask'] + argstr.split())
             eq_(result[0].args.foo.value, expected)
 
         def no_value_becomes_True(self):
-            self._expect(['--foo'], True)
+            self._expect('--foo', True)
+            self._expect('-f', True)
 
         def value_given_gets_preserved_normally(self):
-            self._expect(['--foo', 'whatever'], 'whatever')
+            for argstr in (
+                '--foo whatever',
+                '--foo=whatever',
+                '-f whatever',
+                '-f=whatever',
+            ):
+                self._expect(argstr, 'whatever')
 
         def not_given_at_all_uses_default_value(self):
-            self._expect([], 'mydefault')
+            self._expect('', 'mydefault')
 
         def ambiguity_with_unfilled_posargs(self):
             # mytask --foo value-not-posarg
