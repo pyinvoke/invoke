@@ -82,6 +82,29 @@ and **not**::
 
     $ invoke -f -p -d -f
 
+Dashes vs underscores in flag names
+-----------------------------------
+
+In Python, it's common to use ``underscored_names`` for keyword arguments,
+e.g.::
+
+    @task
+    def mytask(my_option=False):
+        pass
+
+However, the typical convention for command-line flags is dashes, which aren't
+valid in Python identifiers::
+
+    $ invoke mytask --my-option
+
+Invoke works around this by automatically generating dashed versions of
+underscored names, when it turns your task function signatures into
+command-line parser flags.
+
+Therefore, the two examples above actually work fine together -- ``my_option``
+ends up mapping to both ``--my-option`` *and* ``--my_option``, allowing either
+to be given on the command line.
+
 
 Multiple tasks
 ==============

@@ -229,3 +229,13 @@ class Task_(Spec):
             def mytask(ctx):
                 pass
             eq_(len(mytask.get_arguments()), 0)
+
+        def underscores_get_dashed_aliases(self):
+            @task
+            def mytask(longer_arg):
+                pass
+            print mytask.get_arguments()
+            eq_(
+                mytask.get_arguments()[0].names,
+                ('longer_arg', 'longer-arg', 'l')
+            )
