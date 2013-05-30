@@ -198,7 +198,12 @@ class ParseMachine(StateMachine):
         debug("Context flags: %r" % self.context.flags)
 
     def complete_flag(self):
-        if self.flag and self.flag.takes_value and self.flag.raw_value is None:
+        if (
+            self.flag
+            and self.flag.takes_value
+            and self.flag.raw_value is None
+            and not self.flag.optional
+        ):
             self.error("Flag %r needed value and was not given one!" % self.flag)
 
     def switch_to_flag(self, flag):

@@ -37,6 +37,7 @@ class Argument(object):
         self.default = default
         self.help = help
         self.positional = positional
+        self.optional = optional
 
     def __str__(self):
         return "<%s: %s%s%s>" % (
