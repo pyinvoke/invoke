@@ -70,6 +70,9 @@ class Task(object):
         Returns two-tuple:
 
         * First item is list of arg names, in order defined.
+
+            * I.e. we *cannot* simply use a dict's ``keys()`` method here.
+
         * Second item is dict mapping arg names to default values or
           task.NO_DEFAULT (i.e. an 'empty' value distinct from None).
         """
@@ -100,8 +103,10 @@ class Task(object):
         return positional
 
     def arg_opts(self, name, default, taken_names):
-        # Argument name(s)
+        # Argument name(s) (add dashed version if underscores present)
         names = [name]
+        if '_' in name:
+            names.append(name.replace('_', '-'))
         if self.auto_shortflags:
             # Must know what short names are available
             for char in name:

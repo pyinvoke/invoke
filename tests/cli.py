@@ -253,6 +253,7 @@ class CLIParsing(Spec):
 
     def underscored_flags_can_be_given_as_dashed(self):
         self._compare('--long-name', 'long_name', True)
+        self._compare('--long_name', 'long_name', True)
 
     def namespaced_task(self):
         self._compare_names("sub.subtask", "sub.subtask")
