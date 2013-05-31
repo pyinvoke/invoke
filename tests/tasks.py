@@ -234,7 +234,6 @@ class Task_(Spec):
             @task
             def mytask(longer_arg):
                 pass
-            print mytask.get_arguments()
             eq_(
                 mytask.get_arguments()[0].names,
                 ('longer_arg', 'longer-arg', 'l')
