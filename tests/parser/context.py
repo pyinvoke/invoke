@@ -85,6 +85,12 @@ class Context_(Spec):
             assert '--foo' in self.c.flags
             assert '--bar' in self.c.flags
 
+        def adds_true_bools_to_inverse_flags(self):
+            self.c.add_arg(name='myflag', default=True, kind=bool)
+            assert '--myflag' in self.c.flags
+            assert '--no-myflag' in self.c.inverse_flags
+            eq_(self.c.inverse_flags['--no-myflag'], '--myflag')
+
         def turns_single_character_names_into_short_flags(self):
             self.c.add_arg('f')
             assert '-f' in self.c.flags
