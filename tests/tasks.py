@@ -230,11 +230,11 @@ class Task_(Spec):
                 pass
             eq_(len(mytask.get_arguments()), 0)
 
-        def underscores_get_dashed_aliases(self):
+        def underscores_become_dashes(self):
             @task
             def mytask(longer_arg):
                 pass
-            eq_(
-                mytask.get_arguments()[0].names,
-                ('longer_arg', 'longer-arg', 'l')
-            )
+            arg = mytask.get_arguments()[0]
+            eq_(arg.names, ('longer-arg', 'l'))
+            eq_(arg.attr_name, 'longer_arg')
+            eq_(arg.name, 'longer_arg')

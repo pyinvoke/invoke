@@ -23,19 +23,34 @@ class Context_(Spec):
         c = Context(name='name', args=(a1, a2))
         assert c.args['foo'] is a1
 
+    # TODO: reconcile this sort of test organization with the .flags oriented
+    # tests within 'add_arg'.  Some of this behavior is technically driven by
+    # add_arg.
     class args:
         def setup(self):
             self.c = Context(args=(
                 Argument('foo'),
                 Argument(names=('bar', 'biz')),
+                Argument('baz', attr_name='wat'),
             ))
 
         def exposed_as_dict(self):
             assert 'foo' in self.c.args.keys()
 
+        def exposed_as_Lexicon(self):
+            eq_(self.c.args.bar, self.c.args['bar'])
+
         def args_dict_includes_all_arg_names(self):
             for x in ('foo', 'bar', 'biz'):
                 assert x in self.c.args
+
+        def argument_attr_names_appear_in_args_but_not_flags(self):
+            # Both appear as "Python-facing" args
+            for x in ('baz', 'wat'):
+                assert x in self.c.args
+            # But attr_name is for Python access only and isn't shown to the
+            # parser.
+            assert 'wat' not in self.c.flags
 
     class add_arg:
         def setup(self):

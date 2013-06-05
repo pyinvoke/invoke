@@ -102,8 +102,7 @@ underscored names, when it turns your task function signatures into
 command-line parser flags.
 
 Therefore, the two examples above actually work fine together -- ``my_option``
-ends up mapping to both ``--my-option`` *and* ``--my_option``, allowing either
-to be given on the command line.
+ends up mapping to ``--my-option``.
 
 
 Multiple tasks
