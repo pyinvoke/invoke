@@ -23,6 +23,20 @@ class Context_(Spec):
         c = Context(name='name', args=(a1, a2))
         assert c.args['foo'] is a1
 
+    class args:
+        def setup(self):
+            self.c = Context(args=(
+                Argument('foo'),
+                Argument(names=('bar', 'biz')),
+            ))
+
+        def exposed_as_dict(self):
+            assert 'foo' in self.c.args.keys()
+
+        def args_dict_includes_all_arg_names(self):
+            for x in ('foo', 'bar', 'biz'):
+                assert x in self.c.args
+
     class add_arg:
         def setup(self):
             self.c = Context()
