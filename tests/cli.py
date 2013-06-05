@@ -246,7 +246,7 @@ class CLIParsing(Spec):
     def _compare(self, invoke, flagname, value):
         invoke = "mytask " + invoke
         result = self._parse(invoke)
-        eq_(result.to_dict()['mytask'][flagname], value)
+        eq_(result[0].args[flagname].value, value)
 
     def _compare_names(self, given, real):
         eq_(self._parse(given)[0].name, real)
