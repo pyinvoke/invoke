@@ -101,8 +101,8 @@ class Context(object):
             if name in self.args:
                 msg = "Tried to add an argument named %r but one already exists!"
                 raise ValueError(msg % name)
-        # All arguments added to .args
-        main = arg.name
+        # First name used as "main" name for purposes of aliasing
+        main = arg.names[0] # NOT arg.name
         self.args[main] = arg
         # Note positionals in distinct, ordered list attribute
         if arg.positional:
@@ -112,6 +112,9 @@ class Context(object):
         for name in arg.nicknames:
             self.args.alias(name, to=main)
             self.flags.alias(to_flag(name), to=to_flag(main))
+        # Add attr_name to args, but not flags
+        if arg.attr_name:
+            self.args.alias(arg.attr_name, to=main)
 
     @property
     def needs_positional_arg(self):

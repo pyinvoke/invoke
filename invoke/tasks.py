@@ -103,17 +103,20 @@ class Task(object):
         return positional
 
     def arg_opts(self, name, default, taken_names):
-        # Argument name(s) (add dashed version if underscores present)
-        names = [name]
+        opts = {}
+        # Argument name(s) (replace w/ dashed version if underscores present,
+        # and move the underscored version to be the attr_name instead.)
         if '_' in name:
-            names.append(name.replace('_', '-'))
+            opts['attr_name'] = name
+            name = name.replace('_', '-')
+        names = [name]
         if self.auto_shortflags:
             # Must know what short names are available
             for char in name:
                 if not (char == name or char in taken_names):
                     names.append(char)
                     break
-        opts = {'names': names}
+        opts['names'] = names
         # Handle default value & kind if possible
         if default not in (None, NO_DEFAULT):
             # TODO: allow setting 'kind' explicitly.
