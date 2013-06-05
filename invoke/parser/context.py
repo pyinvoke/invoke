@@ -167,6 +167,6 @@ class Context(object):
         # changes?
         # Cast to list to ensure non-generator on Python 3.
         return list(map(
-            lambda x: self.help_for(to_flag(x.names[0])),
+            lambda x: self.help_for(to_flag(x.name)),
             sorted(self.flags.values(), key=flag_key)
         ))
