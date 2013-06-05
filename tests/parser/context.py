@@ -91,9 +91,15 @@ class Context_(Spec):
             assert '--no-myflag' in self.c.inverse_flags
             eq_(self.c.inverse_flags['--no-myflag'], '--myflag')
 
-        def inverse_flags_works_right_with_underscored_names(self):
-            self.c.add_arg(name='underscored_option', kind=bool,
-                default=True)
+        def inverse_flags_works_right_with_task_driven_underscored_names(self):
+            # Use a Task here instead of creating a raw argument, we're partly
+            # testing Task.get_arguments()' transform of underscored names
+            # here. Yes that makes this an integration test, but it's nice to
+            # test it here at this level & not just in cli tests.
+            @task
+            def mytask(underscored_option=True):
+                pass
+            self.c.add_arg(mytask.get_arguments()[0])
             eq_(
                 self.c.inverse_flags['--no-underscored-option'],
                 '--underscored-option'

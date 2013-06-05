@@ -66,7 +66,7 @@ class Context(object):
         self.args = Lexicon()
         self.positional_args = []
         self.flags = Lexicon()
-        self.inverse_flags = Lexicon()
+        self.inverse_flags = {} # No need for Lexicon here
         self.name = name
         self.aliases = aliases
         for arg in args:
