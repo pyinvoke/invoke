@@ -199,6 +199,7 @@ class ParseMachine(StateMachine):
         debug("Moving to context %r" % name)
         debug("Context args: %r" % self.context.args)
         debug("Context flags: %r" % self.context.flags)
+        debug("Context inverse_flags: %r" % self.context.inverse_flags)
 
     def complete_flag(self):
         if self.flag and self.flag.takes_value and self.flag.raw_value is None:

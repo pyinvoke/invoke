@@ -91,6 +91,14 @@ class Context_(Spec):
             assert '--no-myflag' in self.c.inverse_flags
             eq_(self.c.inverse_flags['--no-myflag'], '--myflag')
 
+        def inverse_flags_works_right_with_underscored_names(self):
+            self.c.add_arg(name='underscored_option', kind=bool,
+                default=True)
+            eq_(
+                self.c.inverse_flags['--no-underscored-option'],
+                '--underscored-option'
+            )
+
         def turns_single_character_names_into_short_flags(self):
             self.c.add_arg('f')
             assert '-f' in self.c.flags
