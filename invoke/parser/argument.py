@@ -3,7 +3,7 @@ class Argument(object):
     A command-line argument/flag.
     """
     def __init__(self, name=None, names=(), kind=str, default=None, help=None,
-        positional=False):
+        positional=False, attr_name=None):
         if name and names:
             msg = "Cannot give both 'name' and 'names' arguments! Pick one."
             raise TypeError(msg)
@@ -15,6 +15,7 @@ class Argument(object):
         self.default = default
         self.help = help
         self.positional = positional
+        self.attr_name = attr_name
 
     def __str__(self):
         return "<%s: %s%s%s>" % (
@@ -29,7 +30,7 @@ class Argument(object):
 
     @property
     def name(self):
-        return self.names[0]
+        return self.attr_name or self.names[0]
 
     @property
     def nicknames(self):
