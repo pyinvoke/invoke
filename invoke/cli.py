@@ -183,7 +183,6 @@ def parse(argv, collection=None):
 
 def derive_opts(args):
     run = {}
-    # FIXME: deal with dash to underscore
     if args['warn-only'].value:
         run['warn'] = True
     if args.pty.value:
@@ -206,7 +205,6 @@ def dispatch(argv):
         try:
             # TODO: allow swapping out of Executor subclasses based on core
             # config options
-            # FIXME: friggin dashes vs underscores
             results.append(executor.execute(
                 name=context.name,
                 kwargs=kwargs,
