@@ -1,6 +1,7 @@
 from operator import add
 import types
 
+from .vendor import six
 from .vendor.lexicon import Lexicon
 
 from .parser import Context, Argument
@@ -63,13 +64,13 @@ class Collection(object):
         self.name = None
         # Name if applicable
         args = list(args)
-        if args and isinstance(args[0], basestring):
+        if args and isinstance(args[0], six.string_types):
             self.name = args.pop(0)
         # Dispatch args/kwargs
         for arg in args:
             self._add_object(arg)
         # Dispatch kwargs
-        for name, obj in kwargs.iteritems():
+        for name, obj in six.iteritems(kwargs):
             self._add_object(obj, name)
 
     def _add_object(self, obj, name=None):
@@ -203,7 +204,7 @@ class Collection(object):
         Returns all contained tasks and subtasks as a list of parser contexts.
         """
         result = []
-        for primary, aliases in self.task_names.iteritems():
+        for primary, aliases in six.iteritems(self.task_names):
             task = self[primary]
             result.append(Context(
                 name=primary, aliases=aliases, args=task.get_arguments()
@@ -223,15 +224,17 @@ class Collection(object):
         """
         ret = {}
         # Our own tasks get no prefix, just go in as-is: {name: [aliases]}
-        for name, task in self.tasks.iteritems():
+        for name, task in six.iteritems(self.tasks):
             ret[name] = task.aliases
         # Subcollection tasks get both name + aliases prefixed
-        for coll_name, coll in self.collections.iteritems():
-            for task_name, aliases in coll.task_names.iteritems():
-                aliases = map(
+        for coll_name, coll in six.iteritems(self.collections):
+            for task_name, aliases in six.iteritems(coll.task_names):
+                # Cast to list to handle Py3 map() 'map' return value,
+                # so we can add to it down below if necessary.
+                aliases = list(map(
                     lambda x: self.subtask_name(coll_name, x),
                     aliases
-                )
+                ))
                 # Tack on collection name to alias list if this task is the
                 # collection's default.
                 if coll.default and coll.default == task_name:

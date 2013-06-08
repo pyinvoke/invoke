@@ -155,6 +155,7 @@ Invoke-only user would care about. Not worth the effort to make it work on CLI
 at this point.
 
 ::
+
     @task
     def stuff(var):
         print(var)
@@ -183,6 +184,7 @@ Getting hairy: one task, with one pre-task, parameterized
 =========================================================
 
 ::
+
     @task
     def setup():
         print("Yay")

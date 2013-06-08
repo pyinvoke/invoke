@@ -11,27 +11,32 @@ def to_flag(name):
 def sort_candidate(arg):
     names = arg.names
     # TODO: is there no "split into two buckets on predicate" builtin?
-    shorts = filter(lambda x: len(x.strip('-')) == 1, names)
-    longs = filter(lambda x: x not in shorts, names)
+    shorts = set(x for x in names if len(x.strip('-')) == 1)
+    longs = set(x for x in names if x not in shorts)
     return sorted(shorts if shorts else longs)[0]
 
-def cmp_args(a, b):
-    a, b = map(sort_candidate, (a, b))
-    # Long flags win over short flags
-    if len(a) == 1 and len(b) != 1:
-        return 1
-    elif len(a) != 1 and len(b) == 1:
-        return -1
-    # Equal sized flags get case-insensitive cmp'd
-    # (with equal case-insensitive values then having lowercase win)
-    else:
-        ret = cmp(a.lower(), b.lower())
-        if ret == 0:
-            # Default cmp() thinks uppercase come first (lower) at least for
-            # bytestrings. We want the opposite.
-            return 1 if cmp(a, b) == -1 else -1
-        else:
-            return ret
+def flag_key(x):
+    """
+    Obtain useful key list-of-ints for sorting CLI flags.
+    """
+    # Setup
+    ret = []
+    x = sort_candidate(x)
+    # Long-style flags win over short-style ones, so the first item of
+    # comparison is simply whether the flag is a single character long (with
+    # non-length-1 flags coming "first" [lower number])
+    ret.append(1 if len(x) == 1 else 0)
+    # Next item of comparison is simply the strings themselves,
+    # case-insensitive. They will compare alphabetically if compared at this
+    # stage.
+    ret.append(x.lower())
+    # Finally, if the case-insensitive test also matched, compare
+    # case-sensitive, but inverse (with lowercase letters coming first)
+    inversed = ''
+    for char in x:
+        inversed += char.lower() if char.isupper() else char.upper()
+    ret.append(inversed)
+    return ret
 
 
 class Context(object):
@@ -61,6 +66,7 @@ class Context(object):
         self.args = Lexicon()
         self.positional_args = []
         self.flags = Lexicon()
+        self.inverse_flags = {} # No need for Lexicon here
         self.name = name
         self.aliases = aliases
         for arg in args:
@@ -79,12 +85,16 @@ class Context(object):
         """
         Adds given ``Argument`` (or constructor args for one) to this context.
 
-        The Argument in question is added to two dict attributes:
+        The Argument in question is added to the following dict attributes:
 
         * ``args``: "normal" access, i.e. the given names are directly exposed
           as keys.
         * ``flags``: "flaglike" access, i.e. the given names are translated
           into CLI flags, e.g. ``"foo"`` is accessible via ``flags['--foo']``.
+        * ``inverse_flags``: similar to ``flags`` but containing only the
+          "inverse" versions of boolean flags which default to True. This
+          allows the parser to track e.g. ``--no-myflag`` and turn it into a
+          False value for the ``myflag`` Argument.
         """
         # Normalize
         if len(args) == 1 and isinstance(args[0], Argument):
@@ -96,8 +106,8 @@ class Context(object):
             if name in self.args:
                 msg = "Tried to add an argument named %r but one already exists!"
                 raise ValueError(msg % name)
-        # All arguments added to .args
-        main = arg.name
+        # First name used as "main" name for purposes of aliasing
+        main = arg.names[0] # NOT arg.name
         self.args[main] = arg
         # Note positionals in distinct, ordered list attribute
         if arg.positional:
@@ -107,6 +117,16 @@ class Context(object):
         for name in arg.nicknames:
             self.args.alias(name, to=main)
             self.flags.alias(to_flag(name), to=to_flag(main))
+        # Add attr_name to args, but not flags
+        if arg.attr_name:
+            self.args.alias(arg.attr_name, to=main)
+        # Add to inverse_flags if required
+        if arg.kind == bool and arg.default == True:
+            # Invert the 'main' flag name here, which will be a dashed version
+            # of the primary argument name if underscore-to-dash transformation
+            # occurred.
+            inverse_name = to_flag("no-%s" % main)
+            self.inverse_flags[inverse_name] = to_flag(main)
 
     @property
     def needs_positional_arg(self):
@@ -160,7 +180,8 @@ class Context(object):
         # having to call to_flag on 1st name of an Argument is just dumb.
         # To pass in an Argument object to help_for may require moderate
         # changes?
-        return map(
-            lambda x: self.help_for(to_flag(x.names[0])),
-            sorted(self.flags.values(), cmp=cmp_args)
-        )
+        # Cast to list to ensure non-generator on Python 3.
+        return list(map(
+            lambda x: self.help_for(to_flag(x.name)),
+            sorted(self.flags.values(), key=flag_key)
+        ))

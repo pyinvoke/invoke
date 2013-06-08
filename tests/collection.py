@@ -5,13 +5,15 @@ from spec import Spec, skip, eq_, raises
 
 from invoke.collection import Collection
 from invoke.tasks import task, Task
+from invoke.vendor import six
+from invoke.vendor.six.moves import reduce
 
 from _utils import load, support_path
 
 
 @task
 def _mytask():
-    print "woo!"
+    six.print_("woo!")
 
 def _func():
     pass
@@ -214,7 +216,7 @@ class Collection_(Spec):
         def setup(self):
             @task
             def mytask(text, boolean=False, number=5):
-                print text
+                six.print_(text)
             @task(aliases=['mytask27'])
             def mytask2():
                 pass
@@ -224,9 +226,10 @@ class Collection_(Spec):
             sub = Collection('sub', subtask)
             self.c = Collection(mytask, mytask2, sub)
             self.contexts = self.c.to_contexts()
-            self.context = self.contexts[1]
-            alias_tups = map(lambda x: list(x.aliases), self.contexts)
+            alias_tups = [list(x.aliases) for x in self.contexts]
             self.aliases = reduce(operator.add, alias_tups, [])
+            # Focus on 'mytask' as it has the more interesting sig
+            self.context = [x for x in self.contexts if x.name == 'mytask'][0]
 
         def returns_iterable_of_Contexts_corresponding_to_tasks(self):
             eq_(self.context.name, 'mytask')
@@ -245,7 +248,7 @@ class Collection_(Spec):
             eq_(ctx.positional_args, [ctx.args['second'], ctx.args['first']])
 
         def exposes_namespaced_task_names(self):
-            assert 'sub.subtask' in map(lambda x: x.name, self.contexts)
+            assert 'sub.subtask' in [x.name for x in self.contexts]
 
         def exposes_namespaced_task_aliases(self):
             assert 'sub.othertask' in self.aliases

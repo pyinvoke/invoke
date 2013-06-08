@@ -1,5 +1,5 @@
 ======================================
-``Parser``: Core parsing state machine
+``Executor``: Task execution machinery
 ======================================
 
-.. automodule:: invoke.parser
+.. autoclass:: invoke.executor.Executor

@@ -1,12 +1,13 @@
 import os
 import sys
-import StringIO
 
 from spec import eq_, skip, Spec, ok_, trap
+from mock import patch
 
-from invoke.cli import parse
+from invoke.cli import parse, dispatch
+from invoke.context import Context
 from invoke.runner import run
-from invoke.parser import Parser, Context
+from invoke.parser import Parser
 from invoke.collection import Collection
 from invoke.tasks import task
 from invoke.exceptions import Failure
@@ -47,6 +48,11 @@ class CLI(Spec):
             "whatevs\n"
         )
 
+    def contextualized_tasks_are_given_parser_context_arg(self):
+        # go() in contextualized.py just returns its initial arg
+        retval = dispatch(['-c', 'contextualized', 'go'])[0]
+        assert isinstance(retval, Context)
+
     @trap
     def shorthand_binary_name(self):
         _output_eq("invoke -c integration print_foo", "foo\n")
@@ -64,14 +70,19 @@ class CLI(Spec):
 Usage: inv[oke] [--core-opts] task1 [--task1-opts] ... taskN [--taskN-opts]
 
 Core options:
-  --no-dedupe                      Disable task deduplication
+  --no-dedupe                      Disable task deduplication.
   -c STRING, --collection=STRING   Specify collection name to load. May be
                                    given >1 time.
+  -e, --echo                       Echo executed commands before running.
   -h, --help                       Show this help message and exit.
+  -H STRING, --hide=STRING         Set default value of run()'s 'hide' kwarg.
   -l, --list                       List available tasks.
+  -p, --pty                        Use a pty when executing shell commands.
   -r STRING, --root=STRING         Change root directory used for finding task
                                    modules.
-  -V, --version                    Show version and exit
+  -V, --version                    Show version and exit.
+  -w, --warn-only                  Warn, instead of failing, when shell
+                                   commands fail.
 
 """.lstrip()
         r1 = run("inv -h", hide='out')
@@ -158,6 +169,25 @@ bar
 """.lstrip()
         eq_(run("invoke -c integration --no-dedupe foo bar").stdout, expected)
 
+    class run_options:
+        "run() related CLI flags"
+        def _test_flag(self, flag, kwarg, value):
+            with patch('invoke.context.run') as run:
+                dispatch(flag + ['-c', 'contextualized', 'run'])
+                run.assert_called_with('x', **{kwarg: value})
+
+        def warn_only(self):
+            self._test_flag(['-w'], 'warn', True)
+
+        def pty(self):
+            self._test_flag(['-p'], 'pty', True)
+
+        def hide(self):
+            self._test_flag(['--hide', 'both'], 'hide', 'both')
+
+        def echo(self):
+            self._test_flag(['-e'], 'echo', True)
+
 
 TB_SENTINEL = 'Traceback (most recent call last)'
 
@@ -190,7 +220,8 @@ class CLIParsing(Spec):
     """
     def setup(self):
         @task(positional=[])
-        def mytask(mystring, s, boolean=False, b=False, v=False):
+        def mytask(mystring, s, boolean=False, b=False, v=False,
+            long_name=False, true_bool=True):
             pass
         @task(aliases=['mytask27'])
         def mytask2():
@@ -216,10 +247,16 @@ class CLIParsing(Spec):
     def _compare(self, invoke, flagname, value):
         invoke = "mytask " + invoke
         result = self._parse(invoke)
-        eq_(result.to_dict()['mytask'][flagname], value)
+        eq_(result[0].args[flagname].value, value)
 
     def _compare_names(self, given, real):
         eq_(self._parse(given)[0].name, real)
+
+    def underscored_flags_can_be_given_as_dashed(self):
+        self._compare('--long-name', 'long_name', True)
+
+    def inverse_boolean_flags(self):
+        self._compare('--no-true-bool', 'true_bool', False)
 
     def namespaced_task(self):
         self._compare_names("sub.subtask", "sub.subtask")

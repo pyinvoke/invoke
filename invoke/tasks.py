@@ -1,13 +1,20 @@
 """
-Task definition & manipulation
+This module contains the core `.Task` class & convenience decorators used to
+generate new tasks.
 """
 import inspect
-from itertools import izip_longest
 import types
 
+from .vendor import six
 from .vendor.lexicon import Lexicon
 
+from .context import Context
 from .parser import Argument
+
+if six.PY3:
+    from itertools import zip_longest
+else:
+    from itertools import izip_longest as zip_longest
 
 
 # Non-None sentinel
@@ -23,13 +30,24 @@ class Task(object):
     # TODO: allow central per-session / per-taskmodule control over some of
     # them, e.g. (auto_)positional, auto_shortflags.
     # NOTE: we shadow __builtins__.help here. It's purposeful. :(
-    def __init__(self, body, aliases=(), positional=None, default=False, 
-        auto_shortflags=True, help=None, pre=None, name=None):
+    def __init__(self,
+        body,
+        contextualized=False,
+        aliases=(),
+        positional=None,
+        default=False,
+        auto_shortflags=True,
+        help=None,
+        pre=None,
+        name=None
+    ):
         # Real callable
         self.body = body
         # Must copy doc/name here because Sphinx is retarded about properties.
         self.__doc__ = getattr(body, '__doc__', '')
         self.__name__ = getattr(body, '__name__', '')
+        # Is this a contextualized task?
+        self.contextualized = contextualized
         # Default name, alternate names, and whether it should act as the
         # default for its parent collection
         self.name = name
@@ -44,6 +62,9 @@ class Task(object):
         self.times_called = 0
 
     def __call__(self, *args, **kwargs):
+        # Guard against calling contextualized tasks with no context.
+        if self.contextualized and not isinstance(args[0], Context):
+            raise TypeError("Contextualized task expected a Context, got %s instead!" % type(args[0]))
         result = self.body(*args, **kwargs)
         self.times_called += 1
         return result
@@ -57,6 +78,9 @@ class Task(object):
         Returns two-tuple:
 
         * First item is list of arg names, in order defined.
+
+            * I.e. we *cannot* simply use a dict's ``keys()`` method here.
+
         * Second item is dict mapping arg names to default values or
           task.NO_DEFAULT (i.e. an 'empty' value distinct from None).
         """
@@ -67,22 +91,32 @@ class Task(object):
         spec = inspect.getargspec(func)
         arg_names = spec.args[:]
         matched_args = [reversed(x) for x in [spec.args, spec.defaults or []]]
-        spec_dict = dict(izip_longest(*matched_args, fillvalue=NO_DEFAULT))
+        spec_dict = dict(zip_longest(*matched_args, fillvalue=NO_DEFAULT))
+        # Remove context argument, if applicable
+        if self.contextualized:
+            context_arg = arg_names.pop(0)
+            del spec_dict[context_arg]
         return arg_names, spec_dict
 
     def fill_implicit_positionals(self, positional):
-        _, spec_dict = self.argspec(self.body)
+        args, spec_dict = self.argspec(self.body)
         # If positionals is None, everything lacking a default
         # value will be automatically considered positional.
         if positional is None:
             positional = []
-            for name, default in spec_dict.iteritems():
+            for name in args: # Go in defined order, not dict "order"
+                default = spec_dict[name]
                 if default is NO_DEFAULT:
                     positional.append(name)
         return positional
 
     def arg_opts(self, name, default, taken_names):
-        # Argument name(s)
+        opts = {}
+        # Argument name(s) (replace w/ dashed version if underscores present,
+        # and move the underscored version to be the attr_name instead.)
+        if '_' in name:
+            opts['attr_name'] = name
+            name = name.replace('_', '-')
         names = [name]
         if self.auto_shortflags:
             # Must know what short names are available
@@ -90,7 +124,7 @@ class Task(object):
                 if not (char == name or char in taken_names):
                     names.append(char)
                     break
-        opts = {'names': names}
+        opts['names'] = names
         # Handle default value & kind if possible
         if default not in (None, NO_DEFAULT):
             # TODO: allow setting 'kind' explicitly.
@@ -107,6 +141,7 @@ class Task(object):
         """
         Return a list of Argument objects representing this task's signature.
         """
+        # Core argspec
         arg_names, spec_dict = self.argspec(self.body)
         # Obtain list of args + their default values (if any) in
         # declaration/definition order (i.e. based on getargspec())
@@ -143,6 +178,9 @@ def task(*args, **kwargs):
     specified. Otherwise, the following keyword arguments are allowed in the
     parenthese'd form:
 
+    * ``contextualized``: Hints to callers (especially the CLI) that this task
+      expects to be given a `~invoke.context.Context` object as its first
+      argument when called.
     * ``aliases``: Specify one or more aliases for this task, allowing it to be
       invoked as multiple different names. For example, a task named ``mytask``
       with a simple ``@task`` wrapper may only be invoked as ``"mytask"``.
@@ -156,8 +194,8 @@ def task(*args, **kwargs):
     * ``default``: Boolean option specifying whether this task should be its
       collection's default task (i.e. called if the collection's own name is
       given.)
-    * ``auto_shortflags``: Whether or not to :ref:`automatically create short
-      flags <automatic-shortflags>` from task options; defaults to True.
+    * ``auto_shortflags``: Whether or not to automatically create short
+      flags from task options; defaults to True.
     * ``help``: Dict mapping argument names to their help strings. Will be
       displayed in ``--help`` output.
     * ``pre``: List of task names, for tasks that should get run prior to the
@@ -167,9 +205,11 @@ def task(*args, **kwargs):
     ``pre`` kwarg for convenience's sake. (It is an error to give both
     ``*args`` and ``pre`` at the same time.)
     """
-    # @task -- no options
+    # @task -- no options were (probably) given.
+    # Also handles ctask's use case when given as @ctask, equivalent to
+    # @task(obj, contextualized=True).
     if len(args) == 1 and callable(args[0]):
-        return Task(args[0])
+        return Task(args[0], **kwargs)
     # @task(pre, tasks, here)
     if args:
         if 'pre' in kwargs:
@@ -177,6 +217,7 @@ def task(*args, **kwargs):
         kwargs['pre'] = args
     # @task(options)
     # TODO: pull in centrally defined defaults here (see Task)
+    contextualized = kwargs.pop('contextualized', False)
     aliases = kwargs.pop('aliases', ())
     positional = kwargs.pop('positional', None)
     default = kwargs.pop('default', False)
@@ -190,6 +231,7 @@ def task(*args, **kwargs):
     def inner(obj):
         obj = Task(
             obj,
+            contextualized=contextualized,
             aliases=aliases,
             positional=positional,
             default=default,
@@ -199,3 +241,13 @@ def task(*args, **kwargs):
         )
         return obj
     return inner
+
+
+def ctask(*args, **kwargs):
+    """
+    Wrapper for `.task` which sets ``contextualized=True`` by default.
+
+    Please see `.task` for documentation.
+    """
+    kwargs.setdefault('contextualized', True)
+    return task(*args, **kwargs)

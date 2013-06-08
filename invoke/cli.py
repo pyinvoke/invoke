@@ -2,21 +2,21 @@ from functools import partial
 import sys
 import textwrap
 
+from .vendor import six
+
+from .context import Context
 from .loader import Loader
-from .parser import Parser, Context, Argument
+from .parser import Parser, Context as ParserContext, Argument
 from .executor import Executor
 from .exceptions import Failure, CollectionNotFound, ParseError
 from .util import debug, pty_size
 from ._version import __version__
 
 
-def depth(name):
-    return len(name.split('.'))
+def task_name_to_key(x):
+    return (x.count('.'), x)
 
-def cmp_task_name(a, b):
-    return cmp(depth(a), depth(b)) or cmp(a, b)
-
-sort_names = partial(sorted, cmp=cmp_task_name)
+sort_names = partial(sorted, key=task_name_to_key)
 
 
 def parse_gracefully(parser, argv):
@@ -30,14 +30,23 @@ def parse_gracefully(parser, argv):
     """
     try:
         return parser.parse_argv(argv)
-    except ParseError, e:
-        print str(e)
-        sys.exit(1)
+    except ParseError as e:
+        sys.exit(str(e))
 
 
 def parse(argv, collection=None):
+    """
+    Parse ``argv`` list-of-strings into useful core & per-task structures.
+
+    :returns:
+        Three-tuple of ``args`` (core, non-task `.Argument` objects), ``collection``
+        (compiled `.Collection` of tasks, using defaults or core arguments
+        affecting collection generation) and ``tasks`` (a list of
+        `~.parser.context.Context` objects representing the requested task
+        executions).
+    """
     # Initial/core parsing (core options can affect the rest of the parsing)
-    initial_context = Context(args=(
+    initial_context = ParserContext(args=(
         # TODO: make '--collection' a list-building arg, not a string
         Argument(
             names=('collection', 'c'),
@@ -57,7 +66,7 @@ def parse(argv, collection=None):
             names=('version', 'V'),
             kind=bool,
             default=False,
-            help="Show version and exit"
+            help="Show version and exit."
         ),
         Argument(
             names=('list', 'l'),
@@ -69,7 +78,29 @@ def parse(argv, collection=None):
             names=('no-dedupe',),
             kind=bool,
             default=False,
-            help="Disable task deduplication"
+            help="Disable task deduplication."
+        ),
+        Argument(
+            names=('echo', 'e'),
+            kind=bool,
+            default=False,
+            help="Echo executed commands before running.",
+        ),
+        Argument(
+            names=('warn-only', 'w'),
+            kind=bool,
+            default=False,
+            help="Warn, instead of failing, when shell commands fail.",
+        ),
+        Argument(
+            names=('pty', 'p'),
+            kind=bool,
+            default=False,
+            help="Use a pty when executing shell commands.",
+        ),
+        Argument(
+            names=('hide', 'H'),
+            help="Set default value of run()'s 'hide' kwarg.",
         )
     ))
     # 'core' will result an .unparsed attribute with what was left over.
@@ -81,7 +112,7 @@ def parse(argv, collection=None):
 
     # Print version & exit if necessary
     if args.version.value:
-        print "Invoke %s" % __version__
+        print("Invoke %s" % __version__)
         sys.exit(0)
 
     # Core --help output
@@ -89,15 +120,15 @@ def parse(argv, collection=None):
     # and available tasks listing; or core flags modified by plugins/task
     # modules) it will have to move farther down.
     if args.help.value:
-        print "Usage: inv[oke] [--core-opts] task1 [--task1-opts] ... taskN [--taskN-opts]"
-        print
-        print "Core options:"
+        print("Usage: inv[oke] [--core-opts] task1 [--task1-opts] ... taskN [--taskN-opts]")
+        print("")
+        print("Core options:")
         indent = 2
         padding = 3
         # Calculate column sizes: don't wrap flag specs, give what's left over
-        # to the descriptions
+        # to the descriptions.
         tuples = initial_context.help_tuples()
-        flag_width = max(map(lambda x: len(x[0]), tuples))
+        flag_width = max(len(x[0]) for x in tuples)
         desc_width = pty_size()[0] - flag_width - indent - padding - 1
         wrapper = textwrap.TextWrapper(width=desc_width)
         for flag_spec, help_str in tuples:
@@ -113,12 +144,13 @@ def parse(argv, collection=None):
             ))
             # Print help text as needed
             if help_chunks:
-                print spec + help_chunks[0]
+                print(spec + help_chunks[0])
                 for chunk in help_chunks[1:]:
-                    print (' ' * len(spec)) + chunk
+                    print((' ' * len(spec)) + chunk)
             else:
-                print spec
-        print
+                print(spec)
+        print('')
+        sys.exit(0)
 
     # Load collection (default or specified) and parse leftovers
     # (Skip loading if somebody gave us an explicit task collection.)
@@ -132,7 +164,7 @@ def parse(argv, collection=None):
 
     # Print discovered tasks if necessary
     if args.list.value:
-        print "Available tasks:\n"
+        print("Available tasks:\n")
         # Sort in depth, then alpha, order
         task_names = collection.task_names
         names = sort_names(task_names.keys())
@@ -141,26 +173,52 @@ def parse(argv, collection=None):
             out = primary
             if aliases:
                 out += " (%s)" % ', '.join(aliases)
-            print "    %s" % out
-        print ""
+            print("    %s" % out)
+        print("")
         sys.exit(0)
+
+    # Return to caller so they can handle the results
     return args, collection, tasks
+
+
+def derive_opts(args):
+    run = {}
+    # FIXME: deal with dash to underscore
+    if args['warn-only'].value:
+        run['warn'] = True
+    if args.pty.value:
+        run['pty'] = True
+    if args.hide.value:
+        run['hide'] = args.hide.value
+    if args.echo.value:
+        run['echo'] = True
+    return {'run': run}
+
+def dispatch(argv):
+    args, collection, tasks = parse(argv)
+    results = []
+    executor = Executor(collection, Context(**derive_opts(args)))
+    # Take action based on 'core' options and the 'tasks' found
+    for context in tasks:
+        kwargs = {}
+        for name, arg in six.iteritems(context.args):
+            kwargs[name] = arg.value
+        try:
+            # TODO: allow swapping out of Executor subclasses based on core
+            # config options
+            # FIXME: friggin dashes vs underscores
+            results.append(executor.execute(
+                name=context.name,
+                kwargs=kwargs,
+                dedupe=not args['no-dedupe']
+            ))
+        except Failure as f:
+            sys.exit(f.result.exited)
+    return results
 
 
 def main():
     # Parse command line
     argv = sys.argv[1:]
     debug("Base argv from sys: %r" % (argv,))
-    args, collection, tasks = parse(argv)
-    # Take action based on 'core' options and the 'tasks' found
-    for context in tasks:
-        kwargs = {}
-        for name, arg in context.args.iteritems():
-            kwargs[name] = arg.value
-        try:
-            # TODO: allow swapping out of Executor subclasses based on core
-            # config options
-            # TODO: friggin dashes vs underscores
-            Executor(collection).execute(name=context.name, kwargs=kwargs, dedupe=not args['no-dedupe'])
-        except Failure, f:
-            sys.exit(f.result.exited)
+    dispatch(argv)

@@ -2,6 +2,7 @@ import copy
 
 from ..vendor.lexicon import Lexicon
 from ..vendor.fluidity import StateMachine, state, transition
+from ..vendor import six
 
 from .context import Context
 from .argument import Argument # Mostly for importing via invoke.parser.<x>
@@ -102,7 +103,7 @@ class Parser(object):
                         debug("%r is a flag for current context & it takes a value, giving it %r" % (token, rest))
                         body.insert(index + 1, rest)
                     else:
-                        rest = map(lambda x: '-%s' % x, rest)
+                        rest = ['-%s' % x for x in rest]
                         debug("Splitting multi-flag glob %r into %r and %r" % (
                             orig, token, rest))
                         for item in reversed(rest):
@@ -156,6 +157,9 @@ class ParseMachine(StateMachine):
         if self.context and token in self.context.flags:
             debug("Saw flag %r" % token)
             self.switch_to_flag(token)
+        elif self.context and token in self.context.inverse_flags:
+            debug("Saw inverse flag %r" % token)
+            self.switch_to_flag(token, inverse=True)
         # Value for current flag
         elif self.waiting_for_flag_value:
             self.see_value(token)
@@ -195,19 +199,23 @@ class ParseMachine(StateMachine):
         debug("Moving to context %r" % name)
         debug("Context args: %r" % self.context.args)
         debug("Context flags: %r" % self.context.flags)
+        debug("Context inverse_flags: %r" % self.context.inverse_flags)
 
     def complete_flag(self):
         if self.flag and self.flag.takes_value and self.flag.raw_value is None:
             self.error("Flag %r needed value and was not given one!" % self.flag)
 
-    def switch_to_flag(self, flag):
+    def switch_to_flag(self, flag, inverse=False):
+        # Set flag/arg obj
+        flag = self.context.inverse_flags[flag] if inverse else flag
         # Update state
         self.flag = self.context.flags[flag]
         debug("Moving to flag %r" % self.flag)
         # Handle boolean flags (which can immediately be updated)
         if not self.flag.takes_value:
-            debug("Marking seen flag %r as True" % self.flag)
-            self.flag.value = True
+            val = not inverse
+            debug("Marking seen flag %r as %s" % (self.flag, val))
+            self.flag.value = val
 
     def see_value(self, value):
         if self.flag.takes_value:
@@ -238,12 +246,3 @@ class ParseResult(list):
         super(ParseResult, self).__init__(*args, **kwargs)
         self.remainder = ""
         self.unparsed = []
-
-    def to_dict(self):
-        d = {}
-        for context in self:
-            argd = {}
-            for name, arg in context.args.iteritems():
-                argd[name] = arg.value
-            d[context.name] = argd
-        return d

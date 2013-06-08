@@ -1,8 +1,13 @@
 # Fuckin' A.
 
 import select, errno, os, sys
-
 from subprocess import Popen as OriginalPopen, mswindows, PIPE
+
+from .vendor import six
+
+
+def read_byte(file_no):
+    return os.read(file_no, 1)
 
 
 class Popen(OriginalPopen):
@@ -23,7 +28,9 @@ class Popen(OriginalPopen):
             # TODO: How to determine which sys.std(out|err) to use?
             buffer.append(fh.read())
     else: # Sane operating systems
-        def _communicate(self, input):
+        # endtime + timeout are new for py3; we don't currently use them but
+        # they must exist to be compatible.
+        def _communicate(self, input, endtime=None, timeout=None):
             read_set = []
             write_set = []
             stdout = None # Return
@@ -45,10 +52,11 @@ class Popen(OriginalPopen):
                 stderr = []
 
             input_offset = 0
+            empty_str = b''
             while read_set or write_set:
                 try:
                     rlist, wlist, xlist = select.select(read_set, write_set, [])
-                except select.error, e:
+                except select.error as e:
                     if e.args[0] == errno.EINTR:
                         continue
                     raise
@@ -65,28 +73,34 @@ class Popen(OriginalPopen):
                         write_set.remove(self.stdin)
 
                 if self.stdout in rlist:
-                    data = os.read(self.stdout.fileno(), 1)
-                    if data == "":
+                    data = read_byte(self.stdout.fileno())
+                    if data == empty_str:
                         self.stdout.close()
                         read_set.remove(self.stdout)
                     if 'out' not in self.hide:
-                        sys.stdout.write(data)
+                        stream = sys.stdout
+                        if six.PY3:
+                            stream = stream.buffer
+                        stream.write(data)
                     stdout.append(data)
 
                 if self.stderr in rlist:
-                    data = os.read(self.stderr.fileno(), 1)
-                    if data == "":
+                    data = read_byte(self.stderr.fileno())
+                    if data == empty_str:
                         self.stderr.close()
                         read_set.remove(self.stderr)
                     if 'err' not in self.hide:
-                        sys.stderr.write(data)
+                        stream = sys.stderr
+                        if six.PY3:
+                            stream = stream.buffer
+                        stream.write(data)
                     stderr.append(data)
 
             # All data exchanged.  Translate lists into strings.
             if stdout is not None:
-                stdout = ''.join(stdout)
+                stdout = empty_str.join(stdout).decode('utf-8')
             if stderr is not None:
-                stderr = ''.join(stderr)
+                stderr = empty_str.join(stderr).decode('utf-8')
 
             # Translate newlines, if requested.  We cannot let the file
             # object do the translation: It is based on stdio, which is

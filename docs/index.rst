@@ -7,6 +7,8 @@ What is Invoke?
 
 .. include:: ../README.rst
 
+See :doc:`getting_started` for a quick-start guide.
+
 
 How can I install it?
 =====================
@@ -42,12 +44,37 @@ the ``==dev`` "version" explicitly::
 How do I use it?
 ================
 
+Getting started
+---------------
+
+Many core ideas & API calls are explained in the tutorial/getting-started
+document:
+
+.. toctree::
+    getting_started
+
+Concepts
+--------
+
+Dig deeper into specific topics:
+
 .. toctree::
     :maxdepth: 3
     :glob:
 
-    concepts
-    api
+    concepts/*
+
+API
+---
+
+Know what you're looking for & just need API details? View our auto-generated
+API documentation:
+
+.. toctree::
+    :maxdepth: 3
+    :glob:
+
+    api/*
 
 It's broken, or doesn't do what I want! How can I submit bugs?
 ==============================================================

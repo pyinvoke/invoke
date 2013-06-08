@@ -1,8 +1,5 @@
-from attribute_dict import AttributeDict
-from alias_dict import AliasDict
-
-
-__version__ = "0.1.2"
+from .attribute_dict import AttributeDict
+from .alias_dict import AliasDict
 
 
 class Lexicon(AttributeDict, AliasDict):

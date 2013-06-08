@@ -5,27 +5,50 @@ class Executor(object):
     Subclasses may override various extension points to change, add or remove
     behavior.
     """
-    def __init__(self, collection):
+    def __init__(self, collection, context):
         """
-        Create executor with a pointer to the task collection ``collection``.
+        Initialize executor with handles to a task collection & config context.
 
-        This pointer is used for looking up tasks by name and
+        The collection is used for looking up tasks by name and
         storing/retrieving state, e.g. how many times a given task has been run
         this session and so on.
+
+        The context is passed into any tasks that mark themselves as requiring
+        one for operation.
         """
         self.collection = collection
+        self.context = context
 
     def execute(self, name, kwargs=None, dedupe=True):
         """
-        Execute task named ``name``, optionally passing along ``kwargs``.
+        Execute a named task, honoring pre- or post-tasks and so forth.
 
-        If ``dedupe`` is ``True`` (default), will ensure any given task within
-        ``self.collection`` is only run once per session. To disable this
-        behavior, say ``dedupe=False``.
+        :param name:
+            A string naming which task from the Executor's `.Collection` is to
+            be executed. May contain dotted syntax appropriate for calling
+            namespaced tasks, e.g. ``subcollection.taskname``.
+
+        :param kwargs:
+            A keyword argument dict expanded when calling the requested task. E.g.::
+
+                executor.execute('mytask', {'myarg': 'foo'})
+
+            is (roughly) equivalent to::
+
+                mytask(myarg='foo')
+
+        :param dedupe:
+            Ensures any given task within ``self.collection`` is only run once
+            per session. Set to ``False`` to disable this behavior.
+
+        :returns:
+            The return value of the named task -- regardless of whether pre- or
+            post-tasks are executed.
         """
         kwargs = kwargs or {}
         # Expand task list
-        all_tasks = self.task_list(name)
+        task = self.collection[name]
+        all_tasks = self.task_list(task)
         # Dedupe if requested
         if dedupe:
             # Compact (preserving order, so not using list+set)
@@ -41,11 +64,15 @@ class Executor(object):
         else:
             tasks = all_tasks
         # Execute
-        for task in tasks:
-            task(**kwargs)
+        results = {}
+        for t in tasks:
+            args = []
+            if t.contextualized:
+                args.append(self.context)
+            results[t] = t(*args, **kwargs)
+        return results[task]
 
-    def task_list(self, name):
-        task = self.collection[name]
+    def task_list(self, task):
         tasks = [task]
         prereqs = []
         for pretask in task.pre:

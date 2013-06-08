@@ -2,7 +2,7 @@ from datetime import datetime
 import os
 import sys
 
-exts = ('autodoc', 'viewcode')
+exts = ('autodoc',)# 'viewcode')
 extensions = map(lambda x: 'sphinx.ext.%s' % x, exts)
 templates_path = ['_templates']
 source_suffix = '.rst'
@@ -34,3 +34,4 @@ latex_documents = [
 
 # Autodoc settings
 autodoc_default_flags = ['members']
+autoclass_content = 'both'

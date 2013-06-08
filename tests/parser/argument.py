@@ -29,6 +29,10 @@ class Argument_(Spec):
         def positional_is_False_by_default(self):
             eq_(Argument(name='foo').positional, False)
 
+        def can_set_attr_name_to_control_name_attr(self):
+            a = Argument('foo', attr_name='bar')
+            eq_(a.name, 'bar') # not 'foo'
+
     class string:
         "__str__"
 
@@ -138,4 +142,3 @@ class Argument_(Spec):
         def is_None_when_no_value_was_actually_seen(self):
             a = Argument('a', kind=int)
             eq_(a.raw_value, None)
-

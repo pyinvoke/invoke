@@ -41,6 +41,10 @@ class Result(object):
         # Holy mismatch between name and implementation, Batman!
         return self.exited == 0
 
+    # Python 3 ahoy
+    def __bool__(self):
+        return self.__nonzero__()
+
     def __str__(self):
         ret = ["Command exited with status %s." % self.exited]
         for x in ('stdout', 'stderr'):
@@ -60,23 +64,23 @@ class Result(object):
 
 
 def normalize_hide(val):
-    hide_vals = (None, 'out', 'stdout', 'err', 'stderr', 'both')
+    hide_vals = (None, False, 'out', 'stdout', 'err', 'stderr', 'both', True)
     if val not in hide_vals:
         raise ValueError("'hide' got %r which is not in %r" % (val, hide_vals,))
-    if val is None:
+    if val in (None, False):
         hide = ()
-    elif val is 'both':
+    elif val in ('both', True):
         hide = ('out', 'err')
-    elif val is 'stdout':
+    elif val == 'stdout':
         hide = ('out',)
-    elif val is 'stderr':
+    elif val == 'stderr':
         hide = ('err',)
     else:
         hide = (val,)
     return hide
 
 
-def run(command, warn=False, hide=None, pty=False):
+def run(command, warn=False, hide=None, pty=False, echo=False):
     """
     Execute ``command`` in a local subprocess, returning a `Result` object.
 
@@ -86,8 +90,9 @@ def run(command, warn=False, hide=None, pty=False):
     ``warn=True``.
 
     To disable copying the subprocess' stdout and/or stderr to the controlling
-    terminal, specify ``hide='out'``, ``hide='err'`` or ``hide='both'``. (The
-    default value is ``None``, meaning to print everything.)
+    terminal, specify ``hide='out'`` (or ``'stdout'``), ``hide='err'`` (or
+    ``'stderr'``) or ``hide='both'`` (or ``True``). The default value is
+    ``None``, meaning to print everything; ``False`` will also disable hiding.
 
     .. note::
         Stdout and stderr are always captured and stored in the ``Result``
@@ -104,16 +109,21 @@ def run(command, warn=False, hide=None, pty=False):
         As such, all output will appear on your local stdout and be captured
         into the ``stdout`` result attribute. Stderr and ``stderr`` will always
         be empty when ``pty=True``.
+
+    `.run` does not echo the commands it runs by default; to make it do so, say
+    ``echo=True``.
     """
+    if echo:
+        print("\033[1;37m%s\033[0m" % command)
     if pty:
         hide = normalize_hide(hide)
         out = []
         def out_filter(text):
-            out.append(text)
+            out.append(text.decode("utf-8"))
             if 'out' not in hide:
                 return text
             else:
-                return ""
+                return b""
         wrapped_cmd = "/bin/bash -c \"%s\"" % command
         p = pexpect.spawn(wrapped_cmd)
         # Ensure pexpect doesn't barf with OSError if we fall off the end of
@@ -121,9 +131,9 @@ def run(command, warn=False, hide=None, pty=False):
         exception = None
         try:
             p.interact(output_filter=out_filter)
-        except OSError, e:
+        except OSError as e:
             # Only capture the OSError we expect
-            if "Input/output error" not in e:
+            if "Input/output error" not in str(e):
                 raise
             # Ensure it ties off the child, sets exitstatus, etc
             p.close()

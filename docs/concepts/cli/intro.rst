@@ -82,6 +82,47 @@ and **not**::
 
     $ invoke -f -p -d -f
 
+Dashes vs underscores in flag names
+-----------------------------------
+
+In Python, it's common to use ``underscored_names`` for keyword arguments,
+e.g.::
+
+    @task
+    def mytask(my_option=False):
+        pass
+
+However, the typical convention for command-line flags is dashes, which aren't
+valid in Python identifiers::
+
+    $ invoke mytask --my-option
+
+Invoke works around this by automatically generating dashed versions of
+underscored names, when it turns your task function signatures into
+command-line parser flags.
+
+Therefore, the two examples above actually work fine together -- ``my_option``
+ends up mapping to ``--my-option``.
+
+Automatic Boolean inverse flags
+-------------------------------
+
+Boolean flags tend to work best when setting something that is normally
+``False``, to ``True``::
+
+    $ invoke mytask --yes-please-do-x
+
+However, in some cases, you want the opposite - a default of ``True``, which
+can be easily disabled. For example, colored output::
+
+    @task
+    def run_tests(color=True):
+        # ...
+
+Here, what we really want on the command line is a ``--no-color`` flag that
+sets ``color=False``. Invoke handles this for you: when setting up CLI flags,
+booleans which default to ``True`` generate a ``--no-<name>`` flag instead.
+
 
 Multiple tasks
 ==============

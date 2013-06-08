@@ -1,5 +1,5 @@
-==============
-CLI entrypoint
-==============
+=======================
+``cli``: CLI entrypoint
+=======================
 
 .. automodule:: invoke.cli
