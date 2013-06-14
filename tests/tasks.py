@@ -87,6 +87,12 @@ class task_(Spec):
         assert not task1.contextualized
         assert task2.contextualized
 
+    def sets_name(self):
+        @task(name='foo')
+        def bar():
+            pass
+        eq_(bar.name, 'foo')
+
 
 class ctask_(Spec):
     def behaves_like_task_with_contextualized_True(self):

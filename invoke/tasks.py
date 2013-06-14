@@ -32,6 +32,7 @@ class Task(object):
     # NOTE: we shadow __builtins__.help here. It's purposeful. :(
     def __init__(self,
         body,
+        name=None,
         contextualized=False,
         aliases=(),
         positional=None,
@@ -39,7 +40,6 @@ class Task(object):
         auto_shortflags=True,
         help=None,
         pre=None,
-        name=None
     ):
         # Real callable
         self.body = body
@@ -178,6 +178,9 @@ def task(*args, **kwargs):
     specified. Otherwise, the following keyword arguments are allowed in the
     parenthese'd form:
 
+    * ``name``: Default name to use when binding to a `.Collection`. Useful for
+      avoiding Python namespace issues (i.e. when the desired CLI level name
+      can't or shouldn't be used as the Python level name.)
     * ``contextualized``: Hints to callers (especially the CLI) that this task
       expects to be given a `~invoke.context.Context` object as its first
       argument when called.
@@ -217,6 +220,7 @@ def task(*args, **kwargs):
         kwargs['pre'] = args
     # @task(options)
     # TODO: pull in centrally defined defaults here (see Task)
+    name = kwargs.pop('name', None)
     contextualized = kwargs.pop('contextualized', False)
     aliases = kwargs.pop('aliases', ())
     positional = kwargs.pop('positional', None)
@@ -231,6 +235,7 @@ def task(*args, **kwargs):
     def inner(obj):
         obj = Task(
             obj,
+            name=name,
             contextualized=contextualized,
             aliases=aliases,
             positional=positional,
