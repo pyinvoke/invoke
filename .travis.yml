@@ -11,7 +11,7 @@ install:
   # E.g. it makes our internal test module importable :(
   - pip install .
   # Install those dev requirements (test runner, etc)
-  - pip install -r dev-requirements.txt --use-mirrors
+  - pip install -r dev-requirements.txt
 script: "inv test"
 notifications:
   irc:
