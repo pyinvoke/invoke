@@ -98,9 +98,9 @@ class Popen(OriginalPopen):
 
             # All data exchanged.  Translate lists into strings.
             if stdout is not None:
-                stdout = empty_str.join(stdout).decode('utf-8')
+                stdout = empty_str.join(stdout).decode('utf-8', 'replace')
             if stderr is not None:
-                stderr = empty_str.join(stderr).decode('utf-8')
+                stderr = empty_str.join(stderr).decode('utf-8', 'replace')
 
             # Translate newlines, if requested.  We cannot let the file
             # object do the translation: It is based on stdio, which is
