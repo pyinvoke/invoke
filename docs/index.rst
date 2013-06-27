@@ -119,7 +119,8 @@ following ways:
 
 * IRC: ``#invoke`` on Freenode
 * Twitter: `@pyinvoke <https://twitter.com/pyinvoke>`_
-* Mailing list: TK
+* Mailing list: ``invoke@librelist.com`` (see `the LibreList homepage
+  <http://librelist.com>`_ for usage details).
 * Blog: TK
 
 
