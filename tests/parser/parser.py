@@ -256,7 +256,7 @@ class Parser_(Spec):
             result = self.parser.parse_argv(['mytask'] + argstr.split())
             eq_(result[0].args.foo.value, expected)
 
-        def no_value_becomes_True(self):
+        def no_value_becomes_True_not_default_value(self):
             self._expect('--foo', True)
             self._expect('-f', True)
 

@@ -198,6 +198,7 @@ class ParseMachine(StateMachine):
         debug("Context flags: %r" % self.context.flags)
 
     def complete_flag(self):
+        # Barf if we needed a value and didn't get one
         if (
             self.flag
             and self.flag.takes_value
@@ -205,6 +206,15 @@ class ParseMachine(StateMachine):
             and not self.flag.optional
         ):
             self.error("Flag %r needed value and was not given one!" % self.flag)
+        # Handle optional-value flags; at this point they were not given an
+        # explicit value, but they were seen, ergo they should get treated like
+        # bools.
+        # (Can't do this like real bools because we don't know until now
+        # whether the user was *going* to give an actual value.)
+        if self.flag and self.flag.optional:
+            msg = "Saw optional flag %r go by w/ no value; setting to True"
+            debug(msg % self.flag.name)
+            self.flag.value = True
 
     def switch_to_flag(self, flag):
         # Update state
