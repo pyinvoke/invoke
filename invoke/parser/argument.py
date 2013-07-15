@@ -70,3 +70,15 @@ class Argument(object):
     def value(self, arg):
         self.raw_value = arg
         self._value = self.kind(arg)
+
+    def set_value(self, value, cast=True):
+        """
+        Actual explicit value-setting API call.
+
+        Sets ``self.raw_value`` to ``value`` directly.
+
+        Sets ``self.value`` to ``self.kind(value)``, unless ``cast=False`` in
+        which case the raw value is also used.
+        """
+        self.raw_value = value
+        self._value = (self.kind if cast else lambda x: x)(value)

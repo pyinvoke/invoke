@@ -139,3 +139,13 @@ class Argument_(Spec):
             a = Argument('a', kind=int)
             eq_(a.raw_value, None)
 
+    class set_value:
+        def casts_by_default(self):
+            a = Argument('a', kind=int)
+            a.set_value('5')
+            eq_(a.value, 5)
+
+        def allows_setting_value_without_casting(self):
+            a = Argument('a', kind=int)
+            a.set_value('5', cast=False)
+            eq_(a.value, '5')
