@@ -211,9 +211,10 @@ class ParseMachine(StateMachine):
         # bools.
         # (Can't do this like real bools because we don't know until now
         # whether the user was *going* to give an actual value.)
-        if self.flag and self.flag.optional:
+        if self.flag and self.flag.raw_value is None and self.flag.optional:
             msg = "Saw optional flag %r go by w/ no value; setting to True"
             debug(msg % self.flag.name)
+            # Skip casting so the bool gets preserved
             self.flag.set_value(True, cast=False)
 
     def switch_to_flag(self, flag):
