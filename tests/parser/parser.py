@@ -248,7 +248,7 @@ class Parser_(Spec):
     class optional_arg_values:
         def setup(self):
             self.context = Context('mytask', args=(
-                Argument('foo', optional=True, default='mydefault'),
+                Argument(names=('foo', 'f'), optional=True, default='mydefault'),
             ))
             self.parser = Parser([self.context])
 

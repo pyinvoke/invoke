@@ -214,7 +214,7 @@ class ParseMachine(StateMachine):
         if self.flag and self.flag.optional:
             msg = "Saw optional flag %r go by w/ no value; setting to True"
             debug(msg % self.flag.name)
-            self.flag.value = True
+            self.flag.set_value(True, cast=False)
 
     def switch_to_flag(self, flag):
         # Update state
