@@ -68,8 +68,7 @@ class Argument(object):
 
     @value.setter
     def value(self, arg):
-        self.raw_value = arg
-        self._value = self.kind(arg)
+        self.set_value(arg, cast=True)
 
     def set_value(self, value, cast=True):
         """
