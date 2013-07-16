@@ -213,13 +213,17 @@ class ParseMachine(StateMachine):
         # Handle optional-value flags; at this point they were not given an
         # explicit value, but they were seen, ergo they should get treated like
         # bools.
-        # (Can't do this like real bools because we don't know until now
-        # whether the user was *going* to give an actual value.)
         if self.flag and self.flag.raw_value is None and self.flag.optional:
             msg = "Saw optional flag %r go by w/ no value; setting to True"
             debug(msg % self.flag.name)
             # Skip casting so the bool gets preserved
             self.flag.set_value(True, cast=False)
+
+    def ambiguous_optional_value(self, value):
+        # * unfilled posargs still exist
+        # * value looks like it's supposed to be a flag itself
+        # * value matches another valid task/context name
+        return False
 
     def switch_to_flag(self, flag, inverse=False):
         # Set flag/arg obj
@@ -235,6 +239,12 @@ class ParseMachine(StateMachine):
 
     def see_value(self, value):
         if self.flag.takes_value:
+            # Ensure no ambiguity problems with optional-value flags
+            # Barf on ambiguous values
+            if self.ambiguous_optional_value(value):
+                msg = "%r is too ambiguous when given after an optional-value flag"
+                raise ParseError(msg % value)
+            # Congrats, you passed! Set the value.
             debug("Setting flag %r to value %r" % (self.flag, value))
             self.flag.value = value
         else:
