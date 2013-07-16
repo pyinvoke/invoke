@@ -23,6 +23,35 @@ class Context_(Spec):
         c = Context(name='name', args=(a1, a2))
         assert c.args['foo'] is a1
 
+    # TODO: reconcile this sort of test organization with the .flags oriented
+    # tests within 'add_arg'.  Some of this behavior is technically driven by
+    # add_arg.
+    class args:
+        def setup(self):
+            self.c = Context(args=(
+                Argument('foo'),
+                Argument(names=('bar', 'biz')),
+                Argument('baz', attr_name='wat'),
+            ))
+
+        def exposed_as_dict(self):
+            assert 'foo' in self.c.args.keys()
+
+        def exposed_as_Lexicon(self):
+            eq_(self.c.args.bar, self.c.args['bar'])
+
+        def args_dict_includes_all_arg_names(self):
+            for x in ('foo', 'bar', 'biz'):
+                assert x in self.c.args
+
+        def argument_attr_names_appear_in_args_but_not_flags(self):
+            # Both appear as "Python-facing" args
+            for x in ('baz', 'wat'):
+                assert x in self.c.args
+            # But attr_name is for Python access only and isn't shown to the
+            # parser.
+            assert 'wat' not in self.c.flags
+
     class add_arg:
         def setup(self):
             self.c = Context()
@@ -55,6 +84,26 @@ class Context_(Spec):
             self.c.add_arg(names=('foo', 'bar'))
             assert '--foo' in self.c.flags
             assert '--bar' in self.c.flags
+
+        def adds_true_bools_to_inverse_flags(self):
+            self.c.add_arg(name='myflag', default=True, kind=bool)
+            assert '--myflag' in self.c.flags
+            assert '--no-myflag' in self.c.inverse_flags
+            eq_(self.c.inverse_flags['--no-myflag'], '--myflag')
+
+        def inverse_flags_works_right_with_task_driven_underscored_names(self):
+            # Use a Task here instead of creating a raw argument, we're partly
+            # testing Task.get_arguments()' transform of underscored names
+            # here. Yes that makes this an integration test, but it's nice to
+            # test it here at this level & not just in cli tests.
+            @task
+            def mytask(underscored_option=True):
+                pass
+            self.c.add_arg(mytask.get_arguments()[0])
+            eq_(
+                self.c.inverse_flags['--no-underscored-option'],
+                '--underscored-option'
+            )
 
         def turns_single_character_names_into_short_flags(self):
             self.c.add_arg('f')

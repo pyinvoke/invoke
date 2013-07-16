@@ -8,7 +8,7 @@ from invocations.packaging import vendorize, release
 from invoke import ctask as task, run, Collection
 
 
-@task
+@task(name='tree')
 def doctree(ctx):
     ctx.run("tree -Ca -I \".git|*.pyc|*.swp|dist|*.egg-info|_static|_build\" docs")
 
@@ -27,5 +27,5 @@ def vendorize_pexpect(version):
     shutil.rmtree(os.path.join(target, package, 'tests'))
 
 docs = Collection.from_module(docs)
-docs.add_task(doctree, 'tree')
+docs.add_task(doctree)
 ns = Collection(test, vendorize, release, docs, vendorize_pexpect)

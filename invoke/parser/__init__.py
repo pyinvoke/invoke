@@ -157,6 +157,9 @@ class ParseMachine(StateMachine):
         if self.context and token in self.context.flags:
             debug("Saw flag %r" % token)
             self.switch_to_flag(token)
+        elif self.context and token in self.context.inverse_flags:
+            debug("Saw inverse flag %r" % token)
+            self.switch_to_flag(token, inverse=True)
         # Value for current flag
         elif self.waiting_for_flag_value:
             self.see_value(token)
@@ -196,6 +199,7 @@ class ParseMachine(StateMachine):
         debug("Moving to context %r" % name)
         debug("Context args: %r" % self.context.args)
         debug("Context flags: %r" % self.context.flags)
+        debug("Context inverse_flags: %r" % self.context.inverse_flags)
 
     def complete_flag(self):
         # Barf if we needed a value and didn't get one
@@ -217,14 +221,17 @@ class ParseMachine(StateMachine):
             # Skip casting so the bool gets preserved
             self.flag.set_value(True, cast=False)
 
-    def switch_to_flag(self, flag):
+    def switch_to_flag(self, flag, inverse=False):
+        # Set flag/arg obj
+        flag = self.context.inverse_flags[flag] if inverse else flag
         # Update state
         self.flag = self.context.flags[flag]
         debug("Moving to flag %r" % self.flag)
         # Handle boolean flags (which can immediately be updated)
         if not self.flag.takes_value:
-            debug("Marking seen flag %r as True" % self.flag)
-            self.flag.value = True
+            val = not inverse
+            debug("Marking seen flag %r as %s" % (self.flag, val))
+            self.flag.value = val
 
     def see_value(self, value):
         if self.flag.takes_value:
@@ -255,12 +262,3 @@ class ParseResult(list):
         super(ParseResult, self).__init__(*args, **kwargs)
         self.remainder = ""
         self.unparsed = []
-
-    def to_dict(self):
-        d = {}
-        for context in self:
-            argd = {}
-            for name, arg in six.iteritems(context.args):
-                argd[name] = arg.value
-            d[context.name] = argd
-        return d

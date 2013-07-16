@@ -108,8 +108,18 @@ class Collection_(Spec):
             self.c.add_task(_mytask)
             assert '_mytask' in self.c
 
+        def prefers_name_kwarg_over_task_name_attr(self):
+            self.c.add_task(Task(_func, name='notfunc'), name='yesfunc')
+            assert 'yesfunc' in self.c
+            assert 'notfunc' not in self.c
+
+        def prefers_task_name_attr_over_function_name(self):
+            self.c.add_task(Task(_func, name='notfunc'))
+            assert 'notfunc' in self.c
+            assert '_func' not in self.c
+
         @raises(ValueError)
-        def raises_ValueError_if_no_name_and_non_function(self):
+        def raises_ValueError_if_no_name_found(self):
             # Can't use a lambda here as they are technically real functions.
             class Callable(object):
                 def __call__(self):

@@ -105,6 +105,12 @@ class Parser_(Spec):
             result = Parser((c,)).parse_argv(['mytask', '--boolean'])
             eq_(result[0].args['boolean'].value, True)
 
+        def inverse_bools_get_set_correctly(self):
+            arg = Argument('myarg', kind=bool, default=True)
+            c = Context('mytask', args=(arg,))
+            r = Parser((c,)).parse_argv(['mytask', '--no-myarg'])
+            eq_(r[0].args['myarg'].value, False)
+
         def arguments_which_take_values_get_defaults_overridden_correctly(self):
             args = (Argument('arg', kind=str), Argument('arg2', kind=int))
             c = Context('mytask', args=args)
@@ -299,9 +305,3 @@ class ParseResult_(Spec):
 
     def exhibits_remainder_attribute(self):
         eq_(self.result.remainder, 'my remainder')
-
-    def to_dict_returns_parsed_contexts_and_args_as_nested_dicts(self):
-        eq_(
-            self.result.to_dict(),
-            {'mytask': {'foo': 'foo-val', 'bar': None}}
-        )

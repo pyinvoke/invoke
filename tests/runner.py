@@ -185,6 +185,16 @@ class Run(Spec):
         # E.g. inv test => Ctrl-C halfway => shouldn't get buffer API errors
         skip()
 
-    def funky_characters_in_stdout_dont_barf(self):
-        # Crummy "doesn't explode with decode errors" test
-        run("cat tree.out", hide='both')
+    class funky_characters_in_stdout:
+        def basic_nonstandard_characters(self):
+            # Crummy "doesn't explode with decode errors" test
+            run("cat tree.out", hide='both')
+
+        def nonprinting_bytes(self):
+            # Seriously non-printing characters (i.e. non UTF8) also don't asplode
+            # load('funky').derp()
+            run("echo '\xff'", hide='both')
+
+        def nonprinting_bytes_pty(self):
+            # PTY use adds another utf-8 decode spot which can also fail.
+            run("echo '\xff'", pty=True, hide='both')

@@ -66,6 +66,7 @@ class Context(object):
         self.args = Lexicon()
         self.positional_args = []
         self.flags = Lexicon()
+        self.inverse_flags = {} # No need for Lexicon here
         self.name = name
         self.aliases = aliases
         for arg in args:
@@ -84,12 +85,16 @@ class Context(object):
         """
         Adds given ``Argument`` (or constructor args for one) to this context.
 
-        The Argument in question is added to two dict attributes:
+        The Argument in question is added to the following dict attributes:
 
         * ``args``: "normal" access, i.e. the given names are directly exposed
           as keys.
         * ``flags``: "flaglike" access, i.e. the given names are translated
           into CLI flags, e.g. ``"foo"`` is accessible via ``flags['--foo']``.
+        * ``inverse_flags``: similar to ``flags`` but containing only the
+          "inverse" versions of boolean flags which default to True. This
+          allows the parser to track e.g. ``--no-myflag`` and turn it into a
+          False value for the ``myflag`` Argument.
         """
         # Normalize
         if len(args) == 1 and isinstance(args[0], Argument):
@@ -101,8 +106,8 @@ class Context(object):
             if name in self.args:
                 msg = "Tried to add an argument named %r but one already exists!"
                 raise ValueError(msg % name)
-        # All arguments added to .args
-        main = arg.name
+        # First name used as "main" name for purposes of aliasing
+        main = arg.names[0] # NOT arg.name
         self.args[main] = arg
         # Note positionals in distinct, ordered list attribute
         if arg.positional:
@@ -112,6 +117,16 @@ class Context(object):
         for name in arg.nicknames:
             self.args.alias(name, to=main)
             self.flags.alias(to_flag(name), to=to_flag(main))
+        # Add attr_name to args, but not flags
+        if arg.attr_name:
+            self.args.alias(arg.attr_name, to=main)
+        # Add to inverse_flags if required
+        if arg.kind == bool and arg.default == True:
+            # Invert the 'main' flag name here, which will be a dashed version
+            # of the primary argument name if underscore-to-dash transformation
+            # occurred.
+            inverse_name = to_flag("no-%s" % main)
+            self.inverse_flags[inverse_name] = to_flag(main)
 
     @property
     def needs_positional_arg(self):
@@ -167,6 +182,6 @@ class Context(object):
         # changes?
         # Cast to list to ensure non-generator on Python 3.
         return list(map(
-            lambda x: self.help_for(to_flag(x.names[0])),
+            lambda x: self.help_for(to_flag(x.name)),
             sorted(self.flags.values(), key=flag_key)
         ))

@@ -32,24 +32,32 @@ class Task(object):
     # NOTE: we shadow __builtins__.help here. It's purposeful. :(
     def __init__(self,
         body,
+        name=None,
         contextualized=False,
         aliases=(),
         positional=None,
         default=False,
         auto_shortflags=True,
         help=None,
-        pre=None
+        pre=None,
     ):
+        # Real callable
         self.body = body
         # Must copy doc/name here because Sphinx is retarded about properties.
         self.__doc__ = getattr(body, '__doc__', '')
         self.__name__ = getattr(body, '__name__', '')
+        # Is this a contextualized task?
         self.contextualized = contextualized
+        # Default name, alternate names, and whether it should act as the
+        # default for its parent collection
+        self.name = name
         self.aliases = aliases
-        self.positional = self.fill_implicit_positionals(positional)
         self.is_default = default
+        # Arg/flag/parser hints
+        self.positional = self.fill_implicit_positionals(positional)
         self.auto_shortflags = auto_shortflags
         self.help = help or {}
+        # Call chain bidness
         self.pre = pre or []
         self.times_called = 0
 
@@ -70,6 +78,9 @@ class Task(object):
         Returns two-tuple:
 
         * First item is list of arg names, in order defined.
+
+            * I.e. we *cannot* simply use a dict's ``keys()`` method here.
+
         * Second item is dict mapping arg names to default values or
           task.NO_DEFAULT (i.e. an 'empty' value distinct from None).
         """
@@ -100,7 +111,12 @@ class Task(object):
         return positional
 
     def arg_opts(self, name, default, taken_names):
-        # Argument name(s)
+        opts = {}
+        # Argument name(s) (replace w/ dashed version if underscores present,
+        # and move the underscored version to be the attr_name instead.)
+        if '_' in name:
+            opts['attr_name'] = name
+            name = name.replace('_', '-')
         names = [name]
         if self.auto_shortflags:
             # Must know what short names are available
@@ -108,7 +124,7 @@ class Task(object):
                 if not (char == name or char in taken_names):
                     names.append(char)
                     break
-        opts = {'names': names}
+        opts['names'] = names
         # Handle default value & kind if possible
         if default not in (None, NO_DEFAULT):
             # TODO: allow setting 'kind' explicitly.
@@ -162,6 +178,9 @@ def task(*args, **kwargs):
     specified. Otherwise, the following keyword arguments are allowed in the
     parenthese'd form:
 
+    * ``name``: Default name to use when binding to a `.Collection`. Useful for
+      avoiding Python namespace issues (i.e. when the desired CLI level name
+      can't or shouldn't be used as the Python level name.)
     * ``contextualized``: Hints to callers (especially the CLI) that this task
       expects to be given a `~invoke.context.Context` object as its first
       argument when called.
@@ -201,6 +220,7 @@ def task(*args, **kwargs):
         kwargs['pre'] = args
     # @task(options)
     # TODO: pull in centrally defined defaults here (see Task)
+    name = kwargs.pop('name', None)
     contextualized = kwargs.pop('contextualized', False)
     aliases = kwargs.pop('aliases', ())
     positional = kwargs.pop('positional', None)
@@ -215,6 +235,7 @@ def task(*args, **kwargs):
     def inner(obj):
         obj = Task(
             obj,
+            name=name,
             contextualized=contextualized,
             aliases=aliases,
             positional=positional,

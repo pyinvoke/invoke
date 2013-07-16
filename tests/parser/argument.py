@@ -29,6 +29,10 @@ class Argument_(Spec):
         def positional_is_False_by_default(self):
             eq_(Argument(name='foo').positional, False)
 
+        def can_set_attr_name_to_control_name_attr(self):
+            a = Argument('foo', attr_name='bar')
+            eq_(a.name, 'bar') # not 'foo'
+
     class string:
         "__str__"
 

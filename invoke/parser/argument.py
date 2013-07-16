@@ -25,7 +25,7 @@ class Argument(object):
         Whether or not this (non-``bool``) argument requires a value.
     """
     def __init__(self, name=None, names=(), kind=str, default=None, help=None,
-        positional=False, optional=False):
+        positional=False, optional=False, attr_name=None):
         if name and names:
             msg = "Cannot give both 'name' and 'names' arguments! Pick one."
             raise TypeError(msg)
@@ -38,6 +38,7 @@ class Argument(object):
         self.help = help
         self.positional = positional
         self.optional = optional
+        self.attr_name = attr_name
 
     def __str__(self):
         return "<%s: %s%s%s>" % (
@@ -52,7 +53,7 @@ class Argument(object):
 
     @property
     def name(self):
-        return self.names[0]
+        return self.attr_name or self.names[0]
 
     @property
     def nicknames(self):

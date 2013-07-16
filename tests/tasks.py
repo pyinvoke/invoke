@@ -87,6 +87,12 @@ class task_(Spec):
         assert not task1.contextualized
         assert task2.contextualized
 
+    def sets_name(self):
+        @task(name='foo')
+        def bar():
+            pass
+        eq_(bar.name, 'foo')
+
 
 class ctask_(Spec):
     def behaves_like_task_with_contextualized_True(self):
@@ -103,6 +109,12 @@ class Task_(Spec):
 
         def has_contextualized_flag(self):
             eq_(Task(_func).contextualized, False)
+
+        def has_empty_name(self):
+            eq_(Task(_func).name, None)
+
+        def can_override_name(self):
+            eq_(Task(_func, name='foo').name, 'foo')
 
     class callability:
         def setup(self):
@@ -229,3 +241,12 @@ class Task_(Spec):
             def mytask(ctx):
                 pass
             eq_(len(mytask.get_arguments()), 0)
+
+        def underscores_become_dashes(self):
+            @task
+            def mytask(longer_arg):
+                pass
+            arg = mytask.get_arguments()[0]
+            eq_(arg.names, ('longer-arg', 'l'))
+            eq_(arg.attr_name, 'longer_arg')
+            eq_(arg.name, 'longer_arg')

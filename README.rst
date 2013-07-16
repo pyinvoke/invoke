@@ -1,4 +1,5 @@
 .. image:: https://secure.travis-ci.org/pyinvoke/invoke.png?branch=master
+        :target: https://travis-ci.org/pyinvoke/invoke
 
 **BIG HONKIN' DISCLAIMER:** This software is currently in beta. It's
 test-driven and dogfooded, but feature set & documentation has holes & rough
