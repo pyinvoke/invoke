@@ -219,19 +219,31 @@ class ParseMachine(StateMachine):
             # Skip casting so the bool gets preserved
             self.flag.set_value(True, cast=False)
 
-    def ambiguous_optional_value(self, value):
+    def check_ambiguity(self, value):
+        """
+        Guard against ambiguity when currently flag takes an optional value.
+        """
+        if not (self.flag and self.flag.optional):
+            return False
+        tests = []
         # unfilled posargs still exist
-        unfilled_posargs = self.context and self.context.needs_positional_arg
-        # * value looks like it's supposed to be a flag itself
-        is_flag = (
-            value in self.context.flags
-            or value in self.context.inverse_flags
-        )
+        tests.append(self.context and self.context.needs_positional_arg)
+        # * value looks like it's supposed to be a flag itself.
+        # (Doesn't have to even actually be valid - chances are if it looks
+        # like a flag, the user was trying to give one.)
+        # FIXME: abstract out this w/ the other instance(s) of the test -
+        # despite how simple it is.
+        tests.append(value.startswith('-'))
         # * value matches another valid task/context name
-        is_context = False
-        return unfilled_posargs or is_flag or is_context
+        # FIXME: abstract this out too
+        tests.append(value in self.contexts)
+        if any(tests):
+            msg = "%r is ambiguous when given after an optional-value flag"
+            raise ParseError(msg % value)
 
     def switch_to_flag(self, flag, inverse=False):
+        # Sanity check for ambiguity w/ prior optional-value flag
+        self.check_ambiguity(flag)
         # Set flag/arg obj
         flag = self.context.inverse_flags[flag] if inverse else flag
         # Update state
@@ -244,13 +256,8 @@ class ParseMachine(StateMachine):
             self.flag.value = val
 
     def see_value(self, value):
+        self.check_ambiguity(value)
         if self.flag.takes_value:
-            # Ensure no ambiguity problems with optional-value flags
-            # Barf on ambiguous values
-            if self.flag.optional and self.ambiguous_optional_value(value):
-                msg = "%r is ambiguous when given after an optional-value flag"
-                raise ParseError(msg % value)
-            # Congrats, you passed! Set the value.
             debug("Setting flag %r to value %r" % (self.flag, value))
             self.flag.value = value
         else:
