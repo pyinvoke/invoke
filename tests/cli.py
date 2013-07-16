@@ -96,8 +96,8 @@ Core options:
 Usage: inv[oke] [--core-opts] punch [--options] [other tasks here ...]
 
 Options for 'punch':
-  --who                            Who to punch
-  --why                            Motive
+  -h STRING, --why=STRING   Motive
+  -w STRING, --who=STRING   Who to punch
 
 """.lstrip()
         r1 = run("inv -c decorator -h punch", hide='out')

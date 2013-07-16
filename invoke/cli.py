@@ -89,8 +89,7 @@ def parse(argv, collection=None):
         ),
         Argument(
             names=('help', 'h'),
-            kind=bool,
-            default=False,
+            optional=True,
             help="Show this help message and exit."
         ),
         Argument(
@@ -166,6 +165,16 @@ def parse(argv, collection=None):
     parser = Parser(contexts=collection.to_contexts())
     debug("Parsing actual tasks against collection %r" % collection)
     tasks = parse_gracefully(parser, core.unparsed)
+
+    # Per-task help. Use the parser's contexts dict as that's the easiest way
+    # to obtain Context objects here - which are what help output needs.
+    name = args.help.value
+    if name in parser.contexts:
+        print("Usage: inv[oke] [--core-opts] %s [--options] [other tasks here ...]" % name)
+        print("")
+        print("Options for %r:" % name)
+        print_help(parser.contexts[name])
+        sys.exit(0)
 
     # Print discovered tasks if necessary
     if args.list.value:
