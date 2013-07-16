@@ -91,6 +91,21 @@ Core options:
         eq_(r2.stdout, expected)
 
     @trap
+    def per_task_help_prints_help_for_task_only(self):
+        expected = """
+Usage: inv[oke] [--core-opts] punch [--options] [other tasks here ...]
+
+Options for 'punch':
+  --who                            Who to punch
+  --why                            Motive
+
+""".lstrip()
+        r1 = run("inv -c decorator -h punch", hide='out')
+        r2 = run("inv -c decorator --help punch", hide='out')
+        eq_(r1.stdout, expected)
+        eq_(r2.stdout, expected)
+
+    @trap
     def version_info(self):
         eq_(run("invoke -V").stdout, "Invoke %s\n" % invoke.__version__)
 
