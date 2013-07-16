@@ -90,7 +90,7 @@ def parse(argv, collection=None):
         Argument(
             names=('help', 'h'),
             optional=True,
-            help="Show this help message and exit."
+            help="Show core or per-task help and exit."
         ),
         Argument(
             names=('version', 'V'),
