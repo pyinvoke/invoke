@@ -253,13 +253,26 @@ class Parser_(Spec):
 
     class optional_arg_values:
         def setup(self):
-            self.context = Context('mytask', args=(
-                Argument(names=('foo', 'f'), optional=True, default='mydefault'),
-            ))
-            self.parser = Parser([self.context])
+            self.parser = self._parser()
 
-        def _expect(self, argstr, expected):
-            result = self.parser.parse_argv(['mytask'] + argstr.split())
+        def _parser(self, arguments=None):
+            if arguments is None:
+                arguments = (
+                    Argument(
+                        names=('foo', 'f'),
+                        optional=True,
+                        default='mydefault'
+                    ),
+                )
+            self.context = Context('mytask', args=arguments)
+            return Parser([self.context])
+
+        def _parse(self, argstr, parser=None):
+            parser = parser or self.parser
+            return parser.parse_argv(['mytask'] + argstr.split())
+
+        def _expect(self, argstr, expected, parser=None):
+            result = self._parse(argstr, parser)
             eq_(result[0].args.foo.value, expected)
 
         def no_value_becomes_True_not_default_value(self):
