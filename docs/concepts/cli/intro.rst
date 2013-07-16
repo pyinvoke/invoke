@@ -128,7 +128,8 @@ takes an optional value:
 
 * When a task takes positional arguments and they haven't all been filled in by
   the time the parser arrives at the optional-value flag;
-* When the token following one of these flags looks like another flag; or
+* When the token following one of these flags looks like it is itself a flag;
+  or
 * When that token has the same name as another task.
 
 In any of these situations, Invoke's parser will `refuse the temptation to
