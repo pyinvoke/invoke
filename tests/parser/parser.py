@@ -291,10 +291,10 @@ class Parser_(Spec):
         def not_given_at_all_uses_default_value(self):
             self._expect('', 'mydefault')
 
-        def _test_for_ambiguity(self, invoke, parser):
+        def _test_for_ambiguity(self, invoke, parser=None):
             msg = "is ambiguous"
             try:
-                self._parse(invoke, parser)
+                self._parse(invoke, parser or self.parser)
             # Expected result
             except ParseError, e:
                 assert msg in str(e)
@@ -311,12 +311,21 @@ class Parser_(Spec):
             self._test_for_ambiguity("--foo uhoh", p)
 
         def ambiguity_with_flaglike_value(self):
-            # mytask --foo --lolwut
-            skip()
+            self._test_for_ambiguity("--foo --bar")
+
+        def ambiguity_with_actual_other_flag(self):
+            p = self._parser((
+                Argument('foo', optional=True),
+                Argument('bar')
+            ))
+            self._test_for_ambiguity("--foo --bar")
 
         def ambiguity_with_task_name(self):
             # mytask --foo myothertask
-            skip()
+            c1 = Context('mytask', args=(Argument('foo', optional=True),))
+            c2 = Context('othertask')
+            p = Parser([c1, c2])
+            self._test_for_ambiguity("--foo othertask", p)
 
 
 class ParseResult_(Spec):
