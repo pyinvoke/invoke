@@ -66,9 +66,9 @@ core ``--help``/``-h`` option::
 
     $ invoke --help build
 
-    'build' options:
-      -f STRING, --format=STRING       Which build format type to use
-      --progress-bar, -p               Display progress bar
+    Options for 'build':
+      -f STRING, --format=STRING  Which build format type to use
+      -p, --progress-bar          Display progress bar
 
 Globbed short flags
 -------------------

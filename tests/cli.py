@@ -74,7 +74,7 @@ Core options:
   -c STRING, --collection=STRING   Specify collection name to load. May be
                                    given >1 time.
   -e, --echo                       Echo executed commands before running.
-  -h, --help                       Show this help message and exit.
+  -h STRING, --help=STRING         Show this help message and exit.
   -H STRING, --hide=STRING         Set default value of run()'s 'hide' kwarg.
   -l, --list                       List available tasks.
   -p, --pty                        Use a pty when executing shell commands.
