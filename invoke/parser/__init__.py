@@ -240,7 +240,6 @@ class ParseMachine(StateMachine):
         # like a flag, the user was trying to give one.)
         tests.append(is_flag(value))
         # * value matches another valid task/context name
-        # FIXME: abstract this out too
         tests.append(value in self.contexts)
         if any(tests):
             msg = "%r is ambiguous when given after an optional-value flag"
