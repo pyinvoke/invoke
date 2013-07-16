@@ -10,6 +10,13 @@ from ..util import debug
 from ..exceptions import ParseError
 
 
+def is_flag(value):
+    return value.startswith('-')
+
+def is_long_flag(value):
+    return value.startswith('--')
+
+
 class Parser(object):
     """
     Create parser conscious of ``contexts`` and optional ``initial`` context.
@@ -79,7 +86,7 @@ class Parser(object):
             # Handle non-space-delimited forms, if not currently expecting a
             # flag value and still in valid parsing territory (i.e. not in
             # "unknown" state which implies store-only)
-            if not machine.waiting_for_flag_value and token.startswith('-') \
+            if not machine.waiting_for_flag_value and is_flag(token) \
                 and not machine.result.unparsed:
                 orig = token
                 # Equals-sign-delimited flags, eg --foo=bar or -f=bar
@@ -89,7 +96,7 @@ class Parser(object):
                         orig, token, value))
                     body.insert(index + 1, value)
                 # Contiguous boolean short flags, e.g. -qv
-                elif not token.startswith('--') and len(token) > 2:
+                elif not is_long_flag(token) and len(token) > 2:
                     full_token = token[:]
                     rest, token = token[2:], token[:2]
                     debug("Splitting %r into token %r and rest %r" % (full_token, token, rest))
@@ -231,9 +238,7 @@ class ParseMachine(StateMachine):
         # * value looks like it's supposed to be a flag itself.
         # (Doesn't have to even actually be valid - chances are if it looks
         # like a flag, the user was trying to give one.)
-        # FIXME: abstract out this w/ the other instance(s) of the test -
-        # despite how simple it is.
-        tests.append(value.startswith('-'))
+        tests.append(is_flag(value))
         # * value matches another valid task/context name
         # FIXME: abstract this out too
         tests.append(value in self.contexts)
