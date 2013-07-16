@@ -220,10 +220,12 @@ class ParseMachine(StateMachine):
             self.flag.set_value(True, cast=False)
 
     def ambiguous_optional_value(self, value):
-        # * unfilled posargs still exist
-        # * value looks like it's supposed to be a flag itself
-        # * value matches another valid task/context name
-        return False
+        return (
+            # * unfilled posargs still exist
+            (self.context and self.context.needs_positional_arg)
+            # * value looks like it's supposed to be a flag itself
+            # * value matches another valid task/context name
+        )
 
     def switch_to_flag(self, flag, inverse=False):
         # Set flag/arg obj
@@ -241,8 +243,8 @@ class ParseMachine(StateMachine):
         if self.flag.takes_value:
             # Ensure no ambiguity problems with optional-value flags
             # Barf on ambiguous values
-            if self.ambiguous_optional_value(value):
-                msg = "%r is too ambiguous when given after an optional-value flag"
+            if self.flag.optional and self.ambiguous_optional_value(value):
+                msg = "%r is ambiguous when given after an optional-value flag"
                 raise ParseError(msg % value)
             # Congrats, you passed! Set the value.
             debug("Setting flag %r to value %r" % (self.flag, value))

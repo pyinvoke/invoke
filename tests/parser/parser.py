@@ -297,7 +297,7 @@ class Parser_(Spec):
                 self._parse(invoke, parser)
             # Expected result
             except ParseError, e:
-                assert msg in e
+                assert msg in str(e)
             # No exception occurred at all? Bollocks.
             else:
                 assert False
