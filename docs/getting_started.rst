@@ -67,7 +67,8 @@ It can be invoked in the following ways, all resulting in "Hi Jeff!"::
     $ invoke hi -nJeff
 
 Again, more details on how all this works can be found in the :doc:`CLI
-concepts <concepts/cli>`.
+concepts <concepts/cli>` (for the command-line & parsing side of things) and
+the `.task` API documentation (for the declaration side).
 
 
 Listing tasks

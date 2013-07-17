@@ -6,7 +6,7 @@ Task execution
 * Global and per-user config files are loaded, pending some of those core
   options.
 * A task namespace is loaded up via one or more Collections -- see
-  :doc:`concepts/cli/loading`.
+  :doc:`concepts/loading`.
     * Somewhere in here, pre/post lists are parsed & any strings replaced with
       the looked-up real task objects (or errors raised).
 * The tasks + their options/args are parsed in the second parser pass (within

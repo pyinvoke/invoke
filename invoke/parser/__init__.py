@@ -10,6 +10,13 @@ from ..util import debug
 from ..exceptions import ParseError
 
 
+def is_flag(value):
+    return value.startswith('-')
+
+def is_long_flag(value):
+    return value.startswith('--')
+
+
 class Parser(object):
     """
     Create parser conscious of ``contexts`` and optional ``initial`` context.
@@ -79,7 +86,7 @@ class Parser(object):
             # Handle non-space-delimited forms, if not currently expecting a
             # flag value and still in valid parsing territory (i.e. not in
             # "unknown" state which implies store-only)
-            if not machine.waiting_for_flag_value and token.startswith('-') \
+            if not machine.waiting_for_flag_value and is_flag(token) \
                 and not machine.result.unparsed:
                 orig = token
                 # Equals-sign-delimited flags, eg --foo=bar or -f=bar
@@ -89,7 +96,7 @@ class Parser(object):
                         orig, token, value))
                     body.insert(index + 1, value)
                 # Contiguous boolean short flags, e.g. -qv
-                elif not token.startswith('--') and len(token) > 2:
+                elif not is_long_flag(token) and len(token) > 2:
                     full_token = token[:]
                     rest, token = token[2:], token[:2]
                     debug("Splitting %r into token %r and rest %r" % (full_token, token, rest))
@@ -202,10 +209,45 @@ class ParseMachine(StateMachine):
         debug("Context inverse_flags: %r" % self.context.inverse_flags)
 
     def complete_flag(self):
-        if self.flag and self.flag.takes_value and self.flag.raw_value is None:
+        # Barf if we needed a value and didn't get one
+        if (
+            self.flag
+            and self.flag.takes_value
+            and self.flag.raw_value is None
+            and not self.flag.optional
+        ):
             self.error("Flag %r needed value and was not given one!" % self.flag)
+        # Handle optional-value flags; at this point they were not given an
+        # explicit value, but they were seen, ergo they should get treated like
+        # bools.
+        if self.flag and self.flag.raw_value is None and self.flag.optional:
+            msg = "Saw optional flag %r go by w/ no value; setting to True"
+            debug(msg % self.flag.name)
+            # Skip casting so the bool gets preserved
+            self.flag.set_value(True, cast=False)
+
+    def check_ambiguity(self, value):
+        """
+        Guard against ambiguity when currently flag takes an optional value.
+        """
+        if not (self.flag and self.flag.optional):
+            return False
+        tests = []
+        # unfilled posargs still exist
+        tests.append(self.context and self.context.needs_positional_arg)
+        # * value looks like it's supposed to be a flag itself.
+        # (Doesn't have to even actually be valid - chances are if it looks
+        # like a flag, the user was trying to give one.)
+        tests.append(is_flag(value))
+        # * value matches another valid task/context name
+        tests.append(value in self.contexts)
+        if any(tests):
+            msg = "%r is ambiguous when given after an optional-value flag"
+            raise ParseError(msg % value)
 
     def switch_to_flag(self, flag, inverse=False):
+        # Sanity check for ambiguity w/ prior optional-value flag
+        self.check_ambiguity(flag)
         # Set flag/arg obj
         flag = self.context.inverse_flags[flag] if inverse else flag
         # Update state
@@ -218,6 +260,7 @@ class ParseMachine(StateMachine):
             self.flag.value = val
 
     def see_value(self, value):
+        self.check_ambiguity(value)
         if self.flag.takes_value:
             debug("Setting flag %r to value %r" % (self.flag, value))
             self.flag.value = value

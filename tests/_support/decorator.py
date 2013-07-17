@@ -9,7 +9,7 @@ def foo():
 def biz():
     pass
 
-@task(help={'why': 'Motive'})
+@task(help={'why': 'Motive', 'who': 'Who to punch'})
 def punch(who, why):
     pass
 
@@ -23,4 +23,8 @@ def two_positionals(pos1, pos2, nonpos):
 
 @task
 def implicit_positionals(pos1, pos2, nonpos=None):
+    pass
+
+@task(optional=['myopt'])
+def optional_values(myopt):
     pass
