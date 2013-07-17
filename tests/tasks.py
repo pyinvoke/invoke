@@ -191,7 +191,7 @@ class Task_(Spec):
 
         def optional_flag_is_preserved(self):
             eq_(
-                x.optional for x in self.args],
+                [x.optional for x in self.args],
                 [True, False, False]
             )
 

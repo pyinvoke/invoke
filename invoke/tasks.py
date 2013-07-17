@@ -229,6 +229,7 @@ def task(*args, **kwargs):
     contextualized = kwargs.pop('contextualized', False)
     aliases = kwargs.pop('aliases', ())
     positional = kwargs.pop('positional', None)
+    optional = kwargs.pop('optional', [])
     default = kwargs.pop('default', False)
     auto_shortflags = kwargs.pop('auto_shortflags', True)
     help = kwargs.pop('help', {})
