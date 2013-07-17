@@ -149,15 +149,18 @@ class Context(object):
         # Format & go
         full_names = []
         for name in names:
-            # Short flags are -f VAL, long are --foo=VAL
-            # When optional, also, -f [VAL] and --foo[=VAL]
-            if len(name.strip('-')) == 1:
-                value = ("[%s]" % value) if arg.optional else value
-                valuestr = " %s" % value
+            if value:
+                # Short flags are -f VAL, long are --foo=VAL
+                # When optional, also, -f [VAL] and --foo[=VAL]
+                if len(name.strip('-')) == 1:
+                    value = ("[%s]" % value) if arg.optional else value
+                    valuestr = " %s" % value
+                else:
+                    valuestr = "=%s" % value
+                    if arg.optional:
+                        valuestr = "[%s]" % valuestr
             else:
-                valuestr = "=%s" % value
-                if arg.optional:
-                    valuestr = "[%s]" % valuestr
+                valuestr = ""
             # Tack together
             full_names.append(name + valuestr)
         namestr = ", ".join(sorted(full_names, key=len))
