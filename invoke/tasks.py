@@ -137,6 +137,8 @@ class Task(object):
             opts['help'] = self.help[name]
         # Whether it's positional or not
         opts['positional'] = name in self.positional
+        # Whether it is a value-optional flag
+        opts['optional'] = name in self.optional
         return opts
 
     def get_arguments(self):
