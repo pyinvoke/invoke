@@ -46,6 +46,9 @@ class task_(Spec):
     def sets_arg_kind(self):
         skip()
 
+    def sets_which_args_are_optional(self):
+        eq_(self.vanilla['optional_values'].optional, ['myarg'])
+
     def allows_annotating_args_as_positional(self):
         eq_(self.vanilla['one_positional'].positional, ['pos'])
         eq_(self.vanilla['two_positionals'].positional, ['pos1', 'pos2'])
@@ -150,7 +153,7 @@ class Task_(Spec):
 
     class get_arguments:
         def setup(self):
-            @task(positional=['arg3', 'arg1'])
+            @task(positional=['arg3', 'arg1'], optional=['arg1'])
             def mytask(arg1, arg2=False, arg3=5):
                 pass
             self.task = mytask
@@ -184,6 +187,12 @@ class Task_(Spec):
             eq_(
                 [x.positional for x in self.args],
                 [True, True, False]
+            )
+
+        def optional_flag_is_preserved(self):
+            eq_(
+                x.optional for x in self.args],
+                [True, False, False]
             )
 
         def turns_function_signature_into_Arguments(self):

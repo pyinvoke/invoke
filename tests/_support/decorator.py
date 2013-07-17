@@ -24,3 +24,7 @@ def two_positionals(pos1, pos2, nonpos):
 @task
 def implicit_positionals(pos1, pos2, nonpos=None):
     pass
+
+@task(optional=['myopt'])
+def optional_values(myopt):
+    pass
