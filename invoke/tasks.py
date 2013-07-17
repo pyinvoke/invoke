@@ -36,6 +36,7 @@ class Task(object):
         contextualized=False,
         aliases=(),
         positional=None,
+        optional=(),
         default=False,
         auto_shortflags=True,
         help=None,
@@ -55,6 +56,7 @@ class Task(object):
         self.is_default = default
         # Arg/flag/parser hints
         self.positional = self.fill_implicit_positionals(positional)
+        self.optional = optional
         self.auto_shortflags = auto_shortflags
         self.help = help or {}
         # Call chain bidness
@@ -229,7 +231,7 @@ def task(*args, **kwargs):
     contextualized = kwargs.pop('contextualized', False)
     aliases = kwargs.pop('aliases', ())
     positional = kwargs.pop('positional', None)
-    optional = kwargs.pop('optional', [])
+    optional = tuple(kwargs.pop('optional', ()))
     default = kwargs.pop('default', False)
     auto_shortflags = kwargs.pop('auto_shortflags', True)
     help = kwargs.pop('help', {})
@@ -245,6 +247,7 @@ def task(*args, **kwargs):
             contextualized=contextualized,
             aliases=aliases,
             positional=positional,
+            optional=optional,
             default=default,
             auto_shortflags=auto_shortflags,
             help=help,

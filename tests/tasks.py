@@ -47,7 +47,7 @@ class task_(Spec):
         skip()
 
     def sets_which_args_are_optional(self):
-        eq_(self.vanilla['optional_values'].optional, ['myarg'])
+        eq_(self.vanilla['optional_values'].optional, ('myopt',))
 
     def allows_annotating_args_as_positional(self):
         eq_(self.vanilla['one_positional'].positional, ['pos'])
