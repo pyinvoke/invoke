@@ -164,8 +164,8 @@ class Context_(Spec):
             ))
             # Task/Collection generated Context
             # (will expose flags n such)
-            @task(help={'otherarg': 'other help'}, optional=['myarg'])
-            def mytask(myarg, otherarg):
+            @task(help={'otherarg': 'other help'}, optional=['optval'])
+            def mytask(myarg, otherarg, optval):
                 pass
             col = Collection(mytask)
             self.tasked = col.to_contexts()[0]
@@ -220,7 +220,10 @@ class Context_(Spec):
             eq_(self.tasked.help_for('-m'), self.tasked.help_for('--myarg'))
 
         def optional_values_use_brackets(self):
-            eq_(self.tasked.help_for('--myarg'), '-m [STRING], --myarg[=STRING]')
+            eq_(
+                self.tasked.help_for('--optval'),
+                ("-p [STRING], --optval[=STRING]", "")
+            )
 
     class help_tuples:
         def returns_list_of_help_tuples(self):
