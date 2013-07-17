@@ -149,8 +149,20 @@ class Context(object):
         # Format & go
         full_names = []
         for name in names:
-            sep = " " if len(name.strip('-')) == 1 else "="
-            full_names.append(name + ((sep + value) if value else ""))
+            if value:
+                # Short flags are -f VAL, long are --foo=VAL
+                # When optional, also, -f [VAL] and --foo[=VAL]
+                if len(name.strip('-')) == 1:
+                    value_ = ("[%s]" % value) if arg.optional else value
+                    valuestr = " %s" % value_
+                else:
+                    valuestr = "=%s" % value
+                    if arg.optional:
+                        valuestr = "[%s]" % valuestr
+            else:
+                valuestr = ""
+            # Tack together
+            full_names.append(name + valuestr)
         namestr = ", ".join(sorted(full_names, key=len))
         helpstr = arg.help or ""
         return namestr, helpstr

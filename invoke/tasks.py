@@ -36,6 +36,7 @@ class Task(object):
         contextualized=False,
         aliases=(),
         positional=None,
+        optional=(),
         default=False,
         auto_shortflags=True,
         help=None,
@@ -55,6 +56,7 @@ class Task(object):
         self.is_default = default
         # Arg/flag/parser hints
         self.positional = self.fill_implicit_positionals(positional)
+        self.optional = optional
         self.auto_shortflags = auto_shortflags
         self.help = help or {}
         # Call chain bidness
@@ -135,6 +137,8 @@ class Task(object):
             opts['help'] = self.help[name]
         # Whether it's positional or not
         opts['positional'] = name in self.positional
+        # Whether it is a value-optional flag
+        opts['optional'] = name in self.optional
         return opts
 
     def get_arguments(self):
@@ -194,6 +198,11 @@ def task(*args, **kwargs):
       names, no args besides those named in this iterable will be considered
       positional. (This means that an empty list will force all arguments to be
       given as explicit flags.)
+    * ``optional``: Iterable of argument names, declaring those args to
+      have :ref:`optional values <optional-values>`. Such arguments may be
+      given as value-taking options (e.g. ``--my-arg=myvalue``, wherein the
+      task is given ``"myvalue"``) or as Boolean flags (``--my-arg``, resulting
+      in ``True``).
     * ``default``: Boolean option specifying whether this task should be its
       collection's default task (i.e. called if the collection's own name is
       given.)
@@ -224,6 +233,7 @@ def task(*args, **kwargs):
     contextualized = kwargs.pop('contextualized', False)
     aliases = kwargs.pop('aliases', ())
     positional = kwargs.pop('positional', None)
+    optional = tuple(kwargs.pop('optional', ()))
     default = kwargs.pop('default', False)
     auto_shortflags = kwargs.pop('auto_shortflags', True)
     help = kwargs.pop('help', {})
@@ -239,6 +249,7 @@ def task(*args, **kwargs):
             contextualized=contextualized,
             aliases=aliases,
             positional=positional,
+            optional=optional,
             default=default,
             auto_shortflags=auto_shortflags,
             help=help,

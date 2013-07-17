@@ -19,6 +19,37 @@ def task_name_to_key(x):
 sort_names = partial(sorted, key=task_name_to_key)
 
 
+def print_help(context):
+    indent = 2
+    padding = 3
+    # Calculate column sizes: don't wrap flag specs, give what's left over
+    # to the descriptions.
+    tuples = context.help_tuples()
+    flag_width = max(len(x[0]) for x in tuples)
+    desc_width = pty_size()[0] - flag_width - indent - padding - 1
+    wrapper = textwrap.TextWrapper(width=desc_width)
+    for flag_spec, help_str in tuples:
+        # Wrap descriptions/help text
+        help_chunks = wrapper.wrap(help_str)
+        # Print flag spec + padding
+        flag_padding = flag_width - len(flag_spec)
+        spec = ''.join((
+            indent * ' ',
+            flag_spec,
+            flag_padding * ' ',
+            padding * ' '
+        ))
+        # Print help text as needed
+        if help_chunks:
+            print(spec + help_chunks[0])
+            for chunk in help_chunks[1:]:
+                print((' ' * len(spec)) + chunk)
+        else:
+            print(spec)
+    print('')
+
+
+
 def parse_gracefully(parser, argv):
     """
     Run ``parser.parse_argv(argv)`` & gracefully handle ``ParseError``.
@@ -58,9 +89,8 @@ def parse(argv, collection=None):
         ),
         Argument(
             names=('help', 'h'),
-            kind=bool,
-            default=False,
-            help="Show this help message and exit."
+            optional=True,
+            help="Show core or per-task help and exit."
         ),
         Argument(
             names=('version', 'V'),
@@ -115,41 +145,15 @@ def parse(argv, collection=None):
         print("Invoke %s" % __version__)
         sys.exit(0)
 
-    # Core --help output
+    # Core (no value given) --help output
     # TODO: if this wants to display context sensitive help (e.g. a combo help
     # and available tasks listing; or core flags modified by plugins/task
     # modules) it will have to move farther down.
-    if args.help.value:
+    if args.help.value == True:
         print("Usage: inv[oke] [--core-opts] task1 [--task1-opts] ... taskN [--taskN-opts]")
         print("")
         print("Core options:")
-        indent = 2
-        padding = 3
-        # Calculate column sizes: don't wrap flag specs, give what's left over
-        # to the descriptions.
-        tuples = initial_context.help_tuples()
-        flag_width = max(len(x[0]) for x in tuples)
-        desc_width = pty_size()[0] - flag_width - indent - padding - 1
-        wrapper = textwrap.TextWrapper(width=desc_width)
-        for flag_spec, help_str in tuples:
-            # Wrap descriptions/help text
-            help_chunks = wrapper.wrap(help_str)
-            # Print flag spec + padding
-            flag_padding = flag_width - len(flag_spec)
-            spec = ''.join((
-                indent * ' ',
-                flag_spec,
-                flag_padding * ' ',
-                padding * ' '
-            ))
-            # Print help text as needed
-            if help_chunks:
-                print(spec + help_chunks[0])
-                for chunk in help_chunks[1:]:
-                    print((' ' * len(spec)) + chunk)
-            else:
-                print(spec)
-        print('')
+        print_help(initial_context)
         sys.exit(0)
 
     # Load collection (default or specified) and parse leftovers
@@ -161,6 +165,16 @@ def parse(argv, collection=None):
     parser = Parser(contexts=collection.to_contexts())
     debug("Parsing actual tasks against collection %r" % collection)
     tasks = parse_gracefully(parser, core.unparsed)
+
+    # Per-task help. Use the parser's contexts dict as that's the easiest way
+    # to obtain Context objects here - which are what help output needs.
+    name = args.help.value
+    if name in parser.contexts:
+        print("Usage: inv[oke] [--core-opts] %s [--options] [other tasks here ...]" % name)
+        print("")
+        print("Options for %r:" % name)
+        print_help(parser.contexts[name])
+        sys.exit(0)
 
     # Print discovered tasks if necessary
     if args.list.value:

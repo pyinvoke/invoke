@@ -251,6 +251,82 @@ class Parser_(Spec):
             eq_(a.foo.value, True)
             eq_(a.bar.value, True)
 
+    class optional_arg_values:
+        def setup(self):
+            self.parser = self._parser()
+
+        def _parser(self, arguments=None):
+            if arguments is None:
+                arguments = (
+                    Argument(
+                        names=('foo', 'f'),
+                        optional=True,
+                        default='mydefault'
+                    ),
+                )
+            self.context = Context('mytask', args=arguments)
+            return Parser([self.context])
+
+        def _parse(self, argstr, parser=None):
+            parser = parser or self.parser
+            return parser.parse_argv(['mytask'] + argstr.split())
+
+        def _expect(self, argstr, expected, parser=None):
+            result = self._parse(argstr, parser)
+            eq_(result[0].args.foo.value, expected)
+
+        def no_value_becomes_True_not_default_value(self):
+            self._expect('--foo', True)
+            self._expect('-f', True)
+
+        def value_given_gets_preserved_normally(self):
+            for argstr in (
+                '--foo whatever',
+                '--foo=whatever',
+                '-f whatever',
+                '-f=whatever',
+            ):
+                self._expect(argstr, 'whatever')
+
+        def not_given_at_all_uses_default_value(self):
+            self._expect('', 'mydefault')
+
+        def _test_for_ambiguity(self, invoke, parser=None):
+            msg = "is ambiguous"
+            try:
+                self._parse(invoke, parser or self.parser)
+            # Expected result
+            except ParseError as e:
+                assert msg in str(e)
+            # No exception occurred at all? Bollocks.
+            else:
+                assert False
+            # Any other exceptions will naturally cause failure here.
+
+        def ambiguity_with_unfilled_posargs(self):
+            p = self._parser((
+                Argument('foo', optional=True),
+                Argument('bar', positional=True)
+            ))
+            self._test_for_ambiguity("--foo uhoh", p)
+
+        def ambiguity_with_flaglike_value(self):
+            self._test_for_ambiguity("--foo --bar")
+
+        def ambiguity_with_actual_other_flag(self):
+            p = self._parser((
+                Argument('foo', optional=True),
+                Argument('bar')
+            ))
+            self._test_for_ambiguity("--foo --bar")
+
+        def ambiguity_with_task_name(self):
+            # mytask --foo myothertask
+            c1 = Context('mytask', args=(Argument('foo', optional=True),))
+            c2 = Context('othertask')
+            p = Parser([c1, c2])
+            self._test_for_ambiguity("--foo othertask", p)
+
 
 class ParseResult_(Spec):
     "ParseResult"
