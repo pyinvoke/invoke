@@ -153,8 +153,8 @@ class Context(object):
                 # Short flags are -f VAL, long are --foo=VAL
                 # When optional, also, -f [VAL] and --foo[=VAL]
                 if len(name.strip('-')) == 1:
-                    value = ("[%s]" % value) if arg.optional else value
-                    valuestr = " %s" % value
+                    value_ = ("[%s]" % value) if arg.optional else value
+                    valuestr = " %s" % value_
                 else:
                     valuestr = "=%s" % value
                     if arg.optional:
