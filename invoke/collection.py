@@ -135,6 +135,8 @@ class Collection(object):
                 name = task.name
             elif hasattr(task.body, 'func_name'):
                 name = task.body.func_name
+            elif hasattr(task.body, '__name__'):
+                name = task.__name__
             else:
                 raise ValueError("Could not obtain a name for this task!")
         if name in self.collections:
