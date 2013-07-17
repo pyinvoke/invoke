@@ -94,6 +94,8 @@ and **not**::
 
     $ invoke build -f -p -d -f
 
+.. _optional-values:
+
 Optional flag values
 --------------------
 

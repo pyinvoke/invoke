@@ -194,6 +194,11 @@ def task(*args, **kwargs):
       names, no args besides those named in this iterable will be considered
       positional. (This means that an empty list will force all arguments to be
       given as explicit flags.)
+    * ``optional``: Iterable of argument names, declaring those args to
+      have :ref:`optional values <optional-values>`. Such arguments may be
+      given as value-taking options (e.g. ``--my-arg=myvalue``, wherein the
+      task is given ``"myvalue"``) or as Boolean flags (``--my-arg``, resulting
+      in ``True``).
     * ``default``: Boolean option specifying whether this task should be its
       collection's default task (i.e. called if the collection's own name is
       given.)
