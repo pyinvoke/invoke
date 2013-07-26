@@ -904,9 +904,9 @@ class spawnb(object):
         # Note, it's OK if size==-1 in the regex. That just means it
         # will never match anything in which case we stop only on EOF.
         if self._buffer_type is bytes:
-            pat = (u'.{%d}' % size).encode('ascii')
+            pat = (six.u('.{%d}' % size)).encode('ascii')
         else:
-            pat = u'.{%d}' % size
+            pat = six.u('.{%d}' % size)
         cre = re.compile(pat, re.DOTALL)
         index = self.expect ([cre, self.delimiter]) # delimiter default is EOF
         if index == 0:
@@ -1615,8 +1615,8 @@ class spawn(spawnb):
     _buffer_type = six.text_type
     def _cast_buffer_type(self, s):
         return _cast_unicode(s, self.encoding)
-    _empty_buffer = u''
-    _pty_newline = u'\r\n'
+    _empty_buffer = six.u('')
+    _pty_newline = six.u('\r\n')
     
     def __init__(self, command, args=[], timeout=30, maxread=2000, searchwindowsize=None,
                  logfile=None, cwd=None, env=None, encoding='utf-8'):
