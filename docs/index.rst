@@ -18,7 +18,7 @@ via `pip <http://pip-installer.org>`_::
 
     $ pip install invoke
 
-We currently support **Python 2.6/2.7** and **Python 3.3+**. Users still on
+We currently support **Python 2.6/2.7** and **Python 3.2+**. Users still on
 Python 2.5 or older are urged to upgrade.
 
 As long as you have a supported Python interpreter, **there are no other
