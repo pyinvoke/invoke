@@ -95,7 +95,10 @@ Core options:
         expected = """
 Usage: inv[oke] [--core-opts] punch [--options] [other tasks here ...]
 
-Options for 'punch':
+Docstring:
+    none
+
+Options:
   -h STRING, --why=STRING   Motive
   -w STRING, --who=STRING   Who to punch
 
@@ -110,15 +113,35 @@ Options for 'punch':
         expected = """
 Usage: inv[oke] [--core-opts] biz [other tasks here ...]
 
-'biz' has no options.
+Docstring:
+    none
+
+Options:
+    none
 
 """.lstrip()
         r = run("inv -c decorator -h biz", hide='out')
         eq_(r.stdout, expected)
 
     @trap
+    def per_task_help_displays_docstrings_if_given(self):
+        expected = """
+Usage: inv[oke] [--core-opts] foo [other tasks here ...]
+
+Docstring:
+    Foo the bar.
+    
+Options:
+    none
+
+""".lstrip()
+        r = run("inv -c decorator -h foo", hide='out')
+        eq_(r.stdout, expected)
+
+    @trap
     def version_info(self):
         eq_(run("invoke -V").stdout, "Invoke %s\n" % invoke.__version__)
+
 
     class task_list:
         "--list"

@@ -3,6 +3,9 @@ from invoke.tasks import task
 
 @task(aliases=('bar', 'otherbar'))
 def foo():
+    """
+    Foo the bar.
+    """
     pass
 
 @task(default=True)

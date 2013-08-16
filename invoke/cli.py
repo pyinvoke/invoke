@@ -170,19 +170,29 @@ def parse(argv, collection=None):
     name = args.help.value
     if name in parser.contexts:
         # Setup
-        tuples = parser.contexts[name].help_tuples()
+        ctx = parser.contexts[name]
+        tuples = ctx.help_tuples()
+        docstring = collection[name].__doc__
         header = "Usage: inv[oke] [--core-opts] %s %%s[other tasks here ...]" % name
-        # Has args -> print out the flag info
-        if tuples:
-            print(header % "[--options] ")
-            print("")
-            print("Options for %r:" % name)
-            print_help(tuples)
-        # No args -> present slightly differently (no [--options], diff msg)
+        print(header % ("[--options] " if tuples else ""))
+        print("")
+        print("Docstring:")
+        if docstring:
+            # Really wish textwrap worked better for this.
+            doclines = docstring.lstrip().splitlines()
+            for line in doclines:
+                print("    " + textwrap.dedent(line))
+            # Print trailing blank line if docstring didn't end with one
+            if textwrap.dedent(doclines[-1]):
+                print("")
         else:
-            print(header % "")
+            print("    none")
             print("")
-            print("%r has no options." % name)
+        print("Options:")
+        if tuples:
+            print_help(tuples)
+        else:
+            print("    none")
             print("")
         sys.exit(0)
 
