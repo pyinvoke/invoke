@@ -7,9 +7,9 @@ Temporary changelog until we get something multi-branch-aware working.
 0.5.0 (2013.08.16)
 ==================
 
-* Optional-value flags added - e.g. ``--help`` tells the parser to set the
-  ``help`` option value to True; ``--help sometask`` sets the value to
-  "sometask".
+* Optional-value flags added - e.g. ``--foo`` tells the parser to set the
+  ``foo`` option value to True; ``--foo myval`` sets the value to
+  "myval".
 * The core ``--help`` option now leverages optional-value flags and will
   display per-task help if a task name is given.
 * A bug in our vendored copy of ``pexpect`` clashed with a Python 2->3
