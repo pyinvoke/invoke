@@ -10,6 +10,12 @@ What is Invoke?
 See :doc:`getting_started` for a quick-start guide.
 
 
+What changed recently?
+======================
+
+See :doc:`the changelog <changelog>` for details.
+
+
 How can I install it?
 =====================
 
