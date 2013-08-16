@@ -106,6 +106,17 @@ Options for 'punch':
         eq_(r2.stdout, expected)
 
     @trap
+    def per_task_help_works_for_unparameterized_tasks(self):
+        expected = """
+Usage: inv[oke] [--core-opts] biz [other tasks here ...]
+
+'biz' has no options.
+
+""".lstrip()
+        r = run("inv -c decorator -h biz", hide='out')
+        eq_(r.stdout, expected)
+
+    @trap
     def version_info(self):
         eq_(run("invoke -V").stdout, "Invoke %s\n" % invoke.__version__)
 

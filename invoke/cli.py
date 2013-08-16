@@ -19,12 +19,11 @@ def task_name_to_key(x):
 sort_names = partial(sorted, key=task_name_to_key)
 
 
-def print_help(context):
+def print_help(tuples):
     indent = 2
     padding = 3
     # Calculate column sizes: don't wrap flag specs, give what's left over
     # to the descriptions.
-    tuples = context.help_tuples()
     flag_width = max(len(x[0]) for x in tuples)
     desc_width = pty_size()[0] - flag_width - indent - padding - 1
     wrapper = textwrap.TextWrapper(width=desc_width)
@@ -153,7 +152,7 @@ def parse(argv, collection=None):
         print("Usage: inv[oke] [--core-opts] task1 [--task1-opts] ... taskN [--taskN-opts]")
         print("")
         print("Core options:")
-        print_help(initial_context)
+        print_help(initial_context.help_tuples())
         sys.exit(0)
 
     # Load collection (default or specified) and parse leftovers
@@ -170,10 +169,21 @@ def parse(argv, collection=None):
     # to obtain Context objects here - which are what help output needs.
     name = args.help.value
     if name in parser.contexts:
-        print("Usage: inv[oke] [--core-opts] %s [--options] [other tasks here ...]" % name)
-        print("")
-        print("Options for %r:" % name)
-        print_help(parser.contexts[name])
+        # Setup
+        tuples = parser.contexts[name].help_tuples()
+        header = "Usage: inv[oke] [--core-opts] %s %%s[other tasks here ...]" % name
+        # Has args -> print out the flag info
+        if tuples:
+            print(header % "[--options] ")
+            print("")
+            print("Options for %r:" % name)
+            print_help(tuples)
+        # No args -> present slightly differently (no [--options], diff msg)
+        else:
+            print(header % "")
+            print("")
+            print("%r has no options." % name)
+            print("")
         sys.exit(0)
 
     # Print discovered tasks if necessary
