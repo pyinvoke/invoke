@@ -11,6 +11,10 @@ install:
   # us from having a "pure" install environment like a new user would have.
   # E.g. it makes our internal test module importable :(
   - pip install .
+  # Pre-requirements sanity test (again, resembles pure, non-dev install
+  # environment.) Avoids e.g. spec's 'six' from gumming up our attempts to
+  # import our vendorized 'six'.
+  - inv --list
   # Install those dev requirements (test runner, etc)
   - pip install -r dev-requirements.txt
 script: "inv test"
