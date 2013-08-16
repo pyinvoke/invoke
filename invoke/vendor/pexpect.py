@@ -85,12 +85,8 @@ except ImportError as e:
 A critical module was not found. Probably this operating system does not
 support it. Pexpect is intended for UNIX-like operating systems.""")
 
-# Normal import
-try:
-    import six
-# Horrible, awful hack to work when vendorized
-except ImportError:
-    from .. import six
+# Python 3 support - vendorized
+from . import six
 
 __version__ = '2.5.2'
 version = __version__
