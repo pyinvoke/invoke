@@ -6,7 +6,5 @@ Sphinx>=1.1.2
 -e git+https://github.com/nose-devs/nose#egg=nose
 spec>=0.11.1
 mock==1.0.1
-# Need invocations lib to load internal tasks module (for now)
-# NOTE: as invocations itself requires Invoke, make sure you've already run
-# 'pip install -e .' to get Invoke installed.
--e git+https://github.com/pyinvoke/invocations#egg=invocations
+# Stuff needed for our tasks.py (broken out for ease of CI)
+-r tasks-requirements.txt

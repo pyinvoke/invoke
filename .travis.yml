@@ -14,8 +14,9 @@ install:
   # Pre-requirements sanity test (again, resembles pure, non-dev install
   # environment.) Avoids e.g. spec's 'six' from gumming up our attempts to
   # import our vendorized 'six'.
-  - "inv --list"
-  # Install those dev requirements (test runner, etc)
+  - pip install -r tasks-requirements.txt
+  - inv --list
+  # Install remaining dev requirements (test runner, etc)
   - pip install -r dev-requirements.txt
 script: "inv test"
 notifications:
