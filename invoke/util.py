@@ -24,7 +24,8 @@ def pty_size():
     If unable to determine (e.g. ``sys.stdout`` has been monkeypatched, or
     ``termios`` lacking ``TIOCGWINSZ``) defaults to 80x24.
     """
-    cols, rows = 80, 24
+    default_cols, default_rows = 80, 24
+    cols, rows = default_cols, default_rows
     if sys.stdout.isatty():
         # We want two short unsigned integers (rows, cols)
         fmt = 'HH'
@@ -39,6 +40,11 @@ def pty_size():
             # NOTE: this unpack gives us rows x cols, but we return the
             # inverse.
             rows, cols = struct.unpack(fmt, result)
+            # Fall back to defaults if TIOCGWINSZ returns unreasonable values
+            if rows == 0:
+                rows = default_rows
+            if cols == 0:
+                cols = default_cols
         # Deal with e.g. sys.stdout being monkeypatched, such as in testing.
         # Or termios not having a TIOCGWINSZ.
         except AttributeError:
