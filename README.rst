@@ -36,7 +36,7 @@ Invoke is a Python (2.6+ and 3.2+) task execution tool & library, drawing inspir
     def build(docs=False):
         run("python setup.py build")
         if docs:
-            run("sphinx-build")
+            run("sphinx-build docs docs/_build")
 
 * From GNU Make, it inherits an emphasis on minimal boilerplate for common
   patterns and the ability to run multiple tasks in a single invocation::
