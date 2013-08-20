@@ -48,6 +48,13 @@ class CLI(Spec):
             "whatevs\n"
         )
 
+    @trap
+    def invocation_with_underscored_args(self):
+        _output_eq(
+            "invoke -c integration print_underscored_arg --my-option whatevs",
+            "whatevs\n"
+        )
+
     def contextualized_tasks_are_given_parser_context_arg(self):
         # go() in contextualized.py just returns its initial arg
         retval = dispatch(['-c', 'contextualized', 'go'])[0]
@@ -161,6 +168,7 @@ Available tasks:
                 'foo',
                 'print_foo',
                 'print_name',
+                'print_underscored_arg',
             )
             for flag in ('-l', '--list'):
                 eq_(run("invoke -c integration %s" % flag).stdout, expected)
