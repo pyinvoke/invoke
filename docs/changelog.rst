@@ -4,6 +4,12 @@ Changelog
 
 Temporary changelog until we get something multi-branch-aware working.
 
+0.6.0 (2013.09.??)
+==================
+
+* Fall back to sane defaults for PTY sizes when autodetection gives insane
+  results. Thanks to `@akitada` for the patch.
+
 0.5.0 (2013.08.16)
 ==================
 
