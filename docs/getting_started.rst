@@ -154,10 +154,10 @@ Let's first rename our ``tasks.py`` to be ``docs.py``; no other changes are
 needed there. Then we create a new ``tasks.py``, and for the sake of brevity
 populate it with a new, truly top level task called ``deploy``.
 
-Then we can use a new API member, the `.Collection` class, to bind this new
-task and the ``docs`` module of tasks, into a single explicit namespace. This
-typically occurs at the bottom of ``tasks.py`` once all the other objects have
-been defined, like so::
+Finally, we can use a new API member, the `.Collection` class, to bind this new
+task and the ``docs`` module into a single explicit namespace.  When Invoke
+loads your task module, if a `.Collection` object bound as ``ns`` or
+``namespace`` exists it will get used for the root namespace::
 
     from invoke import Collection, task, run
     import docs
