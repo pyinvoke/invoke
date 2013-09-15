@@ -10,6 +10,10 @@ def print_name(name):
     print(name)
 
 @task
+def print_underscored_arg(my_option):
+    print(my_option)
+
+@task
 def foo():
     print("foo")
 
