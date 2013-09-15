@@ -235,6 +235,11 @@ def dispatch(argv):
     for context in tasks:
         kwargs = {}
         for _, arg in six.iteritems(context.args):
+            # Use the arg obj's internal name - not what was necessarily given
+            # on the CLI. (E.g. --my-option vs --my_option for
+            # mytask(my_option=xxx) requires this.)
+            # TODO: store 'given' name somewhere in case somebody wants to see
+            # it when handling args.
             kwargs[arg.name] = arg.value
         try:
             # TODO: allow swapping out of Executor subclasses based on core

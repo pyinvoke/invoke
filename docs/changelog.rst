@@ -9,6 +9,9 @@ Temporary changelog until we get something multi-branch-aware working.
 
 * Fall back to sane defaults for PTY sizes when autodetection gives insane
   results. Thanks to `@akitada` for the patch.
+* Fix a bug preventing underscored keyword arguments from working correctly as
+  CLI flags (e.g. ``mytask --my-arg`` would not map back correctly to
+  ``mytask(my_arg=...)``.) Credit: `@akitada`.
 
 0.5.0 (2013.08.16)
 ==================
