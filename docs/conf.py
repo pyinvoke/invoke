@@ -3,7 +3,7 @@ import os
 import sys
 
 exts = ('autodoc',)# 'viewcode')
-extensions = map(lambda x: 'sphinx.ext.%s' % x, exts)
+extensions = list(map(lambda x: 'sphinx.ext.%s' % x, exts))
 templates_path = ['_templates']
 source_suffix = '.rst'
 master_doc = 'index'
