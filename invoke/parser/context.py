@@ -137,6 +137,7 @@ class Context(object):
         Return 2-tuple of ``(flag-spec, help-string)`` for given ``flag``.
         """
         # Obtain arg obj
+        flag = flag.replace('_', '-')
         if flag not in self.flags:
             raise ValueError("%r is not a valid flag for this context! Valid flags are: %r" % (flag, self.flags.keys()))
         arg = self.flags[flag]
