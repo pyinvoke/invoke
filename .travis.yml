@@ -18,10 +18,12 @@ install:
   - inv --list
   # Install remaining dev requirements (test runner, etc)
   - pip install -r dev-requirements.txt
+  # Force downgrade of Jinja to a Python 3.2+ compat version, we probably don't
+  # need absolute latest.
+  - 'pip install "jinja2<2.7"'
 script:
   - inv test
-  # Jinja2, used by Sphinx, does not work on Python 3.2 (but does on 3.3)
-  - "if [[ $TRAVIS_PYTHON_VERSION != '3.2' ]]; then inv docs; fi"
+  - inv docs
 notifications:
   irc:
     channels: "irc.freenode.org#invoke"
