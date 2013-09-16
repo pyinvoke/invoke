@@ -18,7 +18,9 @@ install:
   - inv --list
   # Install remaining dev requirements (test runner, etc)
   - pip install -r dev-requirements.txt
-script: "inv test"
+script:
+  - inv test
+  - inv docs
 notifications:
   irc:
     channels: "irc.freenode.org#invoke"

@@ -35,3 +35,8 @@ latex_documents = [
 # Autodoc settings
 autodoc_default_flags = ['members']
 autoclass_content = 'both'
+
+# Releases for nice changelog, + settings
+extensions.append('releases')
+releases_release_uri = "https://github.com/pyinvoke/invoke/tree/%s"
+releases_issue_uri = "https://github.com/pyinvoke/invoke/issues/%s"

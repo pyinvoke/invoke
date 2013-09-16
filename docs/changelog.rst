@@ -2,26 +2,19 @@
 Changelog
 =========
 
-Temporary changelog until we get something multi-branch-aware working.
-
-0.6.0 (2013.09.??)
-==================
-
-* Fall back to sane defaults for PTY sizes when autodetection gives insane
-  results. Thanks to `@akitada` for the patch.
-* Fix a bug preventing underscored keyword arguments from working correctly as
-  CLI flags (e.g. ``mytask --my-arg`` would not map back correctly to
-  ``mytask(my_arg=...)``.) Credit: `@akitada`.
-
-0.5.0 (2013.08.16)
-==================
-
-* Optional-value flags added - e.g. ``--foo`` tells the parser to set the
-  ``foo`` option value to True; ``--foo myval`` sets the value to
-  "myval".
-* The core ``--help`` option now leverages optional-value flags and will
-  display per-task help if a task name is given.
-* A bug in our vendored copy of ``pexpect`` clashed with a Python 2->3
-  change in import behavior to prevent Invoke from running on Python 3 unless
-  the ``six`` module was installed in one's environment. This was fixed - our
-  vendored ``pexpect`` now always loads its sibling vendored ``six`` correctly.
+* :bug:`81 major` Fall back to sane defaults for PTY sizes when autodetection
+  gives insane results. Thanks to `@akitada` for the patch.
+* :bug:`83 major` Fix a bug preventing underscored keyword arguments from
+  working correctly as CLI flags (e.g. ``mytask --my-arg`` would not map back
+  correctly to ``mytask(my_arg=...)``.) Credit: `@akitada`.
+* :release:`0.5.0 <2013.08.16>`
+* :feature:`57` Optional-value flags added - e.g. ``--foo`` tells the parser to
+  set the ``foo`` option value to True; ``--foo myval`` sets the value to
+  "myval". The built-in ``--help`` option now leverages this feature for
+  per-task help (e.g. ``--help`` displays global help, ``--help mytask``
+  displays help for ``mytask`` only.)
+* :bug:`55 major` A bug in our vendored copy of ``pexpect`` clashed with a
+  Python 2->3 change in import behavior to prevent Invoke from running on
+  Python 3 unless the ``six`` module was installed in one's environment. This
+  was fixed - our vendored ``pexpect`` now always loads its sibling vendored
+  ``six`` correctly.
