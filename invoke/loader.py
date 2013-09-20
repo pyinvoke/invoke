@@ -16,13 +16,17 @@ class Loader(object):
         """
         self.root = root or os.getcwd()
 
-    def update_path(self, path):
+    def get_parent_directory(self, path):
+        """Return the parent directory of the given ``path``"""
+        return os.path.abspath(os.path.join(path, '..'))
+
+    def update_path(self, path, root=None):
         """
-        Ensures ``self.root`` is added to a copy of the given ``path`` iterable.
+        Ensures ``root`` is added to a copy of the given ``path`` iterable.
 
         It is up to the caller to assign the return value to e.g. ``sys.path``.
         """
-        parent = os.path.abspath(self.root)
+        parent = os.path.abspath(root or self.root)
         our_path = path[:]
         # If we want to auto-strip .py:
         # os.path.splitext(os.path.basename(name))[0]
@@ -42,10 +46,24 @@ class Loader(object):
         # imp.find_module can take an arbitrary path, after all. But users may
         # find it useful to have local-to-tasks-module Python code on the
         # import path.
-        sys.path, old_path = self.update_path(sys.path), sys.path
+        root = self.root
+        sys.path, original_path = self.update_path(sys.path), sys.path
         try:
-            # TODO: actually seek towards FS root.
-            return tuple([name] + list(imp.find_module(name, sys.path)))
+            while True:
+                try:
+                    return tuple(
+                        [name] + list(imp.find_module(name, sys.path))
+                    )
+                except ImportError:
+                    previous_root = root
+                    root = self.get_parent_directory(previous_root)
+                    # we've reached the root of the FS and haven't found the
+                    # collection
+                    if root == previous_root:
+                        raise
+
+                    sys.path = self.update_path(original_path, root=root)
+
         # ImportErrors raised by imp.find_module indicate the requested module
         # does not exist, not that it exists & couldn't be imported (which is
         # typically what ImportError means)
