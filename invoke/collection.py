@@ -16,7 +16,8 @@ class Collection(object):
         """
         Create a new task collection/namespace.
 
-        May call with no arguments and use e.g. `.add_task`/`.add_collection` to insert objects, e.g.::
+        May call with no arguments and use e.g. `.add_task`/`.add_collection`
+        to insert objects, e.g.::
 
             c = Collection()
             c.add_task(some_task)
