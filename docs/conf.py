@@ -28,7 +28,7 @@ html_style = 'rtd.css'
 html_static_path = ['_static']
 
 latex_documents = [
-  ('index', 'Invoke.tex', u'Invoke Documentation',
+  ('index', 'invoke.tex', u'Invoke Documentation',
    u'Jeff Forcier', 'manual'),
 ]
 
