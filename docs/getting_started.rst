@@ -186,7 +186,7 @@ Handling configuration state
 ============================
 
 A number of command-line flags and other configuration channels need to affect
-global behavior; for example, controlling whether `~.runner.run` defaults to
+global behavior: for example, controlling whether `~.runner.run` defaults to
 echoing its commands, or if nonzero return codes should abort execution.
 
 Some libraries implement this via global module state. That approach works in
