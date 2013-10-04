@@ -75,6 +75,7 @@ class Collection(object):
         self.collections = Lexicon()
         self.default = None
         self.name = None
+        self._configuration = {}
         # Name if applicable
         args = list(args)
         if args and isinstance(args[0], six.string_types):
@@ -262,6 +263,9 @@ class Collection(object):
         """
         Return this collection's configuration options as a dict.
         """
+        # Encapsulate privateish var in case we need to make this more dynamic
+        # in the future.
+        return self._configuration
 
     def configure(self, options):
         """
@@ -278,3 +282,4 @@ class Collection(object):
         :param options: An object implementing the dictionary protocol.
         :returns: ``None``.
         """
+        self._configuration.update(options)

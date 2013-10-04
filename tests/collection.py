@@ -270,3 +270,18 @@ class Collection_(Spec):
             names = self.c.task_names
             eq_(names['top_level'], ['othertop'])
             eq_(names['sub.sub_task'], ['sub.othersub', 'sub'])
+
+    class configuration:
+        "Configuration methods"
+        def setup(self):
+            self.c = Collection()
+
+        def basic_set_and_get(self):
+            self.c.configure({'foo': 'bar'})
+            eq_(self.c.configuration, {'foo': 'bar'})
+
+        def configure_performs_merging(self):
+            self.c.configure({'foo': 'bar'})
+            eq_(self.c.configuration['foo'], 'bar')
+            self.c.configure({'biz': 'baz'})
+            eq_(self.c.configuration.keys(), ['foo', 'biz'])
