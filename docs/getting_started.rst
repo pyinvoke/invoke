@@ -187,7 +187,8 @@ Handling configuration state
 
 A number of command-line flags and other configuration channels need to affect
 global behavior: for example, controlling whether `~.runner.run` defaults to
-echoing its commands, or if nonzero return codes should abort execution.
+echoing the commands it runs, or if nonzero return codes should abort
+execution.
 
 Some libraries implement this via global module state. That approach works in
 the base case but makes testing difficult and error prone, limits concurrency,
@@ -195,14 +196,13 @@ and generally makes the software more complex to use and extend.
 
 Invoke encapsulates core program state in a `~invoke.context.Context` object
 which can be handed to individual tasks. It serves as a configuration vector
-and implements state-aware methods which mirror or wrap the functional parts of
-the API.
+and implements state-aware methods mirroring the functional parts of the API.
 
 Using contexts in your tasks
 ----------------------------
 
-To gain access to Invoke's context-aware API, make the following changes to the
-task definition style seen earlier:
+To use Invoke's context-aware API, make the following changes to the task
+definition style seen earlier:
 
 * Tell `@task <.task>` that you want your task to be *contextualized* - given a
   `~invoke.context.Context` object - by saying ``contextualized=True``.
@@ -210,13 +210,12 @@ task definition style seen earlier:
   .. note::
     See `Boilerplate reduction`_ below; this API is mostly for cleanness' sake.
 
-* Define your task with an initial argument to hold the context; this argument
-  isn't taken into account during command-line parsing and is solely for
-  context handling.
+* Define your task with an initial context argument; this argument is
+  ignored during command-line parsing and is solely for context handling.
 
-    * You can name it anything you want; Invoke passes the context in
-      positionally, not via keyword argument. The convention used in the
-      documentation is typically ``context`` or ``ctx``.
+    * You can name it anything you want; Invoke uses it positionally, not via
+      keyword. The convention used in the documentation is typically
+      ``context`` or ``ctx``.
 
 * Replace any mentions of `~.runner.run` with ``ctx.run`` (or whatever your
   context argument's name was).
