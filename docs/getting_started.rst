@@ -183,10 +183,28 @@ docs <concepts/namespaces>`.
 Using contexts for configurability
 ==================================
 
-* run() is a pure function and knows nothing about the greater app
-* You often want to alter behavior globally, but global state is bad
-* Invoke lets you contextualize tasks and puts methods on these contexts which
-  *can* honor global state
-* Simply import ctask as task, add context argument, and use its `.run` instead
-  of the builtin.
-* See concepts doc for more.
+While fully configurable via keyword arguments, `~.runner.run` is a pure
+function and knows nothing about the greater application. This is a problem
+when you want to alter behavior globally, such as changing the default
+fail-fast behavior, or always using a pty when running commands. It's possible
+to use module-level globals in Python, but this is a bad idea for many reasons.
+
+Instead, Invoke lets you *contextualize* tasks by passing in a context object
+containing information from whatever's executing the task (typically, the CLI
+parser.)
+
+It's quite easy: use `@ctask <.ctask>` instead of `@task <.task>` and add a
+context argument (named anything you want) as the first positional arg. Then
+use the context object's `~invoke.context.Context.run` method instead of the
+global function::
+
+    from invoke import ctask as task
+
+    @task
+    def mytask(ctx, other_args):
+        ctx.run("some command")
+
+This method wraps the builtin `~.runner.run` transparently, but is able to
+honor CLI flags like :option:`--echo` or :option:`--pty`.
+
+See :doc:`the detailed context docs </concepts/context>` for details.
