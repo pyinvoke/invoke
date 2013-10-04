@@ -207,4 +207,7 @@ global function::
 This method wraps the builtin `~.runner.run` transparently, but is able to
 honor CLI flags like :option:`--echo` or :option:`--pty`.
 
+Context objects can also serve as vectors for arbitrary config values -
+allowing greater reuse of your task modules.
+
 See :doc:`the detailed context docs </concepts/context>` for details.
