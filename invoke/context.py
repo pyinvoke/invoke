@@ -9,9 +9,9 @@ class Context(object):
 
     `.Context` objects are created during command-line parsing (or, if desired,
     by hand) and used to share parser and configuration state with executed
-    tasks (see :ref:`context-intro`). Specifically, the class offers wrappers
-    for core API calls (such as `.run`) which take into account CLI parser
-    flags, configuration files, and/or changes made at runtime.
+    tasks (see :doc:`/concepts/context`). Specifically, the class offers
+    wrappers for core API calls (such as `.run`) which take into account CLI
+    parser flags, configuration files, and/or changes made at runtime.
 
     Instances of `.Context` may be shared between tasks when executing
     sub-tasks - either the same context the caller was given, or an altered

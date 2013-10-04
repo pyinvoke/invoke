@@ -167,21 +167,16 @@ that does this::
 
     @task
     def mylocaltask(ctx):
-        # Do stuff here...
+        # Some local stuff goes here
+        pass
 
     # Add 'docs' to our local root namespace, plus our own task
     ns = Collection(mylocaltask, docs)
     # Override upstream configuration
     ns.configure({'sphinx.target': "built_docs"})
 
-Result::
-
-    $ inv -l
-    Available tasks:
-
-        mylocaltask
-        docs.clean
-        docs.build
+Now we have a ``docs`` sub-namespace whose build target defaults to
+``built_docs`` instead of ``docs/_build``.
 
 .. rubric:: Footnotes
 
