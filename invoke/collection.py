@@ -67,6 +67,8 @@ class Collection(object):
             ns = Collection()
             ns.add_task(some_other_task, 'top_level_task')
             ns.add_collection(docs, 'docs')
+
+        See individual methods' API docs for details.
         """
         # Initialize
         self.tasks = Lexicon()
@@ -254,3 +256,25 @@ class Collection(object):
                     aliases += (coll_name,)
                 ret[self.subtask_name(coll_name, task_name)] = aliases
         return ret
+
+    @property
+    def configuration(self):
+        """
+        Return this collection's configuration options as a dict.
+        """
+
+    def configure(self, options):
+        """
+        Merge ``options`` dict into this collection's `.configuration`.
+
+        Options configured this way will be available to all
+        :doc:`contextualized tasks </concepts/context>`. It is recommended to
+        use unique keys to avoid potential clashes with other config options
+
+        For example, if you were configuring a Sphinx docs build target
+        directory, it's better to use a key like ``'sphinx.target'`` than
+        simply ``'target'``.
+
+        :param options: An object implementing the dictionary protocol.
+        :returns: ``None``.
+        """
