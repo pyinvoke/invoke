@@ -53,3 +53,7 @@ class Context_(Spec):
 
         def keys(self):
             skip()
+
+        def update(self):
+            self.c.update({'newkey': 'newval'})
+            eq_(self.c['newkey'], 'newval')

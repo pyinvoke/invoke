@@ -9,9 +9,12 @@ class Context(object):
 
     `.Context` objects are created during command-line parsing (or, if desired,
     by hand) and used to share parser and configuration state with executed
-    tasks (see :doc:`/concepts/context`). Specifically, the class offers
-    wrappers for core API calls (such as `.run`) which take into account CLI
-    parser flags, configuration files, and/or changes made at runtime.
+    tasks (see :doc:`/concepts/context`).
+
+    Specifically, the class offers wrappers for core API calls (such as `.run`)
+    which take into account CLI parser flags, configuration files, and/or
+    changes made at runtime. It also acts as a dict-like object proxying to its
+    ``config`` attribute (for e.g. ``__getitem__``, ``get`` and ``update``.)
 
     Instances of `.Context` may be shared between tasks when executing
     sub-tasks - either the same context the caller was given, or an altered
@@ -70,8 +73,11 @@ class Context(object):
         options.update(kwargs)
         return run(*args, **options)
 
-    def __getitem__(self, key):
-        return self.config['general'][key]
+    def __getitem__(self, *args, **kwargs):
+        return self.config['general'].__getitem__(*args, **kwargs)
 
     def get(self, *args, **kwargs):
         return self.config['general'].get(*args, **kwargs)
+
+    def update(self, *args, **kwargs):
+        return self.config['general'].update(*args, **kwargs)
