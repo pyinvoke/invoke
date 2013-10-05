@@ -69,7 +69,9 @@ class Executor(object):
         for t in tasks:
             args = []
             if t.contextualized:
-                args.append(self.context)
+                context = self.context.clone()
+                context.update(self.collection.configuration)
+                args.append(context)
             results[t] = t(*args, **kwargs)
         return results[task]
 
