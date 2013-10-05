@@ -22,7 +22,7 @@ class Context(object):
         ``Context`` in-place is a nice way to limit unwanted or hard-to-track
         state mutation, and/or to enable safer concurrency.
     """
-    def __init__(self, run=None):
+    def __init__(self, run=None, config=None):
         """
         :param run:
             A dict acting as default ``**kwargs`` for `.run`. E.g. to create a
@@ -31,9 +31,13 @@ class Context(object):
 
                 ctx = Context(run={'echo': True})
 
+        :param config:
+            General (non-``run``-oriented) configuration options dict.
+            Optional.
         """
         self.config = {
-            'run': run or {}
+            'run': run or {},
+            'general': config or {},
         }
 
     def clone(self):
@@ -44,7 +48,8 @@ class Context(object):
         generally work fine because config values are simple data structures.
         """
         return Context(
-            run=deepcopy(self.config['run'])
+            run=deepcopy(self.config['run']),
+            config=deepcopy(self.config['general']),
         )
 
     def run(self, *args, **kwargs):
@@ -64,3 +69,9 @@ class Context(object):
         options = dict(self.config['run'])
         options.update(kwargs)
         return run(*args, **options)
+
+    def __getitem__(self, key):
+        return self.config['general'][key]
+
+    def get(self, *args, **kwargs):
+        return self.config['general'].get(*args, **kwargs)

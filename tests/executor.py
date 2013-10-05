@@ -4,7 +4,7 @@ from mock import Mock
 from invoke.context import Context
 from invoke.executor import Executor
 from invoke.collection import Collection
-from invoke.tasks import Task
+from invoke.tasks import Task, task
 
 
 class Executor_(Spec):
@@ -50,6 +50,17 @@ class Executor_(Spec):
             self.executor.execute(name='task2', dedupe=False)
             self.executor.execute(name='task3', dedupe=False)
             eq_(self.task1.body.call_count, 2)
+
+        def hands_collection_configuration_to_context(self):
+            @task(contextualized=True)
+            def mytask(ctx):
+                eq_(ctx['my.config.key'], 'value')
+            c = Collection(mytask)
+            c.configure({'my.config.key': 'value'})
+            Executor(collection=c, context=Context()).execute('mytask')
+
+        def subcollection_configurations_are_merged_in(self):
+            skip()
 
     class returns_return_value_of_specified_task:
         def base_case(self):

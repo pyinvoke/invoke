@@ -13,8 +13,8 @@ class Executor(object):
         storing/retrieving state, e.g. how many times a given task has been run
         this session and so on.
 
-        The context is passed into any tasks that mark themselves as requiring
-        one for operation.
+        A copy of the context is passed into any tasks that mark themselves as
+        requiring one for operation.
         """
         self.collection = collection
         self.context = context
