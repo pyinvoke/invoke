@@ -29,7 +29,8 @@ class Executor(object):
             namespaced tasks, e.g. ``subcollection.taskname``.
 
         :param kwargs:
-            A keyword argument dict expanded when calling the requested task. E.g.::
+            A keyword argument dict expanded when calling the requested task.
+            E.g.::
 
                 executor.execute('mytask', {'myarg': 'foo'})
 
