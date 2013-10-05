@@ -284,4 +284,4 @@ class Collection_(Spec):
             self.c.configure({'foo': 'bar'})
             eq_(self.c.configuration['foo'], 'bar')
             self.c.configure({'biz': 'baz'})
-            eq_(self.c.configuration.keys(), ['foo', 'biz'])
+            eq_(set(self.c.configuration.keys()), set(['foo', 'biz']))
