@@ -59,20 +59,6 @@ class Executor_(Spec):
             c.configure({'my.config.key': 'value'})
             Executor(collection=c, context=Context()).execute('mytask')
 
-        def subcollection_configurations_are_merged_in(self):
-            @ctask
-            def mytask(ctx):
-                eq_(ctx['unconflicted'], 'okay')
-                eq_(ctx['also_unconflicted'], 'okay')
-                # Sees inner, not outer, value
-                eq_(ctx['conflicted'], 'I win')
-            inner = Collection('inner')
-            inner.configure({'unconflicted': 'okay', 'conflicted': 'I win'})
-            ns = Collection(mytask, inner)
-            ns.configure({'also_unconflicted': 'okay', 'conflicted': 'I lose'})
-            Executor(collection=ns, context=Context()).execute('mytask')
-
-
     class returns_return_value_of_specified_task:
         def base_case(self):
             eq_(self.executor.execute(name='task1'), 7)
