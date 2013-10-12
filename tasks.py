@@ -13,7 +13,7 @@ def doctree(ctx):
     ctx.run("tree -Ca -I \".git|*.pyc|*.swp|dist|*.egg-info|_static|_build\" docs")
 
 @task
-def vendorize_pexpect(version):
+def vendorize_pexpect(ctx, version):
     target = 'invoke/vendor'
     package = 'pexpect'
     vendorize(
