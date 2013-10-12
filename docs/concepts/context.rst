@@ -178,6 +178,37 @@ that does this::
 Now we have a ``docs`` sub-namespace whose build target defaults to
 ``built_docs`` instead of ``docs/_build``.
 
+Nested namespace configuration merging
+--------------------------------------
+
+When :doc:`namespaces </concepts/namespaces>` are nested within one another,
+configuration is merged 'downwards' by default: when conflicts arise, inner
+namespaces win over outer ones.
+
+A quick example of what this means::
+
+    from invoke import Collection, ctask as task
+
+    # This task & collection could just as easily come from another module
+    # somewhere.
+    @task
+    def mytask(ctx):
+        print(ctx['conflicted'])
+    inner = Collection('inner', mytask)
+    inner.configure({'conflicted': 'I win'})
+
+    # Our project's root namespace.
+    ns = Collection(inner)
+    ns.configure({'conflicted': 'I lose'})
+
+The result of calling ``inner.mytask``::
+
+    $ inv inner.mytask
+    I win
+
+If merging had not occurred, the outer namespace would've set ``'conflicted'``
+to ``'I lose'``.
+
 .. rubric:: Footnotes
 
 .. [1]
