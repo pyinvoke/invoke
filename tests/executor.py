@@ -4,7 +4,7 @@ from mock import Mock
 from invoke.context import Context
 from invoke.executor import Executor
 from invoke.collection import Collection
-from invoke.tasks import Task, task
+from invoke.tasks import Task, ctask
 
 
 class Executor_(Spec):
@@ -52,7 +52,7 @@ class Executor_(Spec):
             eq_(self.task1.body.call_count, 2)
 
         def hands_collection_configuration_to_context(self):
-            @task(contextualized=True)
+            @ctask
             def mytask(ctx):
                 eq_(ctx['my.config.key'], 'value')
             c = Collection(mytask)
