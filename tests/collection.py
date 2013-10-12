@@ -285,3 +285,19 @@ class Collection_(Spec):
             eq_(self.c.configuration['foo'], 'bar')
             self.c.configure({'biz': 'baz'})
             eq_(set(self.c.configuration.keys()), set(['foo', 'biz']))
+
+        def access_returns_dict(self):
+            eq_(self.c.configuration, {})
+            self.c.configure({'foo': 'bar'})
+            eq_(self.c.configuration, {'foo': 'bar'})
+
+        def access_merges_from_subcollections(self):
+            inner = Collection('inner')
+            inner.configure({'foo': 'bar'})
+            outer = Collection()
+            outer.configure({'biz': 'baz'})
+            # With no inner collection
+            eq_(outer.configuration.keys(), ['biz'])
+            # With inner collection
+            outer.add_collection(inner)
+            eq_(set(outer.configuration.keys()), set(['foo', 'biz']))
