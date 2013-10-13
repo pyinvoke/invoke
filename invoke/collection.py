@@ -1,3 +1,4 @@
+import copy
 from operator import add
 import types
 
@@ -266,9 +267,16 @@ class Collection(object):
         Child/inner collections' configurations are merged on top of this
         collection's (so the inner collections will override the parent
         collection when conflicts arise.) Multiple child collections'
-        configurations are merged in alphabetical order by name.
+        configurations are merged in alphabetical order by attached name (thus
+        childs with 'later' names will win.)
+
+        .. note::
+            Merging uses ``copy.deepcopy`` to prevent state bleed.
         """
-        return self._configuration
+        ret = copy.deepcopy(self._configuration)
+        for key in self.collections.keys():
+            ret.update(copy.deepcopy(self.collections[key].configuration))
+        return ret
 
     def configure(self, options):
         """

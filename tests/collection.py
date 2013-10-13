@@ -308,4 +308,4 @@ class Collection_(Spec):
             b = Collection('b')
             b.configure({'mysetting': 'b'})
             parent = Collection(b, a) # Ensuring add order doesn't matter. Eh.
-            eq_(parent['mysetting'], 'a')
+            eq_(parent.configuration['mysetting'], 'b')
