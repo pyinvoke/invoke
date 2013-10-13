@@ -297,7 +297,7 @@ class Collection_(Spec):
             outer = Collection()
             outer.configure({'biz': 'baz'})
             # With no inner collection
-            eq_(outer.configuration.keys(), ['biz'])
+            eq_(set(outer.configuration.keys()), set(['biz']))
             # With inner collection
             outer.add_collection(inner)
             eq_(set(outer.configuration.keys()), set(['foo', 'biz']))
