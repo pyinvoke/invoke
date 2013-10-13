@@ -274,7 +274,7 @@ class Collection(object):
             Merging uses ``copy.deepcopy`` to prevent state bleed.
         """
         ret = copy.deepcopy(self._configuration)
-        for key in self.collections.keys():
+        for key in sorted(self.collections.keys()):
             ret.update(copy.deepcopy(self.collections[key].configuration))
         return ret
 
