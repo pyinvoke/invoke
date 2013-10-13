@@ -183,7 +183,8 @@ Nested namespace configuration merging
 
 When :doc:`namespaces </concepts/namespaces>` are nested within one another,
 configuration is merged 'downwards' by default: when conflicts arise, inner
-namespaces win over outer ones.
+namespaces win over outer ones (siblings at the same level merge in
+alphabetical order by name.)
 
 A quick example of what this means::
 

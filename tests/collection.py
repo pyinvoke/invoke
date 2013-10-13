@@ -301,3 +301,11 @@ class Collection_(Spec):
             # With inner collection
             outer.add_collection(inner)
             eq_(set(outer.configuration.keys()), set(['foo', 'biz']))
+
+        def access_merges_siblings_in_alpha_order(self):
+            a = Collection('a')
+            a.configure({'mysetting': 'a'})
+            b = Collection('b')
+            b.configure({'mysetting': 'b'})
+            parent = Collection(b, a) # Ensuring add order doesn't matter. Eh.
+            eq_(parent['mysetting'], 'a')

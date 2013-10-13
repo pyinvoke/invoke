@@ -262,9 +262,12 @@ class Collection(object):
     def configuration(self):
         """
         Return this collection's configuration options as a dict.
+
+        Child/inner collections' configurations are merged on top of this
+        collection's (so the inner collections will override the parent
+        collection when conflicts arise.) Multiple child collections'
+        configurations are merged in alphabetical order by name.
         """
-        # Encapsulate privateish var in case we need to make this more dynamic
-        # in the future.
         return self._configuration
 
     def configure(self, options):
