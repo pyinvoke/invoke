@@ -64,6 +64,7 @@ tidy::
     def restart(ctx):
         ctx.run("restart apache2")
 
+.. _configuration:
 
 Using config values
 ===================
