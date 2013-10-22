@@ -3,7 +3,6 @@
 │   ├── cli.rst
 │   ├── collection.rst
 │   ├── exceptions.rst
-│   ├── loader.rst
 │   ├── [01;34mparser[00m
 │   │   ├── argument.rst
 │   │   ├── context.rst
