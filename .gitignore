@@ -1,4 +1,5 @@
 docs/_build
 .coverage
-*.egg-info
 .tox
+*.egg-info
+*.pyc
