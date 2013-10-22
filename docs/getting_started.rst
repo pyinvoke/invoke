@@ -200,7 +200,7 @@ global function::
 
     from invoke import ctask as task
 
-    @task
+    @ctask
     def mytask(ctx, other_args):
         ctx.run("some command")
 
