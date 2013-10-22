@@ -1,6 +1,6 @@
 # Docs
 Sphinx>=1.1.2
-releases>=0.2.0
+releases>=0.2.4
 # Testing (explicit dependencies to get around a Travis/pip issue)
 # For now, need master as 1.3 isn't out yet :(
 #nose>=1.3
