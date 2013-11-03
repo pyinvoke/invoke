@@ -4,6 +4,7 @@ from .argument import Argument
 
 
 def to_flag(name):
+    name = name.replace('_', '-')
     if len(name) == 1:
         return '-' + name
     return '--' + name
