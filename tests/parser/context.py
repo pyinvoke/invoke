@@ -225,6 +225,11 @@ class Context_(Spec):
                 ("-p [STRING], --optval[=STRING]", "")
             )
 
+        def underscored_args(self):
+            c = Context(args=(Argument('i_have_underscores', help='yup'),))
+            eq_(c.help_for('--i-have-underscores'), 'yup')
+
+
     class help_tuples:
         def returns_list_of_help_tuples(self):
             # Walks own list of flags/args, ensures resulting map to help_for()
@@ -238,6 +243,11 @@ class Context_(Spec):
                 c.help_tuples(),
                 [c.help_for('--myarg'), c.help_for('--otherarg')]
             )
+
+        def works_with_underscored_args(self):
+            c = Context(args=(Argument('i_have_underscores', help='yup'),))
+            eq_(c.help_tuples(), [('--i-have-underscores=STRING', 'yup')])
+
 
         def _assert_order(self, name_tuples, expected_flag_order):
             ctx = Context(args=[Argument(names=x) for x in name_tuples])
