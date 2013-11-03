@@ -1,6 +1,15 @@
 .. image:: https://secure.travis-ci.org/pyinvoke/invoke.png?branch=master
         :target: https://travis-ci.org/pyinvoke/invoke
 
+.. image:: https://pypip.in/v/invoke/badge.png
+    :target: https://crate.io/packages/invoke/
+    :alt: Latest PyPI version
+
+.. image:: https://pypip.in/d/invoke/badge.png
+    :target: https://crate.io/packages/invoke/
+    :alt: Number of PyPI downloads
+
+
 **BIG HONKIN' DISCLAIMER:** This software is currently in beta. It's
 test-driven and dogfooded, but feature set & documentation has holes & rough
 spots. **Please** make sure you search the `known issues
