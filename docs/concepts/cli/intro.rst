@@ -62,9 +62,13 @@ Per-task help / printing available flags
 ----------------------------------------
 
 To get help for a specific task, just give the task name as an argument to the
-core ``--help``/``-h`` option::
+core ``--help``/``-h`` option, and you'll get both its docstring (if any) and
+per-argument/flag help output::
 
     $ invoke --help build
+
+    Docstring:
+        none
 
     Options for 'build':
       -f STRING, --format=STRING  Which build format type to use
