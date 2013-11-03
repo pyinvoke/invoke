@@ -19,9 +19,9 @@ listing available tasks::
     $ invoke --list
     Available tasks:
 
-        foo
-        bar
-        ...
+      foo
+      bar
+      ...
 
 Or they can modify behavior, such as overriding the default task collection
 name Invoke looks for::
@@ -29,8 +29,8 @@ name Invoke looks for::
     $ invoke --collection mytasks --list
     Available tasks:
 
-        mytask1
-        ...
+      mytask1
+      ...
 
 Tasks and task options
 ======================
@@ -68,7 +68,7 @@ per-argument/flag help output::
     $ invoke --help build
 
     Docstring:
-        none
+      none
 
     Options for 'build':
       -f STRING, --format=STRING  Which build format type to use

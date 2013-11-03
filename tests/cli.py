@@ -103,7 +103,7 @@ Core options:
 Usage: inv[oke] [--core-opts] punch [--options] [other tasks here ...]
 
 Docstring:
-    none
+  none
 
 Options:
   -h STRING, --why=STRING   Motive
@@ -121,10 +121,10 @@ Options:
 Usage: inv[oke] [--core-opts] biz [other tasks here ...]
 
 Docstring:
-    none
+  none
 
 Options:
-    none
+  none
 
 """.lstrip()
         r = run("inv -c decorator -h biz", hide='out')
@@ -136,10 +136,10 @@ Options:
 Usage: inv[oke] [--core-opts] foo [other tasks here ...]
 
 Docstring:
-    Foo the bar.
-    
+  Foo the bar.
+  
 Options:
-    none
+  none
 
 """.lstrip()
         r = run("inv -c decorator -h foo", hide='out')
@@ -159,7 +159,7 @@ Available tasks:
 
 %s
 
-""" % '\n'.join("    " + x for x in lines)).lstrip()
+""" % '\n'.join("  " + x for x in lines)).lstrip()
 
         @trap
         def simple_output(self):

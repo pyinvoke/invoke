@@ -18,14 +18,16 @@ def task_name_to_key(x):
 
 sort_names = partial(sorted, key=task_name_to_key)
 
+indent_num = 2
+indent = " " * indent_num
+
 
 def print_help(tuples):
-    indent = 2
     padding = 3
     # Calculate column sizes: don't wrap flag specs, give what's left over
     # to the descriptions.
     flag_width = max(len(x[0]) for x in tuples)
-    desc_width = pty_size()[0] - flag_width - indent - padding - 1
+    desc_width = pty_size()[0] - flag_width - indent_num - padding - 1
     wrapper = textwrap.TextWrapper(width=desc_width)
     for flag_spec, help_str in tuples:
         # Wrap descriptions/help text
@@ -33,7 +35,7 @@ def print_help(tuples):
         # Print flag spec + padding
         flag_padding = flag_width - len(flag_spec)
         spec = ''.join((
-            indent * ' ',
+            indent,
             flag_spec,
             flag_padding * ' ',
             padding * ' '
@@ -181,18 +183,18 @@ def parse(argv, collection=None):
             # Really wish textwrap worked better for this.
             doclines = docstring.lstrip().splitlines()
             for line in doclines:
-                print("    " + textwrap.dedent(line))
+                print(indent + textwrap.dedent(line))
             # Print trailing blank line if docstring didn't end with one
             if textwrap.dedent(doclines[-1]):
                 print("")
         else:
-            print("    none")
+            print(indent + "none")
             print("")
         print("Options:")
         if tuples:
             print_help(tuples)
         else:
-            print("    none")
+            print(indent + "none")
             print("")
         sys.exit(0)
 
@@ -207,7 +209,7 @@ def parse(argv, collection=None):
             out = primary
             if aliases:
                 out += " (%s)" % ', '.join(aliases)
-            print("    %s" % out)
+            print("  %s" % out)
         print("")
         sys.exit(0)
 
