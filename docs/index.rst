@@ -82,8 +82,14 @@ API documentation:
 
     api/*
 
-It's broken, or doesn't do what I want! How can I submit bugs?
-==============================================================
+It's broken!
+============
+
+Are you sure? Make sure you've read :doc:`the FAQ </faq>`!
+
+
+It's definitely broken, or doesn't do what I want! How can I submit bugs?
+=========================================================================
 
 Before submitting a bug, please do the following:
 
