@@ -19,7 +19,6 @@ default_role = 'py:obj'
 sys.path.insert(0, os.path.abspath(os.path.join(os.getcwd(), '..')))
 
 exclude_trees = ['_build']
-default_role = 'obj'
 pygments_style = 'sphinx'
 html_theme = 'default'
 
