@@ -22,6 +22,7 @@ def _parent_dirs(root=None):
     # Make sure we haven't got duplicates on the end
     if roots[-1] == roots[-2]:
         roots = roots[:-1]
+    return roots
 
 
 class Collection(object):
