@@ -2,7 +2,8 @@
 Changelog
 =========
 
-* :bug:`86` Task arguments named with an underscore broke the help feature;
+* :release:`0.6.0 <2013.11.21>`
+* :bug:`86 major` Task arguments named with an underscore broke the help feature;
   this is now fixed. Thanks to Stéphane Klein for the catch.
 * :feature:`89` Implemented configuration for distributed task modules: can set
   config options in `.Collection` objects and they are made available to
