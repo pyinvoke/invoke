@@ -286,6 +286,12 @@ class Collection_(Spec):
             self.c.configure({'biz': 'baz'})
             eq_(set(self.c.configuration.keys()), set(['foo', 'biz']))
 
+        def configure_allows_overwriting(self):
+            self.c.configure({'foo': 'one'})
+            eq_(self.c.configuration['foo'], 'one')
+            self.c.configure({'foo': 'two'})
+            eq_(self.c.configuration['foo'], 'two')
+
         def access_returns_dict(self):
             eq_(self.c.configuration, {})
             self.c.configure({'foo': 'bar'})
@@ -301,6 +307,15 @@ class Collection_(Spec):
             # With inner collection
             outer.add_collection(inner)
             eq_(set(outer.configuration.keys()), set(['foo', 'biz']))
+
+        def parents_overwrite_children(self):
+            inner = Collection('inner')
+            inner.configure({'foo': 'inner'})
+            outer = Collection()
+            outer.add_collection(inner)
+            eq_(outer.configuration['foo'], 'inner')
+            outer.configure({'foo': 'outer'})
+            eq_(outer.configuration['foo'], 'outer')
 
         def access_merges_siblings_in_alpha_order(self):
             a = Collection('a')
