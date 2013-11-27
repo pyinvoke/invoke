@@ -10,7 +10,6 @@ matrix:
   # as 'bad' =/ (Still worth running it though.)
   allow_failures:
     - python: pypy
-  fast_finish: true
 install:
   # Install self (we are required for some of our own dev reqs for now)
   # NOTE: *do not* use -e as it adds checkout root to sys.path, which prevents
