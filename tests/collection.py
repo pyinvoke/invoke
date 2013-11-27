@@ -78,7 +78,7 @@ class Collection_(Spec):
         def adds_tasks(self):
             assert 'print_foo' in self.c
 
-        def derives_name_from_module_name(self):
+        def derives_collection_name_from_module_name(self):
             eq_(self.c.name, 'integration')
 
         def submodule_names_are_stripped_to_last_chunk(self):
