@@ -183,8 +183,8 @@ Nested namespace configuration merging
 --------------------------------------
 
 When :doc:`namespaces </concepts/namespaces>` are nested within one another,
-configuration is merged 'downwards' by default: when conflicts arise, inner
-namespaces win over outer ones (siblings at the same level merge in
+configuration is merged 'downwards' by default: when conflicts arise, outer
+namespaces win over inner ones (siblings at the same level merge in
 alphabetical order by name.)
 
 A quick example of what this means::
@@ -197,19 +197,16 @@ A quick example of what this means::
     def mytask(ctx):
         print(ctx['conflicted'])
     inner = Collection('inner', mytask)
-    inner.configure({'conflicted': 'I win'})
+    inner.configure({'conflicted': 'default value'})
 
     # Our project's root namespace.
     ns = Collection(inner)
-    ns.configure({'conflicted': 'I lose'})
+    ns.configure({'conflicted': 'override value'})
 
 The result of calling ``inner.mytask``::
 
     $ inv inner.mytask
-    I win
-
-If merging had not occurred, the outer namespace would've set ``'conflicted'``
-to ``'I lose'``.
+    override value
 
 .. rubric:: Footnotes
 
