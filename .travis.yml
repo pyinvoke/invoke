@@ -5,6 +5,12 @@ python:
   - "3.2"
   - "3.3"
   - "pypy"
+matrix:
+  # pypy is frequentlyish unstable on Travis, don't let it mark entire status
+  # as 'bad' =/ (Still worth running it though.)
+  allow_failures:
+    - python: pypy
+  fast_finish: true
 install:
   # Install self (we are required for some of our own dev reqs for now)
   # NOTE: *do not* use -e as it adds checkout root to sys.path, which prevents
