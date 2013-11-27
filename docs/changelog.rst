@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :release:`0.6.1 <2013.11.21>`
 * :bug:`96` Tasks in subcollections which set explicit names (via e.g.
   ``@task(name='foo')``) were not having those names honored. This is fixed.
   Thanks to Omer Katz for the report.
