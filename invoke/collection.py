@@ -265,17 +265,21 @@ class Collection(object):
         Return this collection's configuration options as a dict.
 
         Child/inner collections' configurations are merged on top of this
-        collection's (so the inner collections will override the parent
-        collection when conflicts arise.) Multiple child collections'
-        configurations are merged in alphabetical order by attached name (thus
-        childs with 'later' names will win.)
+        collection's, though the outer collection's value will win in
+        conflicts.
+
+        Multiple child collections' configurations are merged in alphabetical
+        order by attached name (thus childs with 'later' names will win.)
 
         .. note::
             Merging uses ``copy.deepcopy`` to prevent state bleed.
         """
-        ret = copy.deepcopy(self._configuration)
-        for key in sorted(self.collections.keys()):
-            ret.update(copy.deepcopy(self.collections[key].configuration))
+        # Merge sideways across subcollections first
+        ret = {}
+        for subcol in sorted(self.collections.keys()):
+            ret.update(copy.deepcopy(self.collections[subcol].configuration))
+        # Then merge in ours so we win conflicts
+        ret.update(copy.deepcopy(self._configuration))
         return ret
 
     def configure(self, options):
