@@ -126,12 +126,12 @@ class Collection(object):
                 return obj
         # Failing that, make our own collection from the module's tasks.
         tasks = filter(
-            lambda x: isinstance(x[1], Task),
-            vars(module).items()
+            lambda x: isinstance(x, Task),
+            vars(module).values()
         )
         collection = Collection(module_name)
-        for name, task in tasks:
-            collection.add_task(name=name, task=task)
+        for task in tasks:
+            collection.add_task(task)
         return collection
 
     def add_task(self, task, name=None):
