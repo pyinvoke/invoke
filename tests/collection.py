@@ -96,6 +96,10 @@ class Collection_(Spec):
             # The real key test
             assert 'sub_task' not in coll.tasks
 
+        def allows_tasks_with_explicit_names_to_override_bound_name(self):
+            coll = Collection.from_module(load('subcollection_task_name'))
+            assert 'explicit_name' in coll.tasks # not 'implicit_name'
+
     class add_task:
         def setup(self):
             self.c = Collection()
