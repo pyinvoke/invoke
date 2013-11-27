@@ -2,6 +2,9 @@
 Changelog
 =========
 
+* :bug:`89` **BACKWARDS INCOMPATIBLE CHANGE!** Configuration merging has been
+  reversed so outer collections' config settings override inner collections.
+  This makes distributing reusable modules significantly less silly.
 * :release:`0.6.0 <2013.11.21>`
 * :bug:`86 major` Task arguments named with an underscore broke the help feature;
   this is now fixed. Thanks to Stéphane Klein for the catch.
