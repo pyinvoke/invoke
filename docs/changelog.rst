@@ -5,7 +5,7 @@ Changelog
 * :bug:`96` Tasks in subcollections which set explicit names (via e.g.
   ``@task(name='foo')``) were not having those names honored. This is fixed.
   Thanks to Omer Katz for the report.
-* :bug:`89` **BACKWARDS INCOMPATIBLE CHANGE!** Configuration merging has been
+* :bug:`98` **BACKWARDS INCOMPATIBLE CHANGE!** Configuration merging has been
   reversed so outer collections' config settings override inner collections.
   This makes distributing reusable modules significantly less silly.
 * :release:`0.6.0 <2013.11.21>`
