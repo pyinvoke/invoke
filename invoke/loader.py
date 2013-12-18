@@ -27,8 +27,7 @@ class Loader(object):
         # If we want to auto-strip .py:
         # os.path.splitext(os.path.basename(name))[0]
         # TODO: copy over rest of path munging from fabric.main
-        if parent not in our_path:
-            our_path.insert(0, parent)
+        our_path.insert(0, parent)
         return our_path
 
     def find_collection(self, name):
