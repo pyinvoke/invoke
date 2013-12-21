@@ -66,6 +66,25 @@ It can be invoked in the following ways, all resulting in "Hi Jeff!"::
     $ invoke hi -n Jeff
     $ invoke hi -nJeff
 
+Describing the meaning of an argument can be done through the task's ``help``
+argument. You can also describe the task as a whole through its doctring::
+
+    @task(help={'name': "Name of the person to say hi to."})
+    def hi(name):
+        """Say hi to someone."""
+        print("Hi %s!" % name)
+
+This description will show up when invoking ``--help``::
+
+    $ invoke --help hi
+    Usage: inv[oke] [--core-opts] hi [--options] [other tasks here ...]
+
+    Docstring:
+      Say hi to someone.
+
+    Options:
+      -n STRING, --name=STRING   Name of the person to say hi to.
+
 Again, more details on how all this works can be found in the :doc:`CLI
 concepts <concepts/cli>` (for the command-line & parsing side of things) and
 the `.task` API documentation (for the declaration side).
