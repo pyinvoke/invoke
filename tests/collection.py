@@ -320,3 +320,11 @@ class Collection_(Spec):
             eq_(outer.configuration['foo'], 'inner')
             outer.configure({'foo': 'outer'})
             eq_(outer.configuration['foo'], 'outer')
+
+        def sibling_subcollections_ignored(self):
+            inner = Collection('inner')
+            inner.configure({'foo': 'hi there'})
+            inner2 = Collection('inner2')
+            inner2.configure({'foo': 'nope'})
+            outer = Collection(inner, inner2)
+            eq_(outer.configuration(inner)['foo'], 'hi there')
