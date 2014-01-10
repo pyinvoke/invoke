@@ -264,12 +264,9 @@ class Collection(object):
         """
         Return this collection's configuration options as a dict.
 
-        Child/inner collections' configurations are merged on top of this
-        collection's, though the outer collection's value will win in
-        conflicts.
-
-        Multiple child collections' configurations are merged in alphabetical
-        order by attached name (thus childs with 'later' names will win.)
+        Child/inner collections' configurations (those between root & that of
+        the task being invoked) are merged on top of this collection's, though
+        the outer collection's value will win in conflicts.
 
         .. note::
             Merging uses ``copy.deepcopy`` to prevent state bleed.
