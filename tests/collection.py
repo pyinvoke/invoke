@@ -282,24 +282,24 @@ class Collection_(Spec):
 
         def basic_set_and_get(self):
             self.c.configure({'foo': 'bar'})
-            eq_(self.c.configuration, {'foo': 'bar'})
+            eq_(self.c.configuration(), {'foo': 'bar'})
 
         def configure_performs_merging(self):
             self.c.configure({'foo': 'bar'})
-            eq_(self.c.configuration['foo'], 'bar')
+            eq_(self.c.configuration()['foo'], 'bar')
             self.c.configure({'biz': 'baz'})
-            eq_(set(self.c.configuration.keys()), set(['foo', 'biz']))
+            eq_(set(self.c.configuration().keys()), set(['foo', 'biz']))
 
         def configure_allows_overwriting(self):
             self.c.configure({'foo': 'one'})
-            eq_(self.c.configuration['foo'], 'one')
+            eq_(self.c.configuration()['foo'], 'one')
             self.c.configure({'foo': 'two'})
-            eq_(self.c.configuration['foo'], 'two')
+            eq_(self.c.configuration()['foo'], 'two')
 
-        def access_returns_dict(self):
-            eq_(self.c.configuration, {})
+        def call_returns_dict(self):
+            eq_(self.c.configuration(), {})
             self.c.configure({'foo': 'bar'})
-            eq_(self.c.configuration, {'foo': 'bar'})
+            eq_(self.c.configuration(), {'foo': 'bar'})
 
         def access_merges_from_subcollections(self):
             inner = Collection('inner')
@@ -307,19 +307,19 @@ class Collection_(Spec):
             outer = Collection()
             outer.configure({'biz': 'baz'})
             # With no inner collection
-            eq_(set(outer.configuration.keys()), set(['biz']))
+            eq_(set(outer.configuration().keys()), set(['biz']))
             # With inner collection
             outer.add_collection(inner)
-            eq_(set(outer.configuration.keys()), set(['foo', 'biz']))
+            eq_(set(outer.configuration('inner').keys()), set(['foo', 'biz']))
 
-        def parents_overwrite_children(self):
+        def parents_overwrite_children_in_path(self):
             inner = Collection('inner')
             inner.configure({'foo': 'inner'})
             outer = Collection()
             outer.add_collection(inner)
-            eq_(outer.configuration['foo'], 'inner')
+            eq_(outer.configuration('inner')['foo'], 'inner')
             outer.configure({'foo': 'outer'})
-            eq_(outer.configuration['foo'], 'outer')
+            eq_(outer.configuration('inner')['foo'], 'outer')
 
         def sibling_subcollections_ignored(self):
             inner = Collection('inner')
@@ -327,4 +327,32 @@ class Collection_(Spec):
             inner2 = Collection('inner2')
             inner2.configure({'foo': 'nope'})
             outer = Collection(inner, inner2)
-            eq_(outer.configuration(inner)['foo'], 'hi there')
+            eq_(outer.configuration('inner')['foo'], 'hi there')
+
+        def subcollection_paths_may_be_dotted(self):
+            leaf = Collection('leaf')
+            leaf.configure({'key': 'leaf-value'})
+            middle = Collection('middle', leaf)
+            outer = Collection('outer', middle)
+            eq_(outer.configuration('middle.leaf'), {'key': 'leaf-value'})
+
+        def invalid_subcollection_paths_result_in_KeyError(self):
+            # Straight up invalid
+            assert_raises(KeyError, Collection('meh').configuration, 'nope')
+            # Exists but wrong level
+            inner = Collection('inner')
+            inner.configure({'foo': 'bar'})
+            assert_raises(KeyError,
+                Collection('outer', inner).configuration, 'foo')
+
+        def keys_dont_have_to_exist_in_full_path(self):
+            # Kinda duplicates earlier stuff; meh
+            # Key only stored on leaf
+            leaf = Collection('leaf')
+            leaf.configure({'key': 'leaf-value'})
+            middle = Collection('middle', leaf)
+            outer = Collection('outer', middle)
+            eq_(outer.configuration('middle.leaf'), {'key': 'leaf-value'})
+            # Key stored on mid + leaf but not outer
+            middle.configure({'key': 'whoa'})
+            eq_(outer.configuration('middle.leaf'), {'key': 'whoa'})
