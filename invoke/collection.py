@@ -263,22 +263,26 @@ class Collection(object):
                 ret[self.subtask_name(coll_name, task_name)] = aliases
         return ret
 
-    @property
-    def configuration(self):
+    def configuration(self, path=None):
         """
-        Return this collection's configuration options as a dict.
-
-        Child/inner collections' configurations (those between root & that of
-        the task being invoked) are merged on top of this collection's, though
-        the outer collection's value will win in conflicts.
+        Obtain merged configuration values from collection & children.
 
         .. note::
             Merging uses ``copy.deepcopy`` to prevent state bleed.
+
+        :param path:
+            (Optional) Dotted string path, same as used for looking up actual
+            tasks, except without the final task name component. Used to
+            determine which subcollection (if any) has its configuration merged
+            in.
+
+        :returns: A dictionary containing configuration values.
         """
-        # Merge sideways across subcollections first
         ret = {}
-        for subcol in sorted(self.collections.keys()):
-            ret.update(copy.deepcopy(self.collections[subcol].configuration))
+        # Merge subcollections if necessary
+        if path:
+            subcoll, rest = self.split_path(path)
+            ret.update(copy.deepcopy(self.collections[subcoll].configuration(rest)))
         # Then merge in ours so we win conflicts
         ret.update(copy.deepcopy(self._configuration))
         return ret
