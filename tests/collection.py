@@ -102,9 +102,16 @@ class Collection_(Spec):
 
         def returns_unique_Collection_objects_for_same_input_module(self):
             # Ignoring self.c for now, just in case it changes later.
-            c1 = Collection.from_module(load('integration'))
-            c2 = Collection.from_module(load('integration'))
+            # First, a module with no root NS
+            mod = load('integration')
+            c1 = Collection.from_module(mod)
+            c2 = Collection.from_module(mod)
             assert c1 is not c2
+            # Now one *with* a root NS (which was previously buggy)
+            mod2 = load('explicit_root')
+            c3 = Collection.from_module(mod2)
+            c4 = Collection.from_module(mod2)
+            assert c3 is not c4
 
     class add_task:
         def setup(self):
