@@ -70,7 +70,8 @@ class Executor(object):
             args = []
             if t.contextualized:
                 context = self.context.clone()
-                context.update(self.collection.configuration)
+                path = '.'.join(name.split('.')[:-1])
+                context.update(self.collection.configuration(path))
                 args.append(context)
             results[t] = t(*args, **kwargs)
         return results[task]
