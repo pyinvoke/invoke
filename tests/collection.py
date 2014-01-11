@@ -100,6 +100,12 @@ class Collection_(Spec):
             coll = Collection.from_module(load('subcollection_task_name'))
             assert 'explicit_name' in coll.tasks # not 'implicit_name'
 
+        def returns_unique_Collection_objects_for_same_input_module(self):
+            # Ignoring self.c for now, just in case it changes later.
+            c1 = Collection.from_module(load('integration'))
+            c2 = Collection.from_module(load('integration'))
+            assert c1 is not c2
+
     class add_task:
         def setup(self):
             self.c = Collection()
