@@ -179,6 +179,12 @@ class Collection(object):
         # Insert
         self.collections[name] = coll
 
+    def split_path(self, path):
+        parts = path.split('.')
+        coll = parts.pop(0)
+        rest = '.'.join(parts)
+        return coll, rest
+
     def __getitem__(self, name=None):
         """
         Returns task named ``name``. Honors aliases and subcollections.
@@ -199,9 +205,7 @@ class Collection(object):
                 raise ValueError("This collection has no default task.")
         # Non-default tasks within subcollections
         if '.' in name:
-            parts = name.split('.')
-            coll = parts.pop(0)
-            rest = '.'.join(parts)
+            coll, rest = self.split_path(name)
             return self.collections[coll][rest]
         # Default task for subcollections (via empty-name lookup)
         if name in self.collections:
