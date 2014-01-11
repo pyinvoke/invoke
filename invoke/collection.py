@@ -104,8 +104,8 @@ class Collection(object):
 
         Inspects ``module`` for any `.Task` instances and adds them to a new
         `.Collection`, returning it. If any explicit namespace collections
-        exist (named ``ns`` or ``namespace``) they are preferentially loaded
-        instead.
+        exist (named ``ns`` or ``namespace``) a copy of that collection object
+        is preferentially loaded instead.
 
         When the implicit/default collection is generated, it will be named
         after the module's ``__name__`` attribute, or its last dotted section
