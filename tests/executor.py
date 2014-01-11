@@ -59,6 +59,22 @@ class Executor_(Spec):
             c.configure({'my.config.key': 'value'})
             Executor(collection=c, context=Context()).execute('mytask')
 
+        def hands_task_specific_configuration_to_context(self):
+            @ctask
+            def mytask(ctx):
+                eq_(ctx['my.config.key'], 'value')
+            @ctask
+            def othertask(ctx):
+                eq_(ctx['my.config.key'], 'othervalue')
+            inner1 = Collection('inner1', mytask)
+            inner1.configure({'my.config.key': 'value'})
+            inner2 = Collection('inner2', othertask)
+            inner2.configure({'my.config.key': 'othervalue'})
+            c = Collection(inner1, inner2)
+            e = Executor(collection=c, context=Context())
+            e.execute('inner1.mytask')
+            e.execute('inner2.othertask')
+
     class returns_return_value_of_specified_task:
         def base_case(self):
             eq_(self.executor.execute(name='task1'), 7)

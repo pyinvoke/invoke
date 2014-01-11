@@ -328,6 +328,7 @@ class Collection_(Spec):
             inner2.configure({'foo': 'nope'})
             outer = Collection(inner, inner2)
             eq_(outer.configuration('inner')['foo'], 'hi there')
+            eq_(outer.configuration('inner2')['foo'], 'nope')
 
         def subcollection_paths_may_be_dotted(self):
             leaf = Collection('leaf')
