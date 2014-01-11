@@ -121,9 +121,12 @@ class Collection(object):
         for candidate in ('ns', 'namespace'):
             obj = getattr(module, candidate, None)
             if obj and isinstance(obj, Collection):
-                if not obj.name:
-                    obj.name = module_name
-                return obj
+                ret = Collection(obj.name or module_name)
+                ret.tasks = copy.deepcopy(obj.tasks)
+                ret.collections = copy.deepcopy(obj.collections)
+                ret.default = copy.deepcopy(obj.default)
+                ret._configuration = copy.deepcopy(obj._configuration)
+                return ret
         # Failing that, make our own collection from the module's tasks.
         tasks = filter(
             lambda x: isinstance(x, Task),
