@@ -171,8 +171,9 @@ serving as an alternate ``Collection`` constructor which takes a Python module
 object as its first argument.
 
 Modules given to this method are scanned for ``Task`` instances, which are
-added to a new ``Collection``. This collection's name is simply taken from the
-module name (the ``__name__`` attribute).
+added to a new ``Collection``. By default, this collection's name is taken from
+the module name (the ``__name__`` attribute), though it can also be supplied
+explicitly.
 
 .. note::
     As with the default task module, you can override this default loading

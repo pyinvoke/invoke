@@ -2,6 +2,8 @@
 Changelog
 =========
 
+* :feature:`108` Update `.from_module` to accept useful shorthand arguments for
+  tweaking the `.Collection` objects it creates (e.g. name, configuration.)
 * :feature:`107` Update configuration merging behavior for more flexible reuse
   of imported task modules, such as parameterizing multiple copies of a module
   within a task tree.

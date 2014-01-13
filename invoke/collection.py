@@ -98,7 +98,7 @@ class Collection(object):
         return method(obj, name=name)
 
     @classmethod
-    def from_module(self, module):
+    def from_module(self, module, name=None, config=None):
         """
         Return a new `.Collection` created from ``module``.
 
@@ -114,8 +114,17 @@ class Collection(object):
 
         Explicitly given collections will only be given that module-derived
         name if they don't already have a valid ``.name`` attribute.
+
+        :param name:
+            A string, which if given will override any automatically derived
+            collection name.
+
+        :param config:
+            A dict, used to set config options on the newly created
+            `.Collection` before returning it (saving you a call to
+            `.configure`.)
         """
-        module_name = module.__name__.split('.')[-1]
+        module_name = name or module.__name__.split('.')[-1]
         # See if the module provides a default NS to use in lieu of creating
         # our own collection.
         for candidate in ('ns', 'namespace'):
@@ -135,6 +144,8 @@ class Collection(object):
         collection = Collection(module_name)
         for task in tasks:
             collection.add_task(task)
+        if config:
+            collection.configure(config)
         return collection
 
     def add_task(self, task, name=None):

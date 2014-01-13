@@ -75,6 +75,32 @@ class Collection_(Spec):
         def setup(self):
             self.c = Collection.from_module(load('integration'))
 
+        class init:
+            "__init__"
+            def setup(self):
+                self.mod = load('integration')
+                self.fm = Collection.from_module
+
+            def name_override(self):
+                eq_(self.fm(self.mod).name, 'integration')
+                eq_(
+                    self.fm(self.mod, name='not-integration').name,
+                    'not-integration'
+                )
+
+            def inline_configuration(self):
+                eq_(self.fm(self.mod).configuration(), {})
+                eq_(
+                    self.fm(self.mod, config={'foo': 'bar'}).configuration(),
+                    {'foo': 'bar'}
+                )
+
+            def name_and_config_simultaneously(self):
+                # Test w/ posargs to enforce ordering, just for safety.
+                c = self.fm(self.mod, 'the name', {'the': 'config'})
+                eq_(c.name, 'the name')
+                eq_(c.configuration(), {'the': 'config'})
+
         def adds_tasks(self):
             assert 'print_foo' in self.c
 
