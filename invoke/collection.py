@@ -148,7 +148,7 @@ class Collection(object):
             collection.configure(config)
         return collection
 
-    def add_task(self, task, name=None):
+    def add_task(self, task, name=None, default=None):
         """
         Add `.Task` ``task`` to this collection.
 
@@ -175,7 +175,7 @@ class Collection(object):
         self.tasks[name] = task
         for alias in task.aliases:
             self.tasks.alias(alias, to=name)
-        if task.is_default:
+        if default is True or (default is None and task.is_default):
             if self.default:
                 msg = "'%s' cannot be the default because '%s' already is!"
                 raise ValueError(msg % (name, self.default))
