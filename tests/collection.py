@@ -181,6 +181,17 @@ class Collection_(Spec):
             self.c.add_collection(Collection('sub'))
             self.c.add_task(_mytask, 'sub')
 
+        def allows_specifying_task_defaultness(self):
+            self.c.add_task(_mytask, default=True)
+            eq_(self.c.default, '_mytask')
+
+        def specifying_default_False_overrides_task_setting(self):
+            @task(default=True)
+            def its_me():
+                pass
+            self.c.add_task(its_me, default=False)
+            eq_(self.c.default, None)
+
     class add_collection:
         def setup(self):
             self.c = Collection()
