@@ -232,10 +232,11 @@ Either way, the result::
 Default tasks
 =============
 
-Tasks may declare themselves as the default task to invoke for the collection
-they belong to, e.g. by giving ``default=True`` to `@task <.task>`. This is
-useful when you have a bunch of related tasks in a namespace but one of them is
-the most commonly used, and maps well to the namespace as a whole.
+Tasks may be declared as the default task to invoke for the collection they
+belong to, e.g. by giving ``default=True`` to `@task <.task>` (or to
+`.Collection.add_task`.) This is useful when you have a bunch of related tasks
+in a namespace but one of them is the most commonly used, and maps well to the
+namespace as a whole.
 
 For example, in the documentation submodule we've been experimenting with so
 far, the ``build`` task makes sense as a default, so we can say things like

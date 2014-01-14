@@ -150,7 +150,7 @@ class Collection(object):
 
     def add_task(self, task, name=None):
         """
-        Adds `.Task` ``task`` to this collection.
+        Add `.Task` ``task`` to this collection.
 
         :param task: The `.Task` object to add to this collection.
 
@@ -158,6 +158,8 @@ class Collection(object):
             Optional string name to bind to (overrides the task's own
             self-defined ``name`` attribute and/or any Python identifier (i.e.
             ``.func_name``.)
+
+        :param default: Whether this task should be the collection default.
         """
         if name is None:
             if task.name:
