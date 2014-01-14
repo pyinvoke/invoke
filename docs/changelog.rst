@@ -2,6 +2,8 @@
 Changelog
 =========
 
+* :feature:`109` Add a ``default`` kwarg to `.Collection.add_task` allowing
+  per-collection control over default tasks.
 * :feature:`108` Update `.from_module` to accept useful shorthand arguments for
   tweaking the `.Collection` objects it creates (e.g. name, configuration.)
 * :feature:`107` Update configuration merging behavior for more flexible reuse
