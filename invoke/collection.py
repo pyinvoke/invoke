@@ -150,14 +150,14 @@ class Collection(object):
 
     def add_task(self, task, name=None):
         """
-        Adds ``Task`` ``task`` to this collection.
+        Adds `.Task` ``task`` to this collection.
 
-        The name the task is bound with is taken, in order, from:
+        :param task: The `.Task` object to add to this collection.
 
-        * The ``name`` kwarg;
-        * If that is not given, the task object's ``name`` attribute;
-        * If that is empty, the task object's wrapped callable's ``.func_name``
-          attribute.
+        :param name:
+            Optional string name to bind to (overrides the task's own
+            self-defined ``name`` attribute and/or any Python identifier (i.e.
+            ``.func_name``.)
         """
         if name is None:
             if task.name:
