@@ -209,6 +209,12 @@ def parse(argv, collection=None):
             out = primary
             if aliases:
                 out += " (%s)" % ', '.join(aliases)
+
+            docstring = collection[primary].__doc__
+            if docstring:
+                max_width = max(map(len, names))
+                out += " " * (max_width - len(primary) + 1) + docstring.split('\n')[0]
+
             print("  %s" % out)
         print("")
         sys.exit(0)

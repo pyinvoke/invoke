@@ -217,6 +217,15 @@ Available tasks:
             )
             eq_(run("invoke -c explicit_root --list").stdout, expected)
 
+        @trap
+        def docstrings(self):
+            expected = self._listing(
+                'no_line',
+                'one_line      foo',
+                'second_lines  foo',
+            )
+            eq_(run("invoke -c docstrings --list").stdout, expected)
+
     @trap
     def no_deduping(self):
         expected = """
