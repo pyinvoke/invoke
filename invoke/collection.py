@@ -124,24 +124,29 @@ class Collection(object):
             `.Collection` before returning it (saving you a call to
             `.configure`.)
         """
-        module_name = name or module.__name__.split('.')[-1]
+        module_name = module.__name__.split('.')[-1]
         # See if the module provides a default NS to use in lieu of creating
         # our own collection.
         for candidate in ('ns', 'namespace'):
             obj = getattr(module, candidate, None)
             if obj and isinstance(obj, Collection):
-                ret = Collection(obj.name or module_name)
+                # Explicitly given name wins over root ns name which wins over
+                # actual module name.
+                ret = Collection(name or obj.name or module_name)
                 ret.tasks = copy.deepcopy(obj.tasks)
                 ret.collections = copy.deepcopy(obj.collections)
                 ret.default = copy.deepcopy(obj.default)
-                ret._configuration = copy.deepcopy(obj._configuration)
+                # Explicitly given config wins over root ns config
+                obj_config = copy.deepcopy(obj._configuration)
+                ret._configuration = config or obj_config
                 return ret
         # Failing that, make our own collection from the module's tasks.
         tasks = filter(
             lambda x: isinstance(x, Task),
             vars(module).values()
         )
-        collection = Collection(module_name)
+        # Again, explicit name wins over implicit one from module path
+        collection = Collection(name or module_name)
         for task in tasks:
             collection.add_task(task)
         if config:
