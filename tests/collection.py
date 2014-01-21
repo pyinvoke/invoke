@@ -75,8 +75,7 @@ class Collection_(Spec):
         def setup(self):
             self.c = Collection.from_module(load('integration'))
 
-        class init:
-            "__init__"
+        class parameters:
             def setup(self):
                 self.mod = load('integration')
                 self.fm = Collection.from_module
