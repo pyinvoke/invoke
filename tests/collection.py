@@ -138,6 +138,32 @@ class Collection_(Spec):
             c4 = Collection.from_module(mod2)
             assert c3 is not c4
 
+        class explicit_root_ns:
+            def setup(self):
+                mod = load('explicit_root')
+                mod.ns.configure({'key': 'builtin'})
+                mod.ns.name = 'builtin_name'
+                self.unchanged = Collection.from_module(mod)
+                self.changed = Collection.from_module(
+                    mod,
+                    name='override_name',
+                    config={'key': 'override'}
+                )
+
+            def inline_config_with_root_namespaces_overrides_builtin(self):
+                eq_(self.unchanged.configuration()['key'], 'builtin')
+                eq_(self.changed.configuration()['key'], 'override')
+
+            def inline_name_overrides_root_namespace_object_name(self):
+                eq_(self.unchanged.name, 'builtin_name')
+                eq_(self.changed.name, 'override_name')
+
+            def root_namespace_object_name_overrides_module_name(self):
+                # Duplicates part of previous test for explicitness' sake.
+                # I.e. proves that the name doesn't end up 'explicit_root'.
+                eq_(self.unchanged.name, 'builtin_name')
+
+
     class add_task:
         def setup(self):
             self.c = Collection()
