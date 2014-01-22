@@ -14,3 +14,9 @@ def second_lines():
     """ foo
     bar
     """
+
+@task
+def empty_first_line():
+    """
+    foo
+    """

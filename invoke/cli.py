@@ -213,7 +213,7 @@ def parse(argv, collection=None):
             docstring = collection[primary].__doc__
             if docstring:
                 max_width = max(map(len, names))
-                out += " " * (max_width - len(primary) + 1) + docstring.split('\n')[0]
+                out += " " * (max_width - len(primary) + 1) + docstring.lstrip().splitlines()[0]
 
             print("  %s" % out)
         print("")
