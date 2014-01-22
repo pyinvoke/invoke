@@ -117,12 +117,16 @@ class Collection(object):
 
         :param name:
             A string, which if given will override any automatically derived
-            collection name.
+            collection name (or name set on the module's root namespace, if it
+            has one.)
 
         :param config:
             A dict, used to set config options on the newly created
             `.Collection` before returning it (saving you a call to
             `.configure`.)
+            
+            If the imported module had a root namespace object, ``config`` is
+            merged on top of it (i.e. overriding any conflicts.)
         """
         module_name = module.__name__.split('.')[-1]
         # See if the module provides a default NS to use in lieu of creating
