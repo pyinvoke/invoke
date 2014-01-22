@@ -142,7 +142,9 @@ class Collection(object):
                 ret.default = copy.deepcopy(obj.default)
                 # Explicitly given config wins over root ns config
                 obj_config = copy.deepcopy(obj._configuration)
-                ret._configuration = config or obj_config
+                if config:
+                    obj_config.update(config)
+                ret._configuration = obj_config
                 return ret
         # Failing that, make our own collection from the module's tasks.
         tasks = filter(
