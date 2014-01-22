@@ -141,7 +141,7 @@ class Collection_(Spec):
         class explicit_root_ns:
             def setup(self):
                 mod = load('explicit_root')
-                mod.ns.configure({'key': 'builtin'})
+                mod.ns.configure({'key': 'builtin', 'otherkey': 'yup'})
                 mod.ns.name = 'builtin_name'
                 self.unchanged = Collection.from_module(mod)
                 self.changed = Collection.from_module(
@@ -153,6 +153,9 @@ class Collection_(Spec):
             def inline_config_with_root_namespaces_overrides_builtin(self):
                 eq_(self.unchanged.configuration()['key'], 'builtin')
                 eq_(self.changed.configuration()['key'], 'override')
+
+            def inline_config_overrides_via_merge_not_replacement(self):
+                assert 'otherkey' in self.changed.configuration()
 
             def inline_name_overrides_root_namespace_object_name(self):
                 eq_(self.unchanged.name, 'builtin_name')
