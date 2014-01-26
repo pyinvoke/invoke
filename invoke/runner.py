@@ -1,10 +1,12 @@
 import os
-import pty
 import select
 import sys
 
-from .vendor import pexpect
-
+try:
+    from .vendor import pexpect
+except:
+    pass
+    
 from .monkey import Popen, PIPE
 from .exceptions import Failure
 
