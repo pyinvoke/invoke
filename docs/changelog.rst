@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :release:`0.7.0 <2014.01.28>`
 * :feature:`109` Add a ``default`` kwarg to `.Collection.add_task` allowing
   per-collection control over default tasks.
 * :feature:`108` Update `.from_module` to accept useful shorthand arguments for
