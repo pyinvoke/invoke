@@ -1,10 +1,8 @@
-import fcntl
 import logging
 import os
 import struct
 import sys
-import termios
-
+import platform
 
 # Allow from-the-start debugging (vs toggled during load of tasks module) via
 # shell env var
@@ -16,14 +14,40 @@ log = logging.getLogger('invoke')
 for x in ('debug',):
     globals()[x] = getattr(log, x)
 
+def __pty_size_windows():
+    res=None
+    try:
+        from ctypes import windll, create_string_buffer
 
-def pty_size():
+        # stdin handle is -10
+        # stdout handle is -11
+        # stderr handle is -12
+
+        h = windll.kernel32.GetStdHandle(-12)
+        csbi = create_string_buffer(22)
+        res = windll.kernel32.GetConsoleScreenBufferInfo(h, csbi)
+    except:
+        return None
+    if res:
+        import struct
+        (bufx, bufy, curx, cury, wattr,
+         left, top, right, bottom, maxx, maxy) = struct.unpack("hhhhHhhhhhh", csbi.raw)
+        sizex = right - left + 1
+        sizey = bottom - top + 1
+        return sizex, sizey
+    else:
+        return None
+
+def __pty_size_unix():
     """
     Return local (stdout-based) pty size as ``(num_cols, num_rows)`` tuple.
 
     If unable to determine (e.g. ``sys.stdout`` has been monkeypatched, or
     ``termios`` lacking ``TIOCGWINSZ``) defaults to 80x24.
     """
+    import fcntl
+    import termios
+    
     default_cols, default_rows = 80, 24
     cols, rows = default_cols, default_rows
     if sys.stdout.isatty():
@@ -50,3 +74,6 @@ def pty_size():
         except AttributeError:
             pass
     return cols, rows
+
+    
+pty_size = __pty_size_windows if platform.system() == 'Windows' else __pty_size_unix
