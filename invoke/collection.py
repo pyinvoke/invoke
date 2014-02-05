@@ -1,18 +1,37 @@
 import copy
-from operator import add
+import imp
+import os
 import types
 
 from .vendor import six
 from .vendor.lexicon import Lexicon
 
-from .parser import Context, Argument
+from .exceptions import CollectionNotFound
+from .parser import Context
 from .tasks import Task
+
+
+def _parent_dirs(root=None):
+    if root is None:
+        root = os.getcwd()
+    roots = [os.path.abspath(root)]
+    # Accumulate all parent directories
+    roots.append(os.path.dirname(roots[-1]))
+    while roots[-1] != roots[-2]:
+        roots.append(os.path.dirname(roots[-1]))
+    # Make sure we haven't got duplicates on the end
+    if roots[-1] == roots[-2]:
+        roots = roots[:-1]
+    return roots
 
 
 class Collection(object):
     """
     A collection of executable tasks.
     """
+
+    default_module_name = 'tasks'
+
     def __init__(self, *args, **kwargs):
         """
         Create a new task collection/namespace.
@@ -330,3 +349,28 @@ class Collection(object):
         :returns: ``None``.
         """
         self._configuration.update(options)
+
+    @classmethod
+    def load_collection(cls, name=None, root=None):
+        """
+        Try find find the module ``name``, recursively from the
+        directory ``root``.
+
+        default: name = 'tasks', root = current working directory.
+        """
+        if name is None:
+            # TODO: make this configurable
+            name = cls.default_module_name
+        roots = _parent_dirs(root)
+        # Try to find the module
+        try:
+            file, pathname, desc = imp.find_module(name, roots)
+        except ImportError:
+            raise CollectionNotFound(name=name, root=root)
+        # Try to load it, then close the file we found
+        try:
+            module = imp.load_module(name, file, pathname, desc)
+        finally:
+            file.close()
+
+        return Collection.from_module(module)

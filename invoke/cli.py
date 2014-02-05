@@ -4,11 +4,11 @@ import textwrap
 
 from .vendor import six
 
+from .collection import Collection
 from .context import Context
-from .loader import Loader
 from .parser import Parser, Context as ParserContext, Argument
 from .executor import Executor
-from .exceptions import Failure, CollectionNotFound, ParseError
+from .exceptions import Failure, ParseError
 from .util import debug, pty_size
 from ._version import __version__
 
@@ -48,7 +48,6 @@ def print_help(tuples):
         else:
             print(spec)
     print('')
-
 
 
 def parse_gracefully(parser, argv):
@@ -150,7 +149,7 @@ def parse(argv, collection=None):
     # TODO: if this wants to display context sensitive help (e.g. a combo help
     # and available tasks listing; or core flags modified by plugins/task
     # modules) it will have to move farther down.
-    if args.help.value == True:
+    if args.help.value is True:
         print("Usage: inv[oke] [--core-opts] task1 [--task1-opts] ... taskN [--taskN-opts]")
         print("")
         print("Core options:")
@@ -161,8 +160,8 @@ def parse(argv, collection=None):
     # (Skip loading if somebody gave us an explicit task collection.)
     if not collection:
         debug("No collection given, loading from %r" % args.root.value)
-        loader = Loader(root=args.root.value)
-        collection = loader.load_collection(args.collection.value)
+        name, root = args.collection.value, args.root.value
+        collection = Collection.load_collection(name, root)
     parser = Parser(contexts=collection.to_contexts())
     debug("Parsing actual tasks against collection %r" % collection)
     tasks = parse_gracefully(parser, core.unparsed)
