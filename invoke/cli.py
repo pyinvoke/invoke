@@ -204,17 +204,22 @@ def parse(argv, collection=None):
         # Sort in depth, then alpha, order
         task_names = collection.task_names
         names = sort_names(task_names.keys())
+
+        full_names = []
         for primary in names:
             aliases = sort_names(task_names[primary])
-            out = primary
             if aliases:
-                out += " (%s)" % ', '.join(aliases)
+                full_names.append(primary + " (%s)" % ', '.join(aliases))
+            else:
+                full_names.append(primary)
 
+        max_width = max(map(len, full_names))
+
+        for full_name, primary in zip(full_names, names):
+            out = full_name
             docstring = collection[primary].__doc__
             if docstring:
-                max_width = max(map(len, names))
-                out += " " * (max_width - len(primary) + 1) + docstring.lstrip().splitlines()[0]
-
+                out += " " * (max_width - len(full_name) + 1) + docstring.lstrip().split('\n')[0]
             print("  %s" % out)
         print("")
         sys.exit(0)

@@ -220,10 +220,11 @@ Available tasks:
         @trap
         def docstrings(self):
             expected = self._listing(
-                'empty_first_line foo',
+                'empty_first_line    foo',
                 'no_line',
-                'one_line         foo',
-                'second_lines     foo',
+                'one_line            foo',
+                'second_lines        foo',
+                'with_aliases (a, b) foo',
             )
             eq_(run("invoke -c docstrings --list").stdout, expected)
 

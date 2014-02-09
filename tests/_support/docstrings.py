@@ -1,4 +1,4 @@
-from invoke import task
+from invoke import task, Collection
 
 @task
 def no_line():
@@ -19,4 +19,9 @@ def second_lines():
 def empty_first_line():
     """
     foo
+    """
+
+@task(aliases=('a', 'b'))
+def with_aliases():
+    """ foo
     """
