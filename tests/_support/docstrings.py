@@ -1,4 +1,4 @@
-from invoke import task, Collection
+from invoke import task
 
 @task
 def no_line():
