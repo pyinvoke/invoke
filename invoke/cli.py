@@ -181,12 +181,13 @@ def parse(argv, collection=None):
         print("Docstring:")
         if docstring:
             # Really wish textwrap worked better for this.
-            doclines = docstring.lstrip().splitlines()
+            doclines = textwrap.dedent(docstring.lstrip('\n').rstrip()+'\n').splitlines()
             for line in doclines:
-                print(indent + textwrap.dedent(line))
-            # Print trailing blank line if docstring didn't end with one
-            if textwrap.dedent(doclines[-1]):
-                print("")
+                if line.strip():
+                    print(indent + line)
+                else:
+                    print("")
+            print("")
         else:
             print(indent + "none")
             print("")

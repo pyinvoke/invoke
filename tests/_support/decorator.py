@@ -8,6 +8,17 @@ def foo():
     """
     pass
 
+@task
+def foo2():
+    """
+    Foo the bar:
+
+      example code
+
+    Added in 1.0
+    """
+    pass
+
 @task(default=True)
 def biz():
     pass

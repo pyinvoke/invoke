@@ -137,12 +137,31 @@ Usage: inv[oke] [--core-opts] foo [other tasks here ...]
 
 Docstring:
   Foo the bar.
-  
+
 Options:
   none
 
 """.lstrip()
         r = run("inv -c decorator -h foo", hide='out')
+        eq_(r.stdout, expected)
+
+    @trap
+    def per_task_help_dedents_correctly(self):
+        expected = """
+Usage: inv[oke] [--core-opts] foo2 [other tasks here ...]
+
+Docstring:
+  Foo the bar:
+
+    example code
+
+  Added in 1.0
+
+Options:
+  none
+
+""".lstrip()
+        r = run("inv -c decorator -h foo2", hide='out')
         eq_(r.stdout, expected)
 
     @trap
