@@ -57,7 +57,7 @@ class CLI(Spec):
 
     def contextualized_tasks_are_given_parser_context_arg(self):
         # go() in contextualized.py just returns its initial arg
-        retval = dispatch(['-c', 'contextualized', 'go'])[0]
+        retval = dispatch(['invoke', '-c', 'contextualized', 'go'])[0]
         assert isinstance(retval, Context)
 
     @trap
@@ -249,7 +249,7 @@ bar
         "run() related CLI flags"
         def _test_flag(self, flag, kwarg, value):
             with patch('invoke.context.run') as run:
-                dispatch(flag + ['-c', 'contextualized', 'run'])
+                dispatch(['invoke'] + flag + ['-c', 'contextualized', 'run'])
                 run.assert_called_with('x', **{kwarg: value})
 
         def warn_only(self):
@@ -417,7 +417,7 @@ class CLIParsing(Spec):
     def globbed_shortflags_with_multipass_parsing(self):
         "mytask -cb and -bc"
         for args in ('-bc', '-cb'):
-            _, _, r = parse(['mytask4', args], self.c)
+            _, _, r = parse(['invoke', 'mytask4', args], self.c)
             a = r[0].args
             eq_(a.clean.value, True)
             eq_(a.browse.value, True)
