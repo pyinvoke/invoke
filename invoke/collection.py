@@ -97,6 +97,9 @@ class Collection(object):
             raise TypeError("No idea how to insert %r!" % type(obj))
         return method(obj, name=name)
 
+    def __repr__(self):
+        return "<Collection: %s>" % self.name
+
     @classmethod
     def from_module(self, module, name=None, config=None):
         """
