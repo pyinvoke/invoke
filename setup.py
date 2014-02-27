@@ -7,7 +7,7 @@ except ImportError:
     from distutils.core import setup
 
     def find_packages(*args, **kwargs):
-        return ['invoke']
+        return ['invoke', 'invoke.parser']
 
 # Version info -- read without importing
 _locals = {}
