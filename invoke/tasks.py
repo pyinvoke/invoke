@@ -44,7 +44,7 @@ class Task(object):
     ):
         # Real callable
         self.body = body
-        # Must copy doc/name here because Sphinx is retarded about properties.
+        # Must copy doc/name here because Sphinx is stupid about properties.
         self.__doc__ = getattr(body, '__doc__', '')
         self.__name__ = getattr(body, '__name__', '')
         # Is this a contextualized task?

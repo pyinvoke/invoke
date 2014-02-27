@@ -236,6 +236,7 @@ def dispatch(argv):
     # Take action based on 'core' options and the 'tasks' found
     for context in tasks:
         kwargs = {}
+        # Take CLI arguments out of parser context, create func-kwarg dict.
         for _, arg in six.iteritems(context.args):
             # Use the arg obj's internal name - not what was necessarily given
             # on the CLI. (E.g. --my-option vs --my_option for
@@ -247,8 +248,11 @@ def dispatch(argv):
             # TODO: allow swapping out of Executor subclasses based on core
             # config options
             results.append(executor.execute(
+                # Task name given on CLI
                 name=context.name,
+                # Flags/other args given to this task specifically
                 kwargs=kwargs,
+                # Was the core dedupe flag given?
                 dedupe=not args['no-dedupe']
             ))
         except Failure as f:
