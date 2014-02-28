@@ -20,12 +20,16 @@ class Executor_(Spec):
 
     class init:
         "__init__"
-        def needs_collection_and_context(self):
+        def allows_collection_and_context(self):
             coll = Collection()
             cont = Context()
             e = Executor(collection=coll, context=cont)
             assert e.collection is coll
             assert e.context is cont
+
+        def uses_blank_context_by_default(self):
+            e = Executor(collection=Collection())
+            assert isinstance(e.context, Context)
 
     class execute:
         def base_case(self):
