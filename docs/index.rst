@@ -120,6 +120,10 @@ How can I contribute?
 Thanks for asking! Please see our :doc:`contribution documentation
 <contributing>` for details.
 
+Our test suite is stored in the ``tests/`` folder, and may be executed via
+``$ invoke test`` (or, if your Invoke is currently inoperable, ``$ spec`` will
+suffice.)
+
 
 .. _contact:
 
