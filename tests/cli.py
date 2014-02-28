@@ -229,10 +229,7 @@ bar
 
     @trap
     def debug_flag(self):
-        expected = """
-wut
-"""
-        eq_(run("invoke -d -c debugging foo").stdout, expected)
+        assert 'my-sentinel' in run("invoke -d -c debugging foo").stderr
 
     class run_options:
         "run() related CLI flags"

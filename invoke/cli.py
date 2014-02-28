@@ -9,7 +9,7 @@ from .loader import Loader
 from .parser import Parser, Context as ParserContext, Argument
 from .executor import Executor
 from .exceptions import Failure, CollectionNotFound, ParseError
-from .util import debug, pty_size
+from .util import debug, pty_size, enable_logging
 from ._version import __version__
 
 
@@ -146,6 +146,10 @@ def parse(argv, collection=None):
     core = parse_gracefully(parser, argv)
     debug("After core-args pass, leftover argv: %r" % (core.unparsed,))
     args = core[0].args
+
+    # Enable debugging from here on out, if debug flag was given.
+    if args.debug.value:
+        enable_logging()
 
     # Print version & exit if necessary
     if args.version.value:
