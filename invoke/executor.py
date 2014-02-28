@@ -1,4 +1,6 @@
 from .context import Context
+from .util import debug
+
 
 class Executor(object):
     """
@@ -52,25 +54,32 @@ class Executor(object):
         kwargs = kwargs or {}
         # Expand task list
         task = self.collection[name]
+        debug("Executor is examining top level task %r" % task)
         task_names = task.pre + [name]
         # TODO: post-tasks
+        debug("Task list, including pre/post tasks: %r" % (task_names,))
         # Dedupe if requested
         if dedupe:
+            debug("Deduplication is enabled")
             # Compact (preserving order, so not using list+set)
             compact_tasks = []
             for tname in task_names:
                 if tname not in compact_tasks:
                     compact_tasks.append(tname)
+            debug("Task list, obvious dupes removed: %r" % (compact_tasks,))
             # Remove tasks already called
             tasks = []
             for tname in compact_tasks:
                 if not self.collection[tname].called:
                     tasks.append(tname)
+            debug("Task list, already-called tasks removed: %r" % (tasks,))
         else:
+            debug("Deduplication is DISABLED, above task list will run")
             tasks = all_tasks
         # Execute
         results = {}
         for t in tasks:
+            debug("Executing %r" % t)
             args = []
             if t.contextualized:
                 context = self.context.clone()
