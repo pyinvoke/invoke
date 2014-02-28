@@ -7,7 +7,10 @@ import termios
 
 
 def enable_logging():
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format="%(module)s: %(message)s",
+    )
 
 # Allow from-the-start debugging (vs toggled during load of tasks module) via
 # shell env var.
