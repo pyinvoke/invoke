@@ -78,6 +78,9 @@ class Task(object):
         self.times_called += 1
         return result
 
+    # FIXME: have a reliable way to get SOME human readable name. sometimes
+    # .name is empty but __name__ is not, sometimes vice versa
+
     @property
     def called(self):
         return self.times_called > 0
