@@ -1,3 +1,6 @@
+from .util import debug
+
+
 class Executor(object):
     """
     An execution strategy for Task objects.
@@ -49,24 +52,31 @@ class Executor(object):
         kwargs = kwargs or {}
         # Expand task list
         task = self.collection[name]
+        debug("Executor is examining top level task %r" % task)
         all_tasks = self.task_list(task)
+        debug("Task list, including pre/post tasks: %r" % (all_tasks,))
         # Dedupe if requested
         if dedupe:
+            debug("Deduplication is enabled")
             # Compact (preserving order, so not using list+set)
             compact_tasks = []
             for task in all_tasks:
                 if task not in compact_tasks:
                     compact_tasks.append(task)
+            debug("Task list, obvious dupes removed: %r" % (compact_tasks,))
             # Remove tasks already called
             tasks = []
             for task in compact_tasks:
                 if not task.called:
                     tasks.append(task)
+            debug("Task list, already-called tasks removed: %r" % (tasks,))
         else:
+            debug("Deduplication is DISABLED, above task list will run")
             tasks = all_tasks
         # Execute
         results = {}
         for t in tasks:
+            debug("Executing %r" % t)
             args = []
             if t.contextualized:
                 context = self.context.clone()
