@@ -63,6 +63,13 @@ class Task(object):
         self.pre = pre or []
         self.times_called = 0
 
+    def __str__(self):
+        aliases = (" (%s)" % ', '.join(self.aliases)) if self.aliases else ""
+        return "<Task %s (%s)>" % (self.name, aliases)
+
+    def __repr__(self):
+        return str(self)
+
     def __call__(self, *args, **kwargs):
         # Guard against calling contextualized tasks with no context.
         if self.contextualized and not isinstance(args[0], Context):
