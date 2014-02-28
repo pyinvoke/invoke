@@ -132,7 +132,13 @@ def parse(argv, collection=None):
         Argument(
             names=('hide', 'H'),
             help="Set default value of run()'s 'hide' kwarg.",
-        )
+        ),
+        Argument(
+            names=('debug', 'd'),
+            kind=bool,
+            default=False,
+            help="Enable debug output.",
+        ),
     ))
     # 'core' will result an .unparsed attribute with what was left over.
     debug("Parsing initial context (core args)")
