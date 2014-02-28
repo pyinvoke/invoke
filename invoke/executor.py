@@ -52,19 +52,20 @@ class Executor(object):
         kwargs = kwargs or {}
         # Expand task list
         task = self.collection[name]
-        all_tasks = self.task_list(task)
+        task_names = task.pre + [name]
+        # TODO: post-tasks
         # Dedupe if requested
         if dedupe:
             # Compact (preserving order, so not using list+set)
             compact_tasks = []
-            for task in all_tasks:
-                if task not in compact_tasks:
-                    compact_tasks.append(task)
+            for tname in task_names:
+                if tname not in compact_tasks:
+                    compact_tasks.append(tname)
             # Remove tasks already called
             tasks = []
-            for task in compact_tasks:
-                if not task.called:
-                    tasks.append(task)
+            for tname in compact_tasks:
+                if not self.collection[tname].called:
+                    tasks.append(tname)
         else:
             tasks = all_tasks
         # Execute
@@ -73,15 +74,7 @@ class Executor(object):
             args = []
             if t.contextualized:
                 context = self.context.clone()
-                path = '.'.join(name.split('.')[:-1])
-                context.update(self.collection.configuration(path))
+                context.update(self.collection.configuration(t))
                 args.append(context)
             results[t] = t(*args, **kwargs)
         return results[task]
-
-    def task_list(self, task):
-        tasks = [task]
-        prereqs = []
-        for pretask in task.pre:
-            prereqs.append(self.collection[pretask])
-        return prereqs + tasks
