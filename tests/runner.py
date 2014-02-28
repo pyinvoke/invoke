@@ -71,6 +71,14 @@ class Run(Spec):
         def warn_kwarg_allows_continuing_past_failures(self):
             eq_(run("false", warn=True).exited, 1)
 
+        def Failure_repr_includes_stderr(self):
+            try:
+                run("./err ohnoz && exit 1")
+                assert false # Ensure failure to Failure fails
+            except Failure, f:
+                r = repr(f)
+                assert 'ohnoz' in r, "Sentinel 'ohnoz' not found in %r" % r
+
     class output_controls:
         @trap
         def _hide_both(self, val):
