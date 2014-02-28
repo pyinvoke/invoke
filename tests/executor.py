@@ -79,6 +79,19 @@ class Executor_(Spec):
             e.execute('inner1.mytask')
             e.execute('inner2.othertask')
 
+        def subcollection_config_works_with_default_tasks(self):
+            @ctask(default=True)
+            def mytask(ctx):
+                eq_(ctx['my.config.key'], 'value')
+            # Sets up a task "known as" sub.mytask which may be called as just
+            # 'sub' due to being default.
+            sub = Collection('sub', mytask=mytask)
+            sub.configure({'my.config.key': 'value'})
+            main = Collection(sub=sub)
+            # Execute via collection default 'task' name.
+            Executor(collection=main, context=Context()).execute('sub')
+
+
     class returns_return_value_of_specified_task:
         def base_case(self):
             eq_(self.executor.execute(name='task1'), 7)
