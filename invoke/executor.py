@@ -55,7 +55,7 @@ class Executor(object):
         # Expand task list
         task = self.collection[name]
         debug("Executor is examining top level task %r" % task)
-        task_names = task.pre + [name]
+        task_names = list(task.pre) + [name]
         # TODO: post-tasks
         debug("Task list, including pre/post tasks: %r" % (task_names,))
         # Dedupe if requested
@@ -75,15 +75,16 @@ class Executor(object):
             debug("Task list, already-called tasks removed: %r" % (tasks,))
         else:
             debug("Deduplication is DISABLED, above task list will run")
-            tasks = all_tasks
+            tasks = task_names
         # Execute
         results = {}
-        for t in tasks:
+        for tname in tasks:
+            t = self.collection[tname]
             debug("Executing %r" % t)
             args = []
             if t.contextualized:
                 context = self.context.clone()
-                context.update(self.collection.configuration(t))
+                context.update(self.collection.configuration(tname))
                 args.append(context)
             results[t] = t(*args, **kwargs)
         return results[task]
