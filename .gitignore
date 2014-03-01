@@ -2,4 +2,4 @@ docs/_build
 .coverage
 *.egg-info
 .tox
-*.py[c|o]
+*.py[cod]
