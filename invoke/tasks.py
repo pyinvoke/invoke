@@ -125,6 +125,10 @@ class Task(object):
 
     def arg_opts(self, name, default, taken_names):
         opts = {}
+        # Whether it's positional or not
+        opts['positional'] = name in self.positional
+        # Whether it is a value-optional flag
+        opts['optional'] = name in self.optional
         # Argument name(s) (replace w/ dashed version if underscores present,
         # and move the underscored version to be the attr_name instead.)
         if '_' in name:
@@ -146,10 +150,6 @@ class Task(object):
         # Help
         if name in self.help:
             opts['help'] = self.help[name]
-        # Whether it's positional or not
-        opts['positional'] = name in self.positional
-        # Whether it is a value-optional flag
-        opts['optional'] = name in self.optional
         return opts
 
     def get_arguments(self):
