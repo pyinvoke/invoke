@@ -2,6 +2,8 @@
 Changelog
 =========
 
+* :bug:`127` Fill in tasks' exposed ``name`` attribute with body name if
+  explicit name not given.
 * :feature:`124` Add a ``--debug`` flag to the core parser to enable easier
   debugging (on top of existing ``INVOKE_DEBUG`` env var.)
 * :feature:`125` Improve output of Failure exceptions when printed.

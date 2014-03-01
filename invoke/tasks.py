@@ -51,7 +51,7 @@ class Task(object):
         self.contextualized = contextualized
         # Default name, alternate names, and whether it should act as the
         # default for its parent collection
-        self.name = name
+        self._name = name
         self.aliases = aliases
         self.is_default = default
         # Arg/flag/parser hints
@@ -62,6 +62,10 @@ class Task(object):
         # Call chain bidness
         self.pre = pre or []
         self.times_called = 0
+
+    @property
+    def name(self):
+        return self._name or self.__name__
 
     def __str__(self):
         aliases = (" (%s)" % ', '.join(self.aliases)) if self.aliases else ""
@@ -77,9 +81,6 @@ class Task(object):
         result = self.body(*args, **kwargs)
         self.times_called += 1
         return result
-
-    # FIXME: have a reliable way to get SOME human readable name. sometimes
-    # .name is empty but __name__ is not, sometimes vice versa
 
     @property
     def called(self):
