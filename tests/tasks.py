@@ -160,8 +160,8 @@ class Task_(Spec):
 
     class get_arguments:
         def setup(self):
-            @task(positional=['arg3', 'arg1'], optional=['arg1'])
-            def mytask(arg1, arg2=False, arg3=5):
+            @task(positional=['arg_3', 'arg1'], optional=['arg1'])
+            def mytask(arg1, arg2=False, arg_3=5):
                 pass
             self.task = mytask
             self.args = self.task.get_arguments()
@@ -179,7 +179,7 @@ class Task_(Spec):
             return self._arglist_to_dict(task.get_arguments())
 
         def positional_args_come_first(self):
-            eq_(self.args[0].name, 'arg3')
+            eq_(self.args[0].name, 'arg_3')
             eq_(self.args[1].name, 'arg1')
             eq_(self.args[2].name, 'arg2')
 
@@ -215,7 +215,7 @@ class Task_(Spec):
             for short, long_ in (
                 ('a', 'arg1'),
                 ('r', 'arg2'),
-                ('g', 'arg3'),
+                ('g', 'arg-3'),
             ):
                 assert self.argdict[short] is self.argdict[long_]
 
