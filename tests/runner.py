@@ -75,7 +75,7 @@ class Run(Spec):
             try:
                 run("./err ohnoz && exit 1")
                 assert false # Ensure failure to Failure fails
-            except Failure, f:
+            except Failure as f:
                 r = repr(f)
                 assert 'ohnoz' in r, "Sentinel 'ohnoz' not found in %r" % r
 
