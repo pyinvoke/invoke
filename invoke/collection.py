@@ -296,20 +296,19 @@ class Collection(object):
                 ret[self.subtask_name(coll_name, task_name)] = aliases
         return ret
 
-    def configuration(self, path=None):
+    def configuration(self, task=None):
         """
         Obtain merged configuration values from collection & children.
 
         .. note::
             Merging uses ``copy.deepcopy`` to prevent state bleed.
 
-        :param path:
-            (Optional) Dotted string path, same as used for looking up actual
-            tasks, except without the final task name component. Used to
-            determine which subcollection (if any) has its configuration merged
-            in.
+        :param task:
+            (Optional) Task name, identical to that used for `__getitem__`
+            (e.g. may be dotted for nested tasks, etc.) Used to decide which
+            path to follow in the collection tree when merging config values.
 
-        :returns: A dictionary containing configuration values.
+        :returns: A `dict` containing configuration values.
         """
         ret = {}
         # Merge subcollections if necessary
