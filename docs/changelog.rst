@@ -2,6 +2,8 @@
 Changelog
 =========
 
+* :bug:`116` Ensure nested config overrides play nicely with default tasks and
+  pre-tasks.
 * :bug:`127` Fill in tasks' exposed ``name`` attribute with body name if
   explicit name not given.
 * :feature:`124` Add a ``--debug`` flag to the core parser to enable easier
