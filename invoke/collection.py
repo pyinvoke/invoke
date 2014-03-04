@@ -97,6 +97,12 @@ class Collection(object):
             raise TypeError("No idea how to insert %r!" % type(obj))
         return method(obj, name=name)
 
+    def __str__(self):
+        return "<Collection: %s>" % self.name
+
+    def __repr__(self):
+        return str(self)
+
     @classmethod
     def from_module(self, module, name=None, config=None):
         """
@@ -207,6 +213,15 @@ class Collection(object):
         self.collections[name] = coll
 
     def split_path(self, path):
+        """
+        Obtain first collection + remainder, of a task path.
+
+        E.g. for ``"subcollection.taskname"``, return ``("subcollection",
+        "taskname")``; for ``"subcollection.nested.taskname"`` return
+        ``("subcollection", "nested.taskname")``, etc.
+
+        An empty path becomes simply ``('', '')``.
+        """
         parts = path.split('.')
         coll = parts.pop(0)
         rest = '.'.join(parts)
@@ -224,21 +239,42 @@ class Collection(object):
         'foo.bar'. Subcollection default tasks will be returned on the
         subcollection's name.
         """
+        return self.task_with_config(name)[0]
+
+    def _task_with_merged_config(self, coll, rest, ours):
+        task, config = self.collections[coll].task_with_config(rest)
+        return task, dict(config, **ours)
+
+    def task_with_config(self, name):
+        """
+        Return task named ``name`` plus its configuration dict.
+
+        E.g. in a deeply nested tree, this method returns the `.Task`, and a
+        configuration dict created by merging that of this `.Collection` and
+        any nested `.Collections`, up through the one actually holding the
+        `.Task.
+
+        See `__getitem__` for semantics of the ``name`` argument.
+
+        :return: Two-tuple of (`.Task`, `dict`).
+        """
+        # Our top level configuration
+        ours = self.configuration()
         # Default task for this collection itself
         if not name:
             if self.default:
-                return self[self.default]
+                return self[self.default], ours
             else:
                 raise ValueError("This collection has no default task.")
-        # Non-default tasks within subcollections
+        # Non-default tasks within subcollections -> recurse (sorta)
         if '.' in name:
             coll, rest = self.split_path(name)
-            return self.collections[coll][rest]
+            return self._task_with_merged_config(coll, rest, ours)
         # Default task for subcollections (via empty-name lookup)
         if name in self.collections:
-            return self.collections[name]['']
+            return self._task_with_merged_config(name, '', ours)
         # Regular task lookup
-        return self.tasks[name]
+        return self.tasks[name], ours
 
     def __contains__(self, name):
         try:
@@ -290,29 +326,23 @@ class Collection(object):
                 ret[self.subtask_name(coll_name, task_name)] = aliases
         return ret
 
-    def configuration(self, path=None):
+    def configuration(self, taskpath=None):
         """
         Obtain merged configuration values from collection & children.
 
         .. note::
             Merging uses ``copy.deepcopy`` to prevent state bleed.
 
-        :param path:
-            (Optional) Dotted string path, same as used for looking up actual
-            tasks, except without the final task name component. Used to
-            determine which subcollection (if any) has its configuration merged
-            in.
+        :param taskpath:
+            (Optional) Task name/path, identical to that used for `__getitem__`
+            (e.g. may be dotted for nested tasks, etc.) Used to decide which
+            path to follow in the collection tree when merging config values.
 
-        :returns: A dictionary containing configuration values.
+        :returns: A `dict` containing configuration values.
         """
-        ret = {}
-        # Merge subcollections if necessary
-        if path:
-            subcoll, rest = self.split_path(path)
-            ret.update(copy.deepcopy(self.collections[subcoll].configuration(rest)))
-        # Then merge in ours so we win conflicts
-        ret.update(copy.deepcopy(self._configuration))
-        return ret
+        if taskpath is None:
+            return copy.deepcopy(self._configuration)
+        return self.task_with_config(taskpath)[1]
 
     def configure(self, options):
         """

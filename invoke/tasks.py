@@ -51,7 +51,7 @@ class Task(object):
         self.contextualized = contextualized
         # Default name, alternate names, and whether it should act as the
         # default for its parent collection
-        self.name = name
+        self._name = name
         self.aliases = aliases
         self.is_default = default
         # Arg/flag/parser hints
@@ -62,6 +62,17 @@ class Task(object):
         # Call chain bidness
         self.pre = pre or []
         self.times_called = 0
+
+    @property
+    def name(self):
+        return self._name or self.__name__
+
+    def __str__(self):
+        aliases = " ({0})".format(', '.join(self.aliases)) if self.aliases else ""
+        return "<Task {0!r}{1}>".format(self.name, aliases)
+
+    def __repr__(self):
+        return str(self)
 
     def __call__(self, *args, **kwargs):
         # Guard against calling contextualized tasks with no context.

@@ -106,6 +106,13 @@ class ctask_(Spec):
 
 
 class Task_(Spec):
+    def has_useful_repr(self):
+        i = repr(Task(_func))
+        assert '_func' in i, "'func' not found in {0!r}".format(i)
+        e = repr(Task(_func, name='funky'))
+        assert 'funky' in e, "'funky' not found in {0!r}".format(e)
+        assert '_func' not in e, "'_func' unexpectedly seen in {0!r}".format(e)
+
     class attributes:
         def has_default_flag(self):
             eq_(Task(_func).is_default, False)
@@ -113,8 +120,8 @@ class Task_(Spec):
         def has_contextualized_flag(self):
             eq_(Task(_func).contextualized, False)
 
-        def has_empty_name(self):
-            eq_(Task(_func).name, None)
+        def name_defaults_to_body_name(self):
+            eq_(Task(_func).name, '_func')
 
         def can_override_name(self):
             eq_(Task(_func, name='foo').name, 'foo')
