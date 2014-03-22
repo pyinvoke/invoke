@@ -1,10 +1,7 @@
 import os
-import pty
-import select
 import sys
 
-from .vendor import pexpect
-
+from .plat import is_win, pexpect
 from .monkey import Popen, PIPE
 from .exceptions import Failure
 
@@ -116,6 +113,8 @@ def run(command, warn=False, hide=None, pty=False, echo=False):
     if echo:
         print("\033[1;37m%s\033[0m" % command)
     if pty:
+        if is_win:
+            raise RuntimeError("Windows does not have pty support")
         hide = normalize_hide(hide)
         out = []
         def out_filter(text):
