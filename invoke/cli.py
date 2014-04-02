@@ -71,9 +71,9 @@ def parse(argv, collection=None):
     Parse ``argv`` list-of-strings into useful core & per-task structures.
 
     :returns:
-        Three-tuple of ``args`` (core, non-task `.Argument` objects), ``collection``
-        (compiled `.Collection` of tasks, using defaults or core arguments
-        affecting collection generation) and ``tasks`` (a list of
+        Three-tuple of ``args`` (core, non-task `.Argument` objects),
+        ``collection`` (compiled `.Collection` of tasks, using defaults or core
+        arguments affecting collection generation) and ``tasks`` (a list of
         `~.parser.context.Context` objects representing the requested task
         executions).
     """
