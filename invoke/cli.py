@@ -1,4 +1,5 @@
 from functools import partial
+import os
 import sys
 import textwrap
 
@@ -66,7 +67,7 @@ def parse_gracefully(parser, argv):
         sys.exit(str(e))
 
 
-def parse(argv, collection=None):
+def parse(argv, collection=None, version=None):
     """
     Parse ``argv`` list-of-strings into useful core & per-task structures.
 
@@ -143,7 +144,7 @@ def parse(argv, collection=None):
     # 'core' will result an .unparsed attribute with what was left over.
     debug("Parsing initial context (core args)")
     parser = Parser(initial=initial_context, ignore_unknown=True)
-    core = parse_gracefully(parser, argv)
+    core = parse_gracefully(parser, argv[1:])
     debug("After core-args pass, leftover argv: %r" % (core.unparsed,))
     args = core[0].args
 
@@ -153,7 +154,10 @@ def parse(argv, collection=None):
 
     # Print version & exit if necessary
     if args.version.value:
-        print("Invoke %s" % __version__)
+        if version:
+            print(version)
+        else:
+            print("Invoke %s" % __version__)
         sys.exit(0)
 
     # Core (no value given) --help output
@@ -161,7 +165,10 @@ def parse(argv, collection=None):
     # and available tasks listing; or core flags modified by plugins/task
     # modules) it will have to move farther down.
     if args.help.value == True:
-        print("Usage: inv[oke] [--core-opts] task1 [--task1-opts] ... taskN [--taskN-opts]")
+        program_name = os.path.basename(argv[0])
+        if program_name == 'invoke' or program_name == 'inv':
+            program_name = 'inv[oke]'
+        print("Usage: {} [--core-opts] task1 [--task1-opts] ... taskN [--taskN-opts]".format(program_name))
         print("")
         print("Core options:")
         print_help(initial_context.help_tuples())
@@ -191,12 +198,13 @@ def parse(argv, collection=None):
         print("Docstring:")
         if docstring:
             # Really wish textwrap worked better for this.
-            doclines = docstring.lstrip().splitlines()
+            doclines = textwrap.dedent(docstring.lstrip('\n').rstrip()+'\n').splitlines()
             for line in doclines:
-                print(indent + textwrap.dedent(line))
-            # Print trailing blank line if docstring didn't end with one
-            if textwrap.dedent(doclines[-1]):
-                print("")
+                if line.strip():
+                    print(indent + line)
+                else:
+                    print("")
+            print("")
         else:
             print(indent + "none")
             print("")
@@ -239,8 +247,8 @@ def derive_opts(args):
         run['echo'] = True
     return {'run': run}
 
-def dispatch(argv):
-    args, collection, tasks = parse(argv)
+def dispatch(argv, version=None):
+    args, collection, tasks = parse(argv, version=version)
     results = []
     executor = Executor(collection, Context(**derive_opts(args)))
     # Take action based on 'core' options and the 'tasks' found
@@ -272,6 +280,5 @@ def dispatch(argv):
 
 def main():
     # Parse command line
-    argv = sys.argv[1:]
-    debug("Base argv from sys: %r" % (argv,))
-    dispatch(argv)
+    debug("Base argv from sys: %r" % (sys.argv[1:],))
+    dispatch(sys.argv)
