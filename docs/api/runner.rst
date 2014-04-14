@@ -1,5 +1,5 @@
-===================================
-``Runner``: Executes shell commands
-===================================
+================================
+``run``: Executes shell commands
+================================
 
 .. automodule:: invoke.runner
