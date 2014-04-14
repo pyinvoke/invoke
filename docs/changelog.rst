@@ -2,6 +2,11 @@
 Changelog
 =========
 
+* :bug:`131` Make sure one's local tasks module is always first in
+  ``sys.path``, even if its parent directory was already somewhere else in
+  ``sys.path``. This ensures that local tasks modules never become hidden by
+  third-party ones. Thanks to ``@crccheck`` for the early report and to Dorian
+  Puła for assistance fixing.
 * :bug:`116` Ensure nested config overrides play nicely with default tasks and
   pre-tasks.
 * :bug:`127` Fill in tasks' exposed ``name`` attribute with body name if
