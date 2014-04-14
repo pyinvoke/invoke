@@ -80,41 +80,7 @@ def normalize_hide(val):
     return hide
 
 
-def run(command, warn=False, hide=None, pty=False, echo=False):
-    """
-    Execute ``command`` in a local subprocess, returning a `Result` object.
-
-    A `Failure` exception (which contains a reference to the `Result` that
-    would otherwise have been returned) is raised if the subprocess terminates
-    with a nonzero return code. This behavior may be disabled by setting
-    ``warn=True``.
-
-    To disable copying the subprocess' stdout and/or stderr to the controlling
-    terminal, specify ``hide='out'`` (or ``'stdout'``), ``hide='err'`` (or
-    ``'stderr'``) or ``hide='both'`` (or ``True``). The default value is
-    ``None``, meaning to print everything; ``False`` will also disable hiding.
-
-    .. note::
-        Stdout and stderr are always captured and stored in the ``Result``
-        object, regardless of ``hide``'s value.
-
-    By default, ``run`` connects directly to the invoked subprocess and reads
-    its stdout/stderr streams. Some programs will buffer differently (or even
-    behave differently) in this situation compared to using an actual terminal
-    or pty. To use a pty, specify ``pty=True``.
-
-    .. warning::
-        Due to their nature, ptys have a single output stream, so the ability
-        to tell stdout apart from stderr is **not possible** when ``pty=True``.
-        As such, all output will appear on your local stdout and be captured
-        into the ``stdout`` result attribute. Stderr and ``stderr`` will always
-        be empty when ``pty=True``.
-
-    `.run` does not echo the commands it runs by default; to make it do so, say
-    ``echo=True``.
-    """
-    if echo:
-        print("\033[1;37m%s\033[0m" % command)
+def _local_run(command, warn, hide, pty):
     if pty:
         hide = normalize_hide(hide)
         out = []
@@ -152,6 +118,45 @@ def run(command, warn=False, hide=None, pty=False, echo=False):
         stdout, stderr = process.communicate()
         result = Result(stdout=stdout, stderr=stderr,
             exited=process.returncode, pty=pty)
+    return result
+
+
+def run(command, warn=False, hide=None, pty=False, echo=False):
+    """
+    Execute ``command`` in a local subprocess, returning a `Result` object.
+
+    A `Failure` exception (which contains a reference to the `Result` that
+    would otherwise have been returned) is raised if the subprocess terminates
+    with a nonzero return code. This behavior may be disabled by setting
+    ``warn=True``.
+
+    To disable copying the subprocess' stdout and/or stderr to the controlling
+    terminal, specify ``hide='out'`` (or ``'stdout'``), ``hide='err'`` (or
+    ``'stderr'``) or ``hide='both'`` (or ``True``). The default value is
+    ``None``, meaning to print everything; ``False`` will also disable hiding.
+
+    .. note::
+        Stdout and stderr are always captured and stored in the ``Result``
+        object, regardless of ``hide``'s value.
+
+    By default, ``run`` connects directly to the invoked subprocess and reads
+    its stdout/stderr streams. Some programs will buffer differently (or even
+    behave differently) in this situation compared to using an actual terminal
+    or pty. To use a pty, specify ``pty=True``.
+
+    .. warning::
+        Due to their nature, ptys have a single output stream, so the ability
+        to tell stdout apart from stderr is **not possible** when ``pty=True``.
+        As such, all output will appear on your local stdout and be captured
+        into the ``stdout`` result attribute. Stderr and ``stderr`` will always
+        be empty when ``pty=True``.
+
+    `.run` does not echo the commands it runs by default; to make it do so, say
+    ``echo=True``.
+    """
+    if echo:
+        print("\033[1;37m%s\033[0m" % command)
+    result = _local_run(command, warn, hide, pty)
     if not (result or warn):
         raise Failure(result)
     return result
