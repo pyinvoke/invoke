@@ -62,7 +62,8 @@ class Loader_(Spec):
             "Inserts self.root at front of path"
             eq_(self.l.update_path([])[0], self.l.root)
 
-        def does_not_insert_if_exists(self):
-            "Doesn't insert self.root if it's already in the path"
+        def adds_to_front_if_exists(self):
+            "Inserts self.root at front of path even if it's already elsewhere"
             new_path = self.l.update_path([self.l.root])
-            eq_(len(new_path), 1) # not 2
+            eq_(len(new_path), 2) # lol ?
+            eq_(new_path[0], self.l.root)

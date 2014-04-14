@@ -31,7 +31,7 @@ setup(
     author_email='jeff@bitprophet.org',
     url='http://docs.pyinvoke.org',
 
-    packages=find_packages(),
+    packages=['invoke'],
     entry_points={
         'console_scripts': [
             'invoke = invoke.cli:main',
