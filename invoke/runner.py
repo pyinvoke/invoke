@@ -167,7 +167,7 @@ def run(command, warn=False, hide=None, pty=False, echo=False, runner=_local):
     The ``runner`` argument allows overriding the actual execution function,
     and must be a callable whose signature matches ``function(command, warn,
     hide, pty)`` - all of which match the above descriptions, re: types and
-    default values.
+    default values. It must return a `Result` object.
     """
     if echo:
         print("\033[1;37m%s\033[0m" % command)
