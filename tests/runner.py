@@ -73,7 +73,7 @@ class Run(Spec):
 
         def Failure_repr_includes_stderr(self):
             try:
-                run("./err ohnoz && exit 1")
+                run("./err ohnoz && exit 1", hide='both')
                 assert false # Ensure failure to Failure fails
             except Failure as f:
                 r = repr(f)
