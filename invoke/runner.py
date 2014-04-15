@@ -25,17 +25,17 @@ class Result(object):
       nonzero return code.
     * ``pty``: A boolean describing whether the subprocess was invoked with a
       pty or not; see `run`.
-    * ``pty_exception``: Typically ``None``, but may be an exception object if
+    * ``exception``: Typically ``None``, but may be an exception object if
       ``pty`` was ``True`` and ``run()`` had to swallow an apparently-spurious
       ``OSError``. Solely for sanity checking/debugging purposes.
     """
     # TODO: inherit from namedtuple instead? heh
-    def __init__(self, stdout, stderr, exited, pty, pty_exception=None):
+    def __init__(self, stdout, stderr, exited, pty, exception=None):
         self.exited = self.return_code = exited
         self.stdout = stdout
         self.stderr = stderr
         self.pty = pty
-        self.pty_exception = pty_exception
+        self.exception = exception
 
     def __nonzero__(self):
         # Holy mismatch between name and implementation, Batman!
@@ -78,7 +78,6 @@ def normalize_hide(val):
     else:
         hide = (val,)
     return hide
-
 
 
 class Local(object):
@@ -156,8 +155,11 @@ def run(command, warn=False, hide=None, pty=False, echo=False, runner=Local):
     The ``runner`` argument allows overriding the actual execution mechanism,
     and must be a class exposing two methods, ``run`` and ``run_pty``, whose
     signatures must match ``function(command, warn, hide)`` - all of which
-    match the above descriptions, re: types and default values. These methods
-    must return a `Result` object.
+    match the above descriptions, re: types and default values.
+    
+    These methods must return a tuple of ``(stdout, stderr, exited,
+    exception)``, where ``stdout`` and ``stderr`` are strings, ``exited`` is
+    an integer, and ``exception`` is an exception object or ``None``.
     """
     hide = normalize_hide(hide)
     exception = False
@@ -171,7 +173,7 @@ def run(command, warn=False, hide=None, pty=False, echo=False, runner=Local):
         stderr=stderr,
         exited=exited,
         pty=pty,
-        pty_exception=exception,
+        exception=exception,
     )
     if not (result or warn):
         raise Failure(result)
