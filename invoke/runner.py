@@ -80,7 +80,7 @@ def normalize_hide(val):
     return hide
 
 
-def _local_run(command, warn, hide, pty):
+def _local(command, warn, hide, pty):
     if pty:
         hide = normalize_hide(hide)
         out = []
@@ -121,16 +121,16 @@ def _local_run(command, warn, hide, pty):
     return result
 
 
-def run(command, warn=False, hide=None, pty=False, echo=False):
+def run(command, warn=False, hide=None, pty=False, echo=False, runner=_local):
     """
-    Execute ``command`` in a local subprocess, returning a `Result` object.
+    Execute ``command`` (via ``runner``) returning a `Result` object.
 
-    A `Failure` exception (which contains a reference to the `Result` that
-    would otherwise have been returned) is raised if the subprocess terminates
-    with a nonzero return code. This behavior may be disabled by setting
+    A `Failure` exception (containing a reference to the `Result` that would
+    otherwise have been returned) is raised if the command terminates with a
+    nonzero return code. This behavior may be disabled by setting
     ``warn=True``.
 
-    To disable copying the subprocess' stdout and/or stderr to the controlling
+    To disable copying the command's stdout and/or stderr to the controlling
     terminal, specify ``hide='out'`` (or ``'stdout'``), ``hide='err'`` (or
     ``'stderr'``) or ``hide='both'`` (or ``True``). The default value is
     ``None``, meaning to print everything; ``False`` will also disable hiding.
@@ -139,7 +139,7 @@ def run(command, warn=False, hide=None, pty=False, echo=False):
         Stdout and stderr are always captured and stored in the ``Result``
         object, regardless of ``hide``'s value.
 
-    By default, ``run`` connects directly to the invoked subprocess and reads
+    By default, ``run`` connects directly to the invoked process and reads
     its stdout/stderr streams. Some programs will buffer differently (or even
     behave differently) in this situation compared to using an actual terminal
     or pty. To use a pty, specify ``pty=True``.
@@ -153,10 +153,15 @@ def run(command, warn=False, hide=None, pty=False, echo=False):
 
     `.run` does not echo the commands it runs by default; to make it do so, say
     ``echo=True``.
+
+    The ``runner`` argument allows overriding the actual execution function,
+    and must be a callable whose signature matches ``function(command, warn,
+    hide, pty)`` - all of which match the above descriptions, re: types and
+    default values.
     """
     if echo:
         print("\033[1;37m%s\033[0m" % command)
-    result = _local_run(command, warn, hide, pty)
+    result = runner(command, warn, hide, pty)
     if not (result or warn):
         raise Failure(result)
     return result
