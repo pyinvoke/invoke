@@ -106,18 +106,28 @@ def _local(command, warn, hide, pty):
             # Capture the exception in case it's NOT the OSError we think it
             # is and folks need to debug
             exception = e
-        result = Result(stdout="".join(out), stderr="", exited=p.exitstatus,
-            pty=pty, pty_exception=exception)
+        result = Result(
+            stdout="".join(out),
+            stderr="",
+            exited=p.exitstatus,
+            pty=pty,
+            pty_exception=exception
+        )
     else:
-        process = Popen(command,
+        process = Popen(
+            command,
             shell=True,
             stdout=PIPE,
             stderr=PIPE,
             hide=normalize_hide(hide)
         )
         stdout, stderr = process.communicate()
-        result = Result(stdout=stdout, stderr=stderr,
-            exited=process.returncode, pty=pty)
+        result = Result(
+            stdout=stdout,
+            stderr=stderr,
+            exited=process.returncode,
+            pty=pty
+        )
     return result
 
 
