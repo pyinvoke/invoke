@@ -80,58 +80,47 @@ def normalize_hide(val):
     return hide
 
 
-def _local(command, warn, hide, pty):
-    if pty:
-        hide = normalize_hide(hide)
-        out = []
-        def out_filter(text):
-            out.append(text.decode("utf-8", 'replace'))
-            if 'out' not in hide:
-                return text
-            else:
-                return b""
-        wrapped_cmd = "/bin/bash -c \"%s\"" % command
-        p = pexpect.spawn(wrapped_cmd)
-        # Ensure pexpect doesn't barf with OSError if we fall off the end of
-        # the child's input on some platforms (e.g. Linux).
-        exception = None
-        try:
-            p.interact(output_filter=out_filter)
-        except OSError as e:
-            # Only capture the OSError we expect
-            if "Input/output error" not in str(e):
-                raise
-            # Ensure it ties off the child, sets exitstatus, etc
-            p.close()
-            # Capture the exception in case it's NOT the OSError we think it
-            # is and folks need to debug
-            exception = e
-        result = Result(
-            stdout="".join(out),
-            stderr="",
-            exited=p.exitstatus,
-            pty=pty,
-            pty_exception=exception
-        )
-    else:
-        process = Popen(
-            command,
-            shell=True,
-            stdout=PIPE,
-            stderr=PIPE,
-            hide=normalize_hide(hide)
-        )
-        stdout, stderr = process.communicate()
-        result = Result(
-            stdout=stdout,
-            stderr=stderr,
-            exited=process.returncode,
-            pty=pty
-        )
-    return result
+def _local_pty(command, warn, hide):
+    out = []
+    def out_filter(text):
+        out.append(text.decode("utf-8", 'replace'))
+        if 'out' not in hide:
+            return text
+        else:
+            return b""
+    wrapped_cmd = "/bin/bash -c \"%s\"" % command
+    p = pexpect.spawn(wrapped_cmd)
+    # Ensure pexpect doesn't barf with OSError if we fall off the end of
+    # the child's input on some platforms (e.g. Linux).
+    exception = None
+    try:
+        p.interact(output_filter=out_filter)
+    except OSError as e:
+        # Only capture the OSError we expect
+        if "Input/output error" not in str(e):
+            raise
+        # Ensure it ties off the child, sets exitstatus, etc
+        p.close()
+        # Capture the exception in case it's NOT the OSError we think it
+        # is and folks need to debug
+        exception = e
+    return "".join(out), "", p.exitstatus, exception
 
 
-def run(command, warn=False, hide=None, pty=False, echo=False, runner=_local):
+def _local(command, warn, hide):
+    process = Popen(
+        command,
+        shell=True,
+        stdout=PIPE,
+        stderr=PIPE,
+        hide=hide,
+    )
+    stdout, stderr = process.communicate()
+    return stdout, stderr, process.returncode, None
+
+
+def run(command, warn=False, hide=None, pty=False, echo=False, runner=_local,
+    pty_runner=_local_pty):
     """
     Execute ``command`` (via ``runner``) returning a `Result` object.
 
@@ -166,12 +155,25 @@ def run(command, warn=False, hide=None, pty=False, echo=False, runner=_local):
 
     The ``runner`` argument allows overriding the actual execution function,
     and must be a callable whose signature matches ``function(command, warn,
-    hide, pty)`` - all of which match the above descriptions, re: types and
-    default values. It must return a `Result` object.
+    hide)`` - all of which match the above descriptions, re: types and default
+    values. It must return a `Result` object.
+
+    ``pty_runner`` is identical to ``runner`` except that its argument value
+    is used for execution when use of a PTY is indicated.
     """
+    hide = normalize_hide(hide)
+    exception = False
     if echo:
         print("\033[1;37m%s\033[0m" % command)
-    result = runner(command, warn, hide, pty)
+    func = pty_runner if pty else runner
+    stdout, stderr, exited, exception = func(command, warn, hide)
+    result = Result(
+        stdout=stdout,
+        stderr=stderr,
+        exited=exited,
+        pty=pty,
+        pty_exception=exception,
+    )
     if not (result or warn):
         raise Failure(result)
     return result
