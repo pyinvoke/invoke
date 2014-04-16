@@ -219,7 +219,14 @@ def parse(argv, collection=None):
             out = primary
             if aliases:
                 out += " (%s)" % ', '.join(aliases)
-            print("  %s" % out)
+
+            doc = collection[primary].__doc__
+            if doc:
+                doc = doc.strip()
+            else:
+                doc = ""
+
+            print("  {0}\t- {1}".format(out, doc))
         print("")
         sys.exit(0)
 
