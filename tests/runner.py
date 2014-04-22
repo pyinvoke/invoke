@@ -68,11 +68,11 @@ class Run(Spec):
             eq_(run("false", warn=True).ok, False)
 
         def failed_attr_indicates_failure(self):
-            eq_(run("true").failed, False)
-            eq_(run("false", warn=True).failed, True)
+            eq_(run("", runner=_runner()).failed, False)
+            eq_(run("", warn=True, runner=_runner(exited=1)).failed, True)
 
         def has_exception_attr(self):
-            eq_(run("meh", runner=_runner()).exception, None)
+            eq_(run("", runner=_runner()).exception, None)
 
 
     class failure_handling:
