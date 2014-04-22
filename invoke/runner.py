@@ -88,9 +88,11 @@ class Runner(object):
 
     * ``run``: Command execution hooking directly into the subprocess'
       stdout/stderr pipes and returning their eventual values as distinct
-      strings.
+      strings. Specifically, return a 4-tuple of ``(stdout, stderr, exitcode,
+      exception)``.
     * ``run_pty``: Execution utilizing a pseudo-terminal, which is then
-      expected to only return a useful stdout (with stderr usually empty.)
+      expected to only return a useful stdout (with stderr usually empty.) Has
+      same signature and return value as ``run``.
     """
     def run(self, command, warn, hide):
         raise NotImplementedError
