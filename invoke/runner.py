@@ -80,7 +80,29 @@ def normalize_hide(val):
     return hide
 
 
-class Local(object):
+class Runner(object):
+    """
+    Example of the core command-runner API.
+
+    Subclass and implement the following:
+
+    * ``run``: Command execution hooking directly into the subprocess'
+      stdout/stderr pipes and returning their eventual values as distinct
+      strings.
+    * ``run_pty``: Execution utilizing a pseudo-terminal, which is then
+      expected to only return a useful stdout (with stderr usually empty.)
+    """
+    def run(self, command, warn, hide):
+        raise NotImplementedError
+
+    def run_pty(self, command, warn, hide):
+        raise NotImplementedError
+
+
+class Local(Runner):
+    """
+    Execute a command on the local system in a subprocess.
+    """
     def run(self, command, warn, hide):
         process = Popen(
             command,
