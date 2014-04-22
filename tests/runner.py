@@ -55,17 +55,9 @@ class Run(Spec):
         def stderr_attribute_contains_stderr(self):
             eq_(run(self.err, hide='both').stderr, 'bar\n')
 
-        def stdout_contains_both_streams_under_pty(self):
-            r = run(self.both, hide='both', pty=True)
-            eq_(r.stdout, 'foo\r\nbar\r\n')
-
-        def stderr_is_empty_under_pty(self):
-            r = run(self.both, hide='both', pty=True)
-            eq_(r.stderr, '')
-
         def ok_attr_indicates_success(self):
-            eq_(run("true").ok, True)
-            eq_(run("false", warn=True).ok, False)
+            eq_(run("", runner=_runner()).ok, True)
+            eq_(run("", warn=True, runner=_runner(exited=1)).ok, False)
 
         def failed_attr_indicates_failure(self):
             eq_(run("", runner=_runner()).failed, False)
@@ -225,3 +217,17 @@ class Run(Spec):
         def nonprinting_bytes_pty(self):
             # PTY use adds another utf-8 decode spot which can also fail.
             run("echo '\xff'", pty=True, hide='both')
+
+
+class Local_(Spec):
+    def setup(self):
+        os.chdir(support)
+        self.both = "echo foo && ./err bar"
+
+    def stdout_contains_both_streams_under_pty(self):
+        r = run(self.both, hide='both', pty=True)
+        eq_(r.stdout, 'foo\r\nbar\r\n')
+
+    def stderr_is_empty_under_pty(self):
+        r = run(self.both, hide='both', pty=True)
+        eq_(r.stderr, '')
