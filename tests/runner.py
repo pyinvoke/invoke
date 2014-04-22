@@ -3,10 +3,15 @@ import os
 
 from spec import eq_, skip, Spec, raises, ok_, trap
 
-from invoke.runner import run
+from invoke.runner import Runner, run
 from invoke.exceptions import Failure
 
 from _utils import support
+
+
+class _MockRunner(Runner):
+    def run(self, command, warn, hide):
+        return "", "", 0, None
 
 
 class Run(Spec):
@@ -55,6 +60,10 @@ class Run(Spec):
         def failed_attr_indicates_failure(self):
             eq_(run("true").failed, False)
             eq_(run("false", warn=True).failed, True)
+
+        def has_exception_attr(self):
+            eq_(run("meh", runner=_MockRunner).exception, None)
+
 
     class failure_handling:
         @raises(Failure)
