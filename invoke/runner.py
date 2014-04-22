@@ -28,6 +28,9 @@ class Result(object):
     * ``exception``: Typically ``None``, but may be an exception object if
       ``pty`` was ``True`` and ``run()`` had to swallow an apparently-spurious
       ``OSError``. Solely for sanity checking/debugging purposes.
+
+    `Result` objects' truth evaluation is equivalent to their ``ok``
+    attribute's value.
     """
     # TODO: inherit from namedtuple instead? heh
     def __init__(self, stdout, stderr, exited, pty, exception=None):
