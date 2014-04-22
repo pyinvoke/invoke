@@ -9,9 +9,19 @@ from invoke.exceptions import Failure
 from _utils import support
 
 
-class _MockRunner(Runner):
-    def run(self, command, warn, hide):
-        return "", "", 0, None
+def _runner(**kwargs):
+    """
+    Return a Runner subclass whose run() return value reflects ``kwargs``.
+    """
+    kwargs.setdefault('exited', 0)
+    value = map(
+        lambda x: kwargs.pop(x, None),
+        ('stdout', 'stderr', 'exited', 'exception'),
+    )
+    class MockRunner(Runner):
+        def run(self, command, warn, hide):
+            return value
+    return MockRunner
 
 
 class Run(Spec):
@@ -62,7 +72,7 @@ class Run(Spec):
             eq_(run("false", warn=True).failed, True)
 
         def has_exception_attr(self):
-            eq_(run("meh", runner=_MockRunner).exception, None)
+            eq_(run("meh", runner=_runner()).exception, None)
 
 
     class failure_handling:
