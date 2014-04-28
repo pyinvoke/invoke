@@ -252,7 +252,7 @@ class Collection(object):
         E.g. in a deeply nested tree, this method returns the `.Task`, and a
         configuration dict created by merging that of this `.Collection` and
         any nested `.Collections`, up through the one actually holding the
-        `.Task.
+        `.Task`.
 
         See `__getitem__` for semantics of the ``name`` argument.
 
