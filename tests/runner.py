@@ -9,19 +9,23 @@ from invoke.exceptions import Failure
 from _utils import support
 
 
-def _runner(**kwargs):
+def _run(returns=None, **kwargs):
     """
-    Return a Runner subclass whose run() return value reflects ``kwargs``.
+    Create a Runner w/ retval reflecting ``returns`` & call ``run(**kwargs)``.
     """
-    kwargs.setdefault('exited', 0)
+    # Set up return value tuple for Runner.run
+    returns = returns or {}
+    returns.setdefault('exited', 0)
     value = map(
-        lambda x: kwargs.pop(x, None),
+        lambda x: returns.get(x, None),
         ('stdout', 'stderr', 'exited', 'exception'),
     )
     class MockRunner(Runner):
         def run(self, command, warn, hide):
             return value
-    return MockRunner
+    # Ensure top level run() uses that runner, provide dummy command.
+    kwargs['runner'] = MockRunner
+    return run("whatever", **kwargs)
 
 
 class Run(Spec):
@@ -56,15 +60,15 @@ class Run(Spec):
             eq_(run(self.err, hide='both').stderr, 'bar\n')
 
         def ok_attr_indicates_success(self):
-            eq_(run("", runner=_runner()).ok, True)
-            eq_(run("", warn=True, runner=_runner(exited=1)).ok, False)
+            eq_(_run().ok, True)
+            eq_(_run(returns={'exited': 1}, warn=True).ok, False)
 
         def failed_attr_indicates_failure(self):
-            eq_(run("", runner=_runner()).failed, False)
-            eq_(run("", warn=True, runner=_runner(exited=1)).failed, True)
+            eq_(_run().failed, False)
+            eq_(_run(returns={'exited': 1}, warn=True).failed, True)
 
         def has_exception_attr(self):
-            eq_(run("", runner=_runner()).exception, None)
+            eq_(_run().exception, None)
 
 
     class failure_handling:
