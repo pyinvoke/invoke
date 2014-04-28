@@ -2,6 +2,9 @@
 Changelog
 =========
 
+* :support:`-` Refactor the `.Runner` module to differentiate what it means to
+  run a command in the abstract, from execution specifics. Top level API is
+  unaffected.
 * :bug:`131` Make sure one's local tasks module is always first in
   ``sys.path``, even if its parent directory was already somewhere else in
   ``sys.path``. This ensures that local tasks modules never become hidden by
