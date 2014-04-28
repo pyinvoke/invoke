@@ -9,63 +9,6 @@ from .monkey import Popen, PIPE
 from .exceptions import Failure
 
 
-class Result(object):
-    """
-    A container for information about the result of a command execution.
-
-    `Result` instances have the following attributes:
-
-    * ``stdout``: The subprocess' standard output, as a multiline string.
-    * ``stderr``: Same as ``stdout`` but containing standard error (unless
-      the process was invoked via a pty; see `run`.)
-    * ``exited``: An integer representing the subprocess' exit/return code.
-    * ``return_code``: An alias to ``exited``.
-    * ``ok``: A boolean equivalent to ``exited == 0``.
-    * ``failed``: The inverse of ``ok``: ``True`` if the program exited with a
-      nonzero return code.
-    * ``pty``: A boolean describing whether the subprocess was invoked with a
-      pty or not; see `run`.
-    * ``exception``: Typically ``None``, but may be an exception object if
-      ``pty`` was ``True`` and ``run()`` had to swallow an apparently-spurious
-      ``OSError``. Solely for sanity checking/debugging purposes.
-
-    `Result` objects' truth evaluation is equivalent to their ``ok``
-    attribute's value.
-    """
-    # TODO: inherit from namedtuple instead? heh
-    def __init__(self, stdout, stderr, exited, pty, exception=None):
-        self.exited = self.return_code = exited
-        self.stdout = stdout
-        self.stderr = stderr
-        self.pty = pty
-        self.exception = exception
-
-    def __nonzero__(self):
-        # Holy mismatch between name and implementation, Batman!
-        return self.exited == 0
-
-    # Python 3 ahoy
-    def __bool__(self):
-        return self.__nonzero__()
-
-    def __str__(self):
-        ret = ["Command exited with status %s." % self.exited]
-        for x in ('stdout', 'stderr'):
-            val = getattr(self, x)
-            ret.append("""=== %s ===
-%s
-""" % (x, val.rstrip()) if val else "(no %s)" % x)
-        return "\n".join(ret)
-
-    @property
-    def ok(self):
-        return self.exited == 0
-
-    @property
-    def failed(self):
-        return not self.ok
-
-
 def normalize_hide(val):
     hide_vals = (None, False, 'out', 'stdout', 'err', 'stderr', 'both', True)
     if val not in hide_vals:
@@ -85,17 +28,20 @@ def normalize_hide(val):
 
 class Runner(object):
     """
-    Example of the core command-runner API.
+    Abstract core command-running API.
 
-    Subclass and implement the following:
+    Actual command runners should subclass & implement the following:
 
     * ``run``: Command execution hooking directly into the subprocess'
       stdout/stderr pipes and returning their eventual values as distinct
-      strings. Specifically, return a 4-tuple of ``(stdout, stderr, exitcode,
-      exception)``.
+      strings. Specifically, have a signature of ``def run(self, command, warn,
+      hide):`` (see `.runner.run` for semantics of these) and return a 4-tuple
+      of ``(stdout, stderr, exitcode, exception)``.
     * ``run_pty``: Execution utilizing a pseudo-terminal, which is then
       expected to only return a useful stdout (with stderr usually empty.) Has
       same signature and return value as ``run``.
+
+    For an implementation example, see the source code for `.Local`.
     """
     def run(self, command, warn, hide):
         raise NotImplementedError
@@ -205,3 +151,60 @@ def run(command, warn=False, hide=None, pty=False, echo=False, runner=Local):
     if not (result or warn):
         raise Failure(result)
     return result
+
+
+class Result(object):
+    """
+    A container for information about the result of a command execution.
+
+    `Result` instances have the following attributes:
+
+    * ``stdout``: The subprocess' standard output, as a multiline string.
+    * ``stderr``: Same as ``stdout`` but containing standard error (unless
+      the process was invoked via a pty; see `run`.)
+    * ``exited``: An integer representing the subprocess' exit/return code.
+    * ``return_code``: An alias to ``exited``.
+    * ``ok``: A boolean equivalent to ``exited == 0``.
+    * ``failed``: The inverse of ``ok``: ``True`` if the program exited with a
+      nonzero return code.
+    * ``pty``: A boolean describing whether the subprocess was invoked with a
+      pty or not; see `run`.
+    * ``exception``: Typically ``None``, but may be an exception object if
+      ``pty`` was ``True`` and ``run()`` had to swallow an apparently-spurious
+      ``OSError``. Solely for sanity checking/debugging purposes.
+
+    `Result` objects' truth evaluation is equivalent to their ``ok``
+    attribute's value.
+    """
+    # TODO: inherit from namedtuple instead? heh
+    def __init__(self, stdout, stderr, exited, pty, exception=None):
+        self.exited = self.return_code = exited
+        self.stdout = stdout
+        self.stderr = stderr
+        self.pty = pty
+        self.exception = exception
+
+    def __nonzero__(self):
+        # Holy mismatch between name and implementation, Batman!
+        return self.exited == 0
+
+    # Python 3 ahoy
+    def __bool__(self):
+        return self.__nonzero__()
+
+    def __str__(self):
+        ret = ["Command exited with status %s." % self.exited]
+        for x in ('stdout', 'stderr'):
+            val = getattr(self, x)
+            ret.append("""=== %s ===
+%s
+""" % (x, val.rstrip()) if val else "(no %s)" % x)
+        return "\n".join(ret)
+
+    @property
+    def ok(self):
+        return self.exited == 0
+
+    @property
+    def failed(self):
+        return not self.ok
