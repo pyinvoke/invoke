@@ -36,7 +36,9 @@ class Loader_(Spec):
             skip()
 
         def searches_towards_root_of_filesystem(self):
-            skip()
+            sub_directory_root = os.path.join(support, 'package')
+            result = Loader(root=sub_directory_root).load_collection('foo')
+            eq_(type(result), Collection)
 
         def defaults_to_tasks_collection(self):
             "defaults to 'tasks' collection"
