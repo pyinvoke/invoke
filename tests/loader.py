@@ -19,22 +19,25 @@ class Loader_(Spec):
         eq_(Loader().root, os.getcwd())
 
     class load_collection:
+        def setup(self):
+            self.l = Loader(root=support)
+
         def returns_collection_object_if_name_found(self):
-            result = Loader(root=support).load_collection('foo')
+            result = self.l.load_collection('foo')
             eq_(type(result), Collection)
 
         @raises(CollectionNotFound)
         def raises_CollectionNotFound_if_not_found(self):
-            Loader(root=support).load_collection('nope')
+            self.l.load_collection('nope')
 
         @raises(ImportError)
         def raises_ImportError_if_found_collection_cannot_be_imported(self):
             # Instead of masking with a CollectionNotFound
-            Loader(root=support).load_collection('oops')
+            self.l.load_collection('oops')
 
         def searches_towards_root_of_filesystem(self):
             # Loaded while root is in same dir as .py
-            directly = Loader(root=support).load_collection('foo')
+            directly = self.l.load_collection('foo')
             # Loaded while root is multiple dirs deeper than the .py
             deep = os.path.join(support, 'ignoreme', 'ignoremetoo')
             indirectly = Loader(root=deep).load_collection('foo')
