@@ -33,7 +33,12 @@ class Loader_(Spec):
             Loader(root=support).load_collection('oops')
 
         def searches_towards_root_of_filesystem(self):
-            skip()
+            # Loaded while root is in same dir as .py
+            directly = Loader(root=support).load_collection('foo')
+            # Loaded while root is multiple dirs deeper than the .py
+            deep = os.path.join(support, 'ignoreme', 'ignoremetoo')
+            indirectly = Loader(root=deep).load_collection('foo')
+            eq_(directly, indirectly)
 
         def defaults_to_tasks_collection(self):
             "defaults to 'tasks' collection"
