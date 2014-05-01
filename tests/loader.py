@@ -53,22 +53,26 @@ class Loader_(Spec):
         def raises_CollectionNotFound_for_missing_collections(self):
             result = Loader(start=support).find('nope')
 
-    class update_path:
-        def setup(self):
-            self.l = Loader(start=support)
 
-        def does_not_modify_argument(self):
-            path = []
-            new_path = self.l.update_path(path)
-            eq_(path, [])
-            assert len(new_path) > 0
-
-        def inserts_self_start_parent_at_front_of_path(self):
-            "Inserts self.start at front of path"
-            eq_(self.l.update_path([])[0], self.l.start)
-
-        def adds_to_front_if_exists(self):
-            "Inserts self.start at front of path even if it's already elsewhere"
-            new_path = self.l.update_path([self.l.start])
-            eq_(len(new_path), 2) # lol ?
-            eq_(new_path[0], self.l.start)
+#class SysPathLoader_(Spec):
+#    # TODO: factor out anything that applies, from FilesystemLoader tests
+#
+#    class update_path:
+#        def setup(self):
+#            self.l = Loader(start=support)
+#
+#        def does_not_modify_argument(self):
+#            path = []
+#            new_path = self.l.update_path(path)
+#            eq_(path, [])
+#            assert len(new_path) > 0
+#
+#        def inserts_self_start_parent_at_front_of_path(self):
+#            "Inserts self.start at front of path"
+#            eq_(self.l.update_path([])[0], self.l.start)
+#
+#        def adds_to_front_if_exists(self):
+#            "Inserts self.start at front of path even if it's already elsewhere"
+#            new_path = self.l.update_path([self.l.start])
+#            eq_(len(new_path), 2) # lol ?
+#            eq_(new_path[0], self.l.start)
