@@ -98,7 +98,8 @@ class Collection(object):
         return method(obj, name=name)
 
     def __str__(self):
-        return "<Collection: %s>" % self.name
+        return "<Collection {0!r}: {1}>".format(
+            self.name, ", ".join(self.tasks.keys()))
 
     def __repr__(self):
         return str(self)
