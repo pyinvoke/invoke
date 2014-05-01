@@ -48,12 +48,16 @@ class FilesystemLoader(Loader):
     Searches recursively towards filesystem root from a given start point.
     """
     def __init__(self, start=None):
-        self.start = start
+        self._start = start
+
+    @property
+    def start(self):
+        # Lazily determine default CWD
+        return self._start or os.getcwd()
 
     def find(self, name):
-        # Lazily obtain current CWD
-        start = self.start or os.getcwd()
         # Accumulate all parent directories
+        start = self.start
         parents = [os.path.abspath(start)]
         parents.append(os.path.dirname(parents[-1]))
         while parents[-1] != parents[-2]:

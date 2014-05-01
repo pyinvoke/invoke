@@ -15,7 +15,7 @@ class Loader_(Spec):
         start = '/tmp/'
         eq_(Loader(start=start).start, start)
 
-    def has_a_default_discovery_start(self):
+    def has_a_default_discovery_start_point(self):
         eq_(Loader().start, os.getcwd())
 
     class load_collection:
