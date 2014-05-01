@@ -5,7 +5,7 @@ import textwrap
 from .vendor import six
 
 from .context import Context
-from .loader import Loader
+from .loader import FilesystemLoader
 from .parser import Parser, Context as ParserContext, Argument
 from .executor import Executor
 from .exceptions import Failure, CollectionNotFound, ParseError
@@ -171,8 +171,9 @@ def parse(argv, collection=None):
     # (Skip loading if somebody gave us an explicit task collection.)
     if not collection:
         debug("No collection given, loading from %r" % args.root.value)
-        loader = Loader(root=args.root.value)
-        collection = loader.load_collection(args.collection.value)
+        loader = FilesystemLoader(start=args.root.value)
+        start = args.collection.value
+        collection = loader.load(start) if start else loader.load()
     parser = Parser(contexts=collection.to_contexts())
     debug("Parsing actual tasks against collection %r" % collection)
     tasks = parse_gracefully(parser, core.unparsed)

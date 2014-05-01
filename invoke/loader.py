@@ -8,57 +8,63 @@ from .tasks import Task
 
 
 class Loader(object):
-    def __init__(self, root=None):
+    """
+    Abstract class defining how to load a session's base `.Collection`.
+    """
+    def find(self, name):
         """
-        Creates a loader object with search root directory of ``root``.
+        Implementation-specific finder method seeking collection ``name``.
 
-        If not given, ``root`` defaults to ``os.getcwd``.
-        """
-        self.root = root or os.getcwd()
+        Must return a 4-tuple valid for use by `imp.load_module`, which is
+        typically a name string followed by the contents of the 3-tuple
+        returned by `imp.find_module` (``file``, ``pathname``,
+        ``description``.)
 
-    def update_path(self, path):
+        For a sample implementation, see `FilesystemLoader`.
         """
-        Ensures ``self.root`` is added to a copy of the given ``path`` iterable.
+        raise NotImplementedError
 
-        It is up to the caller to assign the return value to e.g. ``sys.path``.
+    def load(self, name='tasks'):
         """
-        parent = os.path.abspath(self.root)
-        our_path = path[:]
-        # If we want to auto-strip .py:
-        # os.path.splitext(os.path.basename(name))[0]
-        our_path.insert(0, parent)
-        return our_path
+        Load and return collection identified by ``name``.
 
-    def find_collection(self, name):
+        This method requires a working implementation of `.find` in order to
+        function.
         """
-        Seek towards FS root from self.root for Python module ``name``.
-
-        Returns a tuple suitable for use in ``imp.load_module``.
-        """
-        # Add root to system path
-        # TODO: decide correct behavior re: leaving sys.path modified.
-        # imp.find_module can take an arbitrary path, after all. But users may
-        # find it useful to have local-to-tasks-module Python code on the
-        # import path.
-        sys.path, old_path = self.update_path(sys.path), sys.path
+        # Import. Errors during import will raise normally. Close the file
+        # object that was opened within self.find().
+        fd, path, desc = self.find(name)
         try:
-            # TODO: actually seek towards FS root.
-            return tuple([name] + list(imp.find_module(name, sys.path)))
-        # ImportErrors raised by imp.find_module indicate the requested module
-        # does not exist, not that it exists & couldn't be imported (which is
-        # typically what ImportError means)
+            module = imp.load_module(name, *self.find(name))
+            return Collection.from_module(module)
+        finally:
+            fd.close()
+
+
+class FilesystemLoader(Loader):
+    """
+    Loads Python files from the filesystem (e.g. ``tasks.py``.)
+
+    Searches recursively towards filesystem root from a given start point.
+    """
+    def __init__(self, start=None):
+        self.start = start
+
+    def find(self, name):
+        # Lazily obtain current CWD
+        start = self.start or os.getcwd()
+        # Accumulate all parent directories
+        parents = [os.path.abspath(start)]
+        parents.append(os.path.dirname(parents[-1]))
+        while parents[-1] != parents[-2]:
+            parents.append(os.path.dirname(parents[-1]))
+        # Make sure we haven't got duplicates on the end
+        if parents[-1] == parents[-2]:
+            parents = parents[:-1]
+        # Use find_module with our list of parents. ImportError from
+        # find_module means "couldn't find" not "found and couldn't import" so
+        # we turn it into a more obvious exception class.
+        try:
+            return imp.find_module(name, parents)
         except ImportError:
-            raise CollectionNotFound(name=name, root=self.root)
-
-    def load_collection(self, name=None):
-        """
-        Load and return collection named ``name``.
-
-        If not given, looks for a ``"tasks"`` collection by default.
-        """
-        if name is None:
-            # TODO: make this configurable
-            name = 'tasks'
-        # Import. Errors during import will raise normally.
-        module = imp.load_module(*self.find_collection(name))
-        return Collection.from_module(module)
+            raise CollectionNotFound(name=name, start=start)
