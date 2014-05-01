@@ -32,9 +32,6 @@ class Loader_(Spec):
             # Instead of masking with a CollectionNotFound
             Loader(root=support).load_collection('oops')
 
-        def honors_discovery_root_option(self):
-            skip()
-
         def searches_towards_root_of_filesystem(self):
             skip()
 
