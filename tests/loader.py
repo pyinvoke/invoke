@@ -3,24 +3,24 @@ import sys
 
 from spec import Spec, skip, eq_, raises
 
-from invoke.loader import FilesystemLoader as Loader # TODO: expand
+from invoke.loader import FilesystemLoader as FSLoader
 from invoke.collection import Collection
 from invoke.exceptions import CollectionNotFound
 
 from _utils import support
 
 
-class Loader_(Spec):
+class FilesystemLoader_(Spec):
     def exposes_discovery_start_point(self):
         start = '/tmp/'
-        eq_(Loader(start=start).start, start)
+        eq_(FSLoader(start=start).start, start)
 
     def has_a_default_discovery_start_point(self):
-        eq_(Loader().start, os.getcwd())
+        eq_(FSLoader().start, os.getcwd())
 
     class load:
         def setup(self):
-            self.l = Loader(start=support)
+            self.l = FSLoader(start=support)
 
         def returns_collection_object_if_name_found(self):
             result = self.l.load('foo')
@@ -40,18 +40,18 @@ class Loader_(Spec):
             directly = self.l.load('foo')
             # Loaded while root is multiple dirs deeper than the .py
             deep = os.path.join(support, 'ignoreme', 'ignoremetoo')
-            indirectly = Loader(start=deep).load('foo')
+            indirectly = FSLoader(start=deep).load('foo')
             eq_(directly, indirectly)
 
         def defaults_to_tasks_collection(self):
             "defaults to 'tasks' collection"
-            result = Loader(start=support + '/implicit/').load()
+            result = FSLoader(start=support + '/implicit/').load()
             eq_(type(result), Collection)
 
     class find:
         @raises(CollectionNotFound)
         def raises_CollectionNotFound_for_missing_collections(self):
-            result = Loader(start=support).find('nope')
+            result = FSLoader(start=support).find('nope')
 
 
 #class SysPathLoader_(Spec):
