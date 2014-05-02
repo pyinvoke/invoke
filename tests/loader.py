@@ -48,11 +48,6 @@ class FilesystemLoader_(Spec):
             result = FSLoader(start=support + '/implicit/').load()
             eq_(type(result), Collection)
 
-    class find:
-        @raises(CollectionNotFound)
-        def raises_CollectionNotFound_for_missing_collections(self):
-            result = FSLoader(start=support).find('nope')
-
 
 #class SysPathLoader_(Spec):
 #    # TODO: factor out anything that applies, from FilesystemLoader tests
