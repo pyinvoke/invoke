@@ -1,7 +1,7 @@
 from spec import Spec, skip, eq_, raises
 
 from invoke.tasks import task, ctask, Task
-from invoke.loader import Loader
+from invoke.loader import FilesystemLoader as Loader
 
 from _utils import support
 
@@ -19,8 +19,8 @@ class task_(Spec):
     "@task"
 
     def setup(self):
-        self.loader = Loader(root=support)
-        self.vanilla = self.loader.load_collection('decorator')
+        self.loader = Loader(start=support)
+        self.vanilla = self.loader.load('decorator')
 
     def allows_access_to_wrapped_object(self):
         def lolcats():
@@ -38,7 +38,7 @@ class task_(Spec):
 
     @raises(ValueError)
     def raises_ValueError_on_multiple_defaults(self):
-        self.loader.load_collection('decorator_multi_default')
+        self.loader.load('decorator_multi_default')
 
     def sets_arg_help(self):
         eq_(self.vanilla['punch'].help['why'], 'Motive')
