@@ -74,6 +74,21 @@ class Task(object):
     def __repr__(self):
         return str(self)
 
+    def __eq__(self, other):
+        if self.name != other.name:
+            return False
+        # Functions do not define __eq__ but func_code objects apparently do.
+        # (If we're wrapping some other callable, they will be responsible for
+        # defining equality on their end.)
+        if self.body == other.body:
+            return True
+        else:
+            return (
+                hasattr(self.body, 'func_code')
+                and hasattr(other.body, 'func_code')
+                and self.body.func_code == other.body.func_code
+            )
+
     def __call__(self, *args, **kwargs):
         # Guard against calling contextualized tasks with no context.
         if self.contextualized and not isinstance(args[0], Context):

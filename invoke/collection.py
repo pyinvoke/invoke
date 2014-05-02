@@ -104,6 +104,9 @@ class Collection(object):
     def __repr__(self):
         return str(self)
 
+    def __eq__(self, other):
+        return self.name == other.name and self.tasks == other.tasks
+
     @classmethod
     def from_module(self, module, name=None, config=None):
         """

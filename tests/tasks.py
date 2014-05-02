@@ -113,6 +113,13 @@ class Task_(Spec):
         assert 'funky' in e, "'funky' not found in {0!r}".format(e)
         assert '_func' not in e, "'_func' unexpectedly seen in {0!r}".format(e)
 
+    def equality_testing(self):
+        t1 = Task(_func, name='foo')
+        t2 = Task(_func, name='foo')
+        eq_(t1, t2)
+        t3 = Task(_func, name='bar')
+        assert t1 != t3
+
     class attributes:
         def has_default_flag(self):
             eq_(Task(_func).is_default, False)
