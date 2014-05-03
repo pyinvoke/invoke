@@ -1,13 +1,31 @@
+import imp
 import os
 import sys
 
 from spec import Spec, skip, eq_, raises
 
-from invoke.loader import FilesystemLoader as FSLoader
+from invoke.loader import Loader, FilesystemLoader as FSLoader
 from invoke.collection import Collection
 from invoke.exceptions import CollectionNotFound
 
 from _utils import support
+
+
+class _BasicLoader(Loader):
+    """
+    Tests top level Loader behavior with basic finder stub.
+
+    Used when we want to make sure we're testing Loader.load and not e.g.
+    FilesystemLoader's specific implementation.
+    """
+    def find(self, name):
+        return imp.find_module(name, [support])
+
+
+class Loader_(Spec):
+    def adds_module_parent_dir_to_sys_path(self):
+        # Crummy doesn't-explode test.
+        _BasicLoader().load('namespacing')
 
 
 class FilesystemLoader_(Spec):
@@ -46,27 +64,3 @@ class FilesystemLoader_(Spec):
         "defaults to 'tasks' collection"
         result = FSLoader(start=support + '/implicit/').load()
         eq_(type(result), Collection)
-
-
-#class SysPathLoader_(Spec):
-#    # TODO: factor out anything that applies, from FilesystemLoader tests
-#
-#    class update_path:
-#        def setup(self):
-#            self.l = Loader(start=support)
-#
-#        def does_not_modify_argument(self):
-#            path = []
-#            new_path = self.l.update_path(path)
-#            eq_(path, [])
-#            assert len(new_path) > 0
-#
-#        def inserts_self_start_parent_at_front_of_path(self):
-#            "Inserts self.start at front of path"
-#            eq_(self.l.update_path([])[0], self.l.start)
-#
-#        def adds_to_front_if_exists(self):
-#            "Inserts self.start at front of path even if it's already elsewhere"
-#            new_path = self.l.update_path([self.l.start])
-#            eq_(len(new_path), 2) # lol ?
-#            eq_(new_path[0], self.l.start)
