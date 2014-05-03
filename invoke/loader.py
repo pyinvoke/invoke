@@ -30,14 +30,25 @@ class Loader(object):
 
         This method requires a working implementation of `.find` in order to
         function.
+
+        In addition to importing the named module, it will add the module's
+        parent directory to the front of `sys.path` to provide normal Python
+        import behavior (i.e. so the loaded module may load local-to-it modules
+        or packages.)
         """
-        # Import. Errors during import will raise normally. Close the file
-        # object that was opened within self.find().
+        # Find the named tasks module, depending on implementation.
+        # Will raise an exception if not found.
         fd, path, desc = self.find(name)
         try:
+            # Ensure containing directory is on sys.path in case the module
+            # being imported is trying to load local-to-it names.
+            sys.path.insert(0, os.path.dirname(path))
+            # Actual import
             module = imp.load_module(name, fd, path, desc)
+            # Make a collection from it, and done
             return Collection.from_module(module)
         finally:
+            # Ensure we clean up the opened file object returned by find()
             fd.close()
 
 
