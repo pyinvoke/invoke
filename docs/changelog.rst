@@ -2,6 +2,23 @@
 Changelog
 =========
 
+* :feature:`87` (also :issue:`92`) Rework the loader module such that recursive
+  filesystem searching is implemented, and is used instead of searching
+  `sys.path`.
+  
+  This adds the behavior most users expect or are familiar with from Fabric 1
+  or similar tools; and it avoids nasty surprise collisions with other
+  installed packages containing files named ``tasks.py``.
+
+  Thanks to Michael Hahn for the original report & PR, and to Matt Iversen for
+  providing the discovery algorithm used in the final version of this change.
+
+  .. warning::
+      This is technically a backwards incompatible change (reminder: we're not
+      at 1.0 yet!). You'll only notice if you were relying on adding your tasks
+      module to ``sys.path`` and then calling Invoke elsewhere on the
+      filesystem.
+
 * :support:`-` Refactor the `.Runner` module to differentiate what it means to
   run a command in the abstract, from execution specifics. Top level API is
   unaffected.
