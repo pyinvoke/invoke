@@ -35,7 +35,7 @@ class Loader(object):
         # object that was opened within self.find().
         fd, path, desc = self.find(name)
         try:
-            module = imp.load_module(name, *self.find(name))
+            module = imp.load_module(name, fd, path, desc)
             return Collection.from_module(module)
         finally:
             fd.close()

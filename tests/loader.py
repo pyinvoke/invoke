@@ -19,13 +19,19 @@ class _BasicLoader(Loader):
     FilesystemLoader's specific implementation.
     """
     def find(self, name):
-        return imp.find_module(name, [support])
+        self.fd, self.path, self.desc = t = imp.find_module(name, [support])
+        return t
 
 
 class Loader_(Spec):
     def adds_module_parent_dir_to_sys_path(self):
         # Crummy doesn't-explode test.
         _BasicLoader().load('namespacing')
+
+    def closes_opened_file_object(self):
+        loader = _BasicLoader()
+        loader.load('foo')
+        assert loader.fd.closed
 
 
 class FilesystemLoader_(Spec):
