@@ -2,9 +2,9 @@
 
 # Support setuptools or distutils
 try:
-    from setuptools import setup, find_packages
+    from setuptools import setup
 except ImportError:
-    from distutils.core import setup, find_packages
+    from distutils.core import setup
 
 # Version info -- read without importing
 _locals = {}
