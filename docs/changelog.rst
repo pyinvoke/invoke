@@ -2,6 +2,9 @@
 Changelog
 =========
 
+* :support:`-` Tidy up ``setup.py`` a bit, including axing the (broken)
+  `distutils` support. Thanks to Matt Iverson for the original PR & followup
+  discussion.
 * :feature:`87` (also :issue:`92`) Rework the loader module such that recursive
   filesystem searching is implemented, and is used instead of searching
   `sys.path`.
