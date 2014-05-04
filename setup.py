@@ -1,10 +1,8 @@
 #!/usr/bin/env python
 
-# Support setuptools or distutils
-try:
-    from setuptools import setup
-except ImportError:
-    from distutils.core import setup
+# Support setuptools only, distutils has a divergent and more annoying API and
+# few folks will lack setuptools.
+from setuptools import setup
 
 # Version info -- read without importing
 _locals = {}
