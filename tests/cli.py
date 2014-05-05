@@ -80,6 +80,7 @@ Core options:
   --no-dedupe                      Disable task deduplication.
   -c STRING, --collection=STRING   Specify collection name to load. May be
                                    given >1 time.
+  -d, --debug                      Enable debug output.
   -e, --echo                       Echo executed commands before running.
   -h [STRING], --help[=STRING]     Show core or per-task help and exit.
   -H STRING, --hide=STRING         Set default value of run()'s 'hide' kwarg.
@@ -236,6 +237,10 @@ foo
 bar
 """.lstrip()
         eq_(run("invoke -c integration --no-dedupe foo bar").stdout, expected)
+
+    @trap
+    def debug_flag(self):
+        assert 'my-sentinel' in run("invoke -d -c debugging foo").stderr
 
     class run_options:
         "run() related CLI flags"

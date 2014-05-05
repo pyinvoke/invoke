@@ -5,11 +5,11 @@ import textwrap
 from .vendor import six
 
 from .context import Context
-from .loader import Loader
+from .loader import FilesystemLoader
 from .parser import Parser, Context as ParserContext, Argument
 from .executor import Executor
 from .exceptions import Failure, CollectionNotFound, ParseError
-from .util import debug, pty_size
+from .util import debug, pty_size, enable_logging
 from ._version import __version__
 
 
@@ -71,9 +71,9 @@ def parse(argv, collection=None):
     Parse ``argv`` list-of-strings into useful core & per-task structures.
 
     :returns:
-        Three-tuple of ``args`` (core, non-task `.Argument` objects), ``collection``
-        (compiled `.Collection` of tasks, using defaults or core arguments
-        affecting collection generation) and ``tasks`` (a list of
+        Three-tuple of ``args`` (core, non-task `.Argument` objects),
+        ``collection`` (compiled `.Collection` of tasks, using defaults or core
+        arguments affecting collection generation) and ``tasks`` (a list of
         `~.parser.context.Context` objects representing the requested task
         executions).
     """
@@ -132,7 +132,13 @@ def parse(argv, collection=None):
         Argument(
             names=('hide', 'H'),
             help="Set default value of run()'s 'hide' kwarg.",
-        )
+        ),
+        Argument(
+            names=('debug', 'd'),
+            kind=bool,
+            default=False,
+            help="Enable debug output.",
+        ),
     ))
     # 'core' will result an .unparsed attribute with what was left over.
     debug("Parsing initial context (core args)")
@@ -140,6 +146,10 @@ def parse(argv, collection=None):
     core = parse_gracefully(parser, argv)
     debug("After core-args pass, leftover argv: %r" % (core.unparsed,))
     args = core[0].args
+
+    # Enable debugging from here on out, if debug flag was given.
+    if args.debug.value:
+        enable_logging()
 
     # Print version & exit if necessary
     if args.version.value:
@@ -161,8 +171,9 @@ def parse(argv, collection=None):
     # (Skip loading if somebody gave us an explicit task collection.)
     if not collection:
         debug("No collection given, loading from %r" % args.root.value)
-        loader = Loader(root=args.root.value)
-        collection = loader.load_collection(args.collection.value)
+        loader = FilesystemLoader(start=args.root.value)
+        start = args.collection.value
+        collection = loader.load(start) if start else loader.load()
     parser = Parser(contexts=collection.to_contexts())
     debug("Parsing actual tasks against collection %r" % collection)
     tasks = parse_gracefully(parser, core.unparsed)
@@ -247,6 +258,7 @@ def dispatch(argv):
     # Take action based on 'core' options and the 'tasks' found
     for context in tasks:
         kwargs = {}
+        # Take CLI arguments out of parser context, create func-kwarg dict.
         for _, arg in six.iteritems(context.args):
             # Use the arg obj's internal name - not what was necessarily given
             # on the CLI. (E.g. --my-option vs --my_option for
@@ -258,8 +270,11 @@ def dispatch(argv):
             # TODO: allow swapping out of Executor subclasses based on core
             # config options
             results.append(executor.execute(
+                # Task name given on CLI
                 name=context.name,
+                # Flags/other args given to this task specifically
                 kwargs=kwargs,
+                # Was the core dedupe flag given?
                 dedupe=not args['no-dedupe']
             ))
         except Failure as f:

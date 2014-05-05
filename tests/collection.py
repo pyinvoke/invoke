@@ -71,12 +71,31 @@ class Collection_(Spec):
             ):
                 eq_(x, y)
 
+    class useful_special_methods:
+        def _meh(self):
+            @task
+            def task1():
+                pass
+            @task
+            def task2():
+                pass
+            return Collection('meh', task1=task1, task2=task2)
+
+        def setup(self):
+            self.c = self._meh()
+
+        def repr_(self):
+            "__repr__"
+            eq_(repr(self.c), "<Collection 'meh': task1, task2>")
+
+        def equality_should_be_useful(self):
+            eq_(self.c, self._meh())
+
     class from_module:
         def setup(self):
             self.c = Collection.from_module(load('integration'))
 
-        class init:
-            "__init__"
+        class parameters:
             def setup(self):
                 self.mod = load('integration')
                 self.fm = Collection.from_module
@@ -89,7 +108,9 @@ class Collection_(Spec):
                 )
 
             def inline_configuration(self):
+                # No configuration given, none gotten
                 eq_(self.fm(self.mod).configuration(), {})
+                # Config kwarg given is reflected when config obtained
                 eq_(
                     self.fm(self.mod, config={'foo': 'bar'}).configuration(),
                     {'foo': 'bar'}
@@ -138,6 +159,35 @@ class Collection_(Spec):
             c3 = Collection.from_module(mod2)
             c4 = Collection.from_module(mod2)
             assert c3 is not c4
+
+        class explicit_root_ns:
+            def setup(self):
+                mod = load('explicit_root')
+                mod.ns.configure({'key': 'builtin', 'otherkey': 'yup'})
+                mod.ns.name = 'builtin_name'
+                self.unchanged = Collection.from_module(mod)
+                self.changed = Collection.from_module(
+                    mod,
+                    name='override_name',
+                    config={'key': 'override'}
+                )
+
+            def inline_config_with_root_namespaces_overrides_builtin(self):
+                eq_(self.unchanged.configuration()['key'], 'builtin')
+                eq_(self.changed.configuration()['key'], 'override')
+
+            def inline_config_overrides_via_merge_not_replacement(self):
+                assert 'otherkey' in self.changed.configuration()
+
+            def inline_name_overrides_root_namespace_object_name(self):
+                eq_(self.unchanged.name, 'builtin_name')
+                eq_(self.changed.name, 'override_name')
+
+            def root_namespace_object_name_overrides_module_name(self):
+                # Duplicates part of previous test for explicitness' sake.
+                # I.e. proves that the name doesn't end up 'explicit_root'.
+                eq_(self.unchanged.name, 'builtin_name')
+
 
     class add_task:
         def setup(self):
@@ -328,82 +378,89 @@ class Collection_(Spec):
     class configuration:
         "Configuration methods"
         def setup(self):
-            self.c = Collection()
+            self.root = Collection()
+            self.task = Task(_func, name='task')
 
         def basic_set_and_get(self):
-            self.c.configure({'foo': 'bar'})
-            eq_(self.c.configuration(), {'foo': 'bar'})
+            self.root.configure({'foo': 'bar'})
+            eq_(self.root.configuration(), {'foo': 'bar'})
 
         def configure_performs_merging(self):
-            self.c.configure({'foo': 'bar'})
-            eq_(self.c.configuration()['foo'], 'bar')
-            self.c.configure({'biz': 'baz'})
-            eq_(set(self.c.configuration().keys()), set(['foo', 'biz']))
+            self.root.configure({'foo': 'bar'})
+            eq_(self.root.configuration()['foo'], 'bar')
+            self.root.configure({'biz': 'baz'})
+            eq_(set(self.root.configuration().keys()), set(['foo', 'biz']))
 
         def configure_allows_overwriting(self):
-            self.c.configure({'foo': 'one'})
-            eq_(self.c.configuration()['foo'], 'one')
-            self.c.configure({'foo': 'two'})
-            eq_(self.c.configuration()['foo'], 'two')
+            self.root.configure({'foo': 'one'})
+            eq_(self.root.configuration()['foo'], 'one')
+            self.root.configure({'foo': 'two'})
+            eq_(self.root.configuration()['foo'], 'two')
 
         def call_returns_dict(self):
-            eq_(self.c.configuration(), {})
-            self.c.configure({'foo': 'bar'})
-            eq_(self.c.configuration(), {'foo': 'bar'})
+            eq_(self.root.configuration(), {})
+            self.root.configure({'foo': 'bar'})
+            eq_(self.root.configuration(), {'foo': 'bar'})
 
         def access_merges_from_subcollections(self):
-            inner = Collection('inner')
+            inner = Collection('inner', self.task)
             inner.configure({'foo': 'bar'})
-            outer = Collection()
-            outer.configure({'biz': 'baz'})
+            self.root.configure({'biz': 'baz'})
             # With no inner collection
-            eq_(set(outer.configuration().keys()), set(['biz']))
+            eq_(set(self.root.configuration().keys()), set(['biz']))
             # With inner collection
-            outer.add_collection(inner)
-            eq_(set(outer.configuration('inner').keys()), set(['foo', 'biz']))
+            self.root.add_collection(inner)
+            eq_(
+                set(self.root.configuration('inner.task').keys()),
+                set(['foo', 'biz'])
+            )
 
         def parents_overwrite_children_in_path(self):
-            inner = Collection('inner')
+            inner = Collection('inner', self.task)
             inner.configure({'foo': 'inner'})
-            outer = Collection()
-            outer.add_collection(inner)
-            eq_(outer.configuration('inner')['foo'], 'inner')
-            outer.configure({'foo': 'outer'})
-            eq_(outer.configuration('inner')['foo'], 'outer')
+            self.root.add_collection(inner)
+            # Before updating root collection's config, reflects inner
+            eq_(self.root.configuration('inner.task')['foo'], 'inner')
+            self.root.configure({'foo': 'outer'})
+            # After, reflects outer (since that now overrides)
+            eq_(self.root.configuration('inner.task')['foo'], 'outer')
 
         def sibling_subcollections_ignored(self):
-            inner = Collection('inner')
+            inner = Collection('inner', self.task)
             inner.configure({'foo': 'hi there'})
-            inner2 = Collection('inner2')
+            inner2 = Collection('inner2', Task(_func, name='task2'))
             inner2.configure({'foo': 'nope'})
-            outer = Collection(inner, inner2)
-            eq_(outer.configuration('inner')['foo'], 'hi there')
-            eq_(outer.configuration('inner2')['foo'], 'nope')
+            root = Collection(inner, inner2)
+            eq_(root.configuration('inner.task')['foo'], 'hi there')
+            eq_(root.configuration('inner2.task2')['foo'], 'nope')
 
         def subcollection_paths_may_be_dotted(self):
-            leaf = Collection('leaf')
+            leaf = Collection('leaf', self.task)
             leaf.configure({'key': 'leaf-value'})
             middle = Collection('middle', leaf)
-            outer = Collection('outer', middle)
-            eq_(outer.configuration('middle.leaf'), {'key': 'leaf-value'})
+            root = Collection('root', middle)
+            eq_(root.configuration('middle.leaf.task'), {'key': 'leaf-value'})
 
         def invalid_subcollection_paths_result_in_KeyError(self):
             # Straight up invalid
-            assert_raises(KeyError, Collection('meh').configuration, 'nope')
-            # Exists but wrong level
-            inner = Collection('inner')
-            inner.configure({'foo': 'bar'})
             assert_raises(KeyError,
-                Collection('outer', inner).configuration, 'foo')
+                Collection('meh').configuration,
+                'nope.task'
+            )
+            # Exists but wrong level (should be 'root.task', not just
+            # 'task')
+            inner = Collection('inner', self.task)
+            assert_raises(KeyError,
+                Collection('root', inner).configuration, 'task')
 
         def keys_dont_have_to_exist_in_full_path(self):
             # Kinda duplicates earlier stuff; meh
             # Key only stored on leaf
-            leaf = Collection('leaf')
+            leaf = Collection('leaf', self.task)
             leaf.configure({'key': 'leaf-value'})
             middle = Collection('middle', leaf)
-            outer = Collection('outer', middle)
-            eq_(outer.configuration('middle.leaf'), {'key': 'leaf-value'})
-            # Key stored on mid + leaf but not outer
+            root = Collection('root', middle)
+            eq_(root.configuration('middle.leaf.task'), {'key': 'leaf-value'})
+            # Key stored on mid + leaf but not root
             middle.configure({'key': 'whoa'})
-            eq_(outer.configuration('middle.leaf'), {'key': 'whoa'})
+            eq_(root.configuration('middle.leaf.task'), {'key': 'whoa'})
