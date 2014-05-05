@@ -1,22 +1,22 @@
 from invoke import task
 
+
 @task
-def no_line():
+def no_docstring():
     pass
 
 @task
 def one_line():
     """ foo
     """
-
 @task
-def second_lines():
+def two_lines():
     """ foo
     bar
     """
 
 @task
-def empty_first_line():
+def leading_whitespace():
     """
     foo
     """

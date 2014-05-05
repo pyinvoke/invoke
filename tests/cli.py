@@ -219,12 +219,12 @@ Available tasks:
             eq_(run("invoke -c explicit_root --list").stdout, expected)
 
         @trap
-        def docstrings(self):
+        def docstrings_shown_alongside(self):
             expected = self._listing(
-                'empty_first_line    foo',
-                'no_line',
+                'leading_whitespace  foo',
+                'no_docstring',
                 'one_line            foo',
-                'second_lines        foo',
+                'two_lines           foo',
                 'with_aliases (a, b) foo',
             )
             eq_(run("invoke -c docstrings --list").stdout, expected)
