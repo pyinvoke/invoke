@@ -105,6 +105,7 @@ something::
 
         build
 
+Will also print the first line of each task’s docstring.
 To see what else is available besides ``--list``, say ``invoke --help``.
 
 Running shell commands
