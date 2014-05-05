@@ -20,12 +20,16 @@ class Executor_(Spec):
 
     class init:
         "__init__"
-        def needs_collection_and_context(self):
+        def allows_collection_and_context(self):
             coll = Collection()
             cont = Context()
             e = Executor(collection=coll, context=cont)
             assert e.collection is coll
             assert e.context is cont
+
+        def uses_blank_context_by_default(self):
+            e = Executor(collection=Collection())
+            assert isinstance(e.context, Context)
 
     class execute:
         def base_case(self):
@@ -58,6 +62,35 @@ class Executor_(Spec):
             c = Collection(mytask)
             c.configure({'my.config.key': 'value'})
             Executor(collection=c, context=Context()).execute('mytask')
+
+        def hands_task_specific_configuration_to_context(self):
+            @ctask
+            def mytask(ctx):
+                eq_(ctx['my.config.key'], 'value')
+            @ctask
+            def othertask(ctx):
+                eq_(ctx['my.config.key'], 'othervalue')
+            inner1 = Collection('inner1', mytask)
+            inner1.configure({'my.config.key': 'value'})
+            inner2 = Collection('inner2', othertask)
+            inner2.configure({'my.config.key': 'othervalue'})
+            c = Collection(inner1, inner2)
+            e = Executor(collection=c, context=Context())
+            e.execute('inner1.mytask')
+            e.execute('inner2.othertask')
+
+        def subcollection_config_works_with_default_tasks(self):
+            @ctask(default=True)
+            def mytask(ctx):
+                eq_(ctx['my.config.key'], 'value')
+            # Sets up a task "known as" sub.mytask which may be called as just
+            # 'sub' due to being default.
+            sub = Collection('sub', mytask=mytask)
+            sub.configure({'my.config.key': 'value'})
+            main = Collection(sub=sub)
+            # Execute via collection default 'task' name.
+            Executor(collection=main, context=Context()).execute('sub')
+
 
     class returns_return_value_of_specified_task:
         def base_case(self):

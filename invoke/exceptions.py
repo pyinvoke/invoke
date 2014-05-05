@@ -1,7 +1,7 @@
 class CollectionNotFound(Exception):
-    def __init__(self, name, root):
+    def __init__(self, name, start):
         self.name = name
-        self.root = root
+        self.start = start
 
 
 class Failure(Exception):
@@ -13,6 +13,20 @@ class Failure(Exception):
     """
     def __init__(self, result):
         self.result = result
+
+    def __str__(self):
+        return """Command execution failure!
+
+Exit code: {0}
+
+Stderr:
+
+{1}
+
+""".format(self.result.exited, self.result.stderr)
+
+    def __repr__(self):
+        return str(self)
 
 
 class ParseError(Exception):

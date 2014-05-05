@@ -149,11 +149,11 @@ result::
 
     @task
     def clean(ctx, target=None):
-        ctx.run("rm -rf {0}".format(ctx.get('sphinx.target', target)))
+        ctx.run("rm -rf {0}".format(target or ctx['sphinx.target']))
 
     @task
     def build(ctx, target=None):
-        ctx.run("sphinx-build docs {0}".format(ctx.get('sphinx.target', target)))
+        ctx.run("sphinx-build docs {0}".format(target or ctx['sphinx.target']))
 
     ns = Collection(clean, build)
     ns.configure({'sphinx.target': "docs/_build"})
@@ -184,8 +184,9 @@ Nested namespace configuration merging
 
 When :doc:`namespaces </concepts/namespaces>` are nested within one another,
 configuration is merged 'downwards' by default: when conflicts arise, outer
-namespaces win over inner ones (siblings at the same level merge in
-alphabetical order by name.)
+namespaces win over inner ones (with 'inner' ones being specifically those on
+the path from the root to the one housing the invoked task. 'Sibling'
+subcollections are ignored.)
 
 A quick example of what this means::
 
@@ -207,6 +208,8 @@ The result of calling ``inner.mytask``::
 
     $ inv inner.mytask
     override value
+
+
 
 .. rubric:: Footnotes
 

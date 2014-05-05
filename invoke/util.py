@@ -6,10 +6,16 @@ import sys
 import termios
 
 
+def enable_logging():
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format="%(module)s: %(message)s",
+    )
+
 # Allow from-the-start debugging (vs toggled during load of tasks module) via
-# shell env var
+# shell env var.
 if os.environ.get('INVOKE_DEBUG'):
-    logging.basicConfig(level=logging.DEBUG)
+    enable_logging()
 
 # Add top level logger functions to global namespace. Meh.
 log = logging.getLogger('invoke')
