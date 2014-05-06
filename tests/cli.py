@@ -221,11 +221,11 @@ Available tasks:
         @trap
         def docstrings_shown_alongside(self):
             expected = self._listing(
-                'leading_whitespace  foo',
+                'leading_whitespace    foo',
                 'no_docstring',
-                'one_line            foo',
-                'two_lines           foo',
-                'with_aliases (a, b) foo',
+                'one_line              foo',
+                'two_lines             foo',
+                'with_aliases (a, b)   foo',
             )
             eq_(run("invoke -c docstrings --list").stdout, expected)
 

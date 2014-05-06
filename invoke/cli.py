@@ -51,7 +51,7 @@ def print_help(tuples):
             for chunk in help_chunks[1:]:
                 print((' ' * len(spec)) + chunk)
         else:
-            print(spec)
+            print(spec.rstrip())
     print('')
 
 
