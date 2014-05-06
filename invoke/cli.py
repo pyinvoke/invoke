@@ -23,21 +23,26 @@ indent = " " * indent_num
 
 
 def print_help(tuples):
+    """
+    Print tabbed columns from (name, help) tuples.
+
+    Useful for listing tasks + docstrings, flags + help strings, etc.
+    """
     padding = 3
     # Calculate column sizes: don't wrap flag specs, give what's left over
     # to the descriptions.
-    flag_width = max(len(x[0]) for x in tuples)
-    desc_width = pty_size()[0] - flag_width - indent_num - padding - 1
+    name_width = max(len(x[0]) for x in tuples)
+    desc_width = pty_size()[0] - name_width - indent_num - padding - 1
     wrapper = textwrap.TextWrapper(width=desc_width)
-    for flag_spec, help_str in tuples:
+    for name, help_str in tuples:
         # Wrap descriptions/help text
         help_chunks = wrapper.wrap(help_str)
         # Print flag spec + padding
-        flag_padding = flag_width - len(flag_spec)
+        name_padding = name_width - len(name)
         spec = ''.join((
             indent,
-            flag_spec,
-            flag_padding * ' ',
+            name,
+            name_padding * ' ',
             padding * ' '
         ))
         # Print help text as needed
