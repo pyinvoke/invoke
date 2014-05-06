@@ -91,6 +91,12 @@ class Task(object):
                 and self.body.func_code == other.body.func_code
             )
 
+    def __hash__(self):
+        # Presumes name and body will never be changed. Hrm.
+        # Potentially cleaner to just not use Tasks as hash keys, but let's do
+        # this for now.
+        return hash(self.name) + hash(self.body)
+
     def __call__(self, *args, **kwargs):
         # Guard against calling contextualized tasks with no context.
         if self.contextualized and not isinstance(args[0], Context):
