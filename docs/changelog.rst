@@ -5,7 +5,7 @@ Changelog
 * :feature:`110` Add task docstrings' 1st lines to ``--list`` output. Thanks to
   Hiroki Kiyohara for the original PR (with assists from Robert Read and James
   Thigpen.)
-* :support:`-` Tidy up ``setup.py`` a bit, including axing the (broken)
+* :support:`117` Tidy up ``setup.py`` a bit, including axing the (broken)
   `distutils` support. Thanks to Matt Iverson for the original PR & followup
   discussion.
 * :feature:`87` (also :issue:`92`) Rework the loader module such that recursive
