@@ -85,11 +85,13 @@ class Task(object):
         if self.body == other.body:
             return True
         else:
-            return (
-                hasattr(self.body, 'func_code')
-                and hasattr(other.body, 'func_code')
-                and self.body.func_code == other.body.func_code
-            )
+            try:
+                return (
+                    six.get_function_code(self.body) ==
+                    six.get_function_code(other.body)
+                )
+            except AttributeError:
+                return False
 
     def __hash__(self):
         # Presumes name and body will never be changed. Hrm.
