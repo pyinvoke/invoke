@@ -214,25 +214,22 @@ def parse(argv, collection=None):
         print("Available tasks:\n")
         # Sort in depth, then alpha, order
         task_names = collection.task_names
-        names = sort_names(task_names.keys())
-
-        full_names = []
-        for primary in names:
+        pairs = []
+        for primary in sort_names(task_names.keys()):
+            # Add aliases
             aliases = sort_names(task_names[primary])
+            name = primary
             if aliases:
-                full_names.append(primary + " (%s)" % ', '.join(aliases))
-            else:
-                full_names.append(primary)
+                name += " (%s)" % ', '.join(aliases)
+            # Add docstring 1st lines
+            task = collection[primary]
+            help_ = ""
+            if task.__doc__:
+                help_ = task.__doc__.lstrip().splitlines()[0]
+            pairs.append((name, help_))
 
-        max_width = max(map(len, full_names))
-
-        for full_name, primary in zip(full_names, names):
-            out = full_name
-            docstring = collection[primary].__doc__
-            if docstring:
-                out += " " * (max_width - len(full_name) + 1) + docstring.lstrip().split('\n')[0]
-            print("  %s" % out)
-        print("")
+        # Print
+        print_help(pairs)
         sys.exit(0)
 
     # Return to caller so they can handle the results
