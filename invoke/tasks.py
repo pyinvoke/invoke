@@ -68,7 +68,9 @@ class Task(object):
         return self._name or self.__name__
 
     def __str__(self):
-        aliases = " ({0})".format(', '.join(self.aliases)) if self.aliases else ""
+        aliases = ""
+        if self.aliases:
+            aliases = " ({0})".format(', '.join(self.aliases))
         return "<Task {0!r}{1}>".format(self.name, aliases)
 
     def __repr__(self):
