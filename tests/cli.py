@@ -80,6 +80,7 @@ Core options:
   --no-dedupe                      Disable task deduplication.
   -c STRING, --collection=STRING   Specify collection name to load. May be
                                    given >1 time.
+  -d, --debug                      Enable debug output.
   -e, --echo                       Echo executed commands before running.
   -h [STRING], --help[=STRING]     Show core or per-task help and exit.
   -H STRING, --hide=STRING         Set default value of run()'s 'hide' kwarg.
@@ -236,6 +237,17 @@ Available tasks:
             )
             eq_(run("invoke -c explicit_root --list").stdout, expected)
 
+        @trap
+        def docstrings_shown_alongside(self):
+            expected = self._listing(
+                'leading_whitespace    foo',
+                'no_docstring',
+                'one_line              foo',
+                'two_lines             foo',
+                'with_aliases (a, b)   foo',
+            )
+            eq_(run("invoke -c docstrings --list").stdout, expected)
+
     @trap
     def no_deduping(self):
         expected = """
@@ -244,6 +256,10 @@ foo
 bar
 """.lstrip()
         eq_(run("invoke -c integration --no-dedupe foo bar").stdout, expected)
+
+    @trap
+    def debug_flag(self):
+        assert 'my-sentinel' in run("invoke -d -c debugging foo").stderr
 
     class run_options:
         "run() related CLI flags"
