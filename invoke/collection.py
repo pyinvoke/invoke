@@ -98,10 +98,14 @@ class Collection(object):
         return method(obj, name=name)
 
     def __str__(self):
-        return "<Collection: %s>" % self.name
+        return "<Collection {0!r}: {1}>".format(
+            self.name, ", ".join(self.tasks.keys()))
 
     def __repr__(self):
         return str(self)
+
+    def __eq__(self, other):
+        return self.name == other.name and self.tasks == other.tasks
 
     @classmethod
     def from_module(self, module, name=None, config=None):
@@ -252,7 +256,7 @@ class Collection(object):
         E.g. in a deeply nested tree, this method returns the `.Task`, and a
         configuration dict created by merging that of this `.Collection` and
         any nested `.Collections`, up through the one actually holding the
-        `.Task.
+        `.Task`.
 
         See `__getitem__` for semantics of the ``name`` argument.
 

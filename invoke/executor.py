@@ -14,9 +14,9 @@ class Executor(object):
         Initialize executor with handles to a task collection & config context.
 
         The collection is used for looking up tasks by name and
-        storing/retrieving state, e.g. how many times a given task has been run
-        this session and so on. It is optional; if not given a blank `.Context`
-        is used.
+        storing/retrieving state, e.g. how many times a given task has been
+        run this session and so on. It is optional; if not given a blank
+        `~invoke.context.Context` is used.
 
         A copy of the context is passed into any tasks that mark themselves as
         requiring one for operation.

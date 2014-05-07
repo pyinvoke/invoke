@@ -149,11 +149,11 @@ result::
 
     @task
     def clean(ctx, target=None):
-        ctx.run("rm -rf {0}".format(ctx.get('sphinx.target', target)))
+        ctx.run("rm -rf {0}".format(target or ctx['sphinx.target']))
 
     @task
     def build(ctx, target=None):
-        ctx.run("sphinx-build docs {0}".format(ctx.get('sphinx.target', target)))
+        ctx.run("sphinx-build docs {0}".format(target or ctx['sphinx.target']))
 
     ns = Collection(clean, build)
     ns.configure({'sphinx.target': "docs/_build"})

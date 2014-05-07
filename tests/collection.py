@@ -71,6 +71,26 @@ class Collection_(Spec):
             ):
                 eq_(x, y)
 
+    class useful_special_methods:
+        def _meh(self):
+            @task
+            def task1():
+                pass
+            @task
+            def task2():
+                pass
+            return Collection('meh', task1=task1, task2=task2)
+
+        def setup(self):
+            self.c = self._meh()
+
+        def repr_(self):
+            "__repr__"
+            eq_(repr(self.c), "<Collection 'meh': task1, task2>")
+
+        def equality_should_be_useful(self):
+            eq_(self.c, self._meh())
+
     class from_module:
         def setup(self):
             self.c = Collection.from_module(load('integration'))

@@ -1,68 +1,72 @@
+import imp
 import os
 import sys
 
 from spec import Spec, skip, eq_, raises
 
-from invoke.loader import Loader
+from invoke.loader import Loader, FilesystemLoader as FSLoader
 from invoke.collection import Collection
 from invoke.exceptions import CollectionNotFound
 
 from _utils import support
 
 
+class _BasicLoader(Loader):
+    """
+    Tests top level Loader behavior with basic finder stub.
+
+    Used when we want to make sure we're testing Loader.load and not e.g.
+    FilesystemLoader's specific implementation.
+    """
+    def find(self, name):
+        self.fd, self.path, self.desc = t = imp.find_module(name, [support])
+        return t
+
+
 class Loader_(Spec):
-    def exposes_discovery_root(self):
-        root = '/tmp/'
-        eq_(Loader(root=root).root, root)
+    def adds_module_parent_dir_to_sys_path(self):
+        # Crummy doesn't-explode test.
+        _BasicLoader().load('namespacing')
 
-    def has_a_default_discovery_root(self):
-        eq_(Loader().root, os.getcwd())
+    def closes_opened_file_object(self):
+        loader = _BasicLoader()
+        loader.load('foo')
+        assert loader.fd.closed
 
-    class load_collection:
-        def returns_collection_object_if_name_found(self):
-            result = Loader(root=support).load_collection('foo')
-            eq_(type(result), Collection)
 
-        @raises(CollectionNotFound)
-        def raises_CollectionNotFound_if_not_found(self):
-            Loader(root=support).load_collection('nope')
+class FilesystemLoader_(Spec):
+    def setup(self):
+        self.l = FSLoader(start=support)
 
-        @raises(ImportError)
-        def raises_ImportError_if_found_collection_cannot_be_imported(self):
-            # Instead of masking with a CollectionNotFound
-            Loader(root=support).load_collection('oops')
+    def exposes_discovery_start_point(self):
+        start = '/tmp/'
+        eq_(FSLoader(start=start).start, start)
 
-        def honors_discovery_root_option(self):
-            skip()
+    def has_a_default_discovery_start_point(self):
+        eq_(FSLoader().start, os.getcwd())
 
-        def searches_towards_root_of_filesystem(self):
-            skip()
+    def returns_collection_object_if_name_found(self):
+        result = self.l.load('foo')
+        eq_(type(result), Collection)
 
-        def defaults_to_tasks_collection(self):
-            "defaults to 'tasks' collection"
-            result = Loader(root=support + '/implicit/').load_collection()
-            eq_(type(result), Collection)
+    @raises(CollectionNotFound)
+    def raises_CollectionNotFound_if_not_found(self):
+        self.l.load('nope')
 
-    class find_collection:
-        @raises(CollectionNotFound)
-        def raises_CollectionNotFound_for_missing_collections(self):
-            result = Loader(root=support).find_collection('nope')
+    @raises(ImportError)
+    def raises_ImportError_if_found_collection_cannot_be_imported(self):
+        # Instead of masking with a CollectionNotFound
+        self.l.load('oops')
 
-    class update_path:
-        def setup(self):
-            self.l = Loader(root=support)
+    def searches_towards_root_of_filesystem(self):
+        # Loaded while root is in same dir as .py
+        directly = self.l.load('foo')
+        # Loaded while root is multiple dirs deeper than the .py
+        deep = os.path.join(support, 'ignoreme', 'ignoremetoo')
+        indirectly = FSLoader(start=deep).load('foo')
+        eq_(directly, indirectly)
 
-        def does_not_modify_argument(self):
-            path = []
-            new_path = self.l.update_path(path)
-            eq_(path, [])
-            assert len(new_path) > 0
-
-        def inserts_self_root_parent_at_front_of_path(self):
-            "Inserts self.root at front of path"
-            eq_(self.l.update_path([])[0], self.l.root)
-
-        def does_not_insert_if_exists(self):
-            "Doesn't insert self.root if it's already in the path"
-            new_path = self.l.update_path([self.l.root])
-            eq_(len(new_path), 1) # not 2
+    def defaults_to_tasks_collection(self):
+        "defaults to 'tasks' collection"
+        result = FSLoader(start=support + '/implicit/').load()
+        eq_(type(result), Collection)
