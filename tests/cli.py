@@ -169,6 +169,11 @@ Options:
     def version_info(self):
         eq_(run("invoke -V").stdout, "Invoke %s\n" % invoke.__version__)
 
+    @trap
+    def version_override(self):
+        with patch('sys.exit') as exit: # TODO: sigh.
+            parse(['notinvoke', '-V'], Collection(), "nope 1.0")
+            assert 'nope 1.0' in sys.stdout.getvalue()
 
     class task_list:
         "--list"
