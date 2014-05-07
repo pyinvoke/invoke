@@ -2,13 +2,15 @@
 Changelog
 =========
 
+* :support:`118` Update the bundled ``six`` plus other minor tweaks to support
+  files. Thanks to Matt Iversen.
 * :feature:`115` Make it easier to reuse Invoke's primary CLI machinery in
   other (non-Invoke-distributed) bin-scripts. Thanks to Noah Kantrowitz.
 * :feature:`110` Add task docstrings' 1st lines to ``--list`` output. Thanks to
   Hiroki Kiyohara for the original PR (with assists from Robert Read and James
   Thigpen.)
 * :support:`117` Tidy up ``setup.py`` a bit, including axing the (broken)
-  `distutils` support. Thanks to Matt Iverson for the original PR & followup
+  `distutils` support. Thanks to Matt Iversen for the original PR & followup
   discussion.
 * :feature:`87` (also :issue:`92`) Rework the loader module such that recursive
   filesystem searching is implemented, and is used instead of searching
