@@ -173,7 +173,7 @@ def parse(argv, collection=None, version=None):
         program_name = os.path.basename(argv[0])
         if program_name == 'invoke' or program_name == 'inv':
             program_name = 'inv[oke]'
-        print("Usage: {} [--core-opts] task1 [--task1-opts] ... taskN [--taskN-opts]".format(program_name))
+        print("Usage: {0} [--core-opts] task1 [--task1-opts] ... taskN [--taskN-opts]".format(program_name))
         print("")
         print("Core options:")
         print_help(initial_context.help_tuples())
