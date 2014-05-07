@@ -161,6 +161,11 @@ class Context(object):
                     if arg.optional:
                         valuestr = "[%s]" % valuestr
             else:
+                # no value => boolean
+                # check for inverse
+                if name in self.inverse_flags.values():
+                    name = "--[no-]%s" % name[2:]
+
                 valuestr = ""
             # Tack together
             full_names.append(name + valuestr)

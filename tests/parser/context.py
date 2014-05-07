@@ -229,6 +229,11 @@ class Context_(Spec):
             c = Context(args=(Argument('i_have_underscores', help='yup'),))
             eq_(c.help_for('--i-have-underscores'), ('--i-have-underscores=STRING', 'yup'))
 
+        def true_default_args(self):
+            c = Context(args=(Argument('truthy', kind=bool, default=True),))
+            eq_(c.help_for('--truthy'), ('--[no-]truthy', ''))
+
+
     class help_tuples:
         def returns_list_of_help_tuples(self):
             # Walks own list of flags/args, ensures resulting map to help_for()
