@@ -99,7 +99,7 @@ class Collection(object):
 
     def __str__(self):
         return "<Collection {0!r}: {1}>".format(
-            self.name, ", ".join(self.tasks.keys()))
+            self.name, ", ".join(sorted(self.tasks.keys())))
 
     def __repr__(self):
         return str(self)
