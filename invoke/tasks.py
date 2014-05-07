@@ -51,7 +51,7 @@ class Task(object):
         self.contextualized = contextualized
         # Default name, alternate names, and whether it should act as the
         # default for its parent collection
-        self.name = name
+        self._name = name
         self.aliases = aliases
         self.is_default = default
         # Arg/flag/parser hints
@@ -62,6 +62,42 @@ class Task(object):
         # Call chain bidness
         self.pre = pre or []
         self.times_called = 0
+
+    @property
+    def name(self):
+        return self._name or self.__name__
+
+    def __str__(self):
+        aliases = ""
+        if self.aliases:
+            aliases = " ({0})".format(', '.join(self.aliases))
+        return "<Task {0!r}{1}>".format(self.name, aliases)
+
+    def __repr__(self):
+        return str(self)
+
+    def __eq__(self, other):
+        if self.name != other.name:
+            return False
+        # Functions do not define __eq__ but func_code objects apparently do.
+        # (If we're wrapping some other callable, they will be responsible for
+        # defining equality on their end.)
+        if self.body == other.body:
+            return True
+        else:
+            try:
+                return (
+                    six.get_function_code(self.body) ==
+                    six.get_function_code(other.body)
+                )
+            except AttributeError:
+                return False
+
+    def __hash__(self):
+        # Presumes name and body will never be changed. Hrm.
+        # Potentially cleaner to just not use Tasks as hash keys, but let's do
+        # this for now.
+        return hash(self.name) + hash(self.body)
 
     def __call__(self, *args, **kwargs):
         # Guard against calling contextualized tasks with no context.

@@ -319,12 +319,12 @@ class Context_(Spec):
     class str:
         "__str__"
         def with_no_args_output_is_simple(self):
-            eq_(str(Context('foo')), "<Context 'foo'>")
+            eq_(str(Context('foo')), "<parser/Context 'foo'>")
 
         def args_show_as_repr(self):
             eq_(
                 str(Context('bar', args=[Argument('arg1')])),
-                "<Context 'bar': {'arg1': <Argument: arg1>}>"
+                "<parser/Context 'bar': {'arg1': <Argument: arg1>}>"
             )
 
         def repr_is_str(self):

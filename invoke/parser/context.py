@@ -77,7 +77,7 @@ class Context(object):
         aliases = (" (%s)" % ', '.join(self.aliases)) if self.aliases else ""
         name = (" %r%s" % (self.name, aliases)) if self.name else ""
         args = (": %r" % (self.args,)) if self.args else ""
-        return "<Context%s%s>" % (name, args)
+        return "<parser/Context%s%s>" % (name, args)
 
     def __repr__(self):
         return str(self)

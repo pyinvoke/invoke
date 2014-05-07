@@ -2,6 +2,48 @@
 Changelog
 =========
 
+* :support:`118` Update the bundled ``six`` plus other minor tweaks to support
+  files. Thanks to Matt Iversen.
+* :feature:`115` Make it easier to reuse Invoke's primary CLI machinery in
+  other (non-Invoke-distributed) bin-scripts. Thanks to Noah Kantrowitz.
+* :feature:`110` Add task docstrings' 1st lines to ``--list`` output. Thanks to
+  Hiroki Kiyohara for the original PR (with assists from Robert Read and James
+  Thigpen.)
+* :support:`117` Tidy up ``setup.py`` a bit, including axing the (broken)
+  `distutils` support. Thanks to Matt Iversen for the original PR & followup
+  discussion.
+* :feature:`87` (also :issue:`92`) Rework the loader module such that recursive
+  filesystem searching is implemented, and is used instead of searching
+  `sys.path`.
+  
+  This adds the behavior most users expect or are familiar with from Fabric 1
+  or similar tools; and it avoids nasty surprise collisions with other
+  installed packages containing files named ``tasks.py``.
+
+  Thanks to Michael Hahn for the original report & PR, and to Matt Iversen for
+  providing the discovery algorithm used in the final version of this change.
+
+  .. warning::
+      This is technically a backwards incompatible change (reminder: we're not
+      at 1.0 yet!). You'll only notice if you were relying on adding your tasks
+      module to ``sys.path`` and then calling Invoke elsewhere on the
+      filesystem.
+
+* :support:`-` Refactor the `.Runner` module to differentiate what it means to
+  run a command in the abstract, from execution specifics. Top level API is
+  unaffected.
+* :bug:`131` Make sure one's local tasks module is always first in
+  ``sys.path``, even if its parent directory was already somewhere else in
+  ``sys.path``. This ensures that local tasks modules never become hidden by
+  third-party ones. Thanks to ``@crccheck`` for the early report and to Dorian
+  Puła for assistance fixing.
+* :bug:`116` Ensure nested config overrides play nicely with default tasks and
+  pre-tasks.
+* :bug:`127` Fill in tasks' exposed ``name`` attribute with body name if
+  explicit name not given.
+* :feature:`124` Add a ``--debug`` flag to the core parser to enable easier
+  debugging (on top of existing ``INVOKE_DEBUG`` env var.)
+* :feature:`125` Improve output of Failure exceptions when printed.
 * :release:`0.7.0 <2014.01.28>`
 * :feature:`109` Add a ``default`` kwarg to `.Collection.add_task` allowing
   per-collection control over default tasks.
