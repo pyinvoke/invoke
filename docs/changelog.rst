@@ -2,6 +2,8 @@
 Changelog
 =========
 
+* :feature:`115` Make it easier to reuse Invoke's primary CLI machinery in
+  other (non-Invoke-distributed) bin-scripts. Thanks to Noah Kantrowitz.
 * :feature:`110` Add task docstrings' 1st lines to ``--list`` output. Thanks to
   Hiroki Kiyohara for the original PR (with assists from Robert Read and James
   Thigpen.)
