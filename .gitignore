@@ -4,5 +4,5 @@ dist/
 .coverage
 .tox
 *.egg-info
-*.py[co]
+*.py[cod]
 src/
