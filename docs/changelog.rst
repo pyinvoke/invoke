@@ -2,6 +2,9 @@
 Changelog
 =========
 
+* :bug:`121` Add missing help output denoting inverse Boolean options (i.e.
+  ``--[no-]foo`` for a ``--foo`` flag whose value defaults to true.) Thanks to
+  Andrew Roberts for catch & patch.
 * :support:`118` Update the bundled ``six`` plus other minor tweaks to support
   files. Thanks to Matt Iversen.
 * :feature:`115` Make it easier to reuse Invoke's primary CLI machinery in
