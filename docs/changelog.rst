@@ -2,6 +2,9 @@
 Changelog
 =========
 
+* :bug:`128` Positional arguments containing underscores were not exporting to
+  the parser correctly; this has been fixed. Thanks to J. Javier Maestro for
+  catch & patch.
 * :bug:`121` Add missing help output denoting inverse Boolean options (i.e.
   ``--[no-]foo`` for a ``--foo`` flag whose value defaults to true.) Thanks to
   Andrew Roberts for catch & patch.
