@@ -48,6 +48,38 @@ Execution::
     Cleaning
     Building
         
+Parameterizing pre-tasks
+------------------------
+
+By default, pre-tasks are executed with no arguments. When this is not
+suitable, you can use the dedicated `@pre <.pre>` decorator, which takes a task
+name and a call signature::
+
+    @task
+    def clean(which=None):
+        which = which or 'pyc'
+        print("Cleaning {0}".format(which))
+
+    @pre('clean', which='all') # or just @pre('clean', 'all')
+    @task
+    def build():
+        print("Building")
+
+Example output::
+
+    $ invoke build
+    Cleaning all
+    Building
+
+You can use multiple `@pre <.pre>` decorators if needed. They may come in
+any order, before or after `@task <.task>`::
+
+    @task
+    @pre('clean', which='html')
+    @pre('clean', which='pyc')
+    def build():
+        print("Building")
+
 
 Task deduplication
 ==================
