@@ -24,6 +24,17 @@ class Executor(object):
         self.collection = collection
         self.context = context or Context()
 
+    def _execute(self, name, kwargs):
+        t = self.collection[name]
+        debug("Executing %r" % t)
+        args = []
+        if t.contextualized:
+            context = self.context.clone()
+            context.update(self.collection.configuration(name))
+            args.append(context)
+        return t(*args, **kwargs)
+
+
     def execute(self, name, kwargs=None, dedupe=True):
         """
         Execute a named task, honoring pre- or post-tasks and so forth.
@@ -51,7 +62,6 @@ class Executor(object):
             The return value of the named task -- regardless of whether pre- or
             post-tasks are executed.
         """
-        kwargs = kwargs or {}
         # Expand task list
         task = self.collection[name]
         debug("Executor is examining top level task %r" % task)
@@ -77,13 +87,8 @@ class Executor(object):
             debug("Deduplication is DISABLED, above pre-task list will run")
         # Execute
         results = {}
-        for tname in pre + [name]:
-            t = self.collection[tname]
-            debug("Executing %r" % t)
-            args = []
-            if t.contextualized:
-                context = self.context.clone()
-                context.update(self.collection.configuration(tname))
-                args.append(context)
-            results[t] = t(*args, **kwargs)
-        return results[task]
+        kwargs = kwargs or {}
+        for tname in pre:
+            # TODO: intelligent result capture
+            self._execute(tname, {})
+        return self._execute(name, kwargs)
