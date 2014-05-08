@@ -45,6 +45,17 @@ class Executor_(Spec):
             self.executor.execute(name='task2')
             eq_(self.task1.body.call_count, 1)
 
+        def pre_task_calls_default_to_empty_args_regardless_of_main_args(self):
+            body = Mock()
+            t1 = Task(body)
+            t2 = Task(Mock(), pre=['t1'])
+            e = Executor(
+                collection=Collection(t1=t1, t2=t2),
+                context=Context()
+            )
+            e.execute('t2', {'something': 'meh'})
+            eq_(body.call_args, tuple())
+
         def enabled_deduping(self):
             self.executor.execute(name='task2')
             self.executor.execute(name='task3')
