@@ -55,30 +55,29 @@ class Executor(object):
         # Expand task list
         task = self.collection[name]
         debug("Executor is examining top level task %r" % task)
-        task_names = list(task.pre) + [name]
         # TODO: post-tasks
-        debug("Task list, including pre/post tasks: %r" % (task_names,))
+        pre = list(task.pre)
+        debug("Pre-tasks: %r" % (pre,))
         # Dedupe if requested
         if dedupe:
             debug("Deduplication is enabled")
             # Compact (preserving order, so not using list+set)
-            compact_tasks = []
-            for tname in task_names:
-                if tname not in compact_tasks:
-                    compact_tasks.append(tname)
-            debug("Task list, obvious dupes removed: %r" % (compact_tasks,))
+            compact_pre = []
+            for tname in pre:
+                if tname not in compact_pre:
+                    compact_pre.append(tname)
+            debug("Pre-tasks, obvious dupes removed: %r" % (compact_pre,))
             # Remove tasks already called
-            tasks = []
-            for tname in compact_tasks:
+            pre = []
+            for tname in compact_pre:
                 if not self.collection[tname].called:
-                    tasks.append(tname)
-            debug("Task list, already-called tasks removed: %r" % (tasks,))
+                    pre.append(tname)
+            debug("Pre-tasks, already-called tasks removed: %r" % (pre,))
         else:
-            debug("Deduplication is DISABLED, above task list will run")
-            tasks = task_names
+            debug("Deduplication is DISABLED, above pre-task list will run")
         # Execute
         results = {}
-        for tname in tasks:
+        for tname in pre + [name]:
             t = self.collection[tname]
             debug("Executing %r" % t)
             args = []
