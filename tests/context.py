@@ -31,6 +31,48 @@ class Context_(Spec):
         def echo(self):
             self._honors('echo', True)
 
+    class run_and_expand:
+
+        def vars_from_context_config(self):
+            with patch('invoke.context.run') as run:
+                Context(config={'foo': 'bar'}).run('echo $foo', expand=True)
+                run.assert_called_with('echo bar')
+
+        def vars_from_run_config(self):
+            with patch('invoke.context.run') as run:
+                Context().run('echo $foo', expand=True, config={'foo': 'xyz'})
+                run.assert_called_with('echo xyz')
+
+        def vars_from_run_config_overrides_context_config(self):
+            with patch('invoke.context.run') as run:
+                Context(config={'foo': 'bar'}).run(
+                    'echo $foo', expand=True, config={'foo': 'xyz'})
+                run.assert_called_with('echo xyz')
+
+        def expand_set_on_context(self):
+            with patch('invoke.context.run') as run:
+                Context(config={'foo': 'bar'}, run={'expand': True}).run(
+                    'echo $foo')
+                run.assert_called_with('echo bar')
+
+        def var_with_dot(self):
+            with patch('invoke.context.run') as run:
+                Context(config={'foo.x': 'bar'}).run(
+                    'echo $foo.x', expand=True)
+                run.assert_called_with('echo bar')
+
+        def var_with_dash(self):
+            with patch('invoke.context.run') as run:
+                Context(config={'foo-x': 'bar'}).run(
+                    'echo $foo-x', expand=True)
+                run.assert_called_with('echo bar')
+
+        def var_with_braces(self):
+            with patch('invoke.context.run') as run:
+                Context(config={'foo': 'bar', 'foox': 'xyz'}).run(
+                    'echo ${foo}x', expand=True)
+                run.assert_called_with('echo barx')
+
     class clone:
         def returns_copy_of_self(self):
             skip()

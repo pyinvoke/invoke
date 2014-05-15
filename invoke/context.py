@@ -1,6 +1,11 @@
 from copy import deepcopy
+from string import Template
 
 from .runner import run
+
+
+class CmdTemplate(Template):
+    idpattern = '[a-z0-9_\-\.]+'
 
 
 class Context(object):
@@ -71,6 +76,11 @@ class Context(object):
         """
         options = dict(self.config['run'])
         options.update(kwargs)
+        cmd_config = options.pop('config', {})
+        if options.pop('expand', False):
+            config = self.config['general']
+            args = [CmdTemplate(arg).substitute(config, **cmd_config)
+                    for arg in args]
         return run(*args, **options)
 
     def __getitem__(self, *args, **kwargs):
