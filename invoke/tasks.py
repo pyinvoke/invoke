@@ -256,7 +256,7 @@ def task(*args, **kwargs):
     # @task -- no options were (probably) given.
     # Also handles ctask's use case when given as @ctask, equivalent to
     # @task(obj, contextualized=True).
-    if len(args) == 1 and callable(args[0]):
+    if len(args) == 1 and callable(args[0]) and not isinstance(args[0], Task):
         return Task(args[0], **kwargs)
     # @task(pre, tasks, here)
     if args:
