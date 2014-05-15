@@ -62,7 +62,7 @@ class task_(Spec):
             pass
         eq_(len(mytask.positional), 0)
 
-    def pre_tasks_stored_as_simple_list_of_strings(self):
+    def pre_tasks_stored_directly(self):
         @task(pre=['whatever'])
         def func():
             pass
@@ -75,7 +75,7 @@ class task_(Spec):
         eq_(func.pre, ('my', 'pre', 'tasks'))
 
     @raises(TypeError)
-    def no_ambiguity_between_star_args_and_pre_kwarg(self):
+    def disallows_ambiguity_between_star_args_and_pre_kwarg(self):
         @task('lol', 'wut', pre=['no', 'wai'])
         def func():
             pass
