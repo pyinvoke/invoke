@@ -277,4 +277,5 @@ def main():
     # Parse command line
     debug("Base argv from sys: %r" % (sys.argv[1:],))
     for result in dispatch(sys.argv):
-        print(result)
+        if result is not None:
+            print(result)
