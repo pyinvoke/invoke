@@ -10,8 +10,8 @@ from invoke.tasks import Task, ctask
 class Executor_(Spec):
     def setup(self):
         self.task1 = Task(Mock(return_value=7))
-        self.task2 = Task(Mock(return_value=10), pre=['task1'])
-        self.task3 = Task(Mock(), pre=['task1'])
+        self.task2 = Task(Mock(return_value=10), pre=[self.task1])
+        self.task3 = Task(Mock(), pre=[self.task1])
         coll = Collection()
         coll.add_task(self.task1, name='task1')
         coll.add_task(self.task2, name='task2')
@@ -48,7 +48,7 @@ class Executor_(Spec):
         def pre_task_calls_default_to_empty_args_regardless_of_main_args(self):
             body = Mock()
             t1 = Task(body)
-            t2 = Task(Mock(), pre=['t1'])
+            t2 = Task(Mock(), pre=[t1])
             e = Executor(
                 collection=Collection(t1=t1, t2=t2),
                 context=Context()
