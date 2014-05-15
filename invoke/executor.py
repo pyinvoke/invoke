@@ -24,15 +24,16 @@ class Executor(object):
         self.collection = collection
         self.context = context or Context()
 
-    def _execute(self, name, kwargs):
-        t = self.collection[name]
-        debug("Executing %r" % t)
+    def _execute(self, task, name, kwargs):
+        # Need task + possible name when invoking CLI-given tasks, so we can
+        # pass a dotted path to Collection.configuration()
+        debug("Executing %r%s" % (task, (" as %s" % name) if name else ""))
         args = []
-        if t.contextualized:
+        if task.contextualized:
             context = self.context.clone()
             context.update(self.collection.configuration(name))
             args.append(context)
-        return t(*args, **kwargs)
+        return task(*args, **kwargs)
 
 
     def execute(self, name, kwargs=None, dedupe=True):
@@ -64,7 +65,9 @@ class Executor(object):
         """
         # Expand task list
         task = self.collection[name]
-        debug("Executor is examining top level task %r" % task)
+        debug("Executor is examining top level task %r (name given: %r)" % (
+            task, name
+        ))
         # TODO: post-tasks
         pre = list(task.pre)
         debug("Pre-tasks: %r" % (pre,))
@@ -73,22 +76,25 @@ class Executor(object):
             debug("Deduplication is enabled")
             # Compact (preserving order, so not using list+set)
             compact_pre = []
-            for tname in pre:
-                if tname not in compact_pre:
-                    compact_pre.append(tname)
+            for t in pre:
+                if t not in compact_pre:
+                    compact_pre.append(t)
             debug("Pre-tasks, obvious dupes removed: %r" % (compact_pre,))
             # Remove tasks already called
             pre = []
-            for tname in compact_pre:
-                if not self.collection[tname].called:
-                    pre.append(tname)
+            for t in compact_pre:
+                if not t.called:
+                    pre.append(t)
             debug("Pre-tasks, already-called tasks removed: %r" % (pre,))
         else:
             debug("Deduplication is DISABLED, above pre-task list will run")
         # Execute
         results = {}
         kwargs = kwargs or {}
-        for tname in pre:
+        for t in pre:
             # TODO: intelligent result capture
-            self._execute(tname, {})
-        return self._execute(name, kwargs)
+            # Execute task w/o a given name since it's a pre-task.
+            # TODO: figure out if that's quite right (may not play well with
+            # nested config junk)
+            self._execute(t, None, {})
+        return self._execute(task, name, kwargs)

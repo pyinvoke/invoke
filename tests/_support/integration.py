@@ -17,6 +17,6 @@ def print_underscored_arg(my_option):
 def foo():
     print("foo")
 
-@task('foo')
+@task(foo)
 def bar():
     print("bar")
