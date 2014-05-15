@@ -31,14 +31,14 @@ Pre-tasks
 =========
 
 Tasks may specify that other tasks should always run before they themselves
-run, by giving non-keyword arguments to ``@task`` (or explicitly via the
-``pre`` keyword argument). Example::
+run, by giving task objects as non-keyword arguments to ``@task`` (or
+explicitly via the ``pre`` keyword argument). Example::
 
     @task
     def clean():
         print("Cleaning")
 
-    @task('clean')
+    @task(clean) # or @task(pre=[clean])
     def build():
         print("Building")
 
@@ -52,16 +52,15 @@ Parameterizing pre-tasks
 ------------------------
 
 By default, pre-tasks are executed with no arguments. When this is not
-suitable, you can use the dedicated `@pre <.pre>` decorator, which takes a task
-name and a call signature::
+suitable, you can replace the task objects with calls to the `~.tasks.call`
+function, which takes a task name and a call signature::
 
     @task
     def clean(which=None):
         which = which or 'pyc'
         print("Cleaning {0}".format(which))
 
-    @pre('clean', which='all') # or just @pre('clean', 'all')
-    @task
+    @task(pre=[call(clean, which='all')]) # or just call(clean, 'all')
     def build():
         print("Building")
 
@@ -70,15 +69,6 @@ Example output::
     $ invoke build
     Cleaning all
     Building
-
-You can use multiple `@pre <.pre>` decorators if needed. They may come in
-any order, before or after `@task <.task>`::
-
-    @task
-    @pre('clean', which='html')
-    @pre('clean', which='pyc')
-    def build():
-        print("Building")
 
 
 Task deduplication
