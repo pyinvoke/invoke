@@ -150,7 +150,7 @@ build (but which, of course, can still be executed on its own)::
     def clean():
         run("rm -rf docs/_build")
 
-    @task('clean')
+    @task(clean)
     def build():
         run("sphinx-build docs docs/_build")
 
@@ -159,7 +159,7 @@ Now when you ``invoke build``, it will automatically run ``clean`` first.
 .. note::
     If you're not a fan of the implicit "positional arguments are pre-run task
     names" API, you can simply give the ``pre`` kwarg:
-    ``@task(pre=['clean'])``.
+    ``@task(pre=[clean])``.
 
 Details can be found in the :doc:`execution conceptual docs
 <concepts/execution>`.

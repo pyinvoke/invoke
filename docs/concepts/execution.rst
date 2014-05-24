@@ -82,11 +82,11 @@ encountered. Example::
     def clean():
         print("Cleaning")
 
-    @task('clean')
+    @task(clean)
     def build():
         print("Building")
 
-    @task(pre=['build'])
+    @task(pre=[build])
     def package():
         print("Packaging")
 
@@ -211,7 +211,7 @@ Getting hairy: one task, with one pre-task, parameterized
     def setup():
         print("Yay")
 
-    @task(pre=['setup'])
+    @task(pre=[setup])
     def build():
         print("Woo")
 

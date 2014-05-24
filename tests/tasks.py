@@ -63,20 +63,35 @@ class task_(Spec):
         eq_(len(mytask.positional), 0)
 
     def pre_tasks_stored_directly(self):
-        @task(pre=['whatever'])
+        @task
+        def whatever():
+            pass
+        @task(pre=[whatever])
         def func():
             pass
-        eq_(func.pre, ['whatever'])
+        eq_(func.pre, [whatever])
 
     def allows_star_args_as_shortcut_for_pre(self):
-        @task('my', 'pre', 'tasks')
+        @task
+        def pre1():
+            pass
+        @task
+        def pre2():
+            pass
+        @task(pre1, pre2)
         def func():
             pass
-        eq_(func.pre, ('my', 'pre', 'tasks'))
+        eq_(func.pre, (pre1, pre2))
 
     @raises(TypeError)
     def disallows_ambiguity_between_star_args_and_pre_kwarg(self):
-        @task('lol', 'wut', pre=['no', 'wai'])
+        @task
+        def pre1():
+            pass
+        @task
+        def pre2():
+            pass
+        @task(pre1, pre=[pre2])
         def func():
             pass
 
