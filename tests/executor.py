@@ -1,10 +1,10 @@
 from spec import Spec, eq_, skip
-from mock import Mock
+from mock import Mock, call as mock_call
 
 from invoke.context import Context
 from invoke.executor import Executor
 from invoke.collection import Collection
-from invoke.tasks import Task, ctask
+from invoke.tasks import Task, ctask, call
 
 
 class Executor_(Spec):
@@ -56,10 +56,30 @@ class Executor_(Spec):
             e.execute('t2', {'something': 'meh'})
             eq_(body.call_args, tuple())
 
+        def pre_tasks_may_be_call_objects_specifying_args(self):
+            body = Mock()
+            t1 = Task(body)
+            t2 = Task(Mock(), pre=[call(t1, 5, foo='bar')])
+            c = Collection(t1=t1, t2=t2)
+            e = Executor(collection=c, context=Context())
+            e.execute('t2')
+            eq_(body.call_args, ((5,), {'foo': 'bar'}))
+
         def enabled_deduping(self):
             self.executor.execute(name='task2')
             self.executor.execute(name='task3')
             eq_(self.task1.body.call_count, 1)
+
+        def deduping_treats_different_calls_to_same_task_differently(self):
+            body = Mock()
+            t1 = Task(body)
+            pre = [call(t1, 5), call(t1, 7), call(t1, 5)]
+            t2 = Task(Mock(), pre=pre)
+            c = Collection(t1=t1, t2=t2)
+            e = Executor(collection=c, context=Context())
+            e.execute('t2')
+            # Does not call the second t1(5)
+            body.assert_has_calls([mock_call(5), mock_call(7)])
 
         def disabled_deduping(self):
             self.executor.execute(name='task2', dedupe=False)
