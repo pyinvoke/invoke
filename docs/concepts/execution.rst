@@ -107,6 +107,11 @@ e.g.::
 
 would run ``build`` two times (though ``clean`` would still only run once).
 
+.. note::
+    Parameterized pre-tasks (using `~.tasks.call`) are deduped based on their
+    argument lists, so if our ``clean()`` above took a parameter, ``call(clean,
+    'all')`` and ``call(clean, 'html')`` would not be deduped, but two
+    instances of ``call(clean, 'all')`` would.
 
 Foregoing deduplication of tasks
 ================================
