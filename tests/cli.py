@@ -16,8 +16,13 @@ import invoke
 from _utils import support
 
 
-def _output_eq(cmd, expected):
-    return eq_(run(cmd).stdout, expected)
+@trap
+def _output_eq(collection, args, expected):
+    """
+    dispatch() to 'collection' + 'args', match stdout to 'expected'.
+    """
+    dispatch(['inv', '-c', collection] + args)
+    eq_(sys.stdout.getvalue(), expected)
 
 
 class CLI(Spec):
@@ -26,10 +31,10 @@ class CLI(Spec):
         os.chdir(support)
 
 
-    @trap
     def invocation_with_underscored_args(self):
         _output_eq(
-            "invoke -c integration print_underscored_arg --my-option whatevs",
+            'integration',
+            ['print_underscored_arg', '--my-option', 'whatevs'],
             "whatevs\n"
         )
 
