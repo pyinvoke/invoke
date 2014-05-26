@@ -25,6 +25,7 @@ install:
   - pip install -r dev-requirements.txt
 script:
   - inv test
+  - inv integration
   # Jinja2, used by Sphinx, does not work on Python 3.2 (but does on 3.3)
   - "if [[ $TRAVIS_PYTHON_VERSION != '3.2' ]]; then inv docs; fi"
 notifications:
