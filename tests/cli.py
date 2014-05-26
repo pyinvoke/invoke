@@ -181,7 +181,6 @@ Available tasks:
 
 """ % '\n'.join("  " + x for x in lines)).lstrip()
 
-        @trap
         def simple_output(self):
             expected = self._listing(
                 'bar',
@@ -191,9 +190,8 @@ Available tasks:
                 'print_underscored_arg',
             )
             for flag in ('-l', '--list'):
-                eq_(run("invoke -c integration %s" % flag).stdout, expected)
+                _output_eq(['-c', 'integration', flag], expected)
 
-        @trap
         def namespacing(self):
             # TODO: break out the listing behavior into a testable method, down
             # with subprocesses!
@@ -201,43 +199,37 @@ Available tasks:
                 'toplevel',
                 'module.mytask',
             )
-            eq_(run("invoke -c namespacing --list").stdout, expected)
+            _output_eq(['-c', 'namespacing', '--list'], expected)
 
-        @trap
         def top_level_tasks_listed_first(self):
             expected = self._listing(
                 'z_toplevel',
                 'a.subtask'
             )
-            eq_(run("invoke -c simple_ns_list --list").stdout, expected)
+            _output_eq(['-c', 'simple_ns_list', '--list'], expected)
 
-        @trap
         def subcollections_sorted_in_depth_order(self):
             expected = self._listing(
                 'toplevel',
                 'a.subtask',
                 'a.nother.subtask',
             )
-            eq_(run("invoke -c deeper_ns_list --list").stdout, expected)
+            _output_eq(['-c', 'deeper_ns_list', '--list'], expected)
 
-        @trap
         def aliases_sorted_alphabetically(self):
             expected = self._listing(
                 'toplevel (a, z)',
             )
-            eq_(run("invoke -c alias_sorting --list").stdout, expected)
+            _output_eq(['-c', 'alias_sorting', '--list'], expected)
 
-
-        @trap
         def default_tasks(self):
             # sub-ns default task display as "real.name (collection name)"
             expected = self._listing(
                 'top_level (othertop)',
                 'sub.sub_task (sub, sub.othersub)',
             )
-            eq_(run("invoke -c explicit_root --list").stdout, expected)
+            _output_eq(['-c', 'explicit_root', '--list'], expected)
 
-        @trap
         def docstrings_shown_alongside(self):
             expected = self._listing(
                 'leading_whitespace    foo',
@@ -246,7 +238,7 @@ Available tasks:
                 'two_lines             foo',
                 'with_aliases (a, b)   foo',
             )
-            eq_(run("invoke -c docstrings --list").stdout, expected)
+            _output_eq(['-c', 'docstrings', '--list'], expected)
 
     @trap
     def no_deduping(self):
