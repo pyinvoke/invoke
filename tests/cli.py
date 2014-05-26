@@ -122,7 +122,6 @@ Options:
                 expect_stdout=expected
             )
 
-    @trap
     def per_task_help_works_for_unparameterized_tasks(self):
         expected = """
 Usage: inv[oke] [--core-opts] biz [other tasks here ...]
@@ -134,8 +133,10 @@ Options:
   none
 
 """.lstrip()
-        r = run("inv -c decorator -h biz", hide='out')
-        eq_(r.stdout, expected)
+        _output_eq(
+            ['-c', 'decorator', '-h', 'biz'],
+            expect_stdout=expected,
+        )
 
     @trap
     def per_task_help_displays_docstrings_if_given(self):
