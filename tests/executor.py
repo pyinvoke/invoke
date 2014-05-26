@@ -56,17 +56,20 @@ class Executor_(Spec):
             e.execute('t2', {'something': 'meh'})
             eq_(body.call_args, tuple())
 
-        def pre_tasks_may_be_call_objects_specifying_args(self):
+        def _call_objs(self, contextualized):
             body = Mock()
-            t1 = Task(body)
+            t1 = Task(body, contextualized=contextualized)
             t2 = Task(Mock(), pre=[call(t1, 5, foo='bar')])
             c = Collection(t1=t1, t2=t2)
             e = Executor(collection=c, context=Context())
             e.execute('t2')
             eq_(body.call_args, ((5,), {'foo': 'bar'}))
 
+        def pre_tasks_may_be_call_objects_specifying_args(self):
+            self._call_objs(False)
+
         def call_obj_pre_tasks_play_well_with_context_args(self):
-            skip()
+            self._call_objs(True)
 
         def enabled_deduping(self):
             self.executor.execute(name='task2')
