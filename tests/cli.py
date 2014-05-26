@@ -173,7 +173,7 @@ Options:
     class task_list:
         "--list"
 
-        def _listing(self, *lines):
+        def _listing(self, lines):
             return ("""
 Available tasks:
 
@@ -181,64 +181,59 @@ Available tasks:
 
 """ % '\n'.join("  " + x for x in lines)).lstrip()
 
+        def _list_eq(self, collection, listing):
+            _output_eq(['-c', collection, '--list'], self._listing(listing))
+
         def simple_output(self):
-            expected = self._listing(
+            expected = self._listing((
                 'bar',
                 'foo',
                 'print_foo',
                 'print_name',
                 'print_underscored_arg',
-            )
+            ))
             for flag in ('-l', '--list'):
                 _output_eq(['-c', 'integration', flag], expected)
 
         def namespacing(self):
-            # TODO: break out the listing behavior into a testable method, down
-            # with subprocesses!
-            expected = self._listing(
+            self._list_eq('namespacing', (
                 'toplevel',
                 'module.mytask',
-            )
-            _output_eq(['-c', 'namespacing', '--list'], expected)
+            ))
 
         def top_level_tasks_listed_first(self):
-            expected = self._listing(
+            self._list_eq('simple_ns_list', (
                 'z_toplevel',
                 'a.subtask'
-            )
-            _output_eq(['-c', 'simple_ns_list', '--list'], expected)
+            ))
 
         def subcollections_sorted_in_depth_order(self):
-            expected = self._listing(
+            self._list_eq('deeper_ns_list', (
                 'toplevel',
                 'a.subtask',
                 'a.nother.subtask',
-            )
-            _output_eq(['-c', 'deeper_ns_list', '--list'], expected)
+            ))
 
         def aliases_sorted_alphabetically(self):
-            expected = self._listing(
+            self._list_eq('alias_sorting', (
                 'toplevel (a, z)',
-            )
-            _output_eq(['-c', 'alias_sorting', '--list'], expected)
+            ))
 
         def default_tasks(self):
             # sub-ns default task display as "real.name (collection name)"
-            expected = self._listing(
+            self._list_eq('explicit_root', (
                 'top_level (othertop)',
                 'sub.sub_task (sub, sub.othersub)',
-            )
-            _output_eq(['-c', 'explicit_root', '--list'], expected)
+            ))
 
         def docstrings_shown_alongside(self):
-            expected = self._listing(
+            self._list_eq('docstrings', (
                 'leading_whitespace    foo',
                 'no_docstring',
                 'one_line              foo',
                 'two_lines             foo',
                 'with_aliases (a, b)   foo',
-            )
-            _output_eq(['-c', 'docstrings', '--list'], expected)
+            ))
 
     @trap
     def no_deduping(self):
