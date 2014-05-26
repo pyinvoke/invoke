@@ -17,11 +17,14 @@ from _utils import support
 
 
 @trap
-def _output_eq(collection, args, expected):
+def _output_eq(args, expected, collection=None):
     """
     dispatch() to 'collection' + 'args', match stdout to 'expected'.
     """
-    dispatch(['inv', '-c', collection] + args)
+    if collection:
+        args = ['-c', collection] + args
+    args = ['inv'] + args
+    dispatch(args)
     eq_(sys.stdout.getvalue(), expected)
 
 
@@ -46,16 +49,16 @@ class CLI(Spec):
 
         def args(self):
             _output_eq(
-                'integration',
                 ['print_name', '--name', 'inigo'],
-                "inigo\n"
+                "inigo\n",
+                'integration',
             )
 
         def underscored_args(self):
             _output_eq(
-                'integration',
                 ['print_underscored_arg', '--my-option', 'whatevs'],
-                "whatevs\n"
+                "whatevs\n",
+                'integration',
             )
 
     def contextualized_tasks_are_given_parser_context_arg(self):
