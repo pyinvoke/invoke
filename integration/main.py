@@ -21,3 +21,14 @@ class Main(Spec):
     @trap
     def shorthand_binary_name(self):
         _output_eq("inv print_foo", "foo\n")
+
+    @trap
+    def explicit_task_module(self):
+        _output_eq("invoke --collection _explicit foo", "Yup\n")
+
+    @trap
+    def invocation_with_args(self):
+        _output_eq(
+            "invoke print_name --name whatevs",
+            "whatevs\n"
+        )

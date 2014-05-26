@@ -25,19 +25,6 @@ class CLI(Spec):
     def setup(self):
         os.chdir(support)
 
-    @trap
-    def implicit_task_module(self):
-        # Contains tasks.py
-        os.chdir('implicit')
-        # Doesn't specify --collection
-        _output_eq("invoke foo", "Hm\n")
-
-    @trap
-    def invocation_with_args(self):
-        _output_eq(
-            "invoke -c integration print_name --name whatevs",
-            "whatevs\n"
-        )
 
     @trap
     def invocation_with_underscored_args(self):
