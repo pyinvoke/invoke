@@ -101,7 +101,6 @@ Core options:
             with patch('sys.exit'):
                 _output_eq([flag], expect_stdout=expected)
 
-    @trap
     def per_task_help_prints_help_for_task_only(self):
         expected = """
 Usage: inv[oke] [--core-opts] punch [--options] [other tasks here ...]
@@ -114,10 +113,12 @@ Options:
   -w STRING, --who=STRING   Who to punch
 
 """.lstrip()
-        r1 = run("inv -c decorator -h punch", hide='out')
-        r2 = run("inv -c decorator --help punch", hide='out')
-        eq_(r1.stdout, expected)
-        eq_(r2.stdout, expected)
+        for flag in ['-h', '--help']:
+            with patch('sys.exit'):
+                _output_eq(
+                    ['-c', 'decorator', flag, 'punch'],
+                    expect_stdout=expected
+                )
 
     @trap
     def per_task_help_works_for_unparameterized_tasks(self):
