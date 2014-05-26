@@ -25,15 +25,6 @@ class CLI(Spec):
     def setup(self):
         os.chdir(support)
 
-    def _basic(self):
-        self.result = run("invoke -c integration print_foo", hide='both')
-
-    # Yo dogfood, I heard you like invoking
-    @trap
-    def basic_invocation(self):
-        self._basic()
-        _output_eq("invoke -c integration print_foo", "foo\n")
-
     @trap
     def implicit_task_module(self):
         # Contains tasks.py
@@ -59,10 +50,6 @@ class CLI(Spec):
         # go() in contextualized.py just returns its initial arg
         retval = dispatch(['invoke', '-c', 'contextualized', 'go'])[0]
         assert isinstance(retval, Context)
-
-    @trap
-    def shorthand_binary_name(self):
-        _output_eq("invoke -c integration print_foo", "foo\n")
 
     def core_help_option_prints_core_help(self):
         # TODO: change dynamically based on parser contents?
