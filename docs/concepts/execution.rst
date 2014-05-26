@@ -52,8 +52,7 @@ Parameterizing pre-tasks
 ------------------------
 
 By default, pre-tasks are executed with no arguments. When this is not
-suitable, you can replace the task objects with calls to `~.tasks.call`, which
-takes a task name and a call signature::
+suitable, you can wrap the task objects with `~.tasks.call` objects which allow you to specify a call signature::
 
     @task
     def clean(which=None):
