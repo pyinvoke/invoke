@@ -275,7 +275,6 @@ bar
 TB_SENTINEL = 'Traceback (most recent call last)'
 
 class HighLevelFailures(Spec):
-
     def command_failure(self):
         "Command failure doesn't show tracebacks"
         result = run("inv -c fail simple", warn=True, hide='both')
