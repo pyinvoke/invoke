@@ -235,18 +235,22 @@ Available tasks:
                 'with_aliases (a, b)   foo',
             ))
 
-    @trap
     def no_deduping(self):
         expected = """
 foo
 foo
 bar
 """.lstrip()
-        eq_(run("invoke -c integration --no-dedupe foo bar").stdout, expected)
+        _output_eq(
+            ['-c', 'integration', '--no-dedupe', 'foo', 'bar'],
+            expected
+        )
 
-    @trap
-    def debug_flag(self):
-        assert 'my-sentinel' in run("invoke -d -c debugging foo").stderr
+    def debug_flag_activates_logging(self):
+        # Have to patch our logger to get in before Nose logcapture kicks in.
+        with patch('invoke.util.debug') as debug:
+            dispatch(['inv', '-d', '-c', 'debugging', 'foo'])
+            debug.assert_called_with('my-sentinel')
 
     class run_options:
         "run() related CLI flags"
