@@ -275,11 +275,13 @@ bar
 TB_SENTINEL = 'Traceback (most recent call last)'
 
 class HighLevelFailures(Spec):
+    @trap
     def command_failure(self):
         "Command failure doesn't show tracebacks"
-        result = run("inv -c fail simple", warn=True, hide='both')
-        assert TB_SENTINEL not in result.stderr
-        assert result.exited != 0
+        with patch('sys.exit') as exit:
+            dispatch(['inv', '-c', 'fail', 'simple'])
+            assert TB_SENTINEL not in sys.stderr.getvalue()
+            exit.assert_called_with(1)
 
     class parsing:
         def should_not_show_tracebacks(self):
