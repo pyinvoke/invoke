@@ -2,6 +2,14 @@
 Changelog
 =========
 
+* :feature:`135` Allow control over the arguments passed to pre-tasks (via
+  `.call`). For details, see :ref:`pre-tasks`.
+
+  .. warning::
+      Pre-tasks were overhauled a moderate amount to implement this feature;
+      they now require references to **task objects** instead of **task
+      names**. This is a backwards incompatible change.
+
 * :bug:`128` Positional arguments containing underscores were not exporting to
   the parser correctly; this has been fixed. Thanks to J. Javier Maestro for
   catch & patch.

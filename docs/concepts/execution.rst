@@ -26,6 +26,7 @@ Execution::
     $ invoke hello
     Hello, world!
 
+.. _pre-tasks:
 
 Pre-tasks
 =========
