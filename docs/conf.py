@@ -2,7 +2,7 @@ from datetime import datetime
 import os
 import sys
 
-exts = ('autodoc',)# 'viewcode')
+exts = ('autodoc', 'intersphinx')# 'viewcode')
 extensions = list(map(lambda x: 'sphinx.ext.%s' % x, exts))
 templates_path = ['_templates']
 source_suffix = '.rst'
@@ -14,6 +14,10 @@ copyright = u'%d Jeff Forcier' % year
 
 # Ensure `links` try hitting API endpoints by default.
 default_role = 'py:obj'
+# And that we can talk to Python stdlib docs
+intersphinx_mapping = {
+    'python': ('http://docs.python.org/2.6', None),
+}
 
 # Ensure project directory is on PYTHONPATH for version, autodoc access
 sys.path.insert(0, os.path.abspath(os.path.join(os.getcwd(), '..')))
