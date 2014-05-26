@@ -4,7 +4,7 @@ import sys
 from spec import eq_, skip, Spec, ok_, trap
 from mock import patch
 
-from invoke.cli import parse, dispatch
+from invoke.cli import parse, dispatch as _dispatch
 from invoke.context import Context
 from invoke.runner import run
 from invoke.parser import Parser
@@ -16,6 +16,10 @@ import invoke
 from _utils import support
 
 
+# Strings are easier to type & read than lists
+def dispatch(argstr, version=None):
+    return _dispatch(argstr.split(), version)
+
 @trap
 def _output_eq(args, stdout=None, stderr=None):
     """
@@ -23,8 +27,7 @@ def _output_eq(args, stdout=None, stderr=None):
 
     Must give either or both of the output-expecting args.
     """
-    args = ['inv'] + args
-    dispatch(args)
+    dispatch("inv {0}".format(args))
     if stdout:
         eq_(sys.stdout.getvalue(), stdout)
     if stderr:
@@ -44,32 +47,28 @@ class CLI(Spec):
         @trap
         def vanilla(self):
             os.chdir('implicit')
-            dispatch(['inv', 'foo'])
+            dispatch('inv foo')
             eq_(sys.stdout.getvalue(), "Hm\n")
 
         @trap
         def vanilla_with_explicit_collection(self):
             # Duplicates _output_eq above, but this way that can change w/o
             # breaking our expectations.
-            dispatch(['inv', '-c', 'integration', 'print_foo'])
+            dispatch('inv -c integration print_foo')
             eq_(sys.stdout.getvalue(), "foo\n")
 
         def args(self):
-            _output_eq(
-                ['-c', 'integration', 'print_name', '--name', 'inigo'],
-                "inigo\n",
-            )
+            _output_eq('-c integration print_name --name inigo', "inigo\n")
 
         def underscored_args(self):
             _output_eq(
-                ['-c', 'integration',
-                    'print_underscored_arg', '--my-option', 'whatevs'],
+                '-c integration print_underscored_arg --my-option whatevs',
                 "whatevs\n",
             )
 
     def contextualized_tasks_are_given_parser_context_arg(self):
         # go() in contextualized.py just returns its initial arg
-        retval = dispatch(['invoke', '-c', 'contextualized', 'go'])[0]
+        retval = dispatch('invoke -c contextualized go')[0]
         assert isinstance(retval, Context)
 
     def core_help_option_prints_core_help(self):
@@ -102,7 +101,7 @@ Core options:
 
 """.lstrip()
         for flag in ['-h', '--help']:
-            _output_eq([flag], expected)
+            _output_eq(flag, expected)
 
     def per_task_help_prints_help_for_task_only(self):
         expected = """
@@ -117,7 +116,7 @@ Options:
 
 """.lstrip()
         for flag in ['-h', '--help']:
-            _output_eq(['-c', 'decorator', flag, 'punch'], expected)
+            _output_eq('-c decorator {0} punch'.format(flag), expected)
 
     def per_task_help_works_for_unparameterized_tasks(self):
         expected = """
@@ -130,7 +129,7 @@ Options:
   none
 
 """.lstrip()
-        _output_eq(['-c', 'decorator', '-h', 'biz'], expected)
+        _output_eq('-c decorator -h biz', expected)
 
     def per_task_help_displays_docstrings_if_given(self):
         expected = """
@@ -143,7 +142,7 @@ Options:
   none
 
 """.lstrip()
-        _output_eq(['-c', 'decorator', '-h', 'foo'], expected)
+        _output_eq('-c decorator -h foo', expected)
 
     def per_task_help_dedents_correctly(self):
         expected = """
@@ -160,14 +159,14 @@ Options:
   none
 
 """.lstrip()
-        _output_eq(['-c', 'decorator', '-h', 'foo2'], expected)
+        _output_eq('-c decorator -h foo2', expected)
 
     def version_info(self):
-        _output_eq(['-V'], "Invoke %s\n" % invoke.__version__)
+        _output_eq('-V', "Invoke %s\n" % invoke.__version__)
 
     @trap
     def version_override(self):
-        dispatch(['notinvoke', '-V'], version="nope 1.0")
+        dispatch('notinvoke -V', version="nope 1.0")
         eq_(sys.stdout.getvalue(), "nope 1.0\n")
 
     class task_list:
@@ -182,7 +181,8 @@ Available tasks:
 """ % '\n'.join("  " + x for x in lines)).lstrip()
 
         def _list_eq(self, collection, listing):
-            _output_eq(['-c', collection, '--list'], self._listing(listing))
+            cmd = '-c {0} --list'.format(collection)
+            _output_eq(cmd, self._listing(listing))
 
         def simple_output(self):
             expected = self._listing((
@@ -193,7 +193,7 @@ Available tasks:
                 'print_underscored_arg',
             ))
             for flag in ('-l', '--list'):
-                _output_eq(['-c', 'integration', flag], expected)
+                _output_eq('-c integration {0}'.format(flag), expected)
 
         def namespacing(self):
             self._list_eq('namespacing', (
@@ -241,35 +241,32 @@ foo
 foo
 bar
 """.lstrip()
-        _output_eq(
-            ['-c', 'integration', '--no-dedupe', 'foo', 'bar'],
-            expected
-        )
+        _output_eq('-c integration --no-dedupe foo bar', expected)
 
     def debug_flag_activates_logging(self):
         # Have to patch our logger to get in before Nose logcapture kicks in.
         with patch('invoke.util.debug') as debug:
-            dispatch(['inv', '-d', '-c', 'debugging', 'foo'])
+            dispatch('inv -d -c debugging foo')
             debug.assert_called_with('my-sentinel')
 
     class run_options:
         "run() related CLI flags"
         def _test_flag(self, flag, kwarg, value):
             with patch('invoke.context.run') as run:
-                dispatch(['invoke'] + flag + ['-c', 'contextualized', 'run'])
+                dispatch('invoke {0} -c contextualized run'.format(flag))
                 run.assert_called_with('x', **{kwarg: value})
 
         def warn_only(self):
-            self._test_flag(['-w'], 'warn', True)
+            self._test_flag('-w', 'warn', True)
 
         def pty(self):
-            self._test_flag(['-p'], 'pty', True)
+            self._test_flag('-p', 'pty', True)
 
         def hide(self):
-            self._test_flag(['--hide', 'both'], 'hide', 'both')
+            self._test_flag('--hide both', 'hide', 'both')
 
         def echo(self):
-            self._test_flag(['-e'], 'echo', True)
+            self._test_flag('-e', 'echo', True)
 
 
 TB_SENTINEL = 'Traceback (most recent call last)'
@@ -279,7 +276,7 @@ class HighLevelFailures(Spec):
     def command_failure(self):
         "Command failure doesn't show tracebacks"
         with patch('sys.exit') as exit:
-            dispatch(['inv', '-c', 'fail', 'simple'])
+            dispatch('inv -c fail simple')
             assert TB_SENTINEL not in sys.stderr.getvalue()
             exit.assert_called_with(1)
 
