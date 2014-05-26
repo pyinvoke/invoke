@@ -132,7 +132,6 @@ Options:
 """.lstrip()
         _output_eq(['-c', 'decorator', '-h', 'biz'], expected)
 
-    @trap
     def per_task_help_displays_docstrings_if_given(self):
         expected = """
 Usage: inv[oke] [--core-opts] foo [other tasks here ...]
@@ -144,10 +143,8 @@ Options:
   none
 
 """.lstrip()
-        r = run("inv -c decorator -h foo", hide='out')
-        eq_(r.stdout, expected)
+        _output_eq(['-c', 'decorator', '-h', 'foo'], expected)
 
-    @trap
     def per_task_help_dedents_correctly(self):
         expected = """
 Usage: inv[oke] [--core-opts] foo2 [other tasks here ...]
@@ -163,17 +160,15 @@ Options:
   none
 
 """.lstrip()
-        r = run("inv -c decorator -h foo2", hide='out')
-        eq_(r.stdout, expected)
+        _output_eq(['-c', 'decorator', '-h', 'foo2'], expected)
 
-    @trap
     def version_info(self):
-        eq_(run("invoke -V").stdout, "Invoke %s\n" % invoke.__version__)
+        _output_eq(['-V'], "Invoke %s\n" % invoke.__version__)
 
     @trap
     def version_override(self):
-        parse(['notinvoke', '-V'], Collection(), "nope 1.0")
-        assert 'nope 1.0' in sys.stdout.getvalue()
+        dispatch(['notinvoke', '-V'], version="nope 1.0")
+        eq_(sys.stdout.getvalue(), "nope 1.0\n")
 
     class task_list:
         "--list"
