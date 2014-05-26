@@ -63,7 +63,13 @@ class Executor_(Spec):
             c = Collection(t1=t1, t2=t2)
             e = Executor(collection=c, context=Context())
             e.execute('t2')
-            eq_(body.call_args, ((5,), {'foo': 'bar'}))
+            args, kwargs = body.call_args
+            eq_(kwargs, {'foo': 'bar'})
+            if contextualized:
+                assert isinstance(args[0], Context)
+                eq_(args[1], 5)
+            else:
+                eq_(args, (5,))
 
         def pre_tasks_may_be_call_objects_specifying_args(self):
             self._call_objs(False)

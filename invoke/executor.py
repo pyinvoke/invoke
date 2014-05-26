@@ -32,7 +32,7 @@ class Executor(object):
         if task.contextualized:
             context = self.context.clone()
             context.update(self.collection.configuration(name))
-            args.insert(0, context)
+            args = (context,) + args
         return task(*args, **kwargs)
 
 
@@ -102,4 +102,4 @@ class Executor(object):
                 t = c.task
                 pre_args, pre_kwargs = c.args, c.kwargs
             self._execute(task=t, name=None, args=pre_args, kwargs=pre_kwargs)
-        return self._execute(task=task, name=name, args=[], kwargs=kwargs)
+        return self._execute(task=task, name=name, args=tuple(), kwargs=kwargs)
