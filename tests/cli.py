@@ -1,10 +1,10 @@
 import os
 import sys
 
-from spec import eq_, skip, Spec, ok_, trap
+from spec import eq_, skip, Spec, ok_, trap, nottest
 from mock import patch
 
-from invoke.cli import parse, dispatch as _dispatch
+from invoke.cli import parse, dispatch
 from invoke.context import Context
 from invoke.runner import run
 from invoke.parser import Parser
@@ -17,8 +17,9 @@ from _utils import support
 
 
 # Strings are easier to type & read than lists
-def dispatch(argstr, version=None):
-    return _dispatch(argstr.split(), version)
+
+def _dispatch(argstr, version=None):
+    return dispatch(argstr.split(), version)
 
 @trap
 def _output_eq(args, stdout=None, stderr=None):
@@ -27,7 +28,7 @@ def _output_eq(args, stdout=None, stderr=None):
 
     Must give either or both of the output-expecting args.
     """
-    dispatch("inv {0}".format(args))
+    _dispatch("inv {0}".format(args))
     if stdout:
         eq_(sys.stdout.getvalue(), stdout)
     if stderr:
@@ -47,14 +48,14 @@ class CLI(Spec):
         @trap
         def vanilla(self):
             os.chdir('implicit')
-            dispatch('inv foo')
+            _dispatch('inv foo')
             eq_(sys.stdout.getvalue(), "Hm\n")
 
         @trap
         def vanilla_with_explicit_collection(self):
             # Duplicates _output_eq above, but this way that can change w/o
             # breaking our expectations.
-            dispatch('inv -c integration print_foo')
+            _dispatch('inv -c integration print_foo')
             eq_(sys.stdout.getvalue(), "foo\n")
 
         def args(self):
@@ -68,7 +69,7 @@ class CLI(Spec):
 
     def contextualized_tasks_are_given_parser_context_arg(self):
         # go() in contextualized.py just returns its initial arg
-        retval = dispatch('invoke -c contextualized go')[0]
+        retval = _dispatch('invoke -c contextualized go')[0]
         assert isinstance(retval, Context)
 
     def core_help_option_prints_core_help(self):
@@ -166,7 +167,7 @@ Options:
 
     @trap
     def version_override(self):
-        dispatch('notinvoke -V', version="nope 1.0")
+        _dispatch('notinvoke -V', version="nope 1.0")
         eq_(sys.stdout.getvalue(), "nope 1.0\n")
 
     class task_list:
@@ -246,14 +247,14 @@ bar
     def debug_flag_activates_logging(self):
         # Have to patch our logger to get in before Nose logcapture kicks in.
         with patch('invoke.util.debug') as debug:
-            dispatch('inv -d -c debugging foo')
+            _dispatch('inv -d -c debugging foo')
             debug.assert_called_with('my-sentinel')
 
     class run_options:
         "run() related CLI flags"
         def _test_flag(self, flag, kwarg, value):
             with patch('invoke.context.run') as run:
-                dispatch('invoke {0} -c contextualized run'.format(flag))
+                _dispatch('invoke {0} -c contextualized run'.format(flag))
                 run.assert_called_with('x', **{kwarg: value})
 
         def warn_only(self):
@@ -276,7 +277,7 @@ class HighLevelFailures(Spec):
     def command_failure(self):
         "Command failure doesn't show tracebacks"
         with patch('sys.exit') as exit:
-            dispatch('inv -c fail simple')
+            _dispatch('inv -c fail simple')
             assert TB_SENTINEL not in sys.stderr.getvalue()
             exit.assert_called_with(1)
 
