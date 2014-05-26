@@ -17,15 +17,18 @@ from _utils import support
 
 
 @trap
-def _output_eq(args, expected, collection=None):
+def _output_eq(args, expect_stdout=None, expect_stderr=None):
     """
-    dispatch() to 'collection' + 'args', match stdout to 'expected'.
+    dispatch() 'args', matching output to 'expect_std(out|err)'.
+
+    Must give either or both of the 'expect' args.
     """
-    if collection:
-        args = ['-c', collection] + args
     args = ['inv'] + args
     dispatch(args)
-    eq_(sys.stdout.getvalue(), expected)
+    if expect_stdout:
+        eq_(sys.stdout.getvalue(), expect_stdout)
+    if expect_stderr:
+        eq_(sys.stderr.getvalue(), expect_stderr)
 
 
 class CLI(Spec):
@@ -49,16 +52,15 @@ class CLI(Spec):
 
         def args(self):
             _output_eq(
-                ['print_name', '--name', 'inigo'],
+                ['-c', 'integration', 'print_name', '--name', 'inigo'],
                 "inigo\n",
-                'integration',
             )
 
         def underscored_args(self):
             _output_eq(
-                ['print_underscored_arg', '--my-option', 'whatevs'],
+                ['-c', 'integration',
+                    'print_underscored_arg', '--my-option', 'whatevs'],
                 "whatevs\n",
-                'integration',
             )
 
     def contextualized_tasks_are_given_parser_context_arg(self):
@@ -95,10 +97,9 @@ Core options:
                                    commands fail.
 
 """.lstrip()
-        r1 = run("inv -h", hide='out')
-        r2 = run("inv --help", hide='out')
-        eq_(r1.stdout, expected)
-        eq_(r2.stdout, expected)
+        for flag in ['-h', '--help']:
+            with patch('sys.exit'):
+                _output_eq([flag], expect_stdout=expected)
 
     @trap
     def per_task_help_prints_help_for_task_only(self):
