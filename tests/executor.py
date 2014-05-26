@@ -65,6 +65,9 @@ class Executor_(Spec):
             e.execute('t2')
             eq_(body.call_args, ((5,), {'foo': 'bar'}))
 
+        def call_obj_pre_tasks_play_well_with_context_args(self):
+            skip()
+
         def enabled_deduping(self):
             self.executor.execute(name='task2')
             self.executor.execute(name='task3')

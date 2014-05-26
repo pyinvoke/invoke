@@ -303,3 +303,27 @@ def ctask(*args, **kwargs):
     """
     kwargs.setdefault('contextualized', True)
     return task(*args, **kwargs)
+
+
+class Call(object):
+    """
+    Represents a call/execution of a `.Task` with some arguments.
+
+    Wraps its `.Task` so it can be treated as one by `.Executor`.
+
+    Very similar to `~functools.partial` with some added functionality.
+    """
+    def __init__(self, task, *args, **kwargs):
+        self.task = task
+        self.args = args
+        self.kwargs = kwargs
+
+    @property
+    def called(self):
+        return self.task.called
+
+    def __call__(self):
+        return self.task(*self.args, **self.kwargs)
+
+# Convenience/aesthetically pleasing-ish alias
+call = Call

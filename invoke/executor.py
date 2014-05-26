@@ -1,5 +1,6 @@
 from .context import Context
 from .util import debug
+from .tasks import Call
 
 
 class Executor(object):
@@ -24,15 +25,14 @@ class Executor(object):
         self.collection = collection
         self.context = context or Context()
 
-    def _execute(self, task, name, kwargs):
+    def _execute(self, task, name, args, kwargs):
         # Need task + possible name when invoking CLI-given tasks, so we can
         # pass a dotted path to Collection.configuration()
         debug("Executing %r%s" % (task, (" as %s" % name) if name else ""))
-        args = []
         if task.contextualized:
             context = self.context.clone()
             context.update(self.collection.configuration(name))
-            args.append(context)
+            args.insert(0, context)
         return task(*args, **kwargs)
 
 
@@ -96,5 +96,10 @@ class Executor(object):
             # Execute task w/o a given name since it's a pre-task.
             # TODO: figure out if that's quite right (may not play well with
             # nested config junk)
-            self._execute(t, None, {})
-        return self._execute(task, name, kwargs)
+            pre_args, pre_kwargs = tuple(), {}
+            if isinstance(t, Call):
+                c = t
+                t = c.task
+                pre_args, pre_kwargs = c.args, c.kwargs
+            self._execute(task=t, name=None, args=pre_args, kwargs=pre_kwargs)
+        return self._execute(task=task, name=name, args=[], kwargs=kwargs)
