@@ -26,6 +26,15 @@ def vendorize_pexpect(ctx, version):
     # Nuke test dir inside package hrrgh
     shutil.rmtree(os.path.join(target, package, 'tests'))
 
+@task(help=test.help)
+def integration(c, module=None, runner=None, opts=None):
+    """
+    Run the integration test suite. May be slow!
+    """
+    opts = opts or ""
+    opts += " --tests=integration/"
+    test(c, module, runner, opts)
+
 docs = Collection.from_module(docs)
 docs.add_task(doctree)
-ns = Collection(test, vendorize, release, docs, vendorize_pexpect)
+ns = Collection(test, integration, vendorize, release, docs, vendorize_pexpect)
