@@ -30,13 +30,33 @@ class CLI(Spec):
     def setup(self):
         os.chdir(support)
 
+    class basic_invocation:
+        @trap
+        def vanilla(self):
+            os.chdir('implicit')
+            dispatch(['inv', 'foo'])
+            eq_(sys.stdout.getvalue(), "Hm\n")
 
-    def invocation_with_underscored_args(self):
-        _output_eq(
-            'integration',
-            ['print_underscored_arg', '--my-option', 'whatevs'],
-            "whatevs\n"
-        )
+        @trap
+        def vanilla_with_explicit_collection(self):
+            # Duplicates _output_eq above, but this way that can change w/o
+            # breaking our expectations.
+            dispatch(['inv', '-c', 'integration', 'print_foo'])
+            eq_(sys.stdout.getvalue(), "foo\n")
+
+        def args(self):
+            _output_eq(
+                'integration',
+                ['print_name', '--name', 'inigo'],
+                "inigo\n"
+            )
+
+        def underscored_args(self):
+            _output_eq(
+                'integration',
+                ['print_underscored_arg', '--my-option', 'whatevs'],
+                "whatevs\n"
+            )
 
     def contextualized_tasks_are_given_parser_context_arg(self):
         # go() in contextualized.py just returns its initial arg
