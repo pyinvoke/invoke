@@ -17,18 +17,18 @@ from _utils import support
 
 
 @trap
-def _output_eq(args, expect_stdout=None, expect_stderr=None):
+def _output_eq(args, stdout=None, stderr=None):
     """
-    dispatch() 'args', matching output to 'expect_std(out|err)'.
+    dispatch() 'args', matching output to 'std(out|err)'.
 
-    Must give either or both of the 'expect' args.
+    Must give either or both of the output-expecting args.
     """
     args = ['inv'] + args
     dispatch(args)
-    if expect_stdout:
-        eq_(sys.stdout.getvalue(), expect_stdout)
-    if expect_stderr:
-        eq_(sys.stderr.getvalue(), expect_stderr)
+    if stdout:
+        eq_(sys.stdout.getvalue(), stdout)
+    if stderr:
+        eq_(sys.stderr.getvalue(), stderr)
 
 
 class CLI(Spec):
@@ -102,7 +102,7 @@ Core options:
 
 """.lstrip()
         for flag in ['-h', '--help']:
-            _output_eq([flag], expect_stdout=expected)
+            _output_eq([flag], expected)
 
     def per_task_help_prints_help_for_task_only(self):
         expected = """
@@ -117,10 +117,7 @@ Options:
 
 """.lstrip()
         for flag in ['-h', '--help']:
-            _output_eq(
-                ['-c', 'decorator', flag, 'punch'],
-                expect_stdout=expected
-            )
+            _output_eq(['-c', 'decorator', flag, 'punch'], expected)
 
     def per_task_help_works_for_unparameterized_tasks(self):
         expected = """
@@ -133,10 +130,7 @@ Options:
   none
 
 """.lstrip()
-        _output_eq(
-            ['-c', 'decorator', '-h', 'biz'],
-            expect_stdout=expected,
-        )
+        _output_eq(['-c', 'decorator', '-h', 'biz'], expected)
 
     @trap
     def per_task_help_displays_docstrings_if_given(self):
