@@ -35,6 +35,10 @@ class CLI(Spec):
     "Command-line behavior"
     def setup(self):
         os.chdir(support)
+        self.sys_exit = patch('sys.exit').start()
+
+    def teardown(self):
+        patch.stopall()
 
     class basic_invocation:
         @trap
@@ -98,8 +102,7 @@ Core options:
 
 """.lstrip()
         for flag in ['-h', '--help']:
-            with patch('sys.exit'):
-                _output_eq([flag], expect_stdout=expected)
+            _output_eq([flag], expect_stdout=expected)
 
     def per_task_help_prints_help_for_task_only(self):
         expected = """
@@ -114,11 +117,10 @@ Options:
 
 """.lstrip()
         for flag in ['-h', '--help']:
-            with patch('sys.exit'):
-                _output_eq(
-                    ['-c', 'decorator', flag, 'punch'],
-                    expect_stdout=expected
-                )
+            _output_eq(
+                ['-c', 'decorator', flag, 'punch'],
+                expect_stdout=expected
+            )
 
     @trap
     def per_task_help_works_for_unparameterized_tasks(self):
@@ -175,9 +177,8 @@ Options:
 
     @trap
     def version_override(self):
-        with patch('sys.exit') as exit: # TODO: sigh.
-            parse(['notinvoke', '-V'], Collection(), "nope 1.0")
-            assert 'nope 1.0' in sys.stdout.getvalue()
+        parse(['notinvoke', '-V'], Collection(), "nope 1.0")
+        assert 'nope 1.0' in sys.stdout.getvalue()
 
     class task_list:
         "--list"
