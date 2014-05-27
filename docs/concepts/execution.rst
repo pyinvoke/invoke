@@ -115,9 +115,8 @@ Example output::
 Task deduplication
 ==================
 
-By default, any task that would run more than once during a session due to
-inclusion in pre/post tasks, will be 'collapsed' into a single execution.
-Example::
+By default, any task that would run more than once during a session (due e.g.
+to inclusion in pre/post tasks), will only be run once. Example task file::
 
     @task
     def clean():
@@ -127,11 +126,11 @@ Example::
     def build():
         print("Building")
 
-    @task(pre=[build])
+    @task(build)
     def package():
         print("Packaging")
 
-Without deduplication (see below), the above would execute ``clean`` ->
+With deduplication turned off (see below), the above would execute ``clean`` ->
 ``build`` -> ``build`` again -> ``package``. With duplication, the double
 ``build`` does not occur::
 
