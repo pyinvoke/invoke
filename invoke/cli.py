@@ -288,7 +288,7 @@ def dispatch(argv, version=None):
                 # Flags/other args given to this task specifically
                 kwargs=kwargs,
                 # Was the core dedupe flag given?
-                dedupe=not args['no-dedupe']
+                dedupe=not args['no-dedupe'].value
             ))
         except Failure as f:
             sys.exit(f.result.exited)
