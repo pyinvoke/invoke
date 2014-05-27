@@ -285,7 +285,10 @@ def dispatch(argv, version=None):
             results.append(executor.execute(
                 # Task name given on CLI
                 name=context.name,
-                # Flags/other args given to this task specifically
+                # Flags/other args given to this task specifically.
+                # There are no non-keyword args at this stage; the parser knows
+                # the names of any positionally given values, so we get back a
+                # normalized view.
                 kwargs=kwargs,
                 # Was the core dedupe flag given?
                 dedupe=not args['no-dedupe'].value
