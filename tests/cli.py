@@ -243,8 +243,7 @@ Available tasks:
 
 
     class deduping:
-        def basic_deduping(self):
-            # IS NOT foo -> foo -> bar -> biz
+        def pretask_chain_deduping(self):
             expected = """
 foo
 bar
@@ -252,13 +251,14 @@ biz
 """.lstrip()
             _output_eq('-c integration biz', expected)
 
-        def no_deduping(self):
+        def pretask_chain_no_deduping(self):
             expected = """
 foo
 foo
 bar
+biz
 """.lstrip()
-            _output_eq('-c integration --no-dedupe foo bar', expected)
+            _output_eq('-c integration --no-dedupe biz', expected)
 
     def debug_flag_activates_logging(self):
         # Have to patch our logger to get in before Nose logcapture kicks in.
