@@ -192,6 +192,7 @@ Available tasks:
         def simple_output(self):
             expected = self._listing((
                 'bar',
+                'biz',
                 'foo',
                 'print_foo',
                 'print_name',
@@ -243,7 +244,13 @@ Available tasks:
 
     class deduping:
         def basic_deduping(self):
-            skip()
+            # IS NOT foo -> foo -> bar -> biz
+            expected = """
+foo
+bar
+biz
+""".lstrip()
+            _output_eq('-c integration biz', expected)
 
         def no_deduping(self):
             expected = """

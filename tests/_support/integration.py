@@ -20,3 +20,7 @@ def foo():
 @task(foo)
 def bar():
     print("bar")
+
+@task(foo, bar)
+def biz():
+    print("biz")
