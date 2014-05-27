@@ -74,9 +74,9 @@ Example output::
 Task deduplication
 ==================
 
-By default, any task that would get run multiple times during a session due to
-inclusion in ``pre``/``post`` hooks, will only run the first time it is
-encountered. Example::
+By default, any task that would run more than once during a session due to
+inclusion in pre/post tasks, will be 'collapsed' into a single execution.
+Example::
 
     @task
     def clean():
@@ -90,36 +90,32 @@ encountered. Example::
     def package():
         print("Packaging")
 
-Execution::
+Without deduplication (see below), the above would execute ``clean`` ->
+``build`` -> ``build`` again -> ``package``. With duplication, the double
+``build`` does not occur::
 
     $ invoke build package
     Cleaning
     Building
     Packaging
 
-We invoked ``build`` and ``package``; ``package`` itself depends on ``build``;
-but we still only ran ``build`` once.
-
-Tasks mentioned on the CLI multiple times will always run that many times, so
-e.g.::
-
-    $ invoke build build
-
-would run ``build`` two times (though ``clean`` would still only run once).
-
 .. note::
     Parameterized pre-tasks (using `~.tasks.call`) are deduped based on their
-    argument lists, so if our ``clean()`` above took a parameter, ``call(clean,
-    'all')`` and ``call(clean, 'html')`` would not be deduped, but two
-    instances of ``call(clean, 'all')`` would.
+    argument lists. For example, if ``clean`` was parameterized and hooked up
+    as a pre-task in two different ways - e.g. ``call(clean, 'html')`` and
+    ``call(clean, 'all')`` - they would not get deduped should both end up
+    running in the same session.
+    
+    However, two separate references to ``call(clean, 'html')`` *would* become
+    deduplicated.
 
-Foregoing deduplication of tasks
-================================
+Disabling deduplication
+-----------------------
 
-If you prefer your tasks to run every time, regardless of how often they appear
-in ``pre`` or ``post`` options (or on the command line), you can give the
+If you prefer your tasks to run every time no matter what, you can give the
 ``--no-dedupe`` core option. While it doesn't make a ton of real-world sense,
-let's imagine we wanted to apply ``--no-dedupe`` to the above example::
+let's imagine we wanted to apply ``--no-dedupe`` to the above example; we'd see
+the following output::
 
     $ invoke --no-dedupe build package
     Cleaning

@@ -266,6 +266,9 @@ def dispatch(argv, version=None):
     results = []
     executor = Executor(collection, Context(**derive_opts(args)))
     # Take action based on 'core' options and the 'tasks' found
+    # TODO: dedupe correctly when multiple top level tasks given. Requires
+    # pushing this shit farther down into Executor, most likely, and teasing
+    # the Failure try/except higher up around that.
     for context in tasks:
         kwargs = {}
         # Take CLI arguments out of parser context, create func-kwarg dict.
