@@ -39,7 +39,11 @@ class CLI(Spec):
     "Command-line behavior"
     def setup(self):
         os.chdir(support)
-        self.sys_exit = patch('sys.exit').start()
+        # Set up a patched sys.exit if not already patched.
+        # (spec() will run both setup() >1 time on nested classes.)
+        # TODO: fix that.
+        if not hasattr(self, 'sys_exit'):
+            self.sys_exit = patch('sys.exit').start()
 
     def teardown(self):
         patch.stopall()
