@@ -5,7 +5,7 @@ import types
 from .vendor import six
 from .vendor.lexicon import Lexicon
 
-from .parser import Context, Argument
+from .parser import Context as ParserContext
 from .tasks import Task
 
 
@@ -294,7 +294,7 @@ class Collection(object):
         result = []
         for primary, aliases in six.iteritems(self.task_names):
             task = self[primary]
-            result.append(Context(
+            result.append(ParserContext(
                 name=primary, aliases=aliases, args=task.get_arguments()
             ))
         return result
