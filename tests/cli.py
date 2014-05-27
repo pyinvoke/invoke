@@ -243,7 +243,16 @@ Available tasks:
             ))
 
 
-    class deduping:
+    class deduping_and_chaining:
+        def chaining_is_depth_first(self):
+            _output_eq('-c depth_first deploy', """
+Cleaning HTML
+Cleaning .tar.gz files
+Cleaned everything
+Making directories
+Building
+Deploying""".lstrip())
+
         def _expect(self, args, expected):
             _output_eq('-c integration {0}'.format(args), expected.lstrip())
 
