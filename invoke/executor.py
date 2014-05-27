@@ -90,13 +90,8 @@ class Executor(object):
             for t in pre:
                 if t not in compact_pre:
                     compact_pre.append(t)
-            debug("Pre-tasks, obvious dupes removed: %r" % (compact_pre,))
-            # Remove tasks already called
-            pre = []
-            for t in compact_pre:
-                if not t.called:
-                    pre.append(t)
-            debug("Pre-tasks, already-called tasks removed: %r" % (pre,))
+            pre = compact_pre
+            debug("Pre-tasks, dupes removed: %r" % (pre,))
         else:
             debug("Deduplication is DISABLED, above pre-task list will run")
         # Execute
