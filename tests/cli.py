@@ -289,6 +289,36 @@ foo
 boz
 """)
 
+        # AKA, a (foo) (foo -> bar) scenario arising from foo + bar
+        class adjacent_top_level_tasks:
+            def deduping(self):
+                self._expect('foo bar', """
+foo
+bar
+""")
+
+            def no_deduping(self):
+                self._expect('--no-dedupe foo bar', """
+foo
+foo
+bar
+""")
+
+        # AKA (foo -> bar) (foo)
+        class non_adjacent_top_level_tasks:
+            def deduping(self):
+                self._expect('foo bar', """
+foo
+bar
+""")
+
+            def no_deduping(self):
+                self._expect('--no-dedupe foo bar', """
+foo
+foo
+bar
+""")
+
     def debug_flag_activates_logging(self):
         # Have to patch our logger to get in before Nose logcapture kicks in.
         with patch('invoke.util.debug') as debug:
