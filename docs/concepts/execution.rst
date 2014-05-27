@@ -48,6 +48,47 @@ Execution::
     $ invoke build
     Cleaning
     Building
+
+Recursive/chained pre-tasks
+---------------------------
+
+Pre-tasks of pre-tasks will also be invoked, in a depth-first manner,
+recursively. Here's a more complex (if slightly contrived) tasks file::
+
+    @task
+    def clean_html():
+        print("Cleaning HTML")
+
+    @task
+    def clean_tgz():
+        print("Cleaning .tar.gz files")
+
+    @task(clean_html, clean_tgz)
+    def clean():
+        print("Cleaned everything")
+
+    @task
+    def makedirs():
+        print("Making directories")
+
+    @task(clean, makedirs)
+    def build():
+        print("Building")
+
+    @task(build)
+    def deploy():
+        print("Deploying")
+
+With a depth-first behavior, the below is hopefully intuitive to most users::
+
+    $ inv deploy
+    Cleaning HTML
+    Cleaning .tar.gz files
+    Cleaned everything
+    Making directories
+    Building
+    Deploying
+
         
 Parameterizing pre-tasks
 ------------------------
