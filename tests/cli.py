@@ -193,6 +193,7 @@ Available tasks:
             expected = self._listing((
                 'bar',
                 'biz',
+                'boz',
                 'foo',
                 'print_foo',
                 'print_name',
@@ -260,6 +261,22 @@ foo
 foo
 bar
 biz
+""")
+
+        class non_adjacent_pretask:
+            def deduping(self):
+                self._expect('boz', """
+foo
+bar
+boz
+""")
+
+            def no_deduping(self):
+                self._expect('boz', """
+foo
+bar
+foo
+boz
 """)
 
     def debug_flag_activates_logging(self):

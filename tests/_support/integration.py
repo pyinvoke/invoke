@@ -24,3 +24,7 @@ def bar():
 @task(foo, bar)
 def biz():
     print("biz")
+
+@task(bar, foo)
+def boz():
+    print("boz")
