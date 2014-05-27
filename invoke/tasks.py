@@ -322,5 +322,9 @@ class Call(object):
     def called(self):
         return self.task.called
 
+    @property
+    def pre(self):
+        return self.task.pre
+
 # Convenience/aesthetically pleasing-ish alias
 call = Call
