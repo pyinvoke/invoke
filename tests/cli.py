@@ -251,7 +251,8 @@ Cleaning .tar.gz files
 Cleaned everything
 Making directories
 Building
-Deploying""".lstrip())
+Deploying
+""".lstrip())
 
         def _expect(self, args, expected):
             _output_eq('-c integration {0}'.format(args), expected.lstrip())

@@ -1,6 +1,17 @@
+import itertools
+
 from .context import Context
 from .util import debug
 from .tasks import Call
+
+
+def expand_tasks(tasks):
+    ret = []
+    for task in tasks:
+        ret.extend(expand_tasks(task.pre))
+        ret.append(task)
+        # TODO: ret.extend(expand_tasks(tasks.post))
+    return ret
 
 
 class Executor(object):
@@ -35,7 +46,6 @@ class Executor(object):
             args = (context,) + args
         return task(*args, **kwargs)
 
-
     def execute(self, name, kwargs=None, dedupe=True):
         """
         Execute a named task, honoring pre- or post-tasks and so forth.
@@ -69,9 +79,9 @@ class Executor(object):
             task, name
         ))
         # TODO: post-tasks
-        # TODO: recursion
-        pre = list(task.pre)
-        debug("Pre-tasks: %r" % (pre,))
+        debug("Pre-tasks, immediate: {0}".format(task.pre))
+        pre = list(expand_tasks(task.pre))
+        debug("Pre-tasks, expanded: {0}".format(pre))
         # Dedupe if requested
         if dedupe:
             debug("Deduplication is enabled")
