@@ -240,13 +240,18 @@ Available tasks:
                 'with_aliases (a, b)   foo',
             ))
 
-    def no_deduping(self):
-        expected = """
+
+    class deduping:
+        def basic_deduping(self):
+            skip()
+
+        def no_deduping(self):
+            expected = """
 foo
 foo
 bar
 """.lstrip()
-        _output_eq('-c integration --no-dedupe foo bar', expected)
+            _output_eq('-c integration --no-dedupe foo bar', expected)
 
     def debug_flag_activates_logging(self):
         # Have to patch our logger to get in before Nose logcapture kicks in.
