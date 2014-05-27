@@ -282,7 +282,7 @@ boz
 """)
 
             def no_deduping(self):
-                self._expect('boz', """
+                self._expect('--no-dedupe boz', """
 foo
 bar
 foo
