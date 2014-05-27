@@ -246,15 +246,16 @@ Available tasks:
         def _expect(self, args, expected):
             _output_eq('-c integration {0}'.format(args), expected.lstrip())
 
-        def pretask_chain_deduping(self):
-            self._expect('biz', """
+        class adjacent_pretask:
+            def deduping(self):
+                self._expect('biz', """
 foo
 bar
 biz
 """)
 
-        def pretask_chain_no_deduping(self):
-            self._expect('--no-dedupe biz', """
+            def no_deduping(self):
+                self._expect('--no-dedupe biz', """
 foo
 foo
 bar
