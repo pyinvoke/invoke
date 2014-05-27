@@ -1,8 +1,8 @@
 import os
 import sys
 
-from spec import eq_, skip, Spec, ok_, trap, nottest
-from mock import patch
+from spec import eq_, skip, Spec, ok_, trap, raises
+from mock import patch, Mock
 
 from invoke.cli import parse, dispatch
 from invoke.context import Context
@@ -286,9 +286,16 @@ class HighLevelFailures(Spec):
             exit.assert_called_with(1)
 
     class parsing:
+        @trap
         def should_not_show_tracebacks(self):
-            result = run("inv -c fail missing_pos", warn=True, hide='both')
-            assert TB_SENTINEL not in result.stderr
+            # Ensure we fall out of dispatch() on missing parser args,
+            # but are still able to look at stderr to ensure no TB got printed
+            with patch('sys.exit', Mock(side_effect=SystemExit)):
+                try:
+                    _dispatch("inv -c fail missing_pos")
+                except SystemExit:
+                    pass
+                assert TB_SENTINEL not in sys.stderr.getvalue()
 
         def should_show_core_usage_on_core_failures(self):
             skip()
