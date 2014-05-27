@@ -69,6 +69,7 @@ class Executor(object):
             task, name
         ))
         # TODO: post-tasks
+        # TODO: recursion
         pre = list(task.pre)
         debug("Pre-tasks: %r" % (pre,))
         # Dedupe if requested
