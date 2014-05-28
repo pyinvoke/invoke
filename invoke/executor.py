@@ -83,6 +83,8 @@ class Executor(object):
             A dict mapping task objects to their return values. This may
             include pre- and post-tasks if any were executed.
         """
+        # Handle top level kwargs (the name gets overwritten below)
+        dedupe = kwargs.get('dedupe', True)
         # Normalize to two-tuples
         tasks = [(x, {}) if isinstance(x, basestring) else x for x in tasks]
         # Then to call objects
@@ -96,7 +98,7 @@ class Executor(object):
         # TODO: debug output for expansion
         tasks = expand_tasks(tasks)
         # Dedupe if desired
-        if kwargs.get('dedupe', True): # Python 2 can't do *args + kwarg
+        if dedupe: # Python 2 can't do *args + kwarg
             deduped = []
             for task in tasks:
                 if task not in deduped:
