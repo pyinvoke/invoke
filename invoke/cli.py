@@ -270,15 +270,9 @@ def dispatch(argv, version=None):
     # pushing this shit farther down into Executor, most likely, and teasing
     # the Failure try/except higher up around that.
     for context in parser_contexts:
-        kwargs = {}
-        # Take CLI arguments out of parser context, create func-kwarg dict.
-        for _, arg in six.iteritems(context.args):
-            # Use the arg obj's internal name - not what was necessarily given
-            # on the CLI. (E.g. --my-option vs --my_option for
-            # mytask(my_option=xxx) requires this.)
-            # TODO: store 'given' name somewhere in case somebody wants to see
-            # it when handling args.
-            kwargs[arg.name] = arg.value
+        # TODO: execute can now take the 'tasks' context iterable + 'args' cli
+        # options and handle full task list expansion + calls interally to
+        # self.execute()
         try:
             # TODO: allow swapping out of Executor subclasses based on core
             # config options
@@ -289,7 +283,7 @@ def dispatch(argv, version=None):
                 # There are no non-keyword args at this stage; the parser knows
                 # the names of any positionally given values, so we get back a
                 # normalized view.
-                kwargs=kwargs,
+                kwargs=context.as_kwargs,
                 # Was the core dedupe flag given?
                 dedupe=not args['no-dedupe'].value
             ))

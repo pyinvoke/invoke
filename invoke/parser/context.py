@@ -133,6 +133,19 @@ class Context(object):
     def needs_positional_arg(self):
         return any(x.value is None for x in self.positional_args)
 
+    @property
+    def as_kwargs(self):
+        """
+        This context's arguments' values keyed by their ``.name`` attribute.
+
+        Results in a dict suitable for use in Python contexts, where e.g. an
+        arg named ``foo-bar`` becomes accessible as ``foo_bar``.
+        """
+        ret = {}
+        for arg in self.args.values():
+            ret[arg.name] = arg.value
+        return ret
+
     def help_for(self, flag):
         """
         Return 2-tuple of ``(flag-spec, help-string)`` for given ``flag``.
