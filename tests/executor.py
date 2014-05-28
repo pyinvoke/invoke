@@ -78,8 +78,10 @@ class Executor_(Spec):
             self._call_objs(True)
 
         def enabled_deduping(self):
-            self.executor.execute(name='task2')
-            self.executor.execute(name='task3')
+            self.executor.execute_multi(
+                tasks={'task2': {}, 'task3': {}},
+                dedupe=True
+            )
             eq_(self.task1.body.call_count, 1)
 
         def deduping_treats_different_calls_to_same_task_differently(self):
