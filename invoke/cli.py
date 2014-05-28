@@ -265,8 +265,11 @@ def dispatch(argv, version=None):
     args, collection, parser_contexts = parse(argv, version=version)
     executor = Executor(collection, Context(**derive_opts(args)))
     try:
+        tasks = {}
+        for context in parser_contexts:
+            tasks[context.name] = context.as_kwargs
         dedupe = not args['no-dedupe'].value
-        return executor.execute_multi(parser_contexts, dedupe)
+        return executor.execute_multi(tasks, dedupe)
     except Failure as f:
         sys.exit(f.result.exited)
 

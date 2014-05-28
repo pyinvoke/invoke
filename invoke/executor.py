@@ -4,6 +4,8 @@ from .context import Context
 from .util import debug
 from .tasks import Call
 
+from .vendor import six
+
 
 def expand_tasks(tasks):
     ret = []
@@ -46,9 +48,21 @@ class Executor(object):
             args = (context,) + args
         return task(*args, **kwargs)
 
-    def execute_multi(self, parser_contexts, dedupe):
+    def execute_multi(self, tasks, dedupe):
         """
-        Execute one or more tasks based on the given parser contexts.
+        Execute one or more tasks, given as a name-to-kwargs dict.
+
+        :param dict tasks:
+            A mapping of task name to keyword arg sub-dict. E.g.::
+
+                {
+                    "task1": {},
+                    "task2": {"arg1": "val1"},
+                }
+
+            The dicts used as values must be valid for use as ``**kwargs`` in
+            the task function (from the collection given to the executor at
+            init time) named in their respective key.
 
         :param bool dedupe:
             Whether to perform deduplication on the tasks and their
@@ -59,13 +73,11 @@ class Executor(object):
             their parser contexts were given.
         """
         results = []
-        for context in parser_contexts:
+        for name, kwargs in six.iteritems(tasks):
             # N.B. execute() only takes kwargs, not args, because the parser
             # does the normalization of positional args for us - every arg has
             # some name, after all.
-            result = self.execute(
-                name=context.name, kwargs=context.as_kwargs, dedupe=dedupe
-            )
+            result = self.execute(name=name, kwargs=kwargs, dedupe=dedupe)
             results.append(result)
         return results
 
