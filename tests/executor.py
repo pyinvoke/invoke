@@ -1,4 +1,4 @@
-from spec import Spec, eq_, skip
+from spec import Spec, eq_, skip, trap
 from mock import Mock, call as mock_call
 
 from invoke.context import Context
@@ -6,9 +6,13 @@ from invoke.executor import Executor
 from invoke.collection import Collection
 from invoke.tasks import Task, ctask, call
 
+from _utils import _output_eq, IntegrationSpec
 
-class Executor_(Spec):
+
+class Executor_(IntegrationSpec):
     def setup(self):
+        s = super(Executor_, self)
+        s.setup()
         self.task1 = Task(Mock(return_value=7))
         self.task2 = Task(Mock(return_value=10), pre=[self.task1])
         self.task3 = Task(Mock(), pre=[self.task1])
@@ -77,9 +81,82 @@ class Executor_(Spec):
         def call_obj_pre_tasks_play_well_with_context_args(self):
             self._call_objs(True)
 
-        def enabled_deduping(self):
-            self.executor.execute('task2', 'task3', dedupe=True)
-            eq_(self.task1.body.call_count, 1)
+    class deduping_and_chaining:
+        def chaining_is_depth_first(self):
+            _output_eq('-c depth_first deploy', """
+Cleaning HTML
+Cleaning .tar.gz files
+Cleaned everything
+Making directories
+Building
+Deploying
+""".lstrip())
+
+        def _expect(self, args, expected):
+            _output_eq('-c integration {0}'.format(args), expected.lstrip())
+
+        class adjacent_pretask:
+            def deduping(self):
+                self._expect('biz', """
+foo
+bar
+biz
+""")
+
+            def no_deduping(self):
+                self._expect('--no-dedupe biz', """
+foo
+foo
+bar
+biz
+""")
+
+        class non_adjacent_pretask:
+            def deduping(self):
+                self._expect('boz', """
+foo
+bar
+boz
+""")
+
+            def no_deduping(self):
+                self._expect('--no-dedupe boz', """
+foo
+bar
+foo
+boz
+""")
+
+        # AKA, a (foo) (foo -> bar) scenario arising from foo + bar
+        class adjacent_top_level_tasks:
+            def deduping(self):
+                self._expect('foo bar', """
+foo
+bar
+""")
+
+            def no_deduping(self):
+                self._expect('--no-dedupe foo bar', """
+foo
+foo
+bar
+""")
+
+        # AKA (foo -> bar) (foo)
+        class non_adjacent_top_level_tasks:
+            def deduping(self):
+                self._expect('foo bar', """
+foo
+bar
+""")
+
+            def no_deduping(self):
+                self._expect('--no-dedupe foo bar', """
+foo
+foo
+bar
+""")
+
 
         def deduping_treats_different_calls_to_same_task_differently(self):
             body = Mock()
@@ -92,11 +169,7 @@ class Executor_(Spec):
             # Does not call the second t1(5)
             body.assert_has_calls([mock_call(5), mock_call(7)])
 
-        def disabled_deduping(self):
-            self.executor.execute('task2', dedupe=False)
-            self.executor.execute('task3', dedupe=False)
-            eq_(self.task1.body.call_count, 2)
-
+    class configuration:
         def hands_collection_configuration_to_context(self):
             @ctask
             def mytask(ctx):
