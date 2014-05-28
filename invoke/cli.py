@@ -263,34 +263,12 @@ def derive_opts(args):
 
 def dispatch(argv, version=None):
     args, collection, parser_contexts = parse(argv, version=version)
-    results = []
     executor = Executor(collection, Context(**derive_opts(args)))
-    # Take action based on 'core' options and the 'tasks' found
-    # TODO: dedupe correctly when multiple top level tasks given. Requires
-    # pushing this shit farther down into Executor, most likely, and teasing
-    # the Failure try/except higher up around that.
-    for context in parser_contexts:
-        # TODO: execute can now take the 'tasks' context iterable + 'args' cli
-        # options and handle full task list expansion + calls interally to
-        # self.execute()
-        try:
-            # TODO: allow swapping out of Executor subclasses based on core
-            # config options
-            results.append(executor.execute(
-                # Task name given on CLI
-                name=context.name,
-                # Flags/other args given to this task specifically (not core)
-                # There are no non-keyword args at this stage; the parser knows
-                # the names of any positionally given values, so we get back a
-                # normalized view.
-                kwargs=context.as_kwargs,
-                # Was the core dedupe flag given?
-                dedupe=not args['no-dedupe'].value
-            ))
-        except Failure as f:
-            sys.exit(f.result.exited)
-    return results
-
+    try:
+        dedupe = not args['no-dedupe'].value
+        return executor.execute_multi(parser_contexts, dedupe)
+    except Failure as f:
+        sys.exit(f.result.exited)
 
 def main():
     # Parse command line

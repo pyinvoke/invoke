@@ -46,6 +46,29 @@ class Executor(object):
             args = (context,) + args
         return task(*args, **kwargs)
 
+    def execute_multi(self, parser_contexts, dedupe):
+        """
+        Execute one or more tasks based on the given parser contexts.
+
+        :param bool dedupe:
+            Whether to perform deduplication on the tasks and their
+            pre/post-tasks.
+
+        :returns:
+            A list of the return values from the tasks invoked, in the order
+            their parser contexts were given.
+        """
+        results = []
+        for context in parser_contexts:
+            # N.B. execute() only takes kwargs, not args, because the parser
+            # does the normalization of positional args for us - every arg has
+            # some name, after all.
+            result = self.execute(
+                name=context.name, kwargs=context.as_kwargs, dedupe=dedupe
+            )
+            results.append(result)
+        return results
+
     def execute(self, name, kwargs=None, dedupe=True):
         """
         Execute a named task, honoring pre- or post-tasks and so forth.
