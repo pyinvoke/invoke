@@ -4,7 +4,7 @@ import sys
 from spec import eq_, skip, Spec, ok_, trap, raises
 from mock import patch, Mock
 
-from invoke.cli import parse, dispatch
+from invoke.cli import parse
 from invoke.context import Context
 from invoke.runner import run
 from invoke.parser import Parser
@@ -13,41 +13,11 @@ from invoke.tasks import task
 from invoke.exceptions import Failure
 import invoke
 
-from _utils import support
+from _utils import _dispatch, _output_eq, IntegrationSpec
 
 
-# Strings are easier to type & read than lists
-
-def _dispatch(argstr, version=None):
-    return dispatch(argstr.split(), version)
-
-@trap
-def _output_eq(args, stdout=None, stderr=None):
-    """
-    dispatch() 'args', matching output to 'std(out|err)'.
-
-    Must give either or both of the output-expecting args.
-    """
-    _dispatch("inv {0}".format(args))
-    if stdout:
-        eq_(sys.stdout.getvalue(), stdout)
-    if stderr:
-        eq_(sys.stderr.getvalue(), stderr)
-
-
-class CLI(Spec):
+class CLI(IntegrationSpec):
     "Command-line behavior"
-    def setup(self):
-        os.chdir(support)
-        # Set up a patched sys.exit if not already patched.
-        # (spec() will run both setup() >1 time on nested classes.)
-        # TODO: fix that.
-        if not hasattr(self, 'sys_exit'):
-            self.sys_exit = patch('sys.exit').start()
-
-    def teardown(self):
-        patch.stopall()
-
     class basic_invocation:
         @trap
         def vanilla(self):
