@@ -209,10 +209,13 @@ bar
 
     class returns_return_value_of_specified_task:
         def base_case(self):
-            eq_(self.executor.execute('task1'), [7])
+            eq_(self.executor.execute('task1'), {self.task1: 7})
 
         def with_pre_tasks(self):
-            eq_(self.executor.execute('task2'), [10])
+            eq_(
+                self.executor.execute('task2'),
+                {self.task1: 7, self.task2: 10}
+            )
 
         def with_post_tasks(self):
             skip()

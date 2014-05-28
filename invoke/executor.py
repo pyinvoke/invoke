@@ -80,8 +80,8 @@ class Executor(object):
             pre/post-tasks. See :ref:`deduping`.
 
         :returns:
-            A list of the return values from the tasks invoked, in the order
-            they were given. Pre- and post-tasks' return values are discarded.
+            A dict mapping task objects to their return values. This may
+            include pre- and post-tasks if any were executed.
         """
         # Normalize to two-tuples
         tasks = [(x, {}) if isinstance(x, basestring) else x for x in tasks]
@@ -104,13 +104,12 @@ class Executor(object):
         else:
             deduped = tasks
         # Execute
-        results = []
+        results = {}
         for task in deduped:
             # TODO: move higher, figure out how to preserve given name
             debug("Executor is examining top level task %r (name given: %r)" % (
                 task, name
             ))
-            # TODO: intelligent result capture
             # Execute task w/o a given name since it's a pre-task.
             # TODO: figure out if that's quite right (may not play well with
             # nested config junk)
@@ -121,5 +120,7 @@ class Executor(object):
                 args, kwargs = c.args, c.kwargs
             # TODO: yea definitely need preserved name (?)
             result = self._execute(task=task, name=name, args=args, kwargs=kwargs)
-            results.append(result)
+            # TODO: handle the non-dedupe case / the same-task-different-args
+            # case, wherein one task obj maps to >1 result.
+            results[task] = result
         return results
