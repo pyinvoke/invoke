@@ -87,7 +87,7 @@ class Executor(object):
         tasks = [(x, {}) if isinstance(x, basestring) else x for x in tasks]
         # Then to call objects
         tasks = [
-            call(self.collection[name], **kwargs)
+            Call(self.collection[name], **kwargs)
             for name, kwargs in tasks
         ]
         # Expand pre/post tasks

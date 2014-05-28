@@ -318,13 +318,9 @@ class Call(object):
         self.args = args
         self.kwargs = kwargs
 
-    @property
-    def called(self):
-        return self.task.called
+    def __getattr__(self, name):
+        return getattr(self.task, name)
 
-    @property
-    def pre(self):
-        return self.task.pre
 
 # Convenience/aesthetically pleasing-ish alias
 call = Call
