@@ -15,9 +15,6 @@ def expand_tasks(tasks):
         # TODO: ret.extend(expand_tasks(tasks.post))
     return ret
 
-def normalize_tuples(tuples):
-    return [(x, {}) if isinstance(x, basestring) else x for x in tuples]
-
 
 class Executor(object):
     """
@@ -86,42 +83,43 @@ class Executor(object):
             A list of the return values from the tasks invoked, in the order
             they were given. Pre- and post-tasks' return values are discarded.
         """
-        dedupe = kwargs.get('dedupe', True) # Python 2 can't do *args + kwarg
+        # Normalize to two-tuples
+        tasks = [(x, {}) if isinstance(x, basestring) else x for x in tasks]
+        # Then to call objects
+        tasks = [
+            call(self.collection[name], **kwargs)
+            for name, kwargs in tasks
+        ]
+        # Expand pre/post tasks
+        # TODO: post-tasks
+        # TODO: turn 'empty' pre-tasks into call objects?
+        # TODO: debug output for expansion
+        tasks = expand_tasks(tasks)
+        # Dedupe if desired
+        if kwargs.get('dedupe', True): # Python 2 can't do *args + kwarg
+            deduped = []
+            for task in tasks:
+                if task not in deduped:
+                    deduped.append(task)
+        else:
+            deduped = tasks
+        # Execute
         results = []
-        for name, kwargs in normalize_tuples(tasks):
-            # Expand task list
-            task = self.collection[name]
+        for task in deduped:
+            # TODO: move higher, figure out how to preserve given name
             debug("Executor is examining top level task %r (name given: %r)" % (
                 task, name
             ))
-            # TODO: post-tasks
-            debug("Pre-tasks, immediate: {0}".format(task.pre))
-            pre = list(expand_tasks(task.pre))
-            debug("Pre-tasks, expanded: {0}".format(pre))
-            # Dedupe if requested
-            if dedupe:
-                debug("Deduplication is enabled")
-                # Compact (preserving order, so not using list+set)
-                compact_pre = []
-                for t in pre:
-                    if t not in compact_pre:
-                        compact_pre.append(t)
-                pre = compact_pre
-                debug("Pre-tasks, dupes removed: %r" % (pre,))
-            else:
-                debug("Deduplication is DISABLED, above pre-task list will run")
-            # Execute
-            for t in pre:
-                # TODO: intelligent result capture
-                # Execute task w/o a given name since it's a pre-task.
-                # TODO: figure out if that's quite right (may not play well with
-                # nested config junk)
-                pre_args, pre_kwargs = tuple(), {}
-                if isinstance(t, Call):
-                    c = t
-                    t = c.task
-                    pre_args, pre_kwargs = c.args, c.kwargs
-                self._execute(task=t, name=None, args=pre_args, kwargs=pre_kwargs)
-            result = self._execute(task=task, name=name, args=tuple(), kwargs=kwargs)
+            # TODO: intelligent result capture
+            # Execute task w/o a given name since it's a pre-task.
+            # TODO: figure out if that's quite right (may not play well with
+            # nested config junk)
+            args, kwargs = tuple(), {}
+            if isinstance(task, Call):
+                c = task
+                task = c.task
+                args, kwargs = c.args, c.kwargs
+            # TODO: yea definitely need preserved name (?)
+            result = self._execute(task=task, name=name, args=args, kwargs=kwargs)
             results.append(result)
         return results
