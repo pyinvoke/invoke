@@ -112,6 +112,8 @@ Example output::
     Building
 
 
+.. _deduping:
+
 Task deduplication
 ==================
 

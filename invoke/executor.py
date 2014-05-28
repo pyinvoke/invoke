@@ -80,7 +80,7 @@ class Executor(object):
 
         :param bool dedupe:
             Whether to perform deduplication on the tasks and their
-            pre/post-tasks.
+            pre/post-tasks. See :ref:`deduping`.
 
         :returns:
             A list of the return values from the tasks invoked, in the order
