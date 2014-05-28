@@ -15,6 +15,9 @@ def expand_tasks(tasks):
         # TODO: ret.extend(expand_tasks(tasks.post))
     return ret
 
+def normalize_tuples(tuples):
+    return [(x, {}) if isinstance(x, basestring) else x for x in tuples]
+
 
 class Executor(object):
     """
@@ -48,21 +51,32 @@ class Executor(object):
             args = (context,) + args
         return task(*args, **kwargs)
 
-    def execute_multi(self, tasks, dedupe):
+    def execute(self, *tasks, **kwargs):
         """
-        Execute one or more tasks, given as a name-to-kwargs dict.
+        Execute one or more ``tasks`` in sequence.
 
-        :param dict tasks:
-            A mapping of task name to keyword arg sub-dict. E.g.::
+        :param iterable tasks:
+            An iterable of two-tuples whose first element is a task name and
+            whose second element is a dict suitable for use as ``**kwargs``.
+            E.g.::
 
-                {
-                    "task1": {},
-                    "task2": {"arg1": "val1"},
-                }
+                [
+                    ('task1', {}),
+                    ('task2', {'arg1': 'val1'}),
+                    ...
+                ]
 
-            The dicts used as values must be valid for use as ``**kwargs`` in
-            the task function (from the collection given to the executor at
-            init time) named in their respective key.
+            As a shorthand, a string instead of a two-tuple may be given,
+            implying an empty kwargs dict.
+
+            The string specifies which task from the Executor's `.Collection`
+            is to be executed. It may contain dotted syntax appropriate for
+            calling namespaced tasks, e.g. ``subcollection.taskname``.
+
+            Thus the above list-of-tuples is roughly equivalent to::
+
+                task1()
+                task2(arg1='val1')
 
         :param bool dedupe:
             Whether to perform deduplication on the tasks and their
@@ -70,77 +84,44 @@ class Executor(object):
 
         :returns:
             A list of the return values from the tasks invoked, in the order
-            their parser contexts were given.
+            they were given. Pre- and post-tasks' return values are discarded.
         """
+        dedupe = kwargs.get('dedupe', True) # Python 2 can't do *args + kwarg
         results = []
-        for name, kwargs in six.iteritems(tasks):
-            # N.B. execute() only takes kwargs, not args, because the parser
-            # does the normalization of positional args for us - every arg has
-            # some name, after all.
-            result = self.execute(name=name, kwargs=kwargs, dedupe=dedupe)
+        for name, kwargs in normalize_tuples(tasks):
+            # Expand task list
+            task = self.collection[name]
+            debug("Executor is examining top level task %r (name given: %r)" % (
+                task, name
+            ))
+            # TODO: post-tasks
+            debug("Pre-tasks, immediate: {0}".format(task.pre))
+            pre = list(expand_tasks(task.pre))
+            debug("Pre-tasks, expanded: {0}".format(pre))
+            # Dedupe if requested
+            if dedupe:
+                debug("Deduplication is enabled")
+                # Compact (preserving order, so not using list+set)
+                compact_pre = []
+                for t in pre:
+                    if t not in compact_pre:
+                        compact_pre.append(t)
+                pre = compact_pre
+                debug("Pre-tasks, dupes removed: %r" % (pre,))
+            else:
+                debug("Deduplication is DISABLED, above pre-task list will run")
+            # Execute
+            for t in pre:
+                # TODO: intelligent result capture
+                # Execute task w/o a given name since it's a pre-task.
+                # TODO: figure out if that's quite right (may not play well with
+                # nested config junk)
+                pre_args, pre_kwargs = tuple(), {}
+                if isinstance(t, Call):
+                    c = t
+                    t = c.task
+                    pre_args, pre_kwargs = c.args, c.kwargs
+                self._execute(task=t, name=None, args=pre_args, kwargs=pre_kwargs)
+            result = self._execute(task=task, name=name, args=tuple(), kwargs=kwargs)
             results.append(result)
         return results
-
-    def execute(self, name, kwargs=None, dedupe=True):
-        """
-        Execute a named task, honoring pre- or post-tasks and so forth.
-
-        :param name:
-            A string naming which task from the Executor's `.Collection` is to
-            be executed. May contain dotted syntax appropriate for calling
-            namespaced tasks, e.g. ``subcollection.taskname``.
-
-        :param kwargs:
-            A keyword argument dict expanded when calling the requested task.
-            E.g.::
-
-                executor.execute('mytask', {'myarg': 'foo'})
-
-            is (roughly) equivalent to::
-
-                mytask(myarg='foo')
-
-        :param dedupe:
-            Ensures any given task within ``self.collection`` is only run once
-            per session. Set to ``False`` to disable this behavior.
-
-        :returns:
-            The return value of the named task -- regardless of whether pre- or
-            post-tasks are executed.
-        """
-        # Expand task list
-        task = self.collection[name]
-        debug("Executor is examining top level task %r (name given: %r)" % (
-            task, name
-        ))
-        # TODO: post-tasks
-        debug("Pre-tasks, immediate: {0}".format(task.pre))
-        pre = list(expand_tasks(task.pre))
-        debug("Pre-tasks, expanded: {0}".format(pre))
-        # Dedupe if requested
-        if dedupe:
-            debug("Deduplication is enabled")
-            # Compact (preserving order, so not using list+set)
-            compact_pre = []
-            for t in pre:
-                if t not in compact_pre:
-                    compact_pre.append(t)
-            pre = compact_pre
-            debug("Pre-tasks, dupes removed: %r" % (pre,))
-        else:
-            debug("Deduplication is DISABLED, above pre-task list will run")
-        # Execute
-        results = {}
-        kwargs = kwargs or {}
-        for t in pre:
-            # TODO: intelligent result capture
-            # Execute task w/o a given name since it's a pre-task.
-            # TODO: figure out if that's quite right (may not play well with
-            # nested config junk)
-            pre_args, pre_kwargs = tuple(), {}
-            if isinstance(t, Call):
-                c = t
-                t = c.task
-                pre_args, pre_kwargs = c.args, c.kwargs
-            self._execute(task=t, name=None, args=pre_args, kwargs=pre_kwargs)
-        return self._execute(task=task, name=name, args=tuple(), kwargs=kwargs)

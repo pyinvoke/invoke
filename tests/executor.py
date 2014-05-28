@@ -38,11 +38,11 @@ class Executor_(Spec):
 
         def kwargs(self):
             k = {'foo': 'bar'}
-            self.executor.execute(name='task1', kwargs=k)
+            self.executor.execute(('task1', k))
             self.task1.body.assert_called_once_with(**k)
 
         def pre_tasks(self):
-            self.executor.execute(name='task2')
+            self.executor.execute('task2')
             eq_(self.task1.body.call_count, 1)
 
         def pre_task_calls_default_to_empty_args_regardless_of_main_args(self):
@@ -53,7 +53,7 @@ class Executor_(Spec):
                 collection=Collection(t1=t1, t2=t2),
                 context=Context()
             )
-            e.execute('t2', {'something': 'meh'})
+            e.execute(('t2', {'something': 'meh'}))
             eq_(body.call_args, tuple())
 
         def _call_objs(self, contextualized):
@@ -78,10 +78,7 @@ class Executor_(Spec):
             self._call_objs(True)
 
         def enabled_deduping(self):
-            self.executor.execute_multi(
-                tasks={'task2': {}, 'task3': {}},
-                dedupe=True
-            )
+            self.executor.execute('task2', 'task3', dedupe=True)
             eq_(self.task1.body.call_count, 1)
 
         def deduping_treats_different_calls_to_same_task_differently(self):
@@ -96,8 +93,8 @@ class Executor_(Spec):
             body.assert_has_calls([mock_call(5), mock_call(7)])
 
         def disabled_deduping(self):
-            self.executor.execute(name='task2', dedupe=False)
-            self.executor.execute(name='task3', dedupe=False)
+            self.executor.execute('task2', dedupe=False)
+            self.executor.execute('task3', dedupe=False)
             eq_(self.task1.body.call_count, 2)
 
         def hands_collection_configuration_to_context(self):
@@ -139,10 +136,10 @@ class Executor_(Spec):
 
     class returns_return_value_of_specified_task:
         def base_case(self):
-            eq_(self.executor.execute(name='task1'), 7)
+            eq_(self.executor.execute('task1'), [7])
 
         def with_pre_tasks(self):
-            eq_(self.executor.execute(name='task2'), 10)
+            eq_(self.executor.execute('task2'), [10])
 
         def with_post_tasks(self):
             skip()
