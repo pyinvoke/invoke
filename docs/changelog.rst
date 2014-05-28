@@ -2,6 +2,8 @@
 Changelog
 =========
 
+* :support:`25` Trim a bunch of time off the test suite by using mocking and
+  other tools instead of dogfooding a bunch of subprocess spawns.
 * :feature:`135` Allow control over the arguments passed to pre-tasks (via
   `.call`). For details, see :ref:`pre-tasks`.
 
