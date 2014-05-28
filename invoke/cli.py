@@ -262,14 +262,14 @@ def derive_opts(args):
     return {'run': run}
 
 def dispatch(argv, version=None):
-    args, collection, tasks = parse(argv, version=version)
+    args, collection, parser_contexts = parse(argv, version=version)
     results = []
     executor = Executor(collection, Context(**derive_opts(args)))
     # Take action based on 'core' options and the 'tasks' found
     # TODO: dedupe correctly when multiple top level tasks given. Requires
     # pushing this shit farther down into Executor, most likely, and teasing
     # the Failure try/except higher up around that.
-    for context in tasks:
+    for context in parser_contexts:
         kwargs = {}
         # Take CLI arguments out of parser context, create func-kwarg dict.
         for _, arg in six.iteritems(context.args):
@@ -285,7 +285,7 @@ def dispatch(argv, version=None):
             results.append(executor.execute(
                 # Task name given on CLI
                 name=context.name,
-                # Flags/other args given to this task specifically.
+                # Flags/other args given to this task specifically (not core)
                 # There are no non-keyword args at this stage; the parser knows
                 # the names of any positionally given values, so we get back a
                 # normalized view.

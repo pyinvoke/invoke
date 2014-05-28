@@ -23,6 +23,9 @@ class Argument(object):
         ``False`` (default) arguments must be explicitly named.
     :param optional:
         Whether or not this (non-``bool``) argument requires a value.
+    :param attr_name:
+        A Python identifier/attribute friendly name, typically filled in with
+        the underscored version when ``name``/``names`` contain dashes.
     """
     def __init__(self, name=None, names=(), kind=str, default=None, help=None,
         positional=False, optional=False, attr_name=None):
@@ -53,6 +56,12 @@ class Argument(object):
 
     @property
     def name(self):
+        """
+        The canonical attribute-friendly name for this argument.
+
+        Will be ``attr_name`` (if given to constructor) or the first name in
+        ``names`` otherwise.
+        """
         return self.attr_name or self.names[0]
 
     @property
