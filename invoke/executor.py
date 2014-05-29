@@ -7,15 +7,6 @@ from .tasks import Call
 from .vendor import six
 
 
-def expand_tasks(tasks):
-    ret = []
-    for task in tasks:
-        ret.extend(expand_tasks(task.pre))
-        ret.append(task)
-        # TODO: ret.extend(expand_tasks(tasks.post))
-    return ret
-
-
 class Executor(object):
     """
     An execution strategy for Task objects.
@@ -37,16 +28,6 @@ class Executor(object):
         """
         self.collection = collection
         self.context = context or Context()
-
-    def _execute(self, task, name, args, kwargs):
-        # Need task + possible name when invoking CLI-given tasks, so we can
-        # pass a dotted path to Collection.configuration()
-        debug("Executing %r%s" % (task, (" as %s" % name) if name else ""))
-        if task.contextualized:
-            context = self.context.clone()
-            context.update(self.collection.configuration(name))
-            args = (context,) + args
-        return task(*args, **kwargs)
 
     def execute(self, *tasks, **kwargs):
         """
@@ -86,17 +67,19 @@ class Executor(object):
         # Handle top level kwargs (the name gets overwritten below)
         dedupe = kwargs.get('dedupe', True)
         # Normalize to two-tuples
+        debug("Examining top level tasks {0!r}".format(
+            [x[0] for x in tasks]
+        ))
         tasks = [(x, {}) if isinstance(x, basestring) else x for x in tasks]
-        # Then to call objects
+        debug("Tasks with kwargs: {0!r}".format(tasks))
+        # Then to call objects (binding the task obj + kwargs together)
         tasks = [
             Call(self.collection[name], **kwargs)
             for name, kwargs in tasks
         ]
         # Expand pre/post tasks
         # TODO: post-tasks
-        # TODO: turn 'empty' pre-tasks into call objects?
-        # TODO: debug output for expansion
-        tasks = expand_tasks(tasks)
+        tasks = self.expand_tasks(tasks)
         # Dedupe if desired
         if dedupe: # Python 2 can't do *args + kwarg
             deduped = []
@@ -108,21 +91,43 @@ class Executor(object):
         # Execute
         results = {}
         for task in deduped:
-            # TODO: move higher, figure out how to preserve given name
-            debug("Executor is examining top level task %r (name given: %r)" % (
-                task, name
-            ))
-            # Execute task w/o a given name since it's a pre-task.
-            # TODO: figure out if that's quite right (may not play well with
-            # nested config junk)
             args, kwargs = tuple(), {}
             if isinstance(task, Call):
                 c = task
                 task = c.task
                 args, kwargs = c.args, c.kwargs
-            # TODO: yea definitely need preserved name (?)
-            result = self._execute(task=task, name=name, args=args, kwargs=kwargs)
+            # TODO: figure out how to preserve top-level tasks' given names
+            result = self._execute(
+                task=task, name=name, args=args, kwargs=kwargs
+            )
             # TODO: handle the non-dedupe case / the same-task-different-args
             # case, wherein one task obj maps to >1 result.
             results[task] = result
         return results
+
+    def _execute(self, task, name, args, kwargs):
+        # Need task + possible name when invoking CLI-given tasks, so we can
+        # pass a dotted path to Collection.configuration()
+        debug("Executing %r%s" % (task, (" as %s" % name) if name else ""))
+        if task.contextualized:
+            context = self.context.clone()
+            context.update(self.collection.configuration(name))
+            args = (context,) + args
+        return task(*args, **kwargs)
+
+    def expand_tasks(self, tasks):
+        """
+        Recursively expand `.Task`/`.Call` objects with their pre/post tasks.
+
+        :param iterable tasks:
+            An iterable containing `.Task` or `.Call` objects.
+
+        :returns:
+            A `list` of `.Task` (or `.Call`, if any were passed in) objects.
+        """
+        ret = []
+        for task in tasks:
+            ret.extend(self.expand_tasks(task.pre))
+            ret.append(task)
+            # TODO: ret.extend(expand_tasks(tasks.post))
+        return ret
