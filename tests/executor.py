@@ -191,8 +191,7 @@ bar
             inner2.configure({'my.config.key': 'othervalue'})
             c = Collection(inner1, inner2)
             e = Executor(collection=c, context=Context())
-            e.execute('inner1.mytask')
-            e.execute('inner2.othertask')
+            e.execute('inner1.mytask', 'inner2.othertask')
 
         def subcollection_config_works_with_default_tasks(self):
             @ctask(default=True)
