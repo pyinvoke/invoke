@@ -65,32 +65,19 @@ class Executor(object):
             include pre- and post-tasks if any were executed.
         """
         # Handle top level kwargs (the name gets overwritten below)
-        dedupe = kwargs.get('dedupe', True)
-        # Normalize to two-tuples
+        dedupe = kwargs.get('dedupe', True) # Python 2 can't do *args + kwarg
+        # Normalize input
         debug("Examining top level tasks {0!r}".format(
             [x[0] for x in tasks]
         ))
-        tasks = [(x, {}) if isinstance(x, basestring) else x for x in tasks]
+        tasks = self._normalize(tasks)
         debug("Tasks with kwargs: {0!r}".format(tasks))
-        # Then to call objects (binding the task obj + kwargs together)
-        tasks = [
-            Call(self.collection[name], **kwargs)
-            for name, kwargs in tasks
-        ]
-        # Expand pre/post tasks
+        # Expand pre/post tasks & then dedupe the entire run
         # TODO: post-tasks
-        tasks = self.expand_tasks(tasks)
-        # Dedupe if desired
-        if dedupe: # Python 2 can't do *args + kwarg
-            deduped = []
-            for task in tasks:
-                if task not in deduped:
-                    deduped.append(task)
-        else:
-            deduped = tasks
+        tasks = self._dedupe(self._expand_tasks(tasks), dedupe)
         # Execute
         results = {}
-        for task in deduped:
+        for task in tasks:
             args, kwargs = tuple(), {}
             if isinstance(task, Call):
                 c = task
@@ -105,6 +92,25 @@ class Executor(object):
             results[task] = result
         return results
 
+    def _normalize(self, tasks):
+        # To two-tuples from potential combo of two-tuples & strings
+        tuples = [(x, {}) if isinstance(x, basestring) else x for x in tasks]
+        # Then to call objects (binding the task obj + kwargs together)
+        return [
+            Call(self.collection[name], **kwargs)
+            for name, kwargs in tuples
+        ]
+
+    def _dedupe(self, tasks, dedupe):
+        deduped = []
+        if dedupe:
+            for task in tasks:
+                if task not in deduped:
+                    deduped.append(task)
+        else:
+            deduped = tasks
+        return deduped
+
     def _execute(self, task, name, args, kwargs):
         # Need task + possible name when invoking CLI-given tasks, so we can
         # pass a dotted path to Collection.configuration()
@@ -115,19 +121,10 @@ class Executor(object):
             args = (context,) + args
         return task(*args, **kwargs)
 
-    def expand_tasks(self, tasks):
-        """
-        Recursively expand `.Task`/`.Call` objects with their pre/post tasks.
-
-        :param iterable tasks:
-            An iterable containing `.Task` or `.Call` objects.
-
-        :returns:
-            A `list` of `.Task` (or `.Call`, if any were passed in) objects.
-        """
+    def _expand_tasks(self, tasks):
         ret = []
         for task in tasks:
-            ret.extend(self.expand_tasks(task.pre))
+            ret.extend(self._expand_tasks(task.pre))
             ret.append(task)
-            # TODO: ret.extend(expand_tasks(tasks.post))
+            # TODO: ret.extend(self._expand_tasks(tasks.post))
         return ret
