@@ -16,10 +16,12 @@ class Executor_(IntegrationSpec):
         self.task1 = Task(Mock(return_value=7))
         self.task2 = Task(Mock(return_value=10), pre=[self.task1])
         self.task3 = Task(Mock(), pre=[self.task1])
+        self.task4 = Task(Mock(), post=[self.task1])
         coll = Collection()
         coll.add_task(self.task1, name='task1')
         coll.add_task(self.task2, name='task2')
         coll.add_task(self.task3, name='task3')
+        coll.add_task(self.task4, name='task4')
         self.executor = Executor(collection=coll, context=Context())
 
     class init:
@@ -49,6 +51,10 @@ class Executor_(IntegrationSpec):
             self.executor.execute('task2')
             eq_(self.task1.body.call_count, 1)
 
+        def post_tasks(self):
+            self.executor.execute('task4')
+            eq_(self.task1.body.call_count, 1)
+
         def pre_task_calls_default_to_empty_args_regardless_of_main_args(self):
             body = Mock()
             t1 = Task(body)
@@ -59,6 +65,9 @@ class Executor_(IntegrationSpec):
             )
             e.execute(('t2', {'something': 'meh'}))
             eq_(body.call_args, tuple())
+
+        def post_task_calls_default_to_empty_args_too(self):
+            skip()
 
         def _call_objs(self, contextualized):
             body = Mock()
@@ -80,6 +89,12 @@ class Executor_(IntegrationSpec):
 
         def call_obj_pre_tasks_play_well_with_context_args(self):
             self._call_objs(True)
+
+        def post_tasks_may_be_call_objects_specifying_args(self):
+            skip()
+
+        def call_obj_post_tasks_play_well_with_context_args(self):
+            skip()
 
     class deduping_and_chaining:
         def chaining_is_depth_first(self):
