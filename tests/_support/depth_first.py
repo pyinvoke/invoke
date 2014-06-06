@@ -21,6 +21,14 @@ def makedirs():
 def build():
     print("Building")
 
-@task(build)
+@task
+def pretest():
+    print("Preparing for testing")
+
+@task(pretest)
+def test():
+    print("Testing")
+
+@task(build, post=[test])
 def deploy():
     print("Deploying")

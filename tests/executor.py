@@ -16,7 +16,7 @@ class Executor_(IntegrationSpec):
         self.task1 = Task(Mock(return_value=7))
         self.task2 = Task(Mock(return_value=10), pre=[self.task1])
         self.task3 = Task(Mock(), pre=[self.task1])
-        self.task4 = Task(Mock(), post=[self.task1])
+        self.task4 = Task(Mock(return_value=15), post=[self.task1])
         coll = Collection()
         coll.add_task(self.task1, name='task1')
         coll.add_task(self.task2, name='task2')
@@ -105,17 +105,21 @@ Cleaned everything
 Making directories
 Building
 Deploying
+Preparing for testing
+Testing
 """.lstrip())
 
         def _expect(self, args, expected):
             _output_eq('-c integration {0}'.format(args), expected.lstrip())
 
-        class adjacent_pretask:
+        class adjacent_hooks:
             def deduping(self):
                 self._expect('biz', """
 foo
 bar
 biz
+post1
+post2
 """)
 
             def no_deduping(self):
@@ -124,14 +128,19 @@ foo
 foo
 bar
 biz
+post1
+post2
+post2
 """)
 
-        class non_adjacent_pretask:
+        class non_adjacent_hooks:
             def deduping(self):
                 self._expect('boz', """
 foo
 bar
 boz
+post2
+post1
 """)
 
             def no_deduping(self):
@@ -140,6 +149,9 @@ foo
 bar
 foo
 boz
+post2
+post1
+post2
 """)
 
         # AKA, a (foo) (foo -> bar) scenario arising from foo + bar
@@ -171,7 +183,6 @@ foo
 foo
 bar
 """)
-
 
         def deduping_treats_different_calls_to_same_task_differently(self):
             body = Mock()
@@ -232,4 +243,7 @@ bar
             )
 
         def with_post_tasks(self):
-            skip()
+            eq_(
+                self.executor.execute('task4'),
+                {self.task1: 7, self.task4: 15}
+            )
