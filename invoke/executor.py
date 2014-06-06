@@ -79,11 +79,13 @@ class Executor(object):
         results = {}
         for task in tasks:
             args, kwargs = tuple(), {}
+            # Unpack Call objects, including given-name handling
+            name = None
             if isinstance(task, Call):
                 c = task
                 task = c.task
                 args, kwargs = c.args, c.kwargs
-            # TODO: figure out how to preserve top-level tasks' given names
+                name = c.name
             result = self._execute(
                 task=task, name=name, args=args, kwargs=kwargs
             )
@@ -96,10 +98,12 @@ class Executor(object):
         # To two-tuples from potential combo of two-tuples & strings
         tuples = [(x, {}) if isinstance(x, basestring) else x for x in tasks]
         # Then to call objects (binding the task obj + kwargs together)
-        return [
-            Call(self.collection[name], **kwargs)
-            for name, kwargs in tuples
-        ]
+        calls = []
+        for name, kwargs in tuples:
+            c = Call(self.collection[name], **kwargs)
+            c.name = name
+            calls.append(c)
+        return calls
 
     def _dedupe(self, tasks, dedupe):
         deduped = []

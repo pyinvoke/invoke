@@ -311,12 +311,14 @@ class Call(object):
 
     Wraps its `.Task` so it can be treated as one by `.Executor`.
 
-    Similar to `~functools.partial` with some added functionality.
+    Similar to `~functools.partial` with some added functionality (such as the
+    delegation to the inner task, and optional tracking of a given name.)
     """
     def __init__(self, task, *args, **kwargs):
         self.task = task
         self.args = args
         self.kwargs = kwargs
+        self.name = None # Mostly manipulated by client code
 
     def __getattr__(self, name):
         return getattr(self.task, name)
