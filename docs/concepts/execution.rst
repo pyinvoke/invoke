@@ -113,9 +113,10 @@ With a depth-first behavior, the below is hopefully intuitive to most users::
 Parameterizing pre/post-tasks
 -----------------------------
 
-By default, pre- and post-tasks are executed with no arguments. When this is
-not suitable, you can wrap the task objects with `~.tasks.call` objects which
-allow you to specify a call signature::
+By default, pre- and post-tasks are executed with no arguments, even if the
+task triggering their execution was given some. When this is not suitable, you
+can wrap the task objects with `~.tasks.call` objects which allow you to
+specify a call signature::
 
     @task
     def clean(which=None):
