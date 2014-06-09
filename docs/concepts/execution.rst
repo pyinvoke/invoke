@@ -26,20 +26,23 @@ Execution::
     $ invoke hello
     Hello, world!
 
-.. _pre-tasks:
+.. _pre-post-tasks:
 
-Pre-tasks
-=========
+Pre- and post-tasks
+===================
 
-Tasks may specify that other tasks should always run before they themselves
-run, by giving task objects as non-keyword arguments to ``@task`` (or
-explicitly via the ``pre`` keyword argument). Example::
+Tasks that should always have another task executed before or after them, may
+use the ``@task`` deocator's ``pre`` and/or ``post`` kwargs, like so::
 
     @task
     def clean():
         print("Cleaning")
 
-    @task(clean) # or @task(pre=[clean])
+    @task
+    def publish():
+        print("Publishing")
+
+    @task(pre=[clean], post=[publish])
     def build():
         print("Building")
 
@@ -49,11 +52,27 @@ Execution::
     Cleaning
     Building
 
-Recursive/chained pre-tasks
----------------------------
+These keyword arguments always take iterables. As a convenience, pre-tasks (and
+pre-tasks only) may be given as positional arguments, in a manner similar to
+build systems like ``make``. E.g. we could present part of the above example
+as::
 
-Pre-tasks of pre-tasks will also be invoked, in a depth-first manner,
-recursively. Here's a more complex (if slightly contrived) tasks file::
+    @task
+    def clean():
+        print("Cleaning")
+
+    @task(clean)
+    def build():
+        print("Building")
+
+As before, ``invoke build`` would cause ``clean`` to run, then ``build``.
+
+Recursive/chained pre/post-tasks
+--------------------------------
+
+Pre-tasks of pre-tasks will also be invoked (as will post-tasks of pre-tasks,
+pre-tasks of post-tasks, etc) in a depth-first manner, recursively. Here's a
+more complex (if slightly contrived) tasks file::
 
     @task
     def clean_html():
@@ -90,18 +109,19 @@ With a depth-first behavior, the below is hopefully intuitive to most users::
     Deploying
 
         
-Parameterizing pre-tasks
-------------------------
+Parameterizing pre/post-tasks
+-----------------------------
 
-By default, pre-tasks are executed with no arguments. When this is not
-suitable, you can wrap the task objects with `~.tasks.call` objects which allow you to specify a call signature::
+By default, pre- and post-tasks are executed with no arguments. When this is
+not suitable, you can wrap the task objects with `~.tasks.call` objects which
+allow you to specify a call signature::
 
     @task
     def clean(which=None):
         which = which or 'pyc'
         print("Cleaning {0}".format(which))
 
-    @task(pre=[call(clean, which='all')]) # or just call(clean, 'all')
+    @task(pre=[call(clean, which='all')]) # or call(clean, 'all')
     def build():
         print("Building")
 
