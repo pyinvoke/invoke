@@ -14,12 +14,12 @@ Changelog
 
 * :support:`25` Trim a bunch of time off the test suite by using mocking and
   other tools instead of dogfooding a bunch of subprocess spawns.
-* :bug:`128` Positional arguments containing underscores were not exporting to
-  the parser correctly; this has been fixed. Thanks to J. Javier Maestro for
-  catch & patch.
-* :bug:`121` Add missing help output denoting inverse Boolean options (i.e.
-  ``--[no-]foo`` for a ``--foo`` flag whose value defaults to true.) Thanks to
-  Andrew Roberts for catch & patch.
+* :bug:`128 major` Positional arguments containing underscores were not
+  exporting to the parser correctly; this has been fixed. Thanks to J. Javier
+  Maestro for catch & patch.
+* :bug:`121 major` Add missing help output denoting inverse Boolean options
+  (i.e. ``--[no-]foo`` for a ``--foo`` flag whose value defaults to true.)
+  Thanks to Andrew Roberts for catch & patch.
 * :support:`118` Update the bundled ``six`` plus other minor tweaks to support
   files. Thanks to Matt Iversen.
 * :feature:`115` Make it easier to reuse Invoke's primary CLI machinery in
@@ -50,14 +50,14 @@ Changelog
 * :support:`-` Refactor the `.Runner` module to differentiate what it means to
   run a command in the abstract, from execution specifics. Top level API is
   unaffected.
-* :bug:`131` Make sure one's local tasks module is always first in
+* :bug:`131 major` Make sure one's local tasks module is always first in
   ``sys.path``, even if its parent directory was already somewhere else in
   ``sys.path``. This ensures that local tasks modules never become hidden by
   third-party ones. Thanks to ``@crccheck`` for the early report and to Dorian
   Puła for assistance fixing.
-* :bug:`116` Ensure nested config overrides play nicely with default tasks and
-  pre-tasks.
-* :bug:`127` Fill in tasks' exposed ``name`` attribute with body name if
+* :bug:`116 major` Ensure nested config overrides play nicely with default
+  tasks and pre-tasks.
+* :bug:`127 major` Fill in tasks' exposed ``name`` attribute with body name if
   explicit name not given.
 * :feature:`124` Add a ``--debug`` flag to the core parser to enable easier
   debugging (on top of existing ``INVOKE_DEBUG`` env var.)
