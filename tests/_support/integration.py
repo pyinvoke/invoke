@@ -21,13 +21,13 @@ def foo():
 def bar():
     print("bar")
 
-@task(post=[post2])
-def post1():
-    print("post1")
-
 @task
 def post2():
     print("post2")
+
+@task(post=[post2])
+def post1():
+    print("post1")
 
 @task(foo, bar, post=[post1, post2])
 def biz():

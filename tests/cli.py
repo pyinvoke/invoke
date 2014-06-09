@@ -165,6 +165,8 @@ Available tasks:
                 'biz',
                 'boz',
                 'foo',
+                'post1',
+                'post2',
                 'print_foo',
                 'print_name',
                 'print_underscored_arg',

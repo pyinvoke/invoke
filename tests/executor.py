@@ -47,6 +47,9 @@ class Executor_(IntegrationSpec):
             self.executor.execute(('task1', k))
             self.task1.body.assert_called_once_with(**k)
 
+    class basic_pre_post:
+        "basic pre/post task functionality"
+
         def pre_tasks(self):
             self.executor.execute('task2')
             eq_(self.task1.body.call_count, 1)
@@ -55,46 +58,53 @@ class Executor_(IntegrationSpec):
             self.executor.execute('task4')
             eq_(self.task1.body.call_count, 1)
 
-        def pre_task_calls_default_to_empty_args_regardless_of_main_args(self):
-            body = Mock()
-            t1 = Task(body)
-            t2 = Task(Mock(), pre=[t1])
+        def calls_default_to_empty_args_always(self):
+            pre_body, post_body = Mock(), Mock()
+            t1 = Task(pre_body)
+            t2 = Task(post_body)
+            t3 = Task(Mock(), pre=[t1], post=[t2])
             e = Executor(
-                collection=Collection(t1=t1, t2=t2),
+                collection=Collection(t1=t1, t2=t2, t3=t3),
                 context=Context()
             )
-            e.execute(('t2', {'something': 'meh'}))
-            eq_(body.call_args, tuple())
-
-        def post_task_calls_default_to_empty_args_too(self):
-            skip()
+            e.execute(('t3', {'something': 'meh'}))
+            for body in (pre_body, post_body):
+                eq_(body.call_args, tuple())
 
         def _call_objs(self, contextualized):
-            body = Mock()
-            t1 = Task(body, contextualized=contextualized)
-            t2 = Task(Mock(), pre=[call(t1, 5, foo='bar')])
-            c = Collection(t1=t1, t2=t2)
+            # Setup
+            pre_body, post_body = Mock(), Mock()
+            t1 = Task(pre_body, contextualized=contextualized)
+            t2 = Task(post_body, contextualized=contextualized)
+            t3 = Task(Mock(),
+                pre=[call(t1, 5, foo='bar')],
+                post=[call(t2, 7, biz='baz')],
+            )
+            c = Collection(t1=t1, t2=t2, t3=t3)
             e = Executor(collection=c, context=Context())
-            e.execute('t2')
-            args, kwargs = body.call_args
+            e.execute('t3')
+            # Pre-task asserts
+            args, kwargs = pre_body.call_args
             eq_(kwargs, {'foo': 'bar'})
             if contextualized:
                 assert isinstance(args[0], Context)
                 eq_(args[1], 5)
             else:
                 eq_(args, (5,))
+            # Post-task asserts
+            args, kwargs = post_body.call_args
+            eq_(kwargs, {'biz': 'baz'})
+            if contextualized:
+                assert isinstance(args[0], Context)
+                eq_(args[1], 7)
+            else:
+                eq_(args, (7,))
 
-        def pre_tasks_may_be_call_objects_specifying_args(self):
+        def may_be_call_objects_specifying_args(self):
             self._call_objs(False)
 
-        def call_obj_pre_tasks_play_well_with_context_args(self):
+        def call_objs_play_well_with_context_args(self):
             self._call_objs(True)
-
-        def post_tasks_may_be_call_objects_specifying_args(self):
-            skip()
-
-        def call_obj_post_tasks_play_well_with_context_args(self):
-            skip()
 
     class deduping_and_chaining:
         def chaining_is_depth_first(self):
