@@ -11,11 +11,6 @@ matrix:
   allow_failures:
     - python: pypy
 install:
-  # Install self (we are required for some of our own dev reqs for now)
-  # NOTE: *do not* use -e as it adds checkout root to sys.path, which prevents
-  # us from having a "pure" install environment like a new user would have.
-  # E.g. it makes our internal test module importable :(
-  - pip install .
   # Pre-requirements sanity test (again, resembles pure, non-dev install
   # environment.) Avoids e.g. spec's 'six' from gumming up our attempts to
   # import our vendorized 'six'.
