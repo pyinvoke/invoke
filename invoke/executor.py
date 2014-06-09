@@ -95,7 +95,10 @@ class Executor(object):
 
     def _normalize(self, tasks):
         # To two-tuples from potential combo of two-tuples & strings
-        tuples = [(x, {}) if isinstance(x, basestring) else x for x in tasks]
+        tuples = [
+            (x, {}) if isinstance(x, six.string_types) else x
+            for x in tasks
+        ]
         # Then to call objects (binding the task obj + kwargs together)
         calls = []
         for name, kwargs in tuples:

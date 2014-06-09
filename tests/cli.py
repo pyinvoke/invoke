@@ -43,7 +43,7 @@ class CLI(IntegrationSpec):
 
     def contextualized_tasks_are_given_parser_context_arg(self):
         # go() in contextualized.py just returns its initial arg
-        retval = _dispatch('invoke -c contextualized go').values()[0]
+        retval = list(_dispatch('invoke -c contextualized go').values())[0]
         assert isinstance(retval, Context)
 
     def core_help_option_prints_core_help(self):
