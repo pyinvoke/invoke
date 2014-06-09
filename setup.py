@@ -2,7 +2,7 @@
 
 # Support setuptools only, distutils has a divergent and more annoying API and
 # few folks will lack setuptools.
-from setuptools import setup
+from setuptools import setup, find_packages
 
 # Version info -- read without importing
 _locals = {}
