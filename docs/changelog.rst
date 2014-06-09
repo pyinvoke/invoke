@@ -2,16 +2,17 @@
 Changelog
 =========
 
-* :support:`25` Trim a bunch of time off the test suite by using mocking and
-  other tools instead of dogfooding a bunch of subprocess spawns.
-* :feature:`135` Allow control over the arguments passed to pre-tasks (via
-  `.call`). For details, see :ref:`pre-tasks`.
+* :feature:`135` (also bugs :issue:`120`, :issue:`123`) Implement post-tasks to
+  match pre-tasks, and allow control over the arguments passed to both (via
+  `.call`). For details, see :ref:`pre-post-tasks`.
 
   .. warning::
       Pre-tasks were overhauled a moderate amount to implement this feature;
       they now require references to **task objects** instead of **task
       names**. This is a backwards incompatible change.
 
+* :support:`25` Trim a bunch of time off the test suite by using mocking and
+  other tools instead of dogfooding a bunch of subprocess spawns.
 * :bug:`128` Positional arguments containing underscores were not exporting to
   the parser correctly; this has been fixed. Thanks to J. Javier Maestro for
   catch & patch.
