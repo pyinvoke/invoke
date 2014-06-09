@@ -51,6 +51,7 @@ Execution::
     $ invoke build
     Cleaning
     Building
+    Publishing
 
 These keyword arguments always take iterables. As a convenience, pre-tasks (and
 pre-tasks only) may be given as positional arguments, in a manner similar to
