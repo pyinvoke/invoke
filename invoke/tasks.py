@@ -41,6 +41,7 @@ class Task(object):
         auto_shortflags=True,
         help=None,
         pre=None,
+        post=None,
     ):
         # Real callable
         self.body = body
@@ -61,6 +62,7 @@ class Task(object):
         self.help = help or {}
         # Call chain bidness
         self.pre = pre or []
+        self.post = post or []
         self.times_called = 0
 
     @property
@@ -274,6 +276,7 @@ def task(*args, **kwargs):
     auto_shortflags = kwargs.pop('auto_shortflags', True)
     help = kwargs.pop('help', {})
     pre = kwargs.pop('pre', [])
+    post = kwargs.pop('post', [])
     # Handle unknown kwargs
     if kwargs:
         kwarg = (" unknown kwargs %r" % (kwargs,)) if kwargs else ""
@@ -289,7 +292,8 @@ def task(*args, **kwargs):
             default=default,
             auto_shortflags=auto_shortflags,
             help=help,
-            pre=pre
+            pre=pre,
+            post=post,
         )
         return obj
     return inner

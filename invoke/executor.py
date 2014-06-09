@@ -73,7 +73,6 @@ class Executor(object):
         tasks = self._normalize(tasks)
         debug("Tasks with kwargs: {0!r}".format(tasks))
         # Expand pre/post tasks & then dedupe the entire run
-        # TODO: post-tasks
         tasks = self._dedupe(self._expand_tasks(tasks), dedupe)
         # Execute
         results = {}
@@ -130,5 +129,5 @@ class Executor(object):
         for task in tasks:
             ret.extend(self._expand_tasks(task.pre))
             ret.append(task)
-            # TODO: ret.extend(self._expand_tasks(tasks.post))
+            ret.extend(self._expand_tasks(task.post))
         return ret
