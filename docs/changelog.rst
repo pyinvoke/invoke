@@ -5,8 +5,8 @@ Changelog
 * :release:`0.8.1 <2014-06-09>`
 * :bug:`140` Revert incorrect changes to our `setup.py` regarding detection of
   sub-packages such as the vendor tree & the parser. Also add additional
-  scripting to our Travis-CI config to try and catch this class of error in
-  future. Thanks to Steven Loria and James Cox for the reports.
+  scripting to our Travis-CI config to catch this class of error in future.
+  Thanks to Steven Loria and James Cox for the reports.
 * :release:`0.8.0 <2014-06-08>`
 * :feature:`135` (also bugs :issue:`120`, :issue:`123`) Implement post-tasks to
   match pre-tasks, and allow control over the arguments passed to both (via
