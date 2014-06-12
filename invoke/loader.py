@@ -49,7 +49,8 @@ class Loader(object):
             return Collection.from_module(module)
         finally:
             # Ensure we clean up the opened file object returned by find()
-            fd.close()
+            if fd:
+                fd.close()
 
 
 class FilesystemLoader(Loader):
