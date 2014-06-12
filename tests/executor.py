@@ -17,11 +17,15 @@ class Executor_(IntegrationSpec):
         self.task2 = Task(Mock(return_value=10), pre=[self.task1])
         self.task3 = Task(Mock(), pre=[self.task1])
         self.task4 = Task(Mock(return_value=15), post=[self.task1])
+        self.task5 = Task(Mock(return_value=-5), pre=["task1"])
+        self.task6 = Task(Mock(return_value=-5), post=["task2"])
         coll = Collection()
         coll.add_task(self.task1, name='task1')
         coll.add_task(self.task2, name='task2')
         coll.add_task(self.task3, name='task3')
         coll.add_task(self.task4, name='task4')
+        coll.add_task(self.task5, name='task5')
+        coll.add_task(self.task6, name='task6')
         self.executor = Executor(collection=coll, context=Context())
 
     class init:
@@ -54,9 +58,17 @@ class Executor_(IntegrationSpec):
             self.executor.execute('task2')
             eq_(self.task1.body.call_count, 1)
 
+        def pre_tasks_as_strings(self):
+            self.executor.execute('task5')
+            eq_(self.task1.body.call_count, 1)
+
         def post_tasks(self):
             self.executor.execute('task4')
             eq_(self.task1.body.call_count, 1)
+
+        def post_tasks_as_strings(self):
+            self.executor.execute('task6')
+            eq_(self.task2.body.call_count, 1)
 
         def calls_default_to_empty_args_always(self):
             pre_body, post_body = Mock(), Mock()
