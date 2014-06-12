@@ -33,6 +33,11 @@ class Loader_(Spec):
         loader.load('foo')
         assert loader.fd.closed
 
+    def can_load_package(self):
+        loader = _BasicLoader()
+        # make sure it doesn't explode
+        loader.load('package')
+
 
 class FilesystemLoader_(Spec):
     def setup(self):
