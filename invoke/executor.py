@@ -2,7 +2,7 @@ import itertools
 
 from .context import Context
 from .util import debug
-from .tasks import Call
+from .tasks import Call, Task
 
 from .vendor import six
 
@@ -130,7 +130,14 @@ class Executor(object):
     def _expand_tasks(self, tasks):
         ret = []
         for task in tasks:
+            task = ensure_task_or_call(task, self.collection)
             ret.extend(self._expand_tasks(task.pre))
             ret.append(task)
             ret.extend(self._expand_tasks(task.post))
         return ret
+
+
+def ensure_task_or_call(task, collection):
+    if isinstance(task, (Task, Call)):
+        return task
+    return collection[task]
