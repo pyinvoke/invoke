@@ -41,6 +41,9 @@ class CLI(IntegrationSpec):
                 "whatevs\n",
             )
 
+    def missing_collection_yields_useful_error(self):
+        _output_eq('-c huhwhat -l', "Can't find any collection named 'huhwat'!")
+
     def contextualized_tasks_are_given_parser_context_arg(self):
         # go() in contextualized.py just returns its initial arg
         retval = list(_dispatch('invoke -c contextualized go').values())[0]
