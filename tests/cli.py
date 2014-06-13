@@ -214,6 +214,9 @@ Available tasks:
                 'with_aliases (a, b)   foo',
             ))
 
+        def empty_collections_say_no_tasks(self):
+            _output_eq("-c empty -l", "No tasks found in collection 'empty'!")
+
     def debug_flag_activates_logging(self):
         # Have to patch our logger to get in before Nose logcapture kicks in.
         with patch('invoke.util.debug') as debug:
