@@ -2,6 +2,8 @@
 Changelog
 =========
 
+* :bug:`145` Ensure a useful message is displayed (instead of a confusing
+  exception) when listing empty task collections.
 * :bug:`142` The refactored Loader class failed to account for the behavior of
   `imp.find_module` when run against packages (vs modules) and was exploding at
   load time. This has been fixed. Thanks to David Baumgold for catch & patch.
