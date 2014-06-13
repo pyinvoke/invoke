@@ -226,6 +226,10 @@ def parse(argv, collection=None, version=None):
     if args.list.value:
         # Sort in depth, then alpha, order
         task_names = collection.task_names
+        # Short circuit if no tasks to show
+        if not task_names:
+            print("No tasks found in collection '{0}'!".format(collection.name))
+            raise Exit
         pairs = []
         for primary in sort_names(task_names.keys()):
             # Add aliases
