@@ -85,10 +85,9 @@ def parse(argv, collection=None, version=None):
     """
     # Initial/core parsing (core options can affect the rest of the parsing)
     initial_context = ParserContext(args=(
-        # TODO: make '--collection' a list-building arg, not a string
         Argument(
             names=('collection', 'c'),
-            help="Specify collection name to load. May be given >1 time."
+            help="Specify collection name to load."
         ),
         Argument(
             names=('root', 'r'),

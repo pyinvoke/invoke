@@ -63,8 +63,7 @@ Usage: inv[oke] [--core-opts] task1 [--task1-opts] ... taskN [--taskN-opts]
 
 Core options:
   --no-dedupe                      Disable task deduplication.
-  -c STRING, --collection=STRING   Specify collection name to load. May be
-                                   given >1 time.
+  -c STRING, --collection=STRING   Specify collection name to load.
   -d, --debug                      Enable debug output.
   -e, --echo                       Echo executed commands before running.
   -h [STRING], --help[=STRING]     Show core or per-task help and exit.
