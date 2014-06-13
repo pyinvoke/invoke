@@ -48,7 +48,9 @@ class Loader(object):
             # Make a collection from it, and done
             return Collection.from_module(module)
         finally:
-            # Ensure we clean up the opened file object returned by find()
+            # Ensure we clean up the opened file object returned by find(), if
+            # there was one (eg found packages, vs modules, don't open any
+            # file.)
             if fd:
                 fd.close()
 
