@@ -9,7 +9,7 @@ from .context import Context
 from .loader import FilesystemLoader
 from .parser import Parser, Context as ParserContext, Argument
 from .executor import Executor
-from .exceptions import Failure, CollectionNotFound, ParseError
+from .exceptions import Failure, CollectionNotFound, ParseError, Exit
 from .util import debug, pty_size, enable_logging
 from ._version import __version__
 
@@ -163,7 +163,7 @@ def parse(argv, collection=None, version=None):
             print(version)
         else:
             print("Invoke %s" % __version__)
-        sys.exit(0)
+        raise Exit
 
     # Core (no value given) --help output
     # TODO: if this wants to display context sensitive help (e.g. a combo help
@@ -177,7 +177,7 @@ def parse(argv, collection=None, version=None):
         print("")
         print("Core options:")
         print_help(initial_context.help_tuples())
-        sys.exit(0)
+        raise Exit
 
     # Load collection (default or specified) and parse leftovers
     # (Skip loading if somebody gave us an explicit task collection.)
@@ -220,11 +220,10 @@ def parse(argv, collection=None, version=None):
         else:
             print(indent + "none")
             print("")
-        sys.exit(0)
+        raise Exit
 
     # Print discovered tasks if necessary
     if args.list.value:
-        print("Available tasks:\n")
         # Sort in depth, then alpha, order
         task_names = collection.task_names
         pairs = []
@@ -242,8 +241,9 @@ def parse(argv, collection=None, version=None):
             pairs.append((name, help_))
 
         # Print
+        print("Available tasks:\n")
         print_help(pairs)
-        sys.exit(0)
+        raise Exit
 
     # Return to caller so they can handle the results
     return args, collection, tasks
@@ -262,7 +262,11 @@ def derive_opts(args):
     return {'run': run}
 
 def dispatch(argv, version=None):
-    args, collection, parser_contexts = parse(argv, version=version)
+    try:
+        args, collection, parser_contexts = parse(argv, version=version)
+    except Exit:
+        # 'return' here is mostly a concession to testing. Meh :(
+        return sys.exit(0)
     executor = Executor(collection, Context(**derive_opts(args)))
     try:
         tasks = []

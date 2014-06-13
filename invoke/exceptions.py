@@ -33,3 +33,12 @@ class ParseError(Exception):
     def __init__(self, msg, context=None):
         super(ParseError, self).__init__(msg)
         self.context = context
+
+
+class Exit(Exception):
+    """
+    Simple stand-in for SystemExit that lets us gracefully exit.
+
+    Removes lots of scattered sys.exit(0) calls, improves testability.
+    """
+    pass
