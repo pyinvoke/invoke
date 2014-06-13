@@ -19,6 +19,8 @@ install:
   - inv --list
   # Install remaining dev requirements (test runner, etc)
   - pip install -r dev-requirements.txt
+  # Install coveralls to report coverage info to Coveralls.io
+  - pip install coveralls
 script:
   # Main test suite
   - inv test
@@ -31,6 +33,8 @@ script:
   - pip install . # NO -e!
   - inv -l # Sanity check
   - flake8
+after_success:
+  - coveralls
 notifications:
   irc:
     channels: "irc.freenode.org#invoke"
