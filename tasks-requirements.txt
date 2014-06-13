@@ -1,5 +1,5 @@
 # Need invocations lib to load internal tasks module (for now)
--e git+https://github.com/pyinvoke/invocations#egg=invocations
+-e git+https://github.com/singingwolfboy/invocations@test-coverage#egg=invocations
 # Need self to, you know, run tests / load into tests / etc.
 -e .
 # These required for publish tasks
