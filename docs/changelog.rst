@@ -2,6 +2,9 @@
 Changelog
 =========
 
+* :bug:`142` The refactored Loader class failed to account for the behavior of
+  `imp.find_module` when run against packages (vs modules) and was exploding at
+  load time. This has been fixed. Thanks to David Baumgold for catch & patch.
 * :release:`0.8.1 <2014-06-09>`
 * :bug:`140` Revert incorrect changes to our `setup.py` regarding detection of
   sub-packages such as the vendor tree & the parser. Also add additional
