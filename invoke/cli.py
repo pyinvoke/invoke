@@ -228,7 +228,8 @@ def parse(argv, collection=None, version=None):
         task_names = collection.task_names
         # Short circuit if no tasks to show
         if not task_names:
-            print("No tasks found in collection '{0}'!".format(collection.name))
+            msg = "No tasks found in collection '{0}'!"
+            print(msg.format(collection.name))
             raise Exit
         pairs = []
         for primary in sort_names(task_names.keys()):

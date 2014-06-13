@@ -215,7 +215,10 @@ Available tasks:
             ))
 
         def empty_collections_say_no_tasks(self):
-            _output_eq("-c empty -l", "No tasks found in collection 'empty'!\n")
+            _output_eq(
+                "-c empty -l",
+                "No tasks found in collection 'empty'!\n"
+            )
 
     def debug_flag_activates_logging(self):
         # Have to patch our logger to get in before Nose logcapture kicks in.
