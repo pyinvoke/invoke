@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :release:`0.8.2 <2014-06-15>`
 * :bug:`149` Print a useful message to stderr when Invoke can't find the
   requested collection/tasks file, instead of displaying a traceback.
 * :bug:`145` Ensure a useful message is displayed (instead of a confusing
