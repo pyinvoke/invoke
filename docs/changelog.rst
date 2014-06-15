@@ -2,6 +2,8 @@
 Changelog
 =========
 
+* :bug:`149` Print a useful message to stderr when Invoke can't find the
+  requested collection/tasks file, instead of displaying a traceback.
 * :bug:`145` Ensure a useful message is displayed (instead of a confusing
   exception) when listing empty task collections.
 * :bug:`142` The refactored Loader class failed to account for the behavior of
