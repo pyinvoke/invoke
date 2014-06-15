@@ -182,7 +182,16 @@ def parse(argv, collection=None, version=None):
     start = args.root.value
     loader = FilesystemLoader(start=start)
     coll_name = args.collection.value
-    collection = loader.load(coll_name) if coll_name else loader.load()
+    try:
+        collection = loader.load(coll_name) if coll_name else loader.load()
+    except CollectionNotFound:
+        # TODO: improve sys.exit mocking in tests so we can just raise
+        # Exit(msg)
+        six.print_(
+            "Can't find any collection named {0!r}!".format(coll_name),
+            file=sys.stderr
+        )
+        raise Exit(1)
     parser = Parser(contexts=collection.to_contexts())
     debug("Parsing tasks against collection %r" % collection)
     tasks = parse_gracefully(parser, core.unparsed)
@@ -266,9 +275,10 @@ def derive_opts(args):
 def dispatch(argv, version=None):
     try:
         args, collection, parser_contexts = parse(argv, version=version)
-    except Exit:
+    except Exit as e:
         # 'return' here is mostly a concession to testing. Meh :(
-        return sys.exit(0)
+        # TODO: probably restructure things better so we don't need this?
+        return sys.exit(e.code)
     executor = Executor(collection, Context(**derive_opts(args)))
     try:
         tasks = []

@@ -39,6 +39,7 @@ class Exit(Exception):
     """
     Simple stand-in for SystemExit that lets us gracefully exit.
 
-    Removes lots of scattered sys.exit(0) calls, improves testability.
+    Removes lots of scattered sys.exit calls, improves testability.
     """
-    pass
+    def __init__(self, code=0):
+        self.code = code

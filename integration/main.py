@@ -32,3 +32,10 @@ class Main(Spec):
             "inv print_name --name whatevs",
             "whatevs\n"
         )
+
+    @trap
+    def bad_collection_exits_nonzero(self):
+        result = run("inv -c nope -l", warn=True)
+        eq_(result.exited, 1)
+        assert not result.stdout
+        assert result.stderr

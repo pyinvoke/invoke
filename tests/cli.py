@@ -44,7 +44,7 @@ class CLI(IntegrationSpec):
     def missing_collection_yields_useful_error(self):
         _output_eq(
             '-c huhwhat -l',
-            "Can't find any collection named 'huhwat'!"
+            stderr="Can't find any collection named 'huhwhat'!\n"
         )
 
     def contextualized_tasks_are_given_parser_context_arg(self):
