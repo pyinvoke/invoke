@@ -179,14 +179,11 @@ def parse(argv, collection=None, version=None):
         raise Exit
 
     # Load collection (default or specified) and parse leftovers
-    # (Skip loading if somebody gave us an explicit task collection.)
-    if not collection:
-        debug("No collection given, loading from %r" % args.root.value)
-        loader = FilesystemLoader(start=args.root.value)
-        start = args.collection.value
-        collection = loader.load(start) if start else loader.load()
+    loader = FilesystemLoader(start=args.root.value)
+    start = args.collection.value
+    collection = loader.load(start) if start else loader.load()
     parser = Parser(contexts=collection.to_contexts())
-    debug("Parsing actual tasks against collection %r" % collection)
+    debug("Parsing tasks against collection %r" % collection)
     tasks = parse_gracefully(parser, core.unparsed)
 
     # Per-task help. Use the parser's contexts dict as that's the easiest way

@@ -404,11 +404,3 @@ class CLIParsing(Spec):
             a = r[0].args
             eq_(a.b.value, True)
             eq_(a.v.value, True)
-
-    def globbed_shortflags_with_multipass_parsing(self):
-        "mytask -cb and -bc"
-        for args in ('-bc', '-cb'):
-            _, _, r = parse(['invoke', 'mytask4', args], self.c)
-            a = r[0].args
-            eq_(a.clean.value, True)
-            eq_(a.browse.value, True)
