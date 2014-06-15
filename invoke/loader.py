@@ -5,6 +5,7 @@ import imp
 from .collection import Collection
 from .exceptions import CollectionNotFound
 from .tasks import Task
+from .util import debug
 
 
 class Loader(object):
@@ -72,6 +73,7 @@ class FilesystemLoader(Loader):
     def find(self, name):
         # Accumulate all parent directories
         start = self.start
+        debug("FilesystemLoader find starting at {0!r}".format(start))
         parents = [os.path.abspath(start)]
         parents.append(os.path.dirname(parents[-1]))
         while parents[-1] != parents[-2]:
@@ -83,6 +85,8 @@ class FilesystemLoader(Loader):
         # find_module means "couldn't find" not "found and couldn't import" so
         # we turn it into a more obvious exception class.
         try:
-            return imp.find_module(name, parents)
+            tup = imp.find_module(name, parents)
+            debug("Found module: {0!r}".format(tup[1]))
+            return tup
         except ImportError:
             raise CollectionNotFound(name=name, start=start)

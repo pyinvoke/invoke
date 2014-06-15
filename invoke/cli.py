@@ -179,9 +179,10 @@ def parse(argv, collection=None, version=None):
         raise Exit
 
     # Load collection (default or specified) and parse leftovers
-    loader = FilesystemLoader(start=args.root.value)
-    start = args.collection.value
-    collection = loader.load(start) if start else loader.load()
+    start = args.root.value
+    loader = FilesystemLoader(start=start)
+    coll_name = args.collection.value
+    collection = loader.load(coll_name) if coll_name else loader.load()
     parser = Parser(contexts=collection.to_contexts())
     debug("Parsing tasks against collection %r" % collection)
     tasks = parse_gracefully(parser, core.unparsed)
