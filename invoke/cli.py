@@ -6,7 +6,7 @@ import textwrap
 from .vendor import six
 
 from .context import Context
-from .loader import FilesystemLoader
+from .loader import FilesystemLoader, DEFAULT_COLLECTION_NAME
 from .parser import Parser, Context as ParserContext, Argument
 from .executor import Executor
 from .exceptions import Failure, CollectionNotFound, ParseError, Exit
@@ -187,8 +187,9 @@ def parse(argv, collection=None, version=None):
     except CollectionNotFound:
         # TODO: improve sys.exit mocking in tests so we can just raise
         # Exit(msg)
+        name = coll_name or DEFAULT_COLLECTION_NAME
         six.print_(
-            "Can't find any collection named {0!r}!".format(coll_name),
+            "Can't find any collection named {0!r}!".format(name),
             file=sys.stderr
         )
         raise Exit(1)

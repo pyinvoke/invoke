@@ -8,6 +8,9 @@ from .tasks import Task
 from .util import debug
 
 
+DEFAULT_COLLECTION_NAME = 'tasks'
+
+
 class Loader(object):
     """
     Abstract class defining how to load a session's base `.Collection`.
@@ -25,7 +28,7 @@ class Loader(object):
         """
         raise NotImplementedError
 
-    def load(self, name='tasks'):
+    def load(self, name=DEFAULT_COLLECTION_NAME):
         """
         Load and return collection identified by ``name``.
 
