@@ -164,6 +164,15 @@ class Parser_(Spec):
             eq_(a.value, None)
             eq_(a2.value, 'val')
 
+        def flag_values_not_parsed_as_flags(self):
+            a = Argument('foo', default=False, optional=True)
+            b = Argument('bar', default='')
+            c = Context(name='mytask', args=(a, b))
+            p = Parser(contexts=(c,))
+            r = p.parse_argv(['mytask', '--bar=--foo'])
+            assert not r[0].args['foo'].value
+            eq_(r[0].args['bar'].value, '--foo')
+
         class parsing_errors:
             def setup(self):
                 self.p = Parser([Context(name='foo', args=[Argument('bar')])])

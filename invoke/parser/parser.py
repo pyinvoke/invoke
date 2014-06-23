@@ -162,16 +162,16 @@ class ParseMachine(StateMachine):
             debug("Top-of-handle() see_unknown(%r)" % token)
             self.see_unknown(token)
             return
+        # Value for current flag
+        if self.waiting_for_flag_value:
+            self.see_value(token)
         # Flag
-        if self.context and token in self.context.flags:
+        elif self.context and token in self.context.flags:
             debug("Saw flag %r" % token)
             self.switch_to_flag(token)
         elif self.context and token in self.context.inverse_flags:
             debug("Saw inverse flag %r" % token)
             self.switch_to_flag(token, inverse=True)
-        # Value for current flag
-        elif self.waiting_for_flag_value:
-            self.see_value(token)
         # Positional args (must come above context-name check in case we still
         # need a posarg and the user legitimately wants to give it a value that
         # just happens to be a valid context name.)
