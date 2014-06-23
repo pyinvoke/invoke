@@ -1,6 +1,6 @@
 # Docs
 Sphinx>=1.1.2
-releases>=0.6.1
+-e git+https://github.com/bitprophet/releases#egg=releases
 # Testing (explicit dependencies to get around a Travis/pip issue)
 # N.B. Nose 1.3.1+ has a bizarro display bug re: exception printing
 nose==1.3.0
