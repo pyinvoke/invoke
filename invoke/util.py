@@ -1,9 +1,13 @@
-import fcntl
 import logging
 import os
 import struct
 import sys
-import termios
+try:
+    import fcntl
+    import termios
+except ImportError:
+    fcntl = None
+    termios = None
 
 
 def enable_logging():
@@ -32,7 +36,7 @@ def pty_size():
     """
     default_cols, default_rows = 80, 24
     cols, rows = default_cols, default_rows
-    if sys.stdout.isatty():
+    if fcntl and sys.stdout.isatty():
         # We want two short unsigned integers (rows, cols)
         fmt = 'HH'
         # Create an empty (zeroed) buffer for ioctl to map onto. Yay for C!
