@@ -70,6 +70,7 @@ Usage: inv[oke] [--core-opts] task1 [--task1-opts] ... taskN [--taskN-opts]
 
 Core options:
   --no-dedupe                      Disable task deduplication.
+  --shortlist                      Concisely list available tasks.
   -c STRING, --collection=STRING   Specify collection name to load.
   -d, --debug                      Enable debug output.
   -e, --echo                       Echo executed commands before running.
@@ -228,6 +229,75 @@ Available tasks:
                 "-c empty -l",
                 "No tasks found in collection 'empty'!\n"
             )
+
+    class task_shortlist(object):
+        "--shortlist"
+        flag = '--shortlist'
+
+        def _listing(self, lines):
+            return '\n'.join(lines)+'\n'
+
+        def _list_eq(self, collection, listing):
+            cmd = '-c {0} --shortlist'.format(collection)
+            _output_eq(cmd, self._listing(listing))
+
+        def simple_output(self):
+            expected = self._listing((
+                'bar',
+                'biz',
+                'boz',
+                'foo',
+                'post1',
+                'post2',
+                'print_foo',
+                'print_name',
+                'print_underscored_arg',
+            ))
+            _output_eq('-c integration {0}'.format(self.flag), expected)
+
+        def namespacing(self):
+            self._list_eq('namespacing', (
+                'toplevel',
+                'module.mytask',
+            ))
+
+        def top_level_tasks_listed_first(self):
+            self._list_eq('simple_ns_list', (
+                'z_toplevel',
+                'a.subtask'
+            ))
+
+        def subcollections_sorted_in_depth_order(self):
+            self._list_eq('deeper_ns_list', (
+                'toplevel',
+                'a.subtask',
+                'a.nother.subtask',
+            ))
+
+        def aliases_sorted_alphabetically(self):
+            self._list_eq('alias_sorting', (
+                'toplevel',
+                'a',
+                'z',
+            ))
+
+        def default_tasks(self):
+            # sub-ns default task display as "real.name (collection name)"
+            self._list_eq('explicit_root', (
+                'top_level',
+                'othertop',
+                'sub.sub_task',
+                'sub',
+                'sub.othersub',
+            ))
+
+        def empty_collections_say_nothing(self):
+            _output_eq(
+                "-c empty --shortlist",
+                ''
+            )
+
+
 
     def debug_flag_activates_logging(self):
         # Have to patch our logger to get in before Nose logcapture kicks in.

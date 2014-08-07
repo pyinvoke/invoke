@@ -2,7 +2,7 @@
 Changelog
 =========
 
-* :bug:`149` Fixed a sub-case of the already-mostly-fixed :issue:`149` so the
+* :bug:`150` Fixed a sub-case of the already-mostly-fixed :issue:`149` so the
   error message works usefully even with no explicit collection name given.
 * :release:`0.8.2 <2014-06-15>`
 * :bug:`149` Print a useful message to stderr when Invoke can't find the

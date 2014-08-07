@@ -111,6 +111,12 @@ def parse(argv, collection=None, version=None):
             help="List available tasks."
         ),
         Argument(
+            names=('shortlist',),
+            kind=bool,
+            default=False,
+            help="Concisely list available tasks."
+        ),
+        Argument(
             names=('no-dedupe',),
             kind=bool,
             default=False,
@@ -256,6 +262,23 @@ def parse(argv, collection=None, version=None):
         print("Available tasks:\n")
         print_help(pairs)
         raise Exit
+
+    if args.shortlist.value:
+        task_names = collection.task_names
+        if not task_names:
+            raise Exit
+        tasks = []
+        for primary in sort_names(task_names.keys()):
+            # Add aliases
+            aliases = sort_names(task_names[primary])
+            tasks.append(primary)
+            if aliases:
+                tasks.extend(aliases)
+
+        for name in tasks:
+            print(name)
+        raise Exit
+
 
     # Return to caller so they can handle the results
     return args, collection, tasks
