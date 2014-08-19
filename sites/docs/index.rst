@@ -5,7 +5,7 @@ Invoke
 What is Invoke?
 ===============
 
-.. include:: ../README.rst
+.. include:: ../../README.rst
 
 See :doc:`getting_started` for a quick-start guide.
 
