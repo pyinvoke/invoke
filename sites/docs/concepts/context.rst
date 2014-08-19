@@ -1,6 +1,9 @@
+.. _concepts-context:
+
 =================================
 Configuring behavior via contexts
 =================================
+
 
 A number of command-line flags and other configuration channels need to affect
 global behavior: for example, controlling whether `~.runner.run` defaults to

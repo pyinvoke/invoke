@@ -1,6 +1,6 @@
-===================================
-Frequently asked/answered questions
-===================================
+==========================
+Frequently asked questions
+==========================
 
 
 Defining/executing tasks
@@ -11,7 +11,7 @@ Defining/executing tasks
 My task's first/only argument isn't showing up in ``--help``!
 -------------------------------------------------------------
 
-Make sure your task isn't :doc:`contextualized </concepts/context>`
+Make sure your task isn't :ref:`contextualized <concepts-context>`
 unexpectedly! Put another way, this problem pops up if you're using `@ctask
 <.ctask>` and forget to define an initial context argument for your task.
 
