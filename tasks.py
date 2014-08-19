@@ -1,16 +1,31 @@
 import os
+from os.path import join
 import shutil
 
-from invocations import docs
+from invocations import docs as _docs
 from invocations.testing import test
 from invocations.packaging import vendorize, release
 
 from invoke import ctask as task, run, Collection
 
 
-@task(name='tree')
-def doctree(ctx):
-    ctx.run("tree -Ca -I \".git|*.pyc|*.swp|dist|*.egg-info|_static|_build\" docs")
+d = 'sites'
+
+# Usage doc/API site (published as docs.paramiko.org)
+docs_path = join(d, 'docs')
+docs_build = join(docs_path, '_build')
+docs = Collection.from_module(_docs, name='docs', config={
+    'sphinx.source': docs_path,
+    'sphinx.target': docs_build,
+})
+
+# Main/about/changelog site ((www.)?paramiko.org)
+www_path = join(d, 'www')
+www = Collection.from_module(_docs, name='www', config={
+    'sphinx.source': www_path,
+    'sphinx.target': join(www_path, '_build'),
+})
+
 
 @task
 def vendorize_pexpect(ctx, version):
@@ -35,6 +50,4 @@ def integration(c, module=None, runner=None, opts=None):
     opts += " --tests=integration/"
     test(c, module, runner, opts)
 
-docs = Collection.from_module(docs)
-docs.add_task(doctree)
-ns = Collection(test, integration, vendorize, release, docs, vendorize_pexpect)
+ns = Collection(test, integration, vendorize, release, www, docs, vendorize_pexpect)
