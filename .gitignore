@@ -1,4 +1,4 @@
-docs/_build
+_build
 build/
 dist/
 .coverage
