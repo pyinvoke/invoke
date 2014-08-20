@@ -23,10 +23,8 @@ script:
   - inv test
   # Slow, annoying-to-run-every-time integration suite
   - inv integration
-  # Docs build OK? (Run docs first as it's referenced by the www site.)
-  # (Also force warnings as errors.)
-  - inv docs -o -W
-  - inv www -o -W
+  # Websites build OK?
+  - inv sites
   # Did we break setup.py?
   - pip uninstall -y invoke # To undo the implicit -e install from above
   - pip install . # NO -e!

@@ -50,4 +50,24 @@ def integration(c, module=None, runner=None, opts=None):
     opts += " --tests=integration/"
     test(c, module, runner, opts)
 
-ns = Collection(test, integration, vendorize, release, www, docs, vendorize_pexpect)
+
+@task
+def sites(c):
+    """
+    Builds both doc sites w/ maxed nitpicking.
+    """
+    # Turn warnings into errors, emit warnings about missing references.
+    # This gives us a maximally noisy docs build.
+    opts = "-W -n"
+    # This is super lolzy but we haven't actually tackled nontrivial in-Python
+    # task calling yet, so...
+    docs_c, www_c = c.clone(), c.clone()
+    docs_c.update(**docs.configuration())
+    www_c.update(**www.configuration())
+    docs['build'](docs_c, opts=opts)
+    www['build'](www_c, opts=opts)
+
+
+ns = Collection(
+    test, integration, vendorize, release, www, docs, sites, vendorize_pexpect
+)
