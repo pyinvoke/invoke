@@ -1,5 +1,5 @@
-======================================
-``Parser``: Core parsing state machine
-======================================
+==========
+``parser``
+==========
 
 .. automodule:: invoke.parser

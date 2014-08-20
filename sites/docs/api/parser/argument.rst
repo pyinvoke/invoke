@@ -1,5 +1,5 @@
-=================================
-``Argument``: CLI arguments/flags
-=================================
+============
+``argument``
+============
 
 .. automodule:: invoke.parser.argument

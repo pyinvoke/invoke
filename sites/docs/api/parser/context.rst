@@ -1,5 +1,5 @@
-=========================================
-``Context``: Task-oriented parser context
-=========================================
+===========
+``context``
+===========
 
 .. automodule:: invoke.parser.context
