@@ -2,6 +2,8 @@
 Changelog
 =========
 
+* :support:`169` Overhaul the Sphinx docs into two trees, one for main project
+  info and one for versioned API docs.
 * :bug:`-` Fixed a sub-case of the already-mostly-fixed :issue:`149` so the
   error message works usefully even with no explicit collection name given.
 * :release:`0.8.2 <2014-06-15>`
