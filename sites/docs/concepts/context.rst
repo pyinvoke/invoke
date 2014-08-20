@@ -122,9 +122,9 @@ From Collection to Context
 --------------------------
 
 The `~invoke.context.Context` objects offer access to various config options -
-including ones set on the loaded `.Collection` objects.  `.Collections`'
-`~.Collection.configure` method associates keys and values, which are then
-available on the `~invoke.context.Context` via dict syntax.
+including ones set on the loaded `.Collection` objects.  `Collections
+<.Collection>`' `~.Collection.configure` method associates keys and values,
+which are then available on the `~invoke.context.Context` via dict syntax.
 
 This makes it easy to move otherwise 'hardcoded' default values into a config
 structure which downstream users are free to redefine. Let's apply this to our

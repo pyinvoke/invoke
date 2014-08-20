@@ -96,7 +96,7 @@ def run(command, warn=False, hide=None, pty=False, echo=False, runner=Local):
     """
     Execute ``command`` (via ``runner``) returning a `Result` object.
 
-    A `Failure` exception (containing a reference to the `Result` that would
+    A `.Failure` exception (containing a reference to the `Result` that would
     otherwise have been returned) is raised if the command terminates with a
     nonzero return code. This behavior may be disabled by setting
     ``warn=True``.
