@@ -1,5 +1,5 @@
 ======================================
-``Executor``: Task execution machinery
+``executor``: Task execution machinery
 ======================================
 
 .. autoclass:: invoke.executor.Executor

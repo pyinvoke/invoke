@@ -1,5 +1,5 @@
 ================================
-``Collection``: Task collections
+``collection``: Task collections
 ================================
 
 .. autoclass:: invoke.collection.Collection
