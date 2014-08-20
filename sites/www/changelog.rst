@@ -13,8 +13,8 @@ Changelog
   `imp.find_module` when run against packages (vs modules) and was exploding at
   load time. This has been fixed. Thanks to David Baumgold for catch & patch.
 * :release:`0.8.1 <2014-06-09>`
-* :bug:`140` Revert incorrect changes to our `setup.py` regarding detection of
-  sub-packages such as the vendor tree & the parser. Also add additional
+* :bug:`140` Revert incorrect changes to our ``setup.py`` regarding detection
+  of sub-packages such as the vendor tree & the parser. Also add additional
   scripting to our Travis-CI config to catch this class of error in future.
   Thanks to Steven Loria and James Cox for the reports.
 * :release:`0.8.0 <2014-06-08>`
@@ -100,10 +100,10 @@ Changelog
   contextualized tasks. See :ref:`configuration`.
 * :release:`0.5.1 <2013.09.15>`
 * :bug:`81` Fall back to sane defaults for PTY sizes when autodetection gives
-  insane results. Thanks to `@akitada` for the patch.
+  insane results. Thanks to ``@akitada`` for the patch.
 * :bug:`83` Fix a bug preventing underscored keyword arguments from working
   correctly as CLI flags (e.g. ``mytask --my-arg`` would not map back correctly
-  to ``mytask(my_arg=...)``.) Credit: `@akitada`.
+  to ``mytask(my_arg=...)``.) Credit: ``@akitada``.
 * :release:`0.5.0 <2013.08.16>`
 * :feature:`57` Optional-value flags added - e.g. ``--foo`` tells the parser to
   set the ``foo`` option value to True; ``--foo myval`` sets the value to
