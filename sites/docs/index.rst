@@ -35,7 +35,7 @@ Know what you're looking for & just need API details? View our auto-generated
 API documentation:
 
 .. toctree::
-    :maxdepth: 2
+    :maxdepth: 1
     :glob:
 
     api/*
