@@ -33,7 +33,7 @@ class Executor(object):
         """
         Execute one or more ``tasks`` in sequence.
 
-        :param iterable tasks:
+        :param tasks:
             An iterable of two-tuples whose first element is a task name and
             whose second element is a dict suitable for use as ``**kwargs``.
             E.g.::
