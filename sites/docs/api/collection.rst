@@ -1,6 +1,6 @@
-================================
-``collection``: Task collections
-================================
+==============
+``collection``
+==============
 
 .. autoclass:: invoke.collection.Collection
     :special-members:

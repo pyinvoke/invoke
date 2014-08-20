@@ -1,5 +1,5 @@
-============================================
-``context``: Configuration & execution state
-============================================
+===========
+``context``
+===========
 
 .. automodule:: invoke.context

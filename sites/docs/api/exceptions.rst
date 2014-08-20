@@ -1,5 +1,5 @@
-===========================================
-``exceptions``: Custom exception subclasses
-===========================================
+==============
+``exceptions``
+==============
 
 .. automodule:: invoke.exceptions

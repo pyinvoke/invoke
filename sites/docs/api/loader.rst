@@ -1,6 +1,6 @@
-============================================
-``loader``: Loading of task definition files
-============================================
+==========
+``loader``
+==========
 
 .. autoclass:: invoke.loader.Loader
     :special-members:
