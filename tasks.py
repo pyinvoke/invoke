@@ -58,7 +58,8 @@ def sites(c):
     """
     # Turn warnings into errors, emit warnings about missing references.
     # This gives us a maximally noisy docs build.
-    opts = "-W -n"
+    # Also enable tracebacks for easier debuggage.
+    opts = "-W -n -T"
     # This is super lolzy but we haven't actually tackled nontrivial in-Python
     # task calling yet, so...
     docs_c, www_c = c.clone(), c.clone()
