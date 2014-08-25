@@ -1,0 +1,5 @@
+============
+``platform``
+============
+
+.. automodule:: invoke.platform
