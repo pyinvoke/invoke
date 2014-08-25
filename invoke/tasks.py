@@ -251,6 +251,9 @@ def task(*args, **kwargs):
       displayed in ``--help`` output.
     * ``pre``: List of task objects to execute prior to the
       wrapped task whenever it is executed.
+    * ``autoprint``: Boolean determining whether to automatically print this
+      task's return value to standard output when invoked via the CLI. Defaults
+      to False.
 
     If any non-keyword arguments are given, they are taken as the value of the
     ``pre`` kwarg for convenience's sake. (It is an error to give both
