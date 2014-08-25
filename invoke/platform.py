@@ -7,10 +7,11 @@ This is its own module to abstract away what would otherwise be distracting logi
 import sys
 WINDOWS = (sys.platform == 'win32')
 """
-Impacts a handful of platform specific behaviors. Note that Cygwin's Python is
-actually close enough to "real" UNIXes that it doesn't need (or want!) to use
-PyWin32 -- so we only test for literal Win32 setups (vanilla Python,
-ActiveState etc) here.
+Whether or not the current platform appears to be Windows in nature.
+
+Note that Cygwin's Python is actually close enough to "real" UNIXes that it
+doesn't need (or want!) to use PyWin32 -- so we only test for literal Win32
+setups (vanilla Python, ActiveState etc) here.
 """
 
 
