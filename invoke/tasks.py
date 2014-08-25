@@ -249,8 +249,8 @@ def task(*args, **kwargs):
       flags from task options; defaults to True.
     * ``help``: Dict mapping argument names to their help strings. Will be
       displayed in ``--help`` output.
-    * ``pre``: List of task objects to execute prior to the
-      wrapped task whenever it is executed.
+    * ``pre``, ``post``: Lists of task objects to execute prior to, or after,
+      the wrapped task whenever it is executed.
 
     If any non-keyword arguments are given, they are taken as the value of the
     ``pre`` kwarg for convenience's sake. (It is an error to give both
