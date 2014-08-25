@@ -3,7 +3,8 @@ import select
 import sys
 
 from .monkey import Popen, PIPE
-from .exceptions import Failure
+from .exceptions import Failure, PlatformError
+from .platform import WINDOWS
 
 
 def normalize_hide(val):
@@ -63,6 +64,14 @@ class Local(Runner):
         return stdout, stderr, process.returncode, None
 
     def run_pty(self, command, warn, hide):
+        # Sanity check: platforms that can't pexpect should explode usefully
+        # here. (Without this, the pexpect import throws an inner
+        # ImportException trying to 'import pty' which is unavailable on
+        # Windows. Better to do this here than truly-fork pexpect.)
+        if WINDOWS:
+            err = "You seem to be on Windows, which doesn't support ptys!"
+            raise PlatformError(err)
+        # Proceed as normal for POSIX/etc platforms, with a runtime import
         from .vendor import pexpect
 
         out = []
