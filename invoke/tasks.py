@@ -17,7 +17,7 @@ else:
     from itertools import izip_longest as zip_longest
 
 
-# Non-None sentinel
+#: Sentinel object representing a truly blank value (vs ``None``).
 NO_DEFAULT = object()
 
 
@@ -122,7 +122,8 @@ class Task(object):
             * I.e. we *cannot* simply use a dict's ``keys()`` method here.
 
         * Second item is dict mapping arg names to default values or
-          task.NO_DEFAULT (i.e. an 'empty' value distinct from None).
+          `.NO_DEFAULT` (an 'empty' value distinct from None, since None
+          is a valid value on its own).
         """
         # Handle callable-but-not-function objects
         # TODO: __call__ exhibits the 'self' arg; do we manually nix 1st result

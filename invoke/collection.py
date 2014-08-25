@@ -203,6 +203,15 @@ class Collection(object):
             self.default = name
 
     def add_collection(self, coll, name=None):
+        """
+        Add `.Collection` ``coll`` as a sub-collection of this one.
+
+        :param coll: The `.Collection` to add.
+
+        :param str name:
+            The name to attach the collection as. Defaults to the collection's
+            own internal name.
+        """
         # Handle module-as-collection
         if isinstance(coll, types.ModuleType):
             coll = Collection.from_module(coll)
@@ -255,10 +264,10 @@ class Collection(object):
 
         E.g. in a deeply nested tree, this method returns the `.Task`, and a
         configuration dict created by merging that of this `.Collection` and
-        any nested `.Collections`, up through the one actually holding the
-        `.Task`.
+        any nested `Collections <.Collection>`, up through the one actually
+        holding the `.Task`.
 
-        See `__getitem__` for semantics of the ``name`` argument.
+        See `~.Collection.__getitem__` for semantics of the ``name`` argument.
 
         :return: Two-tuple of (`.Task`, `dict`).
         """
@@ -338,9 +347,10 @@ class Collection(object):
             Merging uses ``copy.deepcopy`` to prevent state bleed.
 
         :param taskpath:
-            (Optional) Task name/path, identical to that used for `__getitem__`
-            (e.g. may be dotted for nested tasks, etc.) Used to decide which
-            path to follow in the collection tree when merging config values.
+            (Optional) Task name/path, identical to that used for
+            `~.Collection.__getitem__` (e.g. may be dotted for nested tasks,
+            etc.) Used to decide which path to follow in the collection tree
+            when merging config values.
 
         :returns: A `dict` containing configuration values.
         """

@@ -228,7 +228,7 @@ global function::
         ctx.run("some command")
 
 This method wraps the builtin `~.runner.run` transparently, but is able to
-honor CLI flags like :option:`--echo` or :option:`--pty`.
+honor CLI flags like :option:`-e` or :option:`-p`.
 
 Context objects can also serve as vectors for arbitrary config values -
 allowing greater reuse of your task modules.

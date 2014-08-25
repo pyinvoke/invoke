@@ -1,0 +1,5 @@
+==============
+``exceptions``
+==============
+
+.. automodule:: invoke.exceptions

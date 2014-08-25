@@ -1,0 +1,5 @@
+==========
+``parser``
+==========
+
+.. automodule:: invoke.parser

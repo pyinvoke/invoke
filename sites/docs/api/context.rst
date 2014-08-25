@@ -1,0 +1,5 @@
+===========
+``context``
+===========
+
+.. automodule:: invoke.context

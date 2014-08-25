@@ -23,9 +23,8 @@ script:
   - inv test
   # Slow, annoying-to-run-every-time integration suite
   - inv integration
-  # Docs build OK?
-  # Jinja2, used by Sphinx, does not work on Python 3.2 (but does on 3.3)
-  - "if [[ $TRAVIS_PYTHON_VERSION != '3.2' ]]; then inv docs; fi"
+  # Websites build OK?
+  - inv sites
   # Did we break setup.py?
   - pip uninstall -y invoke # To undo the implicit -e install from above
   - pip install . # NO -e!

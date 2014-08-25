@@ -24,7 +24,7 @@ class Loader(object):
         returned by `imp.find_module` (``file``, ``pathname``,
         ``description``.)
 
-        For a sample implementation, see `FilesystemLoader`.
+        For a sample implementation, see `.FilesystemLoader`.
         """
         raise NotImplementedError
 

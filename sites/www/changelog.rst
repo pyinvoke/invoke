@@ -2,7 +2,9 @@
 Changelog
 =========
 
-* :bug:`149` Fixed a sub-case of the already-mostly-fixed :issue:`149` so the
+* :support:`169` Overhaul the Sphinx docs into two trees, one for main project
+  info and one for versioned API docs.
+* :bug:`-` Fixed a sub-case of the already-mostly-fixed :issue:`149` so the
   error message works usefully even with no explicit collection name given.
 * :release:`0.8.2 <2014-06-15>`
 * :bug:`149` Print a useful message to stderr when Invoke can't find the
@@ -13,14 +15,14 @@ Changelog
   `imp.find_module` when run against packages (vs modules) and was exploding at
   load time. This has been fixed. Thanks to David Baumgold for catch & patch.
 * :release:`0.8.1 <2014-06-09>`
-* :bug:`140` Revert incorrect changes to our `setup.py` regarding detection of
-  sub-packages such as the vendor tree & the parser. Also add additional
+* :bug:`140` Revert incorrect changes to our ``setup.py`` regarding detection
+  of sub-packages such as the vendor tree & the parser. Also add additional
   scripting to our Travis-CI config to catch this class of error in future.
   Thanks to Steven Loria and James Cox for the reports.
 * :release:`0.8.0 <2014-06-08>`
 * :feature:`135` (also bugs :issue:`120`, :issue:`123`) Implement post-tasks to
   match pre-tasks, and allow control over the arguments passed to both (via
-  `.call`). For details, see :ref:`pre-post-tasks`.
+  `invoke.tasks.call`). For details, see :ref:`pre-post-tasks`.
 
   .. warning::
       Pre-tasks were overhauled a moderate amount to implement this feature;
@@ -62,9 +64,9 @@ Changelog
       module to ``sys.path`` and then calling Invoke elsewhere on the
       filesystem.
 
-* :support:`-` Refactor the `.Runner` module to differentiate what it means to
-  run a command in the abstract, from execution specifics. Top level API is
-  unaffected.
+* :support:`-` Refactor the `invoke.runner.Runner` module to differentiate what
+  it means to run a command in the abstract, from execution specifics. Top
+  level API is unaffected.
 * :bug:`131 major` Make sure one's local tasks module is always first in
   ``sys.path``, even if its parent directory was already somewhere else in
   ``sys.path``. This ensures that local tasks modules never become hidden by
@@ -78,10 +80,12 @@ Changelog
   debugging (on top of existing ``INVOKE_DEBUG`` env var.)
 * :feature:`125` Improve output of Failure exceptions when printed.
 * :release:`0.7.0 <2014.01.28>`
-* :feature:`109` Add a ``default`` kwarg to `.Collection.add_task` allowing
-  per-collection control over default tasks.
-* :feature:`108` Update `.from_module` to accept useful shorthand arguments for
-  tweaking the `.Collection` objects it creates (e.g. name, configuration.)
+* :feature:`109` Add a ``default`` kwarg to
+  `invoke.collection.Collection.add_task` allowing per-collection control over
+  default tasks.
+* :feature:`108` Update `invoke.collection.Collection.from_module` to accept
+  useful shorthand arguments for tweaking the `invoke.collection.Collection`
+  objects it creates (e.g. name, configuration.)
 * :feature:`107` Update configuration merging behavior for more flexible reuse
   of imported task modules, such as parameterizing multiple copies of a module
   within a task tree.
@@ -96,14 +100,14 @@ Changelog
 * :bug:`86 major` Task arguments named with an underscore broke the help feature;
   this is now fixed. Thanks to Stéphane Klein for the catch.
 * :feature:`89` Implemented configuration for distributed task modules: can set
-  config options in `.Collection` objects and they are made available to
-  contextualized tasks. See :ref:`configuration`.
+  config options in `invoke.collection.Collection` objects and they are made
+  available to contextualized tasks. See :ref:`configuration`.
 * :release:`0.5.1 <2013.09.15>`
 * :bug:`81` Fall back to sane defaults for PTY sizes when autodetection gives
-  insane results. Thanks to `@akitada` for the patch.
+  insane results. Thanks to ``@akitada`` for the patch.
 * :bug:`83` Fix a bug preventing underscored keyword arguments from working
   correctly as CLI flags (e.g. ``mytask --my-arg`` would not map back correctly
-  to ``mytask(my_arg=...)``.) Credit: `@akitada`.
+  to ``mytask(my_arg=...)``.) Credit: ``@akitada``.
 * :release:`0.5.0 <2013.08.16>`
 * :feature:`57` Optional-value flags added - e.g. ``--foo`` tells the parser to
   set the ``foo`` option value to True; ``--foo myval`` sets the value to
