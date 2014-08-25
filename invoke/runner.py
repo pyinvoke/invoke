@@ -1,9 +1,6 @@
 import os
-import pty
 import select
 import sys
-
-from .vendor import pexpect
 
 from .monkey import Popen, PIPE
 from .exceptions import Failure
@@ -66,6 +63,8 @@ class Local(Runner):
         return stdout, stderr, process.returncode, None
 
     def run_pty(self, command, warn, hide):
+        from .vendor import pexpect
+
         out = []
         def out_filter(text):
             out.append(text.decode("utf-8", 'replace'))

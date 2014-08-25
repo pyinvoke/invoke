@@ -2,6 +2,8 @@
 Changelog
 =========
 
+* :bug:`162` Adjust platform-sensitive imports so Windows users don't encounter
+  import-time exceptions. Thanks to Paul Moore for the patch.
 * :support:`169` Overhaul the Sphinx docs into two trees, one for main project
   info and one for versioned API docs.
 * :bug:`-` Fixed a sub-case of the already-mostly-fixed :issue:`149` so the
