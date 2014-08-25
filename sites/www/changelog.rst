@@ -2,6 +2,10 @@
 Changelog
 =========
 
+* :feature:`136` Added the ``autoprint`` flag to
+  `invoke.tasks.Task`/`@task <invoke.tasks.task>`, allowing users to set up
+  tasks which act as both subroutines & "print a result" CLI tasks. Thanks to
+  Matthias Lehmann for the original patch.
 * :bug:`162` Adjust platform-sensitive imports so Windows users don't encounter
   import-time exceptions. Thanks to Paul Moore for the patch.
 * :support:`169 backported` Overhaul the Sphinx docs into two trees, one for
