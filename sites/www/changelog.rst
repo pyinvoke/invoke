@@ -2,8 +2,11 @@
 Changelog
 =========
 
-* :bug:`162` Adjust platform-sensitive imports so Windows users don't encounter
-  import-time exceptions. Thanks to Paul Moore for the patch.
+* :bug:`119` (also :issue:`162`, :issue:`113`) Better handle platform-sensitive
+  operations such as pty size detection or use, either replacing with
+  platform-specific implementations or raising useful exceptions. Thanks to
+  Gabi Davar and (especially) Paul Moore, for feedback & original versions of
+  the final patchset.
 * :support:`169 backported` Overhaul the Sphinx docs into two trees, one for
   main project info and one for versioned API docs.
 * :bug:`-` Fixed a sub-case of the already-mostly-fixed :issue:`149` so the
