@@ -269,7 +269,7 @@ class Collection(object):
 
         See `~.Collection.__getitem__` for semantics of the ``name`` argument.
 
-        :return: Two-tuple of (`.Task`, `dict`).
+        :returns: Two-tuple of (`.Task`, `dict`).
         """
         # Our top level configuration
         ours = self.configuration()
