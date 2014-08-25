@@ -235,6 +235,13 @@ Available tasks:
             _dispatch('inv -d -c debugging foo')
             debug.assert_called_with('my-sentinel')
 
+    class autoprinting:
+        def defaults_to_off_and_no_output(self):
+            _output_eq("-c decorator foo", "")
+
+        def prints_return_value_to_stdout_when_on(self):
+            _output_eq("-c decorator autoprints", "It's alive!")
+
     class run_options:
         "run() related CLI flags"
         def _test_flag(self, flag, kwarg, value):

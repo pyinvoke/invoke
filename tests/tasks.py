@@ -36,6 +36,10 @@ class task_(Spec):
     def allows_default_specification(self):
         eq_(self.vanilla[''], self.vanilla['biz'])
 
+    def has_autoprint_option(self):
+        eq_(self.vanilla['foo'].autoprint, False)
+        eq_(self.vanilla['autoprints'].autoprint, True)
+
     @raises(ValueError)
     def raises_ValueError_on_multiple_defaults(self):
         self.loader.load('decorator_multi_default')
