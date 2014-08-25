@@ -42,6 +42,7 @@ class Task(object):
         help=None,
         pre=None,
         post=None,
+        autoprint=False,
     ):
         # Real callable
         self.body = body
@@ -64,6 +65,8 @@ class Task(object):
         self.pre = pre or []
         self.post = post or []
         self.times_called = 0
+        # Whether to print return value post-execution
+        self.autoprint = autoprint
 
     @property
     def name(self):
@@ -281,6 +284,7 @@ def task(*args, **kwargs):
     help = kwargs.pop('help', {})
     pre = kwargs.pop('pre', [])
     post = kwargs.pop('post', [])
+    autoprint = kwargs.pop('autoprint', False)
     # Handle unknown kwargs
     if kwargs:
         kwarg = (" unknown kwargs %r" % (kwargs,)) if kwargs else ""
@@ -298,6 +302,7 @@ def task(*args, **kwargs):
             help=help,
             pre=pre,
             post=post,
+            autoprint=autoprint,
         )
         return obj
     return inner

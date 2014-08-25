@@ -240,7 +240,7 @@ Available tasks:
             _output_eq("-c decorator foo", "")
 
         def prints_return_value_to_stdout_when_on(self):
-            _output_eq("-c decorator autoprints", "It's alive!")
+            _output_eq("-c decorator autoprints", "It's alive!\n")
 
     class run_options:
         "run() related CLI flags"

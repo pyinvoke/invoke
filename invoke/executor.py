@@ -125,7 +125,10 @@ class Executor(object):
             context = self.context.clone()
             context.update(self.collection.configuration(name))
             args = (context,) + args
-        return task(*args, **kwargs)
+        result = task(*args, **kwargs)
+        if task.autoprint:
+            print(result)
+        return result
 
     def _expand_tasks(self, tasks):
         ret = []
