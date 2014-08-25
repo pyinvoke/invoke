@@ -252,8 +252,8 @@ def task(*args, **kwargs):
       flags from task options; defaults to True.
     * ``help``: Dict mapping argument names to their help strings. Will be
       displayed in ``--help`` output.
-    * ``pre``: List of task objects to execute prior to the
-      wrapped task whenever it is executed.
+    * ``pre``, ``post``: Lists of task objects to execute prior to, or after,
+      the wrapped task whenever it is executed.
     * ``autoprint``: Boolean determining whether to automatically print this
       task's return value to standard output when invoked via the CLI. Defaults
       to False.
