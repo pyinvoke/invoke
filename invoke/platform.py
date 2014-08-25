@@ -17,10 +17,11 @@ setups (vanilla Python, ActiveState etc) here.
 
 def pty_size():
     """
-    Return local (stdout-based) pty size as ``(num_cols, num_rows)`` tuple.
+    Determine current local pseudoterminal dimensions.
 
-    If unable to determine (e.g. ``sys.stdout`` has been monkeypatched, or
-    ``termios`` lacking ``TIOCGWINSZ``) defaults to 80x24.
+    :returns:
+        A ``(num_cols, num_rows)`` two-tuple describing PTY size. Defaults to
+        ``(80, 24)`` if unable to get a sensible result dynamically.
     """
     cols, rows = _pty_size() if not WINDOWS else _win_pty_size()
     # TODO: make defaults configurable?
