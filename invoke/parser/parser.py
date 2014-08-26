@@ -208,7 +208,7 @@ class ParseMachine(StateMachine):
             self.result.append(self.context)
 
     def switch_to_context(self, name):
-        self.context = self.contexts[name]
+        self.context = copy.deepcopy(self.contexts[name])
         debug("Moving to context %r" % name)
         debug("Context args: %r" % self.context.args)
         debug("Context flags: %r" % self.context.flags)
