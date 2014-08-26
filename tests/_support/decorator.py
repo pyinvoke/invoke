@@ -42,7 +42,3 @@ def implicit_positionals(pos1, pos2, nonpos=None):
 @task(optional=['myopt'])
 def optional_values(myopt):
     pass
-
-@task(autoprint=True)
-def autoprints():
-    return "It's alive!"
