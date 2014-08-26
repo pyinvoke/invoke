@@ -37,8 +37,9 @@ class task_(Spec):
         eq_(self.vanilla[''], self.vanilla['biz'])
 
     def has_autoprint_option(self):
-        eq_(self.vanilla['foo'].autoprint, False)
-        eq_(self.vanilla['autoprints'].autoprint, True)
+        ap = self.loader.load('autoprint')
+        eq_(ap['nope'].autoprint, False)
+        eq_(ap['yup'].autoprint, True)
 
     @raises(ValueError)
     def raises_ValueError_on_multiple_defaults(self):
