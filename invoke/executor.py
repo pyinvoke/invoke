@@ -67,11 +67,12 @@ class Executor(object):
         # Handle top level kwargs (the name gets overwritten below)
         dedupe = kwargs.get('dedupe', True) # Python 2 can't do *args + kwarg
         # Normalize input
-        debug("Examining top level tasks {0!r}".format(
-            [x[0] for x in tasks]
-        ))
+        debug("Examining top level tasks {0!r}".format([x[0] for x in tasks]))
         tasks = self._normalize(tasks)
         debug("Tasks with kwargs: {0!r}".format(tasks))
+        # Obtain copy of directly-given tasks since they should sometimes
+        # behave differently
+        direct = list(tasks)
         # Expand pre/post tasks & then dedupe the entire run
         tasks = self._dedupe(self._expand_tasks(tasks), dedupe)
         # Execute
@@ -88,6 +89,8 @@ class Executor(object):
             result = self._execute(
                 task=task, name=name, args=args, kwargs=kwargs
             )
+            if task in direct and task.autoprint:
+                print(result)
             # TODO: handle the non-dedupe case / the same-task-different-args
             # case, wherein one task obj maps to >1 result.
             results[task] = result
@@ -126,8 +129,6 @@ class Executor(object):
             context.update(self.collection.configuration(name))
             args = (context,) + args
         result = task(*args, **kwargs)
-        if task.autoprint:
-            print(result)
         return result
 
     def _expand_tasks(self, tasks):
