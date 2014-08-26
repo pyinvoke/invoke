@@ -45,7 +45,7 @@ def _output_eq(args, stdout=None, stderr=None):
     Must give either or both of the output-expecting args.
     """
     _dispatch("inv {0}".format(args))
-    if stdout:
+    if stdout is not None:
         eq_(sys.stdout.getvalue(), stdout)
-    if stderr:
+    if stderr is not None:
         eq_(sys.stderr.getvalue(), stderr)
