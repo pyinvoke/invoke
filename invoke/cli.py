@@ -10,7 +10,8 @@ from .loader import FilesystemLoader, DEFAULT_COLLECTION_NAME
 from .parser import Parser, Context as ParserContext, Argument
 from .executor import Executor
 from .exceptions import Failure, CollectionNotFound, ParseError, Exit
-from .util import debug, pty_size, enable_logging
+from .util import debug, enable_logging
+from .platform import pty_size
 from ._version import __version__
 
 

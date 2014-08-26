@@ -1,3 +1,11 @@
+"""
+Custom exception classes.
+
+These vary in use case from "we needed a specific data structure layout in
+exceptions used for message-passing" to simply "we needed to express an error
+condition in a way easily told apart from other, truly unexpected errors".
+"""
+
 class CollectionNotFound(Exception):
     def __init__(self, name, start):
         self.name = name
@@ -43,3 +51,14 @@ class Exit(Exception):
     """
     def __init__(self, code=0):
         self.code = code
+
+
+class PlatformError(Exception):
+    """
+    Raised when an illegal operation occurs for the current platform.
+
+    E.g. Windows users trying to import the ``pexpect`` module.
+
+    Typically used to present a clearer error message to the user.
+    """
+    pass

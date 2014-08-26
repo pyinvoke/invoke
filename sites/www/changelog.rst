@@ -2,6 +2,11 @@
 Changelog
 =========
 
+* :bug:`119` (also :issue:`162`, :issue:`113`) Better handle platform-sensitive
+  operations such as pty size detection or use, either replacing with
+  platform-specific implementations or raising useful exceptions. Thanks to
+  Gabi Davar and (especially) Paul Moore, for feedback & original versions of
+  the final patchset.
 * :feature:`136` Added the ``autoprint`` flag to
   `invoke.tasks.Task`/`@task <invoke.tasks.task>`, allowing users to set up
   tasks which act as both subroutines & "print a result" CLI tasks. Thanks to
