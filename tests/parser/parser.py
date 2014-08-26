@@ -327,6 +327,19 @@ class Parser_(Spec):
             p = Parser([c1, c2])
             self._test_for_ambiguity("--foo othertask", p)
 
+    class task_repetition:
+        def is_happy_to_handle_same_task_multiple_times(self):
+            task1 = Context('mytask')
+            result = Parser((task1,)).parse_argv(['mytask', 'mytask'])
+            eq_(len(result), 2)
+            [eq_(x.name, 'mytask') for x in result]
+
+        def task_args_work_correctly(self):
+            task1 = Context('mytask', args=(Argument('meh'),))
+            result = Parser((task1,)).parse_argv(['mytask', '--meh', 'mehval1', 'mytask', '--meh', 'mehval2'])
+            eq_(result[0].args.meh.value, 'mehval1')
+            eq_(result[1].args.meh.value, 'mehval2')
+
 
 class ParseResult_(Spec):
     "ParseResult"
