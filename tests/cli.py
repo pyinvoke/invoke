@@ -242,6 +242,12 @@ Available tasks:
         def prints_return_value_to_stdout_when_on(self):
             _output_eq("-c autoprint yup", "It's alive!\n")
 
+        def does_not_fire_on_pre_tasks(self):
+            _output_eq("-c autoprint pre_check", "")
+
+        def does_not_fire_on_post_tasks(self):
+            _output_eq("-c autoprint post_check", "")
+
     class run_options:
         "run() related CLI flags"
         def _test_flag(self, flag, kwarg, value):
