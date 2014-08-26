@@ -2,6 +2,8 @@
 Changelog
 =========
 
+* :bug:`167` Running the same task multiple times in one CLI session was
+  horribly broken; it works now. Thanks to Erich Heine for the report.
 * :bug:`119` (also :issue:`162`, :issue:`113`) Better handle platform-sensitive
   operations such as pty size detection or use, either replacing with
   platform-specific implementations or raising useful exceptions. Thanks to
