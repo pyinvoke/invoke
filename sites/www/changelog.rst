@@ -2,6 +2,9 @@
 Changelog
 =========
 
+* :bug:`165` Running ``inv[oke]`` with no task names on a collection containing
+  a default task should (intuitively) have run that default task, but instead
+  did nothing. This has been fixed.
 * :bug:`167` Running the same task multiple times in one CLI session was
   horribly broken; it works now. Thanks to Erich Heine for the report.
 * :bug:`119` (also :issue:`162`, :issue:`113`) Better handle platform-sensitive
