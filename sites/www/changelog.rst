@@ -2,26 +2,26 @@
 Changelog
 =========
 
-* :bug:`165` Running ``inv[oke]`` with no task names on a collection containing
-  a default task should (intuitively) have run that default task, but instead
-  did nothing. This has been fixed.
-* :bug:`167` Running the same task multiple times in one CLI session was
+* :bug:`165 major` Running ``inv[oke]`` with no task names on a collection
+  containing a default task should (intuitively) have run that default task,
+  but instead did nothing. This has been fixed.
+* :bug:`167 major` Running the same task multiple times in one CLI session was
   horribly broken; it works now. Thanks to Erich Heine for the report.
-* :bug:`119` (also :issue:`162`, :issue:`113`) Better handle platform-sensitive
-  operations such as pty size detection or use, either replacing with
-  platform-specific implementations or raising useful exceptions. Thanks to
-  Gabi Davar and (especially) Paul Moore, for feedback & original versions of
-  the final patchset.
+* :bug:`119 major` (also :issue:`162`, :issue:`113`) Better handle
+  platform-sensitive operations such as pty size detection or use, either
+  replacing with platform-specific implementations or raising useful
+  exceptions. Thanks to Gabi Davar and (especially) Paul Moore, for feedback &
+  original versions of the final patchset.
 * :feature:`136` Added the ``autoprint`` flag to
   `invoke.tasks.Task`/`@task <invoke.tasks.task>`, allowing users to set up
   tasks which act as both subroutines & "print a result" CLI tasks. Thanks to
   Matthias Lehmann for the original patch.
-* :bug:`162` Adjust platform-sensitive imports so Windows users don't encounter
-  import-time exceptions. Thanks to Paul Moore for the patch.
-* :support:`169 backported` Overhaul the Sphinx docs into two trees, one for
-  main project info and one for versioned API docs.
-* :bug:`-` Fixed a sub-case of the already-mostly-fixed :issue:`149` so the
-  error message works usefully even with no explicit collection name given.
+* :bug:`162 major` Adjust platform-sensitive imports so Windows users don't
+  encounter import-time exceptions. Thanks to Paul Moore for the patch.
+* :support:`169` Overhaul the Sphinx docs into two trees, one for main project
+  info and one for versioned API docs.
+* :bug:`- major` Fixed a sub-case of the already-mostly-fixed :issue:`149` so
+  the error message works usefully even with no explicit collection name given.
 * :release:`0.8.2 <2014-06-15>`
 * :bug:`149` Print a useful message to stderr when Invoke can't find the
   requested collection/tasks file, instead of displaying a traceback.
