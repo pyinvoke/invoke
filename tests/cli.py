@@ -4,7 +4,7 @@ import sys
 from spec import eq_, skip, Spec, ok_, trap, raises
 from mock import patch, Mock
 
-from invoke.cli import parse
+from invoke.cli import parse, tasks_from_contexts
 from invoke.context import Context
 from invoke.runner import run
 from invoke.parser import Parser
@@ -313,7 +313,7 @@ class CLIParsing(Spec):
         @task(aliases=['mytask27'])
         def mytask2():
             pass
-        @task
+        @task(default=True)
         def mytask3(mystring):
             pass
         @task
@@ -356,6 +356,11 @@ class CLIParsing(Spec):
 
     def subcollection_default_tasks(self):
         self._compare_names("sub", "sub.subtask")
+
+    def loaded_collection_default_task(self):
+        result = tasks_from_contexts(self._parse(''), self.c)
+        eq_(len(result), 1)
+        eq_(result[0][0], 'mytask3')
 
     def boolean_args(self):
         "mytask --boolean"
