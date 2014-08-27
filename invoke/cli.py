@@ -274,6 +274,15 @@ def derive_opts(args):
         run['echo'] = True
     return {'run': run}
 
+def tasks_from_contexts(parser_contexts, collection):
+    tasks = []
+    for context in parser_contexts:
+        tasks.append((context.name, context.as_kwargs))
+    # Handle top level default task (like 'make')
+    if not tasks:
+        tasks = [(collection.default, {})]
+    return tasks
+
 def dispatch(argv, version=None):
     try:
         args, collection, parser_contexts = parse(argv, version=version)
@@ -283,9 +292,7 @@ def dispatch(argv, version=None):
         return sys.exit(e.code)
     executor = Executor(collection, Context(**derive_opts(args)))
     try:
-        tasks = []
-        for context in parser_contexts:
-            tasks.append((context.name, context.as_kwargs))
+        tasks = tasks_from_contexts(parser_contexts, collection)
         dedupe = not args['no-dedupe'].value
         return executor.execute(*tasks, dedupe=dedupe)
     except Failure as f:
