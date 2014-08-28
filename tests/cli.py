@@ -242,6 +242,9 @@ Available tasks:
         def prints_return_value_to_stdout_when_on(self):
             _output_eq("-c autoprint yup", "It's alive!\n")
 
+        def prints_return_value_to_stdout_when_on_and_in_collection(self):
+            _output_eq("-c autoprint sub.yup", "It's alive!\n")
+
         def does_not_fire_on_pre_tasks(self):
             _output_eq("-c autoprint pre_check", "")
 
