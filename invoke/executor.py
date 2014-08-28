@@ -81,6 +81,7 @@ class Executor(object):
             args, kwargs = tuple(), {}
             # Unpack Call objects, including given-name handling
             name = None
+            autoprint = task in direct and task.autoprint
             if isinstance(task, Call):
                 c = task
                 task = c.task
@@ -89,7 +90,7 @@ class Executor(object):
             result = self._execute(
                 task=task, name=name, args=args, kwargs=kwargs
             )
-            if task in direct and task.autoprint:
+            if autoprint:
                 print(result)
             # TODO: handle the non-dedupe case / the same-task-different-args
             # case, wherein one task obj maps to >1 result.
