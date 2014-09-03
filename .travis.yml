@@ -19,6 +19,8 @@ install:
   - inv --list
   # Install remaining dev requirements (test runner, etc)
   - pip install -r dev-requirements.txt
+  # Sphinx >=1.2 drops support for Python 3.2, incl unpinning Jinja
+  - "[[ $TRAVIS_PYTHON_VERSION == 3.2 ]] && pip install 'sphinx<1.2'"
 script:
   # Main test suite
   - inv test
