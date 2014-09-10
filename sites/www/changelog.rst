@@ -2,6 +2,8 @@
 Changelog
 =========
 
+* :bug:`175 major` ``autoprint`` did not function correctly for tasks stored
+  in sub-collections; this has been fixed. Credit: Matthias Lehmann.
 * :release:`0.9.0 <2014-08-26>`
 * :bug:`165 major` Running ``inv[oke]`` with no task names on a collection
   containing a default task should (intuitively) have run that default task,
