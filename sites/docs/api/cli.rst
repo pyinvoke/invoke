@@ -31,7 +31,8 @@ The core options (which must be given before any task names) are as follows:
 
 .. option:: -e, --echo
 
-    Echo executed commands before running.
+    Echo executed commands before running. Requires :doc:`contextualized tasks
+    </concepts/context>`.
 
 .. option:: -h STRING, --help=STRING
 
@@ -47,7 +48,8 @@ The core options (which must be given before any task names) are as follows:
 
 .. option:: -p, --pty
 
-    Use a pty when executing shell commands.
+    Use a pty when executing shell commands. Requires :doc:`contextualized
+    tasks </concepts/context>`.
 
 .. option:: -r STRING, --root=STRING
 
@@ -59,7 +61,8 @@ The core options (which must be given before any task names) are as follows:
 
 .. option:: -w, --warn-only
 
-    Warn, instead of failing, when shell commands fail.
+    Warn, instead of failing, when shell commands fail. Requires
+    :doc:`contextualized tasks </concepts/context>`.
 
 
 .. seealso::
