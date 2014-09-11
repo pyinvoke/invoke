@@ -18,6 +18,7 @@ Invoke encapsulates core program state in a `~invoke.context.Context` object
 which can be handed to individual tasks. It serves as a configuration vector
 and implements state-aware methods mirroring the functional parts of the API.
 
+
 Using contexts in your tasks
 ============================
 
@@ -66,6 +67,7 @@ tidy::
     @task
     def restart(ctx):
         ctx.run("restart apache2")
+
 
 .. _configuration:
 

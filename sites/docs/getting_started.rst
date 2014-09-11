@@ -108,6 +108,7 @@ something::
 This will also print the first line of each task’s docstring, if it has one. To
 see what else is available besides ``--list``, say ``invoke --help``.
 
+
 Running shell commands
 ======================
 
@@ -202,6 +203,7 @@ The result::
 
 For a more detailed breakdown of how namespacing works, please see :doc:`the
 docs <concepts/namespaces>`.
+
 
 Using contexts for configurability
 ==================================
