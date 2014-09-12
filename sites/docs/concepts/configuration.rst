@@ -26,37 +26,37 @@ The configuration hierarchy
 In brief, the order in which configuration values are loaded (and overridden -
 each new level overrides the one above it) is as follows:
 
-* **Collection-driven configurations** defined in tasks modules via
-  `.Collection.configure`.
-  
-    * Sub-collections' configurations get merged into the top level collection,
-      as described in :doc:`the contexts documentation </concepts/contexts>`,
-      and the final result forms the basis of the overall configuration setup.
-    * Since the root collection is loaded at runtime, configuration options
-      modifying the load process itself obviously won't take effect if defined
-      at this level.
+#. **Collection-driven configurations** defined in tasks modules via
+   `.Collection.configure`.
+   
+     * Sub-collections' configurations get merged into the top level
+       collection, as described in :doc:`the contexts documentation
+       </concepts/contexts>`, and the final result forms the basis of the
+       overall configuration setup.
+     * Since the root collection is loaded at runtime, configuration options
+       modifying the load process itself obviously won't take effect if defined
+       at this level.
 
-* **System-level configuration file** stored in ``/etc/``, such as
-  ``/etc/invoke.yaml``. (See :ref:`config-files` for details on this and the
-  other config-file entries.)
-* **User-level configuration file** found in the running user's home directory,
-  e.g. ``~/.invoke.yaml``.
-* **Project-level configuration file** living next to your top level
-  ``tasks.py``. For example, if your run of Invoke loads
-  ``/home/user/myproject/tasks.py`` (see :doc:`our docs on the load
-  process </concepts/loading>`), this might be
-  ``/home/user/myproject/invoke.yaml``.
-* **Environment variables** found in the invoking shell environment.
+#. **System-level configuration file** stored in ``/etc/``, such as
+   ``/etc/invoke.yaml``. (See :ref:`config-files` for details on this and the
+   other config-file entries.)
+#. **User-level configuration file** found in the running user's home
+   directory, e.g. ``~/.invoke.yaml``.
+#. **Project-level configuration file** living next to your top level
+   ``tasks.py``. For example, if your run of Invoke loads
+   ``/home/user/myproject/tasks.py`` (see :doc:`our docs on the load process
+   </concepts/loading>`), this might be ``/home/user/myproject/invoke.yaml``.
+#. **Environment variables** found in the invoking shell environment.
 
     * These aren't as strongly hierarchical as the rest, nor is the shell
       environment namespace owned wholly by Invoke, so we must rely on slightly
       verbose prefixing instead - see :ref:`env-vars` for details.
 
-* **Runtime configuration file** whose path is given to :option:`-f`, e.g.
-  ``inv -f /random/path/to/config_file.yaml``.
-* **Command-line flags**, either dedicated ones for core options (like
-  :option:`-e`) or use of :option:`--set` which allows runtime overriding of
-  arbitrary configuration paths.
+#. **Runtime configuration file** whose path is given to :option:`-f`, e.g.
+   ``inv -f /random/path/to/config_file.yaml``.
+#. **Command-line flags**, either dedicated ones for core options (like
+   :option:`-e`) or use of :option:`--set` which allows runtime overriding of
+   arbitrary configuration paths.
 
 
 .. _config-files:
