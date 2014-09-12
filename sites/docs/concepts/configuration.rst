@@ -6,18 +6,18 @@ Introduction
 ============
 
 Invoke offers a fully fleshed out configuration mechanism (largely driven by a
-vendored install of the `etcaetera <http://etcaetera.readthedocs.org>`_
-library) allowing you to configure both its core behavior (and that of your
-tasks) via a hierarchy of configuration files, environment variables,
-:doc:`task namespaces </concepts/namespaces>` and CLI flags.
+vendored install of the etcaetera_ library) allowing you to configure both its
+core behavior (and that of your tasks) via a hierarchy of configuration files,
+environment variables, :doc:`task namespaces </concepts/namespaces>` and CLI
+flags.
 
 The end result of configuration seeking, loading, parsing & merging, is an
 `etcaetera.Config
 <http://etcaetera.readthedocs.org/en/latest/howto.html#config-object>`_ object,
 which behaves like a set of nested dictionaries. Invoke then references this
-object when it runs (determining the default behavior of functions like `.run`)
-and exposes it to users' tasks as an attribute on :doc:`contexts
-</concepts/contexts>`.
+object when it runs (determining the default behavior of functions like
+`~.runner.run`) and exposes it to users' tasks as an attribute on
+:doc:`contexts </concepts/context>`.
 
 
 The configuration hierarchy
@@ -31,7 +31,7 @@ each new level overrides the one above it) is as follows:
    
      * Sub-collections' configurations get merged into the top level
        collection, as described in :doc:`the contexts documentation
-       </concepts/contexts>`, and the final result forms the basis of the
+       </concepts/context>`, and the final result forms the basis of the
        overall configuration setup.
      * Since the root collection is loaded at runtime, configuration options
        modifying the load process itself obviously won't take effect if defined
@@ -85,3 +85,6 @@ Environment variables
     * Because of this, env vars cannot be the original source of a variable -
       they must be modifying something defined in one of the other levels such
       as in-Python or config file.
+
+
+.. _etcaetera: http://etcaetera.readthedocs.org/en/0.4.0
