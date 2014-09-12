@@ -64,7 +64,57 @@ each new level overrides the one above it) is as follows:
 Configuration files
 ===================
 
-blah blah multiple variants only one is chosen etc etc
+Loading
+-------
+
+For each configuration file location mentioned in the previous section, we
+search for files ending in ``.yaml``, ``.json`` or ``.py`` (**in that
+order!**), load the first one we find, and ignore any others that might exist.
+
+For example, if Invoke is run on a system containing both ``/etc/invoke.yaml``
+*and* ``/etc/invoke.json``, **only the YAML file will be loaded**. This helps
+keep things simple, both conceptually and implementation.
+
+Format
+------
+
+Invoke's configuration allows arbitrary nesting, and thus so do our config file
+formats. All three of the below examples result in a configuration equivalent
+to ``{'debug': True, 'run': {'echo': True}}``:
+
+* **YAML**
+
+  .. code-block:: yaml
+
+      debug: true
+      run:
+          echo: true
+
+* **JSON**
+
+  .. code-block:: javascript
+
+      {
+          "debug": true,
+          "run": {
+              "echo": true
+          }
+      }
+
+* **Python**::
+
+    debug = True
+    run = {
+        "echo": True
+    }
+
+For further details, see these languages' own documentation, and/or the
+documentation for etcaetera_ , whose drivers we use to load the files.
+
+.. note::
+    We make use of Etcaetera's ``lowercase`` adapter to ensure all config
+    names/keys end up presented to Invoke and your tasks as all-lowercase.
+    Values are untouched.
 
 
 .. _env-vars:
