@@ -128,7 +128,7 @@ are also implicitly shared amongst the entire system's installed application
 base.
 
 In addition, due to implementation concerns, env vars must be pre-determined by
-the levels below them in the config hierarchy (or in other words - env vars may
+the levels below them in the config hierarchy (in other words - env vars may
 only be used to override existing config values). If you need Invoke to
 understand a ``FOOBAR`` environment variable, you must first declare a
 ``foobar`` config option in a configuration file or in your task collections.
@@ -157,13 +157,15 @@ back from the shell:
 
     * Depending on interpreter and environment, this means that a setting
       defaulting to a non-Unicode string type (eg a ``str`` on Python 2) may
-      end up replaced with a Unicode string, or vice versa.
+      end up replaced with a Unicode string, or vice versa. This is intentional
+      as it prevents users from accidentally limiting themselves to non-Unicode
+      strings.
 
 * If the current value is ``None``, it too is replaced with the string from the
   environment;
 * Lists and dicts are currently unsupported and will raise an exception;
 
-    * In the future we may implement convenience transformation, such as
+    * In the future we may implement convenience transformations, such as
       splitting on commas to form a list; however since users can always
       perform such operations themselves, it may not be a high priority.
 
@@ -173,7 +175,6 @@ back from the shell:
     * For example, a ``foobar`` setting whose default value is the integer
       ``1`` will run all env var inputs through `int`, and thus ``FOOBAR=5``
       will result in the Python value ``5``, not ``"5"``.
-
 
 Nesting vs underscored names
 ----------------------------
