@@ -122,6 +122,62 @@ documentation for etcaetera_ , whose drivers we use to load the files.
 Environment variables
 =====================
 
+Environment variables are a bit different from other configuration-setting
+methods, since they don't provide a clean way to nest configuration keys, and
+are also implicitly shared amongst the entire system's installed application
+base.
+
+In addition, due to implementation concerns, env vars must be pre-determined by
+the levels below them in the config hierarchy (or in other words - env vars may
+only be used to override existing config values). If you need Invoke to
+understand a ``FOOBAR`` environment variable, you must first declare a
+``foobar`` config option in a configuration file or in your task collections.
+
+Basic rules
+-----------
+
+To mitigate the shell namespace problem, we simply prefix all our env vars with
+``INVOKE_``.
+
+Nesting is performed via underscore separation, so a setting that looks like
+e.g. ``{'run': {'echo': True}}`` at the Python level becomes
+``INVOKE_RUN_ECHO=1`` in a typical shell.
+
+Type casting
+------------
+
+.. TODO: Dedupe this with the CLI type casting stuff once it is matured.
+
+Since env vars can only be used to override existing settings, the previous
+value of a given config option is used as a guide in casting the strings we get
+back from the shell:
+
+* If the current value is a string or Unicode object, it is replaced with the
+  value from the environment, with no casting whatsoever;
+
+    * Depending on interpreter and environment, this means that a setting
+      defaulting to a non-Unicode string type (eg a ``str`` on Python 2) may
+      end up replaced with a Unicode string, or vice versa.
+
+* If the current value is ``None``, it too is replaced with the string from the
+  environment;
+* Lists and dicts are currently unsupported and will raise an exception;
+
+    * In the future we may implement convenience transformation, such as
+      splitting on commas to form a list; however since users can always
+      perform such operations themselves, it may not be a high priority.
+
+* All other types - integers, longs, floats, etc - are simply used as
+  constructors for the incoming value.
+
+    * For example, a ``foobar`` setting whose default value is the integer
+      ``1`` will run all env var inputs through `int`, and thus ``FOOBAR=5``
+      will result in the Python value ``5``, not ``"5"``.
+
+
+Nesting vs underscored names
+----------------------------
+
 * Env vars all prefixed with ``INVOKE_`` because we don't own the entire shell
   namespace and also don't want to manually declare everything (the other
   method of ensuring no conflicts).
