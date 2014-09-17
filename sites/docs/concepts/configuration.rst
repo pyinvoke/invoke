@@ -141,7 +141,8 @@ To mitigate the shell namespace problem, we simply prefix all our env vars with
 
 Nesting is performed via underscore separation, so a setting that looks like
 e.g. ``{'run': {'echo': True}}`` at the Python level becomes
-``INVOKE_RUN_ECHO=1`` in a typical shell.
+``INVOKE_RUN_ECHO=1`` in a typical shell. See :ref:`env-var-nesting` below for
+more on this.
 
 Type casting
 ------------
@@ -178,6 +179,8 @@ back from the shell:
     * For example, a ``foobar`` setting whose default value is the integer
       ``1`` will run all env var inputs through `int`, and thus ``FOOBAR=5``
       will result in the Python value ``5``, not ``"5"``.
+
+.. _env-var-nesting:
 
 Nesting vs underscored names
 ----------------------------
