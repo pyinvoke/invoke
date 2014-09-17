@@ -163,6 +163,9 @@ back from the shell:
 
 * If the current value is ``None``, it too is replaced with the string from the
   environment;
+* Booleans are set as follows: ``0`` and the empty value/string (e.g.
+  ``SETTING=``, or ``unset SETTING``, or etc) evaluate to ``False``, and any
+  other value evaluates to ``True``.
 * Lists and dicts are currently unsupported and will raise an exception;
 
     * In the future we may implement convenience transformations, such as
