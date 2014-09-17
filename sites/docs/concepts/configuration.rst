@@ -14,10 +14,10 @@ flags.
 The end result of configuration seeking, loading, parsing & merging, is an
 `etcaetera.Config
 <http://etcaetera.readthedocs.org/en/latest/howto.html#config-object>`_ object,
-which behaves like a set of nested dictionaries. Invoke then references this
-object when it runs (determining the default behavior of functions like
-`~.runner.run`) and exposes it to users' tasks as an attribute on
-:doc:`contexts </concepts/context>`.
+which behaves like a set of nested dictionaries. Invoke references this object
+when it runs (determining the default behavior of methods like `~.Context.run`)
+and exposes it to users' tasks as an attribute on :doc:`contexts
+</concepts/context>`.
 
 
 The configuration hierarchy
@@ -44,7 +44,7 @@ each new level overrides the one above it) is as follows:
    directory, e.g. ``~/.invoke.yaml``.
 #. **Project-level configuration file** living next to your top level
    ``tasks.py``. For example, if your run of Invoke loads
-   ``/home/user/myproject/tasks.py`` (see :doc:`our docs on the load process
+   ``/home/user/myproject/tasks.py`` (see our docs on :doc:`the load process
    </concepts/loading>`), this might be ``/home/user/myproject/invoke.yaml``.
 #. **Environment variables** found in the invoking shell environment.
 
@@ -54,9 +54,7 @@ each new level overrides the one above it) is as follows:
 
 #. **Runtime configuration file** whose path is given to :option:`-f`, e.g.
    ``inv -f /random/path/to/config_file.yaml``.
-#. **Command-line flags**, either dedicated ones for core options (like
-   :option:`-e`) or use of :option:`--set` which allows runtime overriding of
-   arbitrary configuration paths.
+#. **Command-line flags** for certain core options, such as :option:`-e`.
 
 
 .. _config-files:
