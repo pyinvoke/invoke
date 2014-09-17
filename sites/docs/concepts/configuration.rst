@@ -185,19 +185,25 @@ back from the shell:
 Nesting vs underscored names
 ----------------------------
 
-* Env vars all prefixed with ``INVOKE_`` because we don't own the entire shell
-  namespace and also don't want to manually declare everything (the other
-  method of ensuring no conflicts).
-* ``run.echo`` in collection configs == ``run: echo:`` in conf files ==
-  ``INVOKE_RUN_ECHO``.
-* Ambiguity between "underscore as level separator" and "underscore as part of
-  level or variable name" is solved by a smart parser that knows what's
-  available and can thus tell what a given underscore "is" (part of a valid
-  name at that level, or not).
+.. TODO: normalize terminology - settings? options? other?
 
-    * Because of this, env vars cannot be the original source of a variable -
-      they must be modifying something defined in one of the other levels such
-      as in-Python or config file.
+Since environment variable keys are single strings, we must use some form of
+string parsing to allow access to nested configuration settings. As mentioned
+above, in basic use cases this just means using an underscore character:
+``{'run': {'echo': True}}`` becomes ``INVOKE_RUN_ECHO=1``.
+
+However, ambiguity is introduced when the settings names themselves contain
+underscores: is ``INVOKE_FOO_BAR=baz`` equivalent to ``{'foo': {'bar':
+'baz'}}``, or to ``{'foo_bar': 'baz'}``? Thankfully, because env vars can only
+be used to modify settings declared at the Python level or in config files, we
+simply look at the current state of the config to determine the answer.
+
+There is still a corner case where *both* possible interpretations exist as
+valid config paths (e.g. ``{'foo': {'bar': 'default'}, 'foo_bar':
+'otherdefault'}``). In this situation, we honor the `Zen of Python
+<http://zen-of-python.info/in-the-face-of-ambiguity-refuse-the-temptation-to-guess.html#12>`_
+and refuse to guess; an error is raised instead counseling users to modify
+their configuration layout or avoid using env vars for the option in question.
 
 
 .. _etcaetera: http://etcaetera.readthedocs.org/en/0.4.0
