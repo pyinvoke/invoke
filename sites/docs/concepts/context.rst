@@ -27,7 +27,7 @@ Using contexts in your tasks
 ============================
 
 To use Invoke's context-aware API, make the following changes to the task
-definition style seen earlier:
+definition style seen in the :doc:`tutorial </getting_started>`:
 
 * Tell `@task <.task>` that you want your task to be *contextualized* - given a
   `~invoke.context.Context` object - by saying ``contextualized=True``.
