@@ -1,22 +1,26 @@
 .. _concepts-context:
 
-=================================
-Configuring behavior via contexts
-=================================
+===========================
+State handling: the context
+===========================
 
+A common problem in tools like Invoke is the transmission or storage of values
+which are "global" for the current session - allowing one to answer questions
+like "what flags were given on the command line?" and "what behavior do they
+modify?" (such as how :option:`-e` affects the echo behavior of
+`~.runner.run`). Access to values loaded from :doc:`configuration files or
+other configuration vectors <configuration>` is also critical.
 
-A number of command-line flags and other configuration channels need to affect
-global behavior: for example, controlling whether `~.runner.run` defaults to
-echoing the commands it runs, or if nonzero return codes should abort
-execution.
+Some Python libraries implement this via global module state. That approach
+works in the base case, but in the long run it makes testing difficult and
+error prone, limits concurrency, and makes the software more complex to use and
+extend.
 
-Some libraries implement this via global module state. That approach works in
-the base case but makes testing difficult and error prone, limits concurrency,
-and generally makes the software more complex to use and extend.
-
-Invoke encapsulates core program state in a `~invoke.context.Context` object
-which can be handed to individual tasks. It serves as a configuration vector
-and implements state-aware methods mirroring the functional parts of the API.
+Invoke encapsulates core program state in an explicit `~invoke.context.Context`
+object which is handed to tasks when they execute or can be instantiated and
+used by hand. This object is the primary API endpoint, offering methods which
+honor the current state (such as `.Context.run`, wrapping `~.runner.run`) as
+well as access to that state itself.
 
 
 Using contexts in your tasks
