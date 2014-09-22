@@ -1,6 +1,7 @@
 import os
-from os.path import join
 import shutil
+import time
+from os.path import join
 
 from invocations import docs as _docs
 from invocations.testing import test
@@ -69,6 +70,52 @@ def sites(c):
     www['build'](www_c, opts=opts)
 
 
+@task
+def watch(c):
+    try:
+        from watchdog.observers import Observer
+        from watchdog.events import RegexMatchingEventHandler
+    except ImportError:
+        sys.exit("If you want to use this, 'pip install watchdog' first.")
+
+    class APIBuildHandler(RegexMatchingEventHandler):
+        def on_any_event(self, event):
+            my_c = c.clone()
+            my_c.update(**docs.configuration())
+            docs['build'](my_c)
+
+    class WWWBuildHandler(RegexMatchingEventHandler):
+        def on_any_event(self, event):
+            my_c = c.clone()
+            my_c.update(**www.configuration())
+            www['build'](my_c)
+
+    # Readme & WWW triggers WWW
+    www_handler = WWWBuildHandler(
+        regexes=['\./README.rst', '\./sites/www'],
+        ignore_regexes=['.*/\..*\.swp', '\./sites/www/_build'],
+    )
+    # Code and docs trigger API
+    api_handler = APIBuildHandler(
+        regexes=['\./invoke/', '\./sites/docs'],
+        ignore_regexes=['.*/\..*\.swp', '\./sites/docs/_build'],
+    )
+
+    # Run observer loop
+    observer = Observer()
+    # TODO: Find parent directory of tasks.py and use that.
+    for x in (www_handler, api_handler):
+        observer.schedule(x, '.', recursive=True)
+    observer.start()
+    try:
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        observer.stop()
+    observer.join()
+
+
 ns = Collection(
-    test, integration, vendorize, release, www, docs, sites, vendorize_pexpect
+    test, integration, vendorize, release, www, docs, sites, vendorize_pexpect,
+    watch
 )
