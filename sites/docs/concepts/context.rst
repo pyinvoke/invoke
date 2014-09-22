@@ -4,23 +4,21 @@
 State handling: the context
 ===========================
 
-A common problem in tools like Invoke is the transmission or storage of values
-which are "global" for the current session - allowing one to answer questions
-like "what flags were given on the command line?" and "what behavior do they
-modify?" (such as how :option:`-e` affects the echo behavior of
-`~.runner.run`). Access to values loaded from :doc:`configuration files or
-other configuration vectors <configuration>` is also critical.
+A common problem task runners face is transmission or storage of values which
+are "global" for the current session - values loaded from :doc:`configuration
+files <configuration>` (or other configuration vectors), CLI flags, values
+set by 'setup' tasks, etc.
 
-Some Python libraries implement this via global module state. That approach
-works in the base case, but in the long run it makes testing difficult and
-error prone, limits concurrency, and makes the software more complex to use and
-extend.
+Some Python libraries (such as `Fabric <http://fabfile.org>`_ 1.x) implement
+this via global module state. That approach works in the base case but makes
+testing difficult and error prone, limits concurrency, and makes the software
+more complex to use and extend.
 
-Invoke encapsulates core program state in an explicit `~invoke.context.Context`
-object which is handed to tasks when they execute or can be instantiated and
-used by hand. This object is the primary API endpoint, offering methods which
-honor the current state (such as `.Context.run`, wrapping `~.runner.run`) as
-well as access to that state itself.
+Invoke encapsulates its state in an explicit `~invoke.context.Context` object,
+handed to tasks when they execute or instantiated and used by hand. The context
+is the primary API endpoint, offering methods which honor the current state
+(such as `.Context.run`, wrapping `~.runner.run`) as well as access to that
+state itself.
 
 
 Using contexts in your tasks
