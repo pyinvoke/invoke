@@ -2,15 +2,14 @@
 Constructing namespaces
 =======================
 
-The base case of loading a single module of tasks works fine initially, but
-advanced users typically need more organization, such as separating tasks into
-a tree of nested namespaces.
+The :doc:`base case </getting_started>` of loading a single module of tasks
+works fine initially, but advanced users typically need more organization, such
+as separating tasks into a tree of nested namespaces.
 
-The `.Collection` class provides an API for organizing tasks and
-sub-collections. Collections may include tasks as well as other collections,
-and form trees of tasks. When referenced by strings (e.g. on the CLI or in
-pre/post hooks) tasks in nested namespaces are referenced in a dot syntax, such
-as ``docs.build``.
+The `.Collection` class provides an API for organizing tasks (and potentially
+their configuration) into a tree-like structure. When referenced by strings
+(e.g. on the CLI or in pre/post hooks) tasks in nested namespaces use a
+dot-separated syntax, e.g. ``docs.build``.
 
 In this section, we show how building namespaces with this API is flexible but
 also allows following Python package layouts with minimal boilerplate.
