@@ -20,6 +20,8 @@ and exposes it to users' tasks as the `~.Context.config` attribute on
 `.Context` objects.
 
 
+.. _config-hierarchy:
+
 The configuration hierarchy
 ===========================
 
@@ -207,6 +209,45 @@ their configuration layout or avoid using env vars for the option in question.
 
 `.Collection`-based configuration
 =================================
+
+`.Collection` objects may contain a config mapping, set via
+`.Collection.configure`, and (as per :ref:`the hierarchy <config-hierarchy>`)
+this typically forms the lowest level of configuration in the system.
+
+When collections are :doc:`nested </concepts/namespaces>`, configuration is
+merged 'downwards' by default: when conflicts arise, outer namespaces closer to
+the root will win, versus inner ones closer to the task being invoked.
+
+.. note::
+    'Inner' tasks here are specifically those on the path from the root to the
+    one housing the invoked task. 'Sibling' subcollections are ignored.
+
+A quick example of what this means::
+
+    from invoke import Collection, ctask as task
+
+    # This task & collection could just as easily come from another module
+    # somewhere.
+    @task
+    def mytask(ctx):
+        print(ctx['conflicted'])
+    inner = Collection('inner', mytask)
+    inner.configure({'conflicted': 'default value'})
+
+    # Our project's root namespace.
+    ns = Collection(inner)
+    ns.configure({'conflicted': 'override value'})
+
+The result of calling ``inner.mytask``::
+
+    $ inv inner.mytask
+    override value
+
+
+Example
+=======
+
+.. TODO: make this more generic, include other override levels
 
 As an example, let's write a small module for building `Sphinx
 <http://sphinx-doc.org>`_ docs. It might start out like this::
