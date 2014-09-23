@@ -52,10 +52,7 @@ class Context(object):
         Simple syntactic sugar for a handful of ``deepcopy`` calls, which
         generally work fine because config values are simple data structures.
         """
-        return Context(
-            run=deepcopy(self.config['run']),
-            config=deepcopy(self.config['general']),
-        )
+        return Context(config=deepcopy(self.config))
 
     def run(self, *args, **kwargs):
         """
@@ -76,10 +73,10 @@ class Context(object):
         return run(*args, **options)
 
     def __getitem__(self, *args, **kwargs):
-        return self.config['general'].__getitem__(*args, **kwargs)
+        return self.config.__getitem__(*args, **kwargs)
 
     def get(self, *args, **kwargs):
-        return self.config['general'].get(*args, **kwargs)
+        return self.config.get(*args, **kwargs)
 
     def update(self, *args, **kwargs):
-        return self.config['general'].update(*args, **kwargs)
+        return self.config.update(*args, **kwargs)

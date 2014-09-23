@@ -1,2 +1,2 @@
-class Config(object):
+class Config(dict):
     pass

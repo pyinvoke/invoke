@@ -7,16 +7,15 @@ from invoke.context import Context
 class Context_(Spec):
     class init:
         "__init__"
-        def takes_optional_run_and_config_args(self):
+        def takes_optional_config_arg(self):
             # Meh-tastic doesn't-barf tests. MEH.
             Context()
-            Context(run={'foo': 'bar'})
             Context(config={'foo': 'bar'})
 
     class run_:
         def _honors(self, kwarg, value):
             with patch('invoke.context.run') as run:
-                Context(run={kwarg: value}).run('x')
+                Context(config={'run': {kwarg: value}}).run('x')
                 run.assert_called_with('x', **{kwarg: value})
 
         def warn(self):
@@ -32,10 +31,7 @@ class Context_(Spec):
             self._honors('echo', True)
 
     class clone:
-        def returns_copy_of_self(self):
-            skip()
-
-        def contents_of_dicts_are_distinct(self):
+        def returns_deep_copy_of_self(self):
             skip()
 
     class configuration:

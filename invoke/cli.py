@@ -290,7 +290,7 @@ def dispatch(argv, version=None):
         # 'return' here is mostly a concession to testing. Meh :(
         # TODO: probably restructure things better so we don't need this?
         return sys.exit(e.code)
-    executor = Executor(collection, Context(**derive_opts(args)))
+    executor = Executor(collection, Context(config=derive_opts(args)))
     try:
         tasks = tasks_from_contexts(parser_contexts, collection)
         dedupe = not args['no-dedupe'].value
