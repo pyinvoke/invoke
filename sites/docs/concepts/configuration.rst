@@ -33,7 +33,7 @@ each new level overrides the one above it) is as follows:
    
      * Sub-collections' configurations get merged into the top level collection
        and the final result forms the basis of the overall configuration setup.
-     * Since the root collection is loaded at runtime, configuration options
+     * Since the root collection is loaded at runtime, configuration settings
        modifying the load process itself obviously won't take effect if defined
        at this level.
 
@@ -54,7 +54,7 @@ each new level overrides the one above it) is as follows:
 
 #. **Runtime configuration file** whose path is given to :option:`-f`, e.g.
    ``inv -f /random/path/to/config_file.yaml``.
-#. **Command-line flags** for certain core options, such as :option:`-e`.
+#. **Command-line flags** for certain core settings, such as :option:`-e`.
 
 
 .. _config-files:
@@ -129,7 +129,7 @@ In addition, due to implementation concerns, env vars must be pre-determined by
 the levels below them in the config hierarchy (in other words - env vars may
 only be used to override existing config values). If you need Invoke to
 understand a ``FOOBAR`` environment variable, you must first declare a
-``foobar`` config option in a configuration file or in your task collections.
+``foobar`` setting in a configuration file or in your task collections.
 
 Basic rules
 -----------
@@ -148,8 +148,8 @@ Type casting
 .. TODO: Dedupe this with the CLI type casting stuff once it is matured.
 
 Since env vars can only be used to override existing settings, the previous
-value of a given config option is used as a guide in casting the strings we get
-back from the shell:
+value of a given setting is used as a guide in casting the strings we get back
+from the shell:
 
 * If the current value is a string or Unicode object, it is replaced with the
   value from the environment, with no casting whatsoever;
@@ -183,8 +183,6 @@ back from the shell:
 Nesting vs underscored names
 ----------------------------
 
-.. TODO: normalize terminology - settings? options? other?
-
 Since environment variable keys are single strings, we must use some form of
 string parsing to allow access to nested configuration settings. As mentioned
 above, in basic use cases this just means using an underscore character:
@@ -201,7 +199,7 @@ valid config paths (e.g. ``{'foo': {'bar': 'default'}, 'foo_bar':
 'otherdefault'}``). In this situation, we honor the `Zen of Python
 <http://zen-of-python.info/in-the-face-of-ambiguity-refuse-the-temptation-to-guess.html#12>`_
 and refuse to guess; an error is raised instead counseling users to modify
-their configuration layout or avoid using env vars for the option in question.
+their configuration layout or avoid using env vars for the setting in question.
 
 
 .. _collection-configuration:
@@ -291,7 +289,7 @@ We can also allow runtime parameterization::
 This task module works for a single set of users, but what if we want to allow
 reuse? Somebody may want to use this module with a different default target.
 You *can* kludge it using non-contextualized tasks, but using a context to
-configure these options is usually the better solution [1]_.
+configure these settings is usually the better solution [1]_.
 
 Switching to contexts
 ---------------------
@@ -373,8 +371,8 @@ snippet, instead drop this into a file next to ``tasks.py`` named
         target: built_docs
 
 For this example, that sort of local-to-project conf file makes the most sense,
-but don't forget that the :ref:`config hierarchy <config-hierarchy>` has
-additional options which may be suitable depending on your needs.
+but don't forget that the :ref:`config hierarchy <config-hierarchy>` offers
+additional configuration methods which may be suitable depending on your needs.
 
 
 .. _etcaetera: http://etcaetera.readthedocs.org/en/0.4.0
