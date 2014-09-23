@@ -247,7 +247,8 @@ The result of calling ``inner.mytask``::
 Example
 =======
 
-.. TODO: make this more generic, include other override levels
+Setup
+-----
 
 As an example, we'll start out with some semi-realistic, non-contextualized
 tasks that hardcode their values, and build up to using the various
@@ -293,8 +294,8 @@ reuse? Somebody may want to use this module with a different default target.
 You *can* kludge it using non-contextualized tasks, but using a context to
 configure these options is usually the better solution [1]_.
 
-From collection to context
---------------------------
+Switching to contexts
+---------------------
 
 The configuration `setting <.Collection.configure>` and `getting
 <.Context.config>` APIs make it easy to move otherwise 'hardcoded' default
@@ -332,6 +333,10 @@ result::
     ns = Collection(clean, build)
     ns.configure({'sphinx.target': "docs/_build"})
 
+.. TODO:
+    turn this into a subsection, followed by another subsection using a config
+    file instead
+
 The result isn't significantly more complex than what we began with, and now
 users can import your module and override your config defaults. E.g. if your
 module is distributed as ``myproject.docs``, someone can define a ``tasks.py``
@@ -352,6 +357,12 @@ that does this::
 
 Now we have a ``docs`` sub-namespace whose build target defaults to
 ``built_docs`` instead of ``docs/_build``.
+
+Finally, it may often be easier for downstream users to override via the
+various config file or env var methods described in :ref:`the hierarchy
+<config-hierarchy>`.
+
+
 
 
 .. _etcaetera: http://etcaetera.readthedocs.org/en/0.4.0
