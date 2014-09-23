@@ -1,6 +1,7 @@
 from copy import deepcopy
 
 from .runner import run
+from .config import Config
 
 
 class Context(object):
@@ -13,8 +14,8 @@ class Context(object):
 
     Specifically, the class offers wrappers for core API calls (such as `.run`)
     which take into account CLI parser flags, configuration files, and/or
-    changes made at runtime. It also acts as a dict-like object proxying to its
-    ``config`` attribute (for e.g. ``__getitem__``, ``get`` and ``update``.)
+    changes made at runtime. It also acts as a proxy for its `~.Context.config`
+    attribute - see that attribute's documentation for details.
 
     Instances of `.Context` may be shared between tasks when executing
     sub-tasks - either the same context the caller was given, or an altered
@@ -25,23 +26,24 @@ class Context(object):
         ``Context`` in-place is a nice way to limit unwanted or hard-to-track
         state mutation, and/or to enable safer concurrency.
     """
-    def __init__(self, run=None, config=None):
+    def __init__(self, config=None):
         """
-        :param run:
-            A dict acting as default ``**kwargs`` for `.run`. E.g. to create a
-            `.Context` whose `Context.run` method defaults to ``echo=True``,
-            say::
-
-                ctx = Context(run={'echo': True})
-
         :param config:
-            General (non-``run``-oriented) configuration options dict.
-            Optional.
+            `.Config` object to use as the base configuration.
+
+            Defaults to an empty `.Config`.
         """
-        self.config = {
-            'run': run or {},
-            'general': config or {},
-        }
+        
+        #: The fully merged `.Config` object appropriate for this context.
+        #:
+        #: `.Config` settings (see their documentation for details) may be
+        #: accessed like dictionary keys (``ctx.config['foo']``) or object
+        #: attributes (``ctx.config.foo``).
+        #:
+        #: As a convenience shorthand, the `.Context` object proxies to its
+        #: ``config`` attribute in the same way - e.g. ``ctx['foo']`` or
+        #: ``ctx.foo`` returns the same value as ``ctx.config['foo']``.
+        self.config = config or Config()
 
     def clone(self):
         """
