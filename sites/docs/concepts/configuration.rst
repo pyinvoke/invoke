@@ -314,10 +314,10 @@ and add an explicit namespace object::
 
     ns = Collection(clean, build)
 
-Then we can move the default build target value into the collection, and refer
-to it via the context. At this point we also change our kwarg default value to
-be ``None`` so we can determine whether or not a runtime value was given.  The
-result::
+Then we can move the default build target value into the collection's default
+configuration, and refer to it via the context. At this point we also change
+our kwarg default value to be ``None`` so we can determine whether or not a
+runtime value was given.  The result::
 
     @task
     def clean(ctx, target=None):
