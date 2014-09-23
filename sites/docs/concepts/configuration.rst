@@ -249,8 +249,10 @@ Example
 
 .. TODO: make this more generic, include other override levels
 
-As an example, let's write a small module for building `Sphinx
-<http://sphinx-doc.org>`_ docs. It might start out like this::
+As an example, we'll start out with some semi-realistic, non-contextualized
+tasks that hardcode their values, and build up to using the various
+configuration mechanisms. A small module for building `Sphinx
+<http://sphinx-doc.org>`_ docs might start out like this::
 
     from invoke import task, run
 
@@ -291,18 +293,14 @@ reuse? Somebody may want to use this module with a different default target.
 You *can* kludge it using non-contextualized tasks, but using a context to
 configure these options is usually the better solution [1]_.
 
-From Collection to Context
+From collection to context
 --------------------------
 
-The `~invoke.context.Context` objects offer access to various config options -
-including ones set on the loaded `.Collection` objects. The
-`.Collection.configure` method associates keys and values, which are then
-available on the `~invoke.context.Context` via dict syntax.
-
-This makes it easy to move otherwise 'hardcoded' default values into a config
-structure which downstream users are free to redefine. Let's apply this to our
-example. First we switch to using contextualized tasks and add an explicit
-namespace object::
+The configuration `setting <.Collection.configure>` and `getting
+<.Context.config>` APIs make it easy to move otherwise 'hardcoded' default
+values into a config structure which downstream users are free to redefine.
+Let's apply this to our example. First we switch to using contextualized tasks
+and add an explicit namespace object::
 
     from invoke import Collection, ctask as task
 
@@ -354,36 +352,6 @@ that does this::
 
 Now we have a ``docs`` sub-namespace whose build target defaults to
 ``built_docs`` instead of ``docs/_build``.
-
-Nested namespace configuration merging
---------------------------------------
-
-When :doc:`namespaces </concepts/namespaces>` are nested within one another,
-configuration is merged 'downwards' by default: when conflicts arise, outer
-namespaces win over inner ones (with 'inner' ones being specifically those on
-the path from the root to the one housing the invoked task. 'Sibling'
-subcollections are ignored.)
-
-A quick example of what this means::
-
-    from invoke import Collection, ctask as task
-
-    # This task & collection could just as easily come from another module
-    # somewhere.
-    @task
-    def mytask(ctx):
-        print(ctx['conflicted'])
-    inner = Collection('inner', mytask)
-    inner.configure({'conflicted': 'default value'})
-
-    # Our project's root namespace.
-    ns = Collection(inner)
-    ns.configure({'conflicted': 'override value'})
-
-The result of calling ``inner.mytask``::
-
-    $ inv inner.mytask
-    override value
 
 
 .. _etcaetera: http://etcaetera.readthedocs.org/en/0.4.0
