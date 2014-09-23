@@ -14,10 +14,10 @@ flags.
 The end result of configuration seeking, loading, parsing & merging, is an
 `etcaetera.Config
 <http://etcaetera.readthedocs.org/en/latest/howto.html#config-object>`_ object,
-which behaves like a set of nested dictionaries. Invoke references this object
+which behaves like a (nested) Python dictionary. Invoke references this object
 when it runs (determining the default behavior of methods like `~.Context.run`)
-and exposes it to users' tasks as an attribute on :doc:`contexts
-</concepts/context>`.
+and exposes it to users' tasks as the `~.Context.config` attribute on
+`.Context` objects.
 
 
 The configuration hierarchy
