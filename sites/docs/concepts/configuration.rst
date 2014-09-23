@@ -15,9 +15,9 @@ The end result of configuration seeking, loading, parsing & merging, is an
 `etcaetera.Config
 <http://etcaetera.readthedocs.org/en/latest/howto.html#config-object>`_ object,
 which behaves like a (nested) Python dictionary. Invoke references this object
-when it runs (determining the default behavior of methods like `~.Context.run`)
-and exposes it to users' tasks as the `~.Context.config` attribute on
-`.Context` objects.
+when it runs (determining the default behavior of methods like `Context.run
+<~.context.Context.run>`) and exposes it to users' tasks as the
+`~.context.Context.config` attribute on `~.context.Context` objects.
 
 
 .. _config-hierarchy:
@@ -333,12 +333,17 @@ result::
     ns = Collection(clean, build)
     ns.configure({'sphinx.target': "docs/_build"})
 
-.. TODO:
-    turn this into a subsection, followed by another subsection using a config
-    file instead
+.. TODO: change all [foo.bar] shit into [foo][bar]
 
-The result isn't significantly more complex than what we began with, and now
-users can import your module and override your config defaults. E.g. if your
+The result isn't significantly more complex than what we began with, and as
+we'll see next, it's now trivial for users to override your defaults in various
+ways.
+
+Configuration overriding
+------------------------
+
+The lowest-level override is, of course, just modifying the local `Collection`
+tree into which a distributed module has been imported. E.g. if the above
 module is distributed as ``myproject.docs``, someone can define a ``tasks.py``
 that does this::
 
@@ -352,17 +357,25 @@ that does this::
 
     # Add 'docs' to our local root namespace, plus our own task
     ns = Collection(mylocaltask, docs)
-    # Override upstream configuration
-    ns.configure({'sphinx.target': "built_docs"})
+
+And then they can simply add this to the bottom::
+
+    ns.configure({'sphinx.target': "built_docs"}) # Our docs live here
 
 Now we have a ``docs`` sub-namespace whose build target defaults to
 ``built_docs`` instead of ``docs/_build``.
 
-Finally, it may often be easier for downstream users to override via the
-various config file or env var methods described in :ref:`the hierarchy
-<config-hierarchy>`.
+If you prefer configuration files over in-Python tweaking of your namespace
+tree, that works just as well; instead of adding the line above to the previous
+snippet, instead drop this into a file next to ``tasks.py`` named
+``invoke.yaml``::
 
+    sphinx:
+        target: built_docs
 
+For this example, that sort of local-to-project conf file makes the most sense,
+but don't forget that the :ref:`config hierarchy <config-hierarchy>` has
+additional options which may be suitable depending on your needs.
 
 
 .. _etcaetera: http://etcaetera.readthedocs.org/en/0.4.0
