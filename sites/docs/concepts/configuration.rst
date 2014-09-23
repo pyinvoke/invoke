@@ -16,7 +16,8 @@ The end result of configuration seeking, loading, parsing & merging, is an
 <http://etcaetera.readthedocs.org/en/latest/howto.html#config-object>`_ object,
 which behaves like a (nested) Python dictionary. Invoke references this object
 when it runs (determining the default behavior of methods like `.Context.run`)
-and exposes it to users' tasks as `.Context.config`.
+and exposes it to users' tasks as `.Context.config` and as shorthand attribute
+access on the `.Context` itself.
 
 
 .. _config-hierarchy:
@@ -321,14 +322,14 @@ runtime value was given.  The result::
 
     @task
     def clean(ctx, target=None):
-        ctx.run("rm -rf {0}".format(target or ctx['sphinx.target']))
+        ctx.run("rm -rf {0}".format(target or ctx.sphinx.target))
 
     @task
     def build(ctx, target=None):
-        ctx.run("sphinx-build docs {0}".format(target or ctx['sphinx.target']))
+        ctx.run("sphinx-build docs {0}".format(target or ctx.sphinx.target))
 
     ns = Collection(clean, build)
-    ns.configure({'sphinx.target': "docs/_build"})
+    ns.configure({'sphinx': {'target': "docs/_build"}})
 
 .. TODO: change all [foo.bar] shit into [foo][bar]
 
@@ -357,7 +358,7 @@ that does this::
 
 And then they can simply add this to the bottom::
 
-    ns.configure({'sphinx.target': "built_docs"}) # Our docs live here
+    ns.configure({'sphinx': {'target': "built_docs"}}) # Our docs live here
 
 Now we have a ``docs`` sub-namespace whose build target defaults to
 ``built_docs`` instead of ``docs/_build``.
