@@ -7,7 +7,7 @@ from .vendor import six
 
 from .context import Context
 from .loader import FilesystemLoader, DEFAULT_COLLECTION_NAME
-from .parser import Parser, Context as ParserContext, Argument
+from .parser import Parser, ParserContext, Argument
 from .executor import Executor
 from .exceptions import Failure, CollectionNotFound, ParseError, Exit
 from .util import debug, enable_logging
@@ -81,7 +81,7 @@ def parse(argv, collection=None, version=None):
         Three-tuple of ``args`` (core, non-task `.Argument` objects),
         ``collection`` (compiled `.Collection` of tasks, using defaults or core
         arguments affecting collection generation) and ``tasks`` (a list of
-        `~.parser.context.Context` objects representing the requested task
+        `~.ParserContext` objects representing the requested task
         executions).
     """
     # Initial/core parsing (core options can affect the rest of the parsing)

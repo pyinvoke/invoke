@@ -14,11 +14,11 @@ this via global module state. That approach works in the base case but makes
 testing difficult and error prone, limits concurrency, and makes the software
 more complex to use and extend.
 
-Invoke encapsulates its state in an explicit `~invoke.context.Context` object,
-handed to tasks when they execute or instantiated and used by hand. The context
-is the primary API endpoint, offering methods which honor the current state
-(such as `.Context.run`, wrapping `~.runner.run`) as well as access to that
-state itself.
+Invoke encapsulates its state in an explicit `~.Context` object, handed to
+tasks when they execute or instantiated and used by hand. The context is the
+primary API endpoint, offering methods which honor the current state (such as
+`.Context.run`, wrapping `~.runner.run`) as well as access to that state
+itself.
 
 
 Using contexts in your tasks
@@ -28,7 +28,7 @@ To use Invoke's context-aware API, make the following changes to the task
 definition style seen in the :doc:`tutorial </getting_started>`:
 
 * Tell `@task <.task>` that you want your task to be *contextualized* - given a
-  `~invoke.context.Context` object - by saying ``contextualized=True``.
+  `.Context` object - by saying ``contextualized=True``.
 
   .. note::
     See `Boilerplate reduction`_ below; this API is mostly for cleanness' sake.

@@ -40,7 +40,9 @@ def flag_key(x):
     return ret
 
 
-class Context(object):
+# Named slightly more verbose so Sphinx references can be unambiguous.
+# Got real sick of fully qualified paths.
+class ParserContext(object):
     """
     Parsing context with knowledge of flags & their format.
 
@@ -51,11 +53,11 @@ class Context(object):
     """
     def __init__(self, name=None, aliases=(), args=()):
         """
-        Create a new ``Context`` named ``name``, with ``aliases``.
+        Create a new ``ParserContext`` named ``name``, with ``aliases``.
 
         ``name`` is optional, and should be a string if given. It's used to
-        tell Context objects apart, and for use in a Parser when determining
-        what chunk of input might belong to a given Context.
+        tell ParserContext objects apart, and for use in a Parser when
+        determining what chunk of input might belong to a given ParserContext.
 
         ``aliases`` is also optional and should be an iterable containing
         strings. Parsing will honor any aliases when trying to "find" a given

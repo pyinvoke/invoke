@@ -221,8 +221,8 @@ parser.)
 
 It's quite easy: use `@ctask <.ctask>` instead of `@task <.task>` and add a
 context argument (named anything you want) as the first positional arg. Then
-use the context object's `~invoke.context.Context.run` method instead of the
-global function::
+use the context object's `~.Context.run` method instead of the global
+function::
 
     from invoke import ctask as task
 

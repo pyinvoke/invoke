@@ -15,9 +15,8 @@ The end result of configuration seeking, loading, parsing & merging, is an
 `etcaetera.Config
 <http://etcaetera.readthedocs.org/en/latest/howto.html#config-object>`_ object,
 which behaves like a (nested) Python dictionary. Invoke references this object
-when it runs (determining the default behavior of methods like `Context.run
-<~.context.Context.run>`) and exposes it to users' tasks as the
-`~.context.Context.config` attribute on `~.context.Context` objects.
+when it runs (determining the default behavior of methods like `.Context.run`)
+and exposes it to users' tasks as `.Context.config`.
 
 
 .. _config-hierarchy:
@@ -342,7 +341,7 @@ ways.
 Configuration overriding
 ------------------------
 
-The lowest-level override is, of course, just modifying the local `Collection`
+The lowest-level override is, of course, just modifying the local `.Collection`
 tree into which a distributed module has been imported. E.g. if the above
 module is distributed as ``myproject.docs``, someone can define a ``tasks.py``
 that does this::
