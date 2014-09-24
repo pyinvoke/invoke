@@ -34,20 +34,36 @@ class Context_(Spec):
         def returns_deep_copy_of_self(self):
             skip()
 
-    class configuration:
-        "Dict-like for config"
+    class configuration_proxy:
+        "Dict-like proxy for self.config"
         def setup(self):
             self.c = Context(config={'foo': 'bar'})
+
+        def direct_access(self):
+            eq_(self.c.config.__class__, Config)
+            eq_(self.c.config['foo'], 'bar')
+            eq_(self.c.config.foo, 'bar')
 
         def getitem(self):
             "___getitem__"
             eq_(self.c['foo'], 'bar')
+
+        def getattribute(self):
+            "__getattr__"
+            eq(self.c.foo, 'bar')
 
         def get(self):
             eq_(self.c.get('foo'), 'bar')
             eq_(self.c.get('biz', 'baz'), 'baz')
 
         def keys(self):
+            skip()
+
+        def values(self):
+            skip()
+
+        def iter(self):
+            "__iter__"
             skip()
 
         def update(self):
