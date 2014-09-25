@@ -1,0 +1,2 @@
+class MalformationError(Exception):
+    pass
