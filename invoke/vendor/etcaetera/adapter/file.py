@@ -37,12 +37,12 @@ class File(Adapter):
             import json
             self.data = dict((self.format(k, formatter), v) for k, v in json.load(fd).items())
         elif file_extension.lower() in YAML_EXTENSIONS:
-            from yaml import load as yload, dump as ydump
-            try:
-                from yaml import CLoader as Loader
-            except ImportError:
-                from yaml import Loader
-            self.data = dict((self.format(k, formatter), v) for k, v in yload(fd, Loader=Loader).items())
+            from ... import six
+            if six.PY3:
+                from ... import yaml3 as yaml
+            else:
+                from ... import yaml2 as yaml
+            self.data = dict((self.format(k, formatter), v) for k, v in yaml.load(fd, Loader=yaml.Loader).items())
         elif file_extension.lower() in PYTHON_EXTENSIONS:
             mod = imp.load_source('mod', self.filepath)
             self.data = dict((self.format(k, formatter), v) for k, v in vars(mod).items() if k.isupper())
