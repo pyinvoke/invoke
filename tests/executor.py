@@ -209,22 +209,22 @@ bar
         def hands_collection_configuration_to_context(self):
             @ctask
             def mytask(ctx):
-                eq_(ctx['my.config.key'], 'value')
+                eq_(ctx['my_key'], 'value')
             c = Collection(mytask)
-            c.configure({'my.config.key': 'value'})
+            c.configure({'my_key': 'value'})
             Executor(collection=c, context=Context()).execute('mytask')
 
         def hands_task_specific_configuration_to_context(self):
             @ctask
             def mytask(ctx):
-                eq_(ctx['my.config.key'], 'value')
+                eq_(ctx['my_key'], 'value')
             @ctask
             def othertask(ctx):
-                eq_(ctx['my.config.key'], 'othervalue')
+                eq_(ctx['my_key'], 'othervalue')
             inner1 = Collection('inner1', mytask)
-            inner1.configure({'my.config.key': 'value'})
+            inner1.configure({'my_key': 'value'})
             inner2 = Collection('inner2', othertask)
-            inner2.configure({'my.config.key': 'othervalue'})
+            inner2.configure({'my_key': 'othervalue'})
             c = Collection(inner1, inner2)
             e = Executor(collection=c, context=Context())
             e.execute('inner1.mytask', 'inner2.othertask')
@@ -232,11 +232,11 @@ bar
         def subcollection_config_works_with_default_tasks(self):
             @ctask(default=True)
             def mytask(ctx):
-                eq_(ctx['my.config.key'], 'value')
+                eq_(ctx['my_key'], 'value')
             # Sets up a task "known as" sub.mytask which may be called as just
             # 'sub' due to being default.
             sub = Collection('sub', mytask=mytask)
-            sub.configure({'my.config.key': 'value'})
+            sub.configure({'my_key': 'value'})
             main = Collection(sub=sub)
             # Execute via collection default 'task' name.
             Executor(collection=main, context=Context()).execute('sub')
