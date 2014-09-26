@@ -4,10 +4,29 @@ from invoke.config import Config
 
 
 class Config_(Spec):
-    # Directly wraps etcaetera.Config? same args and all?
-    # Otherwise, what does its init need? Right now we just pass in a single
-    # dict which represents the Defaults.
-    # Then we need to allow dict access & attribute access somehow, likely by
-    # filtering the top level accesses & returning any dicts wrapped in a new
-    # class (which is used as a mixin on the top class too I guess? Or some
-    # other way of sharing code)
+    class init:
+        "__init__"
+
+        def can_be_empty(self):
+            skip()
+
+        def configure_global_location_prefix(self):
+            skip()
+
+        def configure_user_location_prefix(self):
+            skip()
+
+        def unknown_kwargs_turn_into_top_level_defaults(self):
+            skip()
+
+    def can_update_config_adapters(self):
+        # I.e. hand it a Defaults and a File and go to town
+        skip()
+
+    def allows_dict_and_attr_access(self):
+        # TODO: combine with tests for Context probably
+        skip()
+
+    def nested_dict_values_also_allow_dual_access(self):
+        # TODO: ditto
+        skip()

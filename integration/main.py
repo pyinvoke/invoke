@@ -39,3 +39,9 @@ class Main(Spec):
         eq_(result.exited, 1)
         assert not result.stdout
         assert result.stderr
+
+    def loads_real_global_config(self):
+        skip()
+
+    def loads_real_user_config(self):
+        skip()
