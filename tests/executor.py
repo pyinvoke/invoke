@@ -24,6 +24,7 @@ class Executor_(IntegrationSpec):
         coll.add_task(self.task4, name='task4')
         self.executor = Executor(collection=coll, context=Context())
 
+
     class init:
         "__init__"
         def allows_collection_and_context(self):
@@ -37,6 +38,7 @@ class Executor_(IntegrationSpec):
             e = Executor(collection=Collection())
             assert isinstance(e.context, Context)
 
+
     class execute:
         def base_case(self):
             self.executor.execute('task1')
@@ -46,6 +48,7 @@ class Executor_(IntegrationSpec):
             k = {'foo': 'bar'}
             self.executor.execute(('task1', k))
             self.task1.body.assert_called_once_with(**k)
+
 
     class basic_pre_post:
         "basic pre/post task functionality"
@@ -105,6 +108,7 @@ class Executor_(IntegrationSpec):
 
         def call_objs_play_well_with_context_args(self):
             self._call_objs(True)
+
 
     class deduping_and_chaining:
         def chaining_is_depth_first(self):
@@ -204,6 +208,7 @@ bar
             e.execute('t2')
             # Does not call the second t1(5)
             body.assert_has_calls([mock_call(5), mock_call(7)])
+
 
     class configuration:
         "Configuration loading & overriding"
