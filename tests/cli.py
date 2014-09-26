@@ -271,8 +271,8 @@ Available tasks:
             self._test_flag('-e', 'echo', True)
 
     class config_loading:
-        # TODO: More appropriate in Executor perhaps? Or in addition?
-        
+        "Configuration loading & overriding"
+
         class system_global:
             "Systemwide conf file"
             def yaml_first(self):
