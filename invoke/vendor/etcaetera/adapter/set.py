@@ -11,10 +11,10 @@ class AdapterSet(deque):
         self._load_adapters(adapters)
 
     def __repr__(self):
-        return 'AdapterSet{}'.format(self.__str__())
+        return 'AdapterSet{0}'.format(self.__str__())
 
     def __str__(self):
-        return '({})'.format(', '.join([a.__str__() for a in self]))
+        return '({0})'.format(', '.join([a.__str__() for a in self]))
 
     def __setitem__(self, key, value):
         if isinstance(value, Defaults) and key != 0:

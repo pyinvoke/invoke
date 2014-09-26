@@ -25,7 +25,7 @@ class Adapter(object):
         return self.__class__.__name__
 
     def __repr__(self):
-        return '<{} {}>'.format(self.__str__(), id(self))
+        return '<{0} {1}>'.format(self.__str__(), id(self))
 
     def __getitem__(self, key):
         if is_nested_key(key):

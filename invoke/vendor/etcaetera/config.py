@@ -44,7 +44,7 @@ class Config(dict):
         if not isinstance(subconfig, Config):
             raise TypeError(
                 "Subconfig has to be of Config type. "
-                "Got {} instead".format(type(subconfig))
+                "Got {0} instead".format(type(subconfig))
             )
 
         self._subconfigs[name] = subconfig
