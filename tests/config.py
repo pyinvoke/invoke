@@ -19,8 +19,14 @@ class Config_(Spec):
         def unknown_kwargs_turn_into_top_level_defaults(self):
             skip()
 
-    def can_update_config_adapters(self):
-        # I.e. hand it a Defaults and a File and go to town
+        def does_not_trigger_config_loading(self):
+            skip()
+
+    def allows_explicit_loading(self):
+        skip()
+
+    def allows_modification_of_defaults(self):
+        # Something light which wraps self._config.defaults[k] = v
         skip()
 
     def allows_dict_and_attr_access(self):
