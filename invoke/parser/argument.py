@@ -88,6 +88,17 @@ class Argument(object):
 
         Sets ``self.value`` to ``self.kind(value)``, unless ``cast=False`` in
         which case the raw value is also used.
+
+        For repeated value setting, just convert ``self.raw_value`` to a list.
+        So does ``self.value``.
         """
-        self.raw_value = value
-        self._value = (self.kind if cast else lambda x: x)(value)
+        casted_value = (self.kind if cast else lambda x: x)(value)
+        if self.raw_value is None:
+            self.raw_value = value
+            self._value = casted_value
+        elif isinstance(self.raw_value, list):
+            self.raw_value.append(value)
+            self._value.append(casted_value)
+        else:
+            self.raw_value = [self.raw_value, value]
+            self._value = [self._value, casted_value]
