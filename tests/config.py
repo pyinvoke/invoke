@@ -89,6 +89,15 @@ Valid keys: []""".lstrip()
             for x in d:
                 ok_(x in c)
 
+        def is_iterable_like_dict(self):
+            def expect(c, expected):
+                eq_(set(c.keys()), expected)
+                eq_(set(list(c)), expected)
+            c = Config()
+            expect(c, set())
+            c.set_defaults({'a': 1, 'b': 2})
+            expect(c, set(['a', 'b']))
+
     class system_global:
         "Systemwide conf file"
         def yaml_first(self):

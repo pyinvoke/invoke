@@ -1,7 +1,7 @@
 from os.path import abspath
 
 from .vendor.etcaetera.config import Config as EtcConfig
-from .vendor.etcaetera.adapter import File
+from .vendor.etcaetera.adapter import File, Defaults
 
 
 def noop(s):
@@ -88,6 +88,8 @@ class Config(object):
         :param dict data:
             Dictionary to use as the default data set for this configuration.
         """
+        # Must reinforce 'noop' here as Defaults calls load() in init()
+        self._config.register(Defaults(data, formatter=noop))
 
     def load(self):
         """
@@ -108,3 +110,6 @@ class Config(object):
             err += "\n\nValid real attributes: {0!r}".format(attrs)
             err += "\n\nValid keys: {0!r}".format(self._config.keys())
             raise AttributeError(err)
+
+    def keys(self):
+        pass
