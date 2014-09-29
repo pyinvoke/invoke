@@ -2,6 +2,7 @@ from spec import Spec, eq_, skip, trap
 from mock import Mock, call as mock_call
 
 from invoke.collection import Collection
+from invoke.config import Config
 from invoke.context import Context
 from invoke.executor import Executor
 from invoke.tasks import Task, ctask, call
@@ -253,7 +254,9 @@ bar
         class system_global:
             "Systemwide conf file"
             def yaml_first(self):
-                skip()
+                c = Config(global_path='_support/configs/global')
+                c.load()
+                eq_(c.hooray, 'configuration')
 
             def json_if_no_yaml(self):
                 skip()
