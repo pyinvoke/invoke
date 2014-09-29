@@ -31,7 +31,11 @@ class Config(object):
 
     def __init__(self):
         """
-        Creates a new config object, but does not load any config files.
+        Creates a new config object, but does not load any configuration data.
+
+        .. note::
+            To load configuration data, call `~.Config.load` after
+            initialization.
 
         For convenience, keyword arguments not listed below will be interpreted
         as top-level configuration keys, so one may say e.g.::
@@ -55,3 +59,13 @@ class Config(object):
 
             Default: ``~/.invoke`` (e.g. ``~/.invoke.yaml``).
         """
+        pass
+
+    def load(self):
+        """
+        Performs loading and merging of all config sources.
+
+        See :ref:`config-hierarchy` for details on load order and file
+        locations.
+        """
+        pass
