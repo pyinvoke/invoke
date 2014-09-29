@@ -254,7 +254,7 @@ bar
         class system_global:
             "Systemwide conf file"
             def yaml_first(self):
-                c = Config(global_path='_support/configs/global')
+                c = Config(global_prefix='_support/configs/global')
                 c.load()
                 eq_(c.hooray, 'configuration')
 

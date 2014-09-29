@@ -1,8 +1,15 @@
-from spec import Spec, skip, eq_
+from spec import Spec, skip, eq_, ok_
 
 from invoke.vendor.etcaetera.adapter import File
 
 from invoke.config import Config
+
+
+def loads_path(c, path):
+    files = [x for x in c._config.adapters if isinstance(x, File)]
+    paths = [x.filepath for x in files]
+    found = any(x == path for x in paths)
+    ok_(found, "{0!r} not found, file adapters: {1!r}".format(path, paths))
 
 
 class Config_(Spec):
@@ -15,11 +22,14 @@ class Config_(Spec):
         def configure_global_location_prefix(self):
             # This is a bit funky but more useful than just replicating the
             # same test in Executor?
-            c = Config(global_path='meh')
-            ok_(any(isinstance(x, File) and x.filepath == 'meh', c.adapters))
+            c = Config(global_prefix='meh')
+            loads_path(c, 'meh.yaml')
 
         def default_global_prefix_is_etc(self):
-            skip()
+            # TODO: make this work on Windows somehow without being a total
+            # tautology? heh.
+            c = Config()
+            loads_path(c, '/etc/invoke.yaml')
 
         def configure_user_location_prefix(self):
             skip()
@@ -33,7 +43,7 @@ class Config_(Spec):
         def does_not_trigger_config_loading(self):
             skip()
 
-    def allows_explicit_loading(self):
+    def requires_explicit_loading(self):
         skip()
 
     def allows_modification_of_defaults(self):

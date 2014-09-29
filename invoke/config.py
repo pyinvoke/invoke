@@ -1,3 +1,5 @@
+from os.path import abspath
+
 from .vendor.etcaetera.config import Config as EtcConfig
 from .vendor.etcaetera.adapter import File
 
@@ -34,7 +36,7 @@ class Config(object):
        config.foo.bar
     """
 
-    def __init__(self):
+    def __init__(self, global_prefix=None):
         """
         Creates a new config object, but does not load any configuration data.
 
@@ -52,10 +54,6 @@ class Config(object):
             Path & partial filename for the global config file location. Should
             include everything but the dot & file extension.
             
-            The final result (including extension) will be turned into a fully
-            qualified file path and have system-appropriate expansion performed
-            (tildes and so forth).
-            
             Default: ``/etc/invoke`` (e.g. ``/etc/invoke.yaml`` or
             ``/etc/invoke.json``).
 
@@ -64,7 +62,10 @@ class Config(object):
 
             Default: ``~/.invoke`` (e.g. ``~/.invoke.yaml``).
         """
-        pass
+        c = EtcConfig()
+        path = global_prefix or '/etc/invoke'
+        c.register(File("{0}.yaml".format(path)))
+        self._config = c
 
     def load(self):
         """
