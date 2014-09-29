@@ -1,9 +1,9 @@
 from spec import Spec, eq_, skip, trap
 from mock import Mock, call as mock_call
 
+from invoke.collection import Collection
 from invoke.context import Context
 from invoke.executor import Executor
-from invoke.collection import Collection
 from invoke.tasks import Task, ctask, call
 
 from _utils import _output_eq, IntegrationSpec
