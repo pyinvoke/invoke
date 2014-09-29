@@ -127,6 +127,13 @@ class Executor(object):
         debug("Executing %r%s" % (task, (" as %s" % name) if name else ""))
         if task.contextualized:
             context = self.context.clone()
+            # TODO: this needs to be different because this collection based
+            # config needs to be *below* all the other values in the
+            # context/config object.
+            # But can it still just be a single method call in this location?
+            # Probably becomes: add Defaults to copy of base config, + calls
+            # Config.load() to perform actual loading. (This may mean
+            # loading conf files multiple times? eh)
             context.update(self.collection.configuration(name))
             args = (context,) + args
         result = task(*args, **kwargs)
