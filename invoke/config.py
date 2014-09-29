@@ -4,6 +4,15 @@ from .vendor.etcaetera.config import Config as EtcConfig
 from .vendor.etcaetera.adapter import File
 
 
+def noop(s):
+    """
+    No-op 'formatter' for etcaetera adapters.
+
+    For when we do not want auto upper/lower casing (currently, always).
+    """
+    return s
+
+
 class Config(object):
     """
     Invoke's primary configuration handling class.
@@ -62,7 +71,7 @@ class Config(object):
 
             Default: ``~/.invoke`` (e.g. ``~/.invoke.yaml``).
         """
-        c = EtcConfig()
+        c = EtcConfig(formatter=noop)
         path = global_prefix or '/etc/invoke'
         c.register(File("{0}.yaml".format(path)))
         self._config = c
