@@ -61,6 +61,22 @@ class Config_(Spec):
             # TODO: ditto
             skip()
 
+        def attr_access_has_useful_errr_msg(self):
+            c = Config()
+            c.load()
+            try:
+                c.nope
+            except AttributeError as e:
+                expected = """
+No attribute or config key found for 'nope'
+
+Valid real attributes: ['load']
+
+Valid keys: []""".lstrip()
+                eq_(str(e), expected)
+            else:
+                assert False, "Didn't get an AttributeError on bad key!"
+
     class system_global:
         "Systemwide conf file"
         def yaml_first(self):

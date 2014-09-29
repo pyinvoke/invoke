@@ -74,4 +74,15 @@ class Config(object):
         See :ref:`config-hierarchy` for details on load order and file
         locations.
         """
-        pass
+        return self._config.load()
+
+    def __getattr__(self, key):
+        try:
+            return self._config[key]
+        except KeyError:
+            # to conform with __getattr__ spec
+            err = "No attribute or config key found for {0!r}".format(key)
+            attrs = [x for x in dir(self.__class__) if not x.startswith('_')]
+            err += "\n\nValid real attributes: {0!r}".format(attrs)
+            err += "\n\nValid keys: {0!r}".format(self._config.keys())
+            raise AttributeError(err)
