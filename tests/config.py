@@ -13,7 +13,13 @@ class Config_(Spec):
         def configure_global_location_prefix(self):
             skip()
 
+        def default_global_prefix_is_etc(self):
+            skip()
+
         def configure_user_location_prefix(self):
+            skip()
+
+        def default_local_prefix_is_homedir(self):
             skip()
 
         def unknown_kwargs_turn_into_top_level_defaults(self):
