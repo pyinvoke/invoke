@@ -12,12 +12,10 @@ environment variables, :doc:`task namespaces </concepts/namespaces>` and CLI
 flags.
 
 The end result of configuration seeking, loading, parsing & merging, is an
-`etcaetera.Config
-<http://etcaetera.readthedocs.org/en/latest/howto.html#config-object>`_ object,
-which behaves like a (nested) Python dictionary. Invoke references this object
-when it runs (determining the default behavior of methods like `.Context.run`)
-and exposes it to users' tasks as `.Context.config` and as shorthand attribute
-access on the `.Context` itself.
+`etcaetera.Config`_ object, which behaves like a (nested) Python dictionary.
+Invoke references this object when it runs (determining the default behavior of
+methods like `.Context.run`) and exposes it to users' tasks as
+`.Context.config` and as shorthand attribute access on the `.Context` itself.
 
 
 .. _config-hierarchy:
@@ -377,6 +375,7 @@ additional configuration methods which may be suitable depending on your needs.
 
 
 .. _etcaetera: http://etcaetera.readthedocs.org/en/0.4.0
+.. _etcaetera.Config: http://etcaetera.readthedocs.org/en/0.4.0/howto.html#config-object
 
 .. rubric:: Footnotes
 
