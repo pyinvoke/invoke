@@ -39,7 +39,7 @@ class Context_(Spec):
         def setup(self):
             self.c = Context(config={'foo': 'bar'})
 
-        def direct_access(self):
+        def direct_access_allowed(self):
             eq_(self.c.config.__class__, Config)
             eq_(self.c.config['foo'], 'bar')
             eq_(self.c.config.foo, 'bar')
