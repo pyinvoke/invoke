@@ -49,7 +49,7 @@ class Config_(Spec):
         def requires_explicit_loading(self):
             skip()
 
-        def allows_modification_of_defaults(self):
+        def can_set_defaults_after_initialization(self):
             # Something light which wraps self._config.defaults[k] = v
             c = Config()
             c.set_defaults({'foo': 'bar'})
@@ -83,20 +83,26 @@ Valid keys: []""".lstrip()
         def loaded_keys_are_not_case_munged(self):
             # Looks tautological, but ensures we're suppressing etcaetera's
             # default UPPERCASE_EVERYTHING behavior
-            c = Config()
             d = {'FOO': 'bar', 'biz': 'baz', 'Boz': 'buzz'}
-            c.set_defaults(d)
+            c = Config(**d)
+            c.load()
             for x in d:
-                ok_(x in c)
+                err = "Expected to find {0!r} in {1!r}, didn't"
+                ok_(x in c, err.format(x, c.keys()))
 
         def is_iterable_like_dict(self):
             def expect(c, expected):
                 eq_(set(c.keys()), expected)
                 eq_(set(list(c)), expected)
-            c = Config()
+            c = Config(a=1, b=2)
             expect(c, set())
-            c.set_defaults({'a': 1, 'b': 2})
+            c.load()
             expect(c, set(['a', 'b']))
+
+        def supports_membership_testing_like_dict(self):
+            c = Config(foo='bar')
+            c.load()
+            ok_('foo' in c, "Unable to find 'foo' in {0!r}".format(c))
 
     class system_global:
         "Systemwide conf file"
