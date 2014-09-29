@@ -77,6 +77,15 @@ Valid keys: []""".lstrip()
             else:
                 assert False, "Didn't get an AttributeError on bad key!"
 
+        def loaded_keys_are_not_case_munged(self):
+            # Looks tautological, but ensures we're suppressing etcaetera's
+            # default UPPERCASE_EVERYTHING behavior
+            c = Config()
+            d = {'FOO': 'bar', 'biz': 'baz', 'Boz': 'buzz'}
+            c.set_defaults(d)
+            for x in d:
+                ok_(x in c)
+
     class system_global:
         "Systemwide conf file"
         def yaml_first(self):
