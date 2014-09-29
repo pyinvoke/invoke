@@ -21,7 +21,7 @@ class Config_(Spec):
 
         def configure_global_location_prefix(self):
             # This is a bit funky but more useful than just replicating the
-            # same test in Executor?
+            # same test farther down?
             c = Config(global_prefix='meh')
             loads_path(c, 'meh.yaml')
 
@@ -43,17 +43,132 @@ class Config_(Spec):
         def does_not_trigger_config_loading(self):
             skip()
 
-    def requires_explicit_loading(self):
+    class basic_API:
+        "Basic API components"
+
+        def requires_explicit_loading(self):
+            skip()
+
+        def allows_modification_of_defaults(self):
+            # Something light which wraps self._config.defaults[k] = v
+            skip()
+
+        def allows_dict_and_attr_access(self):
+            # TODO: combine with tests for Context probably
+            skip()
+
+        def nested_dict_values_also_allow_dual_access(self):
+            # TODO: ditto
+            skip()
+
+    class system_global:
+        "Systemwide conf file"
+        def yaml_first(self):
+            c = Config(global_prefix='_support/configs/global')
+            c.load()
+            eq_(c.hooray, 'configuration')
+
+        def json_if_no_yaml(self):
+            skip()
+
+        def python_if_no_json_or_yaml(self):
+            skip()
+
+    class user_specific:
+        "User-specific conf file"
+        def yaml_first(self):
+            skip()
+
+        def json_if_no_yaml(self):
+            skip()
+
+        def python_if_no_json_or_yaml(self):
+            skip()
+
+    class project_specific:
+        "Local-to-project conf file"
+        def yaml_first(self):
+            skip()
+
+        def json_if_no_yaml(self):
+            skip()
+
+        def python_if_no_json_or_yaml(self):
+            skip()
+
+    def honors_conf_file_flag(self):
         skip()
 
-    def allows_modification_of_defaults(self):
-        # Something light which wraps self._config.defaults[k] = v
-        skip()
+    class env_vars:
+        "Environment variables"
+        def base_case(self):
+            # FOO=bar
+            skip()
 
-    def allows_dict_and_attr_access(self):
-        # TODO: combine with tests for Context probably
-        skip()
+        def throws_error_on_undefined_settings(self):
+            skip()
 
-    def nested_dict_values_also_allow_dual_access(self):
-        # TODO: ditto
-        skip()
+        def underscores_top_level(self):
+            # FOO_BAR=biz => {'foo_bar': 'biz'}
+            skip()
+
+        def underscores_nested(self):
+            # FOO_BAR=biz => {'foo': {'bar': 'biz'}}
+            skip()
+
+        def both_underscores(self):
+            # FOO_BAR_BIZ=baz => {'foo_bar': {'biz': 'baz'}}
+            skip()
+
+    class hierarchy:
+        "Config hierarchy in effect"
+        def systemwide_overrides_collection(self):
+            skip()
+
+        def user_overrides_systemwide(self):
+            skip()
+
+        def user_overrides_collection(self):
+            skip()
+
+        def project_overrides_user(self):
+            skip()
+
+        def project_overrides_systemwide(self):
+            skip()
+
+        def project_overrides_collection(self):
+            skip()
+
+        def env_vars_override_project(self):
+            skip()
+
+        def env_vars_override_user(self):
+            skip()
+
+        def env_vars_override_systemwide(self):
+            skip()
+
+        def env_vars_override_collection(self):
+            skip()
+
+        def runtime_overrides_env_vars(self):
+            skip()
+
+        def runtime_overrides_project(self):
+            skip()
+
+        def runtime_overrides_user(self):
+            skip()
+
+        def runtime_overrides_systemwide(self):
+            skip()
+
+        def runtime_overrides_collection(self):
+            skip()
+
+        def e_flag_overrides_all(self):
+            "-e overrides run.echo for all other layers"
+            skip()
+
+

@@ -210,157 +210,42 @@ bar
             # Does not call the second t1(5)
             body.assert_has_calls([mock_call(5), mock_call(7)])
 
+    class collection_driven_config:
+        "Collection-driven config concerns"
+        def hands_collection_configuration_to_context(self):
+            @ctask
+            def mytask(ctx):
+                eq_(ctx.my_key, 'value')
+            c = Collection(mytask)
+            c.configure({'my_key': 'value'})
+            Executor(collection=c, context=Context()).execute('mytask')
 
-    class configuration:
-        "Configuration loading & overriding"
+        def hands_task_specific_configuration_to_context(self):
+            @ctask
+            def mytask(ctx):
+                eq_(ctx.my_key, 'value')
+            @ctask
+            def othertask(ctx):
+                eq_(ctx.my_key, 'othervalue')
+            inner1 = Collection('inner1', mytask)
+            inner1.configure({'my_key': 'value'})
+            inner2 = Collection('inner2', othertask)
+            inner2.configure({'my_key': 'othervalue'})
+            c = Collection(inner1, inner2)
+            e = Executor(collection=c, context=Context())
+            e.execute('inner1.mytask', 'inner2.othertask')
 
-        class collection_driven:
-            "Collection-driven config concerns"
-            def hands_collection_configuration_to_context(self):
-                @ctask
-                def mytask(ctx):
-                    eq_(ctx.my_key, 'value')
-                c = Collection(mytask)
-                c.configure({'my_key': 'value'})
-                Executor(collection=c, context=Context()).execute('mytask')
-
-            def hands_task_specific_configuration_to_context(self):
-                @ctask
-                def mytask(ctx):
-                    eq_(ctx.my_key, 'value')
-                @ctask
-                def othertask(ctx):
-                    eq_(ctx.my_key, 'othervalue')
-                inner1 = Collection('inner1', mytask)
-                inner1.configure({'my_key': 'value'})
-                inner2 = Collection('inner2', othertask)
-                inner2.configure({'my_key': 'othervalue'})
-                c = Collection(inner1, inner2)
-                e = Executor(collection=c, context=Context())
-                e.execute('inner1.mytask', 'inner2.othertask')
-
-            def subcollection_config_works_with_default_tasks(self):
-                @ctask(default=True)
-                def mytask(ctx):
-                    eq_(ctx.my_key, 'value')
-                # Sets up a task "known as" sub.mytask which may be called as
-                # just 'sub' due to being default.
-                sub = Collection('sub', mytask=mytask)
-                sub.configure({'my_key': 'value'})
-                main = Collection(sub=sub)
-                # Execute via collection default 'task' name.
-                Executor(collection=main, context=Context()).execute('sub')
-
-        class system_global:
-            "Systemwide conf file"
-            def yaml_first(self):
-                c = Config(global_prefix='_support/configs/global')
-                c.load()
-                eq_(c.hooray, 'configuration')
-
-            def json_if_no_yaml(self):
-                skip()
-
-            def python_if_no_json_or_yaml(self):
-                skip()
-
-        class user_specific:
-            "User-specific conf file"
-            def yaml_first(self):
-                skip()
-
-            def json_if_no_yaml(self):
-                skip()
-
-            def python_if_no_json_or_yaml(self):
-                skip()
-
-        class project_specific:
-            "Local-to-project conf file"
-            def yaml_first(self):
-                skip()
-
-            def json_if_no_yaml(self):
-                skip()
-
-            def python_if_no_json_or_yaml(self):
-                skip()
-
-        def honors_conf_file_flag(self):
-            skip()
-
-        class env_vars:
-            "Environment variables"
-            def base_case(self):
-                # FOO=bar
-                skip()
-
-            def throws_error_on_undefined_settings(self):
-                skip()
-
-            def underscores_top_level(self):
-                # FOO_BAR=biz => {'foo_bar': 'biz'}
-                skip()
-
-            def underscores_nested(self):
-                # FOO_BAR=biz => {'foo': {'bar': 'biz'}}
-                skip()
-
-            def both_underscores(self):
-                # FOO_BAR_BIZ=baz => {'foo_bar': {'biz': 'baz'}}
-                skip()
-
-        class hierarchy:
-            "Config hierarchy in effect"
-            def systemwide_overrides_collection(self):
-                skip()
-
-            def user_overrides_systemwide(self):
-                skip()
-
-            def user_overrides_collection(self):
-                skip()
-
-            def project_overrides_user(self):
-                skip()
-
-            def project_overrides_systemwide(self):
-                skip()
-
-            def project_overrides_collection(self):
-                skip()
-
-            def env_vars_override_project(self):
-                skip()
-
-            def env_vars_override_user(self):
-                skip()
-
-            def env_vars_override_systemwide(self):
-                skip()
-
-            def env_vars_override_collection(self):
-                skip()
-
-            def runtime_overrides_env_vars(self):
-                skip()
-
-            def runtime_overrides_project(self):
-                skip()
-
-            def runtime_overrides_user(self):
-                skip()
-
-            def runtime_overrides_systemwide(self):
-                skip()
-
-            def runtime_overrides_collection(self):
-                skip()
-
-            def e_flag_overrides_all(self):
-                "-e overrides run.echo for all other layers"
-                skip()
-
+        def subcollection_config_works_with_default_tasks(self):
+            @ctask(default=True)
+            def mytask(ctx):
+                eq_(ctx.my_key, 'value')
+            # Sets up a task "known as" sub.mytask which may be called as
+            # just 'sub' due to being default.
+            sub = Collection('sub', mytask=mytask)
+            sub.configure({'my_key': 'value'})
+            main = Collection(sub=sub)
+            # Execute via collection default 'task' name.
+            Executor(collection=main, context=Context()).execute('sub')
 
     class returns_return_value_of_specified_task:
         def base_case(self):
