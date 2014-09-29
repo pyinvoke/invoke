@@ -21,6 +21,11 @@ class Config(object):
 
         config.foo
 
+    .. warning::
+        Any "real" attributes (methods, etc) on `Config` take precedence over
+        settings values - so if you e.g. have a top level setting named
+        ``load``, you *must* use dict syntax to access it.
+
     Nesting works the same way - dict config values are transparently turned
     into objects which honor both the dictionary protocol and the
     attribute-access method::
