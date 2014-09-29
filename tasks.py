@@ -72,6 +72,12 @@ def sites(c):
 
 @task
 def watch(c):
+    """
+    Watch both doc trees & rebuild them if files change.
+
+    This includes e.g. rebuilding the API docs if the source code changes;
+    rebuilding the WWW docs if the README changes; etc.
+    """
     try:
         from watchdog.observers import Observer
         from watchdog.events import RegexMatchingEventHandler
