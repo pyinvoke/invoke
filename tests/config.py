@@ -1,5 +1,7 @@
 from spec import Spec, skip, eq_
 
+from invoke.vendor.etcaetera.adapter import File
+
 from invoke.config import Config
 
 
@@ -8,10 +10,13 @@ class Config_(Spec):
         "__init__"
 
         def can_be_empty(self):
-            skip()
+            eq_(Config().__class__, Config) # derp
 
         def configure_global_location_prefix(self):
-            skip()
+            # This is a bit funky but more useful than just replicating the
+            # same test in Executor?
+            c = Config(global_path='meh')
+            ok_(any(isinstance(x, File) and x.filepath == 'meh', c.adapters))
 
         def default_global_prefix_is_etc(self):
             skip()
