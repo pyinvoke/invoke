@@ -51,7 +51,10 @@ class Config_(Spec):
 
         def allows_modification_of_defaults(self):
             # Something light which wraps self._config.defaults[k] = v
-            skip()
+            c = Config()
+            c.set_defaults({'foo': 'bar'})
+            c.load()
+            eq_(c.foo, 'bar')
 
         def allows_dict_and_attr_access(self):
             # TODO: combine with tests for Context probably

@@ -76,6 +76,19 @@ class Config(object):
         c.register(File("{0}.yaml".format(path)))
         self._config = c
 
+    def set_defaults(self, data):
+        """
+        Assign ``data`` as the default configuration.
+
+        .. warning::
+            Use of `.Config.load` is required to update the internal
+            configuration data, even if you've called it previously this
+            session. Failure to do so will result in stale data.
+
+        :param dict data:
+            Dictionary to use as the default data set for this configuration.
+        """
+
     def load(self):
         """
         Performs loading and merging of all config sources.
