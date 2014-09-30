@@ -1,6 +1,6 @@
 from spec import Spec, skip, eq_, ok_
 
-from invoke.vendor.etcaetera.adapter import File
+from invoke.vendor.etcaetera.adapter import File, Adapter
 
 from invoke.config import Config
 
@@ -40,6 +40,11 @@ class Config_(Spec):
         def unknown_kwargs_turn_into_top_level_defaults(self):
             skip()
 
+        def accepts_explicit_adapter_override_list(self):
+            c = Config(adapters=[])
+            # Slightly encapsulation-breaking. Meh.
+            eq_(len(c._config.adapters, 0))
+
         def does_not_trigger_config_loading(self):
             skip()
 
@@ -47,7 +52,12 @@ class Config_(Spec):
         "Basic API components"
 
         def requires_explicit_loading(self):
-            skip()
+            # Cuz automatic loading could potentially be surprising.
+            # Meh-tastic no-exception-raised test.
+            class DummyAdapter(Adapter):
+                def load(self, *args, **kwargs):
+                    raise Exception("I shouldn't have been called!")
+            c = Config(adapters=[DummyAdapter()])
 
         def can_set_defaults_after_initialization(self):
             # Something light which wraps self._config.defaults[k] = v

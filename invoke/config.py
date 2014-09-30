@@ -70,6 +70,14 @@ class Config(object):
             Like ``global_prefix`` but for the per-user config file.
 
             Default: ``~/.invoke`` (e.g. ``~/.invoke.yaml``).
+
+        :param iterable adapters:
+            An iterable of `Adapters` to use instead of the default :ref:`hierarchy <config-hierarchy>`.
+
+            If this option is given, ``global_prefix`` and ``user_prefix`` will
+            be ignored.
+
+        .. _Adapters: http://etcaetera.readthedocs.org/en/0.4.0/howto.html#adapters
         """
         c = EtcConfig(formatter=noop)
         path = global_prefix or '/etc/invoke'
