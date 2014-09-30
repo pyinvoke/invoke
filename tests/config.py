@@ -133,14 +133,14 @@ Valid keys: []""".lstrip()
             c.load()
             expect(c, set(['a', 'b']))
 
-        def supports_membership_testing_like_dict(self):
-            c = Config(foo='bar')
+        def supports_rest_of_dict_protocol(self):
+            c = Config(foo='bar', biz={'baz': 'boz'})
+            c2 = Config(foo='bar', biz={'baz': 'boz'})
             c.load()
-            ok_('foo' in c, "Unable to find 'foo' in {0!r}".format(c))
-
-        def supports_rest_of_dict_protocol_like_values(self):
-            # TODO: more tests here
-            skip()
+            c2.load()
+            ok_('foo' in c, "Membership failed")
+            eq_(c, c2, "Equality failed")
+            eq_(len(c), 2, "Length failed")
 
     class system_global:
         "Systemwide conf file"
