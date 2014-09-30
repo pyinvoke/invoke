@@ -1,3 +1,5 @@
+from os.path import join
+
 from spec import Spec, skip, eq_, ok_
 
 from invoke.vendor.etcaetera.adapter import File, Adapter
@@ -10,6 +12,13 @@ def loads_path(c, path):
     paths = [x.filepath for x in files]
     found = any(x == path for x in paths)
     ok_(found, "{0!r} not found, file adapters: {1!r}".format(path, paths))
+
+def load_global(path):
+    c = Config(
+        global_prefix=join('tests', '_support', 'configs', 'global', path)
+    )
+    c.load()
+    return c
 
 
 class Config_(Spec):
@@ -171,18 +180,15 @@ Valid keys: []""".lstrip()
     class system_global:
         "Systemwide conf file"
         def yaml_first(self):
-            c = Config(global_prefix='tests/_support/configs/global')
-            c.load()
+            c = load_global(join('yaml-only', 'invoke'))
             eq_(c.hooray, 'yaml')
 
         def json_if_no_yaml(self):
-            c = Config(global_prefix='tests/_support/configs/jsonglobal')
-            c.load()
+            c = load_global(join('json-only', 'invoke'))
             eq_(c.hooray, 'json')
 
         def python_if_no_json_or_yaml(self):
-            c = Config(global_prefix='tests/_support/configs/pyglobal')
-            c.load()
+            c = load_global(join('py-only', 'invoke'))
             eq_(c.hooray, 'python')
 
     class user_specific:

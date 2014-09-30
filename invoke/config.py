@@ -180,6 +180,8 @@ class Config(DualAccess):
         # The Hierarchy
         else:
             c.register(File("{0}.yaml".format(global_prefix)))
+            c.register(File("{0}.json".format(global_prefix)))
+            c.register(File("{0}.py".format(global_prefix)))
             c.register(File("{0}.yaml".format(user_prefix)))
         # Init-time defaults
         self._config = c
