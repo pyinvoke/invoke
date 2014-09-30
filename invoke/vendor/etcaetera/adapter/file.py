@@ -11,8 +11,9 @@ from ..constants import (
 
 
 class File(Adapter):
-    def __init__(self, filepath, *args, **kwargs):
+    def __init__(self, filepath, python_uppercase=True, *args, **kwargs):
         self.filepath = filepath
+        self.python_uppercase = python_uppercase
 
         # If strict parameter (inherited from parent) is True,
         # strictness_check routine will be called
@@ -45,7 +46,11 @@ class File(Adapter):
             self.data = dict((self.format(k, formatter), v) for k, v in yaml.load(fd, Loader=yaml.Loader).items())
         elif file_extension.lower() in PYTHON_EXTENSIONS:
             mod = imp.load_source('mod', self.filepath)
-            self.data = dict((self.format(k, formatter), v) for k, v in vars(mod).items() if k.isupper())
+            self.data = dict(
+                (self.format(k, formatter), v)
+                for k, v in vars(mod).items()
+                if (k.isupper() if self.python_uppercase else True)
+            )
         else:
             raise ValueError("Unhandled file extension {0}".format(file_extension))
 
