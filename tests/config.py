@@ -87,7 +87,16 @@ class Config_(Spec):
 
         def nested_dict_values_also_allow_dual_access(self):
             # TODO: ditto
-            skip()
+            c = Config(foo='bar', biz={'baz': 'boz'})
+            c.load()
+            # Sanity check - nested doesn't somehow kill simple top level
+            eq_(c.foo, 'bar')
+            eq_(c['foo'], 'bar')
+            # Actual check
+            eq_(c.biz.baz, 'boz')
+            eq_(c['biz']['baz'], 'boz')
+            eq_(c.biz['baz'], 'boz')
+            eq_(c['biz'].baz, 'boz')
 
         def attr_access_has_useful_errr_msg(self):
             c = Config()
