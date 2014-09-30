@@ -28,14 +28,14 @@ class Config_(Spec):
         def default_global_prefix_is_etc(self):
             # TODO: make this work on Windows somehow without being a total
             # tautology? heh.
-            c = Config()
-            loads_path(c, '/etc/invoke.yaml')
+            loads_path(Config(), '/etc/invoke.yaml')
 
         def configure_user_location_prefix(self):
-            skip()
+            c = Config(user_prefix='whatever')
+            loads_path(c, 'whatever.yaml')
 
         def default_local_prefix_is_homedir(self):
-            skip()
+            loads_path(Config(), '~/.invoke.yaml')
 
         def unknown_kwargs_turn_into_top_level_defaults(self):
             c = Config(foo='bar')
