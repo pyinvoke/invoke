@@ -46,18 +46,21 @@ class Config_(Spec):
             eq_(len(c._config.adapters, 0))
 
         def does_not_trigger_config_loading(self):
-            skip()
-
-    class basic_API:
-        "Basic API components"
-
-        def requires_explicit_loading(self):
             # Cuz automatic loading could potentially be surprising.
             # Meh-tastic no-exception-raised test.
             class DummyAdapter(Adapter):
                 def load(self, *args, **kwargs):
                     raise Exception("I shouldn't have been called!")
             c = Config(adapters=[DummyAdapter()])
+
+    class basic_API:
+        "Basic API components"
+
+        def load_method_is_an_thing(self):
+            # Kinda duplicative but meh, nice and explicit.
+            c = Config(default='value')
+            c.load()
+            eq_(c.default, 'value')
 
         def can_set_defaults_after_initialization(self):
             # Something light which wraps self._config.defaults[k] = v
