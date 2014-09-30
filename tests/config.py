@@ -87,7 +87,7 @@ class Config_(Spec):
                 expected = """
 No attribute or config key found for 'nope'
 
-Valid real attributes: ['load']
+Valid real attributes: ['keys', 'load', 'set_defaults']
 
 Valid keys: []""".lstrip()
                 eq_(str(e), expected)
