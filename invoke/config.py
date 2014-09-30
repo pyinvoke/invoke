@@ -135,4 +135,7 @@ class Config(object):
             raise AttributeError(err)
 
     def keys(self):
-        pass
+        return self._config.keys()
+
+    def __iter__(self):
+        return iter(self._config)
