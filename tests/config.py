@@ -194,15 +194,15 @@ Valid keys: []""".lstrip()
         "User-specific conf file"
         def yaml_first(self):
             c = _load('user', join('yaml-only', '.invoke'))
-            eq_(c.hooray, 'yaml')
+            eq_(c.user, 'yaml')
 
         def json_if_no_yaml(self):
             c = _load('user', join('json-only', '.invoke'))
-            eq_(c.hooray, 'json')
+            eq_(c.user, 'json')
 
         def python_if_no_json_or_yaml(self):
             c = _load('user', join('python-only', '.invoke'))
-            eq_(c.hooray, 'python')
+            eq_(c.user, 'python')
 
     class project_specific:
         "Local-to-project conf file"
