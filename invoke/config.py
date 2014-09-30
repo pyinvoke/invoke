@@ -141,3 +141,6 @@ class Config(object):
 
     def __iter__(self):
         return iter(self._config)
+
+    def __getitem__(self, key):
+        return self._config[key]

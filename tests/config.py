@@ -80,7 +80,10 @@ class Config_(Spec):
 
         def allows_dict_and_attr_access(self):
             # TODO: combine with tests for Context probably
-            skip()
+            c = Config(foo='bar')
+            c.load()
+            eq_(c.foo, 'bar')
+            eq_(c['foo'], 'bar')
 
         def nested_dict_values_also_allow_dual_access(self):
             # TODO: ditto
