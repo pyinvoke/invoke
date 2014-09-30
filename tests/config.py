@@ -38,7 +38,8 @@ class Config_(Spec):
             skip()
 
         def unknown_kwargs_turn_into_top_level_defaults(self):
-            skip()
+            c = Config(foo='bar')
+            eq_(c._config.defaults['foo'], 'bar')
 
         def accepts_explicit_adapter_override_list(self):
             c = Config(adapters=[])
