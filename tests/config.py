@@ -173,13 +173,17 @@ Valid keys: []""".lstrip()
         def yaml_first(self):
             c = Config(global_prefix='tests/_support/configs/global')
             c.load()
-            eq_(c.hooray, 'configuration')
+            eq_(c.hooray, 'yaml')
 
         def json_if_no_yaml(self):
-            skip()
+            c = Config(global_prefix='tests/_support/configs/jsonglobal')
+            c.load()
+            eq_(c.hooray, 'json')
 
         def python_if_no_json_or_yaml(self):
-            skip()
+            c = Config(global_prefix='tests/_support/configs/pyglobal')
+            c.load()
+            eq_(c.hooray, 'python')
 
     class user_specific:
         "User-specific conf file"
