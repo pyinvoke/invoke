@@ -179,14 +179,11 @@ class Config(DualAccess):
             c.register(*adapters)
         # The Hierarchy
         else:
-            c.register(File("{0}.yaml".format(global_prefix)))
-            c.register(File("{0}.json".format(global_prefix)))
-            py = File("{0}.py".format(global_prefix), python_uppercase=False)
-            c.register(py)
-            c.register(File("{0}.yaml".format(user_prefix)))
-            c.register(File("{0}.json".format(user_prefix)))
-            py = File("{0}.py".format(user_prefix), python_uppercase=False)
-            c.register(py)
+            for prefix in (global_prefix, user_prefix):
+                c.register(File("{0}.yaml".format(prefix)))
+                c.register(File("{0}.json".format(prefix)))
+                py = File("{0}.py".format(prefix), python_uppercase=False)
+                c.register(py)
         # Init-time defaults
         self._config = c
         self.set_defaults(kwargs)
