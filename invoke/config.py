@@ -97,6 +97,11 @@ class Config(object):
         Assign ``data`` as the default configuration.
 
         .. warning::
+            If values were also given during `~.Config.__init__`, they will
+            be **overridden** by the ``data`` given to this method - no merging
+            will occur.
+
+        .. warning::
             Use of `.Config.load` is required to update the internal
             configuration data, even if you've called it previously this
             session. Failure to do so will result in stale data.

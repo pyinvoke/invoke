@@ -70,6 +70,13 @@ class Config_(Spec):
             c.load()
             eq_(c.foo, 'bar')
 
+        def set_defaults_overrides_convenience_kwargs(self):
+            c = Config(foo='bar')
+            c.set_defaults({'biz': 'baz'})
+            c.load()
+            ok_('foo' not in c, "Expected {0!r} not to include 'foo'!")
+            ok_('biz' in c, "Expected {0!r} to include 'biz'!")
+
         def allows_dict_and_attr_access(self):
             # TODO: combine with tests for Context probably
             skip()
