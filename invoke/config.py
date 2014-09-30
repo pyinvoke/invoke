@@ -18,6 +18,31 @@ class DualAccess(object):
     """
     Helper class implementing nested dict+attr access for `.Config`.
     """
+
+    # Attributes which get proxied through to inner etc.Config obj.
+    _proxies = tuple("""
+        clear
+        get
+        has_key
+        items
+        iteritems
+        iterkeys
+        itervalues
+        keys
+        pop
+        popitem
+        setdefault
+        update
+        values
+    """.split()) + tuple("__{0}__".format(x) for x in """
+        cmp
+        contains
+        delitem
+        iter
+        setitem
+        sizeof
+    """.split())
+
     # Alt constructor used so we aren't getting in the way of Config's real
     # __init__().
     @classmethod
@@ -26,22 +51,37 @@ class DualAccess(object):
         obj._config = data
         return obj
 
-    def keys(self):
-        return self._config.keys()
-
     def __getattr__(self, key):
         try:
             return self._get(key)
         except KeyError:
-            # to conform with __getattr__ spec
+            # Proxy most special vars to _config for dict procotol.
+            if key in self._proxies:
+                return getattr(self._config, key)
+            # Otherwise, raise useful AttributeError to follow getattr proto.
             err = "No attribute or config key found for {0!r}".format(key)
             attrs = [x for x in dir(self.__class__) if not x.startswith('_')]
             err += "\n\nValid real attributes: {0!r}".format(attrs)
             err += "\n\nValid keys: {0!r}".format(self._config.keys())
             raise AttributeError(err)
 
+    def __hasattr__(self, key):
+        return key in self._config or key in self._proxies
+
     def __iter__(self):
+        # For some reason Python is ignoring our __hasattr__ when determining
+        # whether we support __iter__. BOO
         return iter(self._config)
+
+    def __eq__(self, other):
+        # Can't proxy __eq__ because the RHS will always be an obj of the
+        # current class, not the proxied-to class, and that causes
+        # NotImplemented.
+        return self._config == other._config
+
+    def __len__(self):
+        # Can't proxy __len__ either apparently? ugh
+        return len(self._config)
 
     def __getitem__(self, key):
         return self._get(key)
@@ -51,6 +91,8 @@ class DualAccess(object):
         if isinstance(value, DictType):
             value = DualAccess.from_data(value)
         return value
+
+    # TODO: copy()?
 
 
 class Config(DualAccess):

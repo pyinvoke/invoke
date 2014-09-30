@@ -107,7 +107,7 @@ class Config_(Spec):
                 expected = """
 No attribute or config key found for 'nope'
 
-Valid real attributes: ['from_data', 'keys', 'load', 'set_defaults']
+Valid real attributes: ['from_data', 'load', 'set_defaults']
 
 Valid keys: []""".lstrip()
                 eq_(str(e), expected)
@@ -134,13 +134,16 @@ Valid keys: []""".lstrip()
             expect(c, set(['a', 'b']))
 
         def supports_rest_of_dict_protocol(self):
-            c = Config(foo='bar', biz={'baz': 'boz'})
-            c2 = Config(foo='bar', biz={'baz': 'boz'})
+            c = Config(foo='bar')
+            c2 = Config(foo='bar')
             c.load()
             c2.load()
             ok_('foo' in c, "Membership failed")
             eq_(c, c2, "Equality failed")
-            eq_(len(c), 2, "Length failed")
+            eq_(len(c), 1, "Length failed")
+            eq_(c.get('foo'), 'bar')
+            eq_(c.has_key('foo'), True)
+            eq_(c.items(), [('foo', 'bar')])
 
     class system_global:
         "Systemwide conf file"
