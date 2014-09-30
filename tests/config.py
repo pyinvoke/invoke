@@ -13,10 +13,9 @@ def loads_path(c, path):
     found = any(x == path for x in paths)
     ok_(found, "{0!r} not found, file adapters: {1!r}".format(path, paths))
 
-def load_global(path):
-    c = Config(
-        global_prefix=join('tests', '_support', 'configs', 'global', path)
-    )
+def _load(key, path):
+    path = join('tests', '_support', 'configs', key, path)
+    c = Config(**{'{0}_prefix'.format(key): path})
     c.load()
     return c
 
@@ -180,15 +179,15 @@ Valid keys: []""".lstrip()
     class system_global:
         "Systemwide conf file"
         def yaml_first(self):
-            c = load_global(join('yaml-only', 'invoke'))
+            c = _load('global', join('yaml-only', 'invoke'))
             eq_(c.hooray, 'yaml')
 
         def json_if_no_yaml(self):
-            c = load_global(join('json-only', 'invoke'))
+            c = _load('global', join('json-only', 'invoke'))
             eq_(c.hooray, 'json')
 
         def python_if_no_json_or_yaml(self):
-            c = load_global(join('python-only', 'invoke'))
+            c = _load('global', join('python-only', 'invoke'))
             eq_(c.hooray, 'python')
 
     class user_specific:
