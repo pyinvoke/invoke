@@ -77,12 +77,13 @@ class Config(DualAccess):
         settings values - so if you e.g. have a top level setting named
         ``load``, you *must* use dict syntax to access it.
 
-    Nesting works the same way - dict config values are transparently turned
-    into objects which honor both the dictionary protocol and the
-    attribute-access method::
+    Nesting works the same way - dict config values are turned into objects
+    which honor both the dictionary protocol and the attribute-access method::
 
        config['foo']['bar']
        config.foo.bar
+
+    This class implements the entire dictionary protocol.
     """
 
     def __init__(self, **kwargs):
