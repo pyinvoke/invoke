@@ -82,11 +82,14 @@ class Config(object):
         .. _Adapters: http://etcaetera.readthedocs.org/en/0.4.0/howto.html#adapters
         """
         c = EtcConfig(formatter=noop)
-        path = global_prefix or '/etc/invoke'
+        # Explicit adapter set
         if adapters is not None:
             c.register(*adapters)
+        # The Hierarchy
         else:
+            path = global_prefix or '/etc/invoke'
             c.register(File("{0}.yaml".format(path)))
+        # Init-time defaults
         self._config = c
 
     def set_defaults(self, data):
