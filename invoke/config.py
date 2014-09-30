@@ -1,4 +1,5 @@
 from os.path import abspath
+from types import DictType
 
 from .vendor.etcaetera.config import Config as EtcConfig
 from .vendor.etcaetera.adapter import File, Defaults
@@ -127,7 +128,7 @@ class Config(object):
 
     def __getattr__(self, key):
         try:
-            return self._config[key]
+            return self._get(key)
         except KeyError:
             # to conform with __getattr__ spec
             err = "No attribute or config key found for {0!r}".format(key)
@@ -143,4 +144,44 @@ class Config(object):
         return iter(self._config)
 
     def __getitem__(self, key):
-        return self._config[key]
+        return self._get(key)
+
+    def _get(self, key):
+        value = self._config[key]
+        if isinstance(value, DictType):
+            value = DualAccess(value)
+        return value
+
+
+class DualAccess(object):
+    """
+    Helper class implementing nested dict+attr access for `.Config`.
+    """
+    def __init__(self, data):
+        self._data = data
+
+    def __getattr__(self, key):
+        try:
+            return self._get(key)
+        except KeyError:
+            # to conform with __getattr__ spec
+            err = "No attribute or config key found for {0!r}".format(key)
+            attrs = [x for x in dir(self.__class__) if not x.startswith('_')]
+            err += "\n\nValid real attributes: {0!r}".format(attrs)
+            err += "\n\nValid keys: {0!r}".format(self._data.keys())
+            raise AttributeError(err)
+
+    def keys(self):
+        return self._data.keys()
+
+    def __iter__(self):
+        return iter(self._data)
+
+    def __getitem__(self, key):
+        return self._get(key)
+
+    def _get(self, key):
+        value = self._data[key]
+        if isinstance(value, DictType):
+            value = DualAccess(value)
+        return value
