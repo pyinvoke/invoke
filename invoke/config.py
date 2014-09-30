@@ -83,6 +83,7 @@ class Config(object):
         """
         adapters = kwargs.pop('adapters', None)
         global_prefix = kwargs.pop('global_prefix', '/etc/invoke')
+        user_prefix = kwargs.pop('user_prefix', '~/.invoke')
         c = EtcConfig(formatter=noop)
         # Explicit adapter set
         if adapters is not None:
@@ -90,6 +91,7 @@ class Config(object):
         # The Hierarchy
         else:
             c.register(File("{0}.yaml".format(global_prefix)))
+            c.register(File("{0}.yaml".format(user_prefix)))
         # Init-time defaults
         self._config = c
         self.set_defaults(kwargs)
