@@ -45,7 +45,7 @@ class Config(object):
        config.foo.bar
     """
 
-    def __init__(self, global_prefix=None):
+    def __init__(self, global_prefix=None, adapters=None):
         """
         Creates a new config object, but does not load any configuration data.
 
@@ -73,7 +73,8 @@ class Config(object):
             Default: ``~/.invoke`` (e.g. ``~/.invoke.yaml``).
 
         :param iterable adapters:
-            An iterable of `Adapters` to use instead of the default :ref:`hierarchy <config-hierarchy>`.
+            An iterable of `Adapters` to use instead of the default
+            :ref:`hierarchy <config-hierarchy>`.
 
             If this option is given, ``global_prefix`` and ``user_prefix`` will
             be ignored.
@@ -82,7 +83,10 @@ class Config(object):
         """
         c = EtcConfig(formatter=noop)
         path = global_prefix or '/etc/invoke'
-        c.register(File("{0}.yaml".format(path)))
+        if adapters is not None:
+            c.register(*adapters)
+        else:
+            c.register(File("{0}.yaml".format(path)))
         self._config = c
 
     def set_defaults(self, data):

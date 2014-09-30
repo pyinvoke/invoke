@@ -44,7 +44,7 @@ class Config_(Spec):
         def accepts_explicit_adapter_override_list(self):
             c = Config(adapters=[])
             # Slightly encapsulation-breaking. Meh.
-            eq_(len(c._config.adapters, 0))
+            eq_(len(c._config.adapters), 0)
 
         def does_not_trigger_config_loading(self):
             # Cuz automatic loading could potentially be surprising.
