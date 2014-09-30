@@ -109,9 +109,8 @@ For further details, see these languages' own documentation, and/or the
 documentation for etcaetera_ , whose drivers we use to load the files.
 
 .. note::
-    We make use of Etcaetera's ``lowercase`` adapter to ensure all config
-    names/keys end up presented to Invoke and your tasks as all-lowercase.
-    Values are untouched.
+    We use a "no-op" formatter to preserve key case sensitivity (``etcaetera``
+    defaults to forcing keys into uppercase).
 
 
 .. _env-vars:
