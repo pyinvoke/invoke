@@ -188,7 +188,7 @@ Valid keys: []""".lstrip()
             eq_(c.hooray, 'json')
 
         def python_if_no_json_or_yaml(self):
-            c = load_global(join('py-only', 'invoke'))
+            c = load_global(join('python-only', 'invoke'))
             eq_(c.hooray, 'python')
 
     class user_specific:
