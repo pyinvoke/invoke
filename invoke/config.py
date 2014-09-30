@@ -45,7 +45,7 @@ class Config(object):
        config.foo.bar
     """
 
-    def __init__(self, global_prefix=None, adapters=None):
+    def __init__(self, **kwargs):
         """
         Creates a new config object, but does not load any configuration data.
 
@@ -81,16 +81,18 @@ class Config(object):
 
         .. _Adapters: http://etcaetera.readthedocs.org/en/0.4.0/howto.html#adapters
         """
+        adapters = kwargs.pop('adapters', None)
+        global_prefix = kwargs.pop('global_prefix', '/etc/invoke')
         c = EtcConfig(formatter=noop)
         # Explicit adapter set
         if adapters is not None:
             c.register(*adapters)
         # The Hierarchy
         else:
-            path = global_prefix or '/etc/invoke'
-            c.register(File("{0}.yaml".format(path)))
+            c.register(File("{0}.yaml".format(global_prefix)))
         # Init-time defaults
         self._config = c
+        self.set_defaults(kwargs)
 
     def set_defaults(self, data):
         """
