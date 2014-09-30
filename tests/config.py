@@ -107,7 +107,7 @@ class Config_(Spec):
                 expected = """
 No attribute or config key found for 'nope'
 
-Valid real attributes: ['keys', 'load', 'set_defaults']
+Valid real attributes: ['from_data', 'keys', 'load', 'set_defaults']
 
 Valid keys: []""".lstrip()
                 eq_(str(e), expected)
@@ -137,6 +137,10 @@ Valid keys: []""".lstrip()
             c = Config(foo='bar')
             c.load()
             ok_('foo' in c, "Unable to find 'foo' in {0!r}".format(c))
+
+        def supports_rest_of_dict_protocol_like_values(self):
+            # TODO: more tests here
+            skip()
 
     class system_global:
         "Systemwide conf file"

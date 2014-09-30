@@ -14,7 +14,46 @@ def noop(s):
     return s
 
 
-class Config(object):
+class DualAccess(object):
+    """
+    Helper class implementing nested dict+attr access for `.Config`.
+    """
+    # Alt constructor used so we aren't getting in the way of Config's real
+    # __init__().
+    @classmethod
+    def from_data(cls, data):
+        obj = cls()
+        obj._config = data
+        return obj
+
+    def keys(self):
+        return self._config.keys()
+
+    def __getattr__(self, key):
+        try:
+            return self._get(key)
+        except KeyError:
+            # to conform with __getattr__ spec
+            err = "No attribute or config key found for {0!r}".format(key)
+            attrs = [x for x in dir(self.__class__) if not x.startswith('_')]
+            err += "\n\nValid real attributes: {0!r}".format(attrs)
+            err += "\n\nValid keys: {0!r}".format(self._config.keys())
+            raise AttributeError(err)
+
+    def __iter__(self):
+        return iter(self._config)
+
+    def __getitem__(self, key):
+        return self._get(key)
+
+    def _get(self, key):
+        value = self._config[key]
+        if isinstance(value, DictType):
+            value = DualAccess.from_data(value)
+        return value
+
+
+class Config(DualAccess):
     """
     Invoke's primary configuration handling class.
 
@@ -125,63 +164,3 @@ class Config(object):
         locations.
         """
         return self._config.load()
-
-    def __getattr__(self, key):
-        try:
-            return self._get(key)
-        except KeyError:
-            # to conform with __getattr__ spec
-            err = "No attribute or config key found for {0!r}".format(key)
-            attrs = [x for x in dir(self.__class__) if not x.startswith('_')]
-            err += "\n\nValid real attributes: {0!r}".format(attrs)
-            err += "\n\nValid keys: {0!r}".format(self._config.keys())
-            raise AttributeError(err)
-
-    def keys(self):
-        return self._config.keys()
-
-    def __iter__(self):
-        return iter(self._config)
-
-    def __getitem__(self, key):
-        return self._get(key)
-
-    def _get(self, key):
-        value = self._config[key]
-        if isinstance(value, DictType):
-            value = DualAccess(value)
-        return value
-
-
-class DualAccess(object):
-    """
-    Helper class implementing nested dict+attr access for `.Config`.
-    """
-    def __init__(self, data):
-        self._data = data
-
-    def __getattr__(self, key):
-        try:
-            return self._get(key)
-        except KeyError:
-            # to conform with __getattr__ spec
-            err = "No attribute or config key found for {0!r}".format(key)
-            attrs = [x for x in dir(self.__class__) if not x.startswith('_')]
-            err += "\n\nValid real attributes: {0!r}".format(attrs)
-            err += "\n\nValid keys: {0!r}".format(self._data.keys())
-            raise AttributeError(err)
-
-    def keys(self):
-        return self._data.keys()
-
-    def __iter__(self):
-        return iter(self._data)
-
-    def __getitem__(self, key):
-        return self._get(key)
-
-    def _get(self, key):
-        value = self._data[key]
-        if isinstance(value, DictType):
-            value = DualAccess(value)
-        return value
