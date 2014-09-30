@@ -57,6 +57,7 @@ class Config(object):
         as top-level configuration keys, so one may say e.g.::
         
             c = Config(my_setting='my_value')
+            c.load()
             print(c['my_setting']) # => 'my_value'
 
         :param str global_prefix:
