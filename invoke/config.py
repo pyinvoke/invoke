@@ -21,10 +21,10 @@ class Config(object):
     this class implements, including the :ref:`configuration hierarchy
     <config-hierarchy>`.
 
-    Lightly wraps ``etcaetera.config.Config``, allowing for another level of
-    configurability (re: which files are loaded and in what order) as well as
-    convenient access to configuration values, which may be accessed using
-    dict syntax::
+    This class lightly wraps ``etcaetera.config.Config``, allowing for another
+    level of configurability (re: which files are loaded and in what order) as
+    well as convenient access to configuration values, which may be accessed
+    using dict syntax::
 
         config['foo']
 
