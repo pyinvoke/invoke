@@ -37,9 +37,7 @@ class DualAccess(object):
     """.split()) + tuple("__{0}__".format(x) for x in """
         cmp
         contains
-        delitem
         iter
-        setitem
         sizeof
     """.split())
 
@@ -82,6 +80,14 @@ class DualAccess(object):
     def __len__(self):
         # Can't proxy __len__ either apparently? ugh
         return len(self._config)
+
+    def __setitem__(self, key, value):
+        # ... or __setitem__? thanks for nothing Python >:(
+        self._config[key] = value
+
+    def __delitem__(self, key):
+        # OK this is really getting annoying
+        del self._config[key]
 
     def __getitem__(self, key):
         return self._get(key)

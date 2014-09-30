@@ -133,17 +133,40 @@ Valid keys: []""".lstrip()
             c.load()
             expect(c, set(['a', 'b']))
 
-        def supports_rest_of_dict_protocol(self):
+        def supports_readonly_dict_protocols(self):
+            # Use single-keypair dict to avoid sorting problems in tests.
             c = Config(foo='bar')
             c2 = Config(foo='bar')
             c.load()
             c2.load()
-            ok_('foo' in c, "Membership failed")
-            eq_(c, c2, "Equality failed")
-            eq_(len(c), 1, "Length failed")
+            ok_('foo' in c)
+            eq_(c, c2)
+            eq_(len(c), 1)
             eq_(c.get('foo'), 'bar')
             eq_(c.has_key('foo'), True)
             eq_(c.items(), [('foo', 'bar')])
+            eq_(list(c.iteritems()), [('foo', 'bar')])
+            eq_(list(c.iterkeys()), ['foo'])
+            eq_(list(c.itervalues()), ['bar'])
+            eq_(c.keys(), ['foo'])
+            eq_(c.values(), ['bar'])
+
+        def supports_mutation_dict_protocols(self):
+            c = Config(foo='bar')
+            c.load()
+            eq_(c.pop('foo'), 'bar')
+            eq_(len(c), 0)
+            c.setdefault('biz', 'baz')
+            eq_(c['biz'], 'baz')
+            c['boz'] = 'buzz'
+            eq_(len(c), 2)
+            del c['boz']
+            eq_(len(c), 1)
+            ok_('boz' not in c)
+            eq_(c.popitem(), ('biz', 'baz'))
+            eq_(len(c), 0)
+            c.update({'foo': 'bar'})
+            eq_(c['foo'], 'bar')
 
     class system_global:
         "Systemwide conf file"
