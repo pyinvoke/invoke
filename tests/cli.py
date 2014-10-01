@@ -51,6 +51,11 @@ class CLI(IntegrationSpec):
         os.chdir('/')
         _output_eq('-l', stderr="Can't find any collection named 'tasks'!\n")
 
+    @trap
+    def missing_default_task_prints_help(self):
+        _dispatch("inv -c foo")
+        ok_("Core options:" in sys.stdout.getvalue())
+
     def contextualized_tasks_are_given_parser_context_arg(self):
         # go() in contextualized.py just returns its initial arg
         retval = list(_dispatch('invoke -c contextualized go').values())[0]
