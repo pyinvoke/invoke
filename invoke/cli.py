@@ -24,7 +24,7 @@ indent_num = 2
 indent = " " * indent_num
 
 
-def print_help(tuples):
+def print_columns(tuples):
     """
     Print tabbed columns from (name, help) tuples.
 
@@ -176,7 +176,7 @@ def parse(argv, collection=None, version=None):
         print("Usage: {0} [--core-opts] task1 [--task1-opts] ... taskN [--taskN-opts]".format(program_name))
         print("")
         print("Core options:")
-        print_help(initial_context.help_tuples())
+        print_columns(initial_context.help_tuples())
         raise Exit
 
     # Load collection (default or specified) and parse leftovers
@@ -224,7 +224,7 @@ def parse(argv, collection=None, version=None):
             print("")
         print("Options:")
         if tuples:
-            print_help(tuples)
+            print_columns(tuples)
         else:
             print(indent + "none")
             print("")
@@ -255,7 +255,7 @@ def parse(argv, collection=None, version=None):
 
         # Print
         print("Available tasks:\n")
-        print_help(pairs)
+        print_columns(pairs)
         raise Exit
 
     # Return to caller so they can handle the results
