@@ -70,6 +70,10 @@ class Collection_(Spec):
             ):
                 eq_(x, y)
 
+        def accepts_load_path_kwarg(self):
+            eq_(Collection(loaded_from='a/path').loaded_from, 'a/path')
+
+
     class useful_special_methods:
         def _meh(self):
             @task
