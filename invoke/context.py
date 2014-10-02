@@ -1,10 +1,10 @@
 from copy import deepcopy
 
 from .runner import run
-from .config import Config
+from .config import Config, DataProxy
 
 
-class Context(object):
+class Context(DataProxy):
     """
     Context-aware API wrapper & state-passing object.
 
@@ -72,11 +72,3 @@ class Context(object):
         options.update(kwargs)
         return run(*args, **options)
 
-    def __getitem__(self, *args, **kwargs):
-        return self.config.__getitem__(*args, **kwargs)
-
-    def get(self, *args, **kwargs):
-        return self.config.get(*args, **kwargs)
-
-    def update(self, *args, **kwargs):
-        return self.config.update(*args, **kwargs)
