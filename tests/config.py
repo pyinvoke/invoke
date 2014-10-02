@@ -218,10 +218,14 @@ Valid keys: []""".lstrip()
             eq_(c.project_setting, 'yaml')
 
         def json_if_no_yaml(self):
-            skip()
+            c = Config(project_home=join(CONFIGS_PATH, 'project', 'json-only'))
+            c.load()
+            eq_(c.project_setting, 'json')
 
         def python_if_no_json_or_yaml(self):
-            skip()
+            c = Config(project_home=join(CONFIGS_PATH, 'project', 'py-only'))
+            c.load()
+            eq_(c.project_setting, 'python')
 
         def loads_nothing_if_no_project_home_given(self):
             skip()
