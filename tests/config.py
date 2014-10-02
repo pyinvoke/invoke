@@ -213,9 +213,9 @@ Valid keys: []""".lstrip()
     class project_specific:
         "Local-to-project conf file"
         def yaml_first(self):
-            c = Config(project_home=join(CONFIGS_PATH, 'project'))
+            c = Config(project_home=join(CONFIGS_PATH, 'project', 'yaml-only'))
             c.load()
-            eq_(c.project_setting, 'yup')
+            eq_(c.project_setting, 'yaml')
 
         def json_if_no_yaml(self):
             skip()
