@@ -54,7 +54,6 @@ class Collection_(Spec):
             eq_(ns.collections['sub'], sub)
 
         def initial_string_arg_meshes_with_varargs_and_kwargs(self):
-            # Collection('myname', atask, acollection, othertask=taskobj, ...)
             @task
             def task1():
                 pass
