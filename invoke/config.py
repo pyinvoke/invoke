@@ -144,7 +144,7 @@ class Config(DataProxy):
             initialization.
 
         For convenience, keyword arguments not listed below will be interpreted
-        as top-level configuration keys, so one may say e.g.::
+        as top-level default configuration values, so one may say e.g.::
         
             c = Config(my_setting='my_value')
             c.load()
