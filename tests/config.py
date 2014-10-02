@@ -13,8 +13,10 @@ def loads_path(c, path):
     found = any(x == path for x in paths)
     ok_(found, "{0!r} not found, file adapters: {1!r}".format(path, paths))
 
+CONFIGS_PATH = join('tests', '_support', 'configs')
+
 def _load(key, path):
-    path = join('tests', '_support', 'configs', key, path)
+    path = join(CONFIGS_PATH, key, path)
     c = Config(**{'{0}_prefix'.format(key): path})
     c.load()
     return c
@@ -211,12 +213,17 @@ Valid keys: []""".lstrip()
     class project_specific:
         "Local-to-project conf file"
         def yaml_first(self):
-            skip()
+            c = Config(project_home=join(CONFIGS_PATH, 'project'))
+            c.load()
+            eq_(c.project_setting, 'yup')
 
         def json_if_no_yaml(self):
             skip()
 
         def python_if_no_json_or_yaml(self):
+            skip()
+
+        def loads_nothing_if_no_project_home_given(self):
             skip()
 
     def honors_conf_file_flag(self):
