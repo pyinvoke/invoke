@@ -282,6 +282,11 @@ Available tasks:
             self._test_flag('-e', 'echo', True)
 
 
+    def per_project_config_files_are_loaded(self):
+        os.chdir(os.path.join('configs', 'project'))
+        _dispatch("inv mytask")
+
+
 TB_SENTINEL = 'Traceback (most recent call last)'
 
 class HighLevelFailures(Spec):
