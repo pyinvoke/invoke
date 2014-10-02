@@ -45,6 +45,10 @@ class Config_(Spec):
         def default_user_prefix_is_homedir(self):
             loads_path(Config(), '~/.invoke.yaml')
 
+        def configure_project_location(self):
+            c = Config(project_home='someproject')
+            loads_path(c, 'someproject/invoke.yaml')
+
         def unknown_kwargs_turn_into_top_level_defaults(self):
             c = Config(foo='bar')
             eq_(c.config.defaults['foo'], 'bar')
