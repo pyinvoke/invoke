@@ -162,6 +162,12 @@ class Config(DataProxy):
 
             Default: ``~/.invoke`` (e.g. ``~/.invoke.yaml``).
 
+        :param str project_home:
+            Optional directory path location of the currently loaded
+            `.Collection` (as loaded by `.Loader`). When non-empty, will
+            trigger seeking of per-project config files in this location +
+            ``invoke.(yaml|json|py)``.
+
         :param iterable adapters:
             An iterable of `Adapters` to use instead of the default
             :ref:`hierarchy <config-hierarchy>`.
