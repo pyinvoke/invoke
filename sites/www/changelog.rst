@@ -2,6 +2,10 @@
 Changelog
 =========
 
+* :bug:`180` Empty invocation (e.g. just ``invoke`` with no flags or tasks, and
+  when no default task is defined) no
+  longer printed help output, instead complaining about the lack of default
+  task. It now prints help again. Thanks to Brent O'Connor for the catch.
 * :bug:`175 major` ``autoprint`` did not function correctly for tasks stored
   in sub-collections; this has been fixed. Credit: Matthias Lehmann.
 * :release:`0.9.0 <2014-08-26>`

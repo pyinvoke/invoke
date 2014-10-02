@@ -24,7 +24,7 @@ indent_num = 2
 indent = " " * indent_num
 
 
-def print_help(tuples):
+def print_columns(tuples):
     """
     Print tabbed columns from (name, help) tuples.
 
@@ -56,6 +56,16 @@ def print_help(tuples):
             print(spec.rstrip())
     print('')
 
+
+def print_help(argv, initial_context):
+    program_name = os.path.basename(argv[0])
+    if program_name == 'invoke' or program_name == 'inv':
+        program_name = 'inv[oke]'
+    print("Usage: {0} [--core-opts] task1 [--task1-opts] ... taskN [--taskN-opts]".format(program_name))
+    print("")
+    print("Core options:")
+    print_columns(initial_context.help_tuples())
+    raise Exit
 
 
 def parse_gracefully(parser, argv):
@@ -170,14 +180,7 @@ def parse(argv, collection=None, version=None):
     # and available tasks listing; or core flags modified by plugins/task
     # modules) it will have to move farther down.
     if args.help.value == True:
-        program_name = os.path.basename(argv[0])
-        if program_name == 'invoke' or program_name == 'inv':
-            program_name = 'inv[oke]'
-        print("Usage: {0} [--core-opts] task1 [--task1-opts] ... taskN [--taskN-opts]".format(program_name))
-        print("")
-        print("Core options:")
-        print_help(initial_context.help_tuples())
-        raise Exit
+        print_help(argv, initial_context) # exits
 
     # Load collection (default or specified) and parse leftovers
     start = args.root.value
@@ -224,7 +227,7 @@ def parse(argv, collection=None, version=None):
             print("")
         print("Options:")
         if tuples:
-            print_help(tuples)
+            print_columns(tuples)
         else:
             print(indent + "none")
             print("")
@@ -255,8 +258,16 @@ def parse(argv, collection=None, version=None):
 
         # Print
         print("Available tasks:\n")
-        print_help(pairs)
+        print_columns(pairs)
         raise Exit
+
+    # Print help if:
+    # * empty invocation
+    # * no default task found in loaded root collection
+    # * no other "do an thing" flags were found (implicit in where this code is
+    # located - just before return)
+    if not tasks and not collection.default:
+        print_help(argv, initial_context) # exits
 
     # Return to caller so they can handle the results
     return args, collection, tasks
