@@ -6,6 +6,7 @@ import textwrap
 from .vendor import six
 
 from .context import Context
+from .config import Config
 from .loader import FilesystemLoader, DEFAULT_COLLECTION_NAME
 from .parser import Parser, ParserContext, Argument
 from .executor import Executor
@@ -273,7 +274,7 @@ def parse(argv, collection=None, version=None):
     return args, collection, tasks
 
 
-def make_config(args):
+def make_config(args, collection):
     """
     Generate a `.Config` object initialized with parser & collection data.
 
@@ -294,7 +295,9 @@ def make_config(args):
         run['hide'] = args.hide.value
     if args.echo.value:
         run['echo'] = True
-    return {'run': run}
+    # TODO: this should eventually become overrides, not defaults
+    c = Config(run=run)
+    return c
 
 def tasks_from_contexts(parser_contexts, collection):
     tasks = []
@@ -312,7 +315,10 @@ def dispatch(argv, version=None):
         # 'return' here is mostly a concession to testing. Meh :(
         # TODO: probably restructure things better so we don't need this?
         return sys.exit(e.code)
-    executor = Executor(collection, Context(config=make_config(args)))
+    # TODO: we need easier access to context.config here
+    # TODO: can we delay creating the two of them until inside Executor?
+    context = Context(config=make_config(args, collection))
+    executor = Executor(collection, context)
     try:
         tasks = tasks_from_contexts(parser_contexts, collection)
         dedupe = not args['no-dedupe'].value
