@@ -2,6 +2,7 @@ from spec import Spec, skip, eq_
 from mock import patch
 
 from invoke.context import Context
+from invoke.config import Config
 
 
 class Context_(Spec):
@@ -50,7 +51,7 @@ class Context_(Spec):
 
         def getattribute(self):
             "__getattr__"
-            eq(self.c.foo, 'bar')
+            eq_(self.c.foo, 'bar')
 
         def get(self):
             eq_(self.c.get('foo'), 'bar')
