@@ -49,7 +49,7 @@ class Context_(Spec):
             "___getitem__"
             eq_(self.c['foo'], 'bar')
 
-        def getattribute(self):
+        def getattr(self):
             "__getattr__"
             eq_(self.c.foo, 'bar')
 
