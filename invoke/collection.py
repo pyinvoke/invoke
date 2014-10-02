@@ -137,15 +137,14 @@ class Collection(object):
         Explicitly given collections will only be given that module-derived
         name if they don't already have a valid ``.name`` attribute.
 
-        :param name:
+        :param str name:
             A string, which if given will override any automatically derived
             collection name (or name set on the module's root namespace, if it
             has one.)
 
-        :param config:
-            A dict, used to set config options on the newly created
-            `.Collection` before returning it (saving you a call to
-            `.configure`.)
+        :param dict config:
+            Used to set config options on the newly created `.Collection`
+            before returning it (saving you a call to `.configure`.)
             
             If the imported module had a root namespace object, ``config`` is
             merged on top of it (i.e. overriding any conflicts.)
