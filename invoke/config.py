@@ -1,3 +1,4 @@
+import copy
 from os.path import abspath
 from types import DictType
 
@@ -216,3 +217,37 @@ class Config(DataProxy):
         locations.
         """
         return self.config.load()
+
+    def clone(self):
+        """
+        Return a copy of this configuration object.
+
+        The new object will be identical in terms of data, but will be a
+        distinct object with no shared mutable state.
+        """
+        # New config w/ formatter preserved
+        c = EtcConfig(formatter=self.config.formatter)
+        # New adapters, ditto + deepcopy internal data
+        adapters = []
+        for old in self.config.adapters:
+            c.register(_clone_adapter(old))
+        # Then deepcopy loaded data in case already loaded (we don't
+        # necessarily know at this point if loading has occurred).
+        c.update(copy.deepcopy(dict(self.config)))
+        # All set
+        new = Config()
+        new.config = c
+        return new
+
+
+def _clone_adapter(old):
+    if isinstance(old, Defaults):
+        new = Defaults(formatter=old.formatter)
+    elif isinstance(old, File):
+        new = File(
+            filepath=old.filepath,
+            python_uppercase=old.python_uppercase,
+            formatter=old.formatter
+        )
+    new.data = copy.deepcopy(old.data)
+    return new

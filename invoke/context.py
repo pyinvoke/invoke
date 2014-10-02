@@ -48,11 +48,8 @@ class Context(DataProxy):
     def clone(self):
         """
         Return a new Context instance resembling this one.
-
-        Simple syntactic sugar for a handful of ``deepcopy`` calls, which
-        generally work fine because config values are simple data structures.
         """
-        return Context(config=deepcopy(self.config))
+        return Context(config=self.config.clone())
 
     def run(self, *args, **kwargs):
         """

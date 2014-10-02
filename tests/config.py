@@ -115,7 +115,7 @@ class Config_(Spec):
                 expected = """
 No attribute or config key found for 'nope'
 
-Valid real attributes: ['from_data', 'load', 'set_defaults']
+Valid real attributes: ['clone', 'from_data', 'load', 'set_defaults']
 
 Valid keys: []""".lstrip()
                 eq_(str(e), expected)
@@ -291,12 +291,16 @@ Valid keys: []""".lstrip()
             skip()
 
 
-    def clone(self):
-        c = Config(foo={'bar': {'biz': 'baz'}})
-        c.set_defaults({'default': 'yup'})
-        #c.load()
-        c2 = c.clone()
-        eq_(c, c2)
-        ok_(c is not c2)
-        ok_(c.config is not c2.config)
-        ok_(c.foo.bar.biz is not c2.foo.bar.biz)
+    class clone:
+        def with_loading(self):
+            c = Config(foo={'bar': {'biz': ['baz']}})
+            c.load()
+            c2 = c.clone()
+            c2.load()
+            eq_(c, c2)
+            ok_(c is not c2)
+            ok_(c.config is not c2.config)
+            ok_(c.foo.bar.biz is not c2.foo.bar.biz)
+
+        def without_loading(self):
+            skip()
