@@ -292,18 +292,22 @@ Valid keys: []""".lstrip()
 
 
     class clone:
-        def with_loading(self):
-            c = Config(foo={'bar': {'biz': ['baz']}})
+        def setup(self):
+            self.c = Config(foo={'bar': {'biz': ['baz']}})
+
+        def load_before_and_after(self):
+            c = self.c
             c.load()
             c2 = c.clone()
             c2.load()
             eq_(c, c2)
             ok_(c is not c2)
             ok_(c.config is not c2.config)
+            eq_(c.foo.bar.biz, c2.foo.bar.biz)
             ok_(c.foo.bar.biz is not c2.foo.bar.biz)
 
-        def without_loading(self):
-            c = Config(foo={'bar': {'biz': ['baz']}})
+        def no_loading_at_all(self):
+            c = self.c
             c2 = c.clone()
             eq_(c, c2)
             ok_(c is not c2)
@@ -311,3 +315,9 @@ Valid keys: []""".lstrip()
             # Unloaded -> looks empty
             eq_(c.keys(), [])
             eq_(c2.keys(), [])
+
+        def load_after_only(self):
+            c = self.c
+            c2 = c.clone()
+            c2.load()
+            eq_(c2.foo.bar.biz, ['baz'])
