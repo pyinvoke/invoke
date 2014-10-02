@@ -14,7 +14,7 @@ def noop(s):
     return s
 
 
-class DualAccess(object):
+class DataProxy(object):
     """
     Helper class implementing nested dict+attr access for `.Config`.
     """
@@ -95,13 +95,13 @@ class DualAccess(object):
     def _get(self, key):
         value = self._config[key]
         if isinstance(value, DictType):
-            value = DualAccess.from_data(value)
+            value = DataProxy.from_data(value)
         return value
 
     # TODO: copy()?
 
 
-class Config(DualAccess):
+class Config(DataProxy):
     """
     Invoke's primary configuration handling class.
 
