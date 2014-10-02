@@ -20,6 +20,16 @@ class Collection(object):
         `.Collection` offers a set of methods for building a collection of
         tasks from scratch, plus a convenient constructor wrapping said API.
 
+        In either case:
+
+        * the first positional argument may be a string, which (if given) is
+          used as the collection's default name when performing namespace
+          lookups;
+        * a ``loaded_from`` keyword argument may be given, which sets metadata
+          indicating the filesystem path the collection was loaded from. This
+          is used as a guide when loading per-project :ref:`configuration files
+          <config-hierarchy>`.
+
         **The method approach**
 
         May initialize with no arguments and use methods (e.g.
@@ -45,12 +55,12 @@ class Collection(object):
 
         **The constructor approach**
 
-        All ``*args`` given to `.Collection` (besides the optional first 'name'
-        argument) are expected to be `.Task` or `.Collection` instances which
-        will be passed to `.add_task`/`.add_collection` as appropriate. Module
-        objects are also valid (as they are for `.add_collection`). For
-        example, the below snippet results in the same two task identifiers as
-        the one above::
+        All ``*args`` given to `.Collection` (besides the abovementioned
+        optional positional 'name' argument and ``loaded_from`` kwarg) are
+        expected to be `.Task` or `.Collection` instances which will be passed
+        to `.add_task`/`.add_collection` as appropriate. Module objects are
+        also valid (as they are for `.add_collection`). For example, the below
+        snippet results in the same two task identifiers as the one above::
 
             ns = Collection(top_level_task, Collection('docs', doc_task))
 
