@@ -228,7 +228,9 @@ Valid keys: []""".lstrip()
             eq_(c.project_setting, 'python')
 
         def loads_nothing_if_no_project_home_given(self):
-            skip()
+            c = Config()
+            c.load()
+            eq_(c.keys(), [])
 
     def honors_conf_file_flag(self):
         skip()
