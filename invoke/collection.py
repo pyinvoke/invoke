@@ -91,6 +91,8 @@ class Collection(object):
         args = list(args)
         if args and isinstance(args[0], six.string_types):
             self.name = args.pop(0)
+        # Specific kwargs if applicable
+        self.loaded_from = kwargs.pop('loaded_from', None)
         # Dispatch args/kwargs
         for arg in args:
             self._add_object(arg)
