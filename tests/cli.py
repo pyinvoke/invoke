@@ -18,6 +18,7 @@ from _utils import _dispatch, _output_eq, IntegrationSpec
 
 class CLI(IntegrationSpec):
     "Command-line behavior"
+
     class basic_invocation:
         @trap
         def vanilla(self):
@@ -40,6 +41,7 @@ class CLI(IntegrationSpec):
                 '-c integration print_underscored_arg --my-option whatevs',
                 "whatevs\n",
             )
+
 
     def missing_collection_yields_useful_error(self):
         _output_eq(
@@ -158,6 +160,7 @@ Options:
         _dispatch('notinvoke -V', version="nope 1.0")
         eq_(sys.stdout.getvalue(), "nope 1.0\n")
 
+
     class task_list:
         "--list"
 
@@ -234,11 +237,13 @@ Available tasks:
                 "No tasks found in collection 'empty'!\n"
             )
 
+
     def debug_flag_activates_logging(self):
         # Have to patch our logger to get in before Nose logcapture kicks in.
         with patch('invoke.util.debug') as debug:
             _dispatch('inv -d -c debugging foo')
             debug.assert_called_with('my-sentinel')
+
 
     class autoprinting:
         def defaults_to_off_and_no_output(self):
@@ -255,6 +260,7 @@ Available tasks:
 
         def does_not_fire_on_post_tasks(self):
             _output_eq("-c autoprint post_check", "")
+
 
     class run_options:
         "run() related CLI flags"
