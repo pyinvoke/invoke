@@ -1,5 +1,5 @@
 import copy
-from os.path import abspath
+from os.path import join
 from types import DictType
 
 from .vendor.etcaetera.config import Config as EtcConfig
@@ -180,13 +180,17 @@ class Config(DataProxy):
         adapters = kwargs.pop('adapters', None)
         global_prefix = kwargs.pop('global_prefix', '/etc/invoke')
         user_prefix = kwargs.pop('user_prefix', '~/.invoke')
+        project_home = kwargs.pop('project_home', None)
         c = EtcConfig(formatter=noop)
         # Explicit adapter set
         if adapters is not None:
             c.register(*adapters)
         # The Hierarchy
         else:
-            for prefix in (global_prefix, user_prefix):
+            prefixes = [global_prefix, user_prefix]
+            if project_home is not None:
+                prefixes.append(join(project_home, "invoke"))
+            for prefix in prefixes:
                 c.register(File("{0}.yaml".format(prefix)))
                 c.register(File("{0}.json".format(prefix)))
                 py = File("{0}.py".format(prefix), python_uppercase=False)
