@@ -42,7 +42,7 @@ class Config_(Spec):
             c = Config(user_prefix='whatever')
             loads_path(c, 'whatever.yaml')
 
-        def default_local_prefix_is_homedir(self):
+        def default_user_prefix_is_homedir(self):
             loads_path(Config(), '~/.invoke.yaml')
 
         def unknown_kwargs_turn_into_top_level_defaults(self):
