@@ -46,54 +46,54 @@ class DataProxy(object):
     @classmethod
     def from_data(cls, data):
         obj = cls()
-        obj._config = data
+        obj.config = data
         return obj
 
     def __getattr__(self, key):
         try:
             return self._get(key)
         except KeyError:
-            # Proxy most special vars to _config for dict procotol.
+            # Proxy most special vars to config for dict procotol.
             if key in self._proxies:
-                return getattr(self._config, key)
+                return getattr(self.config, key)
             # Otherwise, raise useful AttributeError to follow getattr proto.
             err = "No attribute or config key found for {0!r}".format(key)
             attrs = [x for x in dir(self.__class__) if not x.startswith('_')]
             err += "\n\nValid real attributes: {0!r}".format(attrs)
-            err += "\n\nValid keys: {0!r}".format(self._config.keys())
+            err += "\n\nValid keys: {0!r}".format(self.config.keys())
             raise AttributeError(err)
 
     def __hasattr__(self, key):
-        return key in self._config or key in self._proxies
+        return key in self.config or key in self._proxies
 
     def __iter__(self):
         # For some reason Python is ignoring our __hasattr__ when determining
         # whether we support __iter__. BOO
-        return iter(self._config)
+        return iter(self.config)
 
     def __eq__(self, other):
         # Can't proxy __eq__ because the RHS will always be an obj of the
         # current class, not the proxied-to class, and that causes
         # NotImplemented.
-        return self._config == other._config
+        return self.config == other.config
 
     def __len__(self):
         # Can't proxy __len__ either apparently? ugh
-        return len(self._config)
+        return len(self.config)
 
     def __setitem__(self, key, value):
         # ... or __setitem__? thanks for nothing Python >:(
-        self._config[key] = value
+        self.config[key] = value
 
     def __delitem__(self, key):
         # OK this is really getting annoying
-        del self._config[key]
+        del self.config[key]
 
     def __getitem__(self, key):
         return self._get(key)
 
     def _get(self, key):
-        value = self._config[key]
+        value = self.config[key]
         if isinstance(value, DictType):
             value = DataProxy.from_data(value)
         return value
@@ -185,7 +185,7 @@ class Config(DataProxy):
                 py = File("{0}.py".format(prefix), python_uppercase=False)
                 c.register(py)
         # Init-time defaults
-        self._config = c
+        self.config = c
         self.set_defaults(kwargs)
 
     def set_defaults(self, data):
@@ -206,7 +206,7 @@ class Config(DataProxy):
             Dictionary to use as the default data set for this configuration.
         """
         # Must reinforce 'noop' here as Defaults calls load() in init()
-        self._config.register(Defaults(data, formatter=noop))
+        self.config.register(Defaults(data, formatter=noop))
 
     def load(self):
         """
@@ -215,4 +215,4 @@ class Config(DataProxy):
         See :ref:`config-hierarchy` for details on load order and file
         locations.
         """
-        return self._config.load()
+        return self.config.load()

@@ -8,7 +8,7 @@ from invoke.config import Config
 
 
 def loads_path(c, path):
-    files = [x for x in c._config.adapters if isinstance(x, File)]
+    files = [x for x in c.config.adapters if isinstance(x, File)]
     paths = [x.filepath for x in files]
     found = any(x == path for x in paths)
     ok_(found, "{0!r} not found, file adapters: {1!r}".format(path, paths))
@@ -47,13 +47,13 @@ class Config_(Spec):
 
         def unknown_kwargs_turn_into_top_level_defaults(self):
             c = Config(foo='bar')
-            eq_(c._config.defaults['foo'], 'bar')
+            eq_(c.config.defaults['foo'], 'bar')
 
         def accepts_explicit_adapter_override_list(self):
             c = Config(adapters=[])
             # Slightly encapsulation-breaking. Meh.
             # (Our) Config objs always start with a Defaults.
-            eq_(len(c._config.adapters), 1)
+            eq_(len(c.config.adapters), 1)
 
         def does_not_trigger_config_loading(self):
             # Cuz automatic loading could potentially be surprising.
@@ -73,7 +73,7 @@ class Config_(Spec):
             eq_(c.default, 'value')
 
         def can_set_defaults_after_initialization(self):
-            # Something light which wraps self._config.defaults[k] = v
+            # Something light which wraps self.config.defaults[k] = v
             c = Config()
             c.set_defaults({'foo': 'bar'})
             c.load()
