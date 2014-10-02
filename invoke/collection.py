@@ -120,7 +120,7 @@ class Collection(object):
         return self.name == other.name and self.tasks == other.tasks
 
     @classmethod
-    def from_module(self, module, name=None, config=None):
+    def from_module(self, module, name=None, config=None, loaded_from=None):
         """
         Return a new `.Collection` created from ``module``.
 
@@ -148,6 +148,11 @@ class Collection(object):
             
             If the imported module had a root namespace object, ``config`` is
             merged on top of it (i.e. overriding any conflicts.)
+
+        :param str loaded_from:
+            Identical to the same-named kwarg from the regular class
+            constructor - should be the path where the module was
+            found.
         """
         module_name = module.__name__.split('.')[-1]
         # See if the module provides a default NS to use in lieu of creating
@@ -173,7 +178,7 @@ class Collection(object):
             vars(module).values()
         )
         # Again, explicit name wins over implicit one from module path
-        collection = Collection(name or module_name)
+        collection = Collection(name or module_name, loaded_from=loaded_from)
         for task in tasks:
             collection.add_task(task)
         if config:

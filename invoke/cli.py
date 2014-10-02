@@ -296,7 +296,7 @@ def make_config(args, collection):
     if args.echo.value:
         run['echo'] = True
     # TODO: this should eventually become overrides, not defaults
-    c = Config(run=run)
+    c = Config(run=run, project_home=collection.loaded_from)
     return c
 
 def tasks_from_contexts(parser_contexts, collection):
