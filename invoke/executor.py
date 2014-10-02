@@ -27,9 +27,7 @@ class Executor(object):
         requiring one for operation.
         """
         self.collection = collection
-        self.context = context
-        if self.context is None:
-            self.context = Context()
+        self.context = context if context is not None else Context()
 
     def execute(self, *tasks, **kwargs):
         """
