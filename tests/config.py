@@ -303,4 +303,11 @@ Valid keys: []""".lstrip()
             ok_(c.foo.bar.biz is not c2.foo.bar.biz)
 
         def without_loading(self):
-            skip()
+            c = Config(foo={'bar': {'biz': ['baz']}})
+            c2 = c.clone()
+            eq_(c, c2)
+            ok_(c is not c2)
+            ok_(c.config is not c2.config)
+            # Unloaded -> looks empty
+            eq_(c.keys(), [])
+            eq_(c2.keys(), [])
