@@ -273,7 +273,18 @@ def parse(argv, collection=None, version=None):
     return args, collection, tasks
 
 
-def derive_opts(args):
+def make_config(args):
+    """
+    Generate a `.Config` object initialized with parser & collection data.
+
+    Specifically, parser-level flags are consulted (typically as a top-level
+    "runtime overrides" dict) and the Collection object is used to determine
+    where to seek a per-project config file.
+
+    This object is then further updated within `.Executor` with per-task
+    configuration values and then told to load the full hierarchy (which
+    includes config files.)
+    """
     run = {}
     if args['warn-only'].value:
         run['warn'] = True
@@ -301,7 +312,7 @@ def dispatch(argv, version=None):
         # 'return' here is mostly a concession to testing. Meh :(
         # TODO: probably restructure things better so we don't need this?
         return sys.exit(e.code)
-    executor = Executor(collection, Context(config=derive_opts(args)))
+    executor = Executor(collection, Context(config=make_config(args)))
     try:
         tasks = tasks_from_contexts(parser_contexts, collection)
         dedupe = not args['no-dedupe'].value
