@@ -3,7 +3,7 @@ from os.path import join
 from types import DictType
 
 from .vendor.etcaetera.config import Config as EtcConfig
-from .vendor.etcaetera.adapter import File, Defaults
+from .vendor.etcaetera.adapter import File, Defaults, Overrides
 
 
 def noop(s):
@@ -218,6 +218,21 @@ class Config(DataProxy):
         """
         # Must reinforce 'noop' here as Defaults calls load() in init()
         self.config.register(Defaults(data, formatter=noop))
+
+    def set_overrides(self, data):
+        """
+        Assign ``data`` as an override-level configuration.
+
+        Config values given here will always take precedence over others loaded
+        from collections, config files, etc. See :ref:`config-hierarchy`.
+
+        .. warning::
+            Use of `.Config.load` is required to update the internal
+            configuration data, even if you've called it previously this
+            session. Failure to do so will result in stale data.
+        """
+        # Must reinforce 'noop' here as Overrides calls load() in init()
+        self.config.register(Overrides(data, formatter=noop))
 
     def load(self):
         """

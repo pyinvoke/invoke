@@ -127,7 +127,7 @@ class Config_(Spec):
                 expected = """
 No attribute or config key found for 'nope'
 
-Valid real attributes: ['clone', 'from_data', 'load', 'set_defaults']
+Valid real attributes: ['clone', 'from_data', 'load', 'set_defaults', 'set_overrides']
 
 Valid keys: []""".lstrip()
                 eq_(str(e), expected)
