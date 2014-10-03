@@ -79,7 +79,6 @@ class Config_(Spec):
             eq_(c.default, 'value')
 
         def can_set_defaults_after_initialization(self):
-            # Something light which wraps self.config.defaults[k] = v
             c = Config()
             c.set_defaults({'foo': 'bar'})
             c.load()
