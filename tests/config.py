@@ -91,6 +91,13 @@ class Config_(Spec):
             ok_('foo' not in c, "Expected {0!r} not to include 'foo'!")
             ok_('biz' in c, "Expected {0!r} to include 'biz'!")
 
+        def can_set_overrides(self):
+            c = Config()
+            c.set_defaults({'biz': 'notbaz'})
+            c.set_overrides({'biz': 'baz'})
+            c.load()
+            eq_(c.biz, 'baz')
+
         def allows_dict_and_attr_access(self):
             # TODO: combine with tests for Context probably
             c = Config(foo='bar')
