@@ -127,9 +127,8 @@ class Executor(object):
         debug("Executing %r%s" % (task, (" as %s" % name) if name else ""))
         if task.contextualized:
             context = self.context.clone()
-            # TODO: call the below as an Overrides
             # TODO: bother wrapping load() and such in Context? meh
-            #context.update(self.collection.configuration(name))
+            context.config.set_defaults(self.collection.configuration(name))
             context.config.load()
             args = (context,) + args
         result = task(*args, **kwargs)
