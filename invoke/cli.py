@@ -290,6 +290,7 @@ def make_config(args, collection):
     configuration values and then told to load the full hierarchy (which
     includes config files.)
     """
+    # Set up runtime overrides from flags
     run = {}
     if args['warn-only'].value:
         run['warn'] = True
@@ -299,9 +300,11 @@ def make_config(args, collection):
         run['hide'] = args.hide.value
     if args.echo.value:
         run['echo'] = True
-    # TODO: this should eventually become overrides, not defaults
+    overrides = {'run': run}
+    # Stand up config object with collection's load location
     c = Config(project_home=collection.loaded_from)
-    c.set_overrides({'run': run})
+    # Add parser overrides
+    c.set_overrides(overrides)
     return c
 
 def tasks_from_contexts(parser_contexts, collection):
