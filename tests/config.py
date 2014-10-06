@@ -51,6 +51,10 @@ class Config_(Spec):
             c = Config(project_home='someproject')
             _loads_path(c, 'someproject/invoke.yaml')
 
+        def configure_runtime_path(self):
+            c = Config(runtime_path='some/path.yaml')
+            _loads_path(c, 'some/path.yaml')
+
         def unknown_kwargs_turn_into_top_level_defaults(self):
             c = Config(foo='bar')
             eq_(c.config.defaults['foo'], 'bar')
@@ -239,7 +243,9 @@ Valid keys: []""".lstrip()
             eq_(c.keys(), [])
 
     def honors_conf_file_flag(self):
-        skip()
+        c = Config(runtime_path=join(CONFIGS_PATH, 'runtime', 'runtime.yaml'))
+        c.load()
+        eq_(c["what time?"], "run time!")
 
     class env_vars:
         "Environment variables"
