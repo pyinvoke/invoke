@@ -29,6 +29,12 @@ class IntegrationSpec(Spec):
 
     def teardown(self):
         patch.stopall()
+        reset_cwd()
+
+
+def reset_cwd():
+    # Chdir back to project root to avoid problems
+    os.chdir(os.path.join(os.path.dirname(__file__), '..'))
 
 
 # Strings are easier to type & read than lists
