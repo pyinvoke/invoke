@@ -286,7 +286,8 @@ Available tasks:
         "Configuration-related concerns"
 
         def per_project_config_files_are_loaded(self):
-            with cd(os.path.join('configs', 'project')):
+            # Just reuse an existing project bit
+            with cd(os.path.join('configs', 'project', 'yaml-only')):
                 _dispatch("inv mytask")
 
 
