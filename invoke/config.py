@@ -266,8 +266,8 @@ class Config(DataProxy):
 
 
 def _clone_adapter(old):
-    if isinstance(old, Defaults):
-        new = Defaults(formatter=old.formatter)
+    if isinstance(old, (Defaults, Overrides)):
+        new = old.__class__(formatter=old.formatter)
     elif isinstance(old, File):
         new = File(
             filepath=old.filepath,
