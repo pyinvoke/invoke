@@ -282,13 +282,16 @@ Available tasks:
             self._test_flag('-e', 'echo', True)
 
 
-    def per_project_config_files_are_loaded(self):
-        cwd = os.getcwd()
-        os.chdir(os.path.join('configs', 'project'))
-        try:
-            _dispatch("inv mytask")
-        finally:
-            os.chdir(cwd)
+    class configuration:
+        "Configuration-related concerns"
+
+        def per_project_config_files_are_loaded(self):
+            cwd = os.getcwd()
+            os.chdir(os.path.join('configs', 'project'))
+            try:
+                _dispatch("inv mytask")
+            finally:
+                os.chdir(cwd)
 
 
 TB_SENTINEL = 'Traceback (most recent call last)'
