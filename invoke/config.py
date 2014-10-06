@@ -188,6 +188,7 @@ class Config(DataProxy):
         global_prefix = kwargs.pop('global_prefix', '/etc/invoke')
         user_prefix = kwargs.pop('user_prefix', '~/.invoke')
         project_home = kwargs.pop('project_home', None)
+        runtime_path = kwargs.pop('runtime_path', None)
         c = EtcConfig(formatter=noop)
         # Explicit adapter set
         if adapters is not None:
@@ -208,7 +209,10 @@ class Config(DataProxy):
             # Level 5: environment variables.
             # TODO: this
             # Level 6: Runtime config file
-            # TODO: this
+            if runtime_path is not None:
+                # Give python_uppercase in case it's a .py. Is a safe no-op
+                # otherwise.
+                c.register(File(runtime_path, python_uppercase=False))
             # Level 7 is Overrides, typically runtime flag values set by client
             # using set_overrides().
         # Init-time defaults
