@@ -120,6 +120,10 @@ def parse(argv, collection=None, version=None):
             help="Echo executed commands before running.",
         ),
         Argument(
+            names=('config', 'f'),
+            help="Runtime configuration file to use.",
+        ),
+        Argument(
             names=('help', 'h'),
             optional=True,
             help="Show core or per-task help and exit."
