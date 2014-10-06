@@ -47,14 +47,30 @@ def _dispatch(argstr, version=None):
     return dispatch(argstr.split(), version)
 
 @trap
-def _output_eq(args, stdout=None, stderr=None):
+def _output_eq(args, stdout=None, stderr=None, code=0):
     """
     dispatch() 'args', matching output to 'std(out|err)'.
 
     Must give either or both of the output-expecting args.
     """
-    _dispatch("inv {0}".format(args))
+    with expect_exit(code):
+        _dispatch("inv {0}".format(args))
     if stdout is not None:
         eq_(sys.stdout.getvalue(), stdout)
     if stderr is not None:
         eq_(sys.stderr.getvalue(), stderr)
+
+
+@contextmanager
+def expect_exit(code=0):
+    """
+    Run a block of code expected to sys.exit(), ignoring the exit.
+    
+    This is so we can readily test top level things like help output, listings,
+    etc.
+    """
+    try:
+        yield
+    except SystemExit as e:
+        if e.code != code:
+            raise

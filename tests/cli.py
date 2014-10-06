@@ -13,7 +13,7 @@ from invoke.tasks import task
 from invoke.exceptions import Failure
 import invoke
 
-from _utils import _dispatch, _output_eq, IntegrationSpec, cd
+from _utils import _dispatch, _output_eq, IntegrationSpec, cd, expect_exit
 
 
 class CLI(IntegrationSpec):
@@ -46,16 +46,22 @@ class CLI(IntegrationSpec):
     def missing_collection_yields_useful_error(self):
         _output_eq(
             '-c huhwhat -l',
-            stderr="Can't find any collection named 'huhwhat'!\n"
+            stderr="Can't find any collection named 'huhwhat'!\n",
+            code=1
         )
 
     def missing_default_collection_doesnt_say_None(self):
-        os.chdir('/')
-        _output_eq('-l', stderr="Can't find any collection named 'tasks'!\n")
+        with cd('/'):
+            _output_eq(
+                '-l',
+                stderr="Can't find any collection named 'tasks'!\n",
+                code=1
+            )
 
     @trap
     def missing_default_task_prints_help(self):
-        _dispatch("inv -c foo")
+        with expect_exit():
+            _dispatch("inv -c foo")
         ok_("Core options:" in sys.stdout.getvalue())
 
     def contextualized_tasks_are_given_parser_context_arg(self):
@@ -157,7 +163,8 @@ Options:
 
     @trap
     def version_override(self):
-        _dispatch('notinvoke -V', version="nope 1.0")
+        with expect_exit():
+            _dispatch('notinvoke -V', version="nope 1.0")
         eq_(sys.stdout.getvalue(), "nope 1.0\n")
 
 
