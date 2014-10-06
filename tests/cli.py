@@ -283,8 +283,12 @@ Available tasks:
 
 
     def per_project_config_files_are_loaded(self):
+        cwd = os.getcwd()
         os.chdir(os.path.join('configs', 'project'))
-        _dispatch("inv mytask")
+        try:
+            _dispatch("inv mytask")
+        finally:
+            os.chdir(cwd)
 
 
 TB_SENTINEL = 'Traceback (most recent call last)'
