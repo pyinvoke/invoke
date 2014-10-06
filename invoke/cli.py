@@ -98,35 +98,20 @@ def parse(argv, collection=None, version=None):
     # Initial/core parsing (core options can affect the rest of the parsing)
     initial_context = ParserContext(args=(
         Argument(
-            names=('collection', 'c'),
-            help="Specify collection name to load."
-        ),
-        Argument(
-            names=('root', 'r'),
-            help="Change root directory used for finding task modules."
-        ),
-        Argument(
-            names=('help', 'h'),
-            optional=True,
-            help="Show core or per-task help and exit."
-        ),
-        Argument(
-            names=('version', 'V'),
-            kind=bool,
-            default=False,
-            help="Show version and exit."
-        ),
-        Argument(
-            names=('list', 'l'),
-            kind=bool,
-            default=False,
-            help="List available tasks."
-        ),
-        Argument(
             names=('no-dedupe',),
             kind=bool,
             default=False,
             help="Disable task deduplication."
+        ),
+        Argument(
+            names=('collection', 'c'),
+            help="Specify collection name to load."
+        ),
+        Argument(
+            names=('debug', 'd'),
+            kind=bool,
+            default=False,
+            help="Enable debug output.",
         ),
         Argument(
             names=('echo', 'e'),
@@ -135,10 +120,19 @@ def parse(argv, collection=None, version=None):
             help="Echo executed commands before running.",
         ),
         Argument(
-            names=('warn-only', 'w'),
+            names=('help', 'h'),
+            optional=True,
+            help="Show core or per-task help and exit."
+        ),
+        Argument(
+            names=('hide', 'H'),
+            help="Set default value of run()'s 'hide' kwarg.",
+        ),
+        Argument(
+            names=('list', 'l'),
             kind=bool,
             default=False,
-            help="Warn, instead of failing, when shell commands fail.",
+            help="List available tasks."
         ),
         Argument(
             names=('pty', 'p'),
@@ -147,14 +141,20 @@ def parse(argv, collection=None, version=None):
             help="Use a pty when executing shell commands.",
         ),
         Argument(
-            names=('hide', 'H'),
-            help="Set default value of run()'s 'hide' kwarg.",
+            names=('root', 'r'),
+            help="Change root directory used for finding task modules."
         ),
         Argument(
-            names=('debug', 'd'),
+            names=('version', 'V'),
             kind=bool,
             default=False,
-            help="Enable debug output.",
+            help="Show version and exit."
+        ),
+        Argument(
+            names=('warn-only', 'w'),
+            kind=bool,
+            default=False,
+            help="Warn, instead of failing, when shell commands fail.",
         ),
     ))
     # 'core' will result an .unparsed attribute with what was left over.
