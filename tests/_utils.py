@@ -36,6 +36,15 @@ def reset_cwd():
     # Chdir back to project root to avoid problems
     os.chdir(os.path.join(os.path.dirname(__file__), '..'))
 
+@contextmanager
+def cd(where):
+    cwd = os.getcwd()
+    os.chdir(where)
+    try:
+        yield
+    finally:
+        os.chdir(cwd)
+
 
 # Strings are easier to type & read than lists
 

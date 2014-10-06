@@ -13,7 +13,7 @@ from invoke.tasks import task
 from invoke.exceptions import Failure
 import invoke
 
-from _utils import _dispatch, _output_eq, IntegrationSpec
+from _utils import _dispatch, _output_eq, IntegrationSpec, cd
 
 
 class CLI(IntegrationSpec):
@@ -286,12 +286,8 @@ Available tasks:
         "Configuration-related concerns"
 
         def per_project_config_files_are_loaded(self):
-            cwd = os.getcwd()
-            os.chdir(os.path.join('configs', 'project'))
-            try:
+            with cd(os.path.join('configs', 'project')):
                 _dispatch("inv mytask")
-            finally:
-                os.chdir(cwd)
 
 
 TB_SENTINEL = 'Traceback (most recent call last)'
