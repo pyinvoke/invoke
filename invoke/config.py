@@ -194,6 +194,9 @@ class Config(DataProxy):
             c.register(*adapters)
         # The Hierarchy
         else:
+            # Level 1 is Defaults, set via kwargs or client calling
+            # set_defaults(). Normally comes from task collection tree.
+            # Levels 2-4: global, user, & project config files
             prefixes = [global_prefix, user_prefix]
             if project_home is not None:
                 prefixes.append(join(project_home, "invoke"))
@@ -202,6 +205,12 @@ class Config(DataProxy):
                 c.register(File("{0}.json".format(prefix)))
                 py = File("{0}.py".format(prefix), python_uppercase=False)
                 c.register(py)
+            # Level 5: environment variables.
+            # TODO: this
+            # Level 6: Runtime config file
+            # TODO: this
+            # Level 7 is Overrides, typically runtime flag values set by client
+            # using set_overrides().
         # Init-time defaults
         self.config = c
         self.set_defaults(kwargs)
