@@ -28,8 +28,8 @@ class CLI(IntegrationSpec):
 
         @trap
         def vanilla_with_explicit_collection(self):
-            # Duplicates _output_eq above, but this way that can change w/o
-            # breaking our expectations.
+            # Duplicates _output_eq, but this way that can change w/o breaking
+            # our expectations.
             _dispatch('inv -c integration print_foo')
             eq_(sys.stdout.getvalue(), "foo\n")
 
