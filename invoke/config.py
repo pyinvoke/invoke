@@ -168,6 +168,13 @@ class Config(DataProxy):
             trigger seeking of per-project config files in this location +
             ``invoke.(yaml|json|py)``.
 
+        :param str runtime_path:
+            Optional file path to a runtime configuration file.
+
+            Used to fill the penultimate slot in the config hierarchy. Should
+            be a full file path to an existing file, not a directory path, or a
+            prefix.
+
         :param iterable adapters:
             An iterable of `Adapters` to use instead of the default
             :ref:`hierarchy <config-hierarchy>`.
