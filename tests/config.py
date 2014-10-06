@@ -7,7 +7,7 @@ from invoke.vendor.etcaetera.adapter import File, Adapter
 from invoke.config import Config
 
 
-def loads_path(c, path):
+def _loads_path(c, path):
     files = [x for x in c.config.adapters if isinstance(x, File)]
     paths = [x.filepath for x in files]
     found = any(x == path for x in paths)
@@ -33,23 +33,23 @@ class Config_(Spec):
             # This is a bit funky but more useful than just replicating the
             # same test farther down?
             c = Config(global_prefix='meh')
-            loads_path(c, 'meh.yaml')
+            _loads_path(c, 'meh.yaml')
 
         def default_global_prefix_is_etc(self):
             # TODO: make this work on Windows somehow without being a total
             # tautology? heh.
-            loads_path(Config(), '/etc/invoke.yaml')
+            _loads_path(Config(), '/etc/invoke.yaml')
 
         def configure_user_location_prefix(self):
             c = Config(user_prefix='whatever')
-            loads_path(c, 'whatever.yaml')
+            _loads_path(c, 'whatever.yaml')
 
         def default_user_prefix_is_homedir(self):
-            loads_path(Config(), '~/.invoke.yaml')
+            _loads_path(Config(), '~/.invoke.yaml')
 
         def configure_project_location(self):
             c = Config(project_home='someproject')
-            loads_path(c, 'someproject/invoke.yaml')
+            _loads_path(c, 'someproject/invoke.yaml')
 
         def unknown_kwargs_turn_into_top_level_defaults(self):
             c = Config(foo='bar')
