@@ -301,8 +301,12 @@ def make_config(args, collection):
     if args.echo.value:
         run['echo'] = True
     overrides = {'run': run}
-    # Stand up config object with collection's load location
-    c = Config(project_home=collection.loaded_from)
+    # Stand up config object with collection's load location & any runtime conf
+    # file path given
+    c = Config(
+        project_home=collection.loaded_from,
+        runtime_path=args.config.value,
+    )
     # Add parser overrides
     c.set_overrides(overrides)
     return c
