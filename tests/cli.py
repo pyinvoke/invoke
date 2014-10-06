@@ -290,6 +290,10 @@ Available tasks:
             with cd(os.path.join('configs', 'project', 'yaml-only')):
                 _dispatch("inv mytask")
 
+        def runtime_config_file_honored(self):
+            with cd(os.path.join('configs', 'runtime')):
+                _dispatch("inv -f runtime.yaml mytask")
+
 
 TB_SENTINEL = 'Traceback (most recent call last)'
 
