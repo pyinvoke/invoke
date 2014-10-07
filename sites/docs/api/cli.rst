@@ -34,6 +34,10 @@ The core options (which must be given before any task names) are as follows:
     Echo executed commands before running. Requires :doc:`contextualized tasks
     </concepts/context>`.
 
+.. option:: -f, --config
+
+    Specify a :ref:`runtime configuration file <config-hierarchy>` to load.
+
 .. option:: -h STRING, --help=STRING
 
     Show core or per-task help and exit.
