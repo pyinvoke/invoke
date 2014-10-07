@@ -1,3 +1,4 @@
+import os
 from os.path import join
 
 from spec import Spec, skip, eq_, ok_
@@ -251,7 +252,10 @@ Valid keys: []""".lstrip()
         "Environment variables"
         def base_case(self):
             # FOO=bar
-            skip()
+            c = Config(foo='notbar')
+            os.environ['FOO'] = 'bar'
+            c.load()
+            eq_(c.foo, 'bar')
 
         def throws_error_on_undefined_settings(self):
             skip()
