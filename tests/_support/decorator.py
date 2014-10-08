@@ -19,6 +19,16 @@ def foo2():
     """
     pass
 
+@task
+def foo3():
+    """Foo the other bar:
+
+      example code
+
+    Added in 1.1
+    """
+    pass
+
 @task(default=True)
 def biz():
     pass

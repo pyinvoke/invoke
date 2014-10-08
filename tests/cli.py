@@ -150,6 +150,23 @@ Options:
 """.lstrip()
         _output_eq('-c decorator -h foo2', expected)
 
+    def per_task_help_dedents_correctly_for_alternate_docstring_style(self):
+        expected = """
+Usage: inv[oke] [--core-opts] foo3 [other tasks here ...]
+
+Docstring:
+  Foo the other bar:
+
+    example code
+
+  Added in 1.1
+
+Options:
+  none
+
+""".lstrip()
+        _output_eq('-c decorator -h foo3', expected)
+
     def version_info(self):
         _output_eq('-V', "Invoke %s\n" % invoke.__version__)
 
