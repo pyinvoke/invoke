@@ -18,13 +18,14 @@ class Executor(object):
         """
         Initialize executor with handles to a task collection & config context.
 
-        The collection is used for looking up tasks by name and
-        storing/retrieving state, e.g. how many times a given task has been
-        run this session and so on. It is optional; if not given a blank
-        `.Context` is used.
+        :param collection:
+            A `.Collection` used to look up requested tasks (and their default
+            config data, if any) by name during execution.
 
-        A copy of the context is passed into any tasks that mark themselves as
-        requiring one for operation.
+        :param context:
+            An optional `.Context` holding configuration state & providing a
+            state-aware API for contextualized tasks. Defaults to an empty
+            `.Context` if not given.
         """
         self.collection = collection
         self.context = context if context is not None else Context()
