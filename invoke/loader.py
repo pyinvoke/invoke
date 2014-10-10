@@ -1,4 +1,5 @@
 import os
+import pkgutil
 import sys
 import imp
 
@@ -89,7 +90,23 @@ class FilesystemLoader(Loader):
         # we turn it into a more obvious exception class.
         try:
             tup = imp.find_module(name, parents)
-            debug("Found module: {0!r}".format(tup[1]))
+            debug("FSL: Found module: {0!r}".format(tup[1]))
             return tup
         except ImportError:
             raise CollectionNotFound(name=name, start=start)
+
+
+class PackageLoader(Loader):
+    """
+    Loads Python files from the package (e.g. ``mypackage.inner.tasks``.)
+    """
+
+    def load(self, name=DEFAULT_COLLECTION_NAME):
+        debug("PackageLoader find starting")
+        loader = pkgutil.get_loader(name)
+        if not loader:
+            raise CollectionNotFound(name=name, start="")
+        else:
+            debug("PL: Found module: {0!r}".format(name))
+            res = loader.load_module(name)
+            return Collection.from_module(res)
