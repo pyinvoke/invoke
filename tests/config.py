@@ -56,15 +56,14 @@ class Config_(Spec):
             c = Config(runtime_path='some/path.yaml')
             _loads_path(c, 'some/path.yaml')
 
-        def unknown_kwargs_turn_into_top_level_defaults(self):
-            c = Config(foo='bar')
-            eq_(c.config.defaults['foo'], 'bar')
-
         def accepts_explicit_adapter_override_list(self):
             c = Config(adapters=[])
             # Slightly encapsulation-breaking. Meh.
             # (Our) Config objs always start with a Defaults.
             eq_(len(c.config.adapters), 1)
+
+        def accepts_overrides_dict(self):
+            skip()
 
         def does_not_trigger_config_loading(self):
             # Cuz automatic loading could potentially be surprising.
@@ -77,31 +76,17 @@ class Config_(Spec):
     class basic_API:
         "Basic API components"
 
-        def load_method_is_an_thing(self):
-            # Kinda duplicative but meh, nice and explicit.
-            c = Config(default='value')
-            c.load()
-            eq_(c.default, 'value')
+        class load:
+            "load()"
+            # TODO: rename?
+            def can_be_called_empty(self):
+                skip()
 
-        def can_set_defaults_after_initialization(self):
-            c = Config()
-            c.set_defaults({'foo': 'bar'})
-            c.load()
-            eq_(c.foo, 'bar')
+            def can_be_given_defaults_dict_arg(self):
+                skip()
 
-        def set_defaults_overrides_convenience_kwargs(self):
-            c = Config(foo='bar')
-            c.set_defaults({'biz': 'baz'})
-            c.load()
-            ok_('foo' not in c, "Expected {0!r} not to include 'foo'!")
-            ok_('biz' in c, "Expected {0!r} to include 'biz'!")
-
-        def can_set_overrides(self):
-            c = Config()
-            c.set_defaults({'biz': 'notbaz'})
-            c.set_overrides({'biz': 'baz'})
-            c.load()
-            eq_(c.biz, 'baz')
+            def makes_data_available(self):
+                skip()
 
         def allows_dict_and_attr_access(self):
             # TODO: combine with tests for Context probably
@@ -132,7 +117,7 @@ class Config_(Spec):
                 expected = """
 No attribute or config key found for 'nope'
 
-Valid real attributes: ['clone', 'from_data', 'load', 'set_defaults', 'set_overrides']
+Valid real attributes: ['clone', 'from_data', 'load']
 
 Valid keys: []""".lstrip()
                 eq_(str(e), expected)
