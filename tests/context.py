@@ -32,15 +32,6 @@ class Context_(Spec):
             self._honors('echo', True)
 
 
-    class clone:
-        def returns_deep_copy_of_self(self):
-            conf = Config(foo={'bar': {'biz': 'baz'}})
-            conf.load()
-            c = Context(config=conf)
-            c2 = c.clone()
-            eq_(c, c2)
-
-
     class configuration_proxy:
         "Dict-like proxy for self.config"
         def setup(self):
