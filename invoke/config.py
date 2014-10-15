@@ -180,11 +180,11 @@ class Config(DataProxy):
 
         .. _Adapters: http://etcaetera.readthedocs.org/en/0.4.0/howto.html#adapters
         """
-        adapters = kwargs.pop('adapters', None)
-        global_prefix = kwargs.pop('global_prefix', '/etc/invoke')
-        user_prefix = kwargs.pop('user_prefix', '~/.invoke')
-        project_home = kwargs.pop('project_home', None)
-        runtime_path = kwargs.pop('runtime_path', None)
+        # Setup
+        if global_prefix is None:
+            global_prefix = '/etc/invoke'
+        if user_prefix is None:
+            user_prefix = '~/.invoke'
         c = EtcConfig(formatter=noop)
         # Explicit adapter set
         if adapters is not None:
@@ -213,7 +213,6 @@ class Config(DataProxy):
             # using set_overrides().
         # Init-time defaults
         self.config = c
-        self.set_defaults(kwargs)
 
     def set_defaults(self, data):
         """
