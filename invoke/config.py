@@ -234,7 +234,8 @@ class Config(DataProxy):
         self.config.register(Defaults(defaults, formatter=noop))
         # Now that we have all other sources defined, we can load the Env
         # adapter primed with all known config keys.
-        self.config.register(Env(*self._env_keys()))
+        env = Env(*self._env_keys())
+        self.config.register(env)
         # TODO: fix up register order?? Probably just need to actually-register
         # Env prior to registering the runtime config file...
         return self.config.load()
@@ -264,7 +265,11 @@ class Config(DataProxy):
         """
         Return list of valid configuration keys for use in an ``Env`` adapter.
         """
-        return []
+        keys = []
+        # TODO: force pre-loading of File adapters :(
+        for adapter in self.config.adapters:
+            keys.extend(adapter.data.keys())
+        return keys
 
 
 def _clone_adapter(old):
