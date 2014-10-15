@@ -135,7 +135,7 @@ class Config(DataProxy):
     This class implements the entire dictionary protocol.
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, overrides=None, global_prefix=None, user_prefix=None, project_home=None, runtime_path=None, adapters=None):
         """
         Creates a new config object, but does not load any configuration data.
 
@@ -143,12 +143,8 @@ class Config(DataProxy):
             To load configuration data, call `~.Config.load` after
             initialization.
 
-        For convenience, keyword arguments not listed below will be interpreted
-        as top-level default configuration values, so one may say e.g.::
-        
-            c = Config(my_setting='my_value')
-            c.load()
-            print(c['my_setting']) # => 'my_value'
+        :param dict overrides:
+            A dict containing override-level config data. Default: ``{}``.
 
         :param str global_prefix:
             Path & partial filename for the global config file location. Should
