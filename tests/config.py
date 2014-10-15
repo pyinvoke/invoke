@@ -63,7 +63,9 @@ class Config_(Spec):
             eq_(len(c.config.adapters), 1)
 
         def accepts_overrides_dict(self):
-            skip()
+            c = Config(overrides={'I win': 'always'})
+            c.load()
+            eq_(c['I win'], 'always')
 
         def does_not_trigger_config_loading(self):
             # Cuz automatic loading could potentially be surprising.
@@ -80,13 +82,20 @@ class Config_(Spec):
             "load()"
             # TODO: rename?
             def can_be_called_empty(self):
-                skip()
+                c = Config()
+                c.load()
+                eq_(c.keys(), [])
 
             def can_be_given_defaults_dict_arg(self):
-                skip()
+                c = Config()
+                c.load(defaults={'foo': 'bar'})
+                eq_(c.foo, 'bar')
 
             def makes_data_available(self):
-                skip()
+                c = Config(overrides={'foo': 'notbar'})
+                ok_('foo' not in c.keys())
+                c.load()
+                ok_('foo' in c.keys())
 
         def allows_dict_and_attr_access(self):
             # TODO: combine with tests for Context probably
