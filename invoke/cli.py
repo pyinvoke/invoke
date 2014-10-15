@@ -306,9 +306,8 @@ def make_config(args, collection):
     c = Config(
         project_home=collection.loaded_from,
         runtime_path=args.config.value,
+        overrides=overrides,
     )
-    # Add parser overrides
-    c.set_overrides(overrides)
     return c
 
 def tasks_from_contexts(parser_contexts, collection):
@@ -327,10 +326,7 @@ def dispatch(argv, version=None):
         # 'return' here is mostly a concession to testing. Meh :(
         # TODO: probably restructure things better so we don't need this?
         return sys.exit(e.code)
-    # TODO: we need easier access to context.config here
-    # TODO: can we delay creating the two of them until inside Executor?
-    context = Context(config=make_config(args, collection))
-    executor = Executor(collection, context)
+    executor = Executor(collection, make_config(args, collection))
     try:
         tasks = tasks_from_contexts(parser_contexts, collection)
         dedupe = not args['no-dedupe'].value

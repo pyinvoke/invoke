@@ -23,21 +23,21 @@ class Executor_(IntegrationSpec):
         coll.add_task(self.task2, name='task2')
         coll.add_task(self.task3, name='task3')
         coll.add_task(self.task4, name='task4')
-        self.executor = Executor(collection=coll, context=Context())
+        self.executor = Executor(collection=coll)
 
 
     class init:
         "__init__"
-        def allows_collection_and_context(self):
+        def allows_collection_and_config(self):
             coll = Collection()
-            cont = Context()
-            e = Executor(collection=coll, context=cont)
+            conf = Config()
+            e = Executor(collection=coll, config=conf)
             assert e.collection is coll
-            assert e.context is cont
+            assert e.config is conf
 
-        def uses_blank_context_by_default(self):
+        def uses_blank_config_by_default(self):
             e = Executor(collection=Collection())
-            assert isinstance(e.context, Context)
+            assert isinstance(e.config, Config)
 
 
     class execute:
@@ -67,10 +67,7 @@ class Executor_(IntegrationSpec):
             t1 = Task(pre_body)
             t2 = Task(post_body)
             t3 = Task(Mock(), pre=[t1], post=[t2])
-            e = Executor(
-                collection=Collection(t1=t1, t2=t2, t3=t3),
-                context=Context()
-            )
+            e = Executor(collection=Collection(t1=t1, t2=t2, t3=t3))
             e.execute(('t3', {'something': 'meh'}))
             for body in (pre_body, post_body):
                 eq_(body.call_args, tuple())
@@ -85,7 +82,7 @@ class Executor_(IntegrationSpec):
                 post=[call(t2, 7, biz='baz')],
             )
             c = Collection(t1=t1, t2=t2, t3=t3)
-            e = Executor(collection=c, context=Context())
+            e = Executor(collection=c)
             e.execute('t3')
             # Pre-task asserts
             args, kwargs = pre_body.call_args
@@ -205,7 +202,7 @@ bar
             pre = [call(t1, 5), call(t1, 7), call(t1, 5)]
             t2 = Task(Mock(), pre=pre)
             c = Collection(t1=t1, t2=t2)
-            e = Executor(collection=c, context=Context())
+            e = Executor(collection=c)
             e.execute('t2')
             # Does not call the second t1(5)
             body.assert_has_calls([mock_call(5), mock_call(7)])
@@ -218,7 +215,7 @@ bar
                 eq_(ctx.my_key, 'value')
             c = Collection(mytask)
             c.configure({'my_key': 'value'})
-            Executor(collection=c, context=Context()).execute('mytask')
+            Executor(collection=c).execute('mytask')
 
         def hands_task_specific_configuration_to_context(self):
             @ctask
@@ -232,7 +229,7 @@ bar
             inner2 = Collection('inner2', othertask)
             inner2.configure({'my_key': 'othervalue'})
             c = Collection(inner1, inner2)
-            e = Executor(collection=c, context=Context())
+            e = Executor(collection=c)
             e.execute('inner1.mytask', 'inner2.othertask')
 
         def subcollection_config_works_with_default_tasks(self):
@@ -245,7 +242,7 @@ bar
             sub.configure({'my_key': 'value'})
             main = Collection(sub=sub)
             # Execute via collection default 'task' name.
-            Executor(collection=main, context=Context()).execute('sub')
+            Executor(collection=main).execute('sub')
 
     class returns_return_value_of_specified_task:
         def base_case(self):

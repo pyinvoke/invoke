@@ -1,5 +1,6 @@
 import itertools
 
+from .config import Config
 from .context import Context
 from .util import debug
 from .tasks import Call
@@ -14,21 +15,22 @@ class Executor(object):
     Subclasses may override various extension points to change, add or remove
     behavior.
     """
-    def __init__(self, collection, context=None):
+    def __init__(self, collection, config=None):
         """
-        Initialize executor with handles to a task collection & config context.
+        Initialize executor with handles to a task collection & config.
 
         :param collection:
             A `.Collection` used to look up requested tasks (and their default
             config data, if any) by name during execution.
 
-        :param context:
-            An optional `.Context` holding configuration state & providing a
-            state-aware API for contextualized tasks. Defaults to an empty
-            `.Context` if not given.
+        :param config:
+            An optional `.Config` holding configuration state Defaults to an
+            empty `.Config` if not given.
         """
         self.collection = collection
-        self.context = context if context is not None else Context()
+        if config is None:
+            config = Config()      
+        self.config = config
 
     def execute(self, *tasks, **kwargs):
         """
@@ -127,10 +129,10 @@ class Executor(object):
         # pass a dotted path to Collection.configuration()
         debug("Executing %r%s" % (task, (" as %s" % name) if name else ""))
         if task.contextualized:
-            context = self.context.clone()
+            config = self.config.clone()
             # TODO: bother wrapping load() and such in Context? meh
-            context.config.set_defaults(self.collection.configuration(name))
-            context.config.load()
+            config.load(defaults=self.collection.configuration(name))
+            context = Context(config=config)
             args = (context,) + args
         result = task(*args, **kwargs)
         return result

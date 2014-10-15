@@ -45,12 +45,6 @@ class Context(DataProxy):
         #: ``ctx.foo`` returns the same value as ``ctx.config['foo']``.
         self.config = config if config is not None else Config()
 
-    def clone(self):
-        """
-        Return a new Context instance resembling this one.
-        """
-        return Context(config=self.config.clone())
-
     def run(self, *args, **kwargs):
         """
         Wrapper for `.run`.
