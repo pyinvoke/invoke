@@ -59,8 +59,7 @@ class Config_(Spec):
         def accepts_explicit_adapter_override_list(self):
             c = Config(adapters=[])
             # Slightly encapsulation-breaking. Meh.
-            # (Our) Config objs always start with a Defaults.
-            eq_(len(c.config.adapters), 1)
+            eq_(len(c.config.adapters), 0)
 
         def accepts_overrides_dict(self):
             c = Config(overrides={'I win': 'always'})

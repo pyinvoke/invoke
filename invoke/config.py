@@ -204,19 +204,17 @@ class Config(DataProxy):
                 c.register(File("{0}.json".format(prefix)))
                 py = File("{0}.py".format(prefix), python_uppercase=False)
                 c.register(py)
-            # Level 5: environment variables.
-            # TODO: this
+            # Level 5: environment variables. See `load()` - must be done as
+            # late as possible to 'see' all other defined keys.
             # Level 6: Runtime config file
             if runtime_path is not None:
                 # Give python_uppercase in case it's a .py. Is a safe no-op
                 # otherwise.
                 c.register(File(runtime_path, python_uppercase=False))
-            # Level 7 is Overrides, typically runtime flag values set by client
-            # using set_overrides().
-        # Assign to member & pull in override data
+            # Level 7 is Overrides, typically runtime flag values
+            c.register(Overrides(overrides, formatter=noop))
+        # Assign to member
         self.config = c
-        # Must reinforce 'noop' here as Overrides calls load() in init()
-        self.config.register(Overrides(overrides, formatter=noop))
 
     def load(self, defaults=None):
         """
