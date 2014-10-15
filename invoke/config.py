@@ -181,6 +181,8 @@ class Config(DataProxy):
         .. _Adapters: http://etcaetera.readthedocs.org/en/0.4.0/howto.html#adapters
         """
         # Setup
+        if overrides is None:
+            overrides = {}
         if global_prefix is None:
             global_prefix = '/etc/invoke'
         if user_prefix is None:
@@ -211,43 +213,10 @@ class Config(DataProxy):
                 c.register(File(runtime_path, python_uppercase=False))
             # Level 7 is Overrides, typically runtime flag values set by client
             # using set_overrides().
-        # Init-time defaults
+        # Assign to member & pull in override data
         self.config = c
-
-    def set_defaults(self, data):
-        """
-        Assign ``data`` as the default configuration.
-
-        .. warning::
-            If values were also given during `~.Config.__init__`, they will
-            be **overridden** by the ``data`` given to this method - no merging
-            will occur.
-
-        .. warning::
-            Use of `.Config.load` is required to update the internal
-            configuration data, even if you've called it previously this
-            session. Failure to do so will result in stale data.
-
-        :param dict data:
-            Dictionary to use as the default data set for this configuration.
-        """
-        # Must reinforce 'noop' here as Defaults calls load() in init()
-        self.config.register(Defaults(data, formatter=noop))
-
-    def set_overrides(self, data):
-        """
-        Assign ``data`` as an override-level configuration.
-
-        Config values given here will always take precedence over others loaded
-        from collections, config files, etc. See :ref:`config-hierarchy`.
-
-        .. warning::
-            Use of `.Config.load` is required to update the internal
-            configuration data, even if you've called it previously this
-            session. Failure to do so will result in stale data.
-        """
         # Must reinforce 'noop' here as Overrides calls load() in init()
-        self.config.register(Overrides(data, formatter=noop))
+        self.config.register(Overrides(overrides, formatter=noop))
 
     def load(self):
         """
