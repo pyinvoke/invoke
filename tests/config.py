@@ -237,9 +237,9 @@ Valid keys: []""".lstrip()
         "Environment variables"
         def base_case(self):
             # FOO=bar
-            c = Config({'foo': 'notbar'})
             os.environ['FOO'] = 'bar'
-            c.load()
+            c = Config()
+            c.load(defaults={'foo': 'notbar'})
             eq_(c.foo, 'bar')
 
         def throws_error_on_undefined_settings(self):
