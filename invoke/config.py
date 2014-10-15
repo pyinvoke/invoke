@@ -218,13 +218,20 @@ class Config(DataProxy):
         # Must reinforce 'noop' here as Overrides calls load() in init()
         self.config.register(Overrides(overrides, formatter=noop))
 
-    def load(self):
+    def load(self, defaults=None):
         """
         Performs loading and merging of all config sources.
 
         See :ref:`config-hierarchy` for details on load order and file
         locations.
+
+        :param dict defaults:
+            A dict containing defaults-level config data. Default: ``{}``.
         """
+        if defaults is None:
+            defaults = {}
+        # Reinforce 'noop' here, Defaults calls load() in init()
+        self.config.register(Defaults(defaults, formatter=noop))
         return self.config.load()
 
     def clone(self):
