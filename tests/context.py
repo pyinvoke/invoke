@@ -35,7 +35,7 @@ class Context_(Spec):
     class configuration_proxy:
         "Dict-like proxy for self.config"
         def setup(self):
-            config = Config(foo='bar')
+            config = Config({'foo': 'bar'})
             config.load()
             self.c = Context(config=config)
 

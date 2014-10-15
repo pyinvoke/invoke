@@ -90,14 +90,14 @@ class Config_(Spec):
 
         def allows_dict_and_attr_access(self):
             # TODO: combine with tests for Context probably
-            c = Config(foo='bar')
+            c = Config({'foo': 'bar'})
             c.load()
             eq_(c.foo, 'bar')
             eq_(c['foo'], 'bar')
 
         def nested_dict_values_also_allow_dual_access(self):
             # TODO: ditto
-            c = Config(foo='bar', biz={'baz': 'boz'})
+            c = Config({'foo': 'bar', 'biz': {'baz': 'boz'}})
             c.load()
             # Sanity check - nested doesn't somehow kill simple top level
             eq_(c.foo, 'bar')
@@ -128,7 +128,7 @@ Valid keys: []""".lstrip()
             # Looks tautological, but ensures we're suppressing etcaetera's
             # default UPPERCASE_EVERYTHING behavior
             d = {'FOO': 'bar', 'biz': 'baz', 'Boz': 'buzz'}
-            c = Config(**d)
+            c = Config(d)
             c.load()
             for x in d:
                 err = "Expected to find {0!r} in {1!r}, didn't"
@@ -138,15 +138,15 @@ Valid keys: []""".lstrip()
             def expect(c, expected):
                 eq_(set(c.keys()), expected)
                 eq_(set(list(c)), expected)
-            c = Config(a=1, b=2)
+            c = Config({'a': 1, 'b': 2})
             expect(c, set())
             c.load()
             expect(c, set(['a', 'b']))
 
         def supports_readonly_dict_protocols(self):
             # Use single-keypair dict to avoid sorting problems in tests.
-            c = Config(foo='bar')
-            c2 = Config(foo='bar')
+            c = Config({'foo': 'bar'})
+            c2 = Config({'foo': 'bar'})
             c.load()
             c2.load()
             ok_('foo' in c)
@@ -162,7 +162,7 @@ Valid keys: []""".lstrip()
             eq_(c.values(), ['bar'])
 
         def supports_mutation_dict_protocols(self):
-            c = Config(foo='bar')
+            c = Config({'foo': 'bar'})
             c.load()
             eq_(c.pop('foo'), 'bar')
             eq_(len(c), 0)
@@ -237,7 +237,7 @@ Valid keys: []""".lstrip()
         "Environment variables"
         def base_case(self):
             # FOO=bar
-            c = Config(foo='notbar')
+            c = Config({'foo': 'notbar'})
             os.environ['FOO'] = 'bar'
             c.load()
             eq_(c.foo, 'bar')
@@ -311,7 +311,7 @@ Valid keys: []""".lstrip()
 
     class clone:
         def setup(self):
-            self.c = Config(foo={'bar': {'biz': ['baz']}})
+            self.c = Config({'foo': {'bar': {'biz': ['baz']}}})
 
         def load_before_and_after(self):
             c = self.c
