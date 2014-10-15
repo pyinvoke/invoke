@@ -1,9 +1,10 @@
 import copy
+import os
 from os.path import join
 from types import DictType
 
 from .vendor.etcaetera.config import Config as EtcConfig
-from .vendor.etcaetera.adapter import File, Defaults, Overrides, Env
+from .vendor.etcaetera.adapter import File, Defaults, Overrides, Adapter
 
 
 def noop(s):
@@ -13,6 +14,23 @@ def noop(s):
     For when we do not want auto upper/lower casing (currently, always).
     """
     return s
+
+
+class NestedEnv(Adapter):
+    """
+    Custom etcaetera adapter for handling env vars (more flexibly than Env).
+    """
+    def __init__(self, keys):
+        super(NestedEnv, self).__init__()
+        self.keys = keys
+
+    def load(self, formatter=None):
+        # We actually ignore central formatters because we do such special
+        # things with the keys.
+        for key in self.keys:
+            env_key = key.upper()
+            if env_key in os.environ:
+                self[key] = os.environ[env_key]
 
 
 class DataProxy(object):
@@ -234,7 +252,7 @@ class Config(DataProxy):
         self.config.register(Defaults(defaults, formatter=noop))
         # Now that we have all other sources defined, we can load the Env
         # adapter primed with all known config keys.
-        env = Env(*self._env_keys())
+        env = NestedEnv(self._env_keys())
         self.config.register(env)
         # TODO: fix up register order?? Probably just need to actually-register
         # Env prior to registering the runtime config file...
@@ -281,8 +299,7 @@ def _clone_adapter(old):
             python_uppercase=old.python_uppercase,
             formatter=old.formatter,
         )
-    elif isinstance(old, Env):
-        new = Env(*old.keys)
-        new.formatter = old.formatter # not available as init kwarg
+    elif isinstance(old, NestedEnv):
+        new = NestedEnv(old.keys)
     new.data = copy.deepcopy(old.data)
     return new
