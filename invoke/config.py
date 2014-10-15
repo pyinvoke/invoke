@@ -226,10 +226,17 @@ class Config(DataProxy):
         :param dict defaults:
             A dict containing defaults-level config data. Default: ``{}``.
         """
+        # Pull in defaults (we do so at this level because typically we won't
+        # know about collection-level default values until closer to runtime.
         if defaults is None:
             defaults = {}
         # Reinforce 'noop' here, Defaults calls load() in init()
         self.config.register(Defaults(defaults, formatter=noop))
+        # Now that we have all other sources defined, we can load the Env
+        # adapter primed with all known config keys.
+        self.config.register(Env(*self._env_keys()))
+        # TODO: fix up register order?? Probably just need to actually-register
+        # Env prior to registering the runtime config file...
         return self.config.load()
 
     def clone(self):
