@@ -3,7 +3,7 @@ from os.path import join
 from types import DictType
 
 from .vendor.etcaetera.config import Config as EtcConfig
-from .vendor.etcaetera.adapter import File, Defaults, Overrides
+from .vendor.etcaetera.adapter import File, Defaults, Overrides, Env
 
 
 def noop(s):
@@ -260,6 +260,12 @@ class Config(DataProxy):
         new.config = c
         return new
 
+    def _env_keys(self):
+        """
+        Return list of valid configuration keys for use in an ``Env`` adapter.
+        """
+        return []
+
 
 def _clone_adapter(old):
     if isinstance(old, (Defaults, Overrides)):
@@ -268,7 +274,10 @@ def _clone_adapter(old):
         new = File(
             filepath=old.filepath,
             python_uppercase=old.python_uppercase,
-            formatter=old.formatter
+            formatter=old.formatter,
         )
+    elif isinstance(old, Env):
+        new = Env(*old.keys)
+        new.formatter = old.formatter # not available as init kwarg
     new.data = copy.deepcopy(old.data)
     return new
