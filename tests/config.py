@@ -246,7 +246,6 @@ Valid keys: []""".lstrip()
     class env_vars:
         "Environment variables"
         def base_case(self):
-            # FOO=bar
             os.environ['FOO'] = 'bar'
             c = Config()
             c.load(defaults={'foo': 'notbar'})
