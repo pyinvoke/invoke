@@ -271,8 +271,13 @@ Valid keys: []""".lstrip()
             c.load(defaults={'foo': {'bar': 'notbiz'}})
             eq_(c.foo.bar, 'biz')
 
-        def both_underscores(self):
+        def both_types_of_underscores_mixed(self):
             # FOO_BAR_BIZ=baz => {'foo_bar': {'biz': 'baz'}}
+            skip()
+
+        def ambiguous_underscores_dont_guess(self):
+            # FOO_BAR with config of {'foo_bar': 'wat', 'foo': {'bar': 'huh'}}
+            # will error instead of update one or the other (or both)
             skip()
 
         class type_casting:
