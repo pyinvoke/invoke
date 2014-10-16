@@ -20,14 +20,20 @@ class NestedEnv(Adapter):
     """
     Custom etcaetera adapter for handling env vars (more flexibly than Env).
     """
-    def __init__(self, keys):
+    def __init__(self, config):
+        """
+        Initialize this adapter with a handle to a live Config object.
+
+        :param config:
+            An already-loaded Config object which can be introspected for its keys.
+        """
         super(NestedEnv, self).__init__()
-        self.keys = keys
+        self._config = config
 
     def load(self, formatter=None):
         # We actually ignore central formatters because we do such special
         # things with the keys.
-        for key in self.keys:
+        for key in self._config.keys():
             env_key = key.upper()
             if env_key in os.environ:
                 self[key] = os.environ[env_key]
@@ -251,11 +257,15 @@ class Config(DataProxy):
         # Reinforce 'noop' here, Defaults calls load() in init()
         self.config.register(Defaults(defaults, formatter=noop))
         # Now that we have all other sources defined, we can load the Env
-        # adapter primed with all known config keys.
-        env = NestedEnv(self._env_keys())
+        # adapter. This sadly requires a 'pre-load' call to .load() so config
+        # files get slurped up.
+        self.config.load()
+        env = NestedEnv(self.config)
         self.config.register(env)
         # TODO: fix up register order?? Probably just need to actually-register
         # Env prior to registering the runtime config file...
+        # Re-load() so that our values get applied in the right slot in the
+        # hierarchy.
         return self.config.load()
 
     def clone(self):
@@ -279,16 +289,6 @@ class Config(DataProxy):
         new.config = c
         return new
 
-    def _env_keys(self):
-        """
-        Return list of valid configuration keys for use in an ``Env`` adapter.
-        """
-        keys = []
-        # TODO: force pre-loading of File adapters :(
-        for adapter in self.config.adapters:
-            keys.extend(adapter.data.keys())
-        return keys
-
 
 def _clone_adapter(old):
     if isinstance(old, (Defaults, Overrides)):
@@ -300,6 +300,6 @@ def _clone_adapter(old):
             formatter=old.formatter,
         )
     elif isinstance(old, NestedEnv):
-        new = NestedEnv(old.keys)
+        new = NestedEnv(old._config)
     new.data = copy.deepcopy(old.data)
     return new
