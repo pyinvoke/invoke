@@ -259,16 +259,56 @@ Valid keys: []""".lstrip()
             ok_('hello' not in c)
 
         def underscores_top_level(self):
-            # FOO_BAR=biz => {'foo_bar': 'biz'}
-            skip()
+            os.environ['FOO_BAR'] = 'biz'
+            c = Config()
+            c.load(defaults={'foo_bar': 'notbiz'})
+            eq_(c.foo_bar, 'biz')
 
         def underscores_nested(self):
             # FOO_BAR=biz => {'foo': {'bar': 'biz'}}
-            skip()
+            os.environ['FOO_BAR'] = 'biz'
+            c = Config()
+            c.load(defaults={'foo': {'bar': 'notbiz'}})
+            eq_(c.foo.bar, 'biz')
 
         def both_underscores(self):
             # FOO_BAR_BIZ=baz => {'foo_bar': {'biz': 'baz'}}
             skip()
+
+        class type_casting:
+            def strings_replaced_with_env_value(self):
+                skip()
+
+            def unicode_replaced_with_env_value(self):
+                skip()
+
+            def string_replacement_can_change_type(self):
+                # E.g. if os.environ value is a string and setting value is a
+                # unicode, new value is a string, not a unicode - and vice
+                # versa
+                skip()
+
+            def None_replaced(self):
+                skip()
+
+            def booleans(self):
+                # 0 and empty-string -> false
+                # all other values true
+                # 'false' string is true
+                skip()
+
+            def lists_raise_exception(self):
+                skip()
+
+            def dicts_raise_exception(self):
+                skip()
+
+            def numeric_types_become_casted(self):
+                # int
+                # float
+                # long
+                # ???
+                skip()
 
     class hierarchy:
         "Config hierarchy in effect"
