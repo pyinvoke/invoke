@@ -1,11 +1,12 @@
 import os
 from os.path import join
 
-from spec import Spec, skip, eq_, ok_
+from spec import Spec, skip, eq_, ok_, raises
 
 from invoke.vendor.etcaetera.adapter import File, Adapter
 
 from invoke.config import Config
+from invoke.exceptions import AmbiguousEnvVar
 
 from _utils import CleanEnvSpec
 
@@ -265,20 +266,22 @@ Valid keys: []""".lstrip()
             eq_(c.foo_bar, 'biz')
 
         def underscores_nested(self):
-            # FOO_BAR=biz => {'foo': {'bar': 'biz'}}
             os.environ['FOO_BAR'] = 'biz'
             c = Config()
             c.load(defaults={'foo': {'bar': 'notbiz'}})
             eq_(c.foo.bar, 'biz')
 
         def both_types_of_underscores_mixed(self):
-            # FOO_BAR_BIZ=baz => {'foo_bar': {'biz': 'baz'}}
-            skip()
+            os.environ['FOO_BAR_BIZ'] = 'baz'
+            c = Config()
+            c.load(defaults={'foo_bar': {'biz': 'baz'}})
+            eq_(c.foo_bar.biz, 'baz')
 
+        @raises(AmbiguousEnvVar)
         def ambiguous_underscores_dont_guess(self):
-            # FOO_BAR with config of {'foo_bar': 'wat', 'foo': {'bar': 'huh'}}
-            # will error instead of update one or the other (or both)
-            skip()
+            os.environ['FOO_BAR'] = 'biz'
+            c = Config()
+            c.load(defaults={'foo_bar': 'wat', 'foo': {'bar': 'huh'}})
 
         class type_casting:
             def strings_replaced_with_env_value(self):

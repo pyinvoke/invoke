@@ -62,3 +62,10 @@ class PlatformError(Exception):
     Typically used to present a clearer error message to the user.
     """
     pass
+
+
+class AmbiguousEnvVar(Exception):
+    """
+    Raised when loading env var config keys has an ambiguous target.
+    """
+    pass
