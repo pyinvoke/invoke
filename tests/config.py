@@ -251,8 +251,12 @@ Valid keys: []""".lstrip()
             c.load(defaults={'foo': 'notbar'})
             eq_(c.foo, 'bar')
 
-        def throws_error_on_undefined_settings(self):
-            skip()
+        def non_predeclared_settings_do_not_get_consumed(self):
+            os.environ['HELLO'] = "is it me you're looking for?"
+            c = Config()
+            c.load()
+            ok_('HELLO' not in c)
+            ok_('hello' not in c)
 
         def underscores_top_level(self):
             # FOO_BAR=biz => {'foo_bar': 'biz'}
