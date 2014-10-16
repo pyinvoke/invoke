@@ -26,6 +26,15 @@ class IntegrationSpec(Spec):
         reset_cwd()
 
 
+class CleanEnvSpec(Spec):
+    def setup(self):
+        self.old_environ = os.environ.copy()
+
+    def teardown(self):
+        os.environ.clear()
+        os.environ.update(self.old_environ)
+
+
 def reset_cwd():
     # Chdir back to project root to avoid problems
     os.chdir(os.path.join(os.path.dirname(__file__), '..'))

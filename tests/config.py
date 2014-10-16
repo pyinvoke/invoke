@@ -7,6 +7,8 @@ from invoke.vendor.etcaetera.adapter import File, Adapter
 
 from invoke.config import Config
 
+from _utils import CleanEnvSpec
+
 
 def _loads_path(c, path):
     files = [x for x in c.config.adapters if isinstance(x, File)]
@@ -23,7 +25,7 @@ def _load(key, path):
     return c
 
 
-class Config_(Spec):
+class Config_(CleanEnvSpec):
     class init:
         "__init__"
 
