@@ -195,6 +195,12 @@ class Run(Spec):
             expected = "\033[1;37mecho hi\033[0m\nhi"
             eq_(sys.stdout.getvalue().strip(), expected)
 
+        @trap
+        def when_echo_True_and_nocolor_True_commands_not_in_bold(self):
+            run("echo hi", echo=True, nocolor=True)
+            expected = "echo hi\nhi"
+            eq_(sys.stdout.getvalue().strip(), expected)
+
     #
     # Random edge/corner case junk
     #
