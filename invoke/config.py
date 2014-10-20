@@ -31,12 +31,18 @@ class NestedEnv(Adapter):
         self._config = config
 
     def load(self, formatter=None):
-        # We actually ignore central formatters because we do such special
-        # things with the keys.
-        for key in self._config.keys():
-            env_key = key.upper()
-            if env_key in os.environ:
-                self[key] = os.environ[env_key]
+        # NOTE: We actually ignore central formatters because we do such
+        # special things with the keys.
+        
+        # Crawl existing keys from already-loaded self._config
+        # Keep track of key depth / path
+        # When reach leaf, generate flattened+uppercased key, store in secondary list
+        # If already exists in secondary list, implies a conflict
+        #   If environ has this key, raise exception - ambiguity
+        #   Otherwise, no problem
+        # If environ has key, get it, and set on self/self.data at nested
+        # location
+        # Otherwise, is no-op (but possibly log debug)
 
 
 class DataProxy(object):
