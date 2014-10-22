@@ -1,12 +1,12 @@
 import copy
 import os
 from os.path import join
-from types import DictType, BooleanType
+from types import DictType, BooleanType, StringTypes
 
 from .vendor.etcaetera.config import Config as EtcConfig
 from .vendor.etcaetera.adapter import File, Defaults, Overrides, Adapter
 
-from .exceptions import AmbiguousEnvVar
+from .exceptions import AmbiguousEnvVar, UncastableEnvVar
 
 
 def noop(s):
@@ -96,7 +96,14 @@ class NestedEnv(Adapter):
     def _cast(self, old, new_):
         if isinstance(old, BooleanType):
             return new_ not in ('0', '')
-        return new_
+        elif isinstance(old, StringTypes):
+            return new_
+        elif old is None:
+            return new_
+        else:
+            err = "Can't adapt an environment string into a {0}!"
+            err = err.format(type(old))
+            raise UncastableEnvVar(err)
 
 
 class DataProxy(object):
