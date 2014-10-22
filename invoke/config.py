@@ -1,7 +1,7 @@
 import copy
 import os
 from os.path import join
-from types import DictType
+from types import DictType, BooleanType
 
 from .vendor.etcaetera.config import Config as EtcConfig
 from .vendor.etcaetera.adapter import File, Defaults, Overrides, Adapter
@@ -94,6 +94,8 @@ class NestedEnv(Adapter):
         obj[key_path[-1]] = self._cast(old, value)
 
     def _cast(self, old, new_):
+        if isinstance(old, BooleanType):
+            return new_ not in ('0', '')
         return new_
 
 

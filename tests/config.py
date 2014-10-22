@@ -327,9 +327,11 @@ Valid keys: []""".lstrip()
                     eq_(c.foo, result)
 
             def boolean_type_inputs_with_non_boolean_defaults(self):
-                # when existing value is NOT boolean, the above all become
-                # normal or follow other rules
-                skip()
+                for input_ in ('0', '1', '', 'meh', 'false'):
+                    os.environ['FOO'] = input_
+                    c = Config()
+                    c.load(defaults={'foo': 'bar'})
+                    eq_(c.foo, input_)
 
             def lists_raise_exception(self):
                 skip()
