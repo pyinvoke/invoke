@@ -342,11 +342,18 @@ Valid keys: []""".lstrip()
                     eq_(c.foo, input_)
 
             def numeric_types_become_casted(self):
-                # int
-                # float
-                # long
-                # ???
-                skip()
+                for old, new_, result in (
+                    (int, '5', 5),
+                    (int, '5.0', 5),
+                    (float, '5', 5.0),
+                    (float, '5.5', 5.5),
+                    (long, '5', 5L),
+                    # TODO: more?
+                ):
+                    os.environ['FOO'] = new_
+                    c = Config()
+                    c.load(defaults={'foo': old()})
+                    eq_(c.foo, result)
 
             class uncastable_types:
                 @raises(UncastableEnvVar)
