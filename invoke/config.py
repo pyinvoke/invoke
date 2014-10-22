@@ -25,24 +25,83 @@ class NestedEnv(Adapter):
         Initialize this adapter with a handle to a live Config object.
 
         :param config:
-            An already-loaded Config object which can be introspected for its keys.
+            An already-loaded Config object which can be introspected for its
+            keys.
         """
         super(NestedEnv, self).__init__()
-        self._config = config
+        self._config = dict(config)
 
     def load(self, formatter=None):
-        # NOTE: We actually ignore central formatters because we do such
-        # special things with the keys.
+        # NOTE: This accepts a formatter argument because that's the API.
+        # However we don't use it (or the centrally defined one) because we
+        # have specific requirements for how keys are treated in this adapter.
+        # Meh!
         
         # Crawl existing keys from already-loaded self._config
         # Keep track of key depth / path
-        # When reach leaf, generate flattened+uppercased key, store in secondary list
+        # When reach leaf, generate flattened+uppercased key, store in
+        # secondary list
         # If already exists in secondary list, implies a conflict
         #   If environ has this key, raise exception - ambiguity
-        #   Otherwise, no problem
+        #   Otherwise, no problem, ignore and move on
         # If environ has key, get it, and set on self/self.data at nested
         # location
         # Otherwise, is no-op (but possibly log debug)
+
+        env_vars = self._crawl(key_path=[], env_vars={})
+        print
+        print "end result: %r" % (env_vars,)
+
+        for env_var, key_path in env_vars.iteritems():
+            if env_var in os.environ:
+                # TODO: type casting
+                self._path_set(key_path, os.environ[env_var])
+
+    def _crawl(self, key_path, env_vars):
+        """
+        Examine config at location ``key_path`` & return potential env vars.
+
+        Uses ``env_vars`` dict to determine if a conflict exists, and raises an
+        exception if so. This dict is of the following form::
+
+            {
+                'EXPECTED_ENV_VAR_HERE': ['actual', 'nested', 'key_path'],
+                ...
+            }
+
+        Returns another dictionary of new keypairs as per above.
+        """
+        new_vars = {}
+        obj = self._path_get(key_path)
+        print "crawl start, obj -> %r" % (obj,)
+        # Sub-dict -> recurse
+        if hasattr(obj, 'keys') and hasattr(obj, '__getitem__'):
+            for key in obj.keys():
+                print "checking key %r" % (key,)
+                # TODO: detect conflicts, raise
+                merged_vars = dict(env_vars, **new_vars)
+                merged_path = key_path + [key]
+                print "new path -> %r, new vars -> %r" % (merged_path, merged_vars)
+                crawled = self._crawl(merged_path, merged_vars)
+                print "result from subcrawl: %r" % (crawled,)
+                new_vars.update(crawled)
+        # Other -> is leaf, no recursion
+        else:
+            new_key = '_'.join(key_path).upper()
+            new_vars[new_key] = key_path
+        return new_vars
+
+    def _path_get(self, key_path):
+        obj = copy.deepcopy(self._config)
+        for key in key_path:
+            obj = obj[key]
+        return obj
+
+    def _path_set(self, key_path, value):
+        obj = copy.deepcopy(self._config)
+        for key in key_path[:-1]:
+            obj = obj[key]
+        obj[key_path[-1]] = value
 
 
 class DataProxy(object):
