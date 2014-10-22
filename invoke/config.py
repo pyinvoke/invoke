@@ -49,8 +49,6 @@ class NestedEnv(Adapter):
         # Otherwise, is no-op (but possibly log debug)
 
         env_vars = self._crawl(key_path=[], env_vars={})
-        print
-        print "end result: %r" % (env_vars,)
 
         for env_var, key_path in env_vars.iteritems():
             if env_var in os.environ:
@@ -73,17 +71,13 @@ class NestedEnv(Adapter):
         """
         new_vars = {}
         obj = self._path_get(key_path)
-        print "crawl start, obj -> %r" % (obj,)
         # Sub-dict -> recurse
         if hasattr(obj, 'keys') and hasattr(obj, '__getitem__'):
             for key in obj.keys():
-                print "checking key %r" % (key,)
                 # TODO: detect conflicts, raise
                 merged_vars = dict(env_vars, **new_vars)
                 merged_path = key_path + [key]
-                print "new path -> %r, new vars -> %r" % (merged_path, merged_vars)
                 crawled = self._crawl(merged_path, merged_vars)
-                print "result from subcrawl: %r" % (crawled,)
                 new_vars.update(crawled)
         # Other -> is leaf, no recursion
         else:
