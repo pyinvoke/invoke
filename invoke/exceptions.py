@@ -69,3 +69,13 @@ class AmbiguousEnvVar(Exception):
     Raised when loading env var config keys has an ambiguous target.
     """
     pass
+
+
+class UncastableEnvVar(Exception):
+    """
+    Raised on attempted env var loads whose default values are too rich.
+
+    E.g. trying to stuff ``MY_VAR="foo"`` into ``{'my_var': ['uh', 'oh']}``
+    doesn't make any sense until/if we implement some sort of transform option.
+    """
+    pass

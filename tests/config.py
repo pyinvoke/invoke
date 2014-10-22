@@ -6,7 +6,7 @@ from spec import Spec, skip, eq_, ok_, raises
 from invoke.vendor.etcaetera.adapter import File, Adapter
 
 from invoke.config import Config
-from invoke.exceptions import AmbiguousEnvVar
+from invoke.exceptions import AmbiguousEnvVar, UncastableEnvVar
 
 from _utils import CleanEnvSpec
 
@@ -333,18 +333,32 @@ Valid keys: []""".lstrip()
                     c.load(defaults={'foo': 'bar'})
                     eq_(c.foo, input_)
 
-            def lists_raise_exception(self):
-                skip()
-
-            def dicts_raise_exception(self):
-                skip()
-
             def numeric_types_become_casted(self):
                 # int
                 # float
                 # long
                 # ???
                 skip()
+
+            class uncastable_types:
+                @raises(UncastableEnvVar)
+                def _uncastable_type(self, default):
+                    os.environ['FOO'] = 'stuff'
+                    c = Config()
+                    c.load(defaults={'foo': default})
+
+                def lists(self):
+                    self._uncastable_type(['a', 'list'])
+
+                def tuples(self):
+                    self._uncastable_type(('a', 'tuple'))
+
+                def dicts(self):
+                    self._uncastable_type({'a': 'dict'})
+
+                def custom_types(self):
+                    self._uncastable_type(object())
+
 
     class hierarchy:
         "Config hierarchy in effect"
