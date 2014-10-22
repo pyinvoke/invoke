@@ -29,7 +29,7 @@ class NestedEnv(Adapter):
             keys.
         """
         super(NestedEnv, self).__init__()
-        self._config = dict(config)
+        self._config = config
 
     def load(self, formatter=None):
         # NOTE: This accepts a formatter argument because that's the API.
@@ -92,13 +92,13 @@ class NestedEnv(Adapter):
         return new_vars
 
     def _path_get(self, key_path):
-        obj = copy.deepcopy(self._config)
+        obj = self._config
         for key in key_path:
             obj = obj[key]
         return obj
 
     def _path_set(self, key_path, value):
-        obj = copy.deepcopy(self._config)
+        obj = self._config
         for key in key_path[:-1]:
             obj = obj[key]
         obj[key_path[-1]] = value
