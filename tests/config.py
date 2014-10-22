@@ -189,6 +189,15 @@ Valid keys: []""".lstrip()
             c.update({'foo': 'bar'})
             eq_(c['foo'], 'bar')
 
+    def python_modules_load_lowercase_but_not_special_vars(self):
+        # Borrow another test's Python module.
+        c = _load('global', join('python-only', 'invoke'))
+        # Sanity test that lowercase works
+        eq_(c.hooray, 'python')
+        # Real test that builtins, etc are stripped out
+        for special in ('builtins', 'file', 'package', 'name', 'doc'):
+            ok_('__{0}__'.format(special) not in c)
+
     class system_global:
         "Systemwide conf file"
         def yaml_first(self):
