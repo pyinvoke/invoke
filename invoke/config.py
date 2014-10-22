@@ -6,6 +6,8 @@ from types import DictType
 from .vendor.etcaetera.config import Config as EtcConfig
 from .vendor.etcaetera.adapter import File, Defaults, Overrides, Adapter
 
+from .exceptions import AmbiguousEnvVar
+
 
 def noop(s):
     """
@@ -74,10 +76,15 @@ class NestedEnv(Adapter):
         # Sub-dict -> recurse
         if hasattr(obj, 'keys') and hasattr(obj, '__getitem__'):
             for key in obj.keys():
-                # TODO: detect conflicts, raise
                 merged_vars = dict(env_vars, **new_vars)
                 merged_path = key_path + [key]
                 crawled = self._crawl(merged_path, merged_vars)
+                # Handle conflicts
+                for key in crawled:
+                    if key in new_vars:
+                        err = "Found >1 source for {0}"
+                        raise AmbiguousEnvVar(err.format(key))
+                # Merge and continue
                 new_vars.update(crawled)
         # Other -> is leaf, no recursion
         else:
