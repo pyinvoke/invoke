@@ -355,6 +355,17 @@ Valid keys: []""".lstrip()
                     c.load(defaults={'foo': old()})
                     eq_(c.foo, result)
 
+            def arbitrary_types_work_too(self):
+                os.environ['FOO'] = 'whatever'
+                c = Config()
+                class Meh(object):
+                    def __init__(self, thing=None):
+                        pass
+                old_obj = Meh()
+                c.load(defaults={'foo': old_obj})
+                ok_(isinstance(c.foo, Meh))
+                ok_(c.foo is not old_obj)
+
             class uncastable_types:
                 @raises(UncastableEnvVar)
                 def _uncastable_type(self, default):
@@ -367,9 +378,6 @@ Valid keys: []""".lstrip()
 
                 def tuples(self):
                     self._uncastable_type(('a', 'tuple'))
-
-                def custom_types(self):
-                    self._uncastable_type(object())
 
 
     class hierarchy:
