@@ -294,16 +294,18 @@ Valid keys: []""".lstrip()
 
         class type_casting:
             def strings_replaced_with_env_value(self):
-                skip()
+                os.environ['FOO'] = u'myvalue'
+                c = Config()
+                c.load(defaults={'foo': 'myoldvalue'})
+                eq_(c.foo, u'myvalue')
+                ok_(isinstance(c.foo, unicode)) # FIXME: py3
 
             def unicode_replaced_with_env_value(self):
-                skip()
-
-            def string_replacement_can_change_type(self):
-                # E.g. if os.environ value is a string and setting value is a
-                # unicode, new value is a string, not a unicode - and vice
-                # versa
-                skip()
+                os.environ['FOO'] = 'myunicode'
+                c = Config()
+                c.load(defaults={'foo': u'myoldvalue'})
+                eq_(c.foo, 'myunicode')
+                ok_(isinstance(c.foo, str)) # FIXME: py3
 
             def None_replaced(self):
                 skip()
