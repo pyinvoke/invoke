@@ -38,20 +38,7 @@ class NestedEnv(Adapter):
         # However we don't use it (or the centrally defined one) because we
         # have specific requirements for how keys are treated in this adapter.
         # Meh!
-        
-        # Crawl existing keys from already-loaded self._config
-        # Keep track of key depth / path
-        # When reach leaf, generate flattened+uppercased key, store in
-        # secondary list
-        # If already exists in secondary list, implies a conflict
-        #   If environ has this key, raise exception - ambiguity
-        #   Otherwise, no problem, ignore and move on
-        # If environ has key, get it, and set on self/self.data at nested
-        # location
-        # Otherwise, is no-op (but possibly log debug)
-
         env_vars = self._crawl(key_path=[], env_vars={})
-
         for env_var, key_path in env_vars.iteritems():
             if env_var in os.environ:
                 # TODO: type casting
