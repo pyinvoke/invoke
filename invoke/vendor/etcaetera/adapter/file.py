@@ -23,6 +23,13 @@ class File(Adapter):
         if not os.path.exists(self.filepath):
             raise IOError("Path {0} does not exist".format(self.filepath))
 
+    def _okay(self, key):
+        # Is all-uppercase required?
+        if self.python_uppercase:
+            return key.isupper()
+        # If not, make sure we strip out any special variables
+        return not key.startswith('__')
+
     def load(self, formatter=None):
         try:
             fd = open(self.filepath, 'r')
@@ -49,7 +56,7 @@ class File(Adapter):
             self.data = dict(
                 (self.format(k, formatter), v)
                 for k, v in vars(mod).items()
-                if (k.isupper() if self.python_uppercase else True)
+                if self._okay(k)
             )
         else:
             raise ValueError("Unhandled file extension {0}".format(file_extension))
