@@ -361,9 +361,6 @@ Valid keys: []""".lstrip()
                 def tuples(self):
                     self._uncastable_type(('a', 'tuple'))
 
-                def dicts(self):
-                    self._uncastable_type({'a': 'dict'})
-
                 def custom_types(self):
                     self._uncastable_type(object())
 

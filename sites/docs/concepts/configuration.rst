@@ -163,7 +163,8 @@ from the shell:
 * Booleans are set as follows: ``0`` and the empty value/string (e.g.
   ``SETTING=``, or ``unset SETTING``, or etc) evaluate to ``False``, and any
   other value evaluates to ``True``.
-* Lists and dicts are currently unsupported and will raise an exception;
+* Lists and other complex types are currently unsupported and will raise an
+  exception;
 
     * In the future we may implement convenience transformations, such as
       splitting on commas to form a list; however since users can always
