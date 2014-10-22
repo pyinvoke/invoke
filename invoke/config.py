@@ -81,9 +81,11 @@ class NestedEnv(Adapter):
                 new_vars.update(crawled)
         # Other -> is leaf, no recursion
         else:
-            new_key = '_'.join(key_path).upper()
-            new_vars[new_key] = key_path
+            new_vars[self._to_env_var(key_path)] = key_path
         return new_vars
+
+    def _to_env_var(self, key_path):
+        return '_'.join(key_path).upper()
 
     def _path_get(self, key_path):
         obj = self._config
