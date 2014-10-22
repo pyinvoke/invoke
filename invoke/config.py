@@ -41,7 +41,6 @@ class NestedEnv(Adapter):
         env_vars = self._crawl(key_path=[], env_vars={})
         for env_var, key_path in env_vars.iteritems():
             if env_var in os.environ:
-                # TODO: type casting
                 self._path_set(key_path, os.environ[env_var])
 
     def _crawl(self, key_path, env_vars):
@@ -91,7 +90,11 @@ class NestedEnv(Adapter):
         obj = self._config
         for key in key_path[:-1]:
             obj = obj[key]
-        obj[key_path[-1]] = value
+        old = obj[key_path[-1]]
+        obj[key_path[-1]] = self._cast(old, value)
+
+    def _cast(self, old, new_):
+        return new_
 
 
 class DataProxy(object):
