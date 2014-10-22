@@ -190,6 +190,15 @@ class DataProxy(object):
             value = DataProxy.from_data(value)
         return value
 
+    def __str__(self):
+        return str(self.config)
+
+    def __unicode__(self):
+        return unicode(self.config)
+
+    def __repr__(self):
+        return repr(self.config)
+
     # TODO: copy()?
 
 

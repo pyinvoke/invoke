@@ -189,6 +189,14 @@ Valid keys: []""".lstrip()
             c.update({'foo': 'bar'})
             eq_(c['foo'], 'bar')
 
+        def string_display(self):
+            "__str__ and friends"
+            config = Config({'foo': 'bar'})
+            config.load()
+            eq_(str(config), "{'foo': 'bar'}")
+            eq_(unicode(config), u"{'foo': 'bar'}")
+            eq_(repr(config), "{'foo': 'bar'}")
+
     def python_modules_load_lowercase_but_not_special_vars(self):
         # Borrow another test's Python module.
         c = _load('global', join('python-only', 'invoke'))
