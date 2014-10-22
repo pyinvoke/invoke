@@ -274,7 +274,7 @@ Valid keys: []""".lstrip()
         def both_types_of_underscores_mixed(self):
             os.environ['FOO_BAR_BIZ'] = 'baz'
             c = Config()
-            c.load(defaults={'foo_bar': {'biz': 'baz'}})
+            c.load(defaults={'foo_bar': {'biz': 'notbaz'}})
             eq_(c.foo_bar.biz, 'baz')
 
         @raises(AmbiguousEnvVar)
