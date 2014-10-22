@@ -308,12 +308,27 @@ Valid keys: []""".lstrip()
                 ok_(isinstance(c.foo, str)) # FIXME: py3
 
             def None_replaced(self):
-                skip()
+                os.environ['FOO'] = 'something'
+                c = Config()
+                c.load(defaults={'foo': None})
+                eq_(c.foo, 'something')
 
             def booleans(self):
-                # 0 and empty-string -> false
-                # all other values true
-                # 'false' string is true
+                for input_, result in (
+                    ('0', False),
+                    ('1', True),
+                    ('', False),
+                    ('meh', True),
+                    ('false', True),
+                ):
+                    os.environ['FOO'] = input_
+                    c = Config()
+                    c.load(defaults={'foo': bool()})
+                    eq_(c.foo, result)
+
+            def boolean_type_inputs_with_non_boolean_defaults(self):
+                # when existing value is NOT boolean, the above all become
+                # normal or follow other rules
                 skip()
 
             def lists_raise_exception(self):
