@@ -344,8 +344,6 @@ Valid keys: []""".lstrip()
             def numeric_types_become_casted(self):
                 for old, new_, result in (
                     (int, '5', 5),
-                    (int, '5.0', 5),
-                    (float, '5', 5.0),
                     (float, '5.5', 5.5),
                     (long, '5', 5L),
                     # TODO: more?

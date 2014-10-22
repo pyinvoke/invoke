@@ -1,7 +1,7 @@
 import copy
 import os
 from os.path import join
-from types import DictType, BooleanType, StringTypes
+from types import DictType, BooleanType, StringTypes, ListType, TupleType
 
 from .vendor.etcaetera.config import Config as EtcConfig
 from .vendor.etcaetera.adapter import File, Defaults, Overrides, Adapter
@@ -100,10 +100,12 @@ class NestedEnv(Adapter):
             return new_
         elif old is None:
             return new_
-        else:
+        elif isinstance(old, (ListType, TupleType)):
             err = "Can't adapt an environment string into a {0}!"
             err = err.format(type(old))
             raise UncastableEnvVar(err)
+        else:
+            return old.__class__(new_)
 
 
 class DataProxy(object):
