@@ -17,13 +17,20 @@ def _loads_path(c, path):
     found = any(x == path for x in paths)
     ok_(found, "{0!r} not found, file adapters: {1!r}".format(path, paths))
 
-CONFIGS_PATH = join('tests', '_support', 'configs')
 
-def _load(key, path):
-    path = join(CONFIGS_PATH, key, path)
-    c = Config(**{'{0}_prefix'.format(key): path})
+CONFIGS_PATH = join('tests', '_support', 'configs')
+TYPES = ('yaml', 'json', 'python')
+
+def _load(kwarg, type_):
+    path = join(CONFIGS_PATH, type_, 'invoke')
+    c = Config(**{kwarg: path})
     c.load()
     return c
+
+def _expect(where, type_, **kwargs):
+    config = _load(where, type_)
+    for key, value in kwargs.iteritems():
+        eq_(config[key], value)
 
 
 class Config_(CleanEnvSpec):
@@ -199,67 +206,42 @@ Valid keys: []""".lstrip()
 
     def python_modules_load_lowercase_but_not_special_vars(self):
         # Borrow another test's Python module.
-        c = _load('global', join('python-only', 'invoke'))
+        c = _load('global_prefix', 'python')
         # Sanity test that lowercase works
         eq_(c.hooray, 'python')
         # Real test that builtins, etc are stripped out
         for special in ('builtins', 'file', 'package', 'name', 'doc'):
             ok_('__{0}__'.format(special) not in c)
 
-    class system_global:
-        "Systemwide conf file"
-        def yaml_first(self):
-            c = _load('global', join('yaml-only', 'invoke'))
-            eq_(c.hooray, 'yaml')
+    class config_file_loading:
+        "Configuration file loading"
 
-        def json_if_no_yaml(self):
-            c = _load('global', join('json-only', 'invoke'))
-            eq_(c.hooray, 'json')
+        def system_global(self):
+            "Systemwide conf files"
+            for type_ in TYPES:
+                _expect('global_prefix', type_, hooray=type_)
 
-        def python_if_no_json_or_yaml(self):
-            c = _load('global', join('python-only', 'invoke'))
-            eq_(c.hooray, 'python')
+        def user_specific(self):
+            "User-specific conf files"
+            for type_ in TYPES:
+                _expect('user_prefix', type_, hooray=type_)
 
-    class user_specific:
-        "User-specific conf file"
-        def yaml_first(self):
-            c = _load('user', join('yaml-only', '.invoke'))
-            eq_(c.user, 'yaml')
+        def project_specific(self):
+            "Local-to-project conf files"
+            for type_ in TYPES:
+                c = Config(project_home=join(CONFIGS_PATH, type_))
+                c.load()
+                eq_(c.hooray, type_)
 
-        def json_if_no_yaml(self):
-            c = _load('user', join('json-only', '.invoke'))
-            eq_(c.user, 'json')
-
-        def python_if_no_json_or_yaml(self):
-            c = _load('user', join('python-only', '.invoke'))
-            eq_(c.user, 'python')
-
-    class project_specific:
-        "Local-to-project conf file"
-        def yaml_first(self):
-            c = Config(project_home=join(CONFIGS_PATH, 'project', 'yaml-only'))
-            c.load()
-            eq_(c.project_setting, 'yaml')
-
-        def json_if_no_yaml(self):
-            c = Config(project_home=join(CONFIGS_PATH, 'project', 'json-only'))
-            c.load()
-            eq_(c.project_setting, 'json')
-
-        def python_if_no_json_or_yaml(self):
-            c = Config(project_home=join(CONFIGS_PATH, 'project', 'py-only'))
-            c.load()
-            eq_(c.project_setting, 'python')
-
-        def loads_nothing_if_no_project_home_given(self):
+        def loads_no_project_specific_file_if_no_project_home_given(self):
             c = Config()
             c.load()
             eq_(c.keys(), [])
 
-    def honors_conf_file_flag(self):
-        c = Config(runtime_path=join(CONFIGS_PATH, 'runtime', 'runtime.yaml'))
-        c.load()
-        eq_(c["what time?"], "run time!")
+        def honors_conf_file_flag(self):
+            c = Config(runtime_path=join(CONFIGS_PATH, 'yaml', 'invoke.yaml'))
+            c.load()
+            eq_(c.hooray, 'yaml')
 
     class env_vars:
         "Environment variables"

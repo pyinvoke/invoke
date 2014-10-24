@@ -5,4 +5,4 @@ from invoke import ctask
 
 @ctask
 def mytask(c):
-    eq_(c['what time?'], 'run time!')
+    eq_(c.hooray, 'yaml')

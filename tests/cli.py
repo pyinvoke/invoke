@@ -294,13 +294,12 @@ Available tasks:
         "Configuration-related concerns"
 
         def per_project_config_files_are_loaded(self):
-            # Just reuse an existing project bit
-            with cd(os.path.join('configs', 'project', 'yaml-only')):
+            with cd(os.path.join('configs', 'yaml')):
                 _dispatch("inv mytask")
 
         def runtime_config_file_honored(self):
-            with cd(os.path.join('configs', 'runtime')):
-                _dispatch("inv -f runtime.yaml mytask")
+            with cd(os.path.join('configs')):
+                _dispatch("inv -c runtime -f yaml/invoke.yaml mytask")
 
 
 TB_SENTINEL = 'Traceback (most recent call last)'

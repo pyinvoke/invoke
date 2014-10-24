@@ -5,4 +5,5 @@ from invoke import ctask
 
 @ctask
 def mytask(c):
-    eq_(c.project_setting, 'yaml')
+    print "wat"
+    eq_(c.hooray, 'yaml')
