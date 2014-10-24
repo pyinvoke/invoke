@@ -362,26 +362,62 @@ Valid keys: []""".lstrip()
 
     class hierarchy:
         "Config hierarchy in effect"
+
+        #
+        # NOTE: most of these just leverage existing test fixtures (which live
+        # in their own directories & have differing values for the 'hooray'
+        # key), since we normally don't need more than 2-3 different file
+        # locations for any one test.
+        #
+
         def systemwide_overrides_collection(self):
-            skip()
+            c = Config(global_prefix=join(CONFIGS_PATH, 'yaml', 'invoke'))
+            c.load(defaults={'hooray': 'defaults'})
+            eq_(c.hooray, 'yaml')
 
         def user_overrides_systemwide(self):
-            skip()
+            c = Config(
+                global_prefix=join(CONFIGS_PATH, 'yaml', 'invoke'),
+                user_prefix=join(CONFIGS_PATH, 'json', 'invoke'),
+            )
+            c.load()
+            eq_(c.hooray, 'json')
 
         def user_overrides_collection(self):
-            skip()
+            c = Config(user_prefix=join(CONFIGS_PATH, 'json', 'invoke'))
+            c.load(defaults={'hooray': 'defaults'})
+            eq_(c.hooray, 'json')
 
         def project_overrides_user(self):
-            skip()
+            c = Config(
+                user_prefix=join(CONFIGS_PATH, 'json', 'invoke'),
+                project_home=join(CONFIGS_PATH, 'yaml'),
+            )
+            c.load()
+            eq_(c.hooray, 'yaml')
 
         def project_overrides_systemwide(self):
-            skip()
+            c = Config(
+                global_prefix=join(CONFIGS_PATH, 'json', 'invoke'),
+                project_home=join(CONFIGS_PATH, 'yaml'),
+            )
+            c.load()
+            eq_(c.hooray, 'yaml')
 
         def project_overrides_collection(self):
-            skip()
+            c = Config(
+                project_home=join(CONFIGS_PATH, 'yaml'),
+            )
+            c.load(defaults={'hooray': 'defaults'})
+            eq_(c.hooray, 'yaml')
 
         def env_vars_override_project(self):
-            skip()
+            os.environ['HOORAY'] = 'env'
+            c = Config(
+                project_home=join(CONFIGS_PATH, 'yaml'),
+            )
+            c.load()
+            eq_(c.hooray, 'env')
 
         def env_vars_override_user(self):
             skip()
