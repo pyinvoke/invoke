@@ -237,7 +237,8 @@ class Config(DataProxy):
     This class implements the entire dictionary protocol.
     """
 
-    def __init__(self, overrides=None, global_prefix=None, user_prefix=None, project_home=None, runtime_path=None, adapters=None):
+    def __init__(self, overrides=None, global_prefix=None, user_prefix=None,
+        project_home=None, runtime_path=None, adapters=None):
         """
         Creates a new config object, but does not load any configuration data.
 
