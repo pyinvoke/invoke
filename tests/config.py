@@ -443,12 +443,17 @@ Valid keys: []""".lstrip()
 
         def runtime_overrides_env_vars(self):
             os.environ['HOORAY'] = 'env'
-            c = Config(runtime_path=join(CONFIGS_PATH, 'yaml', 'invoke.yaml'))
+            c = Config(runtime_path=join(CONFIGS_PATH, 'json', 'invoke.json'))
             c.load()
-            eq_(c.hooray, 'yaml')
+            eq_(c.hooray, 'json')
 
         def runtime_overrides_project(self):
-            skip()
+            c = Config(
+                runtime_path=join(CONFIGS_PATH, 'json', 'invoke.json'),
+                project_home=join(CONFIGS_PATH, 'yaml'),
+            )
+            c.load()
+            eq_(c.hooray, 'json')
 
         def runtime_overrides_user(self):
             skip()
