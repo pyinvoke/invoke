@@ -420,13 +420,26 @@ Valid keys: []""".lstrip()
             eq_(c.hooray, 'env')
 
         def env_vars_override_user(self):
-            skip()
+            os.environ['HOORAY'] = 'env'
+            c = Config(
+                user_prefix=join(CONFIGS_PATH, 'yaml', 'invoke'),
+            )
+            c.load()
+            eq_(c.hooray, 'env')
 
         def env_vars_override_systemwide(self):
-            skip()
+            os.environ['HOORAY'] = 'env'
+            c = Config(
+                global_prefix=join(CONFIGS_PATH, 'yaml', 'invoke'),
+            )
+            c.load()
+            eq_(c.hooray, 'env')
 
         def env_vars_override_collection(self):
-            skip()
+            os.environ['HOORAY'] = 'env'
+            c = Config()
+            c.load(defaults={'hooray': 'defaults'})
+            eq_(c.hooray, 'env')
 
         def runtime_overrides_env_vars(self):
             skip()
