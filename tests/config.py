@@ -456,17 +456,35 @@ Valid keys: []""".lstrip()
             eq_(c.hooray, 'json')
 
         def runtime_overrides_user(self):
-            skip()
+            c = Config(
+                runtime_path=join(CONFIGS_PATH, 'json', 'invoke.json'),
+                user_prefix=join(CONFIGS_PATH, 'yaml', 'invoke'),
+            )
+            c.load()
+            eq_(c.hooray, 'json')
 
         def runtime_overrides_systemwide(self):
-            skip()
+            c = Config(
+                runtime_path=join(CONFIGS_PATH, 'json', 'invoke.json'),
+                global_prefix=join(CONFIGS_PATH, 'yaml', 'invoke'),
+            )
+            c.load()
+            eq_(c.hooray, 'json')
 
         def runtime_overrides_collection(self):
-            skip()
+            c = Config(runtime_path=join(CONFIGS_PATH, 'json', 'invoke.json'))
+            c.load(defaults={'hooray': 'defaults'})
+            eq_(c.hooray, 'json')
 
-        def e_flag_overrides_all(self):
-            "-e overrides run.echo for all other layers"
-            skip()
+        def cli_overrides_override_all(self):
+            "CLI-driven overrides win vs all other layers"
+            # TODO: expand into more explicit tests like the above? meh
+            c = Config(
+                overrides={'hooray': 'overrides'},
+                runtime_path=join(CONFIGS_PATH, 'json', 'invoke.json')
+            )
+            c.load()
+            eq_(c.hooray, 'overrides')
 
 
     class clone:
