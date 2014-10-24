@@ -138,9 +138,13 @@ class AdapterSet(deque):
         elif index >= len(self):
             self.append(adapter)
         else:
-            self.rotate(index)
+            # Use deque.rotate to roll forward (right) enough that we can
+            # append the new one at desired spot, then use rotate with a
+            # negative index to roll back to our starting point.
+            focus = len(self) - index
+            self.rotate(focus)
             self.append(adapter)
-            self.rotate(-index)
+            self.rotate(-focus)
 
     def _load_adapters(self, adapters):
         for index, adapter in enumerate(adapters):
