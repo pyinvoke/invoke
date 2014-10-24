@@ -442,7 +442,10 @@ Valid keys: []""".lstrip()
             eq_(c.hooray, 'env')
 
         def runtime_overrides_env_vars(self):
-            skip()
+            os.environ['HOORAY'] = 'env'
+            c = Config(runtime_path=join(CONFIGS_PATH, 'yaml', 'invoke.yaml'))
+            c.load()
+            eq_(c.hooray, 'yaml')
 
         def runtime_overrides_project(self):
             skip()
