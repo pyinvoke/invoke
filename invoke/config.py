@@ -340,7 +340,10 @@ class Config(DataProxy):
         # files get slurped up.
         self.config.load()
         env = NestedEnv(self.config)
-        self.config.register(env)
+        # Must break encapsulation a tiny bit here to ensure env vars come
+        # before runtime config files in the hierarchy. It's the least bad way
+        # right now given etc.Config's api.
+        self.config.adapters.insert(len(self.config.adapters) - 2, env)
         # TODO: fix up register order?? Probably just need to actually-register
         # Env prior to registering the runtime config file...
         # Re-load() so that our values get applied in the right slot in the
