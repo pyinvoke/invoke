@@ -301,6 +301,17 @@ Available tasks:
             with cd('configs'):
                 _dispatch("inv -c runtime -f yaml/invoke.yaml mytask")
 
+        def run_echo_honors_configuration_overrides(self):
+            # Try a few realistic-for-this-setting levels:
+            # Collection
+            with cd('configs'):
+                with patch('invoke.context.run') as run:
+                    _dispatch('invoke -c mixed collection')
+                    run.assert_called_with('false', echo=True)
+
+            # User
+            # Runtime conf file
+            # CLI flag always wins
 
 TB_SENTINEL = 'Traceback (most recent call last)'
 
