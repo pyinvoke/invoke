@@ -298,7 +298,7 @@ Available tasks:
                 _dispatch("inv mytask")
 
         def runtime_config_file_honored(self):
-            with cd(os.path.join('configs')):
+            with cd('configs'):
                 _dispatch("inv -c runtime -f yaml/invoke.yaml mytask")
 
 
