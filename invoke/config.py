@@ -7,6 +7,7 @@ from .vendor.etcaetera.config import Config as EtcConfig
 from .vendor.etcaetera.adapter import File, Defaults, Overrides, Adapter
 
 from .exceptions import AmbiguousEnvVar, UncastableEnvVar
+from .util import debug
 
 
 def noop(s):
@@ -344,11 +345,17 @@ class Config(DataProxy):
         # before runtime config files in the hierarchy. It's the least bad way
         # right now given etc.Config's api.
         self.config.adapters.insert(len(self.config.adapters) - 2, env)
-        # TODO: fix up register order?? Probably just need to actually-register
-        # Env prior to registering the runtime config file...
         # Re-load() so that our values get applied in the right slot in the
         # hierarchy.
-        return self.config.load()
+        self.config.load()
+        for adapter in self.config.adapters:
+            if isinstance(adapter, File) and not adapter.found:
+                debug("Didn't see any {0}, skipping".format(adapter))
+            else:
+                # Wrap adapter in dict() so defaultdicts print nicer
+                debug("Loaded {0}, got {1!r}".format(
+                    adapter, dict(adapter.data)))
+        debug("Final merged config: {0!r}".format(self.config))
 
     def clone(self):
         """
