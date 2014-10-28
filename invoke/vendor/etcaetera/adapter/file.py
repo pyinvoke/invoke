@@ -12,7 +12,7 @@ from ..constants import (
 
 class File(Adapter):
     def __init__(self, filepath, python_uppercase=True, *args, **kwargs):
-        self.filepath = filepath
+        self.filepath = os.path.expanduser(filepath)
         self.python_uppercase = python_uppercase
 
         # If strict parameter (inherited from parent) is True,
@@ -62,3 +62,6 @@ class File(Adapter):
             raise ValueError("Unhandled file extension {0}".format(file_extension))
 
         fd.close()
+
+    def __str__(self):
+        return "File({0!r})".format(self.filepath)
