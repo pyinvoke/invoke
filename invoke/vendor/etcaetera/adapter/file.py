@@ -14,6 +14,7 @@ class File(Adapter):
     def __init__(self, filepath, python_uppercase=True, *args, **kwargs):
         self.filepath = os.path.expanduser(filepath)
         self.python_uppercase = python_uppercase
+        self.found = False
 
         # If strict parameter (inherited from parent) is True,
         # strictness_check routine will be called
@@ -62,6 +63,7 @@ class File(Adapter):
             raise ValueError("Unhandled file extension {0}".format(file_extension))
 
         fd.close()
+        self.found = True
 
     def __str__(self):
         return "File({0!r})".format(self.filepath)
