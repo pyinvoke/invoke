@@ -152,6 +152,15 @@ Valid keys: []""".lstrip()
                 err = "Expected to find {0!r} in {1!r}, didn't"
                 ok_(x in c, err.format(x, c.keys()))
 
+        def loading_merges_subkeys(self):
+            # Ensures nested keys merge deeply instead of shallowly.
+            defaults = {'foo': {'bar': 'baz'}}
+            overrides = {'foo': {'notbar': 'notbaz'}}
+            c = Config(overrides=overrides)
+            c.load(defaults=defaults)
+            eq_(c.foo.notbar, 'notbaz')
+            eq_(c.foo.bar, 'baz')
+
         def is_iterable_like_dict(self):
             def expect(c, expected):
                 eq_(set(c.keys()), expected)
