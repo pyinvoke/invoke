@@ -109,6 +109,57 @@ class NestedEnv(Adapter):
             return old.__class__(new_)
 
 
+class ExclusiveFile(Adapter):
+    """
+    File-loading config adapter that looks for one of N possible suffixes.
+
+    For example, ``ExclusiveFile(prefix='/etc/invoke', suffixes=['yaml',
+    'json'])`` behaves similar to loading both of
+    ``File('/etc/invoke.yaml')`` + ``File('/etc/invoke.json')``, with the
+    distinction that if ``/etc/invoke.yaml`` is succesfully loaded, the JSON
+    file is **not** loaded at all. (This means that the order of the
+    ``suffixes`` parameter matters.)
+
+    This provides an unambiguous config source-loading process, simplifying
+    troubleshooting and (hopefully) reduces potential for confusion.
+
+    :param str prefix:
+        Everything but the file extension, e.g. ``/etc/invoke`` to load up
+        files like ``/etc/invoke.yaml``.
+
+    :param iterable suffixes:
+        Optional iterable of file extensions like ``"yaml"`` or ``"json"``. Do
+        not include any leading periods (i.e. don't say
+        ``ExclusiveFile('/etc/invoke', '.yaml')``).
+
+        Defaults to ``('yaml', 'json', 'py')``.
+    """
+    def __init__(self, prefix, suffixes=None):
+        if suffixes is None:
+            suffixes = ('yaml', 'json', 'py')
+        self.prefix = prefix
+        self.suffixes = suffixes
+        self.adapters = [
+            File(
+                "{0}.{1}".format(prefix, x),
+                python_uppercase=False,
+                strict=False
+            )
+            for x in suffixes
+        ]
+        self.data = {}
+
+    def load(self, formatter=None):
+        # NOTE: Formatter is required by spec but presently ignored.
+        for adapter in self.adapters:
+            adapter.load()
+            # Simply offload data from the 1st one to be found.
+            # If none are found, our data remains empty as initialized.
+            if adapter.found:
+                self.data = adapter.data
+                return
+
+
 class DataProxy(object):
     """
     Helper class implementing nested dict+attr access for `.Config`.
@@ -304,10 +355,7 @@ class Config(DataProxy):
             if project_home is not None:
                 prefixes.append(join(project_home, "invoke"))
             for prefix in prefixes:
-                c.register(File("{0}.yaml".format(prefix)))
-                c.register(File("{0}.json".format(prefix)))
-                py = File("{0}.py".format(prefix), python_uppercase=False)
-                c.register(py)
+                c.register(ExclusiveFile(prefix=prefix))
             # Level 5: environment variables. See `load()` - must be done as
             # late as possible to 'see' all other defined keys.
             # Level 6: Runtime config file
@@ -387,6 +435,11 @@ def _clone_adapter(old):
             filepath=old.filepath,
             python_uppercase=old.python_uppercase,
             formatter=old.formatter,
+        )
+    elif isinstance(old, ExclusiveFile):
+        new = ExclusiveFile(
+            prefix=old.prefix,
+            suffixes=old.suffixes,
         )
     elif isinstance(old, NestedEnv):
         new = NestedEnv(old._config)
