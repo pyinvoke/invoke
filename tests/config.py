@@ -495,6 +495,23 @@ Valid keys: []""".lstrip()
             c.load()
             eq_(c.hooray, 'overrides')
 
+        def yaml_prevents_json_or_python(self):
+            c = Config(
+                global_prefix=join(CONFIGS_PATH, 'all-three', 'invoke'))
+            c.load()
+            ok_('json-only' not in c)
+            ok_('python_only' not in c)
+            ok_('yaml-only' in c)
+            eq_(c.shared, 'yaml-value')
+
+        def json_prevents_python(self):
+            c = Config(
+                global_prefix=join(CONFIGS_PATH, 'json-and-python', 'invoke'))
+            c.load()
+            ok_('python_only' not in c)
+            ok_('json-only' in c)
+            eq_(c.shared, 'json-value')
+
 
     class clone:
         def setup(self):
