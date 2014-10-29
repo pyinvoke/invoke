@@ -43,10 +43,14 @@ class NestedEnv(Adapter):
         # However we don't use it (or the centrally defined one) because we
         # have specific requirements for how keys are treated in this adapter.
         # Meh!
+
+        # Obtain allowed env var -> existing value map
         env_vars = self._crawl(key_path=[], env_vars={})
+        # Check for actual env var (honoring prefix) and try to set
         for env_var, key_path in env_vars.iteritems():
-            if env_var in os.environ:
-                self._path_set(key_path, os.environ[env_var])
+            real_var = (self._prefix or "") + env_var
+            if real_var in os.environ:
+                self._path_set(key_path, os.environ[real_var])
 
     def _crawl(self, key_path, env_vars):
         """
