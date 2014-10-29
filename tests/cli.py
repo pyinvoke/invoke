@@ -306,7 +306,7 @@ Available tasks:
             # Collection
             with cd('configs'):
                 with patch('invoke.context.run') as run:
-                    _dispatch('invoke -c mixed collection')
+                    _dispatch('invoke -c collection go')
                     run.assert_called_with('false', echo=True)
 
             # User
