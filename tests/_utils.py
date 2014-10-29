@@ -20,17 +20,11 @@ def load(name):
 
 class IntegrationSpec(Spec):
     def setup(self):
+        self.old_environ = os.environ.copy()
         os.chdir(support)
 
     def teardown(self):
         reset_cwd()
-
-
-class CleanEnvSpec(Spec):
-    def setup(self):
-        self.old_environ = os.environ.copy()
-
-    def teardown(self):
         os.environ.clear()
         os.environ.update(self.old_environ)
 

@@ -8,7 +8,7 @@ from invoke.vendor.etcaetera.adapter import File, Adapter
 from invoke.config import Config, ExclusiveFile
 from invoke.exceptions import AmbiguousEnvVar, UncastableEnvVar
 
-from _utils import CleanEnvSpec
+from _utils import IntegrationSpec
 
 
 def _loads_path(c, path):
@@ -22,7 +22,7 @@ def _loads_path(c, path):
     ok_(found, "{0!r} not found, file adapters: {1!r}".format(path, paths))
 
 
-CONFIGS_PATH = join('tests', '_support', 'configs')
+CONFIGS_PATH = 'configs'
 TYPES = ('yaml', 'json', 'python')
 
 def _load(kwarg, type_):
@@ -37,7 +37,7 @@ def _expect(where, type_, **kwargs):
         eq_(config[key], value)
 
 
-class Config_(CleanEnvSpec):
+class Config_(IntegrationSpec):
     class init:
         "__init__"
 
