@@ -4,9 +4,9 @@ from invoke import ctask, Collection
 
 
 @ctask
-def collection(c):
+def go(c):
     c.run('false') # Ensures a kaboom if mocking fails
 
 
-ns = Collection(collection)
+ns = Collection(go)
 ns.configure({'run': {'echo': True}})
