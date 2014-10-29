@@ -5,15 +5,19 @@ from spec import Spec, skip, eq_, ok_, raises
 
 from invoke.vendor.etcaetera.adapter import File, Adapter
 
-from invoke.config import Config
+from invoke.config import Config, ExclusiveFile
 from invoke.exceptions import AmbiguousEnvVar, UncastableEnvVar
 
 from _utils import CleanEnvSpec
 
 
 def _loads_path(c, path):
-    files = [x for x in c.config.adapters if isinstance(x, File)]
-    paths = [x.filepath for x in files]
+    paths = []
+    for adapter in c.config.adapters:
+        if isinstance(adapter, File):
+            paths.append(adapter.filepath)
+        elif isinstance(adapter, ExclusiveFile):
+            paths.extend(x.filepath for x in adapter.adapters)
     found = any(x == path for x in paths)
     ok_(found, "{0!r} not found, file adapters: {1!r}".format(path, paths))
 
