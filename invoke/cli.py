@@ -203,7 +203,7 @@ def parse(argv, collection=None, version=None):
         )
         raise Exit(1)
     parser = Parser(contexts=collection.to_contexts())
-    debug("Parsing tasks against collection %r" % collection)
+    debug("Parsing tasks against %r" % collection)
     tasks = parse_gracefully(parser, core.unparsed)
 
     # Per-task help. Use the parser's contexts dict as that's the easiest way
