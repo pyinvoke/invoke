@@ -23,16 +23,20 @@ class NestedEnv(Adapter):
     """
     Custom etcaetera adapter for handling env vars (more flexibly than Env).
     """
-    def __init__(self, config):
+    def __init__(self, config, prefix=None):
         """
         Initialize this adapter with a handle to a live Config object.
 
         :param config:
             An already-loaded Config object which can be introspected for its
             keys.
+
+        :param str prefix:
+            A prefix string used when seeking env vars; see `.Config`.
         """
         super(NestedEnv, self).__init__()
         self._config = config
+        self._prefix = prefix
 
     def load(self, formatter=None):
         # NOTE: This accepts a formatter argument because that's the API.
@@ -295,7 +299,7 @@ class Config(DataProxy):
     """
 
     def __init__(self, overrides=None, global_prefix=None, user_prefix=None,
-        project_home=None, runtime_path=None, adapters=None):
+        project_home=None, runtime_path=None, adapters=None, env_prefix=None):
         """
         Creates a new config object, but does not load any configuration data.
 
@@ -338,6 +342,15 @@ class Config(DataProxy):
             If this option is given, ``global_prefix`` and ``user_prefix`` will
             be ignored.
 
+        :param str env_prefix:
+            Environment variable seek prefix; optional, defaults to ``None``.
+
+            When not ``None``, only environment variables beginning with this
+            value will be loaded. If it is set, the keys will have the prefix
+            stripped out before processing, so e.g. ``env_prefix='INVOKE_'``
+            means users must set ``INVOKE_MYSETTING`` in the shell to affect
+            the ``"mysetting"`` setting.
+
         .. _Adapters: http://etcaetera.readthedocs.org/en/0.4.0/howto.html#adapters
         """
         # Setup
@@ -347,6 +360,8 @@ class Config(DataProxy):
             global_prefix = '/etc/invoke'
         if user_prefix is None:
             user_prefix = '~/.invoke'
+        # Store env prefix for use in load() when we parse the environment
+        self.env_prefix = env_prefix
         c = EtcConfig(formatter=noop)
         # Explicit adapter set
         if adapters is not None:
@@ -393,7 +408,7 @@ class Config(DataProxy):
         # adapter. This sadly requires a 'pre-load' call to .load() so config
         # files get slurped up.
         self.config.load()
-        env = NestedEnv(self.config)
+        env = NestedEnv(config=self.config, prefix=self.env_prefix)
         # Must break encapsulation a tiny bit here to ensure env vars come
         # before runtime config files in the hierarchy. It's the least bad way
         # right now given etc.Config's api.

@@ -5,7 +5,7 @@ from spec import Spec, skip, eq_, ok_, raises
 
 from invoke.vendor.etcaetera.adapter import File, Adapter
 
-from invoke.config import Config, ExclusiveFile
+from invoke.config import Config, ExclusiveFile, NestedEnv
 from invoke.exceptions import AmbiguousEnvVar, UncastableEnvVar
 
 from _utils import IntegrationSpec
@@ -87,7 +87,7 @@ class Config_(IntegrationSpec):
             found_prefix = None
             for adapter in c.config.adapters:
                 if isinstance(adapter, NestedEnv):
-                    found_prefix = adapter.prefix
+                    found_prefix = adapter._prefix
                     break
             eq_(found_prefix, 'INVOKE_')
 
