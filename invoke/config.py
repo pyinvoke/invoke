@@ -150,9 +150,8 @@ class ExclusiveFile(Adapter):
         self.data = {}
 
     def load(self, formatter=None):
-        # NOTE: Formatter is required by spec but presently ignored.
         for adapter in self.adapters:
-            adapter.load()
+            adapter.load(formatter=formatter)
             # Simply offload data from the 1st one to be found.
             # If none are found, our data remains empty as initialized.
             if adapter.found:
