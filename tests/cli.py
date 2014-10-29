@@ -313,6 +313,13 @@ Available tasks:
             # Runtime conf file
             # CLI flag always wins
 
+        def env_vars_load_with_prefix(self):
+            os.environ['INVOKE_RUN_ECHO'] = 1
+            with patch('invoke.context.run') as run:
+                _dispatch('invoke -c contextualized run')
+                run.assert_called_with('x', echo=True)
+
+
 TB_SENTINEL = 'Traceback (most recent call last)'
 
 class HighLevelFailures(Spec):
