@@ -443,5 +443,7 @@ def _clone_adapter(old):
         )
     elif isinstance(old, NestedEnv):
         new = NestedEnv(old._config)
+    else:
+        raise TypeError("No idea how to clone {0}!".format(old.__class__))
     new.data = copy.deepcopy(old.data)
     return new
