@@ -1,5 +1,5 @@
 import os
-from os.path import join
+from os.path import join, expanduser
 
 from spec import Spec, skip, eq_, ok_, raises
 
@@ -56,7 +56,7 @@ class Config_(CleanEnvSpec):
             _loads_path(c, 'whatever.yaml')
 
         def default_user_prefix_is_homedir(self):
-            _loads_path(Config(), '~/.invoke.yaml')
+            _loads_path(Config(), expanduser('~/.invoke.yaml'))
 
         def configure_project_location(self):
             c = Config(project_home='someproject')
