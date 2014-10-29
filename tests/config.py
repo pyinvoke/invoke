@@ -80,6 +80,17 @@ class Config_(IntegrationSpec):
             c.load()
             eq_(c['I win'], 'always')
 
+        def accepts_env_prefix_option(self):
+            c = Config(env_prefix='INVOKE_')
+            c.load()
+            # Meh
+            found_prefix = None
+            for adapter in c.config.adapters:
+                if isinstance(adapter, NestedEnv):
+                    found_prefix = adapter.prefix
+                    break
+            eq_(found_prefix, 'INVOKE_')
+
         def does_not_trigger_config_loading(self):
             # Cuz automatic loading could potentially be surprising.
             # Meh-tastic no-exception-raised test.
@@ -261,6 +272,12 @@ Valid keys: []""".lstrip()
         def base_case(self):
             os.environ['FOO'] = 'bar'
             c = Config()
+            c.load(defaults={'foo': 'notbar'})
+            eq_(c.foo, 'bar')
+
+        def can_declare_prefix(self):
+            os.environ['INVOKE_FOO'] = 'bar'
+            c = Config(env_prefix='INVOKE_')
             c.load(defaults={'foo': 'notbar'})
             eq_(c.foo, 'bar')
 
