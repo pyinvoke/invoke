@@ -475,7 +475,7 @@ class Config(DataProxy):
         # necessarily know at this point if loading has occurred).
         c.update(copy.deepcopy(dict(self.config)))
         # All set
-        new = Config()
+        new = Config(env_prefix=self.env_prefix)
         new.config = c
         return new
 

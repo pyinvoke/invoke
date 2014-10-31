@@ -564,3 +564,8 @@ Valid keys: []""".lstrip()
             c2 = c.clone()
             c2.load()
             eq_(c2.foo.bar.biz, ['baz'])
+
+        def preserves_env_prefix(self):
+            c = Config(env_prefix='foo')
+            c2 = c.clone()
+            eq_(c.env_prefix, c2.env_prefix)
