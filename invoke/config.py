@@ -58,8 +58,7 @@ class NestedEnv(Adapter):
 
         # Obtain allowed env var -> existing value map
         env_vars = self._crawl(key_path=[], env_vars={})
-        debug("Scanning for env vars according to mapping: {0!r}".format(
-            env_vars))
+        debug("Scanning for env vars according to prefix: {1!r}, mapping: {0!r}".format(env_vars, self._prefix))
         # Check for actual env var (honoring prefix) and try to set
         for env_var, key_path in env_vars.iteritems():
             real_var = (self._prefix or "") + env_var
