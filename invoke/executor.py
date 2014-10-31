@@ -130,8 +130,10 @@ class Executor(object):
         debug("Executing %r%s" % (task, (" as %s" % name) if name else ""))
         if task.contextualized:
             config = self.config.clone()
-            # TODO: bother wrapping load() and such in Context? meh
-            config.load(defaults=self.collection.configuration(name))
+            defaults = {'run': {
+                'warn': False, 'pty': False, 'hide': None, 'echo': False}}
+            defaults.update(self.collection.configuration(name))
+            config.load(defaults=defaults)
             context = Context(config=config)
             args = (context,) + args
         result = task(*args, **kwargs)
