@@ -392,8 +392,8 @@ class Config(DataProxy):
             c.register(*adapters)
         # The Hierarchy
         else:
-            # Level 1 is Defaults, set via kwargs or client calling
-            # set_defaults(). Normally comes from task collection tree.
+            # Level 1 is Defaults, set via argument to load(). Normally comes
+            # from task collection tree.
             # Levels 2-4: global, user, & project config files
             c.register(ExclusiveFile(prefix=global_prefix))
             c.register(ExclusiveFile(prefix=user_prefix))
