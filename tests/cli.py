@@ -275,7 +275,7 @@ Available tasks:
         def _test_flag(self, flag, kwarg, value):
             with patch('invoke.context.run') as run:
                 _dispatch('invoke {0} -c contextualized run'.format(flag))
-                run.assert_called_with('x', **{kwarg: value})
+                ok_(run.call_args[1][kwarg] == value)
 
         def warn_only(self):
             self._test_flag('-w', 'warn', True)
@@ -307,7 +307,7 @@ Available tasks:
             with cd('configs'):
                 with patch('invoke.context.run') as run:
                     _dispatch('invoke -c collection go')
-                    run.assert_called_with('false', echo=True)
+                    ok_(run.call_args[1]['echo'] == True)
 
             # User
             # Runtime conf file
@@ -317,7 +317,7 @@ Available tasks:
             os.environ['INVOKE_RUN_ECHO'] = "1"
             with patch('invoke.context.run') as run:
                 _dispatch('invoke -c contextualized run')
-                run.assert_called_with('x', echo=True)
+                ok_(run.call_args[1]['echo'] == True)
 
         def collection_defaults_dont_block_env_var_run_settings(self):
             # Environ setting run.warn
