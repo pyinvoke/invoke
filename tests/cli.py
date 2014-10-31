@@ -307,12 +307,16 @@ Available tasks:
                 # Collection
                 with cd('configs'):
                     _dispatch('invoke -c collection go')
-                    ok_(run.call_args_list[-1][1]['echo'] == True)
+                    eq_(run.call_args_list[-1][1]['echo'], True)
                     # Runtime conf file
                     _dispatch('invoke -c contextualized -f echo.yaml run')
-                    ok_(run.call_args_list[-1][1]['echo'] == True)
-                    # CLI flag always wins
-
+                    eq_(run.call_args_list[-1][1]['echo'], True)
+                    # Runtime beats collection
+                    _dispatch('invoke -c collection -f no-echo.yaml go')
+                    eq_(run.call_args_list[-1][1]['echo'], False)
+                    # Flag beats runtime
+                    _dispatch('invoke -c contextualized -f no-echo.yaml -e run')
+                    eq_(run.call_args_list[-1][1]['echo'], True)
 
         def env_vars_load_with_prefix(self):
             os.environ['INVOKE_RUN_ECHO'] = "1"
