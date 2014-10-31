@@ -20,11 +20,6 @@ class Context(DataProxy):
     Instances of `.Context` may be shared between tasks when executing
     sub-tasks - either the same context the caller was given, or an altered
     copy thereof (or, theoretically, a brand new one).
-
-    .. note::
-        Transmitting a copy (using e.g. `.clone`) instead of mutating a
-        ``Context`` in-place is a nice way to limit unwanted or hard-to-track
-        state mutation, and/or to enable safer concurrency.
     """
     def __init__(self, config=None):
         """
