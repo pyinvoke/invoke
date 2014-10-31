@@ -180,8 +180,7 @@ class ExclusiveFile(Adapter):
         self.loaded = None
 
     def __str__(self):
-        paths = ", ".join(x.filepath for x in self.adapters)
-        return "ExclusiveFile({0})".format(paths)
+        return "ExclusiveFile({0}.{{{1}}})".format(self.prefix, ','.join(self.suffixes))
 
     def load(self, formatter=None):
         for adapter in self.adapters:
@@ -449,7 +448,7 @@ class Config(DataProxy):
                 debug("Didn't see any {0}, skipping".format(adapter))
             elif isinstance(adapter, ExclusiveFile):
                 if adapter.loaded is None:
-                    debug("Didn't see any members of {0}, skipping".format(
+                    debug("Didn't see any of {0}, skipping".format(
                         adapter))
                 else:
                     debug("{0} loaded {1}, got {2!r}".format(
