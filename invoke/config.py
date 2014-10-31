@@ -37,6 +37,7 @@ class NestedEnv(Adapter):
         super(NestedEnv, self).__init__()
         self._config = config
         self._prefix = prefix
+        self.data = {}
 
     def load(self, formatter=None):
         # NOTE: This accepts a formatter argument because that's the API.
@@ -90,17 +91,24 @@ class NestedEnv(Adapter):
         return '_'.join(key_path).upper()
 
     def _path_get(self, key_path):
+        # Gets are from self._config because that's what determines valid env
+        # vars and/or values for typecasting.
         obj = self._config
         for key in key_path:
             obj = obj[key]
         return obj
 
     def _path_set(self, key_path, value):
-        obj = self._config
+        # Sets are to self.data since that's what we are presenting to the
+        # outer config object and debugging.
+        obj = self.data
         for key in key_path[:-1]:
+            if key not in obj:
+                obj[key] = {}
             obj = obj[key]
-        old = obj[key_path[-1]]
-        obj[key_path[-1]] = self._cast(old, value)
+        old = self._path_get(key_path)
+        new_ = self._cast(old, value)
+        obj[key_path[-1]] = new_
 
     def _cast(self, old, new_):
         if isinstance(old, BooleanType):
