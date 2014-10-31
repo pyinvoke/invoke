@@ -303,15 +303,16 @@ Available tasks:
 
         def run_echo_honors_configuration_overrides(self):
             # Try a few realistic-for-this-setting levels:
-            # Collection
-            with cd('configs'):
-                with patch('invoke.context.run') as run:
+            with patch('invoke.context.run') as run:
+                # Collection
+                with cd('configs'):
                     _dispatch('invoke -c collection go')
-                    ok_(run.call_args[1]['echo'] == True)
+                    ok_(run.call_args_list[-1][1]['echo'] == True)
+                    # Runtime conf file
+                    _dispatch('invoke -c contextualized -f echo.yaml run')
+                    ok_(run.call_args_list[-1][1]['echo'] == True)
+                    # CLI flag always wins
 
-            # User
-            # Runtime conf file
-            # CLI flag always wins
 
         def env_vars_load_with_prefix(self):
             os.environ['INVOKE_RUN_ECHO'] = "1"
