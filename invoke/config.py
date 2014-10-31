@@ -19,6 +19,17 @@ def noop(s):
     return s
 
 
+class Dummy(Adapter):
+    """
+    No-op adapter, always has an empty data set.
+
+    Useful for making a Config with a static list of adapters which one can
+    reason about (eg when inserting new adapters at specific points.)
+    """
+    def load(self, formatter=None):
+        self.data = {}
+
+
 class NestedEnv(Adapter):
     """
     Custom etcaetera adapter for handling env vars (more flexibly than Env).
@@ -383,11 +394,12 @@ class Config(DataProxy):
             # Level 1 is Defaults, set via kwargs or client calling
             # set_defaults(). Normally comes from task collection tree.
             # Levels 2-4: global, user, & project config files
-            prefixes = [global_prefix, user_prefix]
+            c.register(ExclusiveFile(prefix=global_prefix))
+            c.register(ExclusiveFile(prefix=user_prefix))
             if project_home is not None:
-                prefixes.append(join(project_home, "invoke"))
-            for prefix in prefixes:
-                c.register(ExclusiveFile(prefix=prefix))
+                c.register(ExclusiveFile(prefix=join(project_home, "invoke")))
+            else:
+                c.register(Dummy())
             # Level 5: environment variables. See `load()` - must be done as
             # late as possible to 'see' all other defined keys.
             # Level 6: Runtime config file
@@ -395,6 +407,8 @@ class Config(DataProxy):
                 # Give python_uppercase in case it's a .py. Is a safe no-op
                 # otherwise.
                 c.register(File(runtime_path, python_uppercase=False))
+            else:
+                c.register(Dummy())
             # Level 7 is Overrides, typically runtime flag values
             c.register(Overrides(overrides, formatter=noop))
         # Assign to member
@@ -482,6 +496,8 @@ def _clone_adapter(old):
         )
     elif isinstance(old, NestedEnv):
         new = NestedEnv(old._config)
+    elif isinstance(old, Dummy):
+        new = Dummy()
     else:
         raise TypeError("No idea how to clone {0}!".format(old.__class__))
     new.data = copy.deepcopy(old.data)
