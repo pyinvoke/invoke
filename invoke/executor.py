@@ -6,6 +6,7 @@ from .util import debug
 from .tasks import Call
 
 from .vendor import six
+from .vendor.etcaetera.config import _merge # TODO: make this member public
 
 
 class Executor(object):
@@ -132,7 +133,7 @@ class Executor(object):
             config = self.config.clone()
             defaults = {'run': {
                 'warn': False, 'pty': False, 'hide': None, 'echo': False}}
-            defaults.update(self.collection.configuration(name))
+            _merge(defaults, self.collection.configuration(name))
             config.load(defaults=defaults)
             context = Context(config=config)
             args = (context,) + args
