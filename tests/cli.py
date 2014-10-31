@@ -319,6 +319,19 @@ Available tasks:
                 _dispatch('invoke -c contextualized run')
                 run.assert_called_with('x', echo=True)
 
+        def collection_defaults_dont_block_env_var_run_settings(self):
+            # Environ setting run.warn
+            os.environ['INVOKE_RUN_WARN'] = "1"
+            with cd('configs'):
+                with patch('invoke.context.run') as run:
+                    # This collection sets run = {echo: true}
+                    # If merging isn't done, it will overwrite the low level
+                    # defaults, meaning the env var adapter won't see that
+                    # 'run_warn' is a valid setting.
+                    _dispatch('invoke -c collection go')
+                    ok_(run.call_args[1]['echo'] == True)
+                    ok_(run.call_args[1]['warn'] == True)
+
 
 TB_SENTINEL = 'Traceback (most recent call last)'
 

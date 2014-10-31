@@ -307,6 +307,7 @@ def make_config(args, collection):
         project_home=collection.loaded_from,
         runtime_path=args.config.value,
         overrides=overrides,
+        env_prefix='INVOKE_',
     )
     return c
 
