@@ -7,7 +7,7 @@ from invocations import docs as _docs
 from invocations.testing import test
 from invocations.packaging import vendorize, release
 
-from invoke import ctask as task, run, Collection
+from invoke import ctask as task, run, Collection, Context
 
 
 d = 'sites'
@@ -63,7 +63,7 @@ def sites(c):
     opts = "-W -n -T"
     # This is super lolzy but we haven't actually tackled nontrivial in-Python
     # task calling yet, so...
-    docs_c, www_c = c.clone(), c.clone()
+    docs_c, www_c = Context(config=c.config.clone()), Context(config=c.config.clone())
     docs_c.update(**docs.configuration())
     www_c.update(**www.configuration())
     docs['build'](docs_c, opts=opts)
@@ -86,13 +86,13 @@ def watch(c):
 
     class APIBuildHandler(RegexMatchingEventHandler):
         def on_any_event(self, event):
-            my_c = c.clone()
+            my_c = Context(config=c.config.clone())
             my_c.update(**docs.configuration())
             docs['build'](my_c)
 
     class WWWBuildHandler(RegexMatchingEventHandler):
         def on_any_event(self, event):
-            my_c = c.clone()
+            my_c = Context(config=c.config.clone())
             my_c.update(**www.configuration())
             www['build'](my_c)
 

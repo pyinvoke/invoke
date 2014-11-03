@@ -44,3 +44,6 @@ class Init(Spec):
 
         def collection_class(self):
             assert invoke.Collection is invoke.collection.Collection
+
+        def context_class(self):
+            assert invoke.Context is invoke.context.Context
