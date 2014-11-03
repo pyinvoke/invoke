@@ -26,6 +26,8 @@ The configuration hierarchy
 In brief, the order in which configuration values are loaded (and overridden -
 each new level overrides the one above it) is as follows:
 
+#. **Internal default values** for behaviors which are controllable via
+   configuration. See :ref:`default-values` for details.
 #. **Collection-driven configurations** defined in tasks modules via
    `.Collection.configure`. (See :ref:`collection-configuration` below for
    details.)
@@ -54,6 +56,50 @@ each new level overrides the one above it) is as follows:
 #. **Runtime configuration file** whose path is given to :option:`-f`, e.g.
    ``inv -f /random/path/to/config_file.yaml``.
 #. **Command-line flags** for certain core settings, such as :option:`-e`.
+
+
+.. _default-values:
+
+Default configuration values
+============================
+
+Below is a list of all the configuration values and/or section Invoke itself
+uses to control behaviors such as `.Context.run`'s ``echo`` and ``pty``
+flags, task deduplication, and so forth.
+
+For convenience, we refer to nested setting names with a dotted syntax, so e.g.
+``foo.bar`` refers to what would be (in a Python config context) ``{'foo':
+{'bar': <value here>}}``. Typically, these can be read or set on `.Config` and
+`.Context` objects using attribute syntax, which looks nearly identical:
+``ctx.foo.bar``.
+
+* The ``tasks`` config tree holds settings relating to task execution.
+
+  * ``tasks.dedupe`` controls :ref:`deduping` and defaults to ``True``. It can
+    also be overridden at runtime via :option:`--no-dedupe`.
+
+* The ``run`` tree controls the behavior of `.Context.run` (but **not** the
+  pure function it wraps, `.runner.run`). Each member of this tree maps
+  directly to a `.Context.run` keyword argument of the same name; see its
+  docstring for details.
+
+    * ``run.echo``: Controls echoing of commands; defaults to ``False``. CLI
+      flag: :option:`-e`.
+    * ``run.hide``: Determines whether stdout/err are hidden; defaults to
+      ``None``. CLI flag: :option:`-H`.
+    * ``run.pty``: Whether to use a pseudo-terminal during command execution;
+      defaults to ``False``. CLI flag: :option:`-p`.
+    * ``run.warn``: Controls 'warn vs abort' behavior; defaults to ``False``.
+      CLI flag: :option:`-w`.
+
+* A top level config setting, ``debug``, controls whether debug-level output is
+  logged; it defaults to ``False``.
+  
+  ``debug`` can be toggled via the :option:`-d` CLI flag, which enables
+  debugging after CLI parsing runs. It can also be toggled via the
+  ``INVOKE_DEBUG`` environment variable which - unlike regular env vars - is
+  honored from the start of execution and is thus useful for troubleshooting
+  parsing and/or config loading.
 
 
 .. _config-files:

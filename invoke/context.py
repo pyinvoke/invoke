@@ -42,17 +42,15 @@ class Context(DataProxy):
 
     def run(self, *args, **kwargs):
         """
-        Wrapper for `.run`.
+        Wrapper for `.runner.run`.
 
-        To set default `.run` keyword argument values, instantiate `.Context`
-        with the ``run`` kwarg set to a dict.
+        Honors the ``run`` tree of this object's `.Config` object, whose inner
+        keys map directly to keyword arguments.
 
-        E.g. to create a `.Context` whose `.Context.run` method always defaults
-        to ``warn=True``::
-
-            ctx = Context(run={'warn': True})
-            ctx.run('command') # behaves like invoke.run('command', warn=True)
-
+        Typically you won't be creating your own `.Context` objects and thus
+        this method will honor the entire :ref:`configuration hierarchy
+        <config-hierarchy>`. If desired, you can pass in your own ``config``
+        argument to `.Context` at init time.
         """
         options = dict(self.config['run'])
         options.update(kwargs)
