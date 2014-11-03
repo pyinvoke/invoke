@@ -30,6 +30,22 @@ class Dummy(Adapter):
         self.data = {}
 
 
+class Basic(Adapter):
+    """
+    Super simple static adapter with one set of Python-driven config data.
+
+    Useful for non-default, non-override, non-env and non-file driven config
+    data.
+    """
+    def __init__(self, data, formatter=None, strict=False):
+        # Formatter is a no-op here; our data is what it is.
+        # Also means loading doesn't really mattress.
+        self.data = data
+
+    def load(self, formatter=None):
+        pass # Data's already "loaded".
+
+
 class NestedEnv(Adapter):
     """
     Custom etcaetera adapter for handling env vars (more flexibly than Env).
@@ -321,14 +337,19 @@ class Config(DataProxy):
     This class implements the entire dictionary protocol.
     """
 
-    def __init__(self, overrides=None, global_prefix=None, user_prefix=None,
-        project_home=None, runtime_path=None, adapters=None, env_prefix=None):
+    def __init__(self, defaults=None, overrides=None, global_prefix=None,
+        user_prefix=None, project_home=None, runtime_path=None, adapters=None,
+        env_prefix=None):
         """
         Creates a new config object, but does not load any configuration data.
 
         .. note::
             To load configuration data, call `~.Config.load` after
             initialization.
+
+        :param dict defaults:
+            A dict containing default (lowest level) config data. Default:
+            ``{}``.
 
         :param dict overrides:
             A dict containing override-level config data. Default: ``{}``.
@@ -377,6 +398,8 @@ class Config(DataProxy):
         .. _Adapters: http://etcaetera.readthedocs.org/en/0.4.0/howto.html#adapters
         """
         # Setup
+        if defaults is None:
+            defaults = {}
         if overrides is None:
             overrides = {}
         if global_prefix is None:
@@ -391,45 +414,51 @@ class Config(DataProxy):
             c.register(*adapters)
         # The Hierarchy
         else:
-            # Level 1 is Defaults, set via argument to load(). Normally comes
-            # from task collection tree.
-            # Levels 2-4: global, user, & project config files
+            # Level 1 is absolute defaults.
+            # Reinforce 'noop' here, Defaults calls load() in init()
+            c.register(Defaults(defaults, formatter=noop)) 
+            # Level 2 is collection-driven, set via argument to load() later
+            # (because they can only come at execution time and may differ for
+            # each task invoked).
+            # Levels 3-5: global, user, & project config files
             c.register(ExclusiveFile(prefix=global_prefix))
             c.register(ExclusiveFile(prefix=user_prefix))
             if project_home is not None:
                 c.register(ExclusiveFile(prefix=join(project_home, "invoke")))
             else:
                 c.register(Dummy())
-            # Level 5: environment variables. See `load()` - must be done as
+            # Level 6: environment variables. See `load()` - must be done as
             # late as possible to 'see' all other defined keys.
-            # Level 6: Runtime config file
+            # Level 7: Runtime config file
             if runtime_path is not None:
                 # Give python_uppercase in case it's a .py. Is a safe no-op
                 # otherwise.
                 c.register(File(runtime_path, python_uppercase=False))
             else:
                 c.register(Dummy())
-            # Level 7 is Overrides, typically runtime flag values
+            # Level 8 is Overrides, typically runtime flag values
             c.register(Overrides(overrides, formatter=noop))
         # Assign to member
         self.config = c
 
-    def load(self, defaults=None):
+    def load(self, collection=None):
         """
         Performs loading and merging of all config sources.
 
         See :ref:`config-hierarchy` for details on load order and file
         locations.
 
-        :param dict defaults:
-            A dict containing defaults-level config data. Default: ``{}``.
+        :param dict collection:
+            A dict containing collection-driven config data. Default: ``{}``.
         """
         # Pull in defaults (we do so at this level because typically we won't
         # know about collection-level default values until closer to runtime.
-        if defaults is None:
-            defaults = {}
-        # Reinforce 'noop' here, Defaults calls load() in init()
-        self.config.register(Defaults(defaults, formatter=noop))
+        if collection is None:
+            collection = {}
+        # NOTE: can't use etc.AdapterSet.appendleft here, it is buggy, no time
+        # to fix right now. Just insert at position 1 after the Defaults we
+        # already know is there.
+        self.config.adapters.insert(1, Basic(collection))
         # Now that we have all other sources defined, we can load the Env
         # adapter. This sadly requires a 'pre-load' call to .load() so config
         # files get slurped up.
@@ -442,6 +471,7 @@ class Config(DataProxy):
         # Re-load() so that our values get applied in the right slot in the
         # hierarchy.
         self.config.load()
+        debug("Loading & merging config adapters in order...")
         for adapter in self.config.adapters:
             if isinstance(adapter, File) and not adapter.found:
                 debug("Didn't see any {0}, skipping".format(adapter))
@@ -498,6 +528,8 @@ def _clone_adapter(old):
         new = NestedEnv(old._config)
     elif isinstance(old, Dummy):
         new = Dummy()
+    elif isinstance(old, Basic):
+        new = Basic(old.data)
     else:
         raise TypeError("No idea how to clone {0}!".format(old.__class__))
     new.data = copy.deepcopy(old.data)

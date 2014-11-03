@@ -372,11 +372,11 @@ Valid keys: []""".lstrip()
 
             def arbitrary_types_work_too(self):
                 os.environ['FOO'] = 'whatever'
-                c = Config(defaults={'foo': old_obj})
                 class Meh(object):
                     def __init__(self, thing=None):
                         pass
                 old_obj = Meh()
+                c = Config(defaults={'foo': old_obj})
                 c.load()
                 ok_(isinstance(c.foo, Meh))
                 ok_(c.foo is not old_obj)
