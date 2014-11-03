@@ -304,8 +304,8 @@ Available tasks:
         def run_echo_honors_configuration_overrides(self):
             # Try a few realistic-for-this-setting levels:
             with patch('invoke.context.run') as run:
-                # Collection
                 with cd('configs'):
+                    # Collection
                     _dispatch('invoke -c collection go')
                     eq_(run.call_args_list[-1][1]['echo'], True)
                     # Runtime conf file
