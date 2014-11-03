@@ -75,6 +75,11 @@ class Config_(IntegrationSpec):
             # Slightly encapsulation-breaking. Meh.
             eq_(len(c.config.adapters), 0)
 
+        def accepts_defaults_dict(self):
+            c = Config(defaults={'super': 'low level'})
+            c.load()
+            eq_(c.super, 'low level')
+
         def accepts_overrides_dict(self):
             c = Config(overrides={'I win': 'always'})
             c.load()
@@ -110,9 +115,9 @@ class Config_(IntegrationSpec):
                 c.load()
                 eq_(c.keys(), [])
 
-            def can_be_given_defaults_dict_arg(self):
+            def can_be_given_collection_dict_arg(self):
                 c = Config()
-                c.load(defaults={'foo': 'bar'})
+                c.load(collection={'foo': 'bar'})
                 eq_(c.foo, 'bar')
 
             def makes_data_available(self):
@@ -171,8 +176,8 @@ Valid keys: []""".lstrip()
             # Ensures nested keys merge deeply instead of shallowly.
             defaults = {'foo': {'bar': 'baz'}}
             overrides = {'foo': {'notbar': 'notbaz'}}
-            c = Config(overrides=overrides)
-            c.load(defaults=defaults)
+            c = Config(defaults=defaults, overrides=overrides)
+            c.load()
             eq_(c.foo.notbar, 'notbaz')
             eq_(c.foo.bar, 'baz')
 
@@ -271,14 +276,14 @@ Valid keys: []""".lstrip()
         "Environment variables"
         def base_case(self):
             os.environ['FOO'] = 'bar'
-            c = Config()
-            c.load(defaults={'foo': 'notbar'})
+            c = Config(defaults={'foo': 'notbar'})
+            c.load()
             eq_(c.foo, 'bar')
 
         def can_declare_prefix(self):
             os.environ['INVOKE_FOO'] = 'bar'
-            c = Config(env_prefix='INVOKE_')
-            c.load(defaults={'foo': 'notbar'})
+            c = Config({'foo': 'notbar'}, env_prefix='INVOKE_')
+            c.load()
             eq_(c.foo, 'bar')
 
         def non_predeclared_settings_do_not_get_consumed(self):
@@ -290,47 +295,47 @@ Valid keys: []""".lstrip()
 
         def underscores_top_level(self):
             os.environ['FOO_BAR'] = 'biz'
-            c = Config()
-            c.load(defaults={'foo_bar': 'notbiz'})
+            c = Config(defaults={'foo_bar': 'notbiz'})
+            c.load()
             eq_(c.foo_bar, 'biz')
 
         def underscores_nested(self):
             os.environ['FOO_BAR'] = 'biz'
-            c = Config()
-            c.load(defaults={'foo': {'bar': 'notbiz'}})
+            c = Config(defaults={'foo': {'bar': 'notbiz'}})
+            c.load()
             eq_(c.foo.bar, 'biz')
 
         def both_types_of_underscores_mixed(self):
             os.environ['FOO_BAR_BIZ'] = 'baz'
-            c = Config()
-            c.load(defaults={'foo_bar': {'biz': 'notbaz'}})
+            c = Config(defaults={'foo_bar': {'biz': 'notbaz'}})
+            c.load()
             eq_(c.foo_bar.biz, 'baz')
 
         @raises(AmbiguousEnvVar)
         def ambiguous_underscores_dont_guess(self):
             os.environ['FOO_BAR'] = 'biz'
-            c = Config()
-            c.load(defaults={'foo_bar': 'wat', 'foo': {'bar': 'huh'}})
+            c = Config(defaults={'foo_bar': 'wat', 'foo': {'bar': 'huh'}})
+            c.load()
 
         class type_casting:
             def strings_replaced_with_env_value(self):
                 os.environ['FOO'] = u'myvalue'
-                c = Config()
-                c.load(defaults={'foo': 'myoldvalue'})
+                c = Config(defaults={'foo': 'myoldvalue'})
+                c.load()
                 eq_(c.foo, u'myvalue')
                 ok_(isinstance(c.foo, unicode)) # FIXME: py3
 
             def unicode_replaced_with_env_value(self):
                 os.environ['FOO'] = 'myunicode'
-                c = Config()
-                c.load(defaults={'foo': u'myoldvalue'})
+                c = Config(defaults={'foo': u'myoldvalue'})
+                c.load()
                 eq_(c.foo, 'myunicode')
                 ok_(isinstance(c.foo, str)) # FIXME: py3
 
             def None_replaced(self):
                 os.environ['FOO'] = 'something'
-                c = Config()
-                c.load(defaults={'foo': None})
+                c = Config(defaults={'foo': None})
+                c.load()
                 eq_(c.foo, 'something')
 
             def booleans(self):
@@ -342,15 +347,15 @@ Valid keys: []""".lstrip()
                     ('false', True),
                 ):
                     os.environ['FOO'] = input_
-                    c = Config()
-                    c.load(defaults={'foo': bool()})
+                    c = Config(defaults={'foo': bool()})
+                    c.load()
                     eq_(c.foo, result)
 
             def boolean_type_inputs_with_non_boolean_defaults(self):
                 for input_ in ('0', '1', '', 'meh', 'false'):
                     os.environ['FOO'] = input_
-                    c = Config()
-                    c.load(defaults={'foo': 'bar'})
+                    c = Config(defaults={'foo': 'bar'})
+                    c.load()
                     eq_(c.foo, input_)
 
             def numeric_types_become_casted(self):
@@ -361,18 +366,18 @@ Valid keys: []""".lstrip()
                     # TODO: more?
                 ):
                     os.environ['FOO'] = new_
-                    c = Config()
-                    c.load(defaults={'foo': old()})
+                    c = Config(defaults={'foo': old()})
+                    c.load()
                     eq_(c.foo, result)
 
             def arbitrary_types_work_too(self):
                 os.environ['FOO'] = 'whatever'
-                c = Config()
+                c = Config(defaults={'foo': old_obj})
                 class Meh(object):
                     def __init__(self, thing=None):
                         pass
                 old_obj = Meh()
-                c.load(defaults={'foo': old_obj})
+                c.load()
                 ok_(isinstance(c.foo, Meh))
                 ok_(c.foo is not old_obj)
 
@@ -380,8 +385,8 @@ Valid keys: []""".lstrip()
                 @raises(UncastableEnvVar)
                 def _uncastable_type(self, default):
                     os.environ['FOO'] = 'stuff'
-                    c = Config()
-                    c.load(defaults={'foo': default})
+                    c = Config(defaults={'foo': default})
+                    c.load()
 
                 def lists(self):
                     self._uncastable_type(['a', 'list'])
@@ -400,9 +405,14 @@ Valid keys: []""".lstrip()
         # locations for any one test.
         #
 
+        def collection_overrides_defaults(self):
+            c = Config(defaults={'setting': 'default'})
+            c.load(collection={'setting': 'collection'})
+            eq_(c.setting, 'collection')
+
         def systemwide_overrides_collection(self):
             c = Config(global_prefix=join(CONFIGS_PATH, 'yaml', 'invoke'))
-            c.load(defaults={'hooray': 'defaults'})
+            c.load(collection={'hooray': 'defaults'})
             eq_(c.hooray, 'yaml')
 
         def user_overrides_systemwide(self):
@@ -415,7 +425,7 @@ Valid keys: []""".lstrip()
 
         def user_overrides_collection(self):
             c = Config(user_prefix=join(CONFIGS_PATH, 'json', 'invoke'))
-            c.load(defaults={'hooray': 'defaults'})
+            c.load(collection={'hooray': 'defaults'})
             eq_(c.hooray, 'json')
 
         def project_overrides_user(self):
@@ -438,7 +448,7 @@ Valid keys: []""".lstrip()
             c = Config(
                 project_home=join(CONFIGS_PATH, 'yaml'),
             )
-            c.load(defaults={'hooray': 'defaults'})
+            c.load(collection={'hooray': 'defaults'})
             eq_(c.hooray, 'yaml')
 
         def env_vars_override_project(self):
@@ -468,7 +478,7 @@ Valid keys: []""".lstrip()
         def env_vars_override_collection(self):
             os.environ['HOORAY'] = 'env'
             c = Config()
-            c.load(defaults={'hooray': 'defaults'})
+            c.load(collection={'hooray': 'defaults'})
             eq_(c.hooray, 'env')
 
         def runtime_overrides_env_vars(self):
@@ -503,7 +513,7 @@ Valid keys: []""".lstrip()
 
         def runtime_overrides_collection(self):
             c = Config(runtime_path=join(CONFIGS_PATH, 'json', 'invoke.json'))
-            c.load(defaults={'hooray': 'defaults'})
+            c.load(collection={'hooray': 'defaults'})
             eq_(c.hooray, 'json')
 
         def cli_overrides_override_all(self):
