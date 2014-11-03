@@ -336,6 +336,14 @@ class Call(object):
     def __getattr__(self, name):
         return getattr(self.task, name)
 
+    def __str__(self):
+        return "<Call {0!r}, args: {1!r} kwargs: {2!r}>".format(
+            self.task.name, self.args, self.kwargs
+        )
+
+    def __repr__(self):
+        return str(self)
+
 
 # Convenience/aesthetically pleasing-ish alias
 call = Call
