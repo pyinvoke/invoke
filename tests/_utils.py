@@ -77,3 +77,10 @@ def expect_exit(code=0):
     except SystemExit as e:
         if e.code != code:
             raise
+
+
+@contextmanager
+def run_in_configs():
+    with patch('invoke.context.run') as run:
+        with cd('configs'):
+            yield run
