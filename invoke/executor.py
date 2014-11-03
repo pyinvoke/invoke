@@ -60,16 +60,15 @@ class Executor(object):
                 task1()
                 task2(arg1='val1')
 
-        :param bool dedupe:
-            Whether to perform deduplication on the tasks and their
-            pre/post-tasks. See :ref:`deduping`.
-
         :returns:
             A dict mapping task objects to their return values. This may
             include pre- and post-tasks if any were executed.
         """
         # Handle top level kwargs (the name gets overwritten below)
-        dedupe = kwargs.get('dedupe', True) # Python 2 can't do *args + kwarg
+        # Which includes a pre-load. Hooray. TODO: ditch etcaetera or make the
+        # config file adapters lazily-load file data.
+        config = self.config.clone()
+        config.load()
         # Normalize input
         debug("Examining top level tasks {0!r}".format([x[0] for x in tasks]))
         tasks = self._normalize(tasks)
@@ -78,7 +77,7 @@ class Executor(object):
         # behave differently
         direct = list(tasks)
         # Expand pre/post tasks & then dedupe the entire run
-        tasks = self._dedupe(self._expand_tasks(tasks), dedupe)
+        tasks = self._dedupe(self._expand_tasks(tasks), config.tasks.dedupe)
         # Execute
         results = {}
         for task in tasks:
@@ -92,7 +91,7 @@ class Executor(object):
                 args, kwargs = c.args, c.kwargs
                 name = c.name
             result = self._execute(
-                task=task, name=name, args=args, kwargs=kwargs
+                task=task, name=name, args=args, kwargs=kwargs, config=config
             )
             if autoprint:
                 print(result)
@@ -118,23 +117,23 @@ class Executor(object):
     def _dedupe(self, tasks, dedupe):
         deduped = []
         if dedupe:
+            debug("Deduplicating tasks...")
             for task in tasks:
                 if task not in deduped:
+                    debug("{0!r}: ok".format(task))
                     deduped.append(task)
+                else:
+                    debug("{0!r}: skipping".format(task))
         else:
             deduped = tasks
         return deduped
 
-    def _execute(self, task, name, args, kwargs):
+    def _execute(self, task, name, args, kwargs, config):
         # Need task + possible name when invoking CLI-given tasks, so we can
         # pass a dotted path to Collection.configuration()
         debug("Executing %r%s" % (task, (" as %s" % name) if name else ""))
         if task.contextualized:
-            config = self.config.clone()
-            defaults = {'run': {
-                'warn': False, 'pty': False, 'hide': None, 'echo': False}}
-            _merge(defaults, self.collection.configuration(name))
-            config.load(defaults=defaults)
+            config.load(collection=self.collection.configuration(name))
             context = Context(config=config)
             args = (context,) + args
         result = task(*args, **kwargs)

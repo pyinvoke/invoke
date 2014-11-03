@@ -325,8 +325,7 @@ Available tasks:
                 # Runtime conf file
                 _output_eq(
                     '-c integration -f no-dedupe.yaml biz',
-"""
-foo
+"""foo
 foo
 bar
 biz
@@ -336,9 +335,8 @@ post2
 """)
                 # Flag beats runtime
                 _dispatch(
-                    'invoke -c integration -f dedupe.yaml --no-dedupe run',
-"""
-foo
+                    'invoke -c integration -f dedupe.yaml --no-dedupe biz',
+"""foo
 foo
 bar
 biz

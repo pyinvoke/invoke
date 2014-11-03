@@ -290,7 +290,16 @@ def make_config(args, collection):
     configuration values and then told to load the full hierarchy (which
     includes config files.)
     """
-    # Set up runtime overrides from flags
+    # Low level defaults
+    defaults = {
+        'run': {
+            'warn': False, 'pty': False, 'hide': None, 'echo': False
+        },
+        'tasks': {'dedupe': True},
+    }
+    # Set up runtime overrides from flags.
+    # NOTE: only fill in values that would alter behavior, otherwise we want
+    # the defaults to come through.
     run = {}
     if args['warn-only'].value:
         run['warn'] = True
@@ -300,13 +309,16 @@ def make_config(args, collection):
         run['hide'] = args.hide.value
     if args.echo.value:
         run['echo'] = True
-    overrides = {'run': run}
-    # Stand up config object with collection's load location & any runtime conf
-    # file path given
+    tasks = {}
+    if not args['no-dedupe'].value:
+        tasks['dedupe'] = False
+    overrides = {'run': run, 'tasks': tasks}
+    # Stand up config object
     c = Config(
+        defaults=defaults,
+        overrides=overrides,
         project_home=collection.loaded_from,
         runtime_path=args.config.value,
-        overrides=overrides,
         env_prefix='INVOKE_',
     )
     return c
@@ -330,8 +342,7 @@ def dispatch(argv, version=None):
     executor = Executor(collection, make_config(args, collection))
     try:
         tasks = tasks_from_contexts(parser_contexts, collection)
-        dedupe = not args['no-dedupe'].value
-        return executor.execute(*tasks, dedupe=dedupe)
+        return executor.execute(*tasks)
     except Failure as f:
         sys.exit(f.result.exited)
 
