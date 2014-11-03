@@ -120,6 +120,24 @@ class Config_(IntegrationSpec):
                 c.load(collection={'foo': 'bar'})
                 eq_(c.foo, 'bar')
 
+            def collection_adapter_overwrites_on_reload(self):
+                c = Config()
+                c.load(collection={'foo': 'bar'})
+                eq_(c.foo, 'bar')
+                c.load(collection={'foo': 'notbar'})
+                eq_(c.foo, 'notbar')
+
+            def env_adapter_overwrites_on_reload(self):
+                # The bug this tests for doesn't break functionality but does
+                # make debugging confusing, so let's just break encapsulation a
+                # bit.
+                c = Config(defaults={'foo': 'default'})
+                os.environ['FOO'] = 'bar'
+                c.load()
+                eq_(len(c.config.adapters), 8)
+                c.load()
+                eq_(len(c.config.adapters), 8)
+
             def makes_data_available(self):
                 c = Config(overrides={'foo': 'notbar'})
                 ok_('foo' not in c.keys())

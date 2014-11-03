@@ -65,10 +65,6 @@ class Executor(object):
             include pre- and post-tasks if any were executed.
         """
         # Handle top level kwargs (the name gets overwritten below)
-        # Which includes a pre-load. Hooray. TODO: ditch etcaetera or make the
-        # config file adapters lazily-load file data.
-        config = self.config.clone()
-        config.load()
         # Normalize input
         debug("Examining top level tasks {0!r}".format([x[0] for x in tasks]))
         tasks = self._normalize(tasks)
@@ -76,8 +72,19 @@ class Executor(object):
         # Obtain copy of directly-given tasks since they should sometimes
         # behave differently
         direct = list(tasks)
-        # Expand pre/post tasks & then dedupe the entire run
-        tasks = self._dedupe(self._expand_tasks(tasks), config.tasks.dedupe)
+        # Expand pre/post tasks & then dedupe the entire run.
+        # Load config at this point to get latest value of dedupe flag
+        # (includes CLI parsing).
+        config = self.config.clone()
+        config.load()
+        # Get some good value for dedupe option, even if config doesn't have
+        # the tree we expect. (This is a concession to testing.)
+        try:
+            dedupe = config.tasks.dedupe
+        except AttributeError:
+            dedupe = True
+        # Actual deduping here
+        tasks = self._dedupe(self._expand_tasks(tasks), dedupe)
         # Execute
         results = {}
         for task in tasks:
