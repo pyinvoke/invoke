@@ -319,6 +319,40 @@ Available tasks:
                 _dispatch('invoke -c contextualized -f no-echo.yaml -e run')
                 eq_(run.call_args_list[-1][1]['echo'], True)
 
+        def tasks_dedupe_honors_configuration(self):
+            # Kinda-sorta duplicates some tests in executor.py, but eh.
+            with cd('configs'):
+                # Runtime conf file
+                _output_eq(
+                    '-c integration -f no-dedupe.yaml biz',
+"""
+foo
+foo
+bar
+biz
+post1
+post2
+post2
+""")
+                # Flag beats runtime
+                _dispatch(
+                    'invoke -c integration -f dedupe.yaml --no-dedupe run',
+"""
+foo
+foo
+bar
+biz
+post1
+post2
+post2
+""")
+                
+
+        # * debug (top level?)
+        # * hide (run.hide...lol)
+        # * pty (run.pty)
+        # * warn (run.warn)
+
         def env_vars_load_with_prefix(self):
             os.environ['INVOKE_RUN_ECHO'] = "1"
             with patch('invoke.context.run') as run:
