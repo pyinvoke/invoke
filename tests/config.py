@@ -481,34 +481,38 @@ Valid keys: []""".lstrip()
         def setup(self):
             self.c = Config({'foo': {'bar': {'biz': ['baz']}}})
 
-        def load_before_and_after(self):
-            c = self.c
-            c.load()
+        def preserves_basic_members(self):
+            c = Config(
+                defaults={'key': 'default'},
+                overrides={'key': 'override'},
+                global_prefix='global',
+                user_prefix='user',
+                project_home='project',
+                env_prefix='env',
+                runtime_path='runtime',
+            )
             c2 = c.clone()
-            c2.load()
-            eq_(c, c2)
-            ok_(c is not c2)
-            ok_(c.config is not c2.config)
-            eq_(c.foo.bar.biz, c2.foo.bar.biz)
-            ok_(c.foo.bar.biz is not c2.foo.bar.biz)
+            eq_(c2.defaults, c1.defaults)
+            ok_(c2.defaults is not c1.defaults)
+            eq_(c2.overrides, c1.overrides)
+            ok_(c2.overrides is not c1.overrides)
+            eq_(c2.global_prefix, c1.global_prefix)
+            eq_(c2.user_prefix, c1.user_prefix)
+            eq_(c2.project_home, c1.project_home)
+            eq_(c2.env_prefix, c1.env_prefix)
+            eq_(c2.runtime_path, c1.runtime_path)
 
-        def no_loading_at_all(self):
-            c = self.c
-            c2 = c.clone()
-            eq_(c, c2)
-            ok_(c is not c2)
-            ok_(c.config is not c2.config)
-            # Unloaded -> looks empty
-            eq_(c.keys(), [])
-            eq_(c2.keys(), [])
+        def preserves_merged_config(self):
+            skip()
 
-        def load_after_only(self):
-            c = self.c
-            c2 = c.clone()
-            c2.load()
-            eq_(c2.foo.bar.biz, ['baz'])
+        def preserves_file_data(self):
+            skip()
 
-        def preserves_env_prefix(self):
-            c = Config(env_prefix='foo')
-            c2 = c.clone()
-            eq_(c.env_prefix, c2.env_prefix)
+        def does_not_reload_file_data(self):
+            skip()
+
+        def preserves_env_data(self):
+            skip()
+
+        def does_not_reload_env_data(self):
+            skip()
