@@ -3,8 +3,6 @@ from os.path import join, expanduser
 
 from spec import Spec, skip, eq_, ok_, raises
 
-from invoke.vendor.etcaetera.adapter import File, Adapter
-
 from invoke.config import Config, ExclusiveFile, NestedEnv
 from invoke.exceptions import AmbiguousEnvVar, UncastableEnvVar
 

@@ -151,12 +151,7 @@ to ``{'debug': True, 'run': {'echo': True}}``:
         "echo": True
     }
 
-For further details, see these languages' own documentation, and/or the
-documentation for etcaetera_ , whose drivers we use to load the files.
-
-.. note::
-    We use a "no-op" formatter to preserve key case sensitivity (``etcaetera``
-    defaults to forcing keys into uppercase).
+For further details, see these languages' own documentation.
 
 
 .. _env-vars:
@@ -418,9 +413,6 @@ For this example, that sort of local-to-project conf file makes the most sense,
 but don't forget that the :ref:`config hierarchy <config-hierarchy>` offers
 additional configuration methods which may be suitable depending on your needs.
 
-
-.. _etcaetera: http://etcaetera.readthedocs.org/en/0.4.0
-.. _etcaetera.Config: http://etcaetera.readthedocs.org/en/0.4.0/howto.html#config-object
 
 .. rubric:: Footnotes
 

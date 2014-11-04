@@ -3,47 +3,8 @@ import os
 from os.path import join
 from types import DictType, BooleanType, StringTypes, ListType, TupleType
 
-from .vendor.etcaetera.config import Config as EtcConfig
-from .vendor.etcaetera.adapter import File, Defaults, Overrides, Adapter
-
 from .exceptions import AmbiguousEnvVar, UncastableEnvVar
 from .util import debug
-
-
-def noop(s):
-    """
-    No-op 'formatter' for etcaetera adapters.
-
-    For when we do not want auto upper/lower casing (currently, always).
-    """
-    return s
-
-
-class Dummy(Adapter):
-    """
-    No-op adapter, always has an empty data set.
-
-    Useful for making a Config with a static list of adapters which one can
-    reason about (eg when inserting new adapters at specific points.)
-    """
-    def load(self, formatter=None):
-        self.data = {}
-
-
-class Basic(Adapter):
-    """
-    Super simple static adapter with one set of Python-driven config data.
-
-    Useful for non-default, non-override, non-env and non-file driven config
-    data.
-    """
-    def __init__(self, data, formatter=None, strict=False):
-        # Formatter is a no-op here; our data is what it is.
-        # Also means loading doesn't really mattress.
-        self.data = data
-
-    def load(self, formatter=None):
-        pass # Data's already "loaded".
 
 
 class NestedEnv(Adapter):
@@ -395,7 +356,6 @@ class Config(DataProxy):
             means users must set ``INVOKE_MYSETTING`` in the shell to affect
             the ``"mysetting"`` setting.
 
-        .. _Adapters: http://etcaetera.readthedocs.org/en/0.4.0/howto.html#adapters
         """
         # Setup
         if defaults is None:
