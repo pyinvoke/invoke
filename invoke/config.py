@@ -271,12 +271,40 @@ class Config(DataProxy):
 
     See :doc:`/concepts/configuration` for details on the configuration system
     this class implements, including the :ref:`configuration hierarchy
-    <config-hierarchy>`.
+    <config-hierarchy>`. The rest of this class' documentation assumes
+    familiarity with that document.
 
-    This class lightly wraps ``etcaetera.config.Config``, allowing for another
-    level of configurability (re: which files are loaded and in what order) as
-    well as convenient access to configuration values, which may be accessed
-    using dict syntax::
+    Lifecycle
+    ---------
+
+    Configuration data is constructed piecemeal starting at initialization time
+    and config sources are loaded lazily upon request. For example, pure-Python
+    configuration does not load from the filesystem or shell environment::
+
+        c = Config(defaults={'foo': 'bar'})
+        c.foo # No action taken, defaults are the only thing consulted
+
+    If filesystem paths prefixes are given, they are scanned at access time and
+    merged into the final config::
+
+        c = Config(global_prefix='/etc/invoke')
+        c.foo # Attempts to load files like /etc/invoke.yaml
+        c.foo # No filesystem action taken this time
+
+    The merged config is regenerated any time config sources are updated, such
+    as when Invoke's core machinery tells the default config object that it's
+    time to load data from the shell environment::
+
+        c = Config(global_prefix='/etc/invoke')
+        c.foo # Merging (and file load) occurs
+        c.foo # No merging nor file loading - cache only
+        c.load_shell_env() # Merging (but no file loads - only env)
+        c.foo # Again, no merging or file loading takes place
+
+    Access
+    ------
+
+    Configuration values may be accessed using dict syntax::
 
         config['foo']
 
@@ -286,8 +314,8 @@ class Config(DataProxy):
 
     .. warning::
         Any "real" attributes (methods, etc) on `Config` take precedence over
-        settings values - so if you e.g. have a top level setting named
-        ``load``, you *must* use dict syntax to access it.
+        settings values - so if you have top level settings named ``clone``,
+        ``defaults``, etc, you *must* use dict syntax to access it.
 
     Nesting works the same way - dict config values are turned into objects
     which honor both the dictionary protocol and the attribute-access method::
@@ -295,18 +323,29 @@ class Config(DataProxy):
        config['foo']['bar']
        config.foo.bar
 
-    This class implements the entire dictionary protocol.
+    Non-data attributes & methods
+    -----------------------------
+
+    This class implements the entire dictionary protocol: methods such as
+    ``keys``, ``values``, ``items``, ``pop`` and so forth should all function
+    as they do on regular dicts.
+
+    Individual configuration 'levels' and their source locations (if
+    applicable) may be accessed via attributes such as
+    `.project`/`.project_file` and so forth - see the
+    documentation for individual members below for details.
     """
 
-    def __init__(self, defaults=None, overrides=None, global_prefix=None,
-        user_prefix=None, project_home=None, runtime_path=None, adapters=None,
-        env_prefix=None):
-        """
-        Creates a new config object, but does not load any configuration data.
+    #: Path to loaded project-related config file, if any.
+    project_file = None
+    #: Data loaded from `.project_file`, if any.
+    project = {}
 
-        .. note::
-            To load configuration data, call `~.Config.load` after
-            initialization.
+    def __init__(self, defaults=None, overrides=None, global_prefix=None,
+        user_prefix=None, project_home=None, env_prefix=None,
+        runtime_path=None):
+        """
+        Creates a new config object.
 
         :param dict defaults:
             A dict containing default (lowest level) config data. Default:
@@ -333,20 +372,6 @@ class Config(DataProxy):
             trigger seeking of per-project config files in this location +
             ``invoke.(yaml|json|py)``.
 
-        :param str runtime_path:
-            Optional file path to a runtime configuration file.
-
-            Used to fill the penultimate slot in the config hierarchy. Should
-            be a full file path to an existing file, not a directory path, or a
-            prefix.
-
-        :param iterable adapters:
-            An iterable of `Adapters` to use instead of the default
-            :ref:`hierarchy <config-hierarchy>`.
-
-            If this option is given, ``global_prefix`` and ``user_prefix`` will
-            be ignored.
-
         :param str env_prefix:
             Environment variable seek prefix; optional, defaults to ``None``.
 
@@ -356,6 +381,12 @@ class Config(DataProxy):
             means users must set ``INVOKE_MYSETTING`` in the shell to affect
             the ``"mysetting"`` setting.
 
+        :param str runtime_path:
+            Optional file path to a runtime configuration file.
+
+            Used to fill the penultimate slot in the config hierarchy. Should
+            be a full file path to an existing file, not a directory path, or a
+            prefix.
         """
         # Setup
         if defaults is None:
@@ -400,6 +431,38 @@ class Config(DataProxy):
             c.register(Overrides(overrides, formatter=noop))
         # Assign to member
         self.config = c
+
+    def load_shell_env(self):
+        """
+        Load values from the shell environment, then trigger a config merge.
+
+        This method is idempotent and does nothing if ``.shell`` is already
+        non-``None``.
+
+        `.load_shell_env` is intended for execution late in a `.Config`
+        object's lifecycle, once all other sources have been merged. Loading
+        from the shell is not terrifically expensive, but must be done at a
+        specific point in time to ensure the "only valid options" behavior
+        works correctly.
+        
+        See :ref:`env-vars` for details on this design decision and other info
+        re: how environment variables are scanned and loaded.
+        """
+        pass
+
+    def set_collection(self, data):
+        """
+        Update collection-driven config data, then trigger a config merge.
+
+        This method is idempotent and does nothing if ``.collection`` is
+        already non-``None``.
+
+        `.set_collection` is intended for use by the core task execution
+        machinery, which is responsible for obtaining per-task
+        collection-driven data. See :ref:`collection-configuration` for
+        details.
+        """
+        pass
 
     def load(self, collection=None):
         """
@@ -452,8 +515,9 @@ class Config(DataProxy):
         """
         Return a copy of this configuration object.
 
-        The new object will be identical in terms of data, but will be a
-        distinct object with no shared mutable state.
+        The new object will be identical in terms of configured sources and any
+        loaded/merged data, but will be a distinct object with no shared
+        mutable state.
         """
         # New config w/ formatter preserved
         c = EtcConfig(formatter=self.config.formatter)

@@ -5,15 +5,14 @@ Configuration
 Introduction
 ============
 
-Invoke offers a fully fleshed out configuration mechanism (largely driven by a
-vendored install of the etcaetera_ library) allowing you to configure both its
-core behavior (and that of your tasks) via a hierarchy of configuration files,
-environment variables, :doc:`task namespaces </concepts/namespaces>` and CLI
-flags.
+Invoke offers a fully fleshed out configuration mechanism allowing you to
+configure both its core behavior (and that of your tasks) via a hierarchy of
+configuration files, environment variables, :doc:`task namespaces
+</concepts/namespaces>` and CLI flags.
 
-The end result of configuration seeking, loading, parsing & merging, is an
-`etcaetera.Config`_ object, which behaves like a (nested) Python dictionary.
-Invoke references this object when it runs (determining the default behavior of
+The end result of configuration seeking, loading, parsing & merging, is a
+`.Config` object, which behaves like a (nested) Python dictionary. Invoke
+references this object when it runs (determining the default behavior of
 methods like `.Context.run`) and exposes it to users' tasks as
 `.Context.config` and as shorthand attribute access on the `.Context` itself.
 

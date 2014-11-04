@@ -3,21 +3,16 @@ from os.path import join, expanduser
 
 from spec import Spec, skip, eq_, ok_, raises
 
-from invoke.config import Config, ExclusiveFile, NestedEnv
+from invoke.config import Config, NestedEnv
 from invoke.exceptions import AmbiguousEnvVar, UncastableEnvVar
 
 from _utils import IntegrationSpec
 
 
-def _loads_path(c, path):
-    paths = []
-    for adapter in c.config.adapters:
-        if isinstance(adapter, File):
-            paths.append(adapter.filepath)
-        elif isinstance(adapter, ExclusiveFile):
-            paths.extend(x.filepath for x in adapter.adapters)
+def _loads_path(config, path):
+    paths = config.paths
     found = any(x == path for x in paths)
-    ok_(found, "{0!r} not found, file adapters: {1!r}".format(path, paths))
+    ok_(found, "{0!r} not found, sought paths: {1!r}".format(path, paths))
 
 
 CONFIGS_PATH = 'configs'
@@ -25,9 +20,7 @@ TYPES = ('yaml', 'json', 'python')
 
 def _load(kwarg, type_):
     path = join(CONFIGS_PATH, type_, 'invoke')
-    c = Config(**{kwarg: path})
-    c.load()
-    return c
+    return Config(**{kwarg: path})
 
 def _expect(where, type_, **kwargs):
     config = _load(where, type_)
@@ -68,24 +61,19 @@ class Config_(IntegrationSpec):
             c = Config(runtime_path='some/path.yaml')
             _loads_path(c, 'some/path.yaml')
 
-        def accepts_explicit_adapter_override_list(self):
-            c = Config(adapters=[])
-            # Slightly encapsulation-breaking. Meh.
-            eq_(len(c.config.adapters), 0)
-
         def accepts_defaults_dict(self):
             c = Config(defaults={'super': 'low level'})
-            c.load()
             eq_(c.super, 'low level')
+
+        def defaults_dict_is_first_posarg(self):
+            skip()
 
         def accepts_overrides_dict(self):
             c = Config(overrides={'I win': 'always'})
-            c.load()
             eq_(c['I win'], 'always')
 
         def accepts_env_prefix_option(self):
             c = Config(env_prefix='INVOKE_')
-            c.load()
             # Meh
             found_prefix = None
             for adapter in c.config.adapters:
@@ -94,65 +82,22 @@ class Config_(IntegrationSpec):
                     break
             eq_(found_prefix, 'INVOKE_')
 
-        def does_not_trigger_config_loading(self):
-            # Cuz automatic loading could potentially be surprising.
-            # Meh-tastic no-exception-raised test.
-            class DummyAdapter(Adapter):
-                def load(self, *args, **kwargs):
-                    raise Exception("I shouldn't have been called!")
-            c = Config(adapters=[DummyAdapter()])
-
     class basic_API:
         "Basic API components"
 
-        class load:
-            "load()"
-            # TODO: rename?
-            def can_be_called_empty(self):
-                c = Config()
-                c.load()
-                eq_(c.keys(), [])
-
-            def can_be_given_collection_dict_arg(self):
-                c = Config()
-                c.load(collection={'foo': 'bar'})
-                eq_(c.foo, 'bar')
-
-            def collection_adapter_overwrites_on_reload(self):
-                c = Config()
-                c.load(collection={'foo': 'bar'})
-                eq_(c.foo, 'bar')
-                c.load(collection={'foo': 'notbar'})
-                eq_(c.foo, 'notbar')
-
-            def env_adapter_overwrites_on_reload(self):
-                # The bug this tests for doesn't break functionality but does
-                # make debugging confusing, so let's just break encapsulation a
-                # bit.
-                c = Config(defaults={'foo': 'default'})
-                os.environ['FOO'] = 'bar'
-                c.load()
-                eq_(len(c.config.adapters), 8)
-                c.load()
-                eq_(len(c.config.adapters), 8)
-
-            def makes_data_available(self):
-                c = Config(overrides={'foo': 'notbar'})
-                ok_('foo' not in c.keys())
-                c.load()
-                ok_('foo' in c.keys())
+        def can_be_used_directly_after_init(self):
+            # No load() here...
+            skip()
 
         def allows_dict_and_attr_access(self):
             # TODO: combine with tests for Context probably
             c = Config({'foo': 'bar'})
-            c.load()
             eq_(c.foo, 'bar')
             eq_(c['foo'], 'bar')
 
         def nested_dict_values_also_allow_dual_access(self):
             # TODO: ditto
             c = Config({'foo': 'bar', 'biz': {'baz': 'boz'}})
-            c.load()
             # Sanity check - nested doesn't somehow kill simple top level
             eq_(c.foo, 'bar')
             eq_(c['foo'], 'bar')
@@ -164,7 +109,6 @@ class Config_(IntegrationSpec):
 
         def attr_access_has_useful_errr_msg(self):
             c = Config()
-            c.load()
             try:
                 c.nope
             except AttributeError as e:
@@ -178,40 +122,24 @@ Valid keys: []""".lstrip()
             else:
                 assert False, "Didn't get an AttributeError on bad key!"
 
-        def loaded_keys_are_not_case_munged(self):
-            # Looks tautological, but ensures we're suppressing etcaetera's
-            # default UPPERCASE_EVERYTHING behavior
-            d = {'FOO': 'bar', 'biz': 'baz', 'Boz': 'buzz'}
-            c = Config(d)
-            c.load()
-            for x in d:
-                err = "Expected to find {0!r} in {1!r}, didn't"
-                ok_(x in c, err.format(x, c.keys()))
-
-        def loading_merges_subkeys(self):
+        def subkeys_get_merged_not_overwritten(self):
             # Ensures nested keys merge deeply instead of shallowly.
             defaults = {'foo': {'bar': 'baz'}}
             overrides = {'foo': {'notbar': 'notbaz'}}
             c = Config(defaults=defaults, overrides=overrides)
-            c.load()
             eq_(c.foo.notbar, 'notbaz')
             eq_(c.foo.bar, 'baz')
 
         def is_iterable_like_dict(self):
             def expect(c, expected):
-                eq_(set(c.keys()), expected)
-                eq_(set(list(c)), expected)
             c = Config({'a': 1, 'b': 2})
-            expect(c, set())
-            c.load()
-            expect(c, set(['a', 'b']))
+            eq_(set(c.keys()), set(['a', 'b']))
+            eq_(set(list(c)), set(['a', 'b']))
 
         def supports_readonly_dict_protocols(self):
             # Use single-keypair dict to avoid sorting problems in tests.
             c = Config({'foo': 'bar'})
             c2 = Config({'foo': 'bar'})
-            c.load()
-            c2.load()
             ok_('foo' in c)
             eq_(c, c2)
             eq_(len(c), 1)
@@ -226,7 +154,6 @@ Valid keys: []""".lstrip()
 
         def supports_mutation_dict_protocols(self):
             c = Config({'foo': 'bar'})
-            c.load()
             eq_(c.pop('foo'), 'bar')
             eq_(len(c), 0)
             c.setdefault('biz', 'baz')
@@ -244,12 +171,12 @@ Valid keys: []""".lstrip()
         def string_display(self):
             "__str__ and friends"
             config = Config({'foo': 'bar'})
-            config.load()
             eq_(str(config), "{'foo': 'bar'}")
             eq_(unicode(config), u"{'foo': 'bar'}")
             eq_(repr(config), "{'foo': 'bar'}")
 
-    def python_modules_load_lowercase_but_not_special_vars(self):
+    def python_modules_dont_load_special_vars(self):
+        "Python modules don't load special vars"
         # Borrow another test's Python module.
         c = _load('global_prefix', 'python')
         # Sanity test that lowercase works
@@ -275,17 +202,16 @@ Valid keys: []""".lstrip()
             "Local-to-project conf files"
             for type_ in TYPES:
                 c = Config(project_home=join(CONFIGS_PATH, type_))
-                c.load()
                 eq_(c.hooray, type_)
 
         def loads_no_project_specific_file_if_no_project_home_given(self):
             c = Config()
-            c.load()
+            eq_(c.project_file, None)
+            eq_(c.project.keys(), [])
             eq_(c.keys(), [])
 
         def honors_conf_file_flag(self):
             c = Config(runtime_path=join(CONFIGS_PATH, 'yaml', 'invoke.yaml'))
-            c.load()
             eq_(c.hooray, 'yaml')
 
     class env_vars:
@@ -293,65 +219,65 @@ Valid keys: []""".lstrip()
         def base_case(self):
             os.environ['FOO'] = 'bar'
             c = Config(defaults={'foo': 'notbar'})
-            c.load()
+            c.load_shell_env()
             eq_(c.foo, 'bar')
 
         def can_declare_prefix(self):
             os.environ['INVOKE_FOO'] = 'bar'
             c = Config({'foo': 'notbar'}, env_prefix='INVOKE_')
-            c.load()
+            c.load_shell_env()
             eq_(c.foo, 'bar')
 
         def non_predeclared_settings_do_not_get_consumed(self):
             os.environ['HELLO'] = "is it me you're looking for?"
             c = Config()
-            c.load()
+            c.load_shell_env()
             ok_('HELLO' not in c)
             ok_('hello' not in c)
 
         def underscores_top_level(self):
             os.environ['FOO_BAR'] = 'biz'
             c = Config(defaults={'foo_bar': 'notbiz'})
-            c.load()
+            c.load_shell_env()
             eq_(c.foo_bar, 'biz')
 
         def underscores_nested(self):
             os.environ['FOO_BAR'] = 'biz'
             c = Config(defaults={'foo': {'bar': 'notbiz'}})
-            c.load()
+            c.load_shell_env()
             eq_(c.foo.bar, 'biz')
 
         def both_types_of_underscores_mixed(self):
             os.environ['FOO_BAR_BIZ'] = 'baz'
             c = Config(defaults={'foo_bar': {'biz': 'notbaz'}})
-            c.load()
+            c.load_shell_env()
             eq_(c.foo_bar.biz, 'baz')
 
         @raises(AmbiguousEnvVar)
         def ambiguous_underscores_dont_guess(self):
             os.environ['FOO_BAR'] = 'biz'
             c = Config(defaults={'foo_bar': 'wat', 'foo': {'bar': 'huh'}})
-            c.load()
+            c.load_shell_env()
 
         class type_casting:
             def strings_replaced_with_env_value(self):
                 os.environ['FOO'] = u'myvalue'
                 c = Config(defaults={'foo': 'myoldvalue'})
-                c.load()
+                c.load_shell_env()
                 eq_(c.foo, u'myvalue')
                 ok_(isinstance(c.foo, unicode)) # FIXME: py3
 
             def unicode_replaced_with_env_value(self):
                 os.environ['FOO'] = 'myunicode'
                 c = Config(defaults={'foo': u'myoldvalue'})
-                c.load()
+                c.load_shell_env()
                 eq_(c.foo, 'myunicode')
                 ok_(isinstance(c.foo, str)) # FIXME: py3
 
             def None_replaced(self):
                 os.environ['FOO'] = 'something'
                 c = Config(defaults={'foo': None})
-                c.load()
+                c.load_shell_env()
                 eq_(c.foo, 'something')
 
             def booleans(self):
@@ -364,14 +290,14 @@ Valid keys: []""".lstrip()
                 ):
                     os.environ['FOO'] = input_
                     c = Config(defaults={'foo': bool()})
-                    c.load()
+                    c.load_shell_env()
                     eq_(c.foo, result)
 
             def boolean_type_inputs_with_non_boolean_defaults(self):
                 for input_ in ('0', '1', '', 'meh', 'false'):
                     os.environ['FOO'] = input_
                     c = Config(defaults={'foo': 'bar'})
-                    c.load()
+                    c.load_shell_env()
                     eq_(c.foo, input_)
 
             def numeric_types_become_casted(self):
@@ -383,7 +309,7 @@ Valid keys: []""".lstrip()
                 ):
                     os.environ['FOO'] = new_
                     c = Config(defaults={'foo': old()})
-                    c.load()
+                    c.load_shell_env()
                     eq_(c.foo, result)
 
             def arbitrary_types_work_too(self):
@@ -393,7 +319,7 @@ Valid keys: []""".lstrip()
                         pass
                 old_obj = Meh()
                 c = Config(defaults={'foo': old_obj})
-                c.load()
+                c.load_shell_env()
                 ok_(isinstance(c.foo, Meh))
                 ok_(c.foo is not old_obj)
 
@@ -402,7 +328,7 @@ Valid keys: []""".lstrip()
                 def _uncastable_type(self, default):
                     os.environ['FOO'] = 'stuff'
                     c = Config(defaults={'foo': default})
-                    c.load()
+                    c.load_shell_env()
 
                 def lists(self):
                     self._uncastable_type(['a', 'list'])
@@ -423,12 +349,12 @@ Valid keys: []""".lstrip()
 
         def collection_overrides_defaults(self):
             c = Config(defaults={'setting': 'default'})
-            c.load(collection={'setting': 'collection'})
+            c.set_collection({'setting': 'collection'})
             eq_(c.setting, 'collection')
 
         def systemwide_overrides_collection(self):
             c = Config(global_prefix=join(CONFIGS_PATH, 'yaml', 'invoke'))
-            c.load(collection={'hooray': 'defaults'})
+            c.set_collection({'hooray': 'defaults'})
             eq_(c.hooray, 'yaml')
 
         def user_overrides_systemwide(self):
@@ -436,12 +362,11 @@ Valid keys: []""".lstrip()
                 global_prefix=join(CONFIGS_PATH, 'yaml', 'invoke'),
                 user_prefix=join(CONFIGS_PATH, 'json', 'invoke'),
             )
-            c.load()
             eq_(c.hooray, 'json')
 
         def user_overrides_collection(self):
             c = Config(user_prefix=join(CONFIGS_PATH, 'json', 'invoke'))
-            c.load(collection={'hooray': 'defaults'})
+            c.set_collection({'hooray': 'defaults'})
             eq_(c.hooray, 'json')
 
         def project_overrides_user(self):
@@ -449,7 +374,6 @@ Valid keys: []""".lstrip()
                 user_prefix=join(CONFIGS_PATH, 'json', 'invoke'),
                 project_home=join(CONFIGS_PATH, 'yaml'),
             )
-            c.load()
             eq_(c.hooray, 'yaml')
 
         def project_overrides_systemwide(self):
@@ -457,14 +381,13 @@ Valid keys: []""".lstrip()
                 global_prefix=join(CONFIGS_PATH, 'json', 'invoke'),
                 project_home=join(CONFIGS_PATH, 'yaml'),
             )
-            c.load()
             eq_(c.hooray, 'yaml')
 
         def project_overrides_collection(self):
             c = Config(
                 project_home=join(CONFIGS_PATH, 'yaml'),
             )
-            c.load(collection={'hooray': 'defaults'})
+            c.set_collection({'hooray': 'defaults'})
             eq_(c.hooray, 'yaml')
 
         def env_vars_override_project(self):
@@ -472,7 +395,7 @@ Valid keys: []""".lstrip()
             c = Config(
                 project_home=join(CONFIGS_PATH, 'yaml'),
             )
-            c.load()
+            c.load_shell_env()
             eq_(c.hooray, 'env')
 
         def env_vars_override_user(self):
@@ -480,7 +403,7 @@ Valid keys: []""".lstrip()
             c = Config(
                 user_prefix=join(CONFIGS_PATH, 'yaml', 'invoke'),
             )
-            c.load()
+            c.load_shell_env()
             eq_(c.hooray, 'env')
 
         def env_vars_override_systemwide(self):
@@ -488,19 +411,19 @@ Valid keys: []""".lstrip()
             c = Config(
                 global_prefix=join(CONFIGS_PATH, 'yaml', 'invoke'),
             )
-            c.load()
+            c.load_shell_env()
             eq_(c.hooray, 'env')
 
         def env_vars_override_collection(self):
             os.environ['HOORAY'] = 'env'
             c = Config()
-            c.load(collection={'hooray': 'defaults'})
+            c.set_collection({'hooray': 'defaults'})
             eq_(c.hooray, 'env')
 
         def runtime_overrides_env_vars(self):
             os.environ['HOORAY'] = 'env'
             c = Config(runtime_path=join(CONFIGS_PATH, 'json', 'invoke.json'))
-            c.load()
+            c.load_shell_env()
             eq_(c.hooray, 'json')
 
         def runtime_overrides_project(self):
@@ -508,7 +431,6 @@ Valid keys: []""".lstrip()
                 runtime_path=join(CONFIGS_PATH, 'json', 'invoke.json'),
                 project_home=join(CONFIGS_PATH, 'yaml'),
             )
-            c.load()
             eq_(c.hooray, 'json')
 
         def runtime_overrides_user(self):
@@ -516,7 +438,6 @@ Valid keys: []""".lstrip()
                 runtime_path=join(CONFIGS_PATH, 'json', 'invoke.json'),
                 user_prefix=join(CONFIGS_PATH, 'yaml', 'invoke'),
             )
-            c.load()
             eq_(c.hooray, 'json')
 
         def runtime_overrides_systemwide(self):
@@ -524,12 +445,11 @@ Valid keys: []""".lstrip()
                 runtime_path=join(CONFIGS_PATH, 'json', 'invoke.json'),
                 global_prefix=join(CONFIGS_PATH, 'yaml', 'invoke'),
             )
-            c.load()
             eq_(c.hooray, 'json')
 
         def runtime_overrides_collection(self):
             c = Config(runtime_path=join(CONFIGS_PATH, 'json', 'invoke.json'))
-            c.load(collection={'hooray': 'defaults'})
+            c.set_collection({'hooray': 'defaults'})
             eq_(c.hooray, 'json')
 
         def cli_overrides_override_all(self):
@@ -539,13 +459,11 @@ Valid keys: []""".lstrip()
                 overrides={'hooray': 'overrides'},
                 runtime_path=join(CONFIGS_PATH, 'json', 'invoke.json')
             )
-            c.load()
             eq_(c.hooray, 'overrides')
 
         def yaml_prevents_json_or_python(self):
             c = Config(
                 global_prefix=join(CONFIGS_PATH, 'all-three', 'invoke'))
-            c.load()
             ok_('json-only' not in c)
             ok_('python_only' not in c)
             ok_('yaml-only' in c)
@@ -554,7 +472,6 @@ Valid keys: []""".lstrip()
         def json_prevents_python(self):
             c = Config(
                 global_prefix=join(CONFIGS_PATH, 'json-and-python', 'invoke'))
-            c.load()
             ok_('python_only' not in c)
             ok_('json-only' in c)
             eq_(c.shared, 'json-value')
