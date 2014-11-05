@@ -2,6 +2,7 @@ import os
 from os.path import join, expanduser
 
 from spec import Spec, skip, eq_, ok_, raises
+from mock import patch
 
 from invoke.config import Config, NestedEnv
 from invoke.exceptions import AmbiguousEnvVar, UncastableEnvVar
@@ -66,7 +67,8 @@ class Config_(IntegrationSpec):
             eq_(c.super, 'low level')
 
         def defaults_dict_is_first_posarg(self):
-            skip()
+            c = Config({'hi': 'there'})
+            eq_(c.hi, 'there')
 
         def accepts_overrides_dict(self):
             c = Config(overrides={'I win': 'always'})
@@ -87,7 +89,8 @@ class Config_(IntegrationSpec):
 
         def can_be_used_directly_after_init(self):
             # No load() here...
-            skip()
+            c = Config({'lots of these': 'tests look similar'})
+            eq_(c['lots of these'], 'tests look similar')
 
         def allows_dict_and_attr_access(self):
             # TODO: combine with tests for Context probably
@@ -131,7 +134,6 @@ Valid keys: []""".lstrip()
             eq_(c.foo.bar, 'baz')
 
         def is_iterable_like_dict(self):
-            def expect(c, expected):
             c = Config({'a': 1, 'b': 2})
             eq_(set(c.keys()), set(['a', 'b']))
             eq_(set(list(c)), set(['a', 'b']))
@@ -503,16 +505,43 @@ Valid keys: []""".lstrip()
             eq_(c2.runtime_path, c1.runtime_path)
 
         def preserves_merged_config(self):
-            skip()
+            c = Config(
+                defaults={'key': 'default'},
+                overrides={'key': 'override'},
+            )
+            eq_(c.key, 'override')
+            eq_(c.defaults.key, 'default')
+            c2 = c.clone()
+            eq_(c2.key, 'override')
+            eq_(c2.defaults.key, 'default')
+            eq_(c2.overrides.key, 'override')
 
         def preserves_file_data(self):
-            skip()
+            c = Config(global_prefix=join(CONFIGS_PATH, 'yaml', 'invoke'))
+            eq_(c.hooray, 'yaml')
+            c2 = c.clone()
+            eq_(c2.hooray, 'yaml')
+            eq_(c2.system, {'hooray': 'yaml'})
 
-        def does_not_reload_file_data(self):
-            skip()
+        @patch('yaml.load', return_value={'hooray': 'yaml'})
+        def does_not_reload_file_data(self, load):
+            path = join(CONFIGS_PATH, 'yaml', 'invoke')
+            c = Config(global_prefix=path)
+            c2 = c.clone()
+            load.assert_called_once_with("{0}.yaml".format(path))
+            eq_(c2.hooray, 'yaml')
 
         def preserves_env_data(self):
-            skip()
+            os.environ['FOO'] = 'bar'
+            c = Config({'foo': 'notbar'})
+            c.load_shell_env()
+            c2 = c.clone()
+            eq_(c2.foo, 'bar')
 
-        def does_not_reload_env_data(self):
-            skip()
+        @patch('os.environ.__getitem__', return_value={'FOO': 'bar'})
+        def does_not_reload_env_data(self, getitem):
+            c = Config({'foo': 'notbar'})
+            c.load_shell_env()
+            c2 = c.clone()
+            eq_(c2.foo, 'bar')
+            getitem.assert_called_once_with('FOO')
