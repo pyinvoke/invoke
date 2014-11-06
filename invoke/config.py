@@ -287,7 +287,7 @@ class Config(DataProxy):
     If filesystem paths prefixes are given, they are scanned at access time and
     merged into the final config::
 
-        c = Config(global_prefix='/etc/invoke')
+        c = Config(system_prefix='/etc/invoke')
         c.foo # Attempts to load files like /etc/invoke.yaml
         c.foo # No filesystem action taken this time
 
@@ -295,7 +295,7 @@ class Config(DataProxy):
     as when Invoke's core machinery tells the default config object that it's
     time to load data from the shell environment::
 
-        c = Config(global_prefix='/etc/invoke')
+        c = Config(system_prefix='/etc/invoke')
         c.foo # Merging (and file load) occurs
         c.foo # No merging nor file loading - cache only
         c.load_shell_env() # Merging (but no file loads - only env)
@@ -341,7 +341,7 @@ class Config(DataProxy):
     #: Data loaded from `.project_file`, if any.
     project = {}
 
-    def __init__(self, defaults=None, overrides=None, global_prefix=None,
+    def __init__(self, defaults=None, overrides=None, system_prefix=None,
         user_prefix=None, project_home=None, env_prefix=None,
         runtime_path=None):
         """
@@ -354,7 +354,7 @@ class Config(DataProxy):
         :param dict overrides:
             A dict containing override-level config data. Default: ``{}``.
 
-        :param str global_prefix:
+        :param str system_prefix:
             Path & partial filename for the global config file location. Should
             include everything but the dot & file extension.
             
@@ -362,7 +362,7 @@ class Config(DataProxy):
             ``/etc/invoke.json``).
 
         :param str user_prefix:
-            Like ``global_prefix`` but for the per-user config file.
+            Like ``system_prefix`` but for the per-user config file.
 
             Default: ``~/.invoke`` (e.g. ``~/.invoke.yaml``).
 

@@ -39,10 +39,10 @@ class Config_(IntegrationSpec):
         def configure_global_location_prefix(self):
             # This is a bit funky but more useful than just replicating the
             # same test farther down?
-            c = Config(global_prefix='meh')
+            c = Config(system_prefix='meh')
             _loads_path(c, 'meh.yaml')
 
-        def default_global_prefix_is_etc(self):
+        def default_system_prefix_is_etc(self):
             # TODO: make this work on Windows somehow without being a total
             # tautology? heh.
             _loads_path(Config(), '/etc/invoke.yaml')
@@ -180,7 +180,7 @@ Valid keys: []""".lstrip()
     def python_modules_dont_load_special_vars(self):
         "Python modules don't load special vars"
         # Borrow another test's Python module.
-        c = _load('global_prefix', 'python')
+        c = _load('system_prefix', 'python')
         # Sanity test that lowercase works
         eq_(c.hooray, 'python')
         # Real test that builtins, etc are stripped out
@@ -193,7 +193,7 @@ Valid keys: []""".lstrip()
         def system_global(self):
             "Systemwide conf files"
             for type_ in TYPES:
-                _expect('global_prefix', type_, hooray=type_)
+                _expect('system_prefix', type_, hooray=type_)
 
         def user_specific(self):
             "User-specific conf files"
@@ -355,13 +355,13 @@ Valid keys: []""".lstrip()
             eq_(c.setting, 'collection')
 
         def systemwide_overrides_collection(self):
-            c = Config(global_prefix=join(CONFIGS_PATH, 'yaml', 'invoke'))
+            c = Config(system_prefix=join(CONFIGS_PATH, 'yaml', 'invoke'))
             c.set_collection({'hooray': 'defaults'})
             eq_(c.hooray, 'yaml')
 
         def user_overrides_systemwide(self):
             c = Config(
-                global_prefix=join(CONFIGS_PATH, 'yaml', 'invoke'),
+                system_prefix=join(CONFIGS_PATH, 'yaml', 'invoke'),
                 user_prefix=join(CONFIGS_PATH, 'json', 'invoke'),
             )
             eq_(c.hooray, 'json')
@@ -380,7 +380,7 @@ Valid keys: []""".lstrip()
 
         def project_overrides_systemwide(self):
             c = Config(
-                global_prefix=join(CONFIGS_PATH, 'json', 'invoke'),
+                system_prefix=join(CONFIGS_PATH, 'json', 'invoke'),
                 project_home=join(CONFIGS_PATH, 'yaml'),
             )
             eq_(c.hooray, 'yaml')
@@ -411,7 +411,7 @@ Valid keys: []""".lstrip()
         def env_vars_override_systemwide(self):
             os.environ['HOORAY'] = 'env'
             c = Config(
-                global_prefix=join(CONFIGS_PATH, 'yaml', 'invoke'),
+                system_prefix=join(CONFIGS_PATH, 'yaml', 'invoke'),
             )
             c.load_shell_env()
             eq_(c.hooray, 'env')
@@ -445,7 +445,7 @@ Valid keys: []""".lstrip()
         def runtime_overrides_systemwide(self):
             c = Config(
                 runtime_path=join(CONFIGS_PATH, 'json', 'invoke.json'),
-                global_prefix=join(CONFIGS_PATH, 'yaml', 'invoke'),
+                system_prefix=join(CONFIGS_PATH, 'yaml', 'invoke'),
             )
             eq_(c.hooray, 'json')
 
@@ -465,7 +465,7 @@ Valid keys: []""".lstrip()
 
         def yaml_prevents_json_or_python(self):
             c = Config(
-                global_prefix=join(CONFIGS_PATH, 'all-three', 'invoke'))
+                system_prefix=join(CONFIGS_PATH, 'all-three', 'invoke'))
             ok_('json-only' not in c)
             ok_('python_only' not in c)
             ok_('yaml-only' in c)
@@ -473,7 +473,7 @@ Valid keys: []""".lstrip()
 
         def json_prevents_python(self):
             c = Config(
-                global_prefix=join(CONFIGS_PATH, 'json-and-python', 'invoke'))
+                system_prefix=join(CONFIGS_PATH, 'json-and-python', 'invoke'))
             ok_('python_only' not in c)
             ok_('json-only' in c)
             eq_(c.shared, 'json-value')
@@ -487,7 +487,7 @@ Valid keys: []""".lstrip()
             c = Config(
                 defaults={'key': 'default'},
                 overrides={'key': 'override'},
-                global_prefix='global',
+                system_prefix='global',
                 user_prefix='user',
                 project_home='project',
                 env_prefix='env',
@@ -498,7 +498,7 @@ Valid keys: []""".lstrip()
             ok_(c2.defaults is not c1.defaults)
             eq_(c2.overrides, c1.overrides)
             ok_(c2.overrides is not c1.overrides)
-            eq_(c2.global_prefix, c1.global_prefix)
+            eq_(c2.system_prefix, c1.system_prefix)
             eq_(c2.user_prefix, c1.user_prefix)
             eq_(c2.project_home, c1.project_home)
             eq_(c2.env_prefix, c1.env_prefix)
@@ -517,7 +517,7 @@ Valid keys: []""".lstrip()
             eq_(c2.overrides.key, 'override')
 
         def preserves_file_data(self):
-            c = Config(global_prefix=join(CONFIGS_PATH, 'yaml', 'invoke'))
+            c = Config(system_prefix=join(CONFIGS_PATH, 'yaml', 'invoke'))
             eq_(c.hooray, 'yaml')
             c2 = c.clone()
             eq_(c2.hooray, 'yaml')
@@ -526,7 +526,7 @@ Valid keys: []""".lstrip()
         @patch('yaml.load', return_value={'hooray': 'yaml'})
         def does_not_reload_file_data(self, load):
             path = join(CONFIGS_PATH, 'yaml', 'invoke')
-            c = Config(global_prefix=path)
+            c = Config(system_prefix=path)
             c2 = c.clone()
             load.assert_called_once_with("{0}.yaml".format(path))
             eq_(c2.hooray, 'yaml')
