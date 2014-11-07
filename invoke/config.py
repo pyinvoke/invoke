@@ -7,7 +7,7 @@ from .exceptions import AmbiguousEnvVar, UncastableEnvVar
 from .util import debug
 
 
-class NestedEnv(Adapter):
+class NestedEnv(object):
     """
     Custom etcaetera adapter for handling env vars (more flexibly than Env).
     """
@@ -114,7 +114,7 @@ class NestedEnv(Adapter):
             return old.__class__(new_)
 
 
-class ExclusiveFile(Adapter):
+class ExclusiveFile(object):
     """
     File-loading config adapter that looks for one of N possible suffixes.
 
@@ -336,11 +336,6 @@ class Config(DataProxy):
     documentation for individual members below for details.
     """
 
-    #: Path to loaded project-related config file, if any.
-    project_file = None
-    #: Data loaded from `.project_file`, if any.
-    project = {}
-
     def __init__(self, defaults=None, overrides=None, system_prefix=None,
         user_prefix=None, project_home=None, env_prefix=None,
         runtime_path=None):
@@ -388,49 +383,54 @@ class Config(DataProxy):
             be a full file path to an existing file, not a directory path, or a
             prefix.
         """
-        # Setup
-        if defaults is None:
-            defaults = {}
-        if overrides is None:
-            overrides = {}
-        if global_prefix is None:
-            global_prefix = '/etc/invoke'
-        if user_prefix is None:
-            user_prefix = '~/.invoke'
-        # Store env prefix for use in load() when we parse the environment
-        self.env_prefix = env_prefix
-        c = EtcConfig(formatter=noop)
-        # Explicit adapter set
-        if adapters is not None:
-            c.register(*adapters)
-        # The Hierarchy
-        else:
-            # Level 1 is absolute defaults.
-            # Reinforce 'noop' here, Defaults calls load() in init()
-            c.register(Defaults(defaults, formatter=noop)) 
-            # Level 2 is collection-driven, set via argument to load() later
-            # (because they can only come at execution time and may differ for
-            # each task invoked).
-            # Levels 3-5: global, user, & project config files
-            c.register(ExclusiveFile(prefix=global_prefix))
-            c.register(ExclusiveFile(prefix=user_prefix))
-            if project_home is not None:
-                c.register(ExclusiveFile(prefix=join(project_home, "invoke")))
-            else:
-                c.register(Dummy())
-            # Level 6: environment variables. See `load()` - must be done as
-            # late as possible to 'see' all other defined keys.
-            # Level 7: Runtime config file
-            if runtime_path is not None:
-                # Give python_uppercase in case it's a .py. Is a safe no-op
-                # otherwise.
-                c.register(File(runtime_path, python_uppercase=False))
-            else:
-                c.register(Dummy())
-            # Level 8 is Overrides, typically runtime flag values
-            c.register(Overrides(overrides, formatter=noop))
-        # Assign to member
-        self.config = c
+        # Technically an implementation detail - do not expose in public API.
+        # Stores merged configs and is accessed via DataProxy.
+        self.config = None
+
+        #: Default configuration values, typically hardcoded in the
+        #: CLI/execution machinery.
+        self.defaults = {} if defaults is None else defaults
+
+        #: Collection-driven config data, gathered from the collection tree
+        #: containing the currently executing task.
+        self.collection = {}
+
+        #: Path prefix searched for the system config file.
+        self.system_prefix = ('/etc/invoke' if system_prefix is None
+            else system_prefix)
+        #: Path to loaded system config file, if any.
+        self.system_path = None
+        #: Data loaded from the system config file.
+        self.system = {}
+
+        #: Path prefix searched for per-user config files.
+        self.user_prefix = '~/.invoke' if user_prefix is None else user_prefix
+        #: Path to loaded user config file, if any.
+        self.user_path = None
+        #: Data loaded from the per-user config file.
+        self.user = {}
+
+        #: Parent directory of the current root tasks file, if applicable.
+        self.project_home = project_home
+        #: Path to loaded per-project config file, if any.
+        self.project_path = None
+        #: Data loaded from the per-project config file.
+        self.project = {}
+
+        #: Environment variable name prefix
+        # TODO: make this INVOKE_ and update tests, just deal
+        self.env_prefix = '' if env_prefix is None else env_prefix
+        #: Config data loaded from the shell environment.
+        self.env = {}
+
+        #: Path to the user-specified runtime config file.
+        self.runtime_path = runtime_path
+        # Data loaded from the runtime config file.
+        self.runtime = {}
+
+        #: Overrides - highest possible config level. Typically filled in from
+        #: command-line flags.
+        self.overrides = {} if overrides is None else overrides
 
     def load_shell_env(self):
         """
