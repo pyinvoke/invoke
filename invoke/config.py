@@ -497,12 +497,35 @@ class Config(DataProxy):
 
     def load_files(self):
         """
-        Load any config files whose paths appear to have changed.
+        Load any unloaded/un-searched-for config file sources.
 
-        Does not imply merging; use `merge` for that.
+        Specifically, any file sources whose ``_path`` values are ``None`` will
+        be sought and loaded if found. Path values which are set to a string or
+        `NOT_FOUND` will be skipped. Typically this means this method is
+        idempotent and becomes a no-op after the first run.
+
+        Execution of this method does not imply merging; use `merge` for that.
         """
-        # TODO: set NOT_FOUND if not found
-        pass
+        # TODO: make subroutine parameterized on stored path, prefix, and
+        # optional suffixes.
+        # system: use system_prefix + file_suffixes
+        if self.system_path is None:
+            for suffix in self.file_suffixes:
+                path = '.'.join((self.system_prefix, suffix))
+                # File doesn't appear to exist (either via check or try/catch):
+                # just wait for loop to terminate? add a debug()?
+                # Try loading based on prefix (yaml, json, import - follow etc)
+                # File exists but errors on loading: just raise that exception
+                # for now. (TODO: maybe allow a skip-load-errors option? at
+                # this point we can still honor collection and CLI flag driven
+                # config settings)
+                # Neither: set self.system = loaded_data, and set
+                # self.system_path = path. and debug()?
+            # Here, if self.system_path is still None, set to NOT_FOUND
+        # user: ditto
+        # project: use project_home + 'invoke' + file_suffixes
+        # runtime: use runtime_path
+
 
     def merge(self):
         """
