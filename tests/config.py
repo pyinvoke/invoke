@@ -4,7 +4,7 @@ from os.path import join, expanduser
 from spec import Spec, skip, eq_, ok_, raises
 from mock import patch
 
-from invoke.config import Config, NestedEnv
+from invoke.config import Config
 from invoke.exceptions import AmbiguousEnvVar, UncastableEnvVar
 
 from _utils import IntegrationSpec
@@ -420,6 +420,7 @@ Valid keys: []""".lstrip()
             os.environ['HOORAY'] = 'env'
             c = Config()
             c.set_collection({'hooray': 'defaults'})
+            c.load_shell_env()
             eq_(c.hooray, 'env')
 
         def runtime_overrides_env_vars(self):

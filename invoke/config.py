@@ -3,7 +3,7 @@ import imp
 import json
 import os
 from os.path import join
-from types import DictType, BooleanType, StringTypes, ListType, TupleType
+from types import DictType
 
 from .vendor import six
 if six.PY3:
@@ -11,6 +11,7 @@ if six.PY3:
 else:
     from .vendor import yaml2 as yaml
 
+from .env import Environment
 from .exceptions import AmbiguousEnvVar, UncastableEnvVar
 from .util import debug
 
@@ -19,113 +20,6 @@ from .util import debug
 #: Differentiated from ``None`` which indicates that no file loading has
 #: occurred yet.
 NOT_FOUND = object()
-
-
-class NestedEnv(object):
-    """
-    Custom etcaetera adapter for handling env vars (more flexibly than Env).
-    """
-    def __init__(self, config, prefix=None):
-        """
-        Initialize this adapter with a handle to a live Config object.
-
-        :param config:
-            An already-loaded Config object which can be introspected for its
-            keys.
-
-        :param str prefix:
-            A prefix string used when seeking env vars; see `.Config`.
-        """
-        super(NestedEnv, self).__init__()
-        self._config = config
-        self._prefix = prefix
-        self.data = {}
-
-    def load(self, formatter=None):
-        # NOTE: This accepts a formatter argument because that's the API.
-        # However we don't use it (or the centrally defined one) because we
-        # have specific requirements for how keys are treated in this adapter.
-        # Meh!
-
-        # Obtain allowed env var -> existing value map
-        env_vars = self._crawl(key_path=[], env_vars={})
-        debug("Scanning for env vars according to prefix: {1!r}, mapping: {0!r}".format(env_vars, self._prefix))
-        # Check for actual env var (honoring prefix) and try to set
-        for env_var, key_path in env_vars.iteritems():
-            real_var = (self._prefix or "") + env_var
-            if real_var in os.environ:
-                self._path_set(key_path, os.environ[real_var])
-
-    def _crawl(self, key_path, env_vars):
-        """
-        Examine config at location ``key_path`` & return potential env vars.
-
-        Uses ``env_vars`` dict to determine if a conflict exists, and raises an
-        exception if so. This dict is of the following form::
-
-            {
-                'EXPECTED_ENV_VAR_HERE': ['actual', 'nested', 'key_path'],
-                ...
-            }
-
-        Returns another dictionary of new keypairs as per above.
-        """
-        new_vars = {}
-        obj = self._path_get(key_path)
-        # Sub-dict -> recurse
-        if hasattr(obj, 'keys') and hasattr(obj, '__getitem__'):
-            for key in obj.keys():
-                merged_vars = dict(env_vars, **new_vars)
-                merged_path = key_path + [key]
-                crawled = self._crawl(merged_path, merged_vars)
-                # Handle conflicts
-                for key in crawled:
-                    if key in new_vars:
-                        err = "Found >1 source for {0}"
-                        raise AmbiguousEnvVar(err.format(key))
-                # Merge and continue
-                new_vars.update(crawled)
-        # Other -> is leaf, no recursion
-        else:
-            new_vars[self._to_env_var(key_path)] = key_path
-        return new_vars
-
-    def _to_env_var(self, key_path):
-        return '_'.join(key_path).upper()
-
-    def _path_get(self, key_path):
-        # Gets are from self._config because that's what determines valid env
-        # vars and/or values for typecasting.
-        obj = self._config
-        for key in key_path:
-            obj = obj[key]
-        return obj
-
-    def _path_set(self, key_path, value):
-        # Sets are to self.data since that's what we are presenting to the
-        # outer config object and debugging.
-        obj = self.data
-        for key in key_path[:-1]:
-            if key not in obj:
-                obj[key] = {}
-            obj = obj[key]
-        old = self._path_get(key_path)
-        new_ = self._cast(old, value)
-        obj[key_path[-1]] = new_
-
-    def _cast(self, old, new_):
-        if isinstance(old, BooleanType):
-            return new_ not in ('0', '')
-        elif isinstance(old, StringTypes):
-            return new_
-        elif old is None:
-            return new_
-        elif isinstance(old, (ListType, TupleType)):
-            err = "Can't adapt an environment string into a {0}!"
-            err = err.format(type(old))
-            raise UncastableEnvVar(err)
-        else:
-            return old.__class__(new_)
 
 
 class DataProxy(object):
@@ -401,13 +295,16 @@ class Config(DataProxy):
         `.load_shell_env` is intended for execution late in a `.Config`
         object's lifecycle, once all other sources have been merged. Loading
         from the shell is not terrifically expensive, but must be done at a
-        specific point in time to ensure the "only valid options" behavior
-        works correctly.
+        specific point in time to ensure the "only known config keys are loaded
+        from the env" behavior works correctly.
         
         See :ref:`env-vars` for details on this design decision and other info
         re: how environment variables are scanned and loaded.
         """
-        pass
+        # Force merge of existing data to ensure we have an up to date picture
+        self.merge()
+        loader = Environment(config=self.config, prefix=self.env_prefix)
+        self.env = loader.load()
 
     def set_collection(self, data):
         """
@@ -492,8 +389,8 @@ class Config(DataProxy):
         self._merge_file('system', "System-wide")
         self._merge_file('user', "Per-user")
         self._merge_file('project', "Per-project")
-        # TODO: determine if env has been loaded yet?
         debug("Environment variable config: {0!r}".format(self.env))
+        _merge(self.config, self.env)
         self._merge_file('runtime', "Runtime")
         debug("Overrides: {0!r}".format(self.overrides))
         _merge(self.config, self.overrides)
