@@ -7,6 +7,12 @@ from .exceptions import AmbiguousEnvVar, UncastableEnvVar
 from .util import debug
 
 
+#: Sentinel object denoting that a config file was sought and not found.
+#: Differentiated from ``None`` which indicates that no file loading has
+#: occurred yet.
+NOT_FOUND = object()
+
+
 class NestedEnv(object):
     """
     Custom etcaetera adapter for handling env vars (more flexibly than Env).
@@ -383,9 +389,12 @@ class Config(DataProxy):
             be a full file path to an existing file, not a directory path, or a
             prefix.
         """
+        # Config file suffixes to search, in preference order.
+        self.file_suffixes = ('yaml', 'json', 'py')
+
         # Technically an implementation detail - do not expose in public API.
         # Stores merged configs and is accessed via DataProxy.
-        self.config = None
+        self.config = {}
 
         #: Default configuration values, typically hardcoded in the
         #: CLI/execution machinery.
@@ -464,53 +473,6 @@ class Config(DataProxy):
         """
         pass
 
-    def load(self, collection=None):
-        """
-        Performs loading and merging of all config sources.
-
-        See :ref:`config-hierarchy` for details on load order and file
-        locations.
-
-        :param dict collection:
-            A dict containing collection-driven config data. Default: ``{}``.
-        """
-        # Pull in defaults (we do so at this level because typically we won't
-        # know about collection-level default values until closer to runtime.
-        if collection is None:
-            collection = {}
-        # NOTE: can't use etc.AdapterSet.appendleft here, it is buggy, no time
-        # to fix right now. Just insert at position 1 after the Defaults we
-        # already know is there.
-        self.config.adapters.insert(1, Basic(collection))
-        # Now that we have all other sources defined, we can load the Env
-        # adapter. This sadly requires a 'pre-load' call to .load() so config
-        # files get slurped up.
-        self.config.load()
-        env = NestedEnv(config=self.config, prefix=self.env_prefix)
-        # Must break encapsulation a tiny bit here to ensure env vars come
-        # before runtime config files in the hierarchy. It's the least bad way
-        # right now given etc.Config's api.
-        self.config.adapters.insert(len(self.config.adapters) - 2, env)
-        # Re-load() so that our values get applied in the right slot in the
-        # hierarchy.
-        self.config.load()
-        debug("Loading & merging config adapters in order...")
-        for adapter in self.config.adapters:
-            if isinstance(adapter, File) and not adapter.found:
-                debug("Didn't see any {0}, skipping".format(adapter))
-            elif isinstance(adapter, ExclusiveFile):
-                if adapter.loaded is None:
-                    debug("Didn't see any of {0}, skipping".format(
-                        adapter))
-                else:
-                    debug("{0} loaded {1}, got {2!r}".format(
-                        adapter, adapter.loaded, adapter.data))
-            else:
-                # Wrap adapter in dict() so defaultdicts print nicer
-                debug("Loaded {0}, got {1!r}".format(
-                    adapter, dict(adapter.data)))
-        debug("Final merged config: {0!r}".format(self.config))
-
     def clone(self):
         """
         Return a copy of this configuration object.
@@ -533,28 +495,91 @@ class Config(DataProxy):
         new.config = c
         return new
 
+    def load_files(self):
+        """
+        Load any config files whose paths appear to have changed.
 
-def _clone_adapter(old):
-    if isinstance(old, (Defaults, Overrides)):
-        new = old.__class__(formatter=old.formatter)
-    elif isinstance(old, File):
-        new = File(
-            filepath=old.filepath,
-            python_uppercase=old.python_uppercase,
-            formatter=old.formatter,
-        )
-    elif isinstance(old, ExclusiveFile):
-        new = ExclusiveFile(
-            prefix=old.prefix,
-            suffixes=old.suffixes,
-        )
-    elif isinstance(old, NestedEnv):
-        new = NestedEnv(old._config)
-    elif isinstance(old, Dummy):
-        new = Dummy()
-    elif isinstance(old, Basic):
-        new = Basic(old.data)
-    else:
-        raise TypeError("No idea how to clone {0}!".format(old.__class__))
-    new.data = copy.deepcopy(old.data)
-    return new
+        Does not imply merging; use `merge` for that.
+        """
+        # TODO: set NOT_FOUND if not found
+        pass
+
+    def merge(self):
+        """
+        Merge all config sources, in order, to `config`.
+
+        Does not imply loading of config files or environment variables; use
+        `load_files` and/or `load_shell_env` beforehand instead.
+        """
+        self.config = {}
+        debug("Merging config sources in order...")
+        debug("Defaults: {0!r}".format(self.defaults))
+        _merge(self.config, self.defaults)
+        debug("Collection-driven: {0!r}".format(self.collection))
+        _merge(self.config, self.collection)
+        self._merge_file('system', "System-wide")
+        self._merge_file('user', "Per-user")
+        self._merge_file('project', "Per-project")
+        # TODO: determine if env has been loaded yet?
+        debug("Environment variable config: {0!r}".format(self.env))
+        self._merge_file('runtime', "Runtime")
+        debug("Overrides: {0!r}".format(self.overrides))
+        _merge(self.config, self.overrides)
+
+    def _merge_file(self, name, desc):
+        desc += " config file" # yup
+        path = getattr(self, "{0}_path".format(name))
+        data = getattr(self, name)
+        if path is None:
+            debug("{0} has not been loaded yet, skipping".format(desc))
+        elif path is NOT_FOUND:
+            msg = "{0} not found (tried {1}), skipping"
+            debug(msg.format(desc, self._files_searched(path)))
+        else:
+            debug("{0} ({1}): {2!r}".format(desc, path, data))
+            _merge(self.config, data)
+
+    def _files_searched(self, prefix):
+        return "{0}.{{{1}}}".format(prefix, ','.join(self.file_suffixes))
+
+    def __getattr__(self, key):
+        print "Config.__getattr__({0!r})".format(key)
+        self.load_files()
+        self.merge()
+        return super(Config, self).__getattr__(key)
+
+
+def _merge(base, updates):
+    """
+    Recursively merge dict ``updates`` into dict ``base`` (mutating ``base``.)
+
+    * Values which are themselves dicts will be recursed into.
+    * Values which are a dict in one input and *not* a dict in the other input
+      (e.g. if our inputs were ``{'foo': 5}`` and ``{'foo': {'bar': 5}}``) are
+      irreconciliable and will generate an exception.
+    """
+    for key, value in updates.items():
+        # Dict values whose keys also exist in 'base' -> recurse
+        # (But only if both types are dicts.)
+        if key in base:
+            if isinstance(value, dict):
+                if isinstance(base[key], dict):
+                    _merge(base[key], value)
+                else:
+                    raise _merge_error(base[key], value)
+            else:
+                if isinstance(base[key], dict):
+                    raise _merge_error(base[key], value)
+                else:
+                    base[key] = value
+        # New values just get set straight
+        else:
+            base[key] = value
+
+def _merge_error(orig, new_):
+    return AmbiguousMergeError("Can't cleanly merge {0} with {1}".format(
+        _format_mismatch(orig), _format_mismatch(new_)
+    ))
+
+def _format_mismatch(x):
+    return "{0} ({1!r})".format(type(x), x)
