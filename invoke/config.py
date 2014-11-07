@@ -1,7 +1,15 @@
 import copy
+import imp
+import json
 import os
 from os.path import join
 from types import DictType, BooleanType, StringTypes, ListType, TupleType
+
+from .vendor import six
+if six.PY3:
+    from .vendor import yaml3 as yaml
+else:
+    from .vendor import yaml2 as yaml
 
 from .exceptions import AmbiguousEnvVar, UncastableEnvVar
 from .util import debug
@@ -512,16 +520,18 @@ class Config(DataProxy):
         if self.system_path is None:
             for suffix in self.file_suffixes:
                 path = '.'.join((self.system_prefix, suffix))
-                # File doesn't appear to exist (either via check or try/catch):
-                # just wait for loop to terminate? add a debug()?
-                # Try loading based on prefix (yaml, json, import - follow etc)
-                # File exists but errors on loading: just raise that exception
-                # for now. (TODO: maybe allow a skip-load-errors option? at
-                # this point we can still honor collection and CLI flag driven
-                # config settings)
-                # Neither: set self.system = loaded_data, and set
-                # self.system_path = path. and debug()?
-            # Here, if self.system_path is still None, set to NOT_FOUND
+                try:
+                    self.system = _loaders[suffix](path)
+                    self.system_path = path
+                    debug("Loaded systemwide config file {0}".format(path))
+                    break
+                # Typically means 'no such file', so just note & skip past.
+                except IOError as e:
+                    err = "Received exception ({0!r}) loading {1}, skipping."
+                    debug(err.format(e.strerror, path))
+            # Still None -> no suffixed paths were found, record this fact
+            if self.system_path is None:
+                self.system_path = NOT_FOUND
         # user: ditto
         # project: use project_home + 'invoke' + file_suffixes
         # runtime: use runtime_path
@@ -606,3 +616,30 @@ def _merge_error(orig, new_):
 
 def _format_mismatch(x):
     return "{0} ({1!r})".format(type(x), x)
+
+
+#
+# File loading
+#
+
+def _load_yaml(path):
+    with open(path) as fd:
+        return yaml.load(fd)
+
+def _load_json(path):
+    with open(path) as fd:
+        return json.load(fd)
+
+def _load_python(path):
+    data = {}
+    for key, value in vars(imp.load_source('mod', path)).iteritems():
+        if key.startswith('__'):
+            continue
+        data[key] = value
+    return data
+
+_loaders = {
+    'yaml': _load_yaml,
+    'json': _load_json,
+    'py': _load_python,
+}
