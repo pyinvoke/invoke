@@ -451,10 +451,7 @@ class Config(DataProxy):
 
     def load_shell_env(self):
         """
-        Load values from the shell environment, then trigger a config merge.
-
-        This method is idempotent and does nothing if ``.shell`` is already
-        non-``None``.
+        Load values from the shell environment.
 
         `.load_shell_env` is intended for execution late in a `.Config`
         object's lifecycle, once all other sources have been merged. Loading
@@ -469,10 +466,7 @@ class Config(DataProxy):
 
     def set_collection(self, data):
         """
-        Update collection-driven config data, then trigger a config merge.
-
-        This method is idempotent and does nothing if ``.collection`` is
-        already non-``None``.
+        Update collection-driven config data.
 
         `.set_collection` is intended for use by the core task execution
         machinery, which is responsible for obtaining per-task
