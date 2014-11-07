@@ -566,14 +566,11 @@ class Config(DataProxy):
         if path is None:
             debug("{0} has not been loaded yet, skipping".format(desc))
         elif path is NOT_FOUND:
-            msg = "{0} not found (tried {1}), skipping"
-            debug(msg.format(desc, self._files_searched(path)))
+            # Details about exact paths searched is debug'd earlier
+            debug("{0} not found, skipping".format(desc))
         else:
             debug("{0} ({1}): {2!r}".format(desc, path, data))
             _merge(self.config, data)
-
-    def _files_searched(self, prefix):
-        return "{0}.{{{1}}}".format(prefix, ','.join(self.file_suffixes))
 
     def __getattr__(self, key):
         print "Config.__getattr__({0!r})".format(key)
