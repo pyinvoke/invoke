@@ -128,61 +128,6 @@ class NestedEnv(object):
             return old.__class__(new_)
 
 
-class ExclusiveFile(object):
-    """
-    File-loading config adapter that looks for one of N possible suffixes.
-
-    For example, ``ExclusiveFile(prefix='/etc/invoke', suffixes=['yaml',
-    'json'])`` behaves similar to loading both of
-    ``File('/etc/invoke.yaml')`` + ``File('/etc/invoke.json')``, with the
-    distinction that if ``/etc/invoke.yaml`` is succesfully loaded, the JSON
-    file is **not** loaded at all. (This means that the order of the
-    ``suffixes`` parameter matters.)
-
-    This provides an unambiguous config source-loading process, simplifying
-    troubleshooting and (hopefully) reduces potential for confusion.
-
-    :param str prefix:
-        Everything but the file extension, e.g. ``/etc/invoke`` to load up
-        files like ``/etc/invoke.yaml``.
-
-    :param iterable suffixes:
-        Optional iterable of file extensions like ``"yaml"`` or ``"json"``. Do
-        not include any leading periods (i.e. don't say
-        ``ExclusiveFile('/etc/invoke', '.yaml')``).
-
-        Defaults to ``('yaml', 'json', 'py')``.
-    """
-    def __init__(self, prefix, suffixes=None):
-        if suffixes is None:
-            suffixes = ('yaml', 'json', 'py')
-        self.prefix = prefix
-        self.suffixes = suffixes
-        self.adapters = [
-            File(
-                "{0}.{1}".format(prefix, x),
-                python_uppercase=False,
-                strict=False
-            )
-            for x in suffixes
-        ]
-        self.data = {}
-        self.loaded = None
-
-    def __str__(self):
-        return "ExclusiveFile({0}.{{{1}}})".format(self.prefix, ','.join(self.suffixes))
-
-    def load(self, formatter=None):
-        for adapter in self.adapters:
-            adapter.load(formatter=formatter)
-            # Simply offload data from the 1st one to be found.
-            # If none are found, our data remains empty as initialized.
-            if adapter.found:
-                self.data = adapter.data
-                self.loaded = adapter.filepath
-                return
-
-
 class DataProxy(object):
     """
     Helper class implementing nested dict+attr access for `.Config`.
