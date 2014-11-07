@@ -473,7 +473,7 @@ class Config(DataProxy):
         collection-driven data. See :ref:`collection-configuration` for
         details.
         """
-        pass
+        self.collection = data
 
     def clone(self):
         """
