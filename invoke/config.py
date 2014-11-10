@@ -268,6 +268,10 @@ class Config(DataProxy):
 
         #: Parent directory of the current root tasks file, if applicable.
         self.project_home = project_home
+        # And a normalized prefix version not really publicly exposed
+        self.project_prefix = None
+        if self.project_home is not None:
+            self.project_prefix = join(project_home, 'invoke')
         #: Path to loaded per-project config file, if any.
         self.project_path = None
         #: Whether the project config file has been loaded or not (or ``None``
@@ -364,7 +368,7 @@ class Config(DataProxy):
         # user: ditto
         self._load_file(prefix='user')
         # project: use project_home + 'invoke' + file_suffixes
-        self._load_file(prefix='project') # TODO: make project_home match
+        self._load_file(prefix='project')
         # runtime: use runtime_path
         self._load_file(prefix='runtime', absolute=True)
 
@@ -373,36 +377,49 @@ class Config(DataProxy):
         found = "{0}_found".format(prefix)
         path = "{0}_path".format(prefix)
         data = prefix
-        prefix = "{0}_prefix".format(prefix) # meh
-        # Short-circuit if loading appears to have occurred
+        # Short-circuit if loading appears to have occurred already
         if getattr(self, found) is not None:
             return
-        # File paths to poke
+        # Moar setup
         if absolute:
-            paths = [path]
+            absolute_path = getattr(self, path)
+            # None -> expected absolute path but none set, short circuit
+            if absolute_path is None:
+                return
+            paths = [absolute_path]
         else:
+            path_prefix = getattr(self, "{0}_prefix".format(prefix))
+            # Short circuit if loading seems unnecessary (eg for project config
+            # files when not running out of a project)
+            if path_prefix is None:
+                return
             paths = [
-                '.'.join((getattr(self, prefix), x))
+                '.'.join((path_prefix, x))
                 for x in self.file_suffixes
             ]
         # Poke 'em
         for filepath in paths:
             try:
                 try:
-                    loader = _loaders[splitext(filepath)[1].lstrip('.')]
-                except KeyError:
+                    type_ = splitext(filepath)[1].lstrip('.')
+                    loader = _loaders[type_]
+                except KeyError as e:
+                    print repr(type_)
                     raise # UnknownFileType
                 # Store data, the path it was found at, and fact that it was
                 # found
                 setattr(self, data, loader(filepath))
                 setattr(self, path, filepath)
                 setattr(self, found, True)
-                debug("Loaded {0} config file {1}".format(data, filepath))
                 break
             # Typically means 'no such file', so just note & skip past.
             except IOError as e:
-                err = "Received exception ({0!r}) loading {1}, skipping."
-                debug(err.format(e.strerror, filepath))
+                # TODO: is there a better / x-platform way to detect this?
+                if "No such file" in e.strerror:
+                    err = "Didn't see any {0}, skipping."
+                    debug(err.format(filepath))
+                else:
+                    raise
         # Still None -> no suffixed paths were found, record this fact
         if getattr(self, path) is None:
             setattr(self, found, False)
@@ -430,17 +447,23 @@ class Config(DataProxy):
         _merge(self.config, self.overrides)
 
     def _merge_file(self, name, desc):
+        # Setup
         desc += " config file" # yup
+        found = getattr(self, "{0}_found".format(name))
         path = getattr(self, "{0}_path".format(name))
         data = getattr(self, name)
-        if path is None:
+        # None -> no loading occurred yet
+        if found is None:
             debug("{0} has not been loaded yet, skipping".format(desc))
-        elif path is NOT_FOUND:
-            # Details about exact paths searched is debug'd earlier
-            debug("{0} not found, skipping".format(desc))
-        else:
+        # True -> hooray
+        elif found:
             debug("{0} ({1}): {2!r}".format(desc, path, data))
             _merge(self.config, data)
+        # False -> did try, did not succeed
+        else:
+            # TODO: how to preserve what was tried for each case but only for
+            # the negative? Just a branch here based on 'name'?
+            debug("{0} not found, skipping".format(desc))
 
     def __getattr__(self, key):
         print "Config.__getattr__({0!r})".format(key)
