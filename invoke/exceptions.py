@@ -79,3 +79,10 @@ class UncastableEnvVar(Exception):
     doesn't make any sense until/if we implement some sort of transform option.
     """
     pass
+
+
+class UnknownFileType(Exception):
+    """
+    A config file of an unknown type was specified and cannot be loaded.
+    """
+    pass

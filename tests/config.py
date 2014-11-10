@@ -5,7 +5,9 @@ from spec import Spec, skip, eq_, ok_, raises
 from mock import patch
 
 from invoke.config import Config
-from invoke.exceptions import AmbiguousEnvVar, UncastableEnvVar
+from invoke.exceptions import (
+    AmbiguousEnvVar, UncastableEnvVar, UnknownFileType
+)
 
 from _utils import IntegrationSpec
 
@@ -215,6 +217,11 @@ Valid keys: []""".lstrip()
         def honors_conf_file_flag(self):
             c = Config(runtime_path=join(CONFIGS_PATH, 'yaml', 'invoke.yaml'))
             eq_(c.hooray, 'yaml')
+
+        @raises(UnknownFileType)
+        def unknown_suffix_in_runtime_path_raises_useful_error(self):
+            c = Config(runtime_path=join(CONFIGS_PATH, 'screw.ini'))
+            eq_(c.boo, 'ini') # Should raise exception
 
     class env_vars:
         "Environment variables"

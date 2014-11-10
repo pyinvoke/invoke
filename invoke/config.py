@@ -2,7 +2,7 @@ import copy
 import imp
 import json
 import os
-from os.path import join
+from os.path import join, splitext
 from types import DictType
 
 from .vendor import six
@@ -14,12 +14,6 @@ else:
 from .env import Environment
 from .exceptions import AmbiguousEnvVar, UncastableEnvVar
 from .util import debug
-
-
-#: Sentinel object denoting that a config file was sought and not found.
-#: Differentiated from ``None`` which indicates that no file loading has
-#: occurred yet.
-NOT_FOUND = object()
 
 
 class DataProxy(object):
@@ -256,6 +250,9 @@ class Config(DataProxy):
             else system_prefix)
         #: Path to loaded system config file, if any.
         self.system_path = None
+        #: Whether the system config file has been loaded or not (or ``None``
+        #: if no loading has been attempted yet.)
+        self.system_found = None
         #: Data loaded from the system config file.
         self.system = {}
 
@@ -263,6 +260,9 @@ class Config(DataProxy):
         self.user_prefix = '~/.invoke' if user_prefix is None else user_prefix
         #: Path to loaded user config file, if any.
         self.user_path = None
+        #: Whether the user config file has been loaded or not (or ``None``
+        #: if no loading has been attempted yet.)
+        self.user_found = None
         #: Data loaded from the per-user config file.
         self.user = {}
 
@@ -270,6 +270,9 @@ class Config(DataProxy):
         self.project_home = project_home
         #: Path to loaded per-project config file, if any.
         self.project_path = None
+        #: Whether the project config file has been loaded or not (or ``None``
+        #: if no loading has been attempted yet.)
+        self.project_found = None
         #: Data loaded from the per-project config file.
         self.project = {}
 
@@ -281,8 +284,11 @@ class Config(DataProxy):
 
         #: Path to the user-specified runtime config file.
         self.runtime_path = runtime_path
-        # Data loaded from the runtime config file.
+        #: Data loaded from the runtime config file.
         self.runtime = {}
+        #: Whether the runtime config file has been loaded or not (or ``None``
+        #: if no loading has been attempted yet.)
+        self.runtime_found = None
 
         #: Overrides - highest possible config level. Typically filled in from
         #: command-line flags.
@@ -343,35 +349,63 @@ class Config(DataProxy):
         """
         Load any unloaded/un-searched-for config file sources.
 
-        Specifically, any file sources whose ``_path`` values are ``None`` will
-        be sought and loaded if found. Path values which are set to a string or
-        `NOT_FOUND` will be skipped. Typically this means this method is
-        idempotent and becomes a no-op after the first run.
+        Specifically, any file sources whose ``_found`` values are ``None``
+        will be sought and loaded if found; if their ``_found`` value is non
+        ``None`` (e.g. ``True`` or ``False``) they will be skipped. Typically
+        this means this method is idempotent and becomes a no-op after the
+        first run.
 
         Execution of this method does not imply merging; use `merge` for that.
         """
         # TODO: make subroutine parameterized on stored path, prefix, and
         # optional suffixes.
         # system: use system_prefix + file_suffixes
-        if self.system_path is None:
-            for suffix in self.file_suffixes:
-                path = '.'.join((self.system_prefix, suffix))
-                try:
-                    self.system = _loaders[suffix](path)
-                    self.system_path = path
-                    debug("Loaded systemwide config file {0}".format(path))
-                    break
-                # Typically means 'no such file', so just note & skip past.
-                except IOError as e:
-                    err = "Received exception ({0!r}) loading {1}, skipping."
-                    debug(err.format(e.strerror, path))
-            # Still None -> no suffixed paths were found, record this fact
-            if self.system_path is None:
-                self.system_path = NOT_FOUND
+        self._load_file(prefix='system')
         # user: ditto
+        self._load_file(prefix='user')
         # project: use project_home + 'invoke' + file_suffixes
+        self._load_file(prefix='project') # TODO: make project_home match
         # runtime: use runtime_path
+        self._load_file(prefix='runtime', absolute=True)
 
+    def _load_file(self, prefix, absolute=False):
+        # Setup
+        found = "{0}_found".format(prefix)
+        path = "{0}_path".format(prefix)
+        data = prefix
+        prefix = "{0}_prefix".format(prefix) # meh
+        # Short-circuit if loading appears to have occurred
+        if getattr(self, found) is not None:
+            return
+        # File paths to poke
+        if absolute:
+            paths = [path]
+        else:
+            paths = [
+                '.'.join((getattr(self, prefix), x))
+                for x in self.file_suffixes
+            ]
+        # Poke 'em
+        for filepath in paths:
+            try:
+                try:
+                    loader = _loaders[splitext(filepath)[1].lstrip('.')]
+                except KeyError:
+                    raise # UnknownFileType
+                # Store data, the path it was found at, and fact that it was
+                # found
+                setattr(self, data, loader(filepath))
+                setattr(self, path, filepath)
+                setattr(self, found, True)
+                debug("Loaded {0} config file {1}".format(data, filepath))
+                break
+            # Typically means 'no such file', so just note & skip past.
+            except IOError as e:
+                err = "Received exception ({0!r}) loading {1}, skipping."
+                debug(err.format(e.strerror, filepath))
+        # Still None -> no suffixed paths were found, record this fact
+        if getattr(self, path) is None:
+            setattr(self, found, False)
 
     def merge(self):
         """
