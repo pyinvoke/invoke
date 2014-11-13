@@ -36,6 +36,7 @@ class Environment(object):
             real_var = (self._prefix or "") + env_var
             if real_var in os.environ:
                 self._path_set(key_path, os.environ[real_var])
+        debug("Obtained env var config: {0!r}".format(self.data))
         return self.data
 
     def _crawl(self, key_path, env_vars):
