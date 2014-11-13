@@ -81,8 +81,7 @@ class Local(Runner):
                 return text
             else:
                 return b""
-        wrapped_cmd = "/bin/bash -c \"%s\"" % command
-        p = pexpect.spawn(wrapped_cmd)
+        p = pexpect.spawn("/bin/bash", ["-c", command])
         # Ensure pexpect doesn't barf with OSError if we fall off the end of
         # the child's input on some platforms (e.g. Linux).
         exception = None
