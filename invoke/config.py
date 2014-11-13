@@ -342,18 +342,32 @@ class Config(DataProxy):
         loaded/merged data, but will be a distinct object with no shared
         mutable state.
         """
-        # New config w/ formatter preserved
-        c = EtcConfig(formatter=self.config.formatter)
-        # New adapters, ditto + deepcopy internal data
-        adapters = []
-        for old in self.config.adapters:
-            c.register(_clone_adapter(old))
-        # Then deepcopy loaded data in case already loaded (we don't
-        # necessarily know at this point if loading has occurred).
-        c.update(copy.deepcopy(dict(self.config)))
-        # All set
-        new = Config(env_prefix=self.env_prefix)
-        new.config = c
+        new = Config()
+        for name in """
+            config
+            defaults
+            collection
+            system_prefix
+            system_path
+            system_found
+            system
+            user_prefix
+            user_path
+            user_found
+            user
+            project_home
+            project_prefix
+            project_path
+            project_found
+            project
+            env_prefix
+            env
+            runtime_path
+            runtime_found
+            runtime
+            overrides
+        """.split():
+            setattr(new, name, copy.deepcopy(getattr(self, name)))
         return new
 
     def load_files(self):
