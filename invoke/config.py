@@ -109,6 +109,9 @@ class DataProxy(object):
     def __repr__(self):
         return repr(self.config)
 
+    def __contains__(self, key):
+        return key in self.config
+
     # TODO: copy()?
 
 
@@ -312,7 +315,11 @@ class Config(DataProxy):
         re: how environment variables are scanned and loaded.
         """
         # Force merge of existing data to ensure we have an up to date picture
+        debug("Running pre-merge for shell env loading...")
+        # TODO: maybe suck it up, add load_files to merge()?
+        self.load_files()
         self.merge()
+        debug("Done with pre-merge.")
         loader = Environment(config=self.config, prefix=self.env_prefix)
         self.env = loader.load()
 
@@ -466,10 +473,16 @@ class Config(DataProxy):
             debug("{0} not found, skipping".format(desc))
 
     def __getattr__(self, key):
-        print "Config.__getattr__({0!r})".format(key)
+        debug("Config.__getattr__({0!r})".format(key))
         self.load_files()
         self.merge()
         return super(Config, self).__getattr__(key)
+
+    def __contains__(self, key):
+        debug("Config.__contains__({0!r})".format(key))
+        self.load_files()
+        self.merge()
+        return super(Config, self).__contains__(key)
 
 
 def _merge(base, updates):
