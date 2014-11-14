@@ -1,7 +1,7 @@
 import operator
 import sys
 
-from spec import Spec, skip, eq_, raises, assert_raises
+from spec import Spec, skip, eq_, ok_, raises, assert_raises
 
 from invoke.collection import Collection
 from invoke.tasks import task, Task
@@ -167,13 +167,20 @@ class Collection_(Spec):
         class explicit_root_ns:
             def setup(self):
                 mod = load('explicit_root')
-                mod.ns.configure({'key': 'builtin', 'otherkey': 'yup'})
+                mod.ns.configure({
+                    'key': 'builtin',
+                    'otherkey': 'yup',
+                    'subconfig': {'mykey': 'myvalue'}
+                })
                 mod.ns.name = 'builtin_name'
                 self.unchanged = Collection.from_module(mod)
                 self.changed = Collection.from_module(
                     mod,
                     name='override_name',
-                    config={'key': 'override'}
+                    config={
+                        'key': 'override',
+                        'subconfig': {'myotherkey': 'myothervalue'}
+                    }
                 )
 
             def inline_config_with_root_namespaces_overrides_builtin(self):
@@ -181,7 +188,13 @@ class Collection_(Spec):
                 eq_(self.changed.configuration()['key'], 'override')
 
             def inline_config_overrides_via_merge_not_replacement(self):
-                assert 'otherkey' in self.changed.configuration()
+                ok_('otherkey' in self.changed.configuration())
+
+            def config_override_merges_recursively(self):
+                eq_(
+                    self.changed.configuration()['subconfig']['mykey'],
+                    'myvalue'
+                )
 
             def inline_name_overrides_root_namespace_object_name(self):
                 eq_(self.unchanged.name, 'builtin_name')
