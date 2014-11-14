@@ -385,15 +385,9 @@ class Config(DataProxy):
 
         Execution of this method does not imply merging; use `merge` for that.
         """
-        # TODO: make subroutine parameterized on stored path, prefix, and
-        # optional suffixes.
-        # system: use system_prefix + file_suffixes
         self._load_file(prefix='system')
-        # user: ditto
         self._load_file(prefix='user')
-        # project: use project_home + 'invoke' + file_suffixes
         self._load_file(prefix='project')
-        # runtime: use runtime_path
         self._load_file(prefix='runtime', absolute=True)
 
     def _load_file(self, prefix, absolute=False):
@@ -455,7 +449,6 @@ class Config(DataProxy):
         Does not imply loading of config files or environment variables; use
         `load_files` and/or `load_shell_env` beforehand instead.
         """
-        self.config = {}
         debug("Merging config sources in order...")
         debug("Defaults: {0!r}".format(self.defaults))
         _merge(self.config, self.defaults)
@@ -488,18 +481,6 @@ class Config(DataProxy):
             # TODO: how to preserve what was tried for each case but only for
             # the negative? Just a branch here based on 'name'?
             debug("{0} not found, skipping".format(desc))
-
-    def __getattr__(self, key):
-        debug("Config.__getattr__({0!r})".format(key))
-        self.load_files()
-        self.merge()
-        return super(Config, self).__getattr__(key)
-
-    def __contains__(self, key):
-        debug("Config.__contains__({0!r})".format(key))
-        self.load_files()
-        self.merge()
-        return super(Config, self).__contains__(key)
 
 
 def _merge(base, updates):
