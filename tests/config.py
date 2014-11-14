@@ -177,7 +177,7 @@ Valid real attributes: ['clone', 'from_data', 'load_collection', 'load_files', '
             config = Config({'foo': 'bar'})
             eq_(str(config), "{'foo': 'bar'}")
             if six.PY2:
-                eq_(unicode(config), u"{'foo': 'bar'}")
+                eq_(unicode(config), six.u("{'foo': 'bar'}"))
             eq_(repr(config), "{'foo': 'bar'}")
 
     def python_modules_dont_load_special_vars(self):
