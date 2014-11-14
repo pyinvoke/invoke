@@ -450,17 +450,17 @@ class Config(DataProxy):
         """
         debug("Merging config sources in order...")
         debug("Defaults: {0!r}".format(self.defaults))
-        _merge(self.config, self.defaults)
+        merge_dicts(self.config, self.defaults)
         debug("Collection-driven: {0!r}".format(self.collection))
-        _merge(self.config, self.collection)
+        merge_dicts(self.config, self.collection)
         self._merge_file('system', "System-wide")
         self._merge_file('user', "Per-user")
         self._merge_file('project', "Per-project")
         debug("Environment variable config: {0!r}".format(self.env))
-        _merge(self.config, self.env)
+        merge_dicts(self.config, self.env)
         self._merge_file('runtime', "Runtime")
         debug("Overrides: {0!r}".format(self.overrides))
-        _merge(self.config, self.overrides)
+        merge_dicts(self.config, self.overrides)
 
     def _merge_file(self, name, desc):
         # Setup
@@ -474,7 +474,7 @@ class Config(DataProxy):
         # True -> hooray
         elif found:
             debug("{0} ({1}): {2!r}".format(desc, path, data))
-            _merge(self.config, data)
+            merge_dicts(self.config, data)
         # False -> did try, did not succeed
         else:
             # TODO: how to preserve what was tried for each case but only for
@@ -512,7 +512,7 @@ class Config(DataProxy):
         return data
 
 
-def _merge(base, updates):
+def merge_dicts(base, updates):
     """
     Recursively merge dict ``updates`` into dict ``base`` (mutating ``base``.)
 
@@ -527,7 +527,7 @@ def _merge(base, updates):
         if key in base:
             if isinstance(value, dict):
                 if isinstance(base[key], dict):
-                    _merge(base[key], value)
+                    merge_dicts(base[key], value)
                 else:
                     raise _merge_error(base[key], value)
             else:
