@@ -334,8 +334,8 @@ post2
 post2
 """)
                 # Flag beats runtime
-                _dispatch(
-                    'invoke -c integration -f dedupe.yaml --no-dedupe biz',
+                _output_eq(
+                    '-c integration -f dedupe.yaml --no-dedupe biz',
 """foo
 foo
 bar
