@@ -124,33 +124,6 @@ class Config(DataProxy):
     <config-hierarchy>`. The rest of this class' documentation assumes
     familiarity with that document.
 
-    Lifecycle
-    ---------
-
-    Configuration data is constructed piecemeal starting at initialization time
-    and config sources are loaded lazily upon request. For example, pure-Python
-    configuration does not load from the filesystem or shell environment::
-
-        c = Config(defaults={'foo': 'bar'})
-        c.foo # No action taken, defaults are the only thing consulted
-
-    If filesystem paths prefixes are given, they are scanned at access time and
-    merged into the final config::
-
-        c = Config(system_prefix='/etc/invoke')
-        c.foo # Attempts to load files like /etc/invoke.yaml
-        c.foo # No filesystem action taken this time
-
-    The merged config is regenerated any time config sources are updated, such
-    as when Invoke's core machinery tells the default config object that it's
-    time to load data from the shell environment::
-
-        c = Config(system_prefix='/etc/invoke')
-        c.foo # Merging (and file load) occurs
-        c.foo # No merging nor file loading - cache only
-        c.load_shell_env() # Merging (but no file loads - only env)
-        c.foo # Again, no merging or file loading takes place
-
     Access
     ------
 
@@ -184,6 +157,29 @@ class Config(DataProxy):
     applicable) may be accessed via attributes such as
     `.project`/`.project_file` and so forth - see the
     documentation for individual members below for details.
+
+    Lifecycle
+    ---------
+
+    On initialization, `Config` will seek out and load various configuration
+    files from disk, then `merge` the results with other in-memory sources such
+    as defaults and CLI overrides.
+
+    Typically, the `load_collection` and `load_shell_env` methods are called
+    after initialization - `load_collection` prior to each task invocation
+    (because collection-level config data may change depending on the task) and
+    `load_shell_env` as the final step (as it needs the rest of the config to
+    know which env vars are valid to load).
+
+    Once users are given a copy of the configuration (usually via their task's
+    `Context` argument) all the above loading (& a final `merge`) has been
+    performed and they are free to modify it as they would any other regular
+    dictionary.
+
+    .. warning::
+        Calling `merge` after manually modifying `Config` objects may overwrite
+        those manual changes, since it overwrites the core config dict with
+        data from per-source attributes like `defaults` or `user`.
     """
 
     def __init__(self, defaults=None, overrides=None, system_prefix=None,
@@ -301,6 +297,10 @@ class Config(DataProxy):
         #: command-line flags.
         self.overrides = {} if overrides is None else overrides
 
+        # Perform initial load & merge.
+        self.load_files()
+        self.merge()
+
     def load_shell_env(self):
         """
         Load values from the shell environment.
@@ -316,23 +316,26 @@ class Config(DataProxy):
         """
         # Force merge of existing data to ensure we have an up to date picture
         debug("Running pre-merge for shell env loading...")
-        # TODO: maybe suck it up, add load_files to merge()?
-        self.load_files()
         self.merge()
         debug("Done with pre-merge.")
         loader = Environment(config=self.config, prefix=self.env_prefix)
         self.env = loader.load()
+        debug("Loaded shell environment, triggering final merge")
+        self.merge()
 
-    def set_collection(self, data):
+    def load_collection(self, data):
         """
         Update collection-driven config data.
 
-        `.set_collection` is intended for use by the core task execution
+        `.load_collection` is intended for use by the core task execution
         machinery, which is responsible for obtaining per-task
         collection-driven data. See :ref:`collection-configuration` for
         details.
+
+        .. note:: This method triggers `merge` after it runs.
         """
         self.collection = data
+        self.merge()
 
     def clone(self):
         """

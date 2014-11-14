@@ -359,12 +359,12 @@ Valid keys: []""".lstrip()
 
         def collection_overrides_defaults(self):
             c = Config(defaults={'setting': 'default'})
-            c.set_collection({'setting': 'collection'})
+            c.load_collection({'setting': 'collection'})
             eq_(c.setting, 'collection')
 
         def systemwide_overrides_collection(self):
             c = Config(system_prefix=join(CONFIGS_PATH, 'yaml', 'invoke'))
-            c.set_collection({'hooray': 'defaults'})
+            c.load_collection({'hooray': 'defaults'})
             eq_(c.hooray, 'yaml')
 
         def user_overrides_systemwide(self):
@@ -376,7 +376,7 @@ Valid keys: []""".lstrip()
 
         def user_overrides_collection(self):
             c = Config(user_prefix=join(CONFIGS_PATH, 'json', 'invoke'))
-            c.set_collection({'hooray': 'defaults'})
+            c.load_collection({'hooray': 'defaults'})
             eq_(c.hooray, 'json')
 
         def project_overrides_user(self):
@@ -397,7 +397,7 @@ Valid keys: []""".lstrip()
             c = Config(
                 project_home=join(CONFIGS_PATH, 'yaml'),
             )
-            c.set_collection({'hooray': 'defaults'})
+            c.load_collection({'hooray': 'defaults'})
             eq_(c.hooray, 'yaml')
 
         def env_vars_override_project(self):
@@ -427,7 +427,7 @@ Valid keys: []""".lstrip()
         def env_vars_override_collection(self):
             os.environ['HOORAY'] = 'env'
             c = Config()
-            c.set_collection({'hooray': 'defaults'})
+            c.load_collection({'hooray': 'defaults'})
             c.load_shell_env()
             eq_(c.hooray, 'env')
 
@@ -460,7 +460,7 @@ Valid keys: []""".lstrip()
 
         def runtime_overrides_collection(self):
             c = Config(runtime_path=join(CONFIGS_PATH, 'json', 'invoke.json'))
-            c.set_collection({'hooray': 'defaults'})
+            c.load_collection({'hooray': 'defaults'})
             eq_(c.hooray, 'json')
 
         def cli_overrides_override_all(self):
