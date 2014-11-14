@@ -61,8 +61,8 @@ class DataProxy(object):
             # Otherwise, raise useful AttributeError to follow getattr proto.
             err = "No attribute or config key found for {0!r}".format(key)
             attrs = [x for x in dir(self.__class__) if not x.startswith('_')]
-            err += "\n\nValid real attributes: {0!r}".format(attrs)
             err += "\n\nValid keys: {0!r}".format(self.config.keys())
+            err += "\n\nValid real attributes: {0!r}".format(attrs)
             raise AttributeError(err)
 
     def __hasattr__(self, key):

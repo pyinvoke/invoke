@@ -120,9 +120,9 @@ class Config_(IntegrationSpec):
                 expected = """
 No attribute or config key found for 'nope'
 
-Valid real attributes: ['clone', 'from_data', 'load']
+Valid keys: []
 
-Valid keys: []""".lstrip()
+Valid real attributes: ['clone', 'from_data', 'load_collection', 'load_files', 'load_shell_env', 'merge']""".lstrip()
                 eq_(str(e), expected)
             else:
                 assert False, "Didn't get an AttributeError on bad key!"
