@@ -36,7 +36,6 @@ class Context_(Spec):
         "Dict-like proxy for self.config"
         def setup(self):
             config = Config({'foo': 'bar'})
-            config.load()
             self.c = Context(config=config)
 
         def direct_access_allowed(self):
