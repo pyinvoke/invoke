@@ -137,7 +137,12 @@ class Executor(object):
         # pass a dotted path to Collection.configuration()
         debug("Executing %r%s" % (task, (" as %s" % name) if name else ""))
         if task.contextualized:
+            # Load per-task/collection config
             config.load_collection(self.collection.configuration(name))
+            # Load env vars, as the last step (so users can override
+            # per-collection keys via the env)
+            config.load_shell_env()
+            # Set up context w/ that config
             context = Context(config=config)
             args = (context,) + args
         result = task(*args, **kwargs)
