@@ -323,7 +323,7 @@ Valid real attributes: ['clone', 'from_data', 'load_collection', 'load_files', '
                 # Can't use '5L' in Python 3, even having it in a branch makes
                 # it upset.
                 if not six.PY3:
-                    tests += (long, '5', long(5))
+                    tests.append((long, '5', long(5)))
                 for old, new_, result in tests:
                     os.environ['FOO'] = new_
                     c = Config(defaults={'foo': old()})
