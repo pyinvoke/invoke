@@ -2,7 +2,7 @@ import copy
 import imp
 import json
 import os
-from os.path import join, splitext
+from os.path import join, splitext, expanduser
 from types import DictType
 
 from .vendor import six
@@ -417,12 +417,14 @@ class Config(DataProxy):
             ]
         # Poke 'em
         for filepath in paths:
+            # Normalize
+            filepath = expanduser(filepath)
             try:
                 try:
                     type_ = splitext(filepath)[1].lstrip('.')
-                    loader = _loaders[type_]
-                except KeyError as e:
-                    raise UnknownFileType("Config files of type {0!r} are not supported! Please use .yaml, .json or .py".format(type_))
+                    loader = getattr(self, "_load_{0}".format(type_))
+                except AttributeError as e:
+                    raise UnknownFileType("Config files of type {0!r} (from file {1!r}) are not supported! Please use one of: {2!r}".format(type_, filepath, self.file_suffixes))
                 # Store data, the path it was found at, and fact that it was
                 # found
                 setattr(self, data, loader(filepath))
@@ -481,6 +483,36 @@ class Config(DataProxy):
             # the negative? Just a branch here based on 'name'?
             debug("{0} not found, skipping".format(desc))
 
+    @property
+    def paths(self):
+        """
+        An iterable of all successfully loaded config file paths.
+
+        No specific order.
+        """
+        paths = []
+        for prefix in "system user project runtime".split():
+            value = getattr(self, "{0}_path".format(prefix))
+            if value is not None:
+                paths.append(value)
+        return paths
+
+    def _load_yaml(self, path):
+        with open(path) as fd:
+            return yaml.load(fd)
+
+    def _load_json(self, path):
+        with open(path) as fd:
+            return json.load(fd)
+
+    def _load_py(self, path):
+        data = {}
+        for key, value in vars(imp.load_source('mod', path)).iteritems():
+            if key.startswith('__'):
+                continue
+            data[key] = value
+        return data
+
 
 def _merge(base, updates):
     """
@@ -516,30 +548,3 @@ def _merge_error(orig, new_):
 
 def _format_mismatch(x):
     return "{0} ({1!r})".format(type(x), x)
-
-
-#
-# File loading
-#
-
-def _load_yaml(path):
-    with open(path) as fd:
-        return yaml.load(fd)
-
-def _load_json(path):
-    with open(path) as fd:
-        return json.load(fd)
-
-def _load_python(path):
-    data = {}
-    for key, value in vars(imp.load_source('mod', path)).iteritems():
-        if key.startswith('__'):
-            continue
-        data[key] = value
-    return data
-
-_loaders = {
-    'yaml': _load_yaml,
-    'json': _load_json,
-    'py': _load_python,
-}

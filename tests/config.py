@@ -2,7 +2,7 @@ import os
 from os.path import join, expanduser
 
 from spec import Spec, skip, eq_, ok_, raises
-from mock import patch
+from mock import patch, call
 
 from invoke.config import Config
 from invoke.exceptions import (
@@ -10,12 +10,6 @@ from invoke.exceptions import (
 )
 
 from _utils import IntegrationSpec
-
-
-def _loads_path(config, path):
-    paths = config.paths
-    found = any(x == path for x in paths)
-    ok_(found, "{0!r} not found, sought paths: {1!r}".format(path, paths))
 
 
 CONFIGS_PATH = 'configs'
@@ -38,31 +32,39 @@ class Config_(IntegrationSpec):
         def can_be_empty(self):
             eq_(Config().__class__, Config) # derp
 
-        def configure_global_location_prefix(self):
+        @patch.object(Config, '_load_yaml')
+        def configure_global_location_prefix(self, load_yaml):
             # This is a bit funky but more useful than just replicating the
             # same test farther down?
             c = Config(system_prefix='meh')
-            _loads_path(c, 'meh.yaml')
+            load_yaml.assert_has_call('meh.yaml')
 
-        def default_system_prefix_is_etc(self):
+        @patch.object(Config, '_load_yaml')
+        def default_system_prefix_is_etc(self, load_yaml):
             # TODO: make this work on Windows somehow without being a total
             # tautology? heh.
-            _loads_path(Config(), '/etc/invoke.yaml')
+            c = Config()
+            load_yaml.assert_has_call('/etc/invoke.yaml')
 
-        def configure_user_location_prefix(self):
+        @patch.object(Config, '_load_yaml')
+        def configure_user_location_prefix(self, load_yaml):
             c = Config(user_prefix='whatever')
-            _loads_path(c, 'whatever.yaml')
+            load_yaml.assert_has_call('whatever.yaml')
 
-        def default_user_prefix_is_homedir(self):
-            _loads_path(Config(), expanduser('~/.invoke.yaml'))
+        @patch.object(Config, '_load_yaml')
+        def default_user_prefix_is_homedir(self, load_yaml):
+            c = Config()
+            load_yaml.assert_has_call(expanduser('~/.invoke.yaml'))
 
-        def configure_project_location(self):
+        @patch.object(Config, '_load_yaml')
+        def configure_project_location(self, load_yaml):
             c = Config(project_home='someproject')
-            _loads_path(c, 'someproject/invoke.yaml')
+            load_yaml.assert_has_call('someproject/invoke.yaml')
 
-        def configure_runtime_path(self):
+        @patch.object(Config, '_load_yaml')
+        def configure_runtime_path(self, load_yaml):
             c = Config(runtime_path='some/path.yaml')
-            _loads_path(c, 'some/path.yaml')
+            load_yaml.assert_has_call('some/path.yaml')
 
         def accepts_defaults_dict(self):
             c = Config(defaults={'super': 'low level'})
@@ -78,13 +80,7 @@ class Config_(IntegrationSpec):
 
         def accepts_env_prefix_option(self):
             c = Config(env_prefix='INVOKE_')
-            # Meh
-            found_prefix = None
-            for adapter in c.config.adapters:
-                if isinstance(adapter, NestedEnv):
-                    found_prefix = adapter._prefix
-                    break
-            eq_(found_prefix, 'INVOKE_')
+            eq_(c.env_prefix, 'INVOKE_')
 
     class basic_API:
         "Basic API components"
@@ -122,7 +118,7 @@ No attribute or config key found for 'nope'
 
 Valid keys: []
 
-Valid real attributes: ['clone', 'from_data', 'load_collection', 'load_files', 'load_shell_env', 'merge']""".lstrip()
+Valid real attributes: ['clone', 'from_data', 'load_collection', 'load_files', 'load_shell_env', 'merge', 'paths']""".lstrip()
                 eq_(str(e), expected)
             else:
                 assert False, "Didn't get an AttributeError on bad key!"
@@ -212,7 +208,7 @@ Valid real attributes: ['clone', 'from_data', 'load_collection', 'load_files', '
 
         def loads_no_project_specific_file_if_no_project_home_given(self):
             c = Config()
-            eq_(c.project_file, None)
+            eq_(c.project_path, None)
             eq_(c.project.keys(), [])
             eq_(c.keys(), [])
 
@@ -491,16 +487,16 @@ Valid real attributes: ['clone', 'from_data', 'load_collection', 'load_files', '
 
     class clone:
         def preserves_basic_members(self):
-            c = Config(
+            c1 = Config(
                 defaults={'key': 'default'},
                 overrides={'key': 'override'},
                 system_prefix='global',
                 user_prefix='user',
                 project_home='project',
                 env_prefix='env',
-                runtime_path='runtime',
+                runtime_path='runtime.yaml',
             )
-            c2 = c.clone()
+            c2 = c1.clone()
             eq_(c2.defaults, c1.defaults)
             ok_(c2.defaults is not c1.defaults)
             eq_(c2.overrides, c1.overrides)
@@ -517,11 +513,11 @@ Valid real attributes: ['clone', 'from_data', 'load_collection', 'load_files', '
                 overrides={'key': 'override'},
             )
             eq_(c.key, 'override')
-            eq_(c.defaults.key, 'default')
+            eq_(c.defaults['key'], 'default')
             c2 = c.clone()
             eq_(c2.key, 'override')
-            eq_(c2.defaults.key, 'default')
-            eq_(c2.overrides.key, 'override')
+            eq_(c2.defaults['key'], 'default')
+            eq_(c2.overrides['key'], 'override')
 
         def preserves_file_data(self):
             c = Config(system_prefix=join(CONFIGS_PATH, 'yaml', 'invoke'))
@@ -530,13 +526,19 @@ Valid real attributes: ['clone', 'from_data', 'load_collection', 'load_files', '
             eq_(c2.hooray, 'yaml')
             eq_(c2.system, {'hooray': 'yaml'})
 
-        @patch('yaml.load', return_value={'hooray': 'yaml'})
-        def does_not_reload_file_data(self, load):
+        @patch.object(Config, '_load_yaml', return_value={'hooray': 'yaml'})
+        def does_not_reload_file_data(self, load_yaml):
             path = join(CONFIGS_PATH, 'yaml', 'invoke')
             c = Config(system_prefix=path)
             c2 = c.clone()
-            load.assert_called_once_with("{0}.yaml".format(path))
             eq_(c2.hooray, 'yaml')
+            # Crummy way to say "only got called with this specific invocation
+            # one time" (since assert_calls_with gets mad about other
+            # invocations w/ different args)
+            calls = load_yaml.call_args_list
+            my_call = call("{0}.yaml".format(path))
+            calls.remove(my_call)
+            ok_(my_call not in calls)
 
         def preserves_env_data(self):
             os.environ['FOO'] = 'bar'
