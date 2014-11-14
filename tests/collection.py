@@ -395,6 +395,13 @@ class Collection_(Spec):
             self.root.configure({'biz': 'baz'})
             eq_(set(self.root.configuration().keys()), set(['foo', 'biz']))
 
+        def configure_merging_is_recursive_for_nested_dicts(self):
+            self.root.configure({'foo': 'bar', 'biz': {'baz': 'boz'}})
+            self.root.configure({'biz': {'otherbaz': 'otherboz'}})
+            c = self.root.configuration()
+            eq_(c['biz']['baz'], 'boz')
+            eq_(c['biz']['otherbaz'], 'otherboz')
+
         def configure_allows_overwriting(self):
             self.root.configure({'foo': 'one'})
             eq_(self.root.configuration()['foo'], 'one')
