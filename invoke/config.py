@@ -123,8 +123,7 @@ class Config(DataProxy):
     <config-hierarchy>`. The rest of this class' documentation assumes
     familiarity with that document.
 
-    Access
-    ------
+    **Access**
 
     Configuration values may be accessed using dict syntax::
 
@@ -135,7 +134,7 @@ class Config(DataProxy):
         config.foo
 
     .. warning::
-        Any "real" attributes (methods, etc) on `Config` take precedence over
+        Any "real" attributes (methods, etc) on `.Config` take precedence over
         settings values - so if you have top level settings named ``clone``,
         ``defaults``, etc, you *must* use dict syntax to access it.
 
@@ -145,8 +144,7 @@ class Config(DataProxy):
        config['foo']['bar']
        config.foo.bar
 
-    Non-data attributes & methods
-    -----------------------------
+    **Non-data attributes & methods**
 
     This class implements the entire dictionary protocol: methods such as
     ``keys``, ``values``, ``items``, ``pop`` and so forth should all function
@@ -154,31 +152,30 @@ class Config(DataProxy):
 
     Individual configuration 'levels' and their source locations (if
     applicable) may be accessed via attributes such as
-    `.project`/`.project_file` and so forth - see the
-    documentation for individual members below for details.
+    `.project`/`.project_path` and so forth - see the documentation for
+    individual members below for details.
 
-    Lifecycle
-    ---------
+    **Lifecycle**
 
-    On initialization, `Config` will seek out and load various configuration
-    files from disk, then `merge` the results with other in-memory sources such
-    as defaults and CLI overrides.
+    On initialization, `.Config` will seek out and load various configuration
+    files from disk, then `.merge` the results with other in-memory sources
+    such as defaults and CLI overrides.
 
-    Typically, the `load_collection` and `load_shell_env` methods are called
-    after initialization - `load_collection` prior to each task invocation
+    Typically, the `.load_collection` and `.load_shell_env` methods are called
+    after initialization - `.load_collection` prior to each task invocation
     (because collection-level config data may change depending on the task) and
-    `load_shell_env` as the final step (as it needs the rest of the config to
+    `.load_shell_env` as the final step (as it needs the rest of the config to
     know which env vars are valid to load).
 
     Once users are given a copy of the configuration (usually via their task's
-    `Context` argument) all the above loading (& a final `merge`) has been
+    `.Context` argument) all the above loading (& a final `.merge`) has been
     performed and they are free to modify it as they would any other regular
     dictionary.
 
     .. warning::
-        Calling `merge` after manually modifying `Config` objects may overwrite
-        those manual changes, since it overwrites the core config dict with
-        data from per-source attributes like `defaults` or `user`.
+        Calling `.merge` after manually modifying `.Config` objects may
+        overwrite those manual changes, since it overwrites the core config
+        dict with data from per-source attributes like `.defaults` or `.user`.
     """
 
     def __init__(self, defaults=None, overrides=None, system_prefix=None,
@@ -331,7 +328,7 @@ class Config(DataProxy):
         collection-driven data. See :ref:`collection-configuration` for
         details.
 
-        .. note:: This method triggers `merge` after it runs.
+        .. note:: This method triggers `.merge` after it runs.
         """
         self.collection = data
         self.merge()
@@ -382,7 +379,7 @@ class Config(DataProxy):
         this means this method is idempotent and becomes a no-op after the
         first run.
 
-        Execution of this method does not imply merging; use `merge` for that.
+        Execution of this method does not imply merging; use `.merge` for that.
         """
         self._load_file(prefix='system')
         self._load_file(prefix='user')
@@ -446,10 +443,10 @@ class Config(DataProxy):
 
     def merge(self):
         """
-        Merge all config sources, in order, to `config`.
+        Merge all config sources, in order, to `.config`.
 
         Does not imply loading of config files or environment variables; use
-        `load_files` and/or `load_shell_env` beforehand instead.
+        `.load_files` and/or `.load_shell_env` beforehand instead.
         """
         debug("Merging config sources in order...")
         debug("Defaults: {0!r}".format(self.defaults))

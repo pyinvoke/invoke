@@ -124,7 +124,7 @@ Changelog
   this is now fixed. Thanks to Stéphane Klein for the catch.
 * :feature:`89` Implemented configuration for distributed task modules: can set
   config options in `invoke.collection.Collection` objects and they are made
-  available to contextualized tasks. See :ref:`configuration`.
+  available to contextualized tasks.
 * :release:`0.5.1 <2013.09.15>`
 * :bug:`81` Fall back to sane defaults for PTY sizes when autodetection gives
   insane results. Thanks to ``@akitada`` for the patch.
