@@ -1,6 +1,6 @@
 import os
 
-from spec import Spec, trap, eq_
+from spec import Spec, trap, eq_, skip
 
 from invoke import run
 
