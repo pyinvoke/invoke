@@ -40,8 +40,14 @@ class Main(Spec):
         assert not result.stdout
         assert result.stderr
 
-    def loads_real_global_config(self):
-        skip()
-
     def loads_real_user_config(self):
-        skip()
+        path = os.path.expanduser("~/.invoke.yaml")
+        try:
+            with open(path, 'w') as fd:
+                fd.write("foo: bar")
+            _output_eq("inv print_config", "bar\n")
+        finally:
+            try:
+                os.unlink(path)
+            except OSError:
+                pass
