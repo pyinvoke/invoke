@@ -170,7 +170,7 @@ class Collection(object):
                 # Explicitly given config wins over root ns config
                 obj_config = copy.deepcopy(obj._configuration)
                 if config:
-                    obj_config.update(config)
+                    merge_dicts(obj_config, config)
                 ret._configuration = obj_config
                 return ret
         # Failing that, make our own collection from the module's tasks.
