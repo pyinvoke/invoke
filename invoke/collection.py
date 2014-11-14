@@ -5,6 +5,7 @@ import types
 from .vendor import six
 from .vendor.lexicon import Lexicon
 
+from .config import merge_dicts
 from .parser import Context as ParserContext
 from .tasks import Task
 
@@ -376,7 +377,7 @@ class Collection(object):
 
     def configure(self, options):
         """
-        Merge ``options`` dict into this collection's `.configuration`.
+        (Recursively) merge ``options`` into the current `.configuration`.
 
         Options configured this way will be available to all
         :doc:`contextualized tasks </concepts/context>`. It is recommended to
@@ -389,4 +390,4 @@ class Collection(object):
         :param options: An object implementing the dictionary protocol.
         :returns: ``None``.
         """
-        self._configuration.update(options)
+        merge_dicts(self._configuration, options)
