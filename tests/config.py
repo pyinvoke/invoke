@@ -490,9 +490,6 @@ Valid real attributes: ['clone', 'from_data', 'load_collection', 'load_files', '
 
 
     class clone:
-        def setup(self):
-            self.c = Config({'foo': {'bar': {'biz': ['baz']}}})
-
         def preserves_basic_members(self):
             c = Config(
                 defaults={'key': 'default'},
@@ -547,12 +544,3 @@ Valid real attributes: ['clone', 'from_data', 'load_collection', 'load_files', '
             c.load_shell_env()
             c2 = c.clone()
             eq_(c2.foo, 'bar')
-
-        @patch('os.environ.__getitem__', return_value={'FOO': 'bar'})
-        def does_not_reload_env_data(self, getitem):
-            c = Config({'foo': 'notbar'})
-            c.load_shell_env()
-            eq_(c.foo, 'bar')
-            c2 = c.clone()
-            eq_(c2.foo, 'bar')
-            getitem.assert_called_once_with('FOO')
