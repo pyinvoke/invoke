@@ -159,6 +159,7 @@ Valid keys: []""".lstrip()
 
         def supports_mutation_dict_protocols(self):
             c = Config({'foo': 'bar'})
+            eq_(len(c), 1)
             eq_(c.pop('foo'), 'bar')
             eq_(len(c), 0)
             c.setdefault('biz', 'baz')
