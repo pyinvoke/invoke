@@ -15,4 +15,4 @@ def print_name(name):
 
 @ctask
 def print_config(c):
-    print c.foo
+    print(c.foo)

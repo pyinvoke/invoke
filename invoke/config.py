@@ -3,7 +3,6 @@ import imp
 import json
 import os
 from os.path import join, splitext, expanduser
-from types import DictType
 
 from .vendor import six
 if six.PY3:
@@ -61,7 +60,7 @@ class DataProxy(object):
             # Otherwise, raise useful AttributeError to follow getattr proto.
             err = "No attribute or config key found for {0!r}".format(key)
             attrs = [x for x in dir(self.__class__) if not x.startswith('_')]
-            err += "\n\nValid keys: {0!r}".format(self.config.keys())
+            err += "\n\nValid keys: {0!r}".format(list(self.config.keys()))
             err += "\n\nValid real attributes: {0!r}".format(attrs)
             raise AttributeError(err)
 
@@ -96,7 +95,7 @@ class DataProxy(object):
 
     def _get(self, key):
         value = self.config[key]
-        if isinstance(value, DictType):
+        if isinstance(value, dict):
             value = DataProxy.from_data(value)
         return value
 
@@ -509,7 +508,7 @@ class Config(DataProxy):
 
     def _load_py(self, path):
         data = {}
-        for key, value in vars(imp.load_source('mod', path)).iteritems():
+        for key, value in six.iteritems(vars(imp.load_source('mod', path))):
             if key.startswith('__'):
                 continue
             data[key] = value

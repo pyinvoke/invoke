@@ -8,6 +8,7 @@ from invoke.config import Config
 from invoke.exceptions import (
     AmbiguousEnvVar, UncastableEnvVar, UnknownFileType
 )
+from invoke.vendor import six
 
 from _utils import IntegrationSpec
 
@@ -21,7 +22,7 @@ def _load(kwarg, type_):
 
 def _expect(where, type_, **kwargs):
     config = _load(where, type_)
-    for key, value in kwargs.iteritems():
+    for key, value in six.iteritems(kwargs):
         eq_(config[key], value)
 
 
@@ -145,13 +146,14 @@ Valid real attributes: ['clone', 'from_data', 'load_collection', 'load_files', '
             eq_(c, c2)
             eq_(len(c), 1)
             eq_(c.get('foo'), 'bar')
-            eq_(c.has_key('foo'), True)
-            eq_(c.items(), [('foo', 'bar')])
-            eq_(list(c.iteritems()), [('foo', 'bar')])
-            eq_(list(c.iterkeys()), ['foo'])
-            eq_(list(c.itervalues()), ['bar'])
-            eq_(c.keys(), ['foo'])
-            eq_(c.values(), ['bar'])
+            if six.PY2:
+                eq_(c.has_key('foo'), True)
+                eq_(list(c.iterkeys()), ['foo'])
+                eq_(list(c.itervalues()), ['bar'])
+            eq_(list(c.items()), [('foo', 'bar')])
+            eq_(list(six.iteritems(c)), [('foo', 'bar')])
+            eq_(list(c.keys()), ['foo'])
+            eq_(list(c.values()), ['bar'])
 
         def supports_mutation_dict_protocols(self):
             c = Config({'foo': 'bar'})
@@ -174,7 +176,8 @@ Valid real attributes: ['clone', 'from_data', 'load_collection', 'load_files', '
             "__str__ and friends"
             config = Config({'foo': 'bar'})
             eq_(str(config), "{'foo': 'bar'}")
-            eq_(unicode(config), u"{'foo': 'bar'}")
+            if six.PY2:
+                eq_(unicode(config), u"{'foo': 'bar'}")
             eq_(repr(config), "{'foo': 'bar'}")
 
     def python_modules_dont_load_special_vars(self):
@@ -209,8 +212,8 @@ Valid real attributes: ['clone', 'from_data', 'load_collection', 'load_files', '
         def loads_no_project_specific_file_if_no_project_home_given(self):
             c = Config()
             eq_(c.project_path, None)
-            eq_(c.project.keys(), [])
-            eq_(c.keys(), [])
+            eq_(list(c.project.keys()), [])
+            eq_(list(c.keys()), [])
 
         def honors_conf_file_flag(self):
             c = Config(runtime_path=join(CONFIGS_PATH, 'yaml', 'invoke.yaml'))
@@ -272,14 +275,18 @@ Valid real attributes: ['clone', 'from_data', 'load_collection', 'load_files', '
                 c = Config(defaults={'foo': 'myoldvalue'})
                 c.load_shell_env()
                 eq_(c.foo, u'myvalue')
-                ok_(isinstance(c.foo, unicode)) # FIXME: py3
+                ok_(isinstance(c.foo, six.text_type))
 
             def unicode_replaced_with_env_value(self):
+                # Python 3 doesn't allow you to put 'bytes' objects into
+                # os.environ, so the test makes no sense there.
+                if six.PY3:
+                    return
                 os.environ['FOO'] = 'myunicode'
                 c = Config(defaults={'foo': u'myoldvalue'})
                 c.load_shell_env()
                 eq_(c.foo, 'myunicode')
-                ok_(isinstance(c.foo, str)) # FIXME: py3
+                ok_(isinstance(c.foo, str))
 
             def None_replaced(self):
                 os.environ['FOO'] = 'something'
@@ -308,12 +315,16 @@ Valid real attributes: ['clone', 'from_data', 'load_collection', 'load_files', '
                     eq_(c.foo, input_)
 
             def numeric_types_become_casted(self):
-                for old, new_, result in (
+                tests = [
                     (int, '5', 5),
                     (float, '5.5', 5.5),
-                    (long, '5', 5L),
                     # TODO: more?
-                ):
+                ]
+                # Can't use '5L' in Python 3, even having it in a branch makes
+                # it upset.
+                if not six.PY3:
+                    tests += (long, '5', long(5))
+                for old, new_, result in tests:
                     os.environ['FOO'] = new_
                     c = Config(defaults={'foo': old()})
                     c.load_shell_env()

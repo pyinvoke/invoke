@@ -8,7 +8,8 @@ not be included in the Sphinx API documentation.
 """
 
 import os
-from types import BooleanType, StringTypes, ListType, TupleType
+
+from .vendor import six
 
 from .exceptions import UncastableEnvVar, AmbiguousEnvVar
 from .util import debug
@@ -33,7 +34,7 @@ class Environment(object):
         env_vars = self._crawl(key_path=[], env_vars={})
         debug("Scanning for env vars according to prefix: {1!r}, mapping: {0!r}".format(env_vars, self._prefix))
         # Check for actual env var (honoring prefix) and try to set
-        for env_var, key_path in env_vars.iteritems():
+        for env_var, key_path in six.iteritems(env_vars):
             real_var = (self._prefix or "") + env_var
             if real_var in os.environ:
                 self._path_set(key_path, os.environ[real_var])
@@ -98,13 +99,13 @@ class Environment(object):
         obj[key_path[-1]] = new_
 
     def _cast(self, old, new_):
-        if isinstance(old, BooleanType):
+        if isinstance(old, bool):
             return new_ not in ('0', '')
-        elif isinstance(old, StringTypes):
+        elif isinstance(old, six.string_types):
             return new_
         elif old is None:
             return new_
-        elif isinstance(old, (ListType, TupleType)):
+        elif isinstance(old, (list, tuple)):
             err = "Can't adapt an environment string into a {0}!"
             err = err.format(type(old))
             raise UncastableEnvVar(err)
