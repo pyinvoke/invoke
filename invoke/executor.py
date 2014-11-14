@@ -6,7 +6,6 @@ from .util import debug
 from .tasks import Call
 
 from .vendor import six
-from .vendor.etcaetera.config import _merge # TODO: make this member public
 
 
 class Executor(object):
@@ -73,10 +72,8 @@ class Executor(object):
         # behave differently
         direct = list(tasks)
         # Expand pre/post tasks & then dedupe the entire run.
-        # Load config at this point to get latest value of dedupe flag
-        # (includes CLI parsing).
+        # Load config at this point to get latest value of dedupe option
         config = self.config.clone()
-        config.load()
         # Get some good value for dedupe option, even if config doesn't have
         # the tree we expect. (This is a concession to testing.)
         try:
@@ -140,7 +137,7 @@ class Executor(object):
         # pass a dotted path to Collection.configuration()
         debug("Executing %r%s" % (task, (" as %s" % name) if name else ""))
         if task.contextualized:
-            config.load(collection=self.collection.configuration(name))
+            config.load_collection(self.collection.configuration(name))
             context = Context(config=config)
             args = (context,) + args
         result = task(*args, **kwargs)

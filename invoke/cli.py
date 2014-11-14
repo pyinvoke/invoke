@@ -310,7 +310,7 @@ def make_config(args, collection):
     if args.echo.value:
         run['echo'] = True
     tasks = {}
-    if not args['no-dedupe'].value:
+    if args['no-dedupe'].value:
         tasks['dedupe'] = False
     overrides = {'run': run, 'tasks': tasks}
     # Stand up config object
