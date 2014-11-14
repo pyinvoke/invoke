@@ -10,6 +10,7 @@ not be included in the Sphinx API documentation.
 import os
 from types import BooleanType, StringTypes, ListType, TupleType
 
+from .exceptions import UncastableEnvVar, AmbiguousEnvVar
 from .util import debug
 
 

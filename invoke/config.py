@@ -12,7 +12,7 @@ else:
     from .vendor import yaml2 as yaml
 
 from .env import Environment
-from .exceptions import AmbiguousEnvVar, UncastableEnvVar
+from .exceptions import UnknownFileType
 from .util import debug
 
 
@@ -422,8 +422,7 @@ class Config(DataProxy):
                     type_ = splitext(filepath)[1].lstrip('.')
                     loader = _loaders[type_]
                 except KeyError as e:
-                    print repr(type_)
-                    raise # UnknownFileType
+                    raise UnknownFileType("Config files of type {0!r} are not supported! Please use .yaml, .json or .py".format(type_))
                 # Store data, the path it was found at, and fact that it was
                 # found
                 setattr(self, data, loader(filepath))
