@@ -108,7 +108,7 @@ class Config_(IntegrationSpec):
             eq_(c.biz['baz'], 'boz')
             eq_(c['biz'].baz, 'boz')
 
-        def attr_access_has_useful_errr_msg(self):
+        def attr_access_has_useful_error_msg(self):
             c = Config()
             try:
                 c.nope
