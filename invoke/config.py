@@ -280,7 +280,7 @@ class Config(DataProxy):
         self.project = {}
 
         #: Environment variable name prefix
-        # TODO: make this INVOKE_ and update tests, just deal
+        # TODO: make this INVOKE_ and update tests to account?
         self.env_prefix = '' if env_prefix is None else env_prefix
         #: Config data loaded from the shell environment.
         self.env = {}
@@ -424,7 +424,9 @@ class Config(DataProxy):
                     type_ = splitext(filepath)[1].lstrip('.')
                     loader = getattr(self, "_load_{0}".format(type_))
                 except AttributeError as e:
-                    raise UnknownFileType("Config files of type {0!r} (from file {1!r}) are not supported! Please use one of: {2!r}".format(type_, filepath, self.file_suffixes))
+                    msg = "Config files of type {0!r} (from file {1!r}) are not supported! Please use one of: {2!r}"
+                    raise UnknownFileType(msg.format(
+                        type_, filepath, self.file_suffixes))
                 # Store data, the path it was found at, and fact that it was
                 # found
                 setattr(self, data, loader(filepath))
