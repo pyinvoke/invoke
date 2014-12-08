@@ -1,7 +1,3 @@
-import os
-import select
-import sys
-
 from .monkey import Popen, PIPE
 from .exceptions import Failure, PlatformError
 from .platform import WINDOWS

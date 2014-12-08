@@ -1,16 +1,14 @@
 import os
 import sys
 
-from spec import eq_, skip, Spec, ok_, trap, raises
+from spec import eq_, skip, Spec, ok_, trap
 from mock import patch, Mock
 
-from invoke.cli import parse, tasks_from_contexts
+from invoke.cli import tasks_from_contexts
 from invoke.context import Context
-from invoke.runner import run
 from invoke.parser import Parser
 from invoke.collection import Collection
 from invoke.tasks import task
-from invoke.exceptions import Failure
 import invoke
 
 from _utils import _dispatch, _output_eq, IntegrationSpec

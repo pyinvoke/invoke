@@ -1,7 +1,6 @@
 import operator
-import sys
 
-from spec import Spec, skip, eq_, raises, assert_raises
+from spec import Spec, eq_, raises, assert_raises
 
 from invoke.collection import Collection
 from invoke.tasks import task, Task

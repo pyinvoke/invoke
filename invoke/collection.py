@@ -1,5 +1,4 @@
 import copy
-from operator import add
 import types
 
 from .vendor import six

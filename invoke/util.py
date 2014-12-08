@@ -1,7 +1,5 @@
 import logging
 import os
-import struct
-import sys
 
 
 def enable_logging():
