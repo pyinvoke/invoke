@@ -195,7 +195,7 @@ class Collection(object):
         self.tasks[name] = task
         for alias in task.aliases:
             self.tasks.alias(alias, to=name)
-        if default is True or (default is None and task.is_default):
+        if default or (default is None and task.is_default):
             if self.default:
                 msg = "'%s' cannot be the default because '%s' already is!"
                 raise ValueError(msg % (name, self.default))
