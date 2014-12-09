@@ -73,18 +73,26 @@ class Executor_(IntegrationSpec):
 
         def _call_objs(self, contextualized):
             # Setup
-            pre_body, post_body = Mock(), Mock()
+            pre_mock, post_mock = Mock(), Mock()
+            def pre_body(a1, *args, **kw):
+                pre_mock(a1, *args, **kw)
+
+            def post_body(a1, *args, **kw):
+                post_mock(a1, *args, **kw)
+
             t1 = Task(pre_body, contextualized=contextualized)
             t2 = Task(post_body, contextualized=contextualized)
             t3 = Task(Mock(),
                 pre=[call(t1, 5, foo='bar')],
                 post=[call(t2, 7, biz='baz')],
             )
+
             c = Collection(t1=t1, t2=t2, t3=t3)
             e = Executor(collection=c, context=Context())
             e.execute('t3')
+
             # Pre-task asserts
-            args, kwargs = pre_body.call_args
+            args, kwargs = pre_mock.call_args
             eq_(kwargs, {'foo': 'bar'})
             if contextualized:
                 assert isinstance(args[0], Context)
@@ -92,7 +100,7 @@ class Executor_(IntegrationSpec):
             else:
                 eq_(args, (5,))
             # Post-task asserts
-            args, kwargs = post_body.call_args
+            args, kwargs = post_mock.call_args
             eq_(kwargs, {'biz': 'baz'})
             if contextualized:
                 assert isinstance(args[0], Context)
