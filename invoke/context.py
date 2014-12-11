@@ -76,6 +76,9 @@ class Context(object):
     def __getitem__(self, *args, **kwargs):
         return self.config['general'].__getitem__(*args, **kwargs)
 
+    def __contains__(self, *args, **kwargs):
+        return self.config['general'].__contains__(*args, **kwargs)
+
     def get(self, *args, **kwargs):
         return self.config['general'].get(*args, **kwargs)
 

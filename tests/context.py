@@ -44,8 +44,13 @@ class Context_(Spec):
             self.c = Context(config={'foo': 'bar'})
 
         def getitem(self):
-            "___getitem__"
+            "__getitem__"
             eq_(self.c['foo'], 'bar')
+
+        def contains(self):
+            "__contains__"
+            eq_('foo' in self.c, True)
+            eq_('absent' in self.c, False)
 
         def get(self):
             eq_(self.c.get('foo'), 'bar')
