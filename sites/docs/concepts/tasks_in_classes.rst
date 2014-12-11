@@ -263,3 +263,7 @@ that need to be addressed.
 
 * are there potential use cases that don't follow the pattern laid out above?
   (some people, for instance, really like mixins, how does that change stuff?)
+
+* what the heck do we call this.. seriously I like none of the idea's I've come
+  up with :) (however something around the Template thought is favorable in my
+  head right now)
