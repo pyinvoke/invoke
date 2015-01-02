@@ -2,6 +2,13 @@
 Changelog
 =========
 
+* :bug:`191` Bypass ``pexpect``'s automatic command splitting to avoid issues
+  running complex nested/quoted commands under a pty. Credit to ``@mijikai``
+  for noticing the problem.
+* :bug:`183` Task docstrings whose first line started on the same line as the
+  opening quote(s) were incorrectly presented in ``invoke --help <task>``. This
+  has been fixed by using `inspect.getdoc`. Thanks to Pekka Klärck for the
+  catch & suggested fix.
 * :bug:`180` Empty invocation (e.g. just ``invoke`` with no flags or tasks, and
   when no default task is defined) no
   longer printed help output, instead complaining about the lack of default

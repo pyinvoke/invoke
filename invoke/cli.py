@@ -1,4 +1,5 @@
 from functools import partial
+import inspect
 import os
 import sys
 import textwrap
@@ -213,15 +214,14 @@ def parse(argv, collection=None, version=None):
         # Setup
         ctx = parser.contexts[name]
         tuples = ctx.help_tuples()
-        docstring = collection[name].__doc__
+        docstring = inspect.getdoc(collection[name])
         header = "Usage: inv[oke] [--core-opts] %s %%s[other tasks here ...]" % name
         print(header % ("[--options] " if tuples else ""))
         print("")
         print("Docstring:")
         if docstring:
             # Really wish textwrap worked better for this.
-            doclines = textwrap.dedent(docstring.lstrip('\n').rstrip()+'\n').splitlines()
-            for line in doclines:
+            for line in docstring.splitlines():
                 if line.strip():
                     print(indent + line)
                 else:

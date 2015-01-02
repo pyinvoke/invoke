@@ -186,6 +186,16 @@ class Run(Spec):
         def pty_defaults_to_off(self):
             eq_(run("true").pty, False)
 
+        def complex_nesting_doesnt_break(self):
+            # GH issue 191
+            substr = "      hello\t\t\nworld with spaces"
+            cmd = """ eval 'echo "{0}" ' """.format(substr)
+            # TODO: consider just mocking os.execv here (and in the other
+            # tests) though that feels like too much of a tautology / testing
+            # pexpect
+            expected = '      hello\t\t\r\nworld with spaces\r\n'
+            eq_(run(cmd, pty=True, hide='both').stdout, expected)
+
     class command_echo:
         @trap
         def does_not_echo_commands_run_by_default(self):

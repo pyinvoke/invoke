@@ -39,4 +39,4 @@ see with ``inv --list``. Some specific tasks of note:
 .. _contribution-guide.org: http://contribution-guide.org
 
 .. _our GitHub page:
-.. _pyinvoke/invoke: https://github.cm/pyinvoke/invoke
+.. _pyinvoke/invoke: https://github.com/pyinvoke/invoke
