@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :feature:`190` Make ``invoke`` invocable with ``python -m invoke``
 * :bug:`183` Task docstrings whose first line started on the same line as the
   opening quote(s) were incorrectly presented in ``invoke --help <task>``. This
   has been fixed by using `inspect.getdoc`. Thanks to Pekka Klärck for the
