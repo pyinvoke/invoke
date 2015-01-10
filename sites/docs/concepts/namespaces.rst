@@ -88,7 +88,7 @@ The result::
 Aliases
 -------
 
-# FIXME: add back aliases and merge at add_task time, as we do with name. HURR
+.. FIXME: add back aliases and merge at add_task time, as we do with name. HURR
 
 Tasks may have additional names or aliases, given as the ``aliases`` keyword
 argument; these are appended to, instead of replacing, any implicit or explicit
