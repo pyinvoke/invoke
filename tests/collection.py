@@ -1,7 +1,6 @@
 import operator
-import sys
 
-from spec import Spec, skip, eq_, raises, assert_raises
+from spec import Spec, eq_, raises, assert_raises
 
 from invoke.collection import Collection
 from invoke.tasks import task, Task
@@ -255,6 +254,11 @@ class Collection_(Spec):
             self.c.add_collection(load('integration'))
             assert 'integration' in self.c.collections
 
+        def allows_specifying_defaultness(self):
+            collection = Collection('foo')
+            self.c.add_collection(collection, default=True)
+            eq_(self.c.default, collection)
+
         @raises(ValueError)
         def raises_ValueError_if_collection_without_name(self):
             # Aka non-root collections must either have an explicit name given
@@ -268,6 +272,13 @@ class Collection_(Spec):
         def raises_ValueError_if_collection_named_same_as_task(self):
             self.c.add_task(_mytask, 'sub')
             self.c.add_collection(Collection('sub'))
+
+        @raises(ValueError)
+        def raises_ValueError_on_multiple_defaults(self):
+            t1 = Task(_func, default=True)
+            self.c.add_task(t1, 'foo')
+            collection = Collection('bar')
+            self.c.add_collection(collection, default=True)
 
     class getitem:
         "__getitem__"
@@ -298,6 +309,13 @@ class Collection_(Spec):
             t = Task(_func, default=True)
             self.c.add_task(t)
             eq_(self.c[''], t)
+
+        def honors_own_default_subcollection(self):
+            task = Task(_func, default=True)
+            sub = Collection('sub')
+            sub.add_task(task, default=True)
+            self.c.add_collection(sub, default=True)
+            eq_(self.c[''], task)
 
         def honors_subcollection_default_tasks_on_subcollection_name(self):
             sub = Collection.from_module(load('decorator'))

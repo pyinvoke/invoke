@@ -1,5 +1,4 @@
 import copy
-from operator import add
 import types
 
 from .vendor import six
@@ -196,13 +195,13 @@ class Collection(object):
         self.tasks[name] = task
         for alias in task.aliases:
             self.tasks.alias(alias, to=name)
-        if default is True or (default is None and task.is_default):
+        if default or (default is None and task.is_default):
             if self.default:
                 msg = "'%s' cannot be the default because '%s' already is!"
                 raise ValueError(msg % (name, self.default))
             self.default = name
 
-    def add_collection(self, coll, name=None):
+    def add_collection(self, coll, name=None, default=None):
         """
         Add `.Collection` ``coll`` as a sub-collection of this one.
 
@@ -211,6 +210,8 @@ class Collection(object):
         :param str name:
             The name to attach the collection as. Defaults to the collection's
             own internal name.
+
+        :param default: Whether this sub-collection should be the default.
         """
         # Handle module-as-collection
         if isinstance(coll, types.ModuleType):
@@ -224,6 +225,11 @@ class Collection(object):
             raise ValueError("Name conflict: this collection has a task named %r already" % name)
         # Insert
         self.collections[name] = coll
+        if default:
+            if self.default:
+                msg = "'%s' cannot be the default because '%s' already is!"
+                raise ValueError(msg % (name, self.default))
+            self.default = coll
 
     def split_path(self, path):
         """
@@ -275,10 +281,12 @@ class Collection(object):
         ours = self.configuration()
         # Default task for this collection itself
         if not name:
-            if self.default:
-                return self[self.default], ours
-            else:
+            if not self.default:
                 raise ValueError("This collection has no default task.")
+            if isinstance(self.default, Collection):
+                return self._task_with_merged_config(self.default.name, '', ours)
+            else:
+                return self[self.default], ours
         # Non-default tasks within subcollections -> recurse (sorta)
         if '.' in name:
             coll, rest = self.split_path(name)

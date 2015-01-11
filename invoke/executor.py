@@ -1,5 +1,3 @@
-import itertools
-
 from .context import Context
 from .util import debug
 from .tasks import Call
