@@ -8,4 +8,4 @@ def z_toplevel():
 def subtask():
     pass
 
-ns = Collection(z_toplevel, Collection('a', subtask))
+ns = Collection(z_toplevel, Collection('a', Collection('b', subtask)))

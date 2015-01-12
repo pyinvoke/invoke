@@ -227,7 +227,7 @@ Available tasks:
         def top_level_tasks_listed_first(self):
             self._list_eq('simple_ns_list', (
                 'z_toplevel',
-                'a.subtask'
+                'a.b.subtask'
             ))
 
         def subcollections_sorted_in_depth_order(self):
