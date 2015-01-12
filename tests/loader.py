@@ -4,7 +4,7 @@ import sys
 
 from spec import Spec, skip, eq_, raises
 
-from invoke.loader import Loader, FilesystemLoader as FSLoader
+from invoke.loader import Loader, FilesystemLoader as FSLoader, PackageLoader
 from invoke.collection import Collection
 from invoke.exceptions import CollectionNotFound
 
@@ -75,3 +75,22 @@ class FilesystemLoader_(Spec):
         "defaults to 'tasks' collection"
         result = FSLoader(start=support + '/implicit/').load()
         eq_(type(result), Collection)
+
+
+class PackageLoader_(Spec):
+    def setup(self):
+        self.l = PackageLoader()
+
+    def returns_collection_object_if_name_found(self):
+        # This module is definitely installed
+        result = self.l.load('invoke.parser.context')
+        eq_(type(result), Collection)
+
+    @raises(CollectionNotFound)
+    def raises_CollectionNotFound_if_not_found(self):
+        self.l.load('nope')
+
+    @raises(ImportError)
+    def raises_ImportError_if_found_collection_cannot_be_imported(self):
+        # Instead of masking with a CollectionNotFound
+        self.l.load('oops')

@@ -7,7 +7,7 @@ import textwrap
 from .vendor import six
 
 from .context import Context
-from .loader import FilesystemLoader, DEFAULT_COLLECTION_NAME
+from .loader import FilesystemLoader, PackageLoader, DEFAULT_COLLECTION_NAME
 from .parser import Parser, Context as ParserContext, Argument
 from .executor import Executor
 from .exceptions import Failure, CollectionNotFound, ParseError, Exit
@@ -82,6 +82,16 @@ def parse_gracefully(parser, argv):
         return parser.parse_argv(argv)
     except ParseError as e:
         sys.exit(str(e))
+
+
+def load_collection(coll_name, loaders):
+    for loader in loaders:
+        try:
+            res = loader.load(coll_name)
+            return res
+        except CollectionNotFound:
+            pass
+    raise CollectionNotFound(name=coll_name, start="")
 
 
 def parse(argv, collection=None, version=None):
@@ -186,15 +196,20 @@ def parse(argv, collection=None, version=None):
     # Load collection (default or specified) and parse leftovers
     start = args.root.value
     loader = FilesystemLoader(start=start)
-    coll_name = args.collection.value
+    coll_name = args.collection.value or DEFAULT_COLLECTION_NAME
     try:
-        collection = loader.load(coll_name) if coll_name else loader.load()
+        # By default use "classic" filesystem loader
+        loaders = [FilesystemLoader(start=start)]
+        # But if there are dots and it doesn't end with ".py"
+        # it seems we can try to load package inner tasks
+        if coll_name.find(".") != -1 and not coll_name.endswith(".py"):
+            loaders.append(PackageLoader())
+        collection = load_collection(coll_name, loaders)
     except CollectionNotFound:
         # TODO: improve sys.exit mocking in tests so we can just raise
         # Exit(msg)
-        name = coll_name or DEFAULT_COLLECTION_NAME
         six.print_(
-            "Can't find any collection named {0!r}!".format(name),
+            "Can't find any collection named {0!r}!".format(coll_name),
             file=sys.stderr
         )
         raise Exit(1)
