@@ -65,6 +65,15 @@ The core options (which must be given before any task names) are as follows:
 
     Change root directory used for finding task modules.
 
+.. option:: --tasks
+
+    Short, computer-readable task name list displaying all task names/paths in
+    a newline-separated list with no indentation or other descriptive info.
+    Useful for building shell completion scripts or other automation.
+
+    .. seealso::
+        For a human-readable task listing, see :option:`--list <-l>`.
+
 .. option:: -V, --version
 
     Show version and exit.

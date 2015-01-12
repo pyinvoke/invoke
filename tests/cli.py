@@ -386,6 +386,16 @@ post2
                 ok_(run.call_args[1]['echo'] == True)
                 ok_(run.call_args[1]['warn'] == True)
 
+    class completion:
+        "Completion-related flag-actions"
+
+        class all_tasks:
+            def tasks_flag_prints_all_tasks(self):
+                _output_eq('-c simple_ns_list --tasks', "z_toplevel\na.b.subtask")
+
+            def empty_tasks_have_empty_output(self):
+                _output_eq('-c empty --tasks', "")
+
 
 TB_SENTINEL = 'Traceback (most recent call last)'
 
