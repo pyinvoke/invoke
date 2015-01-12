@@ -2,6 +2,12 @@
 ``cli``
 =======
 
+.. seealso::
+    This page documents the ``invoke`` command-line program itself. For
+    background on how parsing works, please see :doc:`/concepts/cli`. For
+    details on task execution, see :doc:`/concepts/execution`.
+
+
 ``inv[oke]`` command-line program
 =================================
 
@@ -67,11 +73,6 @@ The core options (which must be given before any task names) are as follows:
 
     Warn, instead of failing, when shell commands fail. Requires
     :doc:`contextualized tasks </concepts/context>`.
-
-
-.. seealso::
-    * :doc:`/concepts/cli` - for background on how parsing works
-    * :doc:`/concepts/execution` - for details on how tasks get executed
 
 
 The internal ``cli`` module's API docs
