@@ -2,6 +2,10 @@
 Changelog
 =========
 
+* :feature:`104` Add core CLI flags to support shell tab completion scripts
+  (:option:`--tasks` and :option:`--flags`) and also bake in some 'blessed'
+  such scripts for bash (3 and 4) and zsh. Thanks to Ivan Malison and Andrew
+  Roberts for providing discussion & early patchsets.
 * :feature:`147` Drastically overhaul/expand the configuration system to
   account for multiple configuration levels including (but not limited to) file
   paths, environment variables, and Python-level constructs (previously the
