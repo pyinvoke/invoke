@@ -3,7 +3,8 @@ Getting started
 ===============
 
 This document presents a whirlwind tour of Invoke's feature set. Please see the
-links throughout for detailed conceptual & API docs.
+links throughout for detailed conceptual & API docs. For installation help, see
+the project's `installation page <http://www.pyinvoke.org/installing.html>`_.
 
 
 Defining and running task functions
@@ -108,6 +109,7 @@ something::
 This will also print the first line of each task’s docstring, if it has one. To
 see what else is available besides ``--list``, say ``invoke --help``.
 
+
 Running shell commands
 ======================
 
@@ -203,8 +205,9 @@ The result::
 For a more detailed breakdown of how namespacing works, please see :doc:`the
 docs <concepts/namespaces>`.
 
-Using contexts for configurability
-==================================
+
+Using contexts
+==============
 
 While fully configurable via keyword arguments, `~.runner.run` is a pure
 function and knows nothing about the greater application. This is a problem
@@ -218,8 +221,8 @@ parser.)
 
 It's quite easy: use `@ctask <.ctask>` instead of `@task <.task>` and add a
 context argument (named anything you want) as the first positional arg. Then
-use the context object's `~invoke.context.Context.run` method instead of the
-global function::
+use the context object's `~.Context.run` method instead of the global
+function::
 
     from invoke import ctask as task
 

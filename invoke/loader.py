@@ -46,11 +46,12 @@ class Loader(object):
         try:
             # Ensure containing directory is on sys.path in case the module
             # being imported is trying to load local-to-it names.
-            sys.path.insert(0, os.path.dirname(path))
+            parent = os.path.dirname(path)
+            sys.path.insert(0, parent)
             # Actual import
             module = imp.load_module(name, fd, path, desc)
             # Make a collection from it, and done
-            return Collection.from_module(module)
+            return Collection.from_module(module, loaded_from=parent)
         finally:
             # Ensure we clean up the opened file object returned by find(), if
             # there was one (eg found packages, vs modules, don't open any

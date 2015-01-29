@@ -13,11 +13,14 @@ from invoke.tasks import task
 from invoke.exceptions import Failure
 import invoke
 
-from _utils import _dispatch, _output_eq, IntegrationSpec
+from _utils import (
+    _dispatch, _output_eq, IntegrationSpec, cd, expect_exit, run_in_configs
+)
 
 
 class CLI(IntegrationSpec):
     "Command-line behavior"
+
     class basic_invocation:
         @trap
         def vanilla(self):
@@ -27,8 +30,8 @@ class CLI(IntegrationSpec):
 
         @trap
         def vanilla_with_explicit_collection(self):
-            # Duplicates _output_eq above, but this way that can change w/o
-            # breaking our expectations.
+            # Duplicates _output_eq, but this way that can change w/o breaking
+            # our expectations.
             _dispatch('inv -c integration print_foo')
             eq_(sys.stdout.getvalue(), "foo\n")
 
@@ -41,19 +44,26 @@ class CLI(IntegrationSpec):
                 "whatevs\n",
             )
 
+
     def missing_collection_yields_useful_error(self):
         _output_eq(
             '-c huhwhat -l',
-            stderr="Can't find any collection named 'huhwhat'!\n"
+            stderr="Can't find any collection named 'huhwhat'!\n",
+            code=1
         )
 
     def missing_default_collection_doesnt_say_None(self):
-        os.chdir('/')
-        _output_eq('-l', stderr="Can't find any collection named 'tasks'!\n")
+        with cd('/'):
+            _output_eq(
+                '-l',
+                stderr="Can't find any collection named 'tasks'!\n",
+                code=1
+            )
 
     @trap
     def missing_default_task_prints_help(self):
-        _dispatch("inv -c foo")
+        with expect_exit():
+            _dispatch("inv -c foo")
         ok_("Core options:" in sys.stdout.getvalue())
 
     def contextualized_tasks_are_given_parser_context_arg(self):
@@ -78,6 +88,7 @@ Core options:
   -c STRING, --collection=STRING   Specify collection name to load.
   -d, --debug                      Enable debug output.
   -e, --echo                       Echo executed commands before running.
+  -f STRING, --config=STRING       Runtime configuration file to use.
   -h [STRING], --help[=STRING]     Show core or per-task help and exit.
   -H STRING, --hide=STRING         Set default value of run()'s 'hide' kwarg.
   -l, --list                       List available tasks.
@@ -172,8 +183,10 @@ Options:
 
     @trap
     def version_override(self):
-        _dispatch('notinvoke -V', version="nope 1.0")
+        with expect_exit():
+            _dispatch('notinvoke -V', version="nope 1.0")
         eq_(sys.stdout.getvalue(), "nope 1.0\n")
+
 
     class task_list:
         "--list"
@@ -251,11 +264,13 @@ Available tasks:
                 "No tasks found in collection 'empty'!\n"
             )
 
+
     def debug_flag_activates_logging(self):
         # Have to patch our logger to get in before Nose logcapture kicks in.
         with patch('invoke.util.debug') as debug:
             _dispatch('inv -d -c debugging foo')
             debug.assert_called_with('my-sentinel')
+
 
     class autoprinting:
         def defaults_to_off_and_no_output(self):
@@ -273,12 +288,13 @@ Available tasks:
         def does_not_fire_on_post_tasks(self):
             _output_eq("-c autoprint post_check", "")
 
+
     class run_options:
         "run() related CLI flags"
         def _test_flag(self, flag, kwarg, value):
             with patch('invoke.context.run') as run:
                 _dispatch('invoke {0} -c contextualized run'.format(flag))
-                run.assert_called_with('x', **{kwarg: value})
+                ok_(run.call_args[1][kwarg] == value)
 
         def warn_only(self):
             self._test_flag('-w', 'warn', True)
@@ -291,6 +307,84 @@ Available tasks:
 
         def echo(self):
             self._test_flag('-e', 'echo', True)
+
+
+    class configuration:
+        "Configuration-related concerns"
+
+        def per_project_config_files_are_loaded(self):
+            with cd(os.path.join('configs', 'yaml')):
+                _dispatch("inv mytask")
+
+        def runtime_config_file_honored(self):
+            with cd('configs'):
+                _dispatch("inv -c runtime -f yaml/invoke.yaml mytask")
+
+        def run_echo_honors_configuration_overrides(self):
+            # Try a few realistic-for-this-setting levels:
+            with run_in_configs() as run:
+                # Collection
+                _dispatch('invoke -c collection go')
+                eq_(run.call_args_list[-1][1]['echo'], True)
+                # Runtime conf file
+                _dispatch('invoke -c contextualized -f echo.yaml run')
+                eq_(run.call_args_list[-1][1]['echo'], True)
+                # Runtime beats collection
+                _dispatch('invoke -c collection -f no-echo.yaml go')
+                eq_(run.call_args_list[-1][1]['echo'], False)
+                # Flag beats runtime
+                _dispatch('invoke -c contextualized -f no-echo.yaml -e run')
+                eq_(run.call_args_list[-1][1]['echo'], True)
+
+        def tasks_dedupe_honors_configuration(self):
+            # Kinda-sorta duplicates some tests in executor.py, but eh.
+            with cd('configs'):
+                # Runtime conf file
+                _output_eq(
+                    '-c integration -f no-dedupe.yaml biz',
+"""foo
+foo
+bar
+biz
+post1
+post2
+post2
+""")
+                # Flag beats runtime
+                _output_eq(
+                    '-c integration -f dedupe.yaml --no-dedupe biz',
+"""foo
+foo
+bar
+biz
+post1
+post2
+post2
+""")
+                
+
+        # * debug (top level?)
+        # * hide (run.hide...lol)
+        # * pty (run.pty)
+        # * warn (run.warn)
+
+        def env_vars_load_with_prefix(self):
+            os.environ['INVOKE_RUN_ECHO'] = "1"
+            with patch('invoke.context.run') as run:
+                _dispatch('invoke -c contextualized run')
+                ok_(run.call_args[1]['echo'] == True)
+
+        def collection_defaults_dont_block_env_var_run_settings(self):
+            # Environ setting run.warn
+            os.environ['INVOKE_RUN_WARN'] = "1"
+            with run_in_configs() as run:
+                # This collection sets run = {echo: true}
+                # If merging isn't done, it will overwrite the low level
+                # defaults, meaning the env var adapter won't see that
+                # 'run_warn' is a valid setting.
+                _dispatch('invoke -c collection go')
+                ok_(run.call_args[1]['echo'] == True)
+                ok_(run.call_args[1]['warn'] == True)
 
 
 TB_SENTINEL = 'Traceback (most recent call last)'

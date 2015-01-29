@@ -6,7 +6,7 @@ from spec import eq_, skip, Spec, raises, ok_, trap
 from invoke.runner import Runner, run
 from invoke.exceptions import Failure
 
-from _utils import support
+from _utils import support, reset_cwd
 
 
 def _run(returns=None, **kwargs):
@@ -37,6 +37,9 @@ class Run(Spec):
         self.out = "echo foo"
         self.err = "./err bar"
         self.sub = "inv -c pty_output hide_%s"
+
+    def teardown(self):
+        reset_cwd()
 
     class return_value:
         def return_code_in_result(self):
@@ -237,6 +240,9 @@ class Local_(Spec):
     def setup(self):
         os.chdir(support)
         self.both = "echo foo && ./err bar"
+
+    def teardown(self):
+        reset_cwd()
 
     def stdout_contains_both_streams_under_pty(self):
         r = run(self.both, hide='both', pty=True)

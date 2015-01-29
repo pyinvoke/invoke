@@ -7,8 +7,9 @@ import textwrap
 from .vendor import six
 
 from .context import Context
+from .config import Config
 from .loader import FilesystemLoader, DEFAULT_COLLECTION_NAME
-from .parser import Parser, Context as ParserContext, Argument
+from .parser import Parser, ParserContext, Argument
 from .executor import Executor
 from .exceptions import Failure, CollectionNotFound, ParseError, Exit
 from .util import debug, enable_logging
@@ -92,41 +93,26 @@ def parse(argv, collection=None, version=None):
         Three-tuple of ``args`` (core, non-task `.Argument` objects),
         ``collection`` (compiled `.Collection` of tasks, using defaults or core
         arguments affecting collection generation) and ``tasks`` (a list of
-        `~.parser.context.Context` objects representing the requested task
+        `~.ParserContext` objects representing the requested task
         executions).
     """
     # Initial/core parsing (core options can affect the rest of the parsing)
     initial_context = ParserContext(args=(
         Argument(
-            names=('collection', 'c'),
-            help="Specify collection name to load."
-        ),
-        Argument(
-            names=('root', 'r'),
-            help="Change root directory used for finding task modules."
-        ),
-        Argument(
-            names=('help', 'h'),
-            optional=True,
-            help="Show core or per-task help and exit."
-        ),
-        Argument(
-            names=('version', 'V'),
-            kind=bool,
-            default=False,
-            help="Show version and exit."
-        ),
-        Argument(
-            names=('list', 'l'),
-            kind=bool,
-            default=False,
-            help="List available tasks."
-        ),
-        Argument(
             names=('no-dedupe',),
             kind=bool,
             default=False,
             help="Disable task deduplication."
+        ),
+        Argument(
+            names=('collection', 'c'),
+            help="Specify collection name to load."
+        ),
+        Argument(
+            names=('debug', 'd'),
+            kind=bool,
+            default=False,
+            help="Enable debug output.",
         ),
         Argument(
             names=('echo', 'e'),
@@ -135,10 +121,23 @@ def parse(argv, collection=None, version=None):
             help="Echo executed commands before running.",
         ),
         Argument(
-            names=('warn-only', 'w'),
+            names=('config', 'f'),
+            help="Runtime configuration file to use.",
+        ),
+        Argument(
+            names=('help', 'h'),
+            optional=True,
+            help="Show core or per-task help and exit."
+        ),
+        Argument(
+            names=('hide', 'H'),
+            help="Set default value of run()'s 'hide' kwarg.",
+        ),
+        Argument(
+            names=('list', 'l'),
             kind=bool,
             default=False,
-            help="Warn, instead of failing, when shell commands fail.",
+            help="List available tasks."
         ),
         Argument(
             names=('pty', 'p'),
@@ -147,14 +146,20 @@ def parse(argv, collection=None, version=None):
             help="Use a pty when executing shell commands.",
         ),
         Argument(
-            names=('hide', 'H'),
-            help="Set default value of run()'s 'hide' kwarg.",
+            names=('root', 'r'),
+            help="Change root directory used for finding task modules."
         ),
         Argument(
-            names=('debug', 'd'),
+            names=('version', 'V'),
             kind=bool,
             default=False,
-            help="Enable debug output.",
+            help="Show version and exit."
+        ),
+        Argument(
+            names=('warn-only', 'w'),
+            kind=bool,
+            default=False,
+            help="Warn, instead of failing, when shell commands fail.",
         ),
     ))
     # 'core' will result an .unparsed attribute with what was left over.
@@ -199,7 +204,7 @@ def parse(argv, collection=None, version=None):
         )
         raise Exit(1)
     parser = Parser(contexts=collection.to_contexts())
-    debug("Parsing tasks against collection %r" % collection)
+    debug("Parsing tasks against %r" % collection)
     tasks = parse_gracefully(parser, core.unparsed)
 
     # Per-task help. Use the parser's contexts dict as that's the easiest way
@@ -273,7 +278,28 @@ def parse(argv, collection=None, version=None):
     return args, collection, tasks
 
 
-def derive_opts(args):
+def make_config(args, collection):
+    """
+    Generate a `.Config` object initialized with parser & collection data.
+
+    Specifically, parser-level flags are consulted (typically as a top-level
+    "runtime overrides" dict) and the Collection object is used to determine
+    where to seek a per-project config file.
+
+    This object is then further updated within `.Executor` with per-task
+    configuration values and then told to load the full hierarchy (which
+    includes config files.)
+    """
+    # Low level defaults
+    defaults = {
+        'run': {
+            'warn': False, 'pty': False, 'hide': None, 'echo': False
+        },
+        'tasks': {'dedupe': True},
+    }
+    # Set up runtime overrides from flags.
+    # NOTE: only fill in values that would alter behavior, otherwise we want
+    # the defaults to come through.
     run = {}
     if args['warn-only'].value:
         run['warn'] = True
@@ -283,7 +309,19 @@ def derive_opts(args):
         run['hide'] = args.hide.value
     if args.echo.value:
         run['echo'] = True
-    return {'run': run}
+    tasks = {}
+    if args['no-dedupe'].value:
+        tasks['dedupe'] = False
+    overrides = {'run': run, 'tasks': tasks}
+    # Stand up config object
+    c = Config(
+        defaults=defaults,
+        overrides=overrides,
+        project_home=collection.loaded_from,
+        runtime_path=args.config.value,
+        env_prefix='INVOKE_',
+    )
+    return c
 
 def tasks_from_contexts(parser_contexts, collection):
     tasks = []
@@ -301,11 +339,10 @@ def dispatch(argv, version=None):
         # 'return' here is mostly a concession to testing. Meh :(
         # TODO: probably restructure things better so we don't need this?
         return sys.exit(e.code)
-    executor = Executor(collection, Context(**derive_opts(args)))
+    executor = Executor(collection, make_config(args, collection))
     try:
         tasks = tasks_from_contexts(parser_contexts, collection)
-        dedupe = not args['no-dedupe'].value
-        return executor.execute(*tasks, dedupe=dedupe)
+        return executor.execute(*tasks)
     except Failure as f:
         sys.exit(f.result.exited)
 

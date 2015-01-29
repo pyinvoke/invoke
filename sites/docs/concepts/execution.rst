@@ -177,9 +177,10 @@ Disabling deduplication
 -----------------------
 
 If you prefer your tasks to run every time no matter what, you can give the
-``--no-dedupe`` core option. While it doesn't make a ton of real-world sense,
-let's imagine we wanted to apply ``--no-dedupe`` to the above example; we'd see
-the following output::
+``--no-dedupe`` core CLI option at runtime, or set the ``tasks.dedupe``
+:doc:`config setting </concepts/configuration>` to ``False``. While it
+doesn't make a ton of real-world sense, let's imagine we wanted to apply
+``--no-dedupe`` to the above example; we'd see the following output::
 
     $ invoke --no-dedupe build package
     Cleaning

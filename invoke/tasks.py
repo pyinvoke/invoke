@@ -241,8 +241,8 @@ def task(*args, **kwargs):
       avoiding Python namespace issues (i.e. when the desired CLI level name
       can't or shouldn't be used as the Python level name.)
     * ``contextualized``: Hints to callers (especially the CLI) that this task
-      expects to be given a `~invoke.context.Context` object as its first
-      argument when called.
+      expects to be given a `.Context` object as its first argument when
+      called.
     * ``aliases``: Specify one or more aliases for this task, allowing it to be
       invoked as multiple different names. For example, a task named ``mytask``
       with a simple ``@task`` wrapper may only be invoked as ``"mytask"``.
@@ -348,6 +348,14 @@ class Call(object):
 
     def __getattr__(self, name):
         return getattr(self.task, name)
+
+    def __str__(self):
+        return "<Call {0!r}, args: {1!r} kwargs: {2!r}>".format(
+            self.task.name, self.args, self.kwargs
+        )
+
+    def __repr__(self):
+        return str(self)
 
 
 # Convenience/aesthetically pleasing-ish alias

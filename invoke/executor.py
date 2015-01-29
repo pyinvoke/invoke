@@ -1,5 +1,6 @@
 import itertools
 
+from .config import Config
 from .context import Context
 from .util import debug
 from .tasks import Call
@@ -14,20 +15,22 @@ class Executor(object):
     Subclasses may override various extension points to change, add or remove
     behavior.
     """
-    def __init__(self, collection, context=None):
+    def __init__(self, collection, config=None):
         """
-        Initialize executor with handles to a task collection & config context.
+        Initialize executor with handles to a task collection & config.
 
-        The collection is used for looking up tasks by name and
-        storing/retrieving state, e.g. how many times a given task has been
-        run this session and so on. It is optional; if not given a blank
-        `~invoke.context.Context` is used.
+        :param collection:
+            A `.Collection` used to look up requested tasks (and their default
+            config data, if any) by name during execution.
 
-        A copy of the context is passed into any tasks that mark themselves as
-        requiring one for operation.
+        :param config:
+            An optional `.Config` holding configuration state Defaults to an
+            empty `.Config` if not given.
         """
         self.collection = collection
-        self.context = context or Context()
+        if config is None:
+            config = Config()      
+        self.config = config
 
     def execute(self, *tasks, **kwargs):
         """
@@ -56,16 +59,11 @@ class Executor(object):
                 task1()
                 task2(arg1='val1')
 
-        :param bool dedupe:
-            Whether to perform deduplication on the tasks and their
-            pre/post-tasks. See :ref:`deduping`.
-
         :returns:
             A dict mapping task objects to their return values. This may
             include pre- and post-tasks if any were executed.
         """
         # Handle top level kwargs (the name gets overwritten below)
-        dedupe = kwargs.get('dedupe', True) # Python 2 can't do *args + kwarg
         # Normalize input
         debug("Examining top level tasks {0!r}".format([x[0] for x in tasks]))
         tasks = self._normalize(tasks)
@@ -73,7 +71,16 @@ class Executor(object):
         # Obtain copy of directly-given tasks since they should sometimes
         # behave differently
         direct = list(tasks)
-        # Expand pre/post tasks & then dedupe the entire run
+        # Expand pre/post tasks & then dedupe the entire run.
+        # Load config at this point to get latest value of dedupe option
+        config = self.config.clone()
+        # Get some good value for dedupe option, even if config doesn't have
+        # the tree we expect. (This is a concession to testing.)
+        try:
+            dedupe = config.tasks.dedupe
+        except AttributeError:
+            dedupe = True
+        # Actual deduping here
         tasks = self._dedupe(self._expand_tasks(tasks), dedupe)
         # Execute
         results = {}
@@ -88,7 +95,7 @@ class Executor(object):
                 args, kwargs = c.args, c.kwargs
                 name = c.name
             result = self._execute(
-                task=task, name=name, args=args, kwargs=kwargs
+                task=task, name=name, args=args, kwargs=kwargs, config=config
             )
             if autoprint:
                 print(result)
@@ -114,20 +121,29 @@ class Executor(object):
     def _dedupe(self, tasks, dedupe):
         deduped = []
         if dedupe:
+            debug("Deduplicating tasks...")
             for task in tasks:
                 if task not in deduped:
+                    debug("{0!r}: ok".format(task))
                     deduped.append(task)
+                else:
+                    debug("{0!r}: skipping".format(task))
         else:
             deduped = tasks
         return deduped
 
-    def _execute(self, task, name, args, kwargs):
+    def _execute(self, task, name, args, kwargs, config):
         # Need task + possible name when invoking CLI-given tasks, so we can
         # pass a dotted path to Collection.configuration()
         debug("Executing %r%s" % (task, (" as %s" % name) if name else ""))
         if task.contextualized:
-            context = self.context.clone()
-            context.update(self.collection.configuration(name))
+            # Load per-task/collection config
+            config.load_collection(self.collection.configuration(name))
+            # Load env vars, as the last step (so users can override
+            # per-collection keys via the env)
+            config.load_shell_env()
+            # Set up context w/ that config
+            context = Context(config=config)
             args = (context,) + args
         result = task(*args, **kwargs)
         return result

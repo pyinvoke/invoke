@@ -5,6 +5,7 @@ import types
 from .vendor import six
 from .vendor.lexicon import Lexicon
 
+from .config import merge_dicts
 from .parser import Context as ParserContext
 from .tasks import Task
 
@@ -19,6 +20,16 @@ class Collection(object):
 
         `.Collection` offers a set of methods for building a collection of
         tasks from scratch, plus a convenient constructor wrapping said API.
+
+        In either case:
+
+        * the first positional argument may be a string, which (if given) is
+          used as the collection's default name when performing namespace
+          lookups;
+        * a ``loaded_from`` keyword argument may be given, which sets metadata
+          indicating the filesystem path the collection was loaded from. This
+          is used as a guide when loading per-project :ref:`configuration files
+          <config-hierarchy>`.
 
         **The method approach**
 
@@ -45,12 +56,12 @@ class Collection(object):
 
         **The constructor approach**
 
-        All ``*args`` given to `.Collection` (besides the optional first 'name'
-        argument) are expected to be `.Task` or `.Collection` instances which
-        will be passed to `.add_task`/`.add_collection` as appropriate. Module
-        objects are also valid (as they are for `.add_collection`). For
-        example, the below snippet results in the same two task identifiers as
-        the one above::
+        All ``*args`` given to `.Collection` (besides the abovementioned
+        optional positional 'name' argument and ``loaded_from`` kwarg) are
+        expected to be `.Task` or `.Collection` instances which will be passed
+        to `.add_task`/`.add_collection` as appropriate. Module objects are
+        also valid (as they are for `.add_collection`). For example, the below
+        snippet results in the same two task identifiers as the one above::
 
             ns = Collection(top_level_task, Collection('docs', doc_task))
 
@@ -81,6 +92,8 @@ class Collection(object):
         args = list(args)
         if args and isinstance(args[0], six.string_types):
             self.name = args.pop(0)
+        # Specific kwargs if applicable
+        self.loaded_from = kwargs.pop('loaded_from', None)
         # Dispatch args/kwargs
         for arg in args:
             self._add_object(arg)
@@ -108,7 +121,7 @@ class Collection(object):
         return self.name == other.name and self.tasks == other.tasks
 
     @classmethod
-    def from_module(self, module, name=None, config=None):
+    def from_module(self, module, name=None, config=None, loaded_from=None):
         """
         Return a new `.Collection` created from ``module``.
 
@@ -125,18 +138,22 @@ class Collection(object):
         Explicitly given collections will only be given that module-derived
         name if they don't already have a valid ``.name`` attribute.
 
-        :param name:
+        :param str name:
             A string, which if given will override any automatically derived
             collection name (or name set on the module's root namespace, if it
             has one.)
 
-        :param config:
-            A dict, used to set config options on the newly created
-            `.Collection` before returning it (saving you a call to
-            `.configure`.)
+        :param dict config:
+            Used to set config options on the newly created `.Collection`
+            before returning it (saving you a call to `.configure`.)
             
             If the imported module had a root namespace object, ``config`` is
             merged on top of it (i.e. overriding any conflicts.)
+
+        :param str loaded_from:
+            Identical to the same-named kwarg from the regular class
+            constructor - should be the path where the module was
+            found.
         """
         module_name = module.__name__.split('.')[-1]
         # See if the module provides a default NS to use in lieu of creating
@@ -153,7 +170,7 @@ class Collection(object):
                 # Explicitly given config wins over root ns config
                 obj_config = copy.deepcopy(obj._configuration)
                 if config:
-                    obj_config.update(config)
+                    merge_dicts(obj_config, config)
                 ret._configuration = obj_config
                 return ret
         # Failing that, make our own collection from the module's tasks.
@@ -162,7 +179,7 @@ class Collection(object):
             vars(module).values()
         )
         # Again, explicit name wins over implicit one from module path
-        collection = Collection(name or module_name)
+        collection = Collection(name or module_name, loaded_from=loaded_from)
         for task in tasks:
             collection.add_task(task)
         if config:
@@ -360,7 +377,7 @@ class Collection(object):
 
     def configure(self, options):
         """
-        Merge ``options`` dict into this collection's `.configuration`.
+        (Recursively) merge ``options`` into the current `.configuration`.
 
         Options configured this way will be available to all
         :doc:`contextualized tasks </concepts/context>`. It is recommended to
@@ -373,4 +390,4 @@ class Collection(object):
         :param options: An object implementing the dictionary protocol.
         :returns: ``None``.
         """
-        self._configuration.update(options)
+        merge_dicts(self._configuration, options)

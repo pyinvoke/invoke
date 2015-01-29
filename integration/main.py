@@ -1,6 +1,6 @@
 import os
 
-from spec import Spec, trap, eq_
+from spec import Spec, trap, eq_, skip
 
 from invoke import run
 
@@ -39,3 +39,15 @@ class Main(Spec):
         eq_(result.exited, 1)
         assert not result.stdout
         assert result.stderr
+
+    def loads_real_user_config(self):
+        path = os.path.expanduser("~/.invoke.yaml")
+        try:
+            with open(path, 'w') as fd:
+                fd.write("foo: bar")
+            _output_eq("inv print_config", "bar\n")
+        finally:
+            try:
+                os.unlink(path)
+            except OSError:
+                pass

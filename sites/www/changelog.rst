@@ -2,6 +2,17 @@
 Changelog
 =========
 
+* :feature:`147` Drastically overhaul/expand the configuration system to
+  account for multiple configuration levels including (but not limited to) file
+  paths, environment variables, and Python-level constructs (previously the
+  only option). See :doc:`/concepts/configuration` for details. Thanks to Erich
+  Heine for his copious feedback on this topic.
+
+  .. warning::
+    This is technically a backwards incompatible change, though some existing
+    user config-setting code may continue to work as-is. In addition, this
+    system may see further updates before 1.0.
+
 * :bug:`191` Bypass ``pexpect``'s automatic command splitting to avoid issues
   running complex nested/quoted commands under a pty. Credit to ``@mijikai``
   for noticing the problem.
@@ -131,7 +142,7 @@ Changelog
   this is now fixed. Thanks to Stéphane Klein for the catch.
 * :feature:`89` Implemented configuration for distributed task modules: can set
   config options in `invoke.collection.Collection` objects and they are made
-  available to contextualized tasks. See :ref:`configuration`.
+  available to contextualized tasks.
 * :release:`0.5.1 <2013.09.15>`
 * :bug:`81` Fall back to sane defaults for PTY sizes when autodetection gives
   insane results. Thanks to ``@akitada`` for the patch.

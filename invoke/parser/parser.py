@@ -4,8 +4,7 @@ from ..vendor.lexicon import Lexicon
 from ..vendor.fluidity import StateMachine, state, transition
 from ..vendor import six
 
-# Mostly for importing via invoke.parser.<x>
-from .context import Context
+from .context import ParserContext as Context
 from .argument import Argument
 
 from ..util import debug

@@ -1,9 +1,10 @@
 from spec import Spec, eq_, skip, trap
 from mock import Mock, call as mock_call
 
+from invoke.collection import Collection
+from invoke.config import Config
 from invoke.context import Context
 from invoke.executor import Executor
-from invoke.collection import Collection
 from invoke.tasks import Task, ctask, call
 
 from _utils import _output_eq, IntegrationSpec
@@ -22,20 +23,22 @@ class Executor_(IntegrationSpec):
         coll.add_task(self.task2, name='task2')
         coll.add_task(self.task3, name='task3')
         coll.add_task(self.task4, name='task4')
-        self.executor = Executor(collection=coll, context=Context())
+        self.executor = Executor(collection=coll)
+
 
     class init:
         "__init__"
-        def allows_collection_and_context(self):
+        def allows_collection_and_config(self):
             coll = Collection()
-            cont = Context()
-            e = Executor(collection=coll, context=cont)
+            conf = Config()
+            e = Executor(collection=coll, config=conf)
             assert e.collection is coll
-            assert e.context is cont
+            assert e.config is conf
 
-        def uses_blank_context_by_default(self):
+        def uses_blank_config_by_default(self):
             e = Executor(collection=Collection())
-            assert isinstance(e.context, Context)
+            assert isinstance(e.config, Config)
+
 
     class execute:
         def base_case(self):
@@ -46,6 +49,7 @@ class Executor_(IntegrationSpec):
             k = {'foo': 'bar'}
             self.executor.execute(('task1', k))
             self.task1.body.assert_called_once_with(**k)
+
 
     class basic_pre_post:
         "basic pre/post task functionality"
@@ -63,10 +67,7 @@ class Executor_(IntegrationSpec):
             t1 = Task(pre_body)
             t2 = Task(post_body)
             t3 = Task(Mock(), pre=[t1], post=[t2])
-            e = Executor(
-                collection=Collection(t1=t1, t2=t2, t3=t3),
-                context=Context()
-            )
+            e = Executor(collection=Collection(t1=t1, t2=t2, t3=t3))
             e.execute(('t3', {'something': 'meh'}))
             for body in (pre_body, post_body):
                 eq_(body.call_args, tuple())
@@ -88,7 +89,7 @@ class Executor_(IntegrationSpec):
             )
 
             c = Collection(t1=t1, t2=t2, t3=t3)
-            e = Executor(collection=c, context=Context())
+            e = Executor(collection=c)
             e.execute('t3')
 
             # Pre-task asserts
@@ -113,6 +114,7 @@ class Executor_(IntegrationSpec):
 
         def call_objs_play_well_with_context_args(self):
             self._call_objs(True)
+
 
     class deduping_and_chaining:
         def chaining_is_depth_first(self):
@@ -208,47 +210,47 @@ bar
             pre = [call(t1, 5), call(t1, 7), call(t1, 5)]
             t2 = Task(Mock(), pre=pre)
             c = Collection(t1=t1, t2=t2)
-            e = Executor(collection=c, context=Context())
+            e = Executor(collection=c)
             e.execute('t2')
             # Does not call the second t1(5)
             body.assert_has_calls([mock_call(5), mock_call(7)])
 
-    class configuration:
+    class collection_driven_config:
+        "Collection-driven config concerns"
         def hands_collection_configuration_to_context(self):
             @ctask
             def mytask(ctx):
-                eq_(ctx['my.config.key'], 'value')
+                eq_(ctx.my_key, 'value')
             c = Collection(mytask)
-            c.configure({'my.config.key': 'value'})
-            Executor(collection=c, context=Context()).execute('mytask')
+            c.configure({'my_key': 'value'})
+            Executor(collection=c).execute('mytask')
 
         def hands_task_specific_configuration_to_context(self):
             @ctask
             def mytask(ctx):
-                eq_(ctx['my.config.key'], 'value')
+                eq_(ctx.my_key, 'value')
             @ctask
             def othertask(ctx):
-                eq_(ctx['my.config.key'], 'othervalue')
+                eq_(ctx.my_key, 'othervalue')
             inner1 = Collection('inner1', mytask)
-            inner1.configure({'my.config.key': 'value'})
+            inner1.configure({'my_key': 'value'})
             inner2 = Collection('inner2', othertask)
-            inner2.configure({'my.config.key': 'othervalue'})
+            inner2.configure({'my_key': 'othervalue'})
             c = Collection(inner1, inner2)
-            e = Executor(collection=c, context=Context())
+            e = Executor(collection=c)
             e.execute('inner1.mytask', 'inner2.othertask')
 
         def subcollection_config_works_with_default_tasks(self):
             @ctask(default=True)
             def mytask(ctx):
-                eq_(ctx['my.config.key'], 'value')
-            # Sets up a task "known as" sub.mytask which may be called as just
-            # 'sub' due to being default.
+                eq_(ctx.my_key, 'value')
+            # Sets up a task "known as" sub.mytask which may be called as
+            # just 'sub' due to being default.
             sub = Collection('sub', mytask=mytask)
-            sub.configure({'my.config.key': 'value'})
+            sub.configure({'my_key': 'value'})
             main = Collection(sub=sub)
             # Execute via collection default 'task' name.
-            Executor(collection=main, context=Context()).execute('sub')
-
+            Executor(collection=main).execute('sub')
 
     class returns_return_value_of_specified_task:
         def base_case(self):
