@@ -99,7 +99,8 @@ class Local(Runner):
         return "".join(out), "", p.exitstatus, exception
 
 
-def run(command, warn=False, hide=None, pty=False, echo=False, runner=Local):
+def run(command, warn=False, hide=None, pty=False, echo=False, nocolor=False,
+        runner=Local):
     """
     Execute ``command`` (via ``runner``) returning a `Result` object.
 
@@ -130,7 +131,7 @@ def run(command, warn=False, hide=None, pty=False, echo=False, runner=Local):
         be empty when ``pty=True``.
 
     `.run` does not echo the commands it runs by default; to make it do so, say
-    ``echo=True``.
+    ``echo=True``. To have echo output without color, set ``nocolor=True``.
 
     The ``runner`` argument allows overriding the actual execution mechanism,
     and must be a class exposing two methods, ``run`` and ``run_pty``, whose
@@ -144,7 +145,10 @@ def run(command, warn=False, hide=None, pty=False, echo=False, runner=Local):
     hide = normalize_hide(hide)
     exception = False
     if echo:
-        print("\033[1;37m%s\033[0m" % command)
+        if nocolor:
+            print(command)
+        else:
+            print("\033[1;37m%s\033[0m" % command)
     runner_ = runner()
     func = runner_.run_pty if pty else runner_.run
     stdout, stderr, exited, exception = func(command, warn, hide)
