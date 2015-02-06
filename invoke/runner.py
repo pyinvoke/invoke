@@ -54,16 +54,6 @@ class Local(Runner):
     Execute a command on the local system in a subprocess.
     """
     def run(self, command, warn, hide):
-        #process = Popen(
-        #    command,
-        #    shell=True,
-        #    stdout=PIPE,
-        #    stderr=PIPE,
-        #    hide=hide,
-        #)
-        #stdout, stderr = process.communicate()
-        #return stdout, stderr, process.returncode, None
-
         process = Popen(
             command,
             shell=True,
