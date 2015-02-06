@@ -72,22 +72,15 @@ class Local(Runner):
 
         stdout = []
         stderr = []
-
         threads = []
-        # out
-        t = threading.Thread(
-            target=display,
-            args=(process.stdout, sys.stdout, stdout, 'out' in hide)
-        )
-        threads.append(t)
-        t.start()
-        # err
-        t = threading.Thread(
-            target=display,
-            args=(process.stderr, sys.stderr, stderr, 'err' in hide)
-        )
-        threads.append(t)
-        t.start()
+
+        for args in (
+            (process.stdout, sys.stdout, stdout, 'out' in hide),
+            (process.stderr, sys.stderr, stderr, 'err' in hide),
+        ):
+            t = threading.Thread(target=display, args=args)
+            threads.append(t)
+            t.start()
 
         process.wait()
         for t in threads:
