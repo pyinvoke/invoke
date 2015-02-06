@@ -64,7 +64,8 @@ class Local(Runner):
         def display(src, dst, cap, hide):
             while True:
                 data = src.read(1000)
-                if not data: break
+                if not data:
+                    break
                 if not hide:
                     dst.write(data)
                 cap.append(data)
@@ -74,11 +75,17 @@ class Local(Runner):
 
         threads = []
         # out
-        t = threading.Thread(target=display, args=(process.stdout, sys.stdout, stdout, 'out' in hide))
+        t = threading.Thread(
+            target=display,
+            args=(process.stdout, sys.stdout, stdout, 'out' in hide)
+        )
         threads.append(t)
         t.start()
         # err
-        t = threading.Thread(target=display, args=(process.stderr, sys.stderr, stderr, 'err' in hide))
+        t = threading.Thread(
+            target=display,
+            args=(process.stderr, sys.stderr, stderr, 'err' in hide)
+        )
         threads.append(t)
         t.start()
 
