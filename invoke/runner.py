@@ -73,10 +73,10 @@ class Local(Runner):
 
         def display(src, dst, cap, hide):
             while True:
-                data = os.read(src.fileno(), 1000)
+                data = src.read(1000)
                 if not data: break
                 if not hide:
-                    os.write(dst.fileno(), data)
+                    dst.write(data)
                 cap.append(data)
 
         stdout = []
