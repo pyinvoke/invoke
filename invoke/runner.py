@@ -1,8 +1,9 @@
 import os
 import select
+from subprocess import Popen, PIPE
 import sys
+import threading
 
-from .monkey import Popen, PIPE
 from .exceptions import Failure, PlatformError
 from .platform import WINDOWS
 
@@ -53,14 +54,49 @@ class Local(Runner):
     Execute a command on the local system in a subprocess.
     """
     def run(self, command, warn, hide):
+        #process = Popen(
+        #    command,
+        #    shell=True,
+        #    stdout=PIPE,
+        #    stderr=PIPE,
+        #    hide=hide,
+        #)
+        #stdout, stderr = process.communicate()
+        #return stdout, stderr, process.returncode, None
+
         process = Popen(
             command,
             shell=True,
             stdout=PIPE,
             stderr=PIPE,
-            hide=hide,
         )
-        stdout, stderr = process.communicate()
+
+        def display(src, dst, cap):
+            while True:
+                data = os.read(src.fileno(), 1000)
+                if not data: break
+                os.write(dst.fileno(), data)
+                cap.append(data)
+
+        stdout = []
+        stderr = []
+
+        threads = []
+        if 'out' not in hide:
+            t = threading.Thread(target=display, args=(process.stdout, sys.stdout, stdout))
+            threads.append(t)
+            t.start()
+        if 'err' not in hide:
+            t = threading.Thread(target=display, args=(process.stderr, sys.stderr, stderr))
+            threads.append(t)
+            t.start()
+
+        process.wait()
+        for t in threads:
+            t.join()
+
+        stdout = b''.join(stdout).decode('utf-8', 'replace')
+        stderr = b''.join(stderr).decode('utf-8', 'replace')
         return stdout, stderr, process.returncode, None
 
     def run_pty(self, command, warn, hide):
