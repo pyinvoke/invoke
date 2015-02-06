@@ -71,25 +71,26 @@ class Local(Runner):
             stderr=PIPE,
         )
 
-        def display(src, dst, cap):
+        def display(src, dst, cap, hide):
             while True:
                 data = os.read(src.fileno(), 1000)
                 if not data: break
-                os.write(dst.fileno(), data)
+                if not hide:
+                    os.write(dst.fileno(), data)
                 cap.append(data)
 
         stdout = []
         stderr = []
 
         threads = []
-        if 'out' not in hide:
-            t = threading.Thread(target=display, args=(process.stdout, sys.stdout, stdout))
-            threads.append(t)
-            t.start()
-        if 'err' not in hide:
-            t = threading.Thread(target=display, args=(process.stderr, sys.stderr, stderr))
-            threads.append(t)
-            t.start()
+        # out
+        t = threading.Thread(target=display, args=(process.stdout, sys.stdout, stdout, 'out' in hide))
+        threads.append(t)
+        t.start()
+        # err
+        t = threading.Thread(target=display, args=(process.stderr, sys.stderr, stderr, 'err' in hide))
+        threads.append(t)
+        t.start()
 
         process.wait()
         for t in threads:
