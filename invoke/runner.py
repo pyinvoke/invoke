@@ -4,6 +4,8 @@ from subprocess import Popen, PIPE
 import sys
 import threading
 
+from .vendor import six
+
 from .exceptions import Failure, PlatformError
 from .platform import WINDOWS
 
@@ -62,6 +64,8 @@ class Local(Runner):
         )
 
         def display(src, dst, cap, hide):
+            if six.PY3:
+                dst = dst.buffer
             while True:
                 data = os.read(src.fileno(), 1000)
                 if not data:
