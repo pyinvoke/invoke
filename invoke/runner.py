@@ -72,6 +72,7 @@ class Local(Runner):
                     break
                 if not hide:
                     dst.write(data)
+                    dst.flush()
                 cap.append(data)
 
         stdout = []
