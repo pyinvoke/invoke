@@ -63,7 +63,7 @@ class Local(Runner):
 
         def display(src, dst, cap, hide):
             while True:
-                data = src.read(1000)
+                data = os.read(src.fileno(), 1000)
                 if not data:
                     break
                 if not hide:
