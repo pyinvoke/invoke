@@ -71,7 +71,7 @@ class Local(Runner):
         def display(src, dst, cap, hide):
             def get():
                 while True:
-                    data = src.read1(1000)
+                    data = os.read(src.fileno(), 1000)
                     if not data:
                         break
                     yield data
