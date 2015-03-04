@@ -67,6 +67,9 @@ The core options (which must be given before any task names) are as follows:
 
 .. option:: --tasks
 
+    .. TODO: make this a help-like optional-argument flag. No args = full list,
+    arg = limit to specific namespace.
+
     Short, computer-readable task name list displaying all task names/paths in
     a newline-separated list with no indentation or other descriptive info.
     Useful for building shell completion scripts or other automation.

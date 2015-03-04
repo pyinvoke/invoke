@@ -150,6 +150,12 @@ def parse(argv, collection=None, version=None):
             help="Change root directory used for finding task modules."
         ),
         Argument(
+            names=('tasks',),
+            kind=bool,
+            default=False,
+            help="List tasks in a computer-readable fashion.",
+        ),
+        Argument(
             names=('version', 'V'),
             kind=bool,
             default=False,
@@ -264,6 +270,12 @@ def parse(argv, collection=None, version=None):
         # Print
         print("Available tasks:\n")
         print_columns(pairs)
+        raise Exit
+
+    # Print shorthand form of task list if necessary
+    if args.tasks.value:
+        for name in sort_names(collection.task_names):
+            print(name)
         raise Exit
 
     # Print help if:

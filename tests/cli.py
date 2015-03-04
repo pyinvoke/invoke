@@ -85,6 +85,7 @@ Usage: inv[oke] [--core-opts] task1 [--task1-opts] ... taskN [--taskN-opts]
 
 Core options:
   --no-dedupe                      Disable task deduplication.
+  --tasks                          List tasks in a computer-readable fashion.
   -c STRING, --collection=STRING   Specify collection name to load.
   -d, --debug                      Enable debug output.
   -e, --echo                       Echo executed commands before running.
@@ -391,7 +392,7 @@ post2
 
         class all_tasks:
             def tasks_flag_prints_all_tasks(self):
-                _output_eq('-c simple_ns_list --tasks', "z_toplevel\na.b.subtask")
+                _output_eq('-c simple_ns_list --tasks', "z_toplevel\na.b.subtask\n")
 
             def empty_tasks_have_empty_output(self):
                 _output_eq('-c empty --tasks', "")
