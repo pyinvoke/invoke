@@ -248,7 +248,7 @@ def parse(argv, collection=None, version=None):
             print(msg.format(collection.name))
             raise Exit
         pairs = []
-        for primary in sort_names(task_names.keys()):
+        for primary in sort_names(task_names):
             # Add aliases
             aliases = sort_names(task_names[primary])
             name = primary
