@@ -2,6 +2,25 @@
 Changelog
 =========
 
+* :bug:`201 major` (also :issue:`211`) Replace the old, first-draft gross
+  monkeypatched Popen code used for `~invoke.runner.run` with a
+  non-monkeypatched approach that works better on non-POSIX platforms like
+  Windows, and also attempts to handle encoding and locale issues more
+  gracefully (meaning: at all gracefully).
+
+  Specifically, the new approach uses threading instead of ``select.select``,
+  and performs explicit encoding/decoding based on detected or explicitly
+  expressed encodings.
+
+  Major thanks to Paul Moore for an enormous amount of
+  testing/experimentation/discussion, as well as the bulk of the code changes
+  themselves.
+
+  .. warning::
+    The top level `~invoke.runner.run` function has had a minor signature
+    change: the sixth positional argument used to be ``runner`` and is now
+    ``encoding`` (with ``runner`` now being the seventh positional argument).
+
 * :feature:`147` Drastically overhaul/expand the configuration system to
   account for multiple configuration levels including (but not limited to) file
   paths, environment variables, and Python-level constructs (previously the
