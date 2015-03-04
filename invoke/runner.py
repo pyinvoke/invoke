@@ -147,7 +147,15 @@ class Local(Runner):
         return "".join(out), "", p.exitstatus, exception
 
 
-def run(command, warn=False, hide=None, pty=False, echo=False, encoding=None, runner=Local):
+def run(
+    command,
+    warn=False,
+    hide=None,
+    pty=False,
+    echo=False,
+    encoding=None,
+    runner=Local
+):
     """
     Execute ``command`` (via ``runner``) returning a `Result` object.
 
