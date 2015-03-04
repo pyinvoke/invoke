@@ -9,8 +9,8 @@ Changelog
 * :feature:`147` Drastically overhaul/expand the configuration system to
   account for multiple configuration levels including (but not limited to) file
   paths, environment variables, and Python-level constructs (previously the
-  only option). See :doc:`/concepts/configuration` for details. Thanks to Erich
-  Heine for his copious feedback on this topic.
+  only option). See :ref:`configuration` for details. Thanks to Erich Heine for
+  his copious feedback on this topic.
 
   .. warning::
     This is technically a backwards incompatible change, though some existing
