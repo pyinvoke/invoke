@@ -21,7 +21,7 @@ def _run(returns=None, **kwargs):
         ('stdout', 'stderr', 'exited', 'exception'),
     )
     class MockRunner(Runner):
-        def run(self, command, warn, hide):
+        def run(self, command, warn, hide, encoding):
             return value
     # Ensure top level run() uses that runner, provide dummy command.
     kwargs['runner'] = MockRunner

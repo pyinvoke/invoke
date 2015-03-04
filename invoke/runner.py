@@ -3,6 +3,8 @@ import select
 from subprocess import Popen, PIPE
 import sys
 import threading
+import codecs
+import locale
 
 from .vendor import six
 
@@ -55,7 +57,7 @@ class Local(Runner):
     """
     Execute a command on the local system in a subprocess.
     """
-    def run(self, command, warn, hide):
+    def run(self, command, warn, hide, encoding=None):
         process = Popen(
             command,
             shell=True,
@@ -63,13 +65,17 @@ class Local(Runner):
             stderr=PIPE,
         )
 
+        if encoding == None:
+            encoding = locale.getpreferredencoding(False)
+
         def display(src, dst, cap, hide):
-            if six.PY3:
-                dst = dst.buffer
-            while True:
-                data = os.read(src.fileno(), 1000)
-                if not data:
-                    break
+            def get():
+                while True:
+                    data = os.read(src.fileno(), 1000)
+                    if not data:
+                        break
+                    yield data
+            for data in codecs.iterdecode(get(), encoding, errors='replace'):
                 if not hide:
                     dst.write(data)
                     dst.flush()
@@ -91,11 +97,20 @@ class Local(Runner):
         for t in threads:
             t.join()
 
-        stdout = b''.join(stdout).decode('utf-8', 'replace')
-        stderr = b''.join(stderr).decode('utf-8', 'replace')
+        stdout = ''.join(stdout)
+        stderr = ''.join(stderr)
+        if WINDOWS:
+            # "Universal newlines" - replace all standard forms of
+            # newline with \n. This is not technically Windows related
+            # (\r as newline is an old Mac convention) but we only apply
+            # the translation for Windows as that's the only platform
+            # it is likely to matter for these days.
+            stdout = stdout.replace("\r\n", "\n").replace("\r", "\n")
+            stderr = stderr.replace("\r\n", "\n").replace("\r", "\n")
+
         return stdout, stderr, process.returncode, None
 
-    def run_pty(self, command, warn, hide):
+    def run_pty(self, command, warn, hide, encoding=None):
         # Sanity check: platforms that can't pexpect should explode usefully
         # here. (Without this, the pexpect import throws an inner
         # ImportException trying to 'import pty' which is unavailable on
@@ -108,6 +123,7 @@ class Local(Runner):
 
         out = []
         def out_filter(text):
+            # Maybe use encoding here as in run() above...
             out.append(text.decode("utf-8", 'replace'))
             if 'out' not in hide:
                 return text
@@ -131,7 +147,7 @@ class Local(Runner):
         return "".join(out), "", p.exitstatus, exception
 
 
-def run(command, warn=False, hide=None, pty=False, echo=False, runner=Local):
+def run(command, warn=False, hide=None, pty=False, echo=False, encoding=None, runner=Local):
     """
     Execute ``command`` (via ``runner``) returning a `Result` object.
 
@@ -172,6 +188,9 @@ def run(command, warn=False, hide=None, pty=False, echo=False, runner=Local):
     These methods must return a tuple of ``(stdout, stderr, exited,
     exception)``, where ``stdout`` and ``stderr`` are strings, ``exited`` is
     an integer, and ``exception`` is an exception object or ``None``.
+
+    The subprocess output is assumed to use encoding ``encoding`` (which
+    defaults to ``locale.getpreferredencoding(False)``).
     """
     hide = normalize_hide(hide)
     exception = False
@@ -179,7 +198,7 @@ def run(command, warn=False, hide=None, pty=False, echo=False, runner=Local):
         print("\033[1;37m%s\033[0m" % command)
     runner_ = runner()
     func = runner_.run_pty if pty else runner_.run
-    stdout, stderr, exited, exception = func(command, warn, hide)
+    stdout, stderr, exited, exception = func(command, warn, hide, encoding)
     result = Result(
         stdout=stdout,
         stderr=stderr,
