@@ -11,6 +11,7 @@ from invoke.parser import Parser
 from invoke.collection import Collection
 from invoke.tasks import task
 from invoke.exceptions import Failure
+from invoke.platform import WINDOWS
 import invoke
 
 from _utils import (
@@ -80,6 +81,10 @@ class CLI(IntegrationSpec):
         # TODO: add more unit-y tests for specific behaviors:
         # * fill terminal w/ columns + spacing
         # * line-wrap help text in its own column
+        if WINDOWS:
+            # TODO: Nope, on Windows a pty size of 80x24 isn't guaranteed,
+            # see comment above. Needs fixing to not rely on terminal size...
+            skip()
         expected = """
 Usage: inv[oke] [--core-opts] task1 [--task1-opts] ... taskN [--taskN-opts]
 

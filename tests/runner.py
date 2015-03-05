@@ -5,9 +5,13 @@ from spec import eq_, skip, Spec, raises, ok_, trap
 
 from invoke.runner import Runner, run
 from invoke.exceptions import Failure
+from invoke.platform import WINDOWS
 
 from _utils import support, reset_cwd
 
+# Get the right platform-specific directory separator,
+# because Windows command parsing doesn't like '/'
+error_command = os.path.join('.', 'err.py')
 
 def _run(returns=None, **kwargs):
     """
@@ -33,9 +37,9 @@ class Run(Spec):
 
     def setup(self):
         os.chdir(support)
-        self.both = "echo foo && ./err bar"
+        self.both = "echo foo && {} bar".format(error_command)
         self.out = "echo foo"
-        self.err = "./err bar"
+        self.err = "{} bar".format(error_command)
         self.sub = "inv -c pty_output hide_%s"
 
     def teardown(self):
@@ -54,7 +58,11 @@ class Run(Spec):
             result = run("false", warn=True)
             eq_(result.exited, 1)
             result = run("goobypls", warn=True, hide='both')
-            eq_(result.exited, 127)
+            if WINDOWS:
+                # Windows doesn't give a 127 error for "unknown command"
+                assert result.exited != 0
+            else:
+                eq_(result.exited, 127)
 
         def stdout_attribute_contains_stdout(self):
             eq_(run(self.out, hide='both').stdout, 'foo\n')
@@ -91,7 +99,7 @@ class Run(Spec):
 
         def Failure_repr_includes_stderr(self):
             try:
-                run("./err ohnoz && exit 1", hide='both')
+                run("{} ohnoz && exit 1".format(error_command), hide='both')
                 assert false # Ensure failure to Failure fails
             except Failure as f:
                 r = repr(f)
@@ -134,16 +142,22 @@ class Run(Spec):
             eq_(sys.stderr.getvalue().strip(), "bar")
 
         def hide_both_hides_both_under_pty(self):
+            if WINDOWS:
+                skip()
             r = run(self.sub % 'both', hide='both')
             eq_(r.stdout, "")
             eq_(r.stderr, "")
 
         def hide_out_hides_both_under_pty(self):
+            if WINDOWS:
+                skip()
             r = run(self.sub % 'out', hide='both')
             eq_(r.stdout, "")
             eq_(r.stderr, "")
 
         def hide_err_has_no_effect_under_pty(self):
+            if WINDOWS:
+                skip()
             r = run(self.sub % 'err', hide='both')
             eq_(r.stdout, "foo\r\nbar\r\n")
             eq_(r.stderr, "")
@@ -181,12 +195,17 @@ class Run(Spec):
     class pseudo_terminals:
         def return_value_indicates_whether_pty_was_used(self):
             eq_(run("true").pty, False)
-            eq_(run("true", pty=True).pty, True)
+            if not WINDOWS:
+                eq_(run("true", pty=True).pty, True)
 
         def pty_defaults_to_off(self):
             eq_(run("true").pty, False)
 
         def complex_nesting_doesnt_break(self):
+            # Not sure how to make this work on Windows
+            if WINDOWS:
+                skip()
+
             # GH issue 191
             substr = "      hello\t\t\nworld with spaces"
             cmd = """ eval 'echo "{0}" ' """.format(substr)
@@ -224,7 +243,11 @@ class Run(Spec):
     class funky_characters_in_stdout:
         def basic_nonstandard_characters(self):
             # Crummy "doesn't explode with decode errors" test
-            run("cat tree.out", hide='both')
+            if WINDOWS:
+                cmd = "type tree.out"
+            else:
+                cmd = "cat tree.out"
+            run(cmd, hide='both')
 
         def nonprinting_bytes(self):
             # Seriously non-printing characters (i.e. non UTF8) also don't asplode
@@ -232,6 +255,8 @@ class Run(Spec):
             run("echo '\xff'", hide='both')
 
         def nonprinting_bytes_pty(self):
+            if WINDOWS:
+                skip()
             # PTY use adds another utf-8 decode spot which can also fail.
             run("echo '\xff'", pty=True, hide='both')
 
@@ -239,15 +264,19 @@ class Run(Spec):
 class Local_(Spec):
     def setup(self):
         os.chdir(support)
-        self.both = "echo foo && ./err bar"
+        self.both = "echo foo && {} bar".format(error_command)
 
     def teardown(self):
         reset_cwd()
 
     def stdout_contains_both_streams_under_pty(self):
+        if WINDOWS:
+            skip()
         r = run(self.both, hide='both', pty=True)
         eq_(r.stdout, 'foo\r\nbar\r\n')
 
     def stderr_is_empty_under_pty(self):
+        if WINDOWS:
+            skip()
         r = run(self.both, hide='both', pty=True)
         eq_(r.stderr, '')

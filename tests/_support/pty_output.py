@@ -1,8 +1,9 @@
+import os
 from invoke.tasks import task
 from invoke.runner import run
 
 
-cmd = "echo foo && ./err bar"
+cmd = "echo foo && {} bar".format(os.path.join('.', 'err.py'))
 
 
 def _go(hide):
