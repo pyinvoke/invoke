@@ -11,7 +11,7 @@ from _utils import support, reset_cwd
 
 # Get the right platform-specific directory separator,
 # because Windows command parsing doesn't like '/'
-error_command = os.path.join('.', 'err.py')
+error_command = "{} err.py".format(sys.executable)
 
 def _run(returns=None, **kwargs):
     """
