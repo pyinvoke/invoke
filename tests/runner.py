@@ -7,7 +7,7 @@ from invoke.runner import Runner, run
 from invoke.exceptions import Failure
 from invoke.platform import WINDOWS
 
-from _utils import support, reset_cwd
+from _utils import support, reset_cwd, skip_if_windows
 
 # Get the right platform-specific directory separator,
 # because Windows command parsing doesn't like '/'
@@ -58,11 +58,8 @@ class Run(Spec):
             result = run("false", warn=True)
             eq_(result.exited, 1)
             result = run("goobypls", warn=True, hide='both')
-            if WINDOWS:
-                # Windows doesn't give a 127 error for "unknown command"
-                assert result.exited != 0
-            else:
-                eq_(result.exited, 127)
+            expected = 1 if WINDOWS else 127
+            eq_(result.exited, expected)
 
         def stdout_attribute_contains_stdout(self):
             eq_(run(self.out, hide='both').stdout, 'foo\n')
@@ -141,23 +138,20 @@ class Run(Spec):
             eq_(sys.stdout.getvalue().strip(), "")
             eq_(sys.stderr.getvalue().strip(), "bar")
 
+        @skip_if_windows
         def hide_both_hides_both_under_pty(self):
-            if WINDOWS:
-                skip()
             r = run(self.sub % 'both', hide='both')
             eq_(r.stdout, "")
             eq_(r.stderr, "")
 
+        @skip_if_windows
         def hide_out_hides_both_under_pty(self):
-            if WINDOWS:
-                skip()
             r = run(self.sub % 'out', hide='both')
             eq_(r.stdout, "")
             eq_(r.stderr, "")
 
+        @skip_if_windows
         def hide_err_has_no_effect_under_pty(self):
-            if WINDOWS:
-                skip()
             r = run(self.sub % 'err', hide='both')
             eq_(r.stdout, "foo\r\nbar\r\n")
             eq_(r.stderr, "")
@@ -201,11 +195,8 @@ class Run(Spec):
         def pty_defaults_to_off(self):
             eq_(run("true").pty, False)
 
+        @skip_if_windows # Not sure how to make this work on Windows
         def complex_nesting_doesnt_break(self):
-            # Not sure how to make this work on Windows
-            if WINDOWS:
-                skip()
-
             # GH issue 191
             substr = "      hello\t\t\nworld with spaces"
             cmd = """ eval 'echo "{0}" ' """.format(substr)
@@ -254,9 +245,8 @@ class Run(Spec):
             # load('funky').derp()
             run("echo '\xff'", hide='both')
 
+        @skip_if_windows
         def nonprinting_bytes_pty(self):
-            if WINDOWS:
-                skip()
             # PTY use adds another utf-8 decode spot which can also fail.
             run("echo '\xff'", pty=True, hide='both')
 
@@ -269,14 +259,12 @@ class Local_(Spec):
     def teardown(self):
         reset_cwd()
 
+    @skip_if_windows
     def stdout_contains_both_streams_under_pty(self):
-        if WINDOWS:
-            skip()
         r = run(self.both, hide='both', pty=True)
         eq_(r.stdout, 'foo\r\nbar\r\n')
 
+    @skip_if_windows
     def stderr_is_empty_under_pty(self):
-        if WINDOWS:
-            skip()
         r = run(self.both, hide='both', pty=True)
         eq_(r.stderr, '')
