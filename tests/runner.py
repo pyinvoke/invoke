@@ -11,7 +11,7 @@ from _utils import support, reset_cwd
 
 # Get the right platform-specific directory separator,
 # because Windows command parsing doesn't like '/'
-error_command = "{} err.py".format(sys.executable)
+error_command = "{0} err.py".format(sys.executable)
 
 def _run(returns=None, **kwargs):
     """
@@ -37,9 +37,9 @@ class Run(Spec):
 
     def setup(self):
         os.chdir(support)
-        self.both = "echo foo && {} bar".format(error_command)
+        self.both = "echo foo && {0} bar".format(error_command)
         self.out = "echo foo"
-        self.err = "{} bar".format(error_command)
+        self.err = "{0} bar".format(error_command)
         self.sub = "inv -c pty_output hide_%s"
 
     def teardown(self):
@@ -99,7 +99,7 @@ class Run(Spec):
 
         def Failure_repr_includes_stderr(self):
             try:
-                run("{} ohnoz && exit 1".format(error_command), hide='both')
+                run("{0} ohnoz && exit 1".format(error_command), hide='both')
                 assert false # Ensure failure to Failure fails
             except Failure as f:
                 r = repr(f)
@@ -264,7 +264,7 @@ class Run(Spec):
 class Local_(Spec):
     def setup(self):
         os.chdir(support)
-        self.both = "echo foo && {} bar".format(error_command)
+        self.both = "echo foo && {0} bar".format(error_command)
 
     def teardown(self):
         reset_cwd()
