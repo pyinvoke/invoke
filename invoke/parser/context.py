@@ -124,7 +124,7 @@ class ParserContext(object):
         if arg.attr_name:
             self.args.alias(arg.attr_name, to=main)
         # Add to inverse_flags if required
-        if arg.kind == bool and arg.default == True:
+        if arg.kind == bool and arg.default is True:
             # Invert the 'main' flag name here, which will be a dashed version
             # of the primary argument name if underscore-to-dash transformation
             # occurred.

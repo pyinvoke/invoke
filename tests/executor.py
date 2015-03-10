@@ -1,4 +1,4 @@
-from spec import Spec, eq_, skip, trap
+from spec import eq_
 from mock import Mock, call as mock_call
 
 from invoke.collection import Collection
@@ -25,7 +25,6 @@ class Executor_(IntegrationSpec):
         coll.add_task(self.task4, name='task4')
         self.executor = Executor(collection=coll)
 
-
     class init:
         "__init__"
         def allows_collection_and_config(self):
@@ -39,7 +38,6 @@ class Executor_(IntegrationSpec):
             e = Executor(collection=Collection())
             assert isinstance(e.config, Config)
 
-
     class execute:
         def base_case(self):
             self.executor.execute('task1')
@@ -49,7 +47,6 @@ class Executor_(IntegrationSpec):
             k = {'foo': 'bar'}
             self.executor.execute(('task1', k))
             self.task1.body.assert_called_once_with(**k)
-
 
     class basic_pre_post:
         "basic pre/post task functionality"
@@ -106,7 +103,6 @@ class Executor_(IntegrationSpec):
 
         def call_objs_play_well_with_context_args(self):
             self._call_objs(True)
-
 
     class deduping_and_chaining:
         def chaining_is_depth_first(self):

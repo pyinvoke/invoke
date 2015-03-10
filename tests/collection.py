@@ -1,7 +1,6 @@
 import operator
-import sys
 
-from spec import Spec, skip, eq_, ok_, raises, assert_raises
+from spec import Spec, eq_, ok_, raises, assert_raises
 
 from invoke.collection import Collection
 from invoke.tasks import task, Task
@@ -73,7 +72,6 @@ class Collection_(Spec):
         def accepts_load_path_kwarg(self):
             eq_(Collection().loaded_from, None)
             eq_(Collection(loaded_from='a/path').loaded_from, 'a/path')
-
 
     class useful_special_methods:
         def _meh(self):
@@ -204,7 +202,6 @@ class Collection_(Spec):
                 # Duplicates part of previous test for explicitness' sake.
                 # I.e. proves that the name doesn't end up 'explicit_root'.
                 eq_(self.unchanged.name, 'builtin_name')
-
 
     class add_task:
         def setup(self):

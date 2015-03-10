@@ -22,7 +22,7 @@ class Init(Spec):
         ver = invoke.__version__
         assert isinstance(ver, six.string_types)
         assert re.match(r'\d+\.\d+\.\d+', ver)
-    
+
     def dunder_version_looks_generated_from_dunder_version_info(self):
         # Meh.
         ver_part = invoke.__version__.split('.')[0]

@@ -7,5 +7,6 @@ alabaster>=0.6.0
 nose==1.3.0
 spec>=0.11.1
 mock==1.0.1
+flake8==2.4.0
 # Stuff needed for our tasks.py (broken out for ease of CI)
 -r tasks-requirements.txt

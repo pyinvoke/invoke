@@ -1,4 +1,5 @@
-import os, sys
+import os
+import sys
 from contextlib import contextmanager
 from invoke.platform import WINDOWS
 
@@ -76,7 +77,7 @@ def _output_eq(args, stdout=None, stderr=None, code=0):
 def expect_exit(code=0):
     """
     Run a block of code expected to sys.exit(), ignoring the exit.
-    
+
     This is so we can readily test top level things like help output, listings,
     etc.
     """

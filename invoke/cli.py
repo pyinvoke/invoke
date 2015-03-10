@@ -6,7 +6,6 @@ import textwrap
 
 from .vendor import six
 
-from .context import Context
 from .config import Config
 from .loader import FilesystemLoader, DEFAULT_COLLECTION_NAME
 from .parser import Parser, ParserContext, Argument
@@ -185,7 +184,7 @@ def parse(argv, collection=None, version=None):
     # TODO: if this wants to display context sensitive help (e.g. a combo help
     # and available tasks listing; or core flags modified by plugins/task
     # modules) it will have to move farther down.
-    if args.help.value == True:
+    if args.help.value is True:
         print_help(argv, initial_context) # exits
 
     # Load collection (default or specified) and parse leftovers

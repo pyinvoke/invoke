@@ -1,8 +1,7 @@
 import imp
 import os
-import sys
 
-from spec import Spec, skip, eq_, raises
+from spec import Spec, eq_, raises
 
 from invoke.loader import Loader, FilesystemLoader as FSLoader
 from invoke.collection import Collection

@@ -1,16 +1,14 @@
 import os
 import sys
 
-from spec import eq_, skip, Spec, ok_, trap, raises
+from spec import eq_, skip, Spec, ok_, trap
 from mock import patch, Mock
 
-from invoke.cli import parse, tasks_from_contexts
+from invoke.cli import tasks_from_contexts
 from invoke.context import Context
-from invoke.runner import run
 from invoke.parser import Parser
 from invoke.collection import Collection
 from invoke.tasks import task
-from invoke.exceptions import Failure
 import invoke
 
 from _utils import (
@@ -44,7 +42,6 @@ class CLI(IntegrationSpec):
                 '-c integration print_underscored_arg --my-option whatevs',
                 "whatevs\n",
             )
-
 
     def missing_collection_yields_useful_error(self):
         _output_eq(
@@ -194,7 +191,6 @@ Options:
             _dispatch('notinvoke -V', version="nope 1.0")
         eq_(sys.stdout.getvalue(), "nope 1.0\n")
 
-
     class task_list:
         "--list"
 
@@ -271,13 +267,11 @@ Available tasks:
                 "No tasks found in collection 'empty'!\n"
             )
 
-
     def debug_flag_activates_logging(self):
         # Have to patch our logger to get in before Nose logcapture kicks in.
         with patch('invoke.util.debug') as debug:
             _dispatch('inv -d -c debugging foo')
             debug.assert_called_with('my-sentinel')
-
 
     class autoprinting:
         def defaults_to_off_and_no_output(self):
@@ -294,7 +288,6 @@ Available tasks:
 
         def does_not_fire_on_post_tasks(self):
             _output_eq("-c autoprint post_check", "")
-
 
     class run_options:
         "run() related CLI flags"
@@ -314,7 +307,6 @@ Available tasks:
 
         def echo(self):
             self._test_flag('-e', 'echo', True)
-
 
     class configuration:
         "Configuration-related concerns"
@@ -349,26 +341,27 @@ Available tasks:
                 # Runtime conf file
                 _output_eq(
                     '-c integration -f no-dedupe.yaml biz',
-"""foo
+                    """
+foo
 foo
 bar
 biz
 post1
 post2
 post2
-""")
+""".lstrip())
                 # Flag beats runtime
                 _output_eq(
                     '-c integration -f dedupe.yaml --no-dedupe biz',
-"""foo
+                    """
+foo
 foo
 bar
 biz
 post1
 post2
 post2
-""")
-                
+""".lstrip())
 
         # * debug (top level?)
         # * hide (run.hide...lol)
@@ -379,7 +372,7 @@ post2
             os.environ['INVOKE_RUN_ECHO'] = "1"
             with patch('invoke.context.run') as run:
                 _dispatch('invoke -c contextualized run')
-                ok_(run.call_args[1]['echo'] == True)
+                ok_(run.call_args[1]['echo'] is True)
 
         def collection_defaults_dont_block_env_var_run_settings(self):
             # Environ setting run.warn
@@ -390,8 +383,8 @@ post2
                 # defaults, meaning the env var adapter won't see that
                 # 'run_warn' is a valid setting.
                 _dispatch('invoke -c collection go')
-                ok_(run.call_args[1]['echo'] == True)
-                ok_(run.call_args[1]['warn'] == True)
+                ok_(run.call_args[1]['echo'] is True)
+                ok_(run.call_args[1]['warn'] is True)
 
 
 TB_SENTINEL = 'Traceback (most recent call last)'

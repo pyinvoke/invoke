@@ -117,7 +117,7 @@ class DataProxy(object):
         return str(self.config)
 
     def __unicode__(self):
-        return unicode(self.config)
+        return unicode(self.config)  # noqa
 
     def __repr__(self):
         return repr(self.config)
@@ -208,7 +208,7 @@ class Config(DataProxy):
         :param str system_prefix:
             Path & partial filename for the global config file location. Should
             include everything but the dot & file extension.
-            
+
             Default: ``/etc/invoke`` (e.g. ``/etc/invoke.yaml`` or
             ``/etc/invoke.json``).
 
@@ -323,7 +323,7 @@ class Config(DataProxy):
         from the shell is not terrifically expensive, but must be done at a
         specific point in time to ensure the "only known config keys are loaded
         from the env" behavior works correctly.
-        
+
         See :ref:`env-vars` for details on this design decision and other info
         re: how environment variables are scanned and loaded.
         """
@@ -527,6 +527,10 @@ class Config(DataProxy):
                 continue
             data[key] = value
         return data
+
+
+class AmbiguousMergeError(ValueError):
+    pass
 
 
 def merge_dicts(base, updates):

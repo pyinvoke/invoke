@@ -1,5 +1,5 @@
-from ._version import __version_info__, __version__
-from .tasks import task, ctask, Task
-from .runner import run
-from .collection import Collection
-from .context import Context
+from ._version import __version_info__, __version__  # noqa
+from .tasks import task, ctask, Task  # noqa
+from .runner import run  # noqa
+from .collection import Collection  # noqa
+from .context import Context  # noqa

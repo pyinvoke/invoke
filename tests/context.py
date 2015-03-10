@@ -31,7 +31,6 @@ class Context_(Spec):
         def echo(self):
             self._honors('echo', True)
 
-
     class configuration_proxy:
         "Dict-like proxy for self.config"
         def setup(self):

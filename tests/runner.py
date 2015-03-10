@@ -78,7 +78,6 @@ class Run(Spec):
         def has_exception_attr(self):
             eq_(_run().exception, None)
 
-
     class failure_handling:
         @raises(Failure)
         def fast_failures(self):
@@ -97,7 +96,7 @@ class Run(Spec):
         def Failure_repr_includes_stderr(self):
             try:
                 run("{0} ohnoz && exit 1".format(error_command), hide='both')
-                assert false # Ensure failure to Failure fails
+                assert false # noqa. Ensure failure to Failure fails
             except Failure as f:
                 r = repr(f)
                 assert 'ohnoz' in r, "Sentinel 'ohnoz' not found in %r" % r
@@ -158,7 +157,7 @@ class Run(Spec):
 
         @trap
         def _no_hiding(self, val):
-            r = run(self.both, hide=val)
+            run(self.both, hide=val)
             eq_(sys.stdout.getvalue().strip(), "foo")
             eq_(sys.stderr.getvalue().strip(), "bar")
 

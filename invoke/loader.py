@@ -4,7 +4,6 @@ import imp
 
 from .collection import Collection
 from .exceptions import CollectionNotFound
-from .tasks import Task
 from .util import debug
 
 

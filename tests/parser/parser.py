@@ -1,7 +1,6 @@
-from spec import Spec, skip, ok_, eq_, raises, trap
+from spec import Spec, eq_, raises
 
 from invoke.parser import Parser, Context, Argument, ParseError
-from invoke.collection import Collection
 
 
 class Parser_(Spec):
@@ -126,7 +125,7 @@ class Parser_(Spec):
             a = Argument('name', kind=str)
             b = Argument('age', default=7)
             c = Context('mytask', args=(a, b))
-            result = Parser((c,)).parse_argv(['mytask', '--name', 'blah'])
+            Parser((c,)).parse_argv(['mytask', '--name', 'blah'])
             eq_(c.args['age'].value, 7)
 
         def returns_remainder(self):
@@ -203,7 +202,7 @@ class Parser_(Spec):
                     Argument('pos', positional=True),
                     Argument('nonpos', default='default')
                 ])
-                othertask = Context('lolwut')
+                Context('lolwut')
                 result = Parser([mytask]).parse_argv(['mytask', 'lolwut'])
                 r = result[0]
                 eq_(r.args['pos'].value, 'lolwut')
@@ -314,7 +313,7 @@ class Parser_(Spec):
             self._test_for_ambiguity("--foo --bar")
 
         def ambiguity_with_actual_other_flag(self):
-            p = self._parser((
+            self._parser((
                 Argument('foo', optional=True),
                 Argument('bar')
             ))

@@ -1,12 +1,9 @@
 import os
-import select
 from subprocess import Popen, PIPE
 import sys
 import threading
 import codecs
 import locale
-
-from .vendor import six
 
 from .exceptions import Failure, PlatformError
 from .platform import WINDOWS
@@ -65,7 +62,7 @@ class Local(Runner):
             stderr=PIPE,
         )
 
-        if encoding == None:
+        if encoding is None:
             encoding = locale.getpreferredencoding(False)
 
         def display(src, dst, cap, hide):
@@ -192,7 +189,7 @@ def run(
     and must be a class exposing two methods, ``run`` and ``run_pty``, whose
     signatures must match ``function(command, warn, hide)`` - all of which
     match the above descriptions, re: types and default values.
-    
+
     These methods must return a tuple of ``(stdout, stderr, exited,
     exception)``, where ``stdout`` and ``stderr`` are strings, ``exited`` is
     an integer, and ``exception`` is an exception object or ``None``.

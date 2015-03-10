@@ -30,6 +30,7 @@ script:
   - pip uninstall -y invoke # To undo the implicit -e install from above
   - pip install . # NO -e!
   - inv -l # Sanity check
+  - flake8
 notifications:
   irc:
     channels: "irc.freenode.org#invoke"
