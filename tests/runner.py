@@ -209,19 +209,25 @@ class Run(Spec):
 
         @patch('os.isatty', return_value=False)
         @patch('tty.tcgetattr', side_effect=termios.error)
-        @patch('sys.stderr', spec=sys.stderr) # to hide output
+        @patch('sys.stderr', spec=sys.stderr) # to hide warning
         def pty_falls_back_to_off_if_True_and_not_isatty(self, *mocks):
             # "does not kaboom" test :x
             run("true", pty=True)
 
-        def fallback_affects_result_pty_value(self):
-            skip()
+        @patch('os.isatty', return_value=False)
+        @patch('sys.stderr', spec=sys.stderr) # to hide warning
+        def fallback_affects_result_pty_value(self, *mocks):
+            eq_(run("true", pty=True).pty, False)
 
-        def fallback_can_be_overridden(self):
-            skip()
+        @patch('os.isatty', return_value=False)
+        @patch.object(Runner, 'run_pty')
+        def fallback_can_be_overridden(self, isatty, run_pty):
+            run("true", pty=True, fallback=False)
+            run_pty.assert_called_with("true")
 
-        def overridden_fallback_affects_result_pty_value(self):
-            skip()
+        @patch('os.isatty', return_value=False)
+        def overridden_fallback_affects_result_pty_value(self, *mocks):
+            eq_(run("true", pty=True, fallback=False).pty, True)
 
     class command_echo:
         @trap
