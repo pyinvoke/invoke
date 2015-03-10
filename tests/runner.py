@@ -205,6 +205,18 @@ class Run(Spec):
             expected = '      hello\t\t\r\nworld with spaces\r\n'
             eq_(run(cmd, pty=True, hide='both').stdout, expected)
 
+        def pty_falls_back_to_off_if_on_and_not_isatty(self):
+            skip()
+
+        def fallback_affects_result_pty_value(self):
+            skip()
+
+        def fallback_can_be_overridden(self):
+            skip()
+
+        def overridden_fallback_affects_result_pty_value(self):
+            skip()
+
     class command_echo:
         @trap
         def does_not_echo_commands_run_by_default(self):
