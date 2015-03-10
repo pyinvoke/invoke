@@ -2,6 +2,9 @@
 Changelog
 =========
 
+* :support:`212` Implement basic linting support using ``flake8``, and apply
+  formatting changes to satisfy said linting. Thanks to Collin Anderson for the
+  patch.
 * :support:`215` (also :issue:`213`, :issue:`214`) Tweak tests & configuration
   sections of the code to include Windows compatibility. Thanks to Paul Moore.
 * :bug:`201 major` (also :issue:`211`) Replace the old, first-draft gross
