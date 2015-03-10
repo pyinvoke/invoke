@@ -1,7 +1,7 @@
 import copy
-import imp
 import json
 import os
+import sys
 from os.path import join, splitext, expanduser
 
 from .vendor import six
@@ -10,9 +10,23 @@ if six.PY3:
 else:
     from .vendor import yaml2 as yaml
 
+if sys.version_info[:2] >= (3, 3):
+    from importlib.machinery import SourceFileLoader
+    def load_source(name, path):
+        if not os.path.exists(path):
+            return {}
+        return vars(SourceFileLoader('mod', path).load_module())
+else:
+    import imp
+    def load_source(name, path):
+        if not os.path.exists(path):
+            return {}
+        return vars(imp.load_source('mod', path))
+
 from .env import Environment
 from .exceptions import UnknownFileType
 from .util import debug
+from .platform import WINDOWS
 
 
 class DataProxy(object):
@@ -241,8 +255,11 @@ class Config(DataProxy):
         self.collection = {}
 
         #: Path prefix searched for the system config file.
-        self.system_prefix = ('/etc/invoke' if system_prefix is None
-            else system_prefix)
+        #: There is no default system prefix on Windows
+        if system_prefix is None:
+            self.system_prefix = (None if WINDOWS else '/etc/invoke')
+        else:
+            self.system_prefix = system_prefix
         #: Path to loaded system config file, if any.
         self.system_path = None
         #: Whether the system config file has been loaded or not (or ``None``
@@ -505,7 +522,7 @@ class Config(DataProxy):
 
     def _load_py(self, path):
         data = {}
-        for key, value in six.iteritems(vars(imp.load_source('mod', path))):
+        for key, value in six.iteritems(load_source('mod', path)):
             if key.startswith('__'):
                 continue
             data[key] = value
