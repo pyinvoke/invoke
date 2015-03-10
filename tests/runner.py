@@ -1,7 +1,9 @@
-import sys
 import os
+import sys
+import termios
 
 from spec import eq_, skip, Spec, raises, ok_, trap
+from mock import patch
 
 from invoke.runner import Runner, run
 from invoke.exceptions import Failure
@@ -205,8 +207,12 @@ class Run(Spec):
             expected = '      hello\t\t\r\nworld with spaces\r\n'
             eq_(run(cmd, pty=True, hide='both').stdout, expected)
 
-        def pty_falls_back_to_off_if_on_and_not_isatty(self):
-            skip()
+        @patch('os.isatty', return_value=False)
+        @patch('tty.tcgetattr', side_effect=termios.error)
+        @patch('sys.stderr', spec=sys.stderr) # to hide output
+        def pty_falls_back_to_off_if_True_and_not_isatty(self, *mocks):
+            # "does not kaboom" test :x
+            run("true", pty=True)
 
         def fallback_affects_result_pty_value(self):
             skip()
