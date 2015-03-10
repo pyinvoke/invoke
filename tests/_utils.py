@@ -1,11 +1,19 @@
 import os, sys
 from contextlib import contextmanager
+from invoke.platform import WINDOWS
 
-from spec import trap, Spec, eq_
+from spec import trap, Spec, eq_, skip
 from mock import patch
 
 
 support = os.path.join(os.path.dirname(__file__), '_support')
+
+def skip_if_windows(fn):
+    def wrapper():
+        if WINDOWS:
+            skip()
+        return fn()
+    return wrapper
 
 @contextmanager
 def support_path():

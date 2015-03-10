@@ -14,7 +14,8 @@ from invoke.exceptions import Failure
 import invoke
 
 from _utils import (
-    _dispatch, _output_eq, IntegrationSpec, cd, expect_exit, run_in_configs
+    _dispatch, _output_eq, IntegrationSpec, cd, expect_exit, run_in_configs,
+    skip_if_windows
 )
 
 
@@ -71,6 +72,12 @@ class CLI(IntegrationSpec):
         retval = list(_dispatch('invoke -c contextualized go').values())[0]
         assert isinstance(retval, Context)
 
+    # TODO: On Windows, we don't get a pty, so we don't get a
+    # guaranteed terminal size of 80x24. Skip for now, but maybe
+    # a suitable fix would be to just strip all whitespace from the
+    # returned and expected values before testing. Then terminal
+    # size is ignored.
+    @skip_if_windows
     def core_help_option_prints_core_help(self):
         # TODO: change dynamically based on parser contents?
         # e.g. no core args == no [--core-opts],
