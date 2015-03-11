@@ -5,7 +5,7 @@ import termios
 from spec import eq_, skip, Spec, raises, ok_, trap
 from mock import patch
 
-from invoke.runner import Runner, run
+from invoke.runner import Runner, run, Local
 from invoke.exceptions import Failure
 from invoke.platform import WINDOWS
 
@@ -220,10 +220,10 @@ class Run(Spec):
             eq_(run("true", pty=True).pty, False)
 
         @patch('os.isatty', return_value=False)
-        @patch.object(Runner, 'run_pty')
-        def fallback_can_be_overridden(self, isatty, run_pty):
+        @patch.object(Local, 'run_pty', return_value=('', '', 0, None))
+        def fallback_can_be_overridden(self, run_pty, isatty):
             run("true", pty=True, fallback=False)
-            run_pty.assert_called_with("true")
+            assert run_pty.called
 
         @patch('os.isatty', return_value=False)
         def overridden_fallback_affects_result_pty_value(self, *mocks):
