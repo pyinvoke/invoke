@@ -66,45 +66,65 @@ class Runner(object):
         warn=False,
         hide=None,
         pty=False,
+        fallback=True,
         echo=False,
         encoding=None,
-        fallback=True,
     ):
         """
         Execute ``command``, returning a `Result` object.
 
-        A `.Failure` exception (containing a reference to the `Result` that
-        would otherwise have been returned) is raised if the command terminates
-        with a nonzero return code. This behavior may be disabled by setting
-        ``warn=True``.
+        :param str command: The shell command to execute.
 
-        To disable copying the command's stdout and/or stderr to the
-        controlling terminal, specify ``hide='out'`` (or ``'stdout'``),
-        ``hide='err'`` (or ``'stderr'``) or ``hide='both'`` (or ``True``). The
-        default value is ``None``, meaning to print everything; ``False`` will
-        also disable hiding.
+        :param bool warn:
+            Whether to warn and continue, instead of raising `Failure`, when
+            the executed command exits with a nonzero status. Default:
+            ``False``.
 
-        .. note::
-            Stdout and stderr are always captured and stored in the ``Result``
-            object, regardless of ``hide``'s value.
+        :param hide:
+            Allows the caller to disable ``run``'s default behavior of copying
+            the subprocess' stdout and stderr to the controlling terminal.
+            Specify ``hide='out'`` (or ``'stdout'``) to hide only the stdout
+            stream, ``hide='err'`` (or ``'stderr'``) to hide only stderr, or
+            ``hide='both'`` (or ``True``) to hide both streams.
 
-        By default, ``run`` connects directly to the invoked process and reads
-        its stdout/stderr streams. Some programs will buffer differently (or
-        even behave differently) in this situation compared to using an actual
-        terminal or pty. To use a pty, specify ``pty=True``.
+            The default value is ``None``, meaning to print everything;
+            ``False`` will also disable hiding.
 
-        .. warning::
-            Due to their nature, ptys have a single output stream, so the
-            ability to tell stdout apart from stderr is **not possible** when
-            ``pty=True``. As such, all output will appear on your local stdout
-            and be captured into the ``stdout`` result attribute. Stderr and
-            ``stderr`` will always be empty when ``pty=True``.
+            .. note::
+                Stdout and stderr are always captured and stored in the
+                ``Result`` object, regardless of ``hide``'s value.
 
-        `.run` does not echo the commands it runs by default; to make it do so,
-        say ``echo=True``.
+        :param bool pty:
+            By default, ``run`` connects directly to the invoked process and
+            reads its stdout/stderr streams. Some programs will buffer (or even
+            behave) differently in this situation compared to using an actual
+            terminal or pty. To use a pty, specify ``pty=True``.
 
-        The subprocess output is assumed to use encoding ``encoding`` (which
-        defaults to ``locale.getpreferredencoding(False)``).
+            .. warning::
+                Due to their nature, ptys have a single output stream, so the
+                ability to tell stdout apart from stderr is **not possible**
+                when ``pty=True``. As such, all output will appear on your
+                local stdout and be captured into the ``stdout`` result
+                attribute. Stderr and ``stderr`` will always be empty when
+                ``pty=True``.
+
+        :param bool fallback:
+            Controls auto-fallback behavior re: problems offering a pty when
+            ``pty=True``. Whether this has any effect depends on the specific
+            `Runner` subclass being invoked. Default: ``True``.
+
+        :param bool echo:
+            Controls whether `.run` prints the command string to local stdout
+            prior to executing it. Default: ``False``.
+
+        :param str encoding:
+            Override auto-detection of which encoding the subprocess is using
+            for its stdout/stderr streams. Defaults to the return value of
+            ``locale.getpreferredencoding(False)``).
+
+        :returns: `Result`
+
+        :raises: `.Failure` (if the command exited nonzero & ``warn=False``)
         """
         hide = normalize_hide(hide)
         exception = False
