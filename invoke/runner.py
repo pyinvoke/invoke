@@ -76,7 +76,7 @@ class Runner(object):
         :param str command: The shell command to execute.
 
         :param bool warn:
-            Whether to warn and continue, instead of raising `Failure`, when
+            Whether to warn and continue, instead of raising `.Failure`, when
             the executed command exits with a nonzero status. Default:
             ``False``.
 
