@@ -188,7 +188,13 @@ class Run(Spec):
             eq_(run(self.out, hide='both').stdout, 'foo\n')
 
     class pseudo_terminals:
-        def return_value_indicates_whether_pty_was_used(self):
+        # Trick select_method into not falling back when tests run under a
+        # non-pty.
+        @patch('os.isatty', return_value=True)
+        # Skip over actual run_pty guts when testing w/o a pty, to avoid error
+        @patch.object(Local, 'run_pty', return_value=('', '', 0, None), func_name='run_pty')
+        @patch('sys.stderr', spec=sys.stderr) # to hide warning
+        def return_value_indicates_whether_pty_was_used(self, *mocks):
             eq_(run("true").pty, False)
             if not WINDOWS:
                 eq_(run("true", pty=True).pty, True)
@@ -225,8 +231,10 @@ class Run(Spec):
             run("true", pty=True, fallback=False)
             assert run_pty.called
 
+        # Force our test for pty-ness to fail
         @patch('os.isatty', return_value=False)
-        @patch.object(Local, 'run_pty', return_value=('', '', 0, None))
+        # Also force run_pty to appear to run normally instead of exploding
+        @patch.object(Local, 'run_pty', return_value=('', '', 0, None), func_name='run_pty')
         def overridden_fallback_affects_result_pty_value(self, *mocks):
             eq_(run("true", pty=True, fallback=False).pty, True)
 
