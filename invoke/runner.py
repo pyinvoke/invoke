@@ -137,7 +137,8 @@ class Runner(object):
             hide=hide,
             encoding=encoding
         )
-        # TODO: make this test less gross?
+        # TODO: make this test less gross? Feels silly to just return a bool in
+        # select_method which is tantamount to this, though.
         used_pty = func.func_name == 'run_pty'
         result = Result(
             stdout=stdout,
