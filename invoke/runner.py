@@ -137,10 +137,10 @@ class Runner(object):
         # NOTE: fallback not used: no falling back implemented by default.
         return getattr(self, 'run_pty' if pty else 'run_direct')
 
-    def run_direct(self, command, warn, hide):
+    def run_direct(self, command, warn, hide, encoding):
         raise NotImplementedError
 
-    def run_pty(self, command, warn, hide):
+    def run_pty(self, command, warn, hide, encoding):
         raise NotImplementedError
 
 
