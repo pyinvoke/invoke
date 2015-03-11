@@ -36,7 +36,11 @@ def _run(returns=None, **kwargs):
 # Shorthand for mocking Local.run_pty so tests run under non-pty environments
 # don't asplode.
 _patch_run_pty = patch.object(
-    Local, 'run_pty', return_value=('', '', 0, None), func_name='run_pty'
+    Local,
+    'run_pty',
+    return_value=('', '', 0, None),
+    func_name='run_pty',
+    __name__='run_pty',
 )
 
 # Shorthand for mocking os.isatty
