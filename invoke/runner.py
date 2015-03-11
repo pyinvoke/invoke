@@ -160,14 +160,12 @@ class Local(Runner):
         negatives in your environment), say ``fallback=False``.
     """
     def select_method(self, pty=False, fallback=True):
+        func = self.run_direct
         if pty:
+            func = self.run_pty
             if not os.isatty(sys.stdin.fileno()) and fallback:
                 sys.stderr.write("WARNING: stdin is not a pty; falling back to non-pty execution!\n")
                 func = self.run_direct
-            else:
-                func = self.run_pty
-        else:
-            func = self.run_direct
         return func
 
     def run_direct(self, command, warn, hide, encoding=None):
