@@ -1,7 +1,7 @@
 import os
 from os.path import join, expanduser
 
-from spec import Spec, skip, eq_, ok_, raises
+from spec import eq_, ok_, raises
 from mock import patch, call
 
 from invoke.config import Config
@@ -37,34 +37,34 @@ class Config_(IntegrationSpec):
         def configure_global_location_prefix(self, load_yaml):
             # This is a bit funky but more useful than just replicating the
             # same test farther down?
-            c = Config(system_prefix='meh')
+            Config(system_prefix='meh')
             load_yaml.assert_has_call('meh.yaml')
 
         @patch.object(Config, '_load_yaml')
         def default_system_prefix_is_etc(self, load_yaml):
             # TODO: make this work on Windows somehow without being a total
             # tautology? heh.
-            c = Config()
+            Config()
             load_yaml.assert_has_call('/etc/invoke.yaml')
 
         @patch.object(Config, '_load_yaml')
         def configure_user_location_prefix(self, load_yaml):
-            c = Config(user_prefix='whatever')
+            Config(user_prefix='whatever')
             load_yaml.assert_has_call('whatever.yaml')
 
         @patch.object(Config, '_load_yaml')
         def default_user_prefix_is_homedir(self, load_yaml):
-            c = Config()
+            Config()
             load_yaml.assert_has_call(expanduser('~/.invoke.yaml'))
 
         @patch.object(Config, '_load_yaml')
         def configure_project_location(self, load_yaml):
-            c = Config(project_home='someproject')
+            Config(project_home='someproject')
             load_yaml.assert_has_call('someproject/invoke.yaml')
 
         @patch.object(Config, '_load_yaml')
         def configure_runtime_path(self, load_yaml):
-            c = Config(runtime_path='some/path.yaml')
+            Config(runtime_path='some/path.yaml')
             load_yaml.assert_has_call('some/path.yaml')
 
         def accepts_defaults_dict(self):
@@ -119,7 +119,8 @@ No attribute or config key found for 'nope'
 
 Valid keys: []
 
-Valid real attributes: ['clone', 'from_data', 'load_collection', 'load_files', 'load_shell_env', 'merge', 'paths']""".lstrip()
+Valid real attributes: ['clone', 'from_data', 'load_collection', 'load_files', 'load_shell_env', 'merge', 'paths']
+""".strip()
                 eq_(str(e), expected)
             else:
                 assert False, "Didn't get an AttributeError on bad key!"
@@ -147,7 +148,7 @@ Valid real attributes: ['clone', 'from_data', 'load_collection', 'load_files', '
             eq_(len(c), 1)
             eq_(c.get('foo'), 'bar')
             if six.PY2:
-                eq_(c.has_key('foo'), True)
+                eq_(c.has_key('foo'), True)  # noqa
                 eq_(list(c.iterkeys()), ['foo'])
                 eq_(list(c.itervalues()), ['bar'])
             eq_(list(c.items()), [('foo', 'bar')])
@@ -177,7 +178,7 @@ Valid real attributes: ['clone', 'from_data', 'load_collection', 'load_files', '
             config = Config({'foo': 'bar'})
             eq_(str(config), "{'foo': 'bar'}")
             if six.PY2:
-                eq_(unicode(config), six.u("{'foo': 'bar'}"))
+                eq_(unicode(config), six.u("{'foo': 'bar'}"))  # noqa
             eq_(repr(config), "{'foo': 'bar'}")
 
     def python_modules_dont_load_special_vars(self):
@@ -323,7 +324,7 @@ Valid real attributes: ['clone', 'from_data', 'load_collection', 'load_files', '
                 # Can't use '5L' in Python 3, even having it in a branch makes
                 # it upset.
                 if not six.PY3:
-                    tests.append((long, '5', long(5)))
+                    tests.append((long, '5', long(5)))  # noqa
                 for old, new_, result in tests:
                     os.environ['FOO'] = new_
                     c = Config(defaults={'foo': old()})
@@ -353,7 +354,6 @@ Valid real attributes: ['clone', 'from_data', 'load_collection', 'load_files', '
 
                 def tuples(self):
                     self._uncastable_type(('a', 'tuple'))
-
 
     class hierarchy:
         "Config hierarchy in effect"
@@ -494,7 +494,6 @@ Valid real attributes: ['clone', 'from_data', 'load_collection', 'load_files', '
             ok_('python_only' not in c)
             ok_('json-only' in c)
             eq_(c.shared, 'json-value')
-
 
     class clone:
         def preserves_basic_members(self):

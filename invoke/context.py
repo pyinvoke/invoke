@@ -1,5 +1,3 @@
-from copy import deepcopy
-
 from .runner import run
 from .config import Config, DataProxy
 
@@ -28,7 +26,7 @@ class Context(DataProxy):
 
             Defaults to an empty `.Config`.
         """
-        
+
         #: The fully merged `.Config` object appropriate for this context.
         #:
         #: `.Config` settings (see their documentation for details) may be
@@ -55,4 +53,3 @@ class Context(DataProxy):
         options = dict(self.config['run'])
         options.update(kwargs)
         return run(*args, **options)
-

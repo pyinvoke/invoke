@@ -111,5 +111,3 @@ class Environment(object):
             raise UncastableEnvVar(err)
         else:
             return old.__class__(new_)
-
-

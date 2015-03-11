@@ -6,6 +6,43 @@ Changelog
   (:option:`--tasks` and :option:`--flags`) and also bake in some 'blessed'
   such scripts for bash (3 and 4) and zsh. Thanks to Ivan Malison and Andrew
   Roberts for providing discussion & early patchsets.
+* :support:`-` Reorganize `~invoke.runner.Runner`, `~invoke.runner.Local` and
+  `~invoke.runner.run` for improved distribution of responsibilities &
+  downstream subclassing.
+
+  .. warning::
+    This includes backwards incompatible changes to the API signature of most
+    members of the `invoke.runner` module, including `~invoke.runner.run`.
+    (However, in the case of `~invoke.runner.run`, the changes are mostly in
+    the later, optional keyword arguments.)
+
+* :feature:`219` Fall back to non-PTY command execution in situations where
+  ``pty=True`` but no PTY appears present. See `~invoke.runner.Runner.run` for
+  details.
+* :support:`212` Implement basic linting support using ``flake8``, and apply
+  formatting changes to satisfy said linting. Thanks to Collin Anderson for the
+  patch.
+* :support:`215` (also :issue:`213`, :issue:`214`) Tweak tests & configuration
+  sections of the code to include Windows compatibility. Thanks to Paul Moore.
+* :bug:`201 major` (also :issue:`211`) Replace the old, first-draft gross
+  monkeypatched Popen code used for `~invoke.runner.run` with a
+  non-monkeypatched approach that works better on non-POSIX platforms like
+  Windows, and also attempts to handle encoding and locale issues more
+  gracefully (meaning: at all gracefully).
+
+  Specifically, the new approach uses threading instead of ``select.select``,
+  and performs explicit encoding/decoding based on detected or explicitly
+  expressed encodings.
+
+  Major thanks to Paul Moore for an enormous amount of
+  testing/experimentation/discussion, as well as the bulk of the code changes
+  themselves.
+
+  .. warning::
+    The top level `~invoke.runner.run` function has had a minor signature
+    change: the sixth positional argument used to be ``runner`` and is now
+    ``encoding`` (with ``runner`` now being the seventh positional argument).
+
 * :feature:`147` Drastically overhaul/expand the configuration system to
   account for multiple configuration levels including (but not limited to) file
   paths, environment variables, and Python-level constructs (previously the

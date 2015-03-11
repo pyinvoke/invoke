@@ -1,5 +1,3 @@
-import itertools
-
 from .config import Config
 from .context import Context
 from .util import debug
@@ -29,7 +27,7 @@ class Executor(object):
         """
         self.collection = collection
         if config is None:
-            config = Config()      
+            config = Config()
         self.config = config
 
     def execute(self, *tasks, **kwargs):

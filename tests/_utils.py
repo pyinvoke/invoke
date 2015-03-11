@@ -1,11 +1,20 @@
-import os, sys
+import os
+import sys
 from contextlib import contextmanager
+from invoke.platform import WINDOWS
 
-from spec import trap, Spec, eq_
+from spec import trap, Spec, eq_, skip
 from mock import patch
 
 
 support = os.path.join(os.path.dirname(__file__), '_support')
+
+def skip_if_windows(fn):
+    def wrapper():
+        if WINDOWS:
+            skip()
+        return fn()
+    return wrapper
 
 @contextmanager
 def support_path():
@@ -68,7 +77,7 @@ def _output_eq(args, stdout=None, stderr=None, code=0):
 def expect_exit(code=0):
     """
     Run a block of code expected to sys.exit(), ignoring the exit.
-    
+
     This is so we can readily test top level things like help output, listings,
     etc.
     """

@@ -1,5 +1,4 @@
 import copy
-from operator import add
 import types
 
 from .vendor import six
@@ -146,7 +145,7 @@ class Collection(object):
         :param dict config:
             Used to set config options on the newly created `.Collection`
             before returning it (saving you a call to `.configure`.)
-            
+
             If the imported module had a root namespace object, ``config`` is
             merged on top of it (i.e. overriding any conflicts.)
 
@@ -308,7 +307,7 @@ class Collection(object):
 
     def __contains__(self, name):
         try:
-            task = self[name]
+            self[name]
             return True
         except KeyError:
             return False

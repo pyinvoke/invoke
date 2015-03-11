@@ -1,3 +1,4 @@
-from .parser import *
-from .context import ParserContext
-from .argument import Argument
+from .parser import *  # noqa
+from .context import ParserContext  # noqa
+from .context import ParserContext as Context  # noqa
+from .argument import Argument  # noqa

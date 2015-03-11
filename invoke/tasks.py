@@ -6,7 +6,6 @@ import inspect
 import types
 
 from .vendor import six
-from .vendor.lexicon import Lexicon
 
 from .context import Context
 from .parser import Argument

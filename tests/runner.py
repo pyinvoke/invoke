@@ -1,19 +1,25 @@
-import sys
 import os
+import sys
+import termios
 
 from spec import eq_, skip, Spec, raises, ok_, trap
+from mock import patch
 
-from invoke.runner import Runner, run
+from invoke.runner import Runner, run, Local
 from invoke.exceptions import Failure
+from invoke.platform import WINDOWS
 
-from _utils import support, reset_cwd
+from _utils import support, reset_cwd, skip_if_windows
 
+# Get the right platform-specific directory separator,
+# because Windows command parsing doesn't like '/'
+error_command = "{0} err.py".format(sys.executable)
 
 def _run(returns=None, **kwargs):
     """
     Create a Runner w/ retval reflecting ``returns`` & call ``run(**kwargs)``.
     """
-    # Set up return value tuple for Runner.run
+    # Set up return value tuple for Runner.run_direct
     returns = returns or {}
     returns.setdefault('exited', 0)
     value = map(
@@ -21,11 +27,22 @@ def _run(returns=None, **kwargs):
         ('stdout', 'stderr', 'exited', 'exception'),
     )
     class MockRunner(Runner):
-        def run(self, command, warn, hide):
+        def run_direct(self, command, **kwargs):
             return value
     # Ensure top level run() uses that runner, provide dummy command.
     kwargs['runner'] = MockRunner
     return run("whatever", **kwargs)
+
+
+# Shorthand for mocking Local.run_pty so tests run under non-pty environments
+# don't asplode.
+_patch_run_pty = patch.object(
+    Local, 'run_pty', return_value=('', '', 0, None), func_name='run_pty'
+)
+
+# Shorthand for mocking os.isatty
+_is_tty = patch('os.isatty', return_value=True)
+_not_tty = patch('os.isatty', return_value=False)
 
 
 class Run(Spec):
@@ -33,9 +50,9 @@ class Run(Spec):
 
     def setup(self):
         os.chdir(support)
-        self.both = "echo foo && ./err bar"
+        self.both = "echo foo && {0} bar".format(error_command)
         self.out = "echo foo"
-        self.err = "./err bar"
+        self.err = "{0} bar".format(error_command)
         self.sub = "inv -c pty_output hide_%s"
 
     def teardown(self):
@@ -54,7 +71,8 @@ class Run(Spec):
             result = run("false", warn=True)
             eq_(result.exited, 1)
             result = run("goobypls", warn=True, hide='both')
-            eq_(result.exited, 127)
+            expected = 1 if WINDOWS else 127
+            eq_(result.exited, expected)
 
         def stdout_attribute_contains_stdout(self):
             eq_(run(self.out, hide='both').stdout, 'foo\n')
@@ -73,7 +91,6 @@ class Run(Spec):
         def has_exception_attr(self):
             eq_(_run().exception, None)
 
-
     class failure_handling:
         @raises(Failure)
         def fast_failures(self):
@@ -91,8 +108,8 @@ class Run(Spec):
 
         def Failure_repr_includes_stderr(self):
             try:
-                run("./err ohnoz && exit 1", hide='both')
-                assert false # Ensure failure to Failure fails
+                run("{0} ohnoz && exit 1".format(error_command), hide='both')
+                assert false # noqa. Ensure failure to Failure fails
             except Failure as f:
                 r = repr(f)
                 assert 'ohnoz' in r, "Sentinel 'ohnoz' not found in %r" % r
@@ -133,16 +150,19 @@ class Run(Spec):
             eq_(sys.stdout.getvalue().strip(), "")
             eq_(sys.stderr.getvalue().strip(), "bar")
 
+        @skip_if_windows
         def hide_both_hides_both_under_pty(self):
             r = run(self.sub % 'both', hide='both')
             eq_(r.stdout, "")
             eq_(r.stderr, "")
 
+        @skip_if_windows
         def hide_out_hides_both_under_pty(self):
             r = run(self.sub % 'out', hide='both')
             eq_(r.stdout, "")
             eq_(r.stderr, "")
 
+        @skip_if_windows
         def hide_err_has_no_effect_under_pty(self):
             r = run(self.sub % 'err', hide='both')
             eq_(r.stdout, "foo\r\nbar\r\n")
@@ -150,7 +170,7 @@ class Run(Spec):
 
         @trap
         def _no_hiding(self, val):
-            r = run(self.both, hide=val)
+            run(self.both, hide=val)
             eq_(sys.stdout.getvalue().strip(), "foo")
             eq_(sys.stderr.getvalue().strip(), "bar")
 
@@ -179,13 +199,20 @@ class Run(Spec):
             eq_(run(self.out, hide='both').stdout, 'foo\n')
 
     class pseudo_terminals:
-        def return_value_indicates_whether_pty_was_used(self):
+        # Trick select_method into not falling back when tests run under a
+        # non-pty.
+        @_is_tty
+        @_patch_run_pty
+        @trap
+        def return_value_indicates_whether_pty_was_used(self, *mocks):
             eq_(run("true").pty, False)
-            eq_(run("true", pty=True).pty, True)
+            if not WINDOWS:
+                eq_(run("true", pty=True).pty, True)
 
         def pty_defaults_to_off(self):
             eq_(run("true").pty, False)
 
+        @skip_if_windows # Not sure how to make this work on Windows
         def complex_nesting_doesnt_break(self):
             # GH issue 191
             substr = "      hello\t\t\nworld with spaces"
@@ -195,6 +222,30 @@ class Run(Spec):
             # pexpect
             expected = '      hello\t\t\r\nworld with spaces\r\n'
             eq_(run(cmd, pty=True, hide='both').stdout, expected)
+
+        @_not_tty
+        @patch('tty.tcgetattr', side_effect=termios.error)
+        @trap
+        def pty_falls_back_to_off_if_True_and_not_isatty(self, *mocks):
+            # "does not kaboom" test :x
+            run("true", pty=True)
+
+        @_not_tty
+        @trap
+        def fallback_affects_result_pty_value(self, *mocks):
+            eq_(run("true", pty=True).pty, False)
+
+        @_not_tty
+        @_patch_run_pty
+        def fallback_can_be_overridden(self, run_pty, isatty):
+            run("true", pty=True, fallback=False)
+            assert run_pty.called
+
+        # Force our test for pty-ness to fail
+        @_not_tty
+        @_patch_run_pty
+        def overridden_fallback_affects_result_pty_value(self, *mocks):
+            eq_(run("true", pty=True, fallback=False).pty, True)
 
     class command_echo:
         @trap
@@ -224,13 +275,18 @@ class Run(Spec):
     class funky_characters_in_stdout:
         def basic_nonstandard_characters(self):
             # Crummy "doesn't explode with decode errors" test
-            run("cat tree.out", hide='both')
+            if WINDOWS:
+                cmd = "type tree.out"
+            else:
+                cmd = "cat tree.out"
+            run(cmd, hide='both')
 
         def nonprinting_bytes(self):
             # Seriously non-printing characters (i.e. non UTF8) also don't asplode
             # load('funky').derp()
             run("echo '\xff'", hide='both')
 
+        @skip_if_windows
         def nonprinting_bytes_pty(self):
             # PTY use adds another utf-8 decode spot which can also fail.
             run("echo '\xff'", pty=True, hide='both')
@@ -239,15 +295,17 @@ class Run(Spec):
 class Local_(Spec):
     def setup(self):
         os.chdir(support)
-        self.both = "echo foo && ./err bar"
+        self.both = "echo foo && {0} bar".format(error_command)
 
     def teardown(self):
         reset_cwd()
 
+    @skip_if_windows
     def stdout_contains_both_streams_under_pty(self):
         r = run(self.both, hide='both', pty=True)
         eq_(r.stdout, 'foo\r\nbar\r\n')
 
+    @skip_if_windows
     def stderr_is_empty_under_pty(self):
         r = run(self.both, hide='both', pty=True)
         eq_(r.stderr, '')

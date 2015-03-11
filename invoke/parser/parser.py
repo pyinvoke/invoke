@@ -2,10 +2,6 @@ import copy
 
 from ..vendor.lexicon import Lexicon
 from ..vendor.fluidity import StateMachine, state, transition
-from ..vendor import six
-
-from .context import ParserContext as Context
-from .argument import Argument
 
 from ..util import debug
 from ..exceptions import ParseError

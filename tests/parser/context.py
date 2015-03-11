@@ -1,6 +1,6 @@
 import copy
 
-from spec import Spec, eq_, skip, ok_, raises
+from spec import Spec, eq_, skip, raises
 
 from invoke.parser import Argument, Context
 from invoke.tasks import task
@@ -232,7 +232,6 @@ class Context_(Spec):
         def true_default_args(self):
             c = Context(args=(Argument('truthy', kind=bool, default=True),))
             eq_(c.help_for('--truthy'), ('--[no-]truthy', ''))
-
 
     class help_tuples:
         def returns_list_of_help_tuples(self):

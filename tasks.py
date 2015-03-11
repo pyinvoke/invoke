@@ -1,4 +1,5 @@
 import os
+import sys
 import shutil
 import time
 from os.path import join
@@ -7,7 +8,7 @@ from invocations import docs as _docs
 from invocations.testing import test
 from invocations.packaging import vendorize, release
 
-from invoke import ctask as task, run, Collection, Context
+from invoke import ctask as task, Collection, Context
 
 
 d = 'sites'
