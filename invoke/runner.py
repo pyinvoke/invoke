@@ -30,38 +30,35 @@ class Runner(object):
     """
     Partially-abstract core command-running API.
 
-    Actual command runners should subclass & implement some or all of the
-    following:
+    This class is not usable by itself and must be subclassed to implement, at
+    minimum, ``run_direct`` and ``run_pty``. An explanation of its methods
+    follows:
 
-    * ``run``: Primary API call which handles command echo output, delegation
-      of actual execution to `run_direct` or `run_pty`, and returning a useful
-      `Result` object.
+    ``run`` is the primary API call which handles high level logic (echoing the
+    commands locally, constructing a useful `Result` object, etc) and
+    wraps/delegates to the below methods for actual execution.
 
-      .. note::
-        This method should not be overridden in subclasses without an excellent
-        reason, as it hosts most of the high level logic.
+    ``select_method`` takes ``pty`` and ``fallback`` kwargs and returns the
+    current object's ``run_direct`` or ``run_pty`` method, depending on those
+    kwargs' values and environmental cues/limitations. `Runner` itself has a
+    useful default implementation of this method, but overriding may be
+    sometimes useful.
 
-    * ``run_direct``: Command execution hooking directly into the subprocess'
-      stdout/stderr pipes and returning their eventual values as distinct
-      strings. Specifically, have a signature of ``def run_direct(self,
-      command, warn, hide):`` (see `run` for semantics of these) and return a
-      4-tuple of ``(stdout, stderr, exitcode, exception)``.
-    * ``run_pty``: Execution utilizing a pseudo-terminal, which is then
-      expected to only return a useful stdout (with stderr usually empty.) Has
-      same signature and return value as ``run``.
-    * ``select_method``: Takes ``pty`` and ``fallback`` kwargs and returns a
-      local method appropriate for actual execution, depending on those kwargs
-      and environmental cues/limitations.
+    ``run_direct`` and ``run_pty`` are fully abstract in `Runner`; in
+    subclasses, they should perform actual command execution, hooking directly
+    into a subprocess' stdout/stderr pipes and returning those pipes' eventual
+    full contents as distinct strings.
 
-      The default implementation of ``select_method`` simply looks at the
-      ``pty`` kwarg and delegates to ``run_direct`` if it is ``False``, and
-      ``run_pty`` if ``True``.
+    ``run_direct``/``run_pty`` both have a signature of ``(self, command, warn,
+    hide, encoding)`` (see `run` for semantics of these) and must return a
+    4-tuple of ``(stdout, stderr, exitcode, exception)`` (see `Result` for
+    their meaning).
 
-      Some implementation subclasses (notably `Local`) fall back from PTY
-      execution to non-PTY execution in some situations; the ``fallback`` kwarg
-      allows users to override this behavior.
+    ``run_pty`` differs from ``run_direct`` in that it should utilize a
+    pseudo-terminal, and is expected to only return a useful ``stdout`` (with
+    ``stderr`` usually set to the empty string.)
 
-    For a full implementation example, see the source code for `.Local`.
+    For a subclass implementation example, see the source code for `.Local`.
     """
     def run(
         self,
