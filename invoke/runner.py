@@ -168,7 +168,7 @@ class Local(Runner):
                 func = self.run_direct
         return func
 
-    def run_direct(self, command, warn, hide, encoding=None):
+    def run_direct(self, command, warn, hide, encoding):
         process = Popen(
             command,
             shell=True,
@@ -221,7 +221,7 @@ class Local(Runner):
 
         return stdout, stderr, process.returncode, None
 
-    def run_pty(self, command, warn, hide, encoding=None):
+    def run_pty(self, command, warn, hide, encoding):
         # Sanity check: platforms that can't pexpect should explode usefully
         # here. (Without this, the pexpect import throws an inner
         # ImportException trying to 'import pty' which is unavailable on
