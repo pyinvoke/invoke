@@ -34,6 +34,17 @@ def _run(returns=None, **kwargs):
     return run("whatever", **kwargs)
 
 
+# Shorthand for mocking Local.run_pty so tests run under non-pty environments
+# don't asplode.
+_patch_run_pty = patch.object(
+    Local, 'run_pty', return_value=('', '', 0, None), func_name='run_pty'
+)
+
+# Shorthand for mocking os.isatty
+_is_tty = patch('os.isatty', return_value=True)
+_not_tty = patch('os.isatty', return_value=False)
+
+
 class Run(Spec):
     "run()"
 
@@ -190,9 +201,8 @@ class Run(Spec):
     class pseudo_terminals:
         # Trick select_method into not falling back when tests run under a
         # non-pty.
-        @patch('os.isatty', return_value=True)
-        # Skip over actual run_pty guts when testing w/o a pty, to avoid error
-        @patch.object(Local, 'run_pty', return_value=('', '', 0, None), func_name='run_pty')
+        @_is_tty
+        @_patch_run_pty
         @trap
         def return_value_indicates_whether_pty_was_used(self, *mocks):
             eq_(run("true").pty, False)
@@ -213,28 +223,27 @@ class Run(Spec):
             expected = '      hello\t\t\r\nworld with spaces\r\n'
             eq_(run(cmd, pty=True, hide='both').stdout, expected)
 
-        @patch('os.isatty', return_value=False)
+        @_not_tty
         @patch('tty.tcgetattr', side_effect=termios.error)
         @trap
         def pty_falls_back_to_off_if_True_and_not_isatty(self, *mocks):
             # "does not kaboom" test :x
             run("true", pty=True)
 
-        @patch('os.isatty', return_value=False)
+        @_not_tty
         @trap
         def fallback_affects_result_pty_value(self, *mocks):
             eq_(run("true", pty=True).pty, False)
 
-        @patch('os.isatty', return_value=False)
-        @patch.object(Local, 'run_pty', return_value=('', '', 0, None))
+        @_not_tty
+        @_patch_run_pty
         def fallback_can_be_overridden(self, run_pty, isatty):
             run("true", pty=True, fallback=False)
             assert run_pty.called
 
         # Force our test for pty-ness to fail
-        @patch('os.isatty', return_value=False)
-        # Also force run_pty to appear to run normally instead of exploding
-        @patch.object(Local, 'run_pty', return_value=('', '', 0, None), func_name='run_pty')
+        @_not_tty
+        @_patch_run_pty
         def overridden_fallback_affects_result_pty_value(self, *mocks):
             eq_(run("true", pty=True, fallback=False).pty, True)
 
