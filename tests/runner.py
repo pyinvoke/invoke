@@ -193,7 +193,7 @@ class Run(Spec):
         @patch('os.isatty', return_value=True)
         # Skip over actual run_pty guts when testing w/o a pty, to avoid error
         @patch.object(Local, 'run_pty', return_value=('', '', 0, None), func_name='run_pty')
-        @patch('sys.stderr', spec=sys.stderr) # to hide warning
+        @trap
         def return_value_indicates_whether_pty_was_used(self, *mocks):
             eq_(run("true").pty, False)
             if not WINDOWS:
@@ -215,13 +215,13 @@ class Run(Spec):
 
         @patch('os.isatty', return_value=False)
         @patch('tty.tcgetattr', side_effect=termios.error)
-        @patch('sys.stderr', spec=sys.stderr) # to hide warning
+        @trap
         def pty_falls_back_to_off_if_True_and_not_isatty(self, *mocks):
             # "does not kaboom" test :x
             run("true", pty=True)
 
         @patch('os.isatty', return_value=False)
-        @patch('sys.stderr', spec=sys.stderr) # to hide warning
+        @trap
         def fallback_affects_result_pty_value(self, *mocks):
             eq_(run("true", pty=True).pty, False)
 
