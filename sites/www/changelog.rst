@@ -2,6 +2,19 @@
 Changelog
 =========
 
+* :support:`-` Reorganize `~invoke.runner.Runner`, `~invoke.runner.Local` and
+  `~invoke.runner.run` for improved distribution of responsibilities &
+  downstream subclassing.
+
+  .. warning::
+    This includes backwards incompatible changes to the API signature of most
+    members of the `invoke.runner` module, including `~invoke.runner.run`.
+    (However, in the case of `~invoke.runner.run`, the changes are mostly in
+    the later, optional keyword arguments.)
+
+* :feature:`219` Fall back to non-PTY command execution in situations where
+  ``pty=True`` but no PTY appears present. See `~invoke.runner.Runner.run` for
+  details.
 * :support:`212` Implement basic linting support using ``flake8``, and apply
   formatting changes to satisfy said linting. Thanks to Collin Anderson for the
   patch.

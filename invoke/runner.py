@@ -28,22 +28,116 @@ def normalize_hide(val):
 
 class Runner(object):
     """
-    Abstract core command-running API.
+    Partially-abstract core command-running API.
 
-    Actual command runners should subclass & implement the following:
+    Actual command runners should subclass & implement some or all of the
+    following:
 
-    * ``run``: Command execution hooking directly into the subprocess'
+    * ``run``: Primary API call which handles command echo output, delegation
+      of actual execution to `run_direct` or `run_pty`, and returning a useful
+      `Result` object.
+
+      .. note::
+        This method should not be overridden in subclasses without an excellent
+        reason, as it hosts most of the high level logic.
+
+    * ``run_direct``: Command execution hooking directly into the subprocess'
       stdout/stderr pipes and returning their eventual values as distinct
-      strings. Specifically, have a signature of ``def run(self, command, warn,
-      hide):`` (see `.runner.run` for semantics of these) and return a 4-tuple
-      of ``(stdout, stderr, exitcode, exception)``.
+      strings. Specifically, have a signature of ``def run_direct(self,
+      command, warn, hide):`` (see `run` for semantics of these) and return a
+      4-tuple of ``(stdout, stderr, exitcode, exception)``.
     * ``run_pty``: Execution utilizing a pseudo-terminal, which is then
       expected to only return a useful stdout (with stderr usually empty.) Has
       same signature and return value as ``run``.
+    * ``select_method``: Takes ``pty`` and ``fallback`` kwargs and returns a
+      local method appropriate for actual execution, depending on those kwargs
+      and environmental cues/limitations.
 
-    For an implementation example, see the source code for `.Local`.
+      The default implementation of ``select_method`` simply looks at the
+      ``pty`` kwarg and delegates to ``run_direct`` if it is ``False``, and
+      ``run_pty`` if ``True``.
+
+      Some implementation subclasses (notably `Local`) fall back from PTY
+      execution to non-PTY execution in some situations; the ``fallback`` kwarg
+      allows users to override this behavior.
+
+    For a full implementation example, see the source code for `.Local`.
     """
-    def run(self, command, warn, hide):
+    def run(
+        self,
+        command,
+        warn=False,
+        hide=None,
+        pty=False,
+        echo=False,
+        encoding=None,
+        fallback=True,
+    ):
+        """
+        Execute ``command``, returning a `Result` object.
+
+        A `.Failure` exception (containing a reference to the `Result` that
+        would otherwise have been returned) is raised if the command terminates
+        with a nonzero return code. This behavior may be disabled by setting
+        ``warn=True``.
+
+        To disable copying the command's stdout and/or stderr to the
+        controlling terminal, specify ``hide='out'`` (or ``'stdout'``),
+        ``hide='err'`` (or ``'stderr'``) or ``hide='both'`` (or ``True``). The
+        default value is ``None``, meaning to print everything; ``False`` will
+        also disable hiding.
+
+        .. note::
+            Stdout and stderr are always captured and stored in the ``Result``
+            object, regardless of ``hide``'s value.
+
+        By default, ``run`` connects directly to the invoked process and reads
+        its stdout/stderr streams. Some programs will buffer differently (or
+        even behave differently) in this situation compared to using an actual
+        terminal or pty. To use a pty, specify ``pty=True``.
+
+        .. warning::
+            Due to their nature, ptys have a single output stream, so the
+            ability to tell stdout apart from stderr is **not possible** when
+            ``pty=True``. As such, all output will appear on your local stdout
+            and be captured into the ``stdout`` result attribute. Stderr and
+            ``stderr`` will always be empty when ``pty=True``.
+
+        `.run` does not echo the commands it runs by default; to make it do so,
+        say ``echo=True``.
+
+        The subprocess output is assumed to use encoding ``encoding`` (which
+        defaults to ``locale.getpreferredencoding(False)``).
+        """
+        hide = normalize_hide(hide)
+        exception = False
+        if echo:
+            print("\033[1;37m%s\033[0m" % command)
+        func = self.select_method(pty=pty, fallback=fallback)
+        stdout, stderr, exited, exception = func(
+            command=command,
+            warn=warn,
+            hide=hide,
+            encoding=encoding
+        )
+        # TODO: make this test less gross?
+        used_pty = func.func_name == 'run_pty'
+        result = Result(
+            stdout=stdout,
+            stderr=stderr,
+            exited=exited,
+            pty=used_pty,
+            exception=exception,
+        )
+        if not (result or warn):
+            raise Failure(result)
+        return result
+
+    def select_method(self, pty, fallback):
+        # NOTE: fallback not used: no falling back implemented by default.
+        return getattr(self, 'run_pty' if pty else 'run_direct')
+
+    def run_direct(self, command, warn, hide):
         raise NotImplementedError
 
     def run_pty(self, command, warn, hide):
@@ -53,8 +147,30 @@ class Runner(object):
 class Local(Runner):
     """
     Execute a command on the local system in a subprocess.
+
+    .. note::
+        When Invoke itself is executed without a valid PTY (i.e.
+        ``os.isatty(sys.stdin)`` is ``False``), it's not possible to present a
+        handle on our PTY to local subprocesses. In such situations, `Local`
+        will fallback to behaving as if ``pty=False``, on the theory that
+        degraded execution is better than none at all, as well as printing a
+        warning to stderr.
+
+        To disable this behavior (i.e. if ``os.isatty`` is causing false
+        negatives in your environment), say ``fallback=False``.
     """
-    def run(self, command, warn, hide, encoding=None):
+    def select_method(self, pty=False, fallback=True):
+        if pty:
+            if not os.isatty(sys.stdin.fileno()) and fallback:
+                sys.stderr.write("WARNING: stdin is not a pty; falling back to non-pty execution!\n")
+                func = self.run_direct
+            else:
+                func = self.run_pty
+        else:
+            func = self.run_direct
+        return func
+
+    def run_direct(self, command, warn, hide, encoding=None):
         process = Popen(
             command,
             shell=True,
@@ -144,97 +260,6 @@ class Local(Runner):
         return "".join(out), "", p.exitstatus, exception
 
 
-def run(
-    command,
-    warn=False,
-    hide=None,
-    pty=False,
-    echo=False,
-    encoding=None,
-    runner=Local,
-    fallback=True,
-):
-    """
-    Execute ``command`` (via ``runner``) returning a `Result` object.
-
-    A `.Failure` exception (containing a reference to the `Result` that would
-    otherwise have been returned) is raised if the command terminates with a
-    nonzero return code. This behavior may be disabled by setting
-    ``warn=True``.
-
-    To disable copying the command's stdout and/or stderr to the controlling
-    terminal, specify ``hide='out'`` (or ``'stdout'``), ``hide='err'`` (or
-    ``'stderr'``) or ``hide='both'`` (or ``True``). The default value is
-    ``None``, meaning to print everything; ``False`` will also disable hiding.
-
-    .. note::
-        Stdout and stderr are always captured and stored in the ``Result``
-        object, regardless of ``hide``'s value.
-
-    By default, ``run`` connects directly to the invoked process and reads
-    its stdout/stderr streams. Some programs will buffer differently (or even
-    behave differently) in this situation compared to using an actual terminal
-    or pty. To use a pty, specify ``pty=True``.
-
-    .. warning::
-        Due to their nature, ptys have a single output stream, so the ability
-        to tell stdout apart from stderr is **not possible** when ``pty=True``.
-        As such, all output will appear on your local stdout and be captured
-        into the ``stdout`` result attribute. Stderr and ``stderr`` will always
-        be empty when ``pty=True``.
-
-    .. note::
-        When Invoke itself is executed without a valid PTY (i.e.
-        ``os.isatty(sys.stdin)`` is ``False``), it's not possible to present a
-        handle on our PTY to the subprocess. In such situations, `run` will
-        fallback to behaving as if ``pty=False``, on the theory that degraded
-        execution is better than none at all, as well as printing a warning to
-        stderr.
-
-        To disable this behavior (i.e. if ``os.isatty`` is causing false
-        negatives in your environment), say ``fallback=False``.
-
-    `.run` does not echo the commands it runs by default; to make it do so, say
-    ``echo=True``.
-
-    The ``runner`` argument allows overriding the actual execution mechanism,
-    and must be a class exposing two methods, ``run`` and ``run_pty``, whose
-    signatures must match ``function(command, warn, hide)`` - all of which
-    match the above descriptions, re: types and default values.
-
-    These methods must return a tuple of ``(stdout, stderr, exited,
-    exception)``, where ``stdout`` and ``stderr`` are strings, ``exited`` is
-    an integer, and ``exception`` is an exception object or ``None``.
-
-    The subprocess output is assumed to use encoding ``encoding`` (which
-    defaults to ``locale.getpreferredencoding(False)``).
-    """
-    hide = normalize_hide(hide)
-    exception = False
-    if echo:
-        print("\033[1;37m%s\033[0m" % command)
-    runner_ = runner()
-    if pty:
-        if not os.isatty(sys.stdin.fileno()) and fallback:
-            sys.stderr.write("WARNING: stdin is not a pty; falling back to non-pty execution!\n")
-            func = runner_.run
-        else:
-            func = runner_.run_pty
-    else:
-        func = runner_.run
-    stdout, stderr, exited, exception = func(command, warn, hide, encoding)
-    result = Result(
-        stdout=stdout,
-        stderr=stderr,
-        exited=exited,
-        pty=func == runner_.run_pty,
-        exception=exception,
-    )
-    if not (result or warn):
-        raise Failure(result)
-    return result
-
-
 class Result(object):
     """
     A container for information about the result of a command execution.
@@ -290,3 +315,17 @@ class Result(object):
     @property
     def failed(self):
         return not self.ok
+
+
+def run(command, **kwargs):
+    """
+    Invoke ``command`` in a subprocess and return a `Result` object.
+
+    This function is simply a convenience wrapper for creating a `Runner`
+    subclass (default: `Local`) and calling its `~.Runner.run` method. Please
+    see `.Runner.run` for details on all behaviors & arguments, sans the below.
+
+    :param runner: Class to use for command execution. Default: `Local`.
+    """
+    runner = kwargs.pop('runner', Local)()
+    return runner.run(command, **kwargs)

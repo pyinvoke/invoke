@@ -19,7 +19,7 @@ def _run(returns=None, **kwargs):
     """
     Create a Runner w/ retval reflecting ``returns`` & call ``run(**kwargs)``.
     """
-    # Set up return value tuple for Runner.run
+    # Set up return value tuple for Runner.run_direct
     returns = returns or {}
     returns.setdefault('exited', 0)
     value = map(
@@ -27,7 +27,7 @@ def _run(returns=None, **kwargs):
         ('stdout', 'stderr', 'exited', 'exception'),
     )
     class MockRunner(Runner):
-        def run(self, command, warn, hide, encoding):
+        def run_direct(self, command, **kwargs):
             return value
     # Ensure top level run() uses that runner, provide dummy command.
     kwargs['runner'] = MockRunner
