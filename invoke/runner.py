@@ -151,7 +151,8 @@ def run(
     pty=False,
     echo=False,
     encoding=None,
-    runner=Local
+    runner=Local,
+    fallback=True,
 ):
     """
     Execute ``command`` (via ``runner``) returning a `Result` object.
@@ -182,6 +183,17 @@ def run(
         into the ``stdout`` result attribute. Stderr and ``stderr`` will always
         be empty when ``pty=True``.
 
+    .. note::
+        When Invoke itself is executed without a valid PTY (i.e.
+        ``os.isatty(sys.stdin)`` is ``False``), it's not possible to present a
+        handle on our PTY to the subprocess. In such situations, `run` will
+        fallback to behaving as if ``pty=False``, on the theory that degraded
+        execution is better than none at all, as well as printing a warning to
+        stderr.
+
+        To disable this behavior (i.e. if ``os.isatty`` is causing false
+        negatives in your environment), say ``fallback=False``.
+
     `.run` does not echo the commands it runs by default; to make it do so, say
     ``echo=True``.
 
@@ -202,13 +214,20 @@ def run(
     if echo:
         print("\033[1;37m%s\033[0m" % command)
     runner_ = runner()
-    func = runner_.run_pty if pty else runner_.run
+    if pty:
+        if not os.isatty(sys.stdin.fileno()) and fallback:
+            sys.stderr.write("WARNING: stdin is not a pty; falling back to non-pty execution!\n")
+            func = runner_.run
+        else:
+            func = runner_.run_pty
+    else:
+        func = runner_.run
     stdout, stderr, exited, exception = func(command, warn, hide, encoding)
     result = Result(
         stdout=stdout,
         stderr=stderr,
         exited=exited,
-        pty=pty,
+        pty=func == runner_.run_pty,
         exception=exception,
     )
     if not (result or warn):
