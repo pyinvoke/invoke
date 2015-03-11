@@ -226,6 +226,7 @@ class Run(Spec):
             assert run_pty.called
 
         @patch('os.isatty', return_value=False)
+        @patch.object(Local, 'run_pty', return_value=('', '', 0, None))
         def overridden_fallback_affects_result_pty_value(self, *mocks):
             eq_(run("true", pty=True, fallback=False).pty, True)
 
