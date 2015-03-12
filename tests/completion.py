@@ -1,7 +1,5 @@
 import sys
 
-from nose.tools import ok_
-
 from _utils import (
     _output_eq, IntegrationSpec, _dispatch, trap, expect_exit, assert_contains
 )
