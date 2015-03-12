@@ -5,6 +5,13 @@ from _utils import (
 )
 
 
+@trap
+def _complete(invocation):
+    with expect_exit(0):
+        _dispatch(invocation)
+    return sys.stdout.getvalue()
+
+
 class ShellCompletion(IntegrationSpec):
     """
     Shell tab-completion behavior
@@ -16,11 +23,8 @@ class ShellCompletion(IntegrationSpec):
     def no_input_with_no_tasks_yields_empty_response(self):
         _output_eq('-c empty --complete', "")
 
-    @trap
     def top_level_with_dash_means_core_options(self):
-        with expect_exit(0):
-            _dispatch('inv --complete -- -')
-        output = sys.stdout.getvalue()
+        output = _complete('inv --complete -- -')
         # No point mirroring all core options, just spot check a few
         for flag in ('--no-dedupe', '-d', '--debug', '-V', '--version'):
             assert_contains(output, "{0}\n".format(flag))
