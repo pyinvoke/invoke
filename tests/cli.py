@@ -88,8 +88,9 @@ class CLI(IntegrationSpec):
 Usage: inv[oke] [--core-opts] task1 [--task1-opts] ... taskN [--taskN-opts]
 
 Core options:
+  --complete                       Print tab-completion candidates for given
+                                   parse remainder.
   --no-dedupe                      Disable task deduplication.
-  --tasks                          List tasks in a computer-readable fashion.
   -c STRING, --collection=STRING   Specify collection name to load.
   -d, --debug                      Enable debug output.
   -e, --echo                       Echo executed commands before running.
