@@ -1,6 +1,8 @@
 import os
+import re
 import sys
 from contextlib import contextmanager
+from functools import partial
 
 from mock import patch
 from spec import trap, Spec, eq_, skip
@@ -98,3 +100,16 @@ def run_in_configs():
     with patch('invoke.context.run') as run:
         with cd('configs'):
             yield run
+
+
+def _assert_contains(haystack, needle, invert):
+    matched = re.search(needle, haystack, re.M)
+    if (invert and matched) or (not invert and not matched):
+        raise AssertionError("r'%s' %sfound in '%s'" % (
+            needle,
+            "" if invert else "not ",
+            haystack
+        ))
+
+assert_contains = partial(_assert_contains, invert=False)
+assert_not_contains = partial(_assert_contains, invert=True)
