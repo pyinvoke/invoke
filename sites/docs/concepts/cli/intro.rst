@@ -139,7 +139,9 @@ takes an optional value:
 * When that token has the same name as another task.
 
 In any of these situations, Invoke's parser will `refuse the temptation to
-guess <http://www.python.org/dev/peps/pep-0020/>`_ and raise an error.
+guess
+<http://zen-of-python.info/in-the-face-of-ambiguity-refuse-the-temptation-to-guess.html#12>`_
+and raise an error.
 
 Dashes vs underscores in flag names
 -----------------------------------
