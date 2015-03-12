@@ -2,10 +2,10 @@
 Changelog
 =========
 
-* :feature:`104` Add core CLI flags to support shell tab completion scripts
-  (:option:`--tasks` and :option:`--flags`) and also bake in some 'blessed'
-  such scripts for bash (3 and 4) and zsh. Thanks to Ivan Malison and Andrew
-  Roberts for providing discussion & early patchsets.
+* :feature:`104` Add core CLI flag :option:`--complete` to support shell tab
+  completion scripts, and add some 'blessed' such scripts for bash (3 and 4)
+  and zsh. Thanks to Ivan Malison and Andrew Roberts for providing discussion &
+  early patchsets.
 * :support:`-` Reorganize `~invoke.runner.Runner`, `~invoke.runner.Local` and
   `~invoke.runner.run` for improved distribution of responsibilities &
   downstream subclassing.
