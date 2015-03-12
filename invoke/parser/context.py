@@ -1,3 +1,5 @@
+import itertools
+
 from ..vendor.lexicon import Lexicon
 
 from .argument import Argument
@@ -148,6 +150,10 @@ class ParserContext(object):
             ret[arg.name] = arg.value
         return ret
 
+    def names_for(self, flag):
+        # TODO: should probably be a method on Lexicon/AliasDict
+        return list(set([flag] + self.flags.aliases_of(flag)))
+
     def help_for(self, flag):
         """
         Return 2-tuple of ``(flag-spec, help-string)`` for given ``flag``.
@@ -156,15 +162,13 @@ class ParserContext(object):
         if flag not in self.flags:
             raise ValueError("%r is not a valid flag for this context! Valid flags are: %r" % (flag, self.flags.keys()))
         arg = self.flags[flag]
-        # Show all potential names for this flag in the output
-        names = list(set([flag] + self.flags.aliases_of(flag)))
         # Determine expected value type, if any
         value = {
             str: 'STRING',
         }.get(arg.kind)
         # Format & go
         full_names = []
-        for name in names:
+        for name in self.names_for(flag):
             if value:
                 # Short flags are -f VAL, long are --foo=VAL
                 # When optional, also, -f [VAL] and --foo[=VAL]
@@ -218,3 +222,13 @@ class ParserContext(object):
             lambda x: self.help_for(to_flag(x.name)),
             sorted(self.flags.values(), key=flag_key)
         ))
+
+    def flag_names(self):
+        """
+        Similar to `help_tuples` but returns flag names only, no helpstrs.
+
+        Specifically, all flag names, flattened, in rough order.
+        """
+        flags = sorted(self.flags.values(), key=flag_key)
+        names = (self.names_for(to_flag(x.name)) for x in flags)
+        return tuple(itertools.chain.from_iterable(names))
