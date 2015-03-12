@@ -273,6 +273,13 @@ def parse(argv, collection=None, version=None):
 
     # Print completion helpers if necessary
     if args.complete.value:
+        # Dash: figure out context & print valid argument names
+        if core.remainder == '-':
+            pass
+        # No dash: print task names
+        else:
+            for name in sort_names(collection.task_names):
+                print(name)
         raise Exit
 
     # Print help if:
