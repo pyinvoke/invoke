@@ -2,7 +2,7 @@ import os
 import re
 import sys
 from contextlib import contextmanager
-from functools import partial
+from functools import partial, wraps
 
 from mock import patch
 from spec import trap, Spec, eq_, skip
@@ -14,10 +14,11 @@ support = os.path.join(os.path.dirname(__file__), '_support')
 
 
 def skip_if_windows(fn):
-    def wrapper():
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
         if WINDOWS:
             skip()
-        return fn()
+        return fn(*args, **kwargs)
     return wrapper
 
 
