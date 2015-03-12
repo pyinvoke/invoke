@@ -98,6 +98,12 @@ def parse(argv, collection=None, version=None):
     # Initial/core parsing (core options can affect the rest of the parsing)
     initial_context = ParserContext(args=(
         Argument(
+            names=('complete',),
+            kind=bool,
+            default=False,
+            help="Print tab-completion candidates for given parse remainder.",
+        ),
+        Argument(
             names=('no-dedupe',),
             kind=bool,
             default=False,
@@ -147,12 +153,6 @@ def parse(argv, collection=None, version=None):
         Argument(
             names=('root', 'r'),
             help="Change root directory used for finding task modules."
-        ),
-        Argument(
-            names=('tasks',),
-            kind=bool,
-            default=False,
-            help="List tasks in a computer-readable fashion.",
         ),
         Argument(
             names=('version', 'V'),
@@ -271,10 +271,8 @@ def parse(argv, collection=None, version=None):
         print_columns(pairs)
         raise Exit
 
-    # Print shorthand form of task list if necessary
-    if args.tasks.value:
-        for name in sort_names(collection.task_names):
-            print(name)
+    # Print completion helpers if necessary
+    if args.complete.value:
         raise Exit
 
     # Print help if:
