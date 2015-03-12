@@ -3,14 +3,14 @@ from _utils import _output_eq, IntegrationSpec
 
 class ShellCompletion(IntegrationSpec):
     """
-    Shell tab-completion related flags
+    Shell tab-completion behavior
     """
 
-    class tasks:
-        "--tasks"
+    def no_input_means_just_task_names(self):
+        _output_eq('-c simple_ns_list --complete', "z_toplevel\na.b.subtask\n")
 
-        def tasks_flag_prints_all_tasks(self):
-            _output_eq('-c simple_ns_list --tasks', "z_toplevel\na.b.subtask\n")
+    def no_input_with_no_tasks_yields_empty_response(self):
+        _output_eq('-c empty --complete', "")
 
-        def empty_tasks_have_empty_output(self):
-            _output_eq('-c empty --tasks', "")
+    def top_level_with_dash_means_core_options(self):
+        _output_eq('--complete -- -', "--lol\n--wut")
