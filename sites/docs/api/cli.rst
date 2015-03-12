@@ -23,6 +23,34 @@ parameterization.
 
 The core options (which must be given before any task names) are as follows:
 
+.. option:: --complete
+
+    Print (line-separated) valid tab-completion options for an Invoke command
+    line given as the 'remainder' (i.e. after a `--`). Used for building shell
+    completion scripts.
+
+    For example, when the local tasks tree contains tasks named ``foo`` and
+    ``bar``, and when ``foo`` takes flags ``--foo-arg`` and ``--foo-arg-2``,
+    you might use it like this::
+
+        # Empty input: just task names
+        $ inv --complete --
+        foo
+        bar
+
+        # Input not ending with a dash: task names still
+        $ inv --complete -- foo --foo-arg
+        foo
+        bar
+
+        # Input ending with a dash: current context's flag names
+        $ inv --complete -- foo -
+        --foo-arg
+        --foo-arg-2
+
+    For more details on how to use this option, see the bundled completion
+    scripts stored in ``completion/`` in the source distribution.
+
 .. option:: --no-dedupe
 
     Disable task deduplication.
@@ -64,18 +92,6 @@ The core options (which must be given before any task names) are as follows:
 .. option:: -r STRING, --root=STRING
 
     Change root directory used for finding task modules.
-
-.. option:: --tasks
-
-    .. TODO: make this a help-like optional-argument flag. No args = full list,
-    arg = limit to specific namespace.
-
-    Short, computer-readable task name list displaying all task names/paths in
-    a newline-separated list with no indentation or other descriptive info.
-    Useful for building shell completion scripts or other automation.
-
-    .. seealso::
-        For a human-readable task listing, see :option:`--list <-l>`.
 
 .. option:: -V, --version
 
