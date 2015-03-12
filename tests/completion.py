@@ -2,7 +2,9 @@ import sys
 
 from nose.tools import ok_
 
-from _utils import _output_eq, IntegrationSpec, _dispatch, trap, expect_exit
+from _utils import (
+    _output_eq, IntegrationSpec, _dispatch, trap, expect_exit, assert_contains
+)
 
 
 class ShellCompletion(IntegrationSpec):
@@ -23,4 +25,4 @@ class ShellCompletion(IntegrationSpec):
         output = sys.stdout.getvalue()
         # No point mirroring all core options, just spot check a few
         for flag in ('--no-dedupe', '-d', '--debug', '-V', '--version'):
-            ok_(flag in output)
+            assert_contains(output, "{0}\n".format(flag))
