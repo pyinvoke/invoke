@@ -26,8 +26,8 @@ The core options (which must be given before any task names) are as follows:
 .. option:: --complete
 
     Print (line-separated) valid tab-completion options for an Invoke command
-    line given as the 'remainder' (i.e. after a `--`). Used for building shell
-    completion scripts.
+    line given as the 'remainder' (i.e. after a ``--``). Used for building
+    shell completion scripts.
 
     For example, when the local tasks tree contains tasks named ``foo`` and
     ``bar``, and when ``foo`` takes flags ``--foo-arg`` and ``--foo-arg-2``,
