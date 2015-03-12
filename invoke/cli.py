@@ -275,7 +275,9 @@ def parse(argv, collection=None, version=None):
     if args.complete.value:
         # Dash: figure out context & print valid argument names
         if core.remainder == '-':
-            pass
+            # TODO: actually work for tasks, not core
+            for flag in initial_context.flag_names():
+                print(flag)
         # No dash: print task names
         else:
             for name in sort_names(collection.task_names):
