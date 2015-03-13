@@ -8,7 +8,6 @@ _complete_invoke() {
     # program name).
     # We hand it to Invoke so it can figure out the current context: spit back
     # core options, task names, the current task's options, or some combo.
-    echo "COMP_WORDS: '${COMP_WORDS[*]}'"
     candidates=`invoke --complete -- ${COMP_WORDS[*]}`
 
     # `compgen -W` takes list of valid options & a partial word & spits back
@@ -21,7 +20,6 @@ _complete_invoke() {
     #
     # COMPREPLY is the list of valid completions handed back to `complete`.
     COMPREPLY=( $(compgen -W "${candidates}" -- $2) )
-    echo "COMPREPLY: '${COMPREPLY[*]}'"
 }
 
 
