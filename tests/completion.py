@@ -7,9 +7,12 @@ from _utils import (
 
 
 @trap
-def _complete(invocation):
+def _complete(invocation, collection=None):
+    colstr = ""
+    if collection:
+        colstr = "-c {0}".format(collection)
     with expect_exit(0):
-        _dispatch(invocation)
+        _dispatch("inv --complete {1} -- inv {0}".format(invocation, colstr))
     return sys.stdout.getvalue()
 
 
@@ -25,12 +28,12 @@ class ShellCompletion(IntegrationSpec):
         _output_eq('-c empty --complete', "")
 
     def top_level_with_dash_means_core_options(self):
-        output = _complete('inv --complete -- inv -')
+        output = _complete('-')
         # No point mirroring all core options, just spot check a few
         for flag in ('--no-dedupe', '-d', '--debug', '-V', '--version'):
             assert_contains(output, "{0}\n".format(flag))
 
     def bare_double_dash_shows_only_long_core_options(self):
-        output = _complete('inv --complete -- inv --')
+        output = _complete('--')
         assert_contains(output, '--no-dedupe')
         assert_not_contains(output, '-V')
