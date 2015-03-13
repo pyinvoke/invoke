@@ -111,8 +111,10 @@ def complete(core, parser, initial_context, collection):
             debug("Not found, completing with flag names")
             # Long flags - partial or just the dashes - complete w/ long flags
             if tail.startswith('--'):
-                # TODO: make vvv a property
-                for name in [x for x in context.flag_names() if x.startswith('--')]:
+                for name in filter(
+                    lambda x: x.startswith('--'),
+                    context.flag_names()
+                ):
                     print(name)
             # Just a dash, completes with all flags
             elif tail == '-':
