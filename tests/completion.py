@@ -45,3 +45,12 @@ class ShellCompletion(IntegrationSpec):
     def task_name_completion_includes_tasks_already_seen(self):
         # Because it's valid to call the same task >1 time.
         assert_contains(_complete('print_foo', 'integration'), 'print_foo')
+
+    def per_task_flags_complete_with_single_dashes(self):
+        for flag in ('--name', '-n'):
+            assert_contains(_complete('print_name -', 'integration'), flag)
+
+    def per_task_flags_complete_with_double_dashes(self):
+        output = _complete('print_name --', 'integration')
+        assert_contains(output, '--name')
+        assert_not_contains(output, '-n')
