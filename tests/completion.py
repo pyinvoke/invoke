@@ -75,27 +75,15 @@ class ShellCompletion(IntegrationSpec):
     def per_task_bool_flags_have_task_name_completion(self):
         assert_contains(_complete('basic_arg --arg', 'foo'), 'foo')
 
-    def core_partial_valid_flags_print_all_flags(self):
-        # Is not just --echo, because we delegate substring completion to the
-        # shell completion builtins.
+    def core_partial_or_invalid_flags_print_all_flags(self):
         for flag in ('--echo', '--complete'):
-            assert_contains(_complete('--e'), flag)
+            for given in ('--e', '--nope'):
+                assert_contains(_complete(given), flag)
 
-    def per_task_partial_valid_flags_print_all_flags(self):
-        for flag in ('--arg1', '--arg2'):
-            assert_contains(_complete('multiple_args --ar', 'foo'), flag)
-
-    def core_unknown_flags_print_all_flags(self):
-        for flag in ('--echo', '--complete'):
-            assert_contains(_complete('--nope'), flag)
-        for flag in ('--echo', '-e'):
-            # Use a kinda-invalid char here to stand in for "something there is
-            # no flag for presently". This will change over time so can't just
-            # choose a currently-unused one. MEH.
-            assert_contains(_complete('-@'), flag)
-
-    def per_task_unknown_flags_print_all_flags(self):
-        for flag in ('--arg1', '--arg2'):
-            assert_contains(_complete('multiple_args --nope', 'foo'), flag)
-        for flag in ('--arg1', '-a'):
-            assert_contains(_complete('multiple_args -n', 'foo'), flag)
+    def per_task_partial_or_invalid_flags_print_all_flags(self):
+        for flag in ('--arg1', '--otherarg'):
+            for given in ('--ar', '--nope'):
+                assert_contains(
+                    _complete('multiple_args {0}'.format(given), 'foo'),
+                    flag
+                )

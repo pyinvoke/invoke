@@ -11,5 +11,5 @@ def basic_arg(arg='val'):
 
 
 @task
-def multiple_args(arg1='val1', arg2='val2'):
+def multiple_args(arg1='val1', otherarg='val2'):
     pass
