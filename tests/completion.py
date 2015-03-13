@@ -2,7 +2,7 @@ import sys
 
 from _utils import (
     _output_eq, IntegrationSpec, _dispatch, trap, expect_exit, assert_contains,
-    assert_not_contains, skip
+    assert_not_contains, skip, eq_
 )
 
 
@@ -64,7 +64,13 @@ class ShellCompletion(IntegrationSpec):
 
     def core_flags_taking_values_have_no_completion_output(self):
         # So the shell's default completion is available.
-        skip()
+        eq_(_complete('-f'), '')
 
     def per_task_flags_taking_values_have_no_completion_output(self):
-        skip()
+        eq_(_complete('--arg', 'foo'), '')
+
+    def core_bool_flags_have_task_name_completion(self):
+        assert_contains(_complete('--echo', 'foo'), 'foo')
+
+    def per_task_bool_flags_have_task_name_completion(self):
+        assert_contains(_complete('basic_arg --arg', 'foo'), 'foo')

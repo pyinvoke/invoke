@@ -299,7 +299,16 @@ def parse(argv, collection=None, version=None):
             for flag in context.flag_names():
                 if tail == '-' or (tail == '--' and flag.startswith('--')):
                     print(flag)
-        # No dash (or empty): always print task names
+        # Flags known to take values: print nothing, to let default (usually
+        # file) completion occur.
+        elif tokens and tokens[-1].startswith('-'):
+            # Try parsing
+            # check argument from last context
+            # if valid & takes a value, just pass
+            # if valid & does not take a value, print tasks
+            # if not valid, either print nothing anyway, or print tasks?
+            pass
+        # None of the above (empty, task name, etc): just task names.
         else:
             for name in sort_names(collection.task_names):
                 print(name)
