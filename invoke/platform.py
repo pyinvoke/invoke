@@ -1,7 +1,8 @@
 """
 Platform-specific code lives here.
 
-This is its own module to abstract away what would otherwise be distracting logic-flow interruptions.
+This is its own module to abstract away what would otherwise be distracting
+logic-flow interruptions.
 """
 
 import sys

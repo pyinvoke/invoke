@@ -110,7 +110,7 @@ class Parser_(Spec):
             r = Parser((c,)).parse_argv(['mytask', '--no-myarg'])
             eq_(r[0].args['myarg'].value, False)
 
-        def arguments_which_take_values_get_defaults_overridden_correctly(self):
+        def arguments_which_take_values_get_defaults_overridden_correctly(self): # noqa
             args = (Argument('arg', kind=str), Argument('arg2', kind=int))
             c = Context('mytask', args=args)
             argv = ['mytask', '--arg', 'myval', '--arg2', '25']
@@ -130,7 +130,9 @@ class Parser_(Spec):
 
         def returns_remainder(self):
             "returns -- style remainder string chunk"
-            r = Parser((Context('foo'),)).parse_argv(['foo', '--', 'bar', 'biz'])
+            r = Parser((Context('foo'),)).parse_argv(
+                ['foo', '--', 'bar', 'biz']
+            )
             eq_(r.remainder, "bar biz")
 
         def clones_initial_context(self):
@@ -335,7 +337,9 @@ class Parser_(Spec):
 
         def task_args_work_correctly(self):
             task1 = Context('mytask', args=(Argument('meh'),))
-            result = Parser((task1,)).parse_argv(['mytask', '--meh', 'mehval1', 'mytask', '--meh', 'mehval2'])
+            result = Parser((task1,)).parse_argv(
+                ['mytask', '--meh', 'mehval1', 'mytask', '--meh', 'mehval2']
+            )
             eq_(result[0].args.meh.value, 'mehval1')
             eq_(result[1].args.meh.value, 'mehval2')
 

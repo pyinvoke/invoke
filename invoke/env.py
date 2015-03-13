@@ -1,7 +1,8 @@
 """
 Environment variable configuration loading class.
 
-Using a class here doesn't really model anything but makes state passing (in a situation requiring it) more convenient.
+Using a class here doesn't really model anything but makes state passing (in a
+situation requiring it) more convenient.
 
 This module is currently considered private/an implementation detail and should
 not be included in the Sphinx API documentation.
@@ -32,7 +33,8 @@ class Environment(object):
         """
         # Obtain allowed env var -> existing value map
         env_vars = self._crawl(key_path=[], env_vars={})
-        debug("Scanning for env vars according to prefix: {1!r}, mapping: {0!r}".format(env_vars, self._prefix))
+        m = "Scanning for env vars according to prefix: {1!r}, mapping: {0!r}"
+        debug(m.format(env_vars, self._prefix))
         # Check for actual env var (honoring prefix) and try to set
         for env_var, key_path in six.iteritems(env_vars):
             real_var = (self._prefix or "") + env_var

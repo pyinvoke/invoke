@@ -64,7 +64,7 @@ def print_help(argv, initial_context):
     program_name = os.path.basename(argv[0])
     if program_name == 'invoke' or program_name == 'inv':
         program_name = 'inv[oke]'
-    print("Usage: {0} [--core-opts] task1 [--task1-opts] ... taskN [--taskN-opts]".format(program_name))
+    print("Usage: {0} [--core-opts] task1 [--task1-opts] ... taskN [--taskN-opts]".format(program_name)) # noqa
     print("")
     print("Core options:")
     print_columns(initial_context.help_tuples())
@@ -242,7 +242,7 @@ def parse(argv, collection=None, version=None):
     debug("Parsing initial context (core args)")
     parser = Parser(initial=initial_context, ignore_unknown=True)
     core = parse_gracefully(parser, argv[1:])
-    debug("After core-args pass, leftover argv: %r" % (core.unparsed,))
+    debug("After core-args pass, leftover argv: {0!r}".format(core.unparsed))
     args = core[0].args
 
     # Enable debugging from here on out, if debug flag was given.
@@ -254,7 +254,7 @@ def parse(argv, collection=None, version=None):
         if version:
             print(version)
         else:
-            print("Invoke %s" % __version__)
+            print("Invoke {0}".format(__version__))
         raise Exit
 
     # Core (no value given) --help output
@@ -280,7 +280,7 @@ def parse(argv, collection=None, version=None):
         )
         raise Exit(1)
     parser = Parser(contexts=collection.to_contexts())
-    debug("Parsing tasks against %r" % collection)
+    debug("Parsing tasks against {0!r}".format(collection))
     tasks = parse_gracefully(parser, core.unparsed)
 
     # Per-task help. Use the parser's contexts dict as that's the easiest way
@@ -291,8 +291,8 @@ def parse(argv, collection=None, version=None):
         ctx = parser.contexts[name]
         tuples = ctx.help_tuples()
         docstring = inspect.getdoc(collection[name])
-        header = "Usage: inv[oke] [--core-opts] %s %%s[other tasks here ...]" % name
-        print(header % ("[--options] " if tuples else ""))
+        header = "Usage: inv[oke] [--core-opts] {0} {{0}}[other tasks here ...]".format(name) # noqa
+        print(header.format("[--options] " if tuples else ""))
         print("")
         print("Docstring:")
         if docstring:
@@ -329,7 +329,7 @@ def parse(argv, collection=None, version=None):
             aliases = sort_names(task_names[primary])
             name = primary
             if aliases:
-                name += " (%s)" % ', '.join(aliases)
+                name += " ({0})".format(', '.join(aliases))
             # Add docstring 1st lines
             task = collection[primary]
             help_ = ""
@@ -428,5 +428,5 @@ def dispatch(argv, version=None):
 
 def main():
     # Parse command line
-    debug("Base argv from sys: %r" % (sys.argv[1:],))
+    debug("Base argv from sys: {0!r}".format(sys.argv[1:]))
     dispatch(sys.argv)

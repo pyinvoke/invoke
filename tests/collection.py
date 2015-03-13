@@ -382,7 +382,10 @@ class Collection_(Spec):
             self.c = Collection.from_module(load('explicit_root'))
 
         def returns_all_task_names_including_subtasks(self):
-            eq_(set(self.c.task_names.keys()), set(['top_level', 'sub.sub_task']))
+            eq_(
+                set(self.c.task_names.keys()),
+                set(['top_level', 'sub.sub_task'])
+            )
 
         def includes_aliases_and_defaults_as_values(self):
             names = self.c.task_names

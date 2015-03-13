@@ -227,7 +227,10 @@ class Context_(Spec):
 
         def underscored_args(self):
             c = Context(args=(Argument('i_have_underscores', help='yup'),))
-            eq_(c.help_for('--i-have-underscores'), ('--i-have-underscores=STRING', 'yup'))
+            eq_(
+                c.help_for('--i-have-underscores'),
+                ('--i-have-underscores=STRING', 'yup')
+            )
 
         def true_default_args(self):
             c = Context(args=(Argument('truthy', kind=bool, default=True),))
@@ -282,7 +285,7 @@ class Context_(Spec):
                 ['--longarg', '--otherarg']
             )
 
-        def sorts_heterogenous_help_output_with_longflag_only_options_first(self):
+        def sorts_heterogenous_help_output_with_longflag_only_options_first(self): # noqa
             # When both of the above mix, long-flag-only options come first.
             # E.g.:
             #   --alpha

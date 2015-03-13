@@ -106,7 +106,8 @@ class Task(object):
     def __call__(self, *args, **kwargs):
         # Guard against calling contextualized tasks with no context.
         if self.contextualized and not isinstance(args[0], Context):
-            raise TypeError("Contextualized task expected a Context, got %s instead!" % type(args[0]))
+            err = "Contextualized task expected a Context, got {0} instead!"
+            raise TypeError(err.format(type(args[0])))
         result = self.body(*args, **kwargs)
         self.times_called += 1
         return result
@@ -269,7 +270,9 @@ def task(*args, **kwargs):
     # @task(pre, tasks, here)
     if args:
         if 'pre' in kwargs:
-            raise TypeError("May not give *args and 'pre' kwarg simultaneously!")
+            raise TypeError(
+                "May not give *args and 'pre' kwarg simultaneously!"
+            )
         kwargs['pre'] = args
     # @task(options)
     # TODO: pull in centrally defined defaults here (see Task)
@@ -286,7 +289,7 @@ def task(*args, **kwargs):
     autoprint = kwargs.pop('autoprint', False)
     # Handle unknown kwargs
     if kwargs:
-        kwarg = (" unknown kwargs %r" % (kwargs,)) if kwargs else ""
+        kwarg = (" unknown kwargs {0!r}".format(kwargs)) if kwargs else ""
         raise TypeError("@task was called with" + kwarg)
     def inner(obj):
         obj = Task(

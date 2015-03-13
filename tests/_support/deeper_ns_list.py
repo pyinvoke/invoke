@@ -8,4 +8,9 @@ def toplevel():
 def subtask():
     pass
 
-ns = Collection(toplevel, Collection('a', subtask, Collection('nother', subtask)))
+ns = Collection(
+    toplevel,
+    Collection('a', subtask,
+        Collection('nother', subtask)
+    )
+)

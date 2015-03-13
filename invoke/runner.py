@@ -12,7 +12,8 @@ from .platform import WINDOWS
 def normalize_hide(val):
     hide_vals = (None, False, 'out', 'stdout', 'err', 'stderr', 'both', True)
     if val not in hide_vals:
-        raise ValueError("'hide' got %r which is not in %r" % (val, hide_vals,))
+        err = "'hide' got {0!r} which is not in {1!r}"
+        raise ValueError(err.format(val, hide_vals))
     if val in (None, False):
         hide = ()
     elif val in ('both', True):
@@ -129,7 +130,7 @@ class Runner(object):
         hide = normalize_hide(hide)
         exception = False
         if echo:
-            print("\033[1;37m%s\033[0m" % command)
+            print("\033[1;37m{0}\033[0m".format(command))
         func = self.select_method(pty=pty, fallback=fallback)
         stdout, stderr, exited, exception = func(
             command=command,
@@ -183,7 +184,7 @@ class Local(Runner):
         if pty:
             func = self.run_pty
             if not os.isatty(sys.stdin.fileno()) and fallback:
-                sys.stderr.write("WARNING: stdin is not a pty; falling back to non-pty execution!\n")
+                sys.stderr.write("WARNING: stdin is not a pty; falling back to non-pty execution!\n") # noqa
                 func = self.run_direct
         return func
 
@@ -317,12 +318,12 @@ class Result(object):
         return self.__nonzero__()
 
     def __str__(self):
-        ret = ["Command exited with status %s." % self.exited]
+        ret = ["Command exited with status {0}.".format(self.exited)]
         for x in ('stdout', 'stderr'):
             val = getattr(self, x)
-            ret.append("""=== %s ===
-%s
-""" % (x, val.rstrip()) if val else "(no %s)" % x)
+            ret.append("""=== {0} ===
+{1}
+""".format(x, val.rstrip()) if val else "(no {0})".format(x))
         return "\n".join(ret)
 
     @property

@@ -106,7 +106,7 @@ class Collection(object):
         elif isinstance(obj, (Collection, types.ModuleType)):
             method = self.add_collection
         else:
-            raise TypeError("No idea how to insert %r!" % type(obj))
+            raise TypeError("No idea how to insert {0!r}!".format(type(obj)))
         return method(obj, name=name)
 
     def __str__(self):
@@ -208,14 +208,14 @@ class Collection(object):
             else:
                 raise ValueError("Could not obtain a name for this task!")
         if name in self.collections:
-            raise ValueError("Name conflict: this collection has a sub-collection named %r already" % name)
+            raise ValueError("Name conflict: this collection has a sub-collection named {0!r} already".format(name)) # noqa
         self.tasks[name] = task
         for alias in task.aliases:
             self.tasks.alias(alias, to=name)
         if default is True or (default is None and task.is_default):
             if self.default:
-                msg = "'%s' cannot be the default because '%s' already is!"
-                raise ValueError(msg % (name, self.default))
+                msg = "'{0}' cannot be the default because '{1}' already is!"
+                raise ValueError(msg.format(name, self.default))
             self.default = name
 
     def add_collection(self, coll, name=None):
@@ -237,7 +237,7 @@ class Collection(object):
             raise ValueError("Non-root collections must have a name!")
         # Test for conflict
         if name in self.tasks:
-            raise ValueError("Name conflict: this collection has a task named %r already" % name)
+            raise ValueError("Name conflict: this collection has a task named {0!r} already".format(name)) # noqa
         # Insert
         self.collections[name] = coll
 
@@ -325,7 +325,7 @@ class Collection(object):
         return result
 
     def subtask_name(self, collection_name, task_name):
-        return "%s.%s" % (collection_name, task_name)
+        return '.'.join([collection_name, task_name])
 
     @property
     def task_names(self):
