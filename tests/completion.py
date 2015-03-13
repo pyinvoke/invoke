@@ -24,7 +24,7 @@ class ShellCompletion(IntegrationSpec):
         _output_eq('-c empty --complete', "")
 
     def top_level_with_dash_means_core_options(self):
-        output = _complete('inv --complete -- -')
+        output = _complete('inv --complete -- inv -')
         # No point mirroring all core options, just spot check a few
         for flag in ('--no-dedupe', '-d', '--debug', '-V', '--version'):
             assert_contains(output, "{0}\n".format(flag))
