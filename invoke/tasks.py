@@ -289,7 +289,7 @@ def task(*args, **kwargs):
     autoprint = kwargs.pop('autoprint', False)
     # Handle unknown kwargs
     if kwargs:
-        kwarg = (" unknown kwargs %r" % (kwargs,)) if kwargs else ""
+        kwarg = (" unknown kwargs {0!r}".format(kwargs)) if kwargs else ""
         raise TypeError("@task was called with" + kwarg)
     def inner(obj):
         obj = Task(

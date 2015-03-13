@@ -133,7 +133,7 @@ class Executor(object):
     def _execute(self, task, name, args, kwargs, config):
         # Need task + possible name when invoking CLI-given tasks, so we can
         # pass a dotted path to Collection.configuration()
-        debug("Executing %r%s" % (task, (" as %s" % name) if name else ""))
+        debug("Executing {0!r}{1}".format(task, (" as {0}".format(name)) if name else ""))
         if task.contextualized:
             # Load per-task/collection config
             config.load_collection(self.collection.configuration(name))

@@ -56,7 +56,7 @@ class Run(Spec):
         self.both = "echo foo && {0} bar".format(error_command)
         self.out = "echo foo"
         self.err = "{0} bar".format(error_command)
-        self.sub = "inv -c pty_output hide_%s"
+        self.sub = "inv -c pty_output hide_{0}"
 
     def teardown(self):
         reset_cwd()
@@ -115,7 +115,8 @@ class Run(Spec):
                 assert false # noqa. Ensure failure to Failure fails
             except Failure as f:
                 r = repr(f)
-                assert 'ohnoz' in r, "Sentinel 'ohnoz' not found in %r" % r
+                err = "Sentinel 'ohnoz' not found in {0!r}".format(r)
+                assert 'ohnoz' in r, err
 
     class output_controls:
         @trap
@@ -155,19 +156,19 @@ class Run(Spec):
 
         @skip_if_windows
         def hide_both_hides_both_under_pty(self):
-            r = run(self.sub % 'both', hide='both')
+            r = run(self.sub.format('both', hide='both'))
             eq_(r.stdout, "")
             eq_(r.stderr, "")
 
         @skip_if_windows
         def hide_out_hides_both_under_pty(self):
-            r = run(self.sub % 'out', hide='both')
+            r = run(self.sub.format('out', hide='both'))
             eq_(r.stdout, "")
             eq_(r.stderr, "")
 
         @skip_if_windows
         def hide_err_has_no_effect_under_pty(self):
-            r = run(self.sub % 'err', hide='both')
+            r = run(self.sub.format('err', hide='both'))
             eq_(r.stdout, "foo\r\nbar\r\n")
             eq_(r.stderr, "")
 
@@ -193,7 +194,7 @@ class Run(Spec):
                 run("command", hide=value)
             except ValueError as e:
                 msg = "Error from run(hide=xxx) did not tell user what the bad value was!" # noqa
-                msg += "\nException msg: %s" % e
+                msg += "\nException msg: {0}".format(e)
                 ok_(value in str(e), msg)
             else:
                 assert False, "run() did not raise ValueError for bad hide= value" # noqa

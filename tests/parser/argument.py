@@ -39,7 +39,7 @@ class Argument_(Spec):
         def shows_useful_info(self):
             eq_(
                 str(Argument(names=('name', 'nick1', 'nick2'))),
-                "<Argument: %s (%s)>" % ('name', 'nick1, nick2')
+                "<Argument: {0} ({1})>".format('name', 'nick1, nick2')
             )
 
         def does_not_show_nickname_parens_if_no_nicknames(self):

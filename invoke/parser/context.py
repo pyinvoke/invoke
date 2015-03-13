@@ -76,10 +76,10 @@ class ParserContext(object):
             self.add_arg(arg)
 
     def __str__(self):
-        aliases = (" (%s)" % ', '.join(self.aliases)) if self.aliases else ""
-        name = (" %r%s" % (self.name, aliases)) if self.name else ""
-        args = (": %r" % (self.args,)) if self.args else ""
-        return "<parser/Context%s%s>" % (name, args)
+        aliases = (" ({0})".format(', '.join(self.aliases))) if self.aliases else ""
+        name = (" {0!r}{1}".format(self.name, aliases)) if self.name else ""
+        args = (": {0!r}".format(self.args)) if self.args else ""
+        return "<parser/Context{0}{1}>".format(name, args)
 
     def __repr__(self):
         return str(self)
@@ -128,7 +128,7 @@ class ParserContext(object):
             # Invert the 'main' flag name here, which will be a dashed version
             # of the primary argument name if underscore-to-dash transformation
             # occurred.
-            inverse_name = to_flag("no-%s" % main)
+            inverse_name = to_flag("no-{0}".format(main))
             self.inverse_flags[inverse_name] = to_flag(main)
 
     @property
@@ -170,17 +170,17 @@ class ParserContext(object):
                 # Short flags are -f VAL, long are --foo=VAL
                 # When optional, also, -f [VAL] and --foo[=VAL]
                 if len(name.strip('-')) == 1:
-                    value_ = ("[%s]" % value) if arg.optional else value
-                    valuestr = " %s" % value_
+                    value_ = ("[{0}]".format(value)) if arg.optional else value
+                    valuestr = " {0}".format(value_)
                 else:
-                    valuestr = "=%s" % value
+                    valuestr = "={0}".format(value)
                     if arg.optional:
-                        valuestr = "[%s]" % valuestr
+                        valuestr = "[{0}]".format(valuestr)
             else:
                 # no value => boolean
                 # check for inverse
                 if name in self.inverse_flags.values():
-                    name = "--[no-]%s" % name[2:]
+                    name = "--[no-]{0}".format(name[2:])
 
                 valuestr = ""
             # Tack together

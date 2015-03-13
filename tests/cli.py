@@ -183,7 +183,7 @@ Options:
         _output_eq('-c decorator -h foo3', expected)
 
     def version_info(self):
-        _output_eq('-V', "Invoke %s\n" % invoke.__version__)
+        _output_eq('-V', "Invoke {0}\n".format(invoke.__version__))
 
     @trap
     def version_override(self):
@@ -195,12 +195,12 @@ Options:
         "--list"
 
         def _listing(self, lines):
-            return ("""
+            return """
 Available tasks:
 
-%s
+{0}
 
-""" % '\n'.join("  " + x for x in lines)).lstrip()
+""".format('\n'.join("  " + x for x in lines)).lstrip()
 
         def _list_eq(self, collection, listing):
             cmd = '-c {0} --list'.format(collection)
@@ -511,7 +511,7 @@ class CLIParsing(Spec):
         eq_(r[0].args.s.value, 'value')
 
     def _flag_value_task(self, value):
-        r = self._parse("mytask -s %s mytask2" % value)
+        r = self._parse("mytask -s {0} mytask2".format(value))
         eq_(len(r), 2)
         eq_(r[0].name, 'mytask')
         eq_(r[0].args.s.value, value)
@@ -544,7 +544,7 @@ class CLIParsing(Spec):
     def multiple_short_flags_adjacent(self):
         "mytask -bv (and inverse)"
         for args in ('-bv', '-vb'):
-            r = self._parse("mytask %s" % args)
+            r = self._parse("mytask {0}".format(args))
             a = r[0].args
             eq_(a.b.value, True)
             eq_(a.v.value, True)
