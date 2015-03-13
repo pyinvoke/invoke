@@ -28,8 +28,8 @@ class ShellCompletion(IntegrationSpec):
         _output_eq('-c empty --complete', "")
 
     def task_name_completion_includes_aliases(self):
-        # E.g. in real tasks.py, no 'docs' is appearing
-        skip()
+        for name in ('z\n', 'toplevel'):
+            assert_contains(_complete('', 'alias_sorting'), name)
 
     def top_level_with_dash_means_core_options(self):
         output = _complete('-')

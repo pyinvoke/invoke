@@ -74,6 +74,10 @@ def print_help(argv, initial_context):
 def print_task_names(collection):
     for name in sort_names(collection.task_names):
         print(name)
+        # Just stick aliases after the thing they're aliased to. Sorting isn't
+        # so important that it's worth bending over backwards here.
+        for alias in collection.task_names[name]:
+            print(alias)
 
 
 def complete(core, parser, initial_context, collection):
