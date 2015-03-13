@@ -76,7 +76,11 @@ class ShellCompletion(IntegrationSpec):
         assert_contains(_complete('basic_arg --arg', 'foo'), 'foo')
 
     def core_partial_flag_completion(self):
-        assert_contains(_complete('--e'), '--echo')
+        # Is not just --echo, because we delegate substring completion to the
+        # shell completion builtins.
+        for flag in ('--echo', '--complete'):
+            assert_contains(_complete('--e'), flag)
 
     def per_task_partial_flag_completion(self):
-        assert_contains(_complete('basic_arg --ar', 'foo'), '--arg')
+        for flag in ('--arg1', '--arg2'):
+            assert_contains(_complete('multiple_args --ar', 'foo'), flag)
