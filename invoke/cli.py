@@ -71,6 +71,46 @@ def print_help(argv, initial_context):
     raise Exit
 
 
+def complete(core, parser, initial_context, collection):
+    # Strip out program name (scripts give us full command line)
+    invocation = re.sub(r'^(inv|invoke) ', '', core.remainder)
+    # Tokenize (shlex will have to do)
+    tokens = shlex.split(invocation)
+    # Handle flags (partial or otherwise)
+    if tokens and tokens[-1].startswith('-'):
+        # Discard token from invocation as it's unparseable
+        # TODO: except when it's not (full flag)
+        tail = tokens.pop()
+        # Gently parse invocation to obtain 'current' context.
+        # Use last seen context in case of failure (required for
+        # otherwise-invalid partial invocations being completed).
+        try:
+            contexts = parser.parse_argv(tokens)
+        except ParseError as e:
+            contexts = [e.context]
+        # Fall back to core context if no context seen.
+        context = contexts[-1] if contexts else initial_context
+        # When tail is *just* a dash, complete available flags
+        if tail in ('-', '--'):
+            # Print all flags with one dash, long flags only if two.
+            for flag in context.flag_names():
+                if tail == '-' or (tail == '--' and flag.startswith('--')):
+                    print(flag)
+        # Flags known to take values: print nothing, to let default (usually
+        # file) completion occur.
+        else:
+            # check argument from last context
+            # if valid & takes a value, just pass
+            # if valid & does not take a value, print tasks
+            # if not valid, either print nothing anyway, or print tasks?
+            pass
+    # If not a flag, is either task name or a flag value, so just complete
+    # task names.
+    else:
+        for name in sort_names(collection.task_names):
+            print(name)
+    raise Exit
+
 def parse_gracefully(parser, argv):
     """
     Run ``parser.parse_argv(argv)`` & gracefully handle ``ParseError``.
@@ -275,44 +315,7 @@ def parse(argv, collection=None, version=None):
 
     # Print completion helpers if necessary
     if args.complete.value:
-        # Strip out program name (scripts give us full command line)
-        invocation = re.sub(r'^(inv|invoke) ', '', core.remainder)
-        # Tokenize (shlex will have to do)
-        tokens = shlex.split(invocation)
-        # Handle flags (partial or otherwise)
-        if tokens and tokens[-1].startswith('-'):
-            # Discard token from invocation as it's unparseable
-            # TODO: except when it's not (full flag)
-            tail = tokens.pop()
-            # Gently parse invocation to obtain 'current' context.
-            # Use last seen context in case of failure (required for
-            # otherwise-invalid partial invocations being completed).
-            try:
-                contexts = parser.parse_argv(tokens)
-            except ParseError as e:
-                contexts = [e.context]
-            # Fall back to core context if no context seen.
-            context = contexts[-1] if contexts else initial_context
-            # When tail is *just* a dash, complete available flags
-            if tail in ('-', '--'):
-                # Print all flags with one dash, long flags only if two.
-                for flag in context.flag_names():
-                    if tail == '-' or (tail == '--' and flag.startswith('--')):
-                        print(flag)
-            # Flags known to take values: print nothing, to let default (usually
-            # file) completion occur.
-            else:
-                # check argument from last context
-                # if valid & takes a value, just pass
-                # if valid & does not take a value, print tasks
-                # if not valid, either print nothing anyway, or print tasks?
-                pass
-        # If not a flag, is either task name or a flag value, so just complete
-        # task names.
-        else:
-            for name in sort_names(collection.task_names):
-                print(name)
-        raise Exit
+        complete(core, parser, initial_context, collection)
 
     # Print help if:
     # * empty invocation
