@@ -44,10 +44,13 @@ class Argument(object):
         self.attr_name = attr_name
 
     def __str__(self):
+        nicks = ""
+        if self.nicknames:
+            nicks = " ({0})".format(", ".join(self.nicknames))
         return "<{0}: {1}{2}{3}>".format(
             self.__class__.__name__,
             self.name,
-            " ({0})".format(", ".join(self.nicknames)) if self.nicknames else "",
+            nicks,
             "*" if self.positional else ""
         )
 

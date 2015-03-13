@@ -78,7 +78,9 @@ class Parser(object):
         body = argv[:ddash]
         remainder = argv[ddash:][1:] # [1:] to strip off remainder itself
         if remainder:
-            debug("Remainder: argv[{0!r}:][1:] => {1!r}".format(ddash, remainder))
+            debug("Remainder: argv[{0!r}:][1:] => {1!r}".format(
+                ddash, remainder
+            ))
         for index, token in enumerate(body):
             # Handle non-space-delimited forms, if not currently expecting a
             # flag value and still in valid parsing territory (i.e. not in
@@ -89,7 +91,7 @@ class Parser(object):
                 # Equals-sign-delimited flags, eg --foo=bar or -f=bar
                 if '=' in token:
                     token, _, value = token.partition('=')
-                    debug("Splitting x=y expr {0!r} into tokens {1!r} and {2!r}".format(
+                    debug("Splitting x=y expr {0!r} into tokens {1!r} and {2!r}".format( # noqa
                         orig, token, value))
                     body.insert(index + 1, value)
                 # Contiguous boolean short flags, e.g. -qv
@@ -109,7 +111,7 @@ class Parser(object):
                         body.insert(index + 1, rest)
                     else:
                         rest = ['-{0}'.format(x) for x in rest]
-                        debug("Splitting multi-flag glob {0!r} into {1!r} and {2!r}".format(
+                        debug("Splitting multi-flag glob {0!r} into {1!r} and {2!r}".format( # noqa
                             orig, token, rest))
                         for item in reversed(rest):
                             body.insert(index + 1, item)
@@ -190,8 +192,8 @@ class ParseMachine(StateMachine):
         # need a posarg and the user legitimately wants to give it a value that
         # just happens to be a valid context name.)
         elif self.context and self.context.needs_positional_arg:
-            debug("Context {0!r} requires positional args, eating {1!r}".format(
-                self.context, token))
+            msg = "Context {0!r} requires positional args, eating {1!r}"
+            debug(msg.format(self.context, token))
             self.see_positional_arg(token)
         # New context
         elif token in self.contexts:
@@ -225,7 +227,9 @@ class ParseMachine(StateMachine):
         debug("Moving to context {0!r}".format(name))
         debug("Context args: {0!r}".format(self.context.args))
         debug("Context flags: {0!r}".format(self.context.flags))
-        debug("Context inverse_flags: {0!r}".format(self.context.inverse_flags))
+        debug("Context inverse_flags: {0!r}".format(
+            self.context.inverse_flags
+        ))
 
     def complete_flag(self):
         # Barf if we needed a value and didn't get one
