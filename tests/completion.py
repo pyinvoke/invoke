@@ -2,7 +2,7 @@ import sys
 
 from _utils import (
     _output_eq, IntegrationSpec, _dispatch, trap, expect_exit, assert_contains,
-    assert_not_contains,
+    assert_not_contains, skip
 )
 
 
@@ -53,4 +53,15 @@ class ShellCompletion(IntegrationSpec):
     def per_task_flags_complete_with_double_dashes(self):
         output = _complete('print_name --', 'integration')
         assert_contains(output, '--name')
-        assert_not_contains(output, '-n')
+        assert_not_contains(output, '-n\n') # newline because -n is in --name
+
+    def tasks_with_positional_args_complete_with_flags(self):
+        # Because otherwise completing them is invalid anyways
+        skip()
+
+    def core_flags_taking_values_have_no_completion_output(self):
+        # So the shell's default completion is available.
+        skip()
+
+    def per_task_flags_taking_values_have_no_completion_output(self):
+        skip()

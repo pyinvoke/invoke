@@ -2,6 +2,7 @@ from functools import partial
 import inspect
 import os
 import re
+import shlex
 import sys
 import textwrap
 
@@ -276,15 +277,25 @@ def parse(argv, collection=None, version=None):
     if args.complete.value:
         # Strip out program name (scripts give us full command line)
         invocation = re.sub(r'^(inv|invoke) ', '', core.remainder)
-        # Obtain current token
-        token = invocation.split(' ')[-1]
-        # Dash: figure out context & print valid argument names
-        if token in ('-', '--'):
-            # TODO: actually work for tasks, not core
-            for flag in initial_context.flag_names():
-                if token == '-' or (token == '--' and flag.startswith('--')):
+        # Tokenize (shlex will have to do)
+        tokens = shlex.split(invocation)
+        # Dash: print valid argument names (core, or per-task)
+        if tokens and tokens[-1] in ('-', '--'):
+            # Discard token from invocation as it's unparseable
+            tail = tokens.pop()
+            # Gently parse invocation to obtain 'current' context
+            try:
+                contexts = parser.parse_argv(tokens)
+            except ParseError as e:
+                contexts = [e.context]
+            if contexts:
+                context = contexts[-1]
+            else:
+                context = initial_context
+            for flag in context.flag_names():
+                if tail == '-' or (tail == '--' and flag.startswith('--')):
                     print(flag)
-        # No dash: print task names
+        # No dash (or empty): always print task names
         else:
             for name in sort_names(collection.task_names):
                 print(name)
