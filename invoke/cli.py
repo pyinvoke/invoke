@@ -1,6 +1,7 @@
 from functools import partial
 import inspect
 import os
+import re
 import sys
 import textwrap
 
@@ -273,8 +274,10 @@ def parse(argv, collection=None, version=None):
 
     # Print completion helpers if necessary
     if args.complete.value:
+        # Strip out program name (scripts give us full command line)
+        invocation = re.sub(r'^(inv|invoke) ', '', core.remainder)
         # Dash: figure out context & print valid argument names
-        if core.remainder == '-':
+        if invocation == '-':
             # TODO: actually work for tasks, not core
             for flag in initial_context.flag_names():
                 print(flag)
