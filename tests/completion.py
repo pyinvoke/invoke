@@ -2,7 +2,7 @@ import sys
 
 from _utils import (
     _output_eq, IntegrationSpec, _dispatch, trap, expect_exit, assert_contains,
-    assert_not_contains, skip, eq_
+    assert_not_contains, eq_
 )
 
 
