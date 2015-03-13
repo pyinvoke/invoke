@@ -37,3 +37,11 @@ class ShellCompletion(IntegrationSpec):
         output = _complete('--')
         assert_contains(output, '--no-dedupe')
         assert_not_contains(output, '-V')
+
+    def task_names_only_complete_other_task_names(self):
+        # Because only tokens starting with a dash should result in options.
+        assert_contains(_complete('print_foo', 'integration'), 'print_name')
+
+    def task_name_completion_includes_tasks_already_seen(self):
+        # Because it's valid to call the same task >1 time.
+        assert_contains(_complete('print_foo', 'integration'), 'print_foo')
