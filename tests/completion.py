@@ -56,8 +56,11 @@ class ShellCompletion(IntegrationSpec):
         assert_not_contains(output, '-n\n') # newline because -n is in --name
 
     def tasks_with_positional_args_complete_with_flags(self):
-        # Because otherwise completing them is invalid anyways
-        skip()
+        # Because otherwise completing them is invalid anyways.
+        # NOTE: this currently duplicates another test because this test cares
+        # about a specific detail.
+        output = _complete('print_name --', 'integration')
+        assert_contains(output, '--name')
 
     def core_flags_taking_values_have_no_completion_output(self):
         # So the shell's default completion is available.
