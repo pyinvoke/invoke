@@ -2,4 +2,4 @@
 ``parser``
 ==========
 
-.. automodule:: invoke.parser
+.. automodule:: invoke.parser.parser
