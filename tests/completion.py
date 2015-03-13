@@ -27,6 +27,10 @@ class ShellCompletion(IntegrationSpec):
     def no_input_with_no_tasks_yields_empty_response(self):
         _output_eq('-c empty --complete', "")
 
+    def task_name_completion_includes_aliases(self):
+        # E.g. in real tasks.py, no 'docs' is appearing
+        skip()
+
     def top_level_with_dash_means_core_options(self):
         output = _complete('-')
         # No point mirroring all core options, just spot check a few
