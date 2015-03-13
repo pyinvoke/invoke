@@ -96,7 +96,8 @@ class Parser(object):
                 elif not is_long_flag(token) and len(token) > 2:
                     full_token = token[:]
                     rest, token = token[2:], token[:2]
-                    debug("Splitting %r into token %r and rest %r" % (full_token, token, rest))
+                    err = "Splitting {0!r} into token {1!r} and rest {2!r}"
+                    debug(err.format(full_token, token, rest))
                     # Handle boolean flag block vs short-flag + value. Make
                     # sure not to test the token as a context flag if we've
                     # passed into 'storing unknown stuff' territory (e.g. on a
@@ -104,7 +105,7 @@ class Parser(object):
                     have_flag = (token in machine.context.flags
                         and machine.current_state != 'unknown')
                     if have_flag and machine.context.flags[token].takes_value:
-                        debug("%r is a flag for current context & it takes a value, giving it %r" % (token, rest))
+                        debug("{0!r} is a flag for current context & it takes a value, giving it {1!r}".format(token, rest)) # noqa
                         body.insert(index + 1, rest)
                     else:
                         rest = ['-%s' % x for x in rest]
@@ -126,9 +127,23 @@ class ParseMachine(StateMachine):
     state('unknown', enter=['complete_flag', 'complete_context'])
     state('end', enter=['complete_flag', 'complete_context'])
 
-    transition(from_=('context', 'unknown'), event='finish', to='end')
-    transition(from_='context', event='see_context', action='switch_to_context', to='context')
-    transition(from_=('context', 'unknown'), event='see_unknown', action='store_only', to='unknown')
+    transition(
+        from_=('context', 'unknown'),
+        event='finish',
+        to='end',
+    )
+    transition(
+        from_='context',
+        event='see_context',
+        action='switch_to_context',
+        to='context',
+    )
+    transition(
+        from_=('context', 'unknown'),
+        event='see_unknown',
+        action='store_only',
+        to='unknown',
+    )
 
     def changing_state(self, from_, to):
         debug("ParseMachine: %r => %r" % (from_, to))
@@ -195,10 +210,13 @@ class ParseMachine(StateMachine):
         self.result.unparsed.append(token)
 
     def complete_context(self):
-        debug("Wrapping up context %r" % (self.context.name if self.context else self.context))
+        debug("Wrapping up context {0!r}".format(
+            self.context.name if self.context else self.context
+        ))
         # Ensure all of context's positional args have been given.
         if self.context and self.context.needs_positional_arg:
-            self.error("'%s' did not receive all required positional arguments!" % self.context.name)
+            err = "'{0}' did not receive all required positional arguments!"
+            self.error(err.format(self.context.name))
         if self.context and self.context not in self.result:
             self.result.append(self.context)
 
@@ -217,7 +235,8 @@ class ParseMachine(StateMachine):
             and self.flag.raw_value is None
             and not self.flag.optional
         ):
-            self.error("Flag %r needed value and was not given one!" % self.flag)
+            err = "Flag {0!r} needed value and was not given one!"
+            self.error(err.format(self.flag))
         # Handle optional-value flags; at this point they were not given an
         # explicit value, but they were seen, ergo they should get treated like
         # bools.

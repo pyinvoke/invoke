@@ -62,7 +62,8 @@ def sites(c):
     opts = "-W -n -T"
     # This is super lolzy but we haven't actually tackled nontrivial in-Python
     # task calling yet, so...
-    docs_c, www_c = Context(config=c.config.clone()), Context(config=c.config.clone())
+    docs_c = Context(config=c.config.clone())
+    www_c = Context(config=c.config.clone())
     docs_c.update(**docs.configuration())
     www_c.update(**www.configuration())
     docs['build'](docs_c, opts=opts)

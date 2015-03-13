@@ -208,7 +208,7 @@ class Collection(object):
             else:
                 raise ValueError("Could not obtain a name for this task!")
         if name in self.collections:
-            raise ValueError("Name conflict: this collection has a sub-collection named %r already" % name)
+            raise ValueError("Name conflict: this collection has a sub-collection named {0!r} already".format(name)) # noqa
         self.tasks[name] = task
         for alias in task.aliases:
             self.tasks.alias(alias, to=name)
@@ -237,7 +237,7 @@ class Collection(object):
             raise ValueError("Non-root collections must have a name!")
         # Test for conflict
         if name in self.tasks:
-            raise ValueError("Name conflict: this collection has a task named %r already" % name)
+            raise ValueError("Name conflict: this collection has a task named {0!r} already".format(name)) # noqa
         # Insert
         self.collections[name] = coll
 

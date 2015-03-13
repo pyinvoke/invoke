@@ -62,7 +62,7 @@ def print_help(argv, initial_context):
     program_name = os.path.basename(argv[0])
     if program_name == 'invoke' or program_name == 'inv':
         program_name = 'inv[oke]'
-    print("Usage: {0} [--core-opts] task1 [--task1-opts] ... taskN [--taskN-opts]".format(program_name))
+    print("Usage: {0} [--core-opts] task1 [--task1-opts] ... taskN [--taskN-opts]".format(program_name)) # noqa
     print("")
     print("Core options:")
     print_columns(initial_context.help_tuples())
@@ -214,8 +214,8 @@ def parse(argv, collection=None, version=None):
         ctx = parser.contexts[name]
         tuples = ctx.help_tuples()
         docstring = inspect.getdoc(collection[name])
-        header = "Usage: inv[oke] [--core-opts] %s %%s[other tasks here ...]" % name
-        print(header % ("[--options] " if tuples else ""))
+        header = "Usage: inv[oke] [--core-opts] {0} {{0}}[other tasks here ...]".format(name) # noqa
+        print(header.format("[--options] " if tuples else ""))
         print("")
         print("Docstring:")
         if docstring:

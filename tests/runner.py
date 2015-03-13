@@ -192,11 +192,11 @@ class Run(Spec):
             try:
                 run("command", hide=value)
             except ValueError as e:
-                msg = "Error from run(hide=xxx) did not tell user what the bad value was!"
+                msg = "Error from run(hide=xxx) did not tell user what the bad value was!" # noqa
                 msg += "\nException msg: %s" % e
                 ok_(value in str(e), msg)
             else:
-                assert False, "run() did not raise ValueError for bad hide= value"
+                assert False, "run() did not raise ValueError for bad hide= value" # noqa
 
         def hide_does_not_affect_capturing(self):
             eq_(run(self.out, hide='both').stdout, 'foo\n')
@@ -290,8 +290,8 @@ class Run(Spec):
             run(cmd, hide='both')
 
         def nonprinting_bytes(self):
-            # Seriously non-printing characters (i.e. non UTF8) also don't asplode
-            # load('funky').derp()
+            # Seriously non-printing characters (i.e. non UTF8) also don't
+            # asplode
             run("echo '\xff'", hide='both')
 
         @skip_if_windows

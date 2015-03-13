@@ -12,7 +12,8 @@ from .platform import WINDOWS
 def normalize_hide(val):
     hide_vals = (None, False, 'out', 'stdout', 'err', 'stderr', 'both', True)
     if val not in hide_vals:
-        raise ValueError("'hide' got %r which is not in %r" % (val, hide_vals,))
+        err = "'hide' got {0!r} which is not in {1!r}"
+        raise ValueError(err.format(val, hide_vals))
     if val in (None, False):
         hide = ()
     elif val in ('both', True):
@@ -183,7 +184,7 @@ class Local(Runner):
         if pty:
             func = self.run_pty
             if not os.isatty(sys.stdin.fileno()) and fallback:
-                sys.stderr.write("WARNING: stdin is not a pty; falling back to non-pty execution!\n")
+                sys.stderr.write("WARNING: stdin is not a pty; falling back to non-pty execution!\n") # noqa
                 func = self.run_direct
         return func
 

@@ -107,8 +107,8 @@ class ParserContext(object):
         # Uniqueness constraint: no name collisions
         for name in arg.names:
             if name in self.args:
-                msg = "Tried to add an argument named %r but one already exists!"
-                raise ValueError(msg % name)
+                msg = "Tried to add an argument named {0!r} but one already exists!" # noqa
+                raise ValueError(msg.format(name))
         # First name used as "main" name for purposes of aliasing
         main = arg.names[0] # NOT arg.name
         self.args[main] = arg
@@ -154,7 +154,8 @@ class ParserContext(object):
         """
         # Obtain arg obj
         if flag not in self.flags:
-            raise ValueError("%r is not a valid flag for this context! Valid flags are: %r" % (flag, self.flags.keys()))
+            err = "{0!r} is not a valid flag for this context! Valid flags are: {1!r}" # noqa
+            raise ValueError(err.format(flag, self.flags.keys()))
         arg = self.flags[flag]
         # Show all potential names for this flag in the output
         names = list(set([flag] + self.flags.aliases_of(flag)))
