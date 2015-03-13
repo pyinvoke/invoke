@@ -276,11 +276,14 @@ def parse(argv, collection=None, version=None):
     if args.complete.value:
         # Strip out program name (scripts give us full command line)
         invocation = re.sub(r'^(inv|invoke) ', '', core.remainder)
+        # Obtain current token
+        token = invocation.split(' ')[-1]
         # Dash: figure out context & print valid argument names
-        if invocation == '-':
+        if token in ('-', '--'):
             # TODO: actually work for tasks, not core
             for flag in initial_context.flag_names():
-                print(flag)
+                if token == '-' or (token == '--' and flag.startswith('--')):
+                    print(flag)
         # No dash: print task names
         else:
             for name in sort_names(collection.task_names):

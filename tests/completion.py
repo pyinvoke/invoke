@@ -1,7 +1,8 @@
 import sys
 
 from _utils import (
-    _output_eq, IntegrationSpec, _dispatch, trap, expect_exit, assert_contains
+    _output_eq, IntegrationSpec, _dispatch, trap, expect_exit, assert_contains,
+    assert_not_contains,
 )
 
 
@@ -28,3 +29,8 @@ class ShellCompletion(IntegrationSpec):
         # No point mirroring all core options, just spot check a few
         for flag in ('--no-dedupe', '-d', '--debug', '-V', '--version'):
             assert_contains(output, "{0}\n".format(flag))
+
+    def bare_double_dash_shows_only_long_core_options(self):
+        output = _complete('inv --complete -- inv --')
+        assert_contains(output, '--no-dedupe')
+        assert_not_contains(output, '-V')
