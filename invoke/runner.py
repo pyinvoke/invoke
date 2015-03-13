@@ -139,7 +139,8 @@ class Runner(object):
         )
         # TODO: make this test less gross? Feels silly to just return a bool in
         # select_method which is tantamount to this, though.
-        used_pty = func.func_name == 'run_pty'
+        func_name = getattr(func, 'func_name', getattr(func, '__name__'))
+        used_pty = func_name == 'run_pty'
         result = Result(
             stdout=stdout,
             stderr=stderr,

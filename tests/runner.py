@@ -1,6 +1,5 @@
 import os
 import sys
-import termios
 
 from spec import eq_, skip, Spec, raises, ok_, trap
 from mock import patch
@@ -37,7 +36,11 @@ def _run(returns=None, **kwargs):
 # Shorthand for mocking Local.run_pty so tests run under non-pty environments
 # don't asplode.
 _patch_run_pty = patch.object(
-    Local, 'run_pty', return_value=('', '', 0, None), func_name='run_pty'
+    Local,
+    'run_pty',
+    return_value=('', '', 0, None),
+    func_name='run_pty',
+    __name__='run_pty',
 )
 
 # Shorthand for mocking os.isatty
@@ -220,11 +223,16 @@ class Run(Spec):
             eq_(run(cmd, pty=True, hide='both').stdout, expected)
 
         @_not_tty
-        @patch('tty.tcgetattr', side_effect=termios.error)
         @trap
         def pty_falls_back_to_off_if_True_and_not_isatty(self, *mocks):
-            # "does not kaboom" test :x
-            run("true", pty=True)
+            if WINDOWS:
+                # Straight up "it shouldn't kaboom, it should fall back"
+                run("true", pty=True)
+            else:
+                # Force termios to kaboom to trigger fallback
+                import termios
+                with patch('tty.tcgetattr', side_effect=termios.error):
+                    run("true", pty=True)
 
         @_not_tty
         @trap
