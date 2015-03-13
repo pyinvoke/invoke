@@ -283,15 +283,19 @@ def parse(argv, collection=None, version=None):
         if tokens and tokens[-1] in ('-', '--'):
             # Discard token from invocation as it's unparseable
             tail = tokens.pop()
-            # Gently parse invocation to obtain 'current' context
+            # Gently parse invocation to obtain 'current' context.
+            # Use last seen context in case of failure (required for
+            # otherwise-invalid partial invocations being completed).
             try:
                 contexts = parser.parse_argv(tokens)
             except ParseError as e:
                 contexts = [e.context]
+            # Fall back to core context if no context seen.
             if contexts:
                 context = contexts[-1]
             else:
                 context = initial_context
+            # Print all flags with one dash, long flags only if two.
             for flag in context.flag_names():
                 if tail == '-' or (tail == '--' and flag.startswith('--')):
                     print(flag)
