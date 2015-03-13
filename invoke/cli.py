@@ -71,16 +71,21 @@ def print_help(argv, initial_context):
     raise Exit
 
 
+def print_task_names(collection):
+    for name in sort_names(collection.task_names):
+        print(name)
+
+
 def complete(core, parser, initial_context, collection):
     # Strip out program name (scripts give us full command line)
     invocation = re.sub(r'^(inv|invoke) ', '', core.remainder)
+    debug("Completing for invocation: {0!r}".format(invocation))
     # Tokenize (shlex will have to do)
     tokens = shlex.split(invocation)
     # Handle flags (partial or otherwise)
     if tokens and tokens[-1].startswith('-'):
-        # Discard token from invocation as it's unparseable
-        # TODO: except when it's not (full flag)
-        tail = tokens.pop()
+        tail = tokens[-1]
+        debug("Invocation's tail {0!r} is flag-like".format(tail))
         # Gently parse invocation to obtain 'current' context.
         # Use last seen context in case of failure (required for
         # otherwise-invalid partial invocations being completed).
@@ -89,27 +94,51 @@ def complete(core, parser, initial_context, collection):
         except ParseError as e:
             contexts = [e.context]
         # Fall back to core context if no context seen.
-        context = contexts[-1] if contexts else initial_context
-        # When tail is *just* a dash, complete available flags
-        if tail in ('-', '--'):
-            # Print all flags with one dash, long flags only if two.
-            for flag in context.flag_names():
-                if tail == '-' or (tail == '--' and flag.startswith('--')):
-                    print(flag)
-        # Flags known to take values: print nothing, to let default (usually
-        # file) completion occur.
+        debug("Parsed invocation, contexts: {0!r}".format(contexts))
+        if not contexts or not contexts[-1]:
+            context = initial_context
         else:
-            # check argument from last context
-            # if valid & takes a value, just pass
-            # if valid & does not take a value, print tasks
-            # if not valid, either print nothing anyway, or print tasks?
-            pass
+            context = contexts[-1]
+        debug("Selected context: {0!r}".format(context))
+        # Unknown flags (could be e.g. only partially typed out; could be
+        # wholly invalid; doesn't matter) complete with flags.
+        debug("Looking for {0!r} in {1!r}".format(tail, context.flags))
+        if tail not in context.flags:
+            debug("Not found, completing with flag names")
+            # Long flags - partial or just the dashes - complete w/ long flags
+            if tail.startswith('--'):
+                # TODO: make vvv a property
+                for name in [x for x in context.flag_names() if x.startswith('--')]:
+                    print(name)
+            # Just a dash, completes with all flags
+            elif tail == '-':
+                for name in context.flag_names():
+                    print(name)
+            # Otherwise, it's something entirely invalid (a shortflag not
+            # recognized, or a java style flag like -foo) so return nothing
+            # (the shell will still try completing with files, but that doesn't
+            # hurt really.)
+            else:
+                pass
+        # Known flags complete w/ nothing or tasks, depending
+        else:
+            # Flags expecting values: do nothing, to let default (usually
+            # file) shell completion occur (which we actively want in this
+            # case.)
+            if context.flags[name].takes_value:
+                debug("Found, and it takes a value, so no completion")
+                pass
+            # Not taking values (eg bools): print task names
+            else:
+                debug("Found, takes no value, printing task names")
+                print_task_names(collection)
     # If not a flag, is either task name or a flag value, so just complete
     # task names.
     else:
-        for name in sort_names(collection.task_names):
-            print(name)
+        debug("Last token isn't flag-like, just printing task names")
+        print_task_names(collection)
     raise Exit
+
 
 def parse_gracefully(parser, argv):
     """
