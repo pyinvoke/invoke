@@ -74,3 +74,9 @@ class ShellCompletion(IntegrationSpec):
 
     def per_task_bool_flags_have_task_name_completion(self):
         assert_contains(_complete('basic_arg --arg', 'foo'), 'foo')
+
+    def core_partial_flag_completion(self):
+        assert_contains(_complete('--e'), '--echo')
+
+    def per_task_partial_flag_completion(self):
+        assert_contains(_complete('basic_arg --ar', 'foo'), '--arg')
