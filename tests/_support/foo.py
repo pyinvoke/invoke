@@ -13,3 +13,8 @@ def basic_arg(arg='val'):
 @task
 def multiple_args(arg1='val1', otherarg='val2'):
     pass
+
+
+@task
+def basic_bool(mybool=True):
+    pass

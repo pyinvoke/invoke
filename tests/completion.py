@@ -67,13 +67,13 @@ class ShellCompletion(IntegrationSpec):
         eq_(_complete('-f'), '')
 
     def per_task_flags_taking_values_have_no_completion_output(self):
-        eq_(_complete('--arg', 'foo'), '')
+        eq_(_complete('basic_arg --arg', 'foo'), '')
 
     def core_bool_flags_have_task_name_completion(self):
-        assert_contains(_complete('--echo', 'foo'), 'foo')
+        assert_contains(_complete('--echo', 'foo'), 'mytask')
 
     def per_task_bool_flags_have_task_name_completion(self):
-        assert_contains(_complete('basic_arg --arg', 'foo'), 'foo')
+        assert_contains(_complete('basic_bool --mybool', 'foo'), 'mytask')
 
     def core_partial_or_invalid_flags_print_all_flags(self):
         for flag in ('--echo', '--complete'):

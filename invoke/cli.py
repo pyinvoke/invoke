@@ -125,7 +125,7 @@ def complete(core, parser, initial_context, collection):
             # Flags expecting values: do nothing, to let default (usually
             # file) shell completion occur (which we actively want in this
             # case.)
-            if context.flags[name].takes_value:
+            if context.flags[tail].takes_value:
                 debug("Found, and it takes a value, so no completion")
                 pass
             # Not taking values (eg bools): print task names
