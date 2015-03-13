@@ -279,9 +279,10 @@ def parse(argv, collection=None, version=None):
         invocation = re.sub(r'^(inv|invoke) ', '', core.remainder)
         # Tokenize (shlex will have to do)
         tokens = shlex.split(invocation)
-        # Dash: print valid argument names (core, or per-task)
-        if tokens and tokens[-1] in ('-', '--'):
+        # Handle flags (partial or otherwise)
+        if tokens and tokens[-1].startswith('-'):
             # Discard token from invocation as it's unparseable
+            # TODO: except when it's not (full flag)
             tail = tokens.pop()
             # Gently parse invocation to obtain 'current' context.
             # Use last seen context in case of failure (required for
@@ -291,24 +292,23 @@ def parse(argv, collection=None, version=None):
             except ParseError as e:
                 contexts = [e.context]
             # Fall back to core context if no context seen.
-            if contexts:
-                context = contexts[-1]
+            context = contexts[-1] if contexts else initial_context
+            # When tail is *just* a dash, complete available flags
+            if tail in ('-', '--'):
+                # Print all flags with one dash, long flags only if two.
+                for flag in context.flag_names():
+                    if tail == '-' or (tail == '--' and flag.startswith('--')):
+                        print(flag)
+            # Flags known to take values: print nothing, to let default (usually
+            # file) completion occur.
             else:
-                context = initial_context
-            # Print all flags with one dash, long flags only if two.
-            for flag in context.flag_names():
-                if tail == '-' or (tail == '--' and flag.startswith('--')):
-                    print(flag)
-        # Flags known to take values: print nothing, to let default (usually
-        # file) completion occur.
-        elif tokens and tokens[-1].startswith('-'):
-            # Try parsing
-            # check argument from last context
-            # if valid & takes a value, just pass
-            # if valid & does not take a value, print tasks
-            # if not valid, either print nothing anyway, or print tasks?
-            pass
-        # None of the above (empty, task name, etc): just task names.
+                # check argument from last context
+                # if valid & takes a value, just pass
+                # if valid & does not take a value, print tasks
+                # if not valid, either print nothing anyway, or print tasks?
+                pass
+        # If not a flag, is either task name or a flag value, so just complete
+        # task names.
         else:
             for name in sort_names(collection.task_names):
                 print(name)
