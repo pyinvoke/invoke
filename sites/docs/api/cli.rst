@@ -103,6 +103,38 @@ The core options (which must be given before any task names) are as follows:
     :doc:`contextualized tasks </concepts/context>`.
 
 
+Shell tab completion
+====================
+
+Invoke ships with some shell completion scripts, which leverage a core CLI
+mechanism suitable for use in custom completion scripts as well. If you're
+using Bash or Zsh, simply do the following:
+
+* Obtain the source distribution, or visit the ``/completion/`` folder `on Github
+  <https://github.com/pyinvoke/invoke/blob/master/completion/>`_, and place a
+  copy of the appropriate file (e.g. ``/completion/bash`` for Bash users)
+  somewhere on your local system.
+* ``source`` the file in your shell login file (e.g. ``.bash_profile``,
+  ``.zshrc``).
+* By default, tabbing after typing ``inv`` or ``invoke`` will display task
+  names from your current directory/project's tasks file.
+* Tabbing after typing a dash (``-``) or double dash (``--``) will display
+  valid options/flags for the current context: core Invoke options if no task
+  names have been typed yet; options for the most recently typed task
+  otherwise.
+
+    * Tabbing while typing a partial long option will complete matching long
+      options, using your shell's native substring completion. E.g. if no task
+      names have been typed yet, ``--e<tab>`` will offer ``--echo`` as a
+      completion option.
+
+* Hitting tab when the most recent typed/completed token is a flag which takes
+  a value, will 'fall through' to your shell's native filename completion.
+
+    * For example, prior to typing a task name, ``--config <tab>`` will
+      complete local file paths to assist in filling in a config file.
+
+
 The internal ``cli`` module's API docs
 ======================================
 
