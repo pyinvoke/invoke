@@ -1,26 +1,33 @@
 import os
+import re
 import sys
 from contextlib import contextmanager
-from invoke.platform import WINDOWS
+from functools import partial, wraps
 
-from spec import trap, Spec, eq_, skip
 from mock import patch
+from spec import trap, Spec, eq_, skip
+
+from invoke.platform import WINDOWS
 
 
 support = os.path.join(os.path.dirname(__file__), '_support')
 
+
 def skip_if_windows(fn):
-    def wrapper():
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
         if WINDOWS:
             skip()
-        return fn()
+        return fn(*args, **kwargs)
     return wrapper
+
 
 @contextmanager
 def support_path():
     sys.path.insert(0, support)
     yield
     sys.path.pop(0)
+
 
 def load(name):
     with support_path():
@@ -42,6 +49,7 @@ def reset_cwd():
     # Chdir back to project root to avoid problems
     os.chdir(os.path.join(os.path.dirname(__file__), '..'))
 
+
 @contextmanager
 def cd(where):
     cwd = os.getcwd()
@@ -53,10 +61,10 @@ def cd(where):
 
 
 # Strings are easier to type & read than lists
-
 def _dispatch(argstr, version=None):
     from invoke.cli import dispatch
     return dispatch(argstr.split(), version)
+
 
 @trap
 def _output_eq(args, stdout=None, stderr=None, code=0):
@@ -93,3 +101,16 @@ def run_in_configs():
     with patch('invoke.context.run') as run:
         with cd('configs'):
             yield run
+
+
+def _assert_contains(haystack, needle, invert):
+    matched = re.search(needle, haystack, re.M)
+    if (invert and matched) or (not invert and not matched):
+        raise AssertionError("r'%s' %sfound in '%s'" % (
+            needle,
+            "" if invert else "not ",
+            haystack
+        ))
+
+assert_contains = partial(_assert_contains, invert=False)
+assert_not_contains = partial(_assert_contains, invert=True)

@@ -203,10 +203,6 @@ class Run(Spec):
             eq_(run(self.out, hide='both').stdout, 'foo\n')
 
     class pseudo_terminals:
-        # Trick select_method into not falling back when tests run under a
-        # non-pty.
-        @_is_tty
-        @_patch_run_pty
         @trap
         def return_value_indicates_whether_pty_was_used(self, *mocks):
             eq_(run("true").pty, False)

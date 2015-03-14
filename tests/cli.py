@@ -88,6 +88,8 @@ class CLI(IntegrationSpec):
 Usage: inv[oke] [--core-opts] task1 [--task1-opts] ... taskN [--taskN-opts]
 
 Core options:
+  --complete                       Print tab-completion candidates for given
+                                   parse remainder.
   --no-dedupe                      Disable task deduplication.
   -c STRING, --collection=STRING   Specify collection name to load.
   -d, --debug                      Enable debug output.
@@ -230,7 +232,7 @@ Available tasks:
         def top_level_tasks_listed_first(self):
             self._list_eq('simple_ns_list', (
                 'z_toplevel',
-                'a.subtask'
+                'a.b.subtask'
             ))
 
         def subcollections_sorted_in_depth_order(self):
