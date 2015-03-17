@@ -167,9 +167,8 @@ class Config(DataProxy):
 
     Individual configuration 'levels' and their source locations are stored as
     'private' attributes (e.g. ``_defaults``, ``_system_prefix``) so fewer
-    names are "taken" from the perspective of attribute access to user config v
-    alues. See the documentation for individual members below for details on
-    these.
+    names are "taken" from the perspective of attribute access to user config
+    values.
 
     **Lifecycle**
 
@@ -191,8 +190,8 @@ class Config(DataProxy):
     .. warning::
         Calling `.merge` after manually modifying `.Config` objects may
         overwrite those manual changes, since it overwrites the core config
-        dict with data from per-source attributes like `._defaults` or
-        `_.user`.
+        dict with data from per-source attributes like ``._defaults`` or
+        ``_.user``.
     """
 
     def __init__(
