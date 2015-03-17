@@ -2,6 +2,8 @@
 Changelog
 =========
 
+* :support:`-` Tweak README to reflect recent(-ish) changes in ``pip`` re:
+  installing the development version via ``pip`` instead of using e.g. git.
 * :release:`0.10.0 <2015-03-17>`
 * :feature:`104` Add core CLI flag ``--complete`` to support shell tab
   completion scripts, and add some 'blessed' such scripts for bash (3 and 4)

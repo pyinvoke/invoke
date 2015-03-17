@@ -46,4 +46,4 @@ http://docs.pyinvoke.org. Post-install usage information may be found in ``invok
 
 You can install the `development version
 <https://github.com/pyinvoke/invoke/tarball/master#egg=invoke-dev>`_ via ``pip
-install invoke==dev``.
+install invoke==dev --allow-unverified invoke``.
