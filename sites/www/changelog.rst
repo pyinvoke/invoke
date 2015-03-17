@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :release:`0.10.0 <2015-03-17>`
 * :feature:`104` Add core CLI flag ``--complete`` to support shell tab
   completion scripts, and add some 'blessed' such scripts for bash (3 and 4)
   and zsh. Thanks to Ivan Malison and Andrew Roberts for providing discussion &
