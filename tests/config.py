@@ -81,7 +81,7 @@ class Config_(IntegrationSpec):
 
         def accepts_env_prefix_option(self):
             c = Config(env_prefix='INVOKE_')
-            eq_(c.env_prefix, 'INVOKE_')
+            eq_(c._env_prefix, 'INVOKE_')
 
 
     class basic_API:
@@ -204,8 +204,8 @@ Valid real attributes: ['clone', 'from_data', 'load_collection', 'load_files', '
 
         def loads_no_project_specific_file_if_no_project_home_given(self):
             c = Config()
-            eq_(c.project_path, None)
-            eq_(list(c.project.keys()), [])
+            eq_(c._project_path, None)
+            eq_(list(c._project.keys()), [])
             eq_(list(c.keys()), [])
 
         def honors_conf_file_flag(self):
@@ -514,15 +514,15 @@ Valid real attributes: ['clone', 'from_data', 'load_collection', 'load_files', '
                 runtime_path='runtime.yaml',
             )
             c2 = c1.clone()
-            eq_(c2.defaults, c1.defaults)
-            ok_(c2.defaults is not c1.defaults)
-            eq_(c2.overrides, c1.overrides)
-            ok_(c2.overrides is not c1.overrides)
-            eq_(c2.system_prefix, c1.system_prefix)
-            eq_(c2.user_prefix, c1.user_prefix)
-            eq_(c2.project_home, c1.project_home)
-            eq_(c2.env_prefix, c1.env_prefix)
-            eq_(c2.runtime_path, c1.runtime_path)
+            eq_(c2._defaults, c1._defaults)
+            ok_(c2._defaults is not c1._defaults)
+            eq_(c2._overrides, c1._overrides)
+            ok_(c2._overrides is not c1._overrides)
+            eq_(c2._system_prefix, c1._system_prefix)
+            eq_(c2._user_prefix, c1._user_prefix)
+            eq_(c2._project_home, c1._project_home)
+            eq_(c2._env_prefix, c1._env_prefix)
+            eq_(c2._runtime_path, c1._runtime_path)
 
         def preserves_merged_config(self):
             c = Config(
@@ -530,18 +530,18 @@ Valid real attributes: ['clone', 'from_data', 'load_collection', 'load_files', '
                 overrides={'key': 'override'},
             )
             eq_(c.key, 'override')
-            eq_(c.defaults['key'], 'default')
+            eq_(c._defaults['key'], 'default')
             c2 = c.clone()
             eq_(c2.key, 'override')
-            eq_(c2.defaults['key'], 'default')
-            eq_(c2.overrides['key'], 'override')
+            eq_(c2._defaults['key'], 'default')
+            eq_(c2._overrides['key'], 'override')
 
         def preserves_file_data(self):
             c = Config(system_prefix=join(CONFIGS_PATH, 'yaml', 'invoke'))
             eq_(c.hooray, 'yaml')
             c2 = c.clone()
             eq_(c2.hooray, 'yaml')
-            eq_(c2.system, {'hooray': 'yaml'})
+            eq_(c2._system, {'hooray': 'yaml'})
 
         @patch.object(Config, '_load_yaml', return_value={'hooray': 'yaml'})
         def does_not_reload_file_data(self, load_yaml):
