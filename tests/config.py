@@ -83,6 +83,7 @@ class Config_(IntegrationSpec):
             c = Config(env_prefix='INVOKE_')
             eq_(c.env_prefix, 'INVOKE_')
 
+
     class basic_API:
         "Basic API components"
 
@@ -181,6 +182,7 @@ Valid real attributes: ['clone', 'from_data', 'load_collection', 'load_files', '
                 eq_(unicode(config), six.u("{'foo': 'bar'}"))  # noqa
             eq_(repr(config), "{'foo': 'bar'}")
 
+
     class config_file_loading:
         "Configuration file loading"
 
@@ -224,6 +226,7 @@ Valid real attributes: ['clone', 'from_data', 'load_collection', 'load_files', '
             # Real test that builtins, etc are stripped out
             for special in ('builtins', 'file', 'package', 'name', 'doc'):
                 ok_('__{0}__'.format(special) not in c)
+
 
     class env_vars:
         "Environment variables"
@@ -269,6 +272,7 @@ Valid real attributes: ['clone', 'from_data', 'load_collection', 'load_files', '
             os.environ['FOO_BAR'] = 'biz'
             c = Config(defaults={'foo_bar': 'wat', 'foo': {'bar': 'huh'}})
             c.load_shell_env()
+
 
         class type_casting:
             def strings_replaced_with_env_value(self):
@@ -342,6 +346,7 @@ Valid real attributes: ['clone', 'from_data', 'load_collection', 'load_files', '
                 ok_(isinstance(c.foo, Meh))
                 ok_(c.foo is not old_obj)
 
+
             class uncastable_types:
                 @raises(UncastableEnvVar)
                 def _uncastable_type(self, default):
@@ -354,6 +359,7 @@ Valid real attributes: ['clone', 'from_data', 'load_collection', 'load_files', '
 
                 def tuples(self):
                     self._uncastable_type(('a', 'tuple'))
+
 
     class hierarchy:
         "Config hierarchy in effect"
@@ -494,6 +500,7 @@ Valid real attributes: ['clone', 'from_data', 'load_collection', 'load_files', '
             ok_('python_only' not in c)
             ok_('json-only' in c)
             eq_(c.shared, 'json-value')
+
 
     class clone:
         def preserves_basic_members(self):
