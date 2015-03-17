@@ -181,16 +181,6 @@ Valid real attributes: ['clone', 'from_data', 'load_collection', 'load_files', '
                 eq_(unicode(config), six.u("{'foo': 'bar'}"))  # noqa
             eq_(repr(config), "{'foo': 'bar'}")
 
-    def python_modules_dont_load_special_vars(self):
-        "Python modules don't load special vars"
-        # Borrow another test's Python module.
-        c = _load('system_prefix', 'python')
-        # Sanity test that lowercase works
-        eq_(c.hooray, 'python')
-        # Real test that builtins, etc are stripped out
-        for special in ('builtins', 'file', 'package', 'name', 'doc'):
-            ok_('__{0}__'.format(special) not in c)
-
     class config_file_loading:
         "Configuration file loading"
 
@@ -224,6 +214,16 @@ Valid real attributes: ['clone', 'from_data', 'load_collection', 'load_files', '
         def unknown_suffix_in_runtime_path_raises_useful_error(self):
             c = Config(runtime_path=join(CONFIGS_PATH, 'screw.ini'))
             eq_(c.boo, 'ini') # Should raise exception
+
+        def python_modules_dont_load_special_vars(self):
+            "Python modules don't load special vars"
+            # Borrow another test's Python module.
+            c = _load('system_prefix', 'python')
+            # Sanity test that lowercase works
+            eq_(c.hooray, 'python')
+            # Real test that builtins, etc are stripped out
+            for special in ('builtins', 'file', 'package', 'name', 'doc'):
+                ok_('__{0}__'.format(special) not in c)
 
     class env_vars:
         "Environment variables"
