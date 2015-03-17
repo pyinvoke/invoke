@@ -1,6 +1,6 @@
-==============
+==========
 ``config``
-==============
+==========
 
 .. autoclass:: invoke.config.Config
     :special-members:
