@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :release:`0.10.1 <2015-03-17>`
 * :support:`-` Tweak README to reflect recent(-ish) changes in ``pip`` re:
   installing the development version via ``pip`` instead of using e.g. git.
 * :release:`0.10.0 <2015-03-17>`
