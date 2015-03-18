@@ -41,7 +41,7 @@ Invoke is a Python (2.6+ and 3.2+) task execution tool & library, drawing inspir
   namespacing, task aliasing, before/after hooks, parallel execution and more.
 
 For documentation, including detailed installation information, please see
-http://docs.pyinvoke.org. Post-install usage information may be found in ``invoke
+http://pyinvoke.org. Post-install usage information may be found in ``invoke
 --help``.
 
 You can install the `development version
