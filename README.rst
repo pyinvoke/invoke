@@ -2,7 +2,9 @@ Invoke is a Python (2.6+ and 3.2+) task execution tool & library, drawing inspir
 
 * Like Ruby's Rake tool and Invoke's own predecessor Fabric 1.x, it provides a
   clean, high level API for running shell commands and defining/organizing
-  task functions from a ``tasks.py`` file::
+  task functions from a ``tasks.py`` file:
+
+  .. code-block:: python
 
     from invoke import run, task
 
