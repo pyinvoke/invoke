@@ -2,6 +2,8 @@
 Changelog
 =========
 
+* :support:`224` Add a completion script for the ``fish`` shell, courtesy of
+  Jaime Ferrándiz.
 * :release:`0.10.1 <2015-03-17>`
 * :support:`-` Tweak README to reflect recent(-ish) changes in ``pip`` re:
   installing the development version via ``pip`` instead of using e.g. git.
