@@ -8,4 +8,4 @@ def go(ctx):
 
 @ctask
 def run(ctx):
-    ctx.run('x')
+    ctx.run('false')
