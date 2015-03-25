@@ -333,17 +333,3 @@ class Result(object):
     @property
     def failed(self):
         return not self.ok
-
-
-def run(command, **kwargs):
-    """
-    Invoke ``command`` in a subprocess and return a `Result` object.
-
-    This function is simply a convenience wrapper for creating a `Runner`
-    subclass (default: `Local`) and calling its `~.Runner.run` method. Please
-    see `.Runner.run` for details on all behaviors & arguments, sans the below.
-
-    :param runner: Class to use for command execution. Default: `Local`.
-    """
-    runner = kwargs.pop('runner', Local)()
-    return runner.run(command, **kwargs)

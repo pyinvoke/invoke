@@ -1,6 +1,7 @@
 import sys
+
+from invoke import run
 from invoke.tasks import task
-from invoke.runner import run
 
 
 cmd = "echo foo && {0} err.py bar".format(sys.executable)

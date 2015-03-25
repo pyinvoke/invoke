@@ -4,11 +4,14 @@ import sys
 from spec import eq_, skip, Spec, raises, ok_, trap
 from mock import patch
 
-from invoke.runner import Runner, run, Local
+from invoke import run
+from invoke.runner import Runner, Local
+from invoke.context import Context
 from invoke.exceptions import Failure
 from invoke.platform import WINDOWS
 
 from _utils import support, reset_cwd, skip_if_windows
+
 
 # Get the right platform-specific directory separator,
 # because Windows command parsing doesn't like '/'

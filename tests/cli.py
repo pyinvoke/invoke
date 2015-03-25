@@ -294,7 +294,7 @@ Available tasks:
     class run_options:
         "run() related CLI flags"
         def _test_flag(self, flag, kwarg, value):
-            with patch('invoke.context.run') as run:
+            with patch('invoke.runner.Runner.run') as run:
                 _dispatch('invoke {0} -c contextualized run'.format(flag))
                 ok_(run.call_args[1][kwarg] == value)
 
@@ -372,7 +372,7 @@ post2
 
         def env_vars_load_with_prefix(self):
             os.environ['INVOKE_RUN_ECHO'] = "1"
-            with patch('invoke.context.run') as run:
+            with patch('invoke.runner.Runner.run') as run:
                 _dispatch('invoke -c contextualized run')
                 ok_(run.call_args[1]['echo'] is True)
 

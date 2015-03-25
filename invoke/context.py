@@ -1,4 +1,4 @@
-from .runner import run
+from .runner import Local
 from .config import Config, DataProxy
 
 
@@ -38,18 +38,23 @@ class Context(DataProxy):
         #: ``ctx.foo`` returns the same value as ``ctx.config['foo']``.
         self.config = config if config is not None else Config()
 
+    # TODO: make this take 'command', not *args
     def run(self, *args, **kwargs):
         """
-        Wrapper for `.runner.run`.
+        Execute a local shell command, honoring config options.
 
-        Honors the ``run`` tree of this object's `.Config` object, whose inner
-        keys map directly to keyword arguments.
+        Specifically, this method:
 
-        Typically you won't be creating your own `.Context` objects and thus
-        this method will honor the entire :ref:`configuration hierarchy
-        <config-hierarchy>`. If desired, you can pass in your own ``config``
-        argument to `.Context` at init time.
+        * starts with a copy of the ``run`` tree of this object's `.Config`
+          (which may be blank, or may contain keys mapping to keyword arguments
+          such as ``echo``);
+        * merges any given ``kwargs`` into that dict;
+        * instantiates a `.Runner` subclass (according to the ``runner``
+          parameter) and calls its `.Local.run` method, with this method's
+          ``args``, and the above dict as its ``kwargs``.
         """
-        options = dict(self.config['run'])
+        # TODO: this can become a one liner
+        options = dict(self.config.get('run', {}))
+        runner = kwargs.pop('runner', Local)
         options.update(kwargs)
-        return run(*args, **options)
+        return runner().run(*args, **options)

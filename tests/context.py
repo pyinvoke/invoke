@@ -15,7 +15,7 @@ class Context_(Spec):
 
     class run_:
         def _honors(self, kwarg, value):
-            with patch('invoke.context.run') as run:
+            with patch('invoke.runner.Runner.run') as run:
                 Context(config={'run': {kwarg: value}}).run('x')
                 run.assert_called_with('x', **{kwarg: value})
 

@@ -40,7 +40,7 @@ class Init(Spec):
             assert invoke.Task is invoke.tasks.Task
 
         def run_function(self):
-            assert invoke.run is invoke.runner.run
+            assert invoke.run # lol
 
         def collection_class(self):
             assert invoke.Collection is invoke.collection.Collection
