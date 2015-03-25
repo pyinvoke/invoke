@@ -286,16 +286,16 @@ class Result(object):
 
     * ``stdout``: The subprocess' standard output, as a multiline string.
     * ``stderr``: Same as ``stdout`` but containing standard error (unless
-      the process was invoked via a pty; see `run`.)
+      the process was invoked via a pty; see `.Runner.run`.)
     * ``exited``: An integer representing the subprocess' exit/return code.
     * ``return_code``: An alias to ``exited``.
     * ``ok``: A boolean equivalent to ``exited == 0``.
     * ``failed``: The inverse of ``ok``: ``True`` if the program exited with a
       nonzero return code.
     * ``pty``: A boolean describing whether the subprocess was invoked with a
-      pty or not; see `run`.
+      pty or not; see `.Runner.run`.
     * ``exception``: Typically ``None``, but may be an exception object if
-      ``pty`` was ``True`` and ``run()`` had to swallow an apparently-spurious
+      ``pty`` was ``True`` and ``run`` had to swallow an apparently-spurious
       ``OSError``. Solely for sanity checking/debugging purposes.
 
     `Result` objects' truth evaluation is equivalent to their ``ok``

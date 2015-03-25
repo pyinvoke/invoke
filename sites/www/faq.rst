@@ -55,8 +55,8 @@ Calling Python or Python scripts prints all the output at the end of the run!
 
 The symptom is easy to spot - you're running a command that takes a few seconds
 or more to execute, it usually prints lines of text as it goes, but via
-`~invoke.runner.run` nothing appears to happen at first, and then all the
-output prints once it's done executing.
+`~invoke.run` nothing appears to happen at first, and then all the output
+prints once it's done executing.
 
 This is usually due to Python - the "inner" Python executable you're invoking,
 not the one Invoke is running under - performing unwanted buffering of its
@@ -69,4 +69,4 @@ saying ``pty=True`` (e.g. ``run("python foo", pty=True)``).
 Alternately, since both Invoke and the inner command are Python, you could try
 loading the inner Python module directly in your Invoke-using code, and call
 whichever methods its command-line stub is using - instead of using
-`~invoke.runner.run`. This can often have other benefits too.
+`~invoke.run`. This can often have other benefits too.

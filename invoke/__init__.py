@@ -6,10 +6,10 @@ from .context import Context  # noqa
 
 def run(command, **kwargs):
     """
-    Invoke ``command`` in a subprocess and return a `Result` object.
+    Invoke ``command`` in a subprocess and return a `.Result` object.
 
     This function is simply a convenience wrapper for creating an anonymous
-    `Context` object and calling its `.Context.run` method, which lets you use
+    `.Context` object and calling its `.Context.run` method, which lets you use
     Invoke's powerful local command execution without requiring the rest of its
     API.
     """

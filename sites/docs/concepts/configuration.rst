@@ -79,10 +79,9 @@ For convenience, we refer to nested setting names with a dotted syntax, so e.g.
   * ``tasks.dedupe`` controls :ref:`deduping` and defaults to ``True``. It can
     also be overridden at runtime via :option:`--no-dedupe`.
 
-* The ``run`` tree controls the behavior of `.Context.run` (but **not** the
-  pure function it wraps, `.runner.run`). Each member of this tree maps
-  directly to a `.Context.run` keyword argument of the same name; see its
-  docstring for details.
+* The ``run`` tree controls the behavior of `.Context.run`. Each member of this
+  tree maps directly to a `.Context.run` keyword argument of the same name; see
+  its docstring for details.
 
     * ``run.echo``: Controls echoing of commands; defaults to ``False``. CLI
       flag: :option:`-e`.

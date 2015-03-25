@@ -114,7 +114,7 @@ Running shell commands
 ======================
 
 Many use cases for Invoke involve running local shell commands, similar to
-programs like Make or Rake. This is done via the `~.runner.run` function::
+programs like Make or Rake. This is done via the `~invoke.run` function::
 
     from invoke import task, run
 
@@ -130,10 +130,10 @@ You'll see the command's output in your terminal as it runs::
     ...
     build succeeded, 2 warnings.
 
-`~.runner.run` returns a useful `.Result` object providing access to the
+`~invoke.run` returns a useful `.Result` object providing access to the
 captured output, exit code, and so forth; it also allows you to activate a PTY,
 hide output (so it is captured only), and more. See `its API docs
-<.runner.run>` for details.
+<invoke.run>` for details.
 
 
 Declaring pre-tasks
@@ -209,7 +209,7 @@ docs <concepts/namespaces>`.
 Using contexts
 ==============
 
-While fully configurable via keyword arguments, `~.runner.run` is a pure
+While fully configurable via keyword arguments, `~invoke.run` is a pure
 function and knows nothing about the greater application. This is a problem
 when you want to alter behavior globally, such as changing the default
 fail-fast behavior, or always using a pty when running commands. It's possible
@@ -230,7 +230,7 @@ function::
     def mytask(ctx, other_args):
         ctx.run("some command")
 
-This method wraps the builtin `~.runner.run` transparently, but is able to
+This method wraps the same machinery that `~invoke.run` uses, but is able to
 honor CLI flags like :option:`-e` or :option:`-p`.
 
 Context objects can also serve as vectors for arbitrary config values -

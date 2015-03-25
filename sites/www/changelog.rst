@@ -2,6 +2,17 @@
 Changelog
 =========
 
+* :support:`-` Rearrange internals relating to the top level ``run`` function,
+  including moving it from its original home in `invoke.runner`, to
+  `invoke.__init__ <invoke>` (to reflect that fact that it itself is now simply
+  a convenience wrapper).
+
+  .. warning::
+    This is a backwards incompatible change if your code was doing ``from
+    invoke.runner import run`` instead of ``from invoke import run``. All such
+    code should now be using ``from invoke import run``. The function's public
+    signature has **not** changed.
+
 * :support:`224` Add a completion script for the ``fish`` shell, courtesy of
   Jaime Marquínez Ferrándiz.
 * :release:`0.10.1 <2015-03-17>`
@@ -13,13 +24,13 @@ Changelog
   and zsh. Thanks to Ivan Malison and Andrew Roberts for providing discussion &
   early patchsets.
 * :support:`-` Reorganize `~invoke.runner.Runner`, `~invoke.runner.Local` and
-  `~invoke.runner.run` for improved distribution of responsibilities &
+  ``invoke.runner.run`` for improved distribution of responsibilities &
   downstream subclassing.
 
   .. warning::
     This includes backwards incompatible changes to the API signature of most
-    members of the `invoke.runner` module, including `~invoke.runner.run`.
-    (However, in the case of `~invoke.runner.run`, the changes are mostly in
+    members of the `invoke.runner` module, including ``invoke.runner.run``.
+    (However, in the case of ``invoke.runner.run``, the changes are mostly in
     the later, optional keyword arguments.)
 
 * :feature:`219` Fall back to non-PTY command execution in situations where
@@ -32,7 +43,7 @@ Changelog
 * :support:`215` (also :issue:`213`, :issue:`214`) Tweak tests & configuration
   sections of the code to include Windows compatibility. Thanks to Paul Moore.
 * :bug:`201 major` (also :issue:`211`) Replace the old, first-draft gross
-  monkeypatched Popen code used for `~invoke.runner.run` with a
+  monkeypatched Popen code used for ``invoke.runner.run`` with a
   non-monkeypatched approach that works better on non-POSIX platforms like
   Windows, and also attempts to handle encoding and locale issues more
   gracefully (meaning: at all gracefully).
@@ -46,7 +57,7 @@ Changelog
   themselves.
 
   .. warning::
-    The top level `~invoke.runner.run` function has had a minor signature
+    The top level ``invoke.runner.run`` function has had a minor signature
     change: the sixth positional argument used to be ``runner`` and is now
     ``encoding`` (with ``runner`` now being the seventh positional argument).
 

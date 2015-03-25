@@ -17,8 +17,7 @@ more complex to use and extend.
 Invoke encapsulates its state in an explicit `~.Context` object, handed to
 tasks when they execute or instantiated and used by hand. The context is the
 primary API endpoint, offering methods which honor the current state (such as
-`.Context.run`, wrapping `~.runner.run`) as well as access to that state
-itself.
+`.Context.run`) as well as access to that state itself.
 
 
 Using contexts in your tasks
@@ -40,7 +39,7 @@ definition style seen in the :doc:`tutorial </getting_started>`:
       keyword. The convention used in the documentation is typically
       ``context`` or ``ctx``.
 
-* Replace any mentions of `~.runner.run` with ``ctx.run`` (or whatever your
+* Replace any mentions of `~invoke.run` with ``ctx.run`` (or whatever your
   context argument's name was).
 
 Here's a simple example::
