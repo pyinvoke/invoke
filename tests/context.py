@@ -4,6 +4,8 @@ from mock import patch
 from invoke.context import Context
 from invoke.config import Config
 
+from _utils import mocked_run
+
 
 class Context_(Spec):
     class init:
@@ -15,7 +17,7 @@ class Context_(Spec):
 
     class run_:
         def _honors(self, kwarg, value):
-            with patch('invoke.runner.Runner.run') as run:
+            with mocked_run() as run:
                 Context(config={'run': {kwarg: value}}).run('x')
                 run.assert_called_with('x', **{kwarg: value})
 
