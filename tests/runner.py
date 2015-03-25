@@ -6,7 +6,6 @@ from mock import patch
 
 from invoke import run
 from invoke.runner import Runner, Local
-from invoke.context import Context
 from invoke.exceptions import Failure
 from invoke.platform import WINDOWS
 

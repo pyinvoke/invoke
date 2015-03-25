@@ -1,5 +1,4 @@
 from spec import Spec, skip, eq_
-from mock import patch
 
 from invoke.context import Context
 from invoke.config import Config
