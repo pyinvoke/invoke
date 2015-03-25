@@ -38,8 +38,7 @@ class Context(DataProxy):
         #: ``ctx.foo`` returns the same value as ``ctx.config['foo']``.
         self.config = config if config is not None else Config()
 
-    # TODO: make this take 'command', not *args
-    def run(self, *args, **kwargs):
+    def run(self, command, **kwargs):
         """
         Execute a local shell command, honoring config options.
 
@@ -50,11 +49,10 @@ class Context(DataProxy):
           such as ``echo``);
         * merges any given ``kwargs`` into that dict;
         * instantiates a `.Runner` subclass (according to the ``runner``
-          parameter) and calls its `.Local.run` method, with this method's
-          ``args``, and the above dict as its ``kwargs``.
+          parameter; default is `.Local`) and calls its ``.run`` method, with
+          this method's ``command`` parameter and the above dict as its
+          ``kwargs``.
         """
-        # TODO: this can become a one liner
-        options = dict(self.config.get('run', {}))
         runner = kwargs.pop('runner', Local)
-        options.update(kwargs)
-        return runner().run(*args, **options)
+        options = dict(self.config.get('run', {}), **kwargs)
+        return runner().run(command, **options)
