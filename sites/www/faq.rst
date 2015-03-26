@@ -9,30 +9,27 @@ General project questions
 Why was Invoke split off from the `Fabric <http://fabfile.org>`_ project?
 -------------------------------------------------------------------------
 
-Fabric (1.x and earlier) was a hybrid project implementing two semi-distinct
-feature sets: task execution (organization of task functions, execution of them
-on the CLI, and local-to-process shell commands) and high level SSH features
-(organization of servers/hosts, remote shell commands, and file transfer).
+Fabric (1.x and earlier) was a hybrid project implementing two feature sets:
+task execution (organization of task functions, execution of them via CLI, and
+local shell commands) and high level SSH actions (organization of
+servers/hosts, remote shell commands, and file transfer).
 
 For use cases requiring both feature sets, this arrangement worked well.
 However, over time it became clear many users only needed one or the other,
-with local-only users resenting the SSH-related install-time requirements, and
-remote-focused users struggling with API limitations caused by early conflating
-of the two areas.
+with local-only users resenting heavy SSH/crypto install requirements, and
+remote-focused users struggling with API limitations caused by the hybrid
+codebase.
 
-When planning a 2.x version of Fabric, it was clear that having the "local"
-feature set as a standalone library made sense, and it seemed plausible to
-design the SSH component as a separate layer above that.
+When planning Fabric 2.x, having the "local" feature set as a standalone
+library made sense, and it seemed plausible to design the SSH component as a
+separate layer above. Thus, Invoke was created to focus exclusively on local
+and abstract concerns, leaving Fabric 2.x concerned only with servers and
+network commands.
 
-Thus, Invoke was born as a project to focus exclusively on the local and
-abstract concerns of running commands and tasks, leaving Fabric 2.x free to
-exist as both a separate project/installation target, and to focus more
-strongly on a high level SSH API.
-
-Fabric 2 will require some parts of Invoke's API, but will not require use of
-its CLI aspects, allowing all 3 use cases (build tool, high level SSH lib,
-hybrid build/orchestration tool) to coexist without negatively impacting each
-other.
+Fabric 2 will leverage parts of Invoke's API, and allow (but not require!) use
+of Invoke's CLI features, allowing multiple use cases (build tool, high level
+SSH lib, hybrid build/orchestration tool) to coexist without negatively
+impacting each other.
 
 For more info on how this relates to Fabric specifically, please see `Fabric's
 roadmap <http://fabfile.org/roadmap.html>`_.
