@@ -3,6 +3,41 @@ Frequently asked questions
 ==========================
 
 
+General project questions
+=========================
+
+Why was Invoke split off from the `Fabric <http://fabfile.org>`_ project?
+-------------------------------------------------------------------------
+
+Fabric (1.x and earlier) was a hybrid project implementing two semi-distinct
+feature sets: task execution (organization of task functions, execution of them
+on the CLI, and local-to-process shell commands) and high level SSH features
+(organization of servers/hosts, remote shell commands, and file transfer).
+
+For use cases requiring both feature sets, this arrangement worked well.
+However, over time it became clear many users only needed one or the other,
+with local-only users resenting the SSH-related install-time requirements, and
+remote-focused users struggling with API limitations caused by early conflating
+of the two areas.
+
+When planning a 2.x version of Fabric, it was clear that having the "local"
+feature set as a standalone library made sense, and it seemed plausible to
+design the SSH component as a separate layer above that.
+
+Thus, Invoke was born as a project to focus exclusively on the local and
+abstract concerns of running commands and tasks, leaving Fabric 2.x free to
+exist as both a separate project/installation target, and to focus more
+strongly on a high level SSH API.
+
+Fabric 2 will require some parts of Invoke's API, but will not require use of
+its CLI aspects, allowing all 3 use cases (build tool, high level SSH lib,
+hybrid build/orchestration tool) to coexist without negatively impacting each
+other.
+
+For more info on how this relates to Fabric specifically, please see `Fabric's
+roadmap <http://fabfile.org/roadmap.html>`_.
+
+
 Defining/executing tasks
 ========================
 
