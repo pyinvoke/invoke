@@ -15,6 +15,10 @@ class Context_(Spec):
             Context(config={'foo': 'bar'})
 
     class run_:
+        # Proves that expected values from the `run` config tree get passed
+        # into the `Context.run` method. Technically we could just have one of
+        # these since the current implementation passes the entire subtree as
+        # kwargs; but safer to be explicit in case that changes. Meh?
         def _honors(self, kwarg, value):
             with mocked_run() as run:
                 Context(config={'run': {kwarg: value}}).run('x')
