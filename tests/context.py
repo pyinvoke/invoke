@@ -2,6 +2,7 @@ from spec import Spec, skip, eq_
 
 from invoke.context import Context
 from invoke.config import Config
+from invoke.runner import Local
 
 from _utils import mocked_run
 
@@ -35,6 +36,9 @@ class Context_(Spec):
 
         def echo(self):
             self._honors('echo', True)
+
+        def runner(self):
+            self._honors('runner', Local)
 
     class configuration_proxy:
         "Dict-like proxy for self.config"

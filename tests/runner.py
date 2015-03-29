@@ -30,9 +30,7 @@ def _run(returns=None, **kwargs):
     class MockRunner(Runner):
         def run_direct(self, command, **kwargs):
             return value
-    # Ensure top level run() uses that runner, provide dummy command.
-    kwargs['runner'] = MockRunner
-    return run("whatever", **kwargs)
+    return MockRunner().run("whatever", **kwargs)
 
 
 # Shorthand for mocking Local.run_pty so tests run under non-pty environments

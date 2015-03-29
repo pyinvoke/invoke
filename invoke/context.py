@@ -49,10 +49,15 @@ class Context(DataProxy):
           such as ``echo``);
         * merges any given ``kwargs`` into that dict;
         * instantiates a `.Runner` subclass (according to the ``runner``
-          parameter; default is `.Local`) and calls its ``.run`` method, with
-          this method's ``command`` parameter and the above dict as its
+          config option; default is `.Local`) and calls its ``.run`` method,
+          with this method's ``command`` parameter and the above dict as its
           ``kwargs``.
         """
-        runner = kwargs.pop('runner', Local)
-        options = dict(self.config.get('run', {}), **kwargs)
-        return runner().run(command, **options)
+        # TODO: probably store config-driven options inside the Runner instance
+        # instead of making them only be run() kwargs.
+        # TODO: how does this behave with unexpected/invalid kwargs?
+        # TODO: should 'run' subtree ever truly not be there? Otherwise we risk
+        # having defaults both here and in the config stuff (such as 'runner')
+        options = self.config.get('run', {})
+        runner_class = options.get('runner', Local)
+        return runner_class().run(command, **dict(options, **kwargs))
