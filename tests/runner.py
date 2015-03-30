@@ -1,5 +1,6 @@
 import os
 import sys
+from functools import partial
 
 from spec import eq_, skip, Spec, raises, ok_, trap
 from mock import patch, Mock
@@ -33,6 +34,23 @@ def _run(returns=None, **kwargs):
         def run_direct(self, command, **kwargs):
             return value
     return MockRunner(Context()).run("whatever", **kwargs)
+
+
+def _config_check(key, config_val, kwarg_val, expected, func='run_direct'):
+    # Config reflecting given data
+    c = Context(config=Config(overrides={'run': {key: config_val}}))
+    # Runner w/ methods mocked for inspection (& to prevent actual subprocess)
+    r = Runner(context=c)
+    r.run_direct = Mock(return_value=("", "", 0, None))
+    r.run_direct.__name__ = 'run_direct'
+    # NOTE: mocking select_emethod this way means result pty info is incorrect.
+    # Doesn't matter for these tests.
+    r.select_method = Mock(return_value=r.run_direct)
+    kwargs = {}
+    if kwarg_val is not None:
+        kwargs[key] = kwarg_val
+    r.run('whatever', **{key: kwarg_val})
+    eq_(getattr(r, func).call_args[1][key], expected)
 
 
 # Shorthand for mocking Local.run_pty so tests run under non-pty environments
@@ -77,24 +95,22 @@ class Run(Spec):
         "Context's config values are honored"
 
         def warn(self):
-            # honors default
-            c = Context(config=Config(overrides={'run': {'warn': 'yup'}}))
-            r = Runner(context=c)
-            r.run_direct = Mock(return_value=("", "", 0, None))
-            r.run_direct.__name__ = 'run_direct'
-            r.run('whatever')
-            eq_(r.run_direct.call_args[1]['warn'], 'yup')
-            # kwarg overrides
+            check = partial(_config_check, key='warn', config_val='yup')
+            check(kwarg_val=None, expected='yup')
+            check(kwarg_val='nope', expected='nope')
 
         def hide(self):
-            # honors default
-            # kwarg overrides
-            skip()
+            check = partial(_config_check, key='hide', config_val='stdout')
+            # NOTE: expected are post-normalized values
+            check(kwarg_val=None, expected=('out',))
+            check(kwarg_val='stderr', expected=('err',))
 
         def pty(self):
-            # honors default
-            # kwarg overrides
-            skip()
+            check = partial(
+                _config_check, key='pty', config_val=True, func='select_method'
+            )
+            check(kwarg_val=None, expected=True)
+            check(kwarg_val=False, expected=False)
 
         def echo(self):
             # honors default
