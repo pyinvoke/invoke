@@ -29,6 +29,24 @@ from .util import debug
 from .platform import WINDOWS
 
 
+#: Core default configuration values. For their descriptions, see
+#: :doc:`/concepts/configuration`.
+#:
+#: .. warning:: Modifying this structure voids all support guarantees!
+global_defaults = {
+    'run': {
+        'warn': False,
+        'hide': None,
+        'pty': False,
+        'fallback': True,
+        'echo': False,
+        'encoding': None,
+
+    },
+    'tasks': {'dedupe': True},
+}
+
+
 class DataProxy(object):
     """
     Helper class implementing nested dict+attr access for `.Config`.
@@ -209,7 +227,7 @@ class Config(DataProxy):
 
         :param dict defaults:
             A dict containing default (lowest level) config data. Default:
-            ``{}``.
+            `~invoke.config.global_defaults`.
 
         :param dict overrides:
             A dict containing override-level config data. Default: ``{}``.
@@ -255,9 +273,11 @@ class Config(DataProxy):
         # Stores merged configs and is accessed via DataProxy.
         self.config = {}
 
-        #: Default configuration values, typically hardcoded in the
-        #: CLI/execution machinery.
-        self._defaults = {} if defaults is None else defaults
+        #: Default configuration values, typically a copy of
+        #: `~invoke.config.global_defaults`.
+        if defaults is None:
+            defaults = copy.deepcopy(global_defaults)
+        self._defaults = defaults
 
         #: Collection-driven config data, gathered from the collection tree
         #: containing the currently executing task.

@@ -24,7 +24,7 @@ class Context(DataProxy):
         :param config:
             `.Config` object to use as the base configuration.
 
-            Defaults to an empty `.Config`.
+            Defaults to an anonymous/default `.Config` instance.
         """
 
         #: The fully merged `.Config` object appropriate for this context.
@@ -42,22 +42,12 @@ class Context(DataProxy):
         """
         Execute a local shell command, honoring config options.
 
-        Specifically, this method:
+        Specifically, this method instantiates a `.Runner` subclass (according
+        to the ``runner`` config option; default is `.Local`) and calls its
+        ``.run`` method with ``command`` and ``kwargs``.
 
-        * starts with a copy of the ``run`` tree of this object's `.Config`
-          (which may be blank, or may contain keys mapping to keyword arguments
-          such as ``echo``);
-        * merges any given ``kwargs`` into that dict;
-        * instantiates a `.Runner` subclass (according to the ``runner``
-          config option; default is `.Local`) and calls its ``.run`` method,
-          with this method's ``command`` parameter and the above dict as its
-          ``kwargs``.
+        See `.Runner.run` for details on ``command`` and the available keyword
+        arguments.
         """
-        # TODO: probably store config-driven options inside the Runner instance
-        # instead of making them only be run() kwargs.
-        # TODO: how does this behave with unexpected/invalid kwargs?
-        # TODO: should 'run' subtree ever truly not be there? Otherwise we risk
-        # having defaults both here and in the config stuff (such as 'runner')
-        options = self.config.get('run', {})
-        runner_class = options.get('runner', Local)
-        return runner_class().run(command, **dict(options, **kwargs))
+        runner_class = self.config.get('runner', Local)
+        return runner_class(context=self).run(command, **kwargs)

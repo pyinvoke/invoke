@@ -8,6 +8,8 @@ import locale
 from .exceptions import Failure, PlatformError
 from .platform import WINDOWS
 
+from .vendor import six
+
 
 def normalize_hide(val):
     hide_vals = (None, False, 'out', 'stdout', 'err', 'stderr', 'both', True)
@@ -61,18 +63,36 @@ class Runner(object):
 
     For a subclass implementation example, see the source code for `.Local`.
     """
-    def run(
-        self,
-        command,
-        warn=False,
-        hide=None,
-        pty=False,
-        fallback=True,
-        echo=False,
-        encoding=None,
-    ):
+    def __init__(self, context):
+        """
+        Create a new runner with a handle on some `.Context`.
+
+        :param context:
+            a `.Context` instance, used to transmit default options and provide
+            access to other contextualized information (e.g. a remote-oriented
+            `.Runner` might want a `.Context` subclass holding info about
+            hostnames and ports.)
+
+            .. note::
+                The `.Context` given to `.Runner` instances **must** contain
+                default config values for the `.Runner` class in question. At a
+                minimum, this means values for each of the default
+                `.Runner.run` keyword arguments such as ``echo`` and ``warn``.
+
+        :raises ValueError:
+            if not all expected default values are found in ``context``.
+        """
+        self.context = context
+
+    def run(self, command, **kwargs):
         """
         Execute ``command``, returning a `Result` object.
+
+        .. note::
+            All kwargs will default to the values found in this instance's
+            `~.Runner.context` attribute, specifically in its configuration's
+            ``run`` subtree. The base default values are described in the
+            parameter list below.
 
         :param str command: The shell command to execute.
 
@@ -127,16 +147,24 @@ class Runner(object):
 
         :raises: `.Failure` (if the command exited nonzero & ``warn=False``)
         """
-        hide = normalize_hide(hide)
         exception = False
-        if echo:
+        # Normalize kwargs w/ config
+        opts = {}
+        for key, value in six.iteritems(self.context.config.run):
+            runtime = kwargs.pop(key, None)
+            opts[key] = value if runtime is None else runtime
+        # TODO: handle invalid kwarg keys (anything left in kwargs)
+        # Normalize 'hide' from one of the various valid input values
+        opts['hide'] = normalize_hide(opts['hide'])
+        # Do the things
+        if opts['echo']:
             print("\033[1;37m{0}\033[0m".format(command))
-        func = self.select_method(pty=pty, fallback=fallback)
+        func = self.select_method(pty=opts['pty'], fallback=opts['fallback'])
         stdout, stderr, exited, exception = func(
             command=command,
-            warn=warn,
-            hide=hide,
-            encoding=encoding
+            warn=opts['warn'],
+            hide=opts['hide'],
+            encoding=opts['encoding'],
         )
         # TODO: make this test less gross? Feels silly to just return a bool in
         # select_method which is tantamount to this, though.
@@ -149,7 +177,7 @@ class Runner(object):
             pty=used_pty,
             exception=exception,
         )
-        if not (result or warn):
+        if not (result or opts['warn']):
             raise Failure(result)
         return result
 

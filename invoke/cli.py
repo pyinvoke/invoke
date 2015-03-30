@@ -376,13 +376,6 @@ def make_config(args, collection):
     configuration values and then told to load the full hierarchy (which
     includes config files.)
     """
-    # Low level defaults
-    defaults = {
-        'run': {
-            'warn': False, 'pty': False, 'hide': None, 'echo': False
-        },
-        'tasks': {'dedupe': True},
-    }
     # Set up runtime overrides from flags.
     # NOTE: only fill in values that would alter behavior, otherwise we want
     # the defaults to come through.
@@ -401,7 +394,6 @@ def make_config(args, collection):
     overrides = {'run': run, 'tasks': tasks}
     # Stand up config object
     c = Config(
-        defaults=defaults,
         overrides=overrides,
         project_home=collection.loaded_from,
         runtime_path=args.config.value,

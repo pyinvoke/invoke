@@ -15,31 +15,6 @@ class Context_(Spec):
             Context()
             Context(config={'foo': 'bar'})
 
-    class run_:
-        # Proves that expected values from the `run` config tree get passed
-        # into the `Context.run` method. Technically we could just have one of
-        # these since the current implementation passes the entire subtree as
-        # kwargs; but safer to be explicit in case that changes. Meh?
-        def _honors(self, kwarg, value):
-            with mocked_run() as run:
-                Context(config={'run': {kwarg: value}}).run('x')
-                run.assert_called_with('x', **{kwarg: value})
-
-        def warn(self):
-            self._honors('warn', True)
-
-        def hide(self):
-            self._honors('hide', 'both')
-
-        def pty(self):
-            self._honors('pty', True)
-
-        def echo(self):
-            self._honors('echo', True)
-
-        def runner(self):
-            self._honors('runner', Local)
-
     class configuration_proxy:
         "Dict-like proxy for self.config"
         def setup(self):

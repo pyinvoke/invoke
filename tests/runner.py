@@ -2,14 +2,16 @@ import os
 import sys
 
 from spec import eq_, skip, Spec, raises, ok_, trap
-from mock import patch
+from mock import patch, Mock
 
 from invoke import run
+from invoke.config import Config
+from invoke.context import Context
 from invoke.runner import Runner, Local
 from invoke.exceptions import Failure
 from invoke.platform import WINDOWS
 
-from _utils import support, reset_cwd, skip_if_windows
+from _utils import support, reset_cwd, skip_if_windows, mocked_run
 
 
 # Get the right platform-specific directory separator,
@@ -30,7 +32,7 @@ def _run(returns=None, **kwargs):
     class MockRunner(Runner):
         def run_direct(self, command, **kwargs):
             return value
-    return MockRunner().run("whatever", **kwargs)
+    return MockRunner(Context()).run("whatever", **kwargs)
 
 
 # Shorthand for mocking Local.run_pty so tests run under non-pty environments
@@ -60,6 +62,50 @@ class Run(Spec):
 
     def teardown(self):
         reset_cwd()
+
+    class init:
+        "__init__"
+        def takes_a_context_instance(self):
+            c = Context()
+            eq_(Runner(c).context, c)
+
+        @raises(TypeError)
+        def context_instance_is_required(self):
+            Runner()
+
+    class uses_context_config:
+        "Context's config values are honored"
+
+        def warn(self):
+            # honors default
+            c = Context(config=Config(overrides={'run': {'warn': 'yup'}}))
+            r = Runner(context=c)
+            r.run_direct = Mock(return_value=("", "", 0, None))
+            r.run_direct.__name__ = 'run_direct'
+            r.run('whatever')
+            eq_(r.run_direct.call_args[1]['warn'], 'yup')
+            # kwarg overrides
+
+        def hide(self):
+            # honors default
+            # kwarg overrides
+            skip()
+
+        def pty(self):
+            # honors default
+            # kwarg overrides
+            skip()
+
+        def echo(self):
+            # honors default
+            # kwarg overrides
+            skip()
+        
+        def fallback(self):
+            skip()
+
+        def encoding(self):
+            skip()
 
     class return_value:
         def return_code_in_result(self):
