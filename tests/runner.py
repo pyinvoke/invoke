@@ -36,14 +36,18 @@ def _run(returns=None, **kwargs):
     return MockRunner(Context()).run("whatever", **kwargs)
 
 
-def _config_check(key, config_val, kwarg_val, expected, func='run_direct'):
+def _runner(key, config_val):
     # Config reflecting given data
     c = Context(config=Config(overrides={'run': {key: config_val}}))
     # Runner w/ methods mocked for inspection (& to prevent actual subprocess)
     r = Runner(context=c)
     r.run_direct = Mock(return_value=("", "", 0, None))
     r.run_direct.__name__ = 'run_direct'
-    # NOTE: mocking select_emethod this way means result pty info is incorrect.
+    return r
+
+def _config_check(key, config_val, kwarg_val, expected, func='run_direct'):
+    r = _runner(key=key, config_val=config_val)
+    # NOTE: mocking select_method this way means result pty info is incorrect.
     # Doesn't matter for these tests.
     r.select_method = Mock(return_value=r.run_direct)
     kwargs = {}
@@ -112,16 +116,26 @@ class Run(Spec):
             check(kwarg_val=None, expected=True)
             check(kwarg_val=False, expected=False)
 
+        @trap
         def echo(self):
             # honors default
+            r = _runner(key='echo', config_val=True)
+            r.run('whatever')
+            ok_('whatever' in sys.stdout.getvalue())
             # kwarg overrides
-            skip()
         
         def fallback(self):
-            skip()
+            check = partial(
+                _config_check, key='fallback', config_val=True,
+                func='select_method'
+            )
+            check(kwarg_val=None, expected=True)
+            check(kwarg_val=False, expected=False)
 
         def encoding(self):
-            skip()
+            check = partial(_config_check, key='encoding', config_val='UTF-7')
+            check(kwarg_val=None, expected='UTF-7')
+            check(kwarg_val='UTF-9', expected='UTF-9')
 
     class return_value:
         def return_code_in_result(self):
