@@ -132,13 +132,15 @@ class DataProxy(object):
         return value
 
     def __str__(self):
-        return str(self.config)
+        return "<{0}: {1}>".format(self.__class__.__name__, self.config)
 
     def __unicode__(self):
-        return unicode(self.config)  # noqa
+        return unicode(self.__str__())  # noqa
 
     def __repr__(self):
-        return repr(self.config)
+        # TODO: something more useful? Not an easy object to reconstruct from a
+        # stringrep.
+        return self.__str__()
 
     def __contains__(self, key):
         return key in self.config

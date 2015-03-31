@@ -177,10 +177,10 @@ Valid real attributes: ['clone', 'from_data', 'load_collection', 'load_files', '
         def string_display(self):
             "__str__ and friends"
             config = Config({'foo': 'bar'})
-            eq_(str(config), "{'foo': 'bar'}")
+            eq_(str(config), "<Config: {'foo': 'bar'}>")
             if six.PY2:
-                eq_(unicode(config), six.u("{'foo': 'bar'}"))  # noqa
-            eq_(repr(config), "{'foo': 'bar'}")
+                eq_(unicode(config), six.u("<Config: {'foo': 'bar'}>"))  # noqa
+            eq_(repr(config), "<Config: {'foo': 'bar'}>")
 
 
     class config_file_loading:
