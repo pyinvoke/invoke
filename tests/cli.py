@@ -321,22 +321,6 @@ Available tasks:
             with cd('configs'):
                 _dispatch("inv -c runtime -f yaml/invoke.yaml mytask")
 
-        def run_echo_honors_configuration_overrides(self):
-            # Try a few realistic-for-this-setting levels:
-            with run_in_configs() as run:
-                # Collection
-                _dispatch('invoke -c collection go')
-                eq_(run.call_args_list[-1][1]['echo'], True)
-                # Runtime conf file
-                _dispatch('invoke -c contextualized -f echo.yaml run')
-                eq_(run.call_args_list[-1][1]['echo'], True)
-                # Runtime beats collection
-                _dispatch('invoke -c collection -f no-echo.yaml go')
-                eq_(run.call_args_list[-1][1]['echo'], False)
-                # Flag beats runtime
-                _dispatch('invoke -c contextualized -f no-echo.yaml -e run')
-                eq_(run.call_args_list[-1][1]['echo'], True)
-
         def tasks_dedupe_honors_configuration(self):
             # Kinda-sorta duplicates some tests in executor.py, but eh.
             with cd('configs'):
@@ -375,18 +359,6 @@ post2
             with mocked_run() as run:
                 _dispatch('invoke -c contextualized run')
                 ok_(run.call_args[1]['echo'] is True)
-
-        def collection_defaults_dont_block_env_var_run_settings(self):
-            # Environ setting run.warn
-            os.environ['INVOKE_RUN_WARN'] = "1"
-            with run_in_configs() as run:
-                # This collection sets run = {echo: true}
-                # If merging isn't done, it will overwrite the low level
-                # defaults, meaning the env var adapter won't see that
-                # 'run_warn' is a valid setting.
-                _dispatch('invoke -c collection go')
-                ok_(run.call_args[1]['echo'] is True)
-                ok_(run.call_args[1]['warn'] is True)
 
 
 TB_SENTINEL = 'Traceback (most recent call last)'
