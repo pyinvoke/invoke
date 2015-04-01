@@ -1,4 +1,4 @@
-from .runner import Local
+from .runners import Local
 from .config import Config, DataProxy
 
 

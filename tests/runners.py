@@ -8,7 +8,7 @@ from mock import patch, Mock
 from invoke import run
 from invoke.config import Config
 from invoke.context import Context
-from invoke.runner import Runner, Local
+from invoke.runners import Runner, Local
 from invoke.exceptions import Failure
 from invoke.platform import WINDOWS
 

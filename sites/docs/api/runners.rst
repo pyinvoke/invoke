@@ -1,6 +1,6 @@
-==========
-``runner``
-==========
+===========
+``runners``
+===========
 
-.. automodule:: invoke.runner
+.. automodule:: invoke.runners
     :member-order: bysource

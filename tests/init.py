@@ -5,7 +5,6 @@ from spec import Spec, eq_
 
 import invoke
 import invoke.tasks
-import invoke.runner
 import invoke.collection
 
 

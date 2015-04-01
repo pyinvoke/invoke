@@ -2,18 +2,22 @@
 Changelog
 =========
 
-* :support:`-` Rearrange internals relating to the top level ``run`` function,
-  including moving it from its original home in `invoke.runner`, to
-  `invoke.__init__ <invoke>` (to reflect that fact that it itself is now simply
-  a convenience wrapper) as well as tweaking the implementation of
-  `~invoke.runner.Runner` so it can reference `~invoke.context.Context` objects
-  (useful for anticipated subclasses).
+* :support:`-` Rearrange ``run`` related concerns for improved subclassing,
+  organization, and use in other libraries, including:
+
+    * Changed the name of the ``runner`` module to ``runners``.
+    * Moved the top level ``run`` function from its original home in
+      ``invoke.runner`` to `invoke.__init__ <invoke>`, to reflect the fact that
+      it's now simply a convenience wrapper around ``Runner``.
+    * Tweaked the implementation of `~invoke.runners.Runner` so it can
+      reference `~invoke.context.Context` objects (useful for anticipated
+      subclasses).
 
   .. warning::
-    This is a backwards incompatible change if your code was doing ``from
-    invoke.runner import run`` instead of ``from invoke import run``. All such
-    code should now be using ``from invoke import run``. The function's public
-    signature has **not** changed.
+    These are backwards incompatible changes if your code was doing any imports
+    from the ``invoke.runner`` module (including especially
+    ``invoke.runner.run``, which is now only ``invoke.run``). Function
+    signatures have **not** changed.
 
 * :support:`224` Add a completion script for the ``fish`` shell, courtesy of
   Jaime Marquínez Ferrándiz.
