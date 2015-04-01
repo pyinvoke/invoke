@@ -292,23 +292,25 @@ Available tasks:
             _output_eq("-c autoprint post_check", "")
 
     class run_options:
-        "run() related CLI flags"
-        def _test_flag(self, flag, kwarg, value):
-            with mocked_run() as run:
-                _dispatch('invoke {0} -c contextualized run'.format(flag))
-                ok_(run.call_args[1][kwarg] == value)
+        "run() related CLI flags affect 'run' config values"
+        def _test_flag(self, flag, key):
+            with mocked_run():
+                # The tasks themselves perform the necessary asserts.
+                _dispatch('invoke {0} -c contextualized check_{1}'.format(
+                    flag, key
+                ))
 
         def warn_only(self):
-            self._test_flag('-w', 'warn', True)
+            self._test_flag('-w', 'warn')
 
         def pty(self):
-            self._test_flag('-p', 'pty', True)
+            self._test_flag('-p', 'pty')
 
         def hide(self):
-            self._test_flag('--hide both', 'hide', 'both')
+            self._test_flag('--hide both', 'hide')
 
         def echo(self):
-            self._test_flag('-e', 'echo', True)
+            self._test_flag('-e', 'echo')
 
     class configuration:
         "Configuration-related concerns"
@@ -357,8 +359,8 @@ post2
         def env_vars_load_with_prefix(self):
             os.environ['INVOKE_RUN_ECHO'] = "1"
             with mocked_run() as run:
-                _dispatch('invoke -c contextualized run')
-                ok_(run.call_args[1]['echo'] is True)
+                # Task performs the assert
+                _dispatch('invoke -c contextualized check_echo')
 
 
 TB_SENTINEL = 'Traceback (most recent call last)'
