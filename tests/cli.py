@@ -5,9 +5,9 @@ from spec import eq_, skip, Spec, ok_, trap
 from mock import patch, Mock
 
 from invoke.cli import tasks_from_contexts
+from invoke.collection import Collection
 from invoke.context import Context
 from invoke.parser import Parser
-from invoke.collection import Collection
 from invoke.tasks import task
 import invoke
 
