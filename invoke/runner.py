@@ -79,7 +79,7 @@ class Runner(object):
                 minimum, this means values for each of the default
                 `.Runner.run` keyword arguments such as ``echo`` and ``warn``.
 
-        :raises ValueError:
+        :raises exceptions.ValueError:
             if not all expected default values are found in ``context``.
         """
         self.context = context
