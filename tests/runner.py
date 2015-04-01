@@ -12,7 +12,7 @@ from invoke.runner import Runner, Local
 from invoke.exceptions import Failure
 from invoke.platform import WINDOWS
 
-from _utils import support, reset_cwd, skip_if_windows, mocked_run
+from _utils import support, reset_cwd, skip_if_windows
 
 
 # Get the right platform-specific directory separator,
@@ -123,7 +123,7 @@ class Run(Spec):
             r.run('whatever')
             ok_('whatever' in sys.stdout.getvalue())
             # kwarg overrides
-        
+
         def fallback(self):
             check = partial(
                 _config_check, key='fallback', config_val=True,

@@ -102,13 +102,6 @@ def mocked_run():
         yield run
 
 
-@contextmanager
-def run_in_configs():
-    with mocked_run() as run:
-        with cd('configs'):
-            yield run
-
-
 def _assert_contains(haystack, needle, invert):
     matched = re.search(needle, haystack, re.M)
     if (invert and matched) or (not invert and not matched):

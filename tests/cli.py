@@ -12,7 +12,7 @@ from invoke.tasks import task
 import invoke
 
 from _utils import (
-    _dispatch, _output_eq, IntegrationSpec, cd, expect_exit, run_in_configs,
+    _dispatch, _output_eq, IntegrationSpec, cd, expect_exit,
     skip_if_windows, mocked_run
 )
 
@@ -358,7 +358,7 @@ post2
 
         def env_vars_load_with_prefix(self):
             os.environ['INVOKE_RUN_ECHO'] = "1"
-            with mocked_run() as run:
+            with mocked_run():
                 # Task performs the assert
                 _dispatch('invoke -c contextualized check_echo')
 
