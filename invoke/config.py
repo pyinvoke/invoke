@@ -30,9 +30,12 @@ from .platform import WINDOWS
 
 
 #: Core default configuration values. For their descriptions, see
-#: :doc:`/concepts/configuration`.
+#: :ref:`default-values`.
 #:
-#: .. warning:: Modifying this structure voids all support guarantees!
+#: .. warning::
+#:     Modifying this structure voids all support guarantees! To make global
+#:     changes, use config files or other config avenues (as outlined in
+#:     :doc:`/concepts/configuration`).
 global_defaults = {
     'run': {
         'warn': False,
