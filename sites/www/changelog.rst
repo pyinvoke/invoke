@@ -5,7 +5,9 @@ Changelog
 * :support:`-` Rearrange internals relating to the top level ``run`` function,
   including moving it from its original home in `invoke.runner`, to
   `invoke.__init__ <invoke>` (to reflect that fact that it itself is now simply
-  a convenience wrapper).
+  a convenience wrapper) as well as tweaking the implementation of
+  `~invoke.runner.Runner` so it can reference `~invoke.context.Context` objects
+  (useful for anticipated subclasses).
 
   .. warning::
     This is a backwards incompatible change if your code was doing ``from
