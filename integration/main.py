@@ -6,7 +6,7 @@ from invoke import run
 
 
 def _output_eq(cmd, expected):
-    return eq_(run(cmd).stdout, expected)
+    return eq_(run(cmd, hide=True).stdout, expected)
 
 
 class Main(Spec):

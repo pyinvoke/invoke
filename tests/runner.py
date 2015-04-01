@@ -73,7 +73,7 @@ _not_tty = patch('os.isatty', return_value=False)
 
 
 class Run(Spec):
-    "run()"
+    "Basic run() / Context.run() behavior"
 
     def setup(self):
         os.chdir(support)
@@ -243,6 +243,7 @@ class Run(Spec):
             eq_(r.stderr, "")
 
         @skip_if_windows
+        @trap
         def hide_err_has_no_effect_under_pty(self):
             r = run(self.sub.format('err', hide='both'))
             eq_(r.stdout, "foo\r\nbar\r\n")
