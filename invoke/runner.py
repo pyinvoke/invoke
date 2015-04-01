@@ -82,6 +82,9 @@ class Runner(object):
         :raises exceptions.ValueError:
             if not all expected default values are found in ``context``.
         """
+        #: Context this `.Runner` operates against, referenced for
+        #: configuration options (e.g. echo, warn) and possibly more,
+        #: depending on subclass needs.
         self.context = context
 
     def run(self, command, **kwargs):
