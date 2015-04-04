@@ -2,8 +2,9 @@
 Changelog
 =========
 
-* :support:`-` Rearrange ``run`` related concerns for improved subclassing,
-  organization, and use in other libraries, including:
+* :support:`-` Additional rearranging of ``run``/``Runner`` related concerns
+  for improved subclassing, organization, and use in other libraries,
+  including:
 
     * Changed the name of the ``runner`` module to ``runners``.
     * Moved the top level ``run`` function from its original home in
@@ -29,18 +30,18 @@ Changelog
   completion scripts, and add some 'blessed' such scripts for bash (3 and 4)
   and zsh. Thanks to Ivan Malison and Andrew Roberts for providing discussion &
   early patchsets.
-* :support:`-` Reorganize `~invoke.runner.Runner`, `~invoke.runner.Local` and
+* :support:`-` Reorganize `~invoke.runners.Runner`, `~invoke.runners.Local` and
   ``invoke.runner.run`` for improved distribution of responsibilities &
   downstream subclassing.
 
   .. warning::
     This includes backwards incompatible changes to the API signature of most
-    members of the `invoke.runner` module, including ``invoke.runner.run``.
+    members of the ``invoke.runner`` module, including ``invoke.runner.run``.
     (However, in the case of ``invoke.runner.run``, the changes are mostly in
     the later, optional keyword arguments.)
 
 * :feature:`219` Fall back to non-PTY command execution in situations where
-  ``pty=True`` but no PTY appears present. See `~invoke.runner.Local` for
+  ``pty=True`` but no PTY appears present. See `~invoke.runners.Local` for
   details.
 * :support:`212` Implement basic linting support using ``flake8``, and apply
   formatting changes to satisfy said linting. As part of this shakeup, also
@@ -170,8 +171,8 @@ Changelog
       module to ``sys.path`` and then calling Invoke elsewhere on the
       filesystem.
 
-* :support:`-` Refactor the `invoke.runner.Runner` module to differentiate what
-  it means to run a command in the abstract, from execution specifics. Top
+* :support:`-` Refactor the `invoke.runners.Runner` module to differentiate
+  what it means to run a command in the abstract, from execution specifics. Top
   level API is unaffected.
 * :bug:`131 major` Make sure one's local tasks module is always first in
   ``sys.path``, even if its parent directory was already somewhere else in
