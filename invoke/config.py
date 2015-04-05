@@ -29,27 +29,6 @@ from .util import debug
 from .platform import WINDOWS
 
 
-#: Core default configuration values. For their descriptions, see
-#: :ref:`default-values`.
-#:
-#: .. warning::
-#:     Modifying this structure voids all support guarantees! To make global
-#:     changes, use config files or other config avenues (as outlined in
-#:     :doc:`/concepts/configuration`).
-global_defaults = {
-    'run': {
-        'warn': False,
-        'hide': None,
-        'pty': False,
-        'fallback': True,
-        'echo': False,
-        'encoding': None,
-
-    },
-    'tasks': {'dedupe': True},
-}
-
-
 class DataProxy(object):
     """
     Helper class implementing nested dict+attr access for `.Config`.
@@ -219,6 +198,30 @@ class Config(DataProxy):
         ``_.user``.
     """
 
+    @staticmethod
+    def global_defaults():
+        """
+        Return the statically defined core default settings for Invoke.
+
+        Generally only for use by `.Config` internals. For descriptions of
+        these values, see :ref:`default-values`.
+
+        Subclasses may choose to use `super` and `.merge_dicts` to add to, or
+        modify, these values.
+        """
+        return {
+            'run': {
+                'warn': False,
+                'hide': None,
+                'pty': False,
+                'fallback': True,
+                'echo': False,
+                'encoding': None,
+
+            },
+            'tasks': {'dedupe': True},
+        }
+
     def __init__(
         self,
         defaults=None,
@@ -234,7 +237,7 @@ class Config(DataProxy):
 
         :param dict defaults:
             A dict containing default (lowest level) config data. Default:
-            `~invoke.config.global_defaults`.
+            `global_defaults`.
 
         :param dict overrides:
             A dict containing override-level config data. Default: ``{}``.
@@ -281,9 +284,9 @@ class Config(DataProxy):
         self.config = {}
 
         #: Default configuration values, typically a copy of
-        #: `~invoke.config.global_defaults`.
+        #: `global_defaults`.
         if defaults is None:
-            defaults = copy.deepcopy(global_defaults)
+            defaults = copy.deepcopy(Config.global_defaults())
         self._defaults = defaults
 
         #: Collection-driven config data, gathered from the collection tree
