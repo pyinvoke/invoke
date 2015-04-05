@@ -201,13 +201,14 @@ class Config(DataProxy):
     @staticmethod
     def global_defaults():
         """
-        Return the statically defined core default settings for Invoke.
+        Return the core default settings for Invoke.
 
         Generally only for use by `.Config` internals. For descriptions of
         these values, see :ref:`default-values`.
 
-        Subclasses may choose to use `super` and `.merge_dicts` to add to, or
-        modify, these values.
+        Subclasses may choose to override this method, calling
+        ``Config.global_defaults`` and applying `.merge_dicts` to the result,
+        to add to or modify these values.
         """
         return {
             'run': {
