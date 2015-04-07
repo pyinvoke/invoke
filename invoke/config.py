@@ -501,7 +501,7 @@ class Config(DataProxy):
 
     def merge(self):
         """
-        Merge all config sources, in order, to `.config`.
+        Merge all config sources, in order.
 
         Does not imply loading of config files or environment variables; use
         `.load_files` and/or `.load_shell_env` beforehand instead.
