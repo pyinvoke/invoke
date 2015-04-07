@@ -287,7 +287,7 @@ class Config(DataProxy):
         #: Default configuration values, typically a copy of
         #: `global_defaults`.
         if defaults is None:
-            defaults = copy.deepcopy(Config.global_defaults())
+            defaults = copy.deepcopy(self.global_defaults())
         self._defaults = defaults
 
         #: Collection-driven config data, gathered from the collection tree
