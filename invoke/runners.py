@@ -53,9 +53,9 @@ class Runner(object):
     full contents as distinct strings.
 
     ``run_direct``/``run_pty`` both have a signature of ``(self, command, warn,
-    hide, encoding)`` (see `run` for semantics of these) and must return a
-    4-tuple of ``(stdout, stderr, exitcode, exception)`` (see `Result` for
-    their meaning).
+    hide, encoding, out_stream, err_stream)`` (see `run` for semantics of
+    these) and must return a 4-tuple of ``(stdout, stderr, exitcode,
+    exception)`` (see `Result` for their meaning).
 
     ``run_pty`` differs from ``run_direct`` in that it should utilize a
     pseudo-terminal, and is expected to only return a useful ``stdout`` (with
@@ -127,10 +127,10 @@ class Runner(object):
             .. warning::
                 Due to their nature, ptys have a single output stream, so the
                 ability to tell stdout apart from stderr is **not possible**
-                when ``pty=True``. As such, all output will appear on your
-                local stdout and be captured into the ``stdout`` result
-                attribute. Stderr and ``stderr`` will always be empty when
-                ``pty=True``.
+                when ``pty=True``. As such, all output will appear on
+                ``out_stream`` (see below) and be captured into the ``stdout``
+                result attribute. ``err_stream`` and ``stderr`` will always be
+                empty when ``pty=True``.
 
         :param bool fallback:
             Controls auto-fallback behavior re: problems offering a pty when
@@ -145,6 +145,15 @@ class Runner(object):
             Override auto-detection of which encoding the subprocess is using
             for its stdout/stderr streams. Defaults to the return value of
             ``locale.getpreferredencoding(False)``).
+
+        :param out_stream:
+            A file-like stream object to which the subprocess' standard error
+            should be written. If ``None`` (the default), ``sys.stdout`` will
+            be used.
+
+        :param err_stream:
+            Same as ``out_stream``, except for standard error, and defaulting
+            to ``sys.stderr`.
 
         :returns: `Result`
 
