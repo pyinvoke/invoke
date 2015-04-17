@@ -152,7 +152,7 @@ class Runner(object):
 
         :param err_stream:
             Same as ``out_stream``, except for standard error, and defaulting
-            to ``sys.stderr`.
+            to ``sys.stderr``.
 
         :returns: `Result`
 
