@@ -1,4 +1,5 @@
 import sys
+from StringIO import StringIO
 
 from spec import Spec, trap, eq_
 
@@ -23,8 +24,14 @@ class Local_(Spec):
             Local(Context()).run("command")
             eq_(sys.stderr.getvalue(), "sup")
 
+        @trap
+        @mock_subprocess(out="sup")
         def out_stream_can_be_overridden(self):
             "out_stream can be overridden"
+            out = StringIO()
+            Local(Context()).run("command", out_stream=out)
+            eq_(out.getvalue(), "sup")
+            eq_(sys.stdout.getvalue(), "")
 
         def err_stream_can_be_overridden(self):
             "err_stream can be overridden"
