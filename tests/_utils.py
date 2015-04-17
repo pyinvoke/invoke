@@ -1,8 +1,9 @@
 import os
 import re
 import sys
-from contextlib import contextmanager
+from contextlib import contextmanager, nested
 from functools import partial, wraps
+from StringIO import StringIO
 
 from mock import patch
 from spec import trap, Spec, eq_, skip
@@ -113,3 +114,25 @@ def _assert_contains(haystack, needle, invert):
 
 assert_contains = partial(_assert_contains, invert=False)
 assert_not_contains = partial(_assert_contains, invert=True)
+
+
+def mock_subprocess(out='', err='', exit=0):
+    def decorator(f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            with nested(
+                patch('invoke.runners.Popen'), patch('os.read')
+            ) as (Popen, read):
+                process = Popen.return_value
+                process.returncode = exit
+                process.stdout.fileno.return_value = 1
+                process.stderr.fileno.return_value = 2
+                out_file = StringIO(out)
+                err_file = StringIO(err)
+                def fakeread(fileno, count):
+                    fd = {1: out_file, 2: err_file}[fileno]
+                    return fd.read(count)
+                read.side_effect = fakeread
+                f(*args, **kwargs)
+        return wrapper
+    return decorator
