@@ -45,8 +45,11 @@ class Local_(Spec):
             eq_(err.getvalue(), "sup")
             eq_(sys.stderr.getvalue(), "")
 
+        @trap
+        @mock_subprocess(out="sup")
         def pty_output_stream_defaults_are_the_same(self):
-            skip()
+            self._run("nope", pty=True)
+            eq_(sys.stdout.getvalue(), "sup")
 
         def pty_output_stream_overrides_are_the_same(self):
             skip()
