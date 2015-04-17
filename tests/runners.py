@@ -1,7 +1,7 @@
 import sys
 from StringIO import StringIO
 
-from spec import Spec, trap, eq_
+from spec import Spec, trap, eq_, skip
 
 from invoke import Local, Context
 
@@ -35,3 +35,9 @@ class Local_(Spec):
 
         def err_stream_can_be_overridden(self):
             "err_stream can be overridden"
+
+        def pty_output_stream_defaults_are_the_same(self):
+            skip()
+
+        def pty_output_stream_overrides_are_the_same(self):
+            skip()
