@@ -33,8 +33,14 @@ class Local_(Spec):
             eq_(out.getvalue(), "sup")
             eq_(sys.stdout.getvalue(), "")
 
+        @trap
+        @mock_subprocess(err="sup")
         def err_stream_can_be_overridden(self):
             "err_stream can be overridden"
+            err = StringIO()
+            Local(Context()).run("nope", err_stream=err)
+            eq_(err.getvalue(), "sup")
+            eq_(sys.stderr.getvalue(), "")
 
         def pty_output_stream_defaults_are_the_same(self):
             skip()
