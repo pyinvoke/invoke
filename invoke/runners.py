@@ -82,9 +82,7 @@ class Runner(object):
         :raises exceptions.ValueError:
             if not all expected default values are found in ``context``.
         """
-        #: Context this `.Runner` operates against, referenced for
-        #: configuration options (e.g. echo, warn) and possibly more,
-        #: depending on subclass needs.
+        #: The `.Context` given to the same-named argument of `__init__`.
         self.context = context
 
     def run(self, command, **kwargs):
@@ -94,8 +92,9 @@ class Runner(object):
         .. note::
             All kwargs will default to the values found in this instance's
             `~.Runner.context` attribute, specifically in its configuration's
-            ``run`` subtree. The base default values are described in the
-            parameter list below.
+            ``run`` subtree (e.g. ``run.echo`` provides the default value for
+            the ``echo`` keyword, etc). The base default values are described
+            in the parameter list below.
 
         :param str command: The shell command to execute.
 
