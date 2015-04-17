@@ -176,6 +176,8 @@ class Runner(object):
             warn=opts['warn'],
             hide=opts['hide'],
             encoding=opts['encoding'],
+            out_stream=opts['out_stream'],
+            err_stream=opts['err_stream'],
         )
         # TODO: make this test less gross? Feels silly to just return a bool in
         # select_method which is tantamount to this, though.
@@ -196,10 +198,10 @@ class Runner(object):
         # NOTE: fallback not used: no falling back implemented by default.
         return getattr(self, 'run_pty' if pty else 'run_direct')
 
-    def run_direct(self, command, warn, hide, encoding):
+    def run_direct(self, command, warn, hide, encoding, out_stream, err_stream):
         raise NotImplementedError
 
-    def run_pty(self, command, warn, hide, encoding):
+    def run_pty(self, command, warn, hide, encoding, out_stream, err_stream):
         raise NotImplementedError
 
 
@@ -227,7 +229,7 @@ class Local(Runner):
                 func = self.run_direct
         return func
 
-    def run_direct(self, command, warn, hide, encoding):
+    def run_direct(self, command, warn, hide, encoding, out_stream, err_stream):
         process = Popen(
             command,
             shell=True,
@@ -256,8 +258,8 @@ class Local(Runner):
         threads = []
 
         for args in (
-            (process.stdout, sys.stdout, stdout, 'out' in hide),
-            (process.stderr, sys.stderr, stderr, 'err' in hide),
+            (process.stdout, out_stream, stdout, 'out' in hide),
+            (process.stderr, err_stream, stderr, 'err' in hide),
         ):
             t = threading.Thread(target=display, args=args)
             threads.append(t)
@@ -280,7 +282,7 @@ class Local(Runner):
 
         return stdout, stderr, process.returncode, None
 
-    def run_pty(self, command, warn, hide, encoding):
+    def run_pty(self, command, warn, hide, encoding, out_stream, err_stream):
         # Sanity check: platforms that can't pexpect should explode usefully
         # here. (Without this, the pexpect import throws an inner
         # ImportException trying to 'import pty' which is unavailable on
