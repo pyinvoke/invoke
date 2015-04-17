@@ -304,6 +304,10 @@ class Local(Runner):
                 return text
             else:
                 return b""
+        # Hand pexpect useful args for os.execve(binary, args).
+        # TODO: try to use same default binary value as Popen does (is usually
+        # /bin/sh but IIRC there's caveats)
+        # TODO: allow control over this
         p = pexpect.spawn("/bin/bash", ["-c", command])
         # Ensure pexpect doesn't barf with OSError if we fall off the end of
         # the child's input on some platforms (e.g. Linux).
