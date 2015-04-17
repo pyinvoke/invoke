@@ -167,6 +167,9 @@ class Runner(object):
         # TODO: handle invalid kwarg keys (anything left in kwargs)
         # Normalize 'hide' from one of the various valid input values
         opts['hide'] = normalize_hide(opts['hide'])
+        # Derive stream objects
+        out_stream = sys.stdout if opts['out_stream'] is None else opts['out_stream']
+        err_stream = sys.stderr if opts['err_stream'] is None else opts['err_stream']
         # Do the things
         if opts['echo']:
             print("\033[1;37m{0}\033[0m".format(command))
@@ -176,8 +179,8 @@ class Runner(object):
             warn=opts['warn'],
             hide=opts['hide'],
             encoding=opts['encoding'],
-            out_stream=opts['out_stream'],
-            err_stream=opts['err_stream'],
+            out_stream=out_stream,
+            err_stream=err_stream,
         )
         # TODO: make this test less gross? Feels silly to just return a bool in
         # select_method which is tantamount to this, though.

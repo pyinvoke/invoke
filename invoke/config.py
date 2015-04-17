@@ -218,8 +218,8 @@ class Config(DataProxy):
                 'fallback': True,
                 'echo': False,
                 'encoding': None,
-                'out_stream': sys.stdout,
-                'err_stream': sys.stderr,
+                'out_stream': None,
+                'err_stream': None,
             },
             'tasks': {'dedupe': True},
         }
