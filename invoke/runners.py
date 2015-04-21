@@ -285,7 +285,6 @@ class Local(Runner):
 
         return stdout, stderr, process.returncode, None
 
-
     def run_pty(self, command, warn, hide, encoding, out_stream, err_stream):
         # TODO: re-insert Windows "lol y u no pty" stuff here
         import pty
@@ -366,56 +365,6 @@ class Local(Runner):
             stderr = stderr.replace("\r\n", "\n").replace("\r", "\n")
 
         return stdout, stderr, returncode, None
-
-
-
-
-
-    def _run_pty(self, command, warn, hide, encoding, out_stream, err_stream):
-        from invoke import pty
-        e = pty.spawn(['/bin/bash', '-c', command])
-        print e
-        
-        return "uh", "wat", 1, None
-
-        # Sanity check: platforms that can't pexpect should explode usefully
-        # here. (Without this, the pexpect import throws an inner
-        # ImportException trying to 'import pty' which is unavailable on
-        # Windows. Better to do this here than truly-fork pexpect.)
-        if WINDOWS:
-            err = "You seem to be on Windows, which doesn't support ptys!"
-            raise PlatformError(err)
-        # Proceed as normal for POSIX/etc platforms, with a runtime import
-        from .vendor import pexpect
-
-        out = []
-        def out_filter(text):
-            # Maybe use encoding here as in run() above...
-            out.append(text.decode("utf-8", 'replace'))
-            if 'out' not in hide:
-                return text
-            else:
-                return b""
-        # Hand pexpect useful args for os.execve(binary, args).
-        # TODO: try to use same default binary value as Popen does (is usually
-        # /bin/sh but IIRC there's caveats)
-        # TODO: allow control over this
-        p = pexpect.spawn("/bin/bash", ["-c", command])
-        # Ensure pexpect doesn't barf with OSError if we fall off the end of
-        # the child's input on some platforms (e.g. Linux).
-        exception = None
-        try:
-            p.interact(output_filter=out_filter)
-        except OSError as e:
-            # Only capture the OSError we expect
-            if "Input/output error" not in str(e):
-                raise
-            # Ensure it ties off the child, sets exitstatus, etc
-            p.close()
-            # Capture the exception in case it's NOT the OSError we think it
-            # is and folks need to debug
-            exception = e
-        return "".join(out), "", p.exitstatus, exception
 
 
 class Result(object):

@@ -299,8 +299,7 @@ class Run(Spec):
             substr = "      hello\t\t\nworld with spaces"
             cmd = """ eval 'echo "{0}" ' """.format(substr)
             # TODO: consider just mocking os.execv here (and in the other
-            # tests) though that feels like too much of a tautology / testing
-            # pexpect
+            # tests) though that feels like maybe too much of a tautology
             expected = '      hello\t\t\r\nworld with spaces\r\n'
             eq_(run(cmd, pty=True, hide='both').stdout, expected)
 
@@ -348,11 +347,6 @@ class Run(Spec):
     #
     # Random edge/corner case junk
     #
-
-    def non_stupid_OSErrors_get_captured(self):
-        # Somehow trigger an OSError saying "Input/output error" within
-        # pexpect.spawn().interact() & assert it is in result.exception
-        skip()
 
     def KeyboardInterrupt_on_stdin_doesnt_flake(self):
         # E.g. inv test => Ctrl-C halfway => shouldn't get buffer API errors

@@ -28,20 +28,6 @@ www = Collection.from_module(_docs, name='www', config={
 www['build'].__doc__ = "Build the main project website."
 
 
-@task
-def vendorize_pexpect(ctx, version):
-    target = 'invoke/vendor'
-    package = 'pexpect'
-    vendorize(
-        distribution="pexpect-u",
-        package=package,
-        version=version,
-        vendor_dir=target,
-        license='LICENSE', # TODO: autodetect this in vendorize
-    )
-    # Nuke test dir inside package hrrgh
-    shutil.rmtree(os.path.join(target, package, 'tests'))
-
 @task(help=test.help)
 def integration(c, module=None, runner=None, opts=None):
     """
@@ -123,6 +109,5 @@ def watch(c):
 
 
 ns = Collection(
-    test, integration, vendorize, release, www, docs, sites, vendorize_pexpect,
-    watch
+    test, integration, vendorize, release, www, docs, sites, watch,
 )
