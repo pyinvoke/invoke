@@ -285,7 +285,99 @@ class Local(Runner):
 
         return stdout, stderr, process.returncode, None
 
+
     def run_pty(self, command, warn, hide, encoding, out_stream, err_stream):
+        # TODO: re-insert Windows "lol y u no pty" stuff here
+        import pty
+        pid, parent_fd = pty.fork()
+        # If we're the child process, load up the actual command in a shell,
+        # just as subprocess does; this replaces our process - whose pipes are
+        # all hooked up to the PTY - with the "real" one.
+        if pid == 0:
+            # Use execv for bare-minimum "exec w/ variable # args" behavior.
+            # No need for the 'p' (use PATH to find executable) or 'e' (define
+            # a custom/overridden shell env) variants, for now.
+            # TODO: use /bin/sh or whatever subprocess does. Only using bash
+            # for now because that's what we have been testing against.
+            # TODO: also see if subprocess is using equivalent of execvp...
+            # TODO: both pty.spawn() and pexpect.spawn() do a lot of
+            # setup/teardown involving tty.*, setwinsize, getrlimit, signal.
+            # Ostensibly we'll want some of that eventually, but if possible
+            # write tests - integration-level if necessary - before adding it! 
+            os.execv('/bin/bash', ['/bin/bash', '-c', command])
+
+        if encoding is None:
+            encoding = locale.getpreferredencoding(False)
+
+        def display(src_fd, dst, cap, hide):
+            def get():
+                while True:
+                    data = os.read(src_fd, 1000)
+                    if not data:
+                        break
+                    yield data
+            for data in codecs.iterdecode(get(), encoding, errors='replace'):
+                if not hide:
+                    dst.write(data)
+                    dst.flush()
+                cap.append(data)
+
+        stdout = []
+        stderr = []
+        threads = []
+
+        # TODO: can we simply run this loop in the main thread now?
+        # TODO: or is there some other benefit to threading it, such as
+        # eventual stdin control?
+        for args in (
+            (parent_fd, out_stream, stdout, 'out' in hide),
+            #(process.stderr, err_stream, stderr, 'err' in hide),
+        ):
+            t = threading.Thread(target=display, args=args)
+            threads.append(t)
+            t.start()
+
+        # Wait in main thread until child appears to have exited.
+        while True:
+            # TODO: set 2nd value to os.WNOHANG in some situations?
+            pid_val, status = os.waitpid(pid, 0)
+            # waitpid() sets the 'pid' return val to 0 when no children have
+            # exited yet; when it is NOT zero, we know the child's stopped.
+            if pid_val != 0:
+                break
+            # TODO: io sleep?
+        
+        # Derive return code from waitpid() result
+        returncode = os.WEXITSTATUS(status)
+
+        # Join reader threads & pack things up
+        for t in threads:
+            t.join()
+
+        stdout = ''.join(stdout)
+        stderr = ''.join(stderr)
+        if WINDOWS:
+            # "Universal newlines" - replace all standard forms of
+            # newline with \n. This is not technically Windows related
+            # (\r as newline is an old Mac convention) but we only apply
+            # the translation for Windows as that's the only platform
+            # it is likely to matter for these days.
+            stdout = stdout.replace("\r\n", "\n").replace("\r", "\n")
+            stderr = stderr.replace("\r\n", "\n").replace("\r", "\n")
+
+        return stdout, stderr, returncode, None
+
+
+
+
+
+    def _run_pty(self, command, warn, hide, encoding, out_stream, err_stream):
+        from invoke import pty
+        e = pty.spawn(['/bin/bash', '-c', command])
+        print e
+        
+        return "uh", "wat", 1, None
+
         # Sanity check: platforms that can't pexpect should explode usefully
         # here. (Without this, the pexpect import throws an inner
         # ImportException trying to 'import pty' which is unavailable on
