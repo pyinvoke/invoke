@@ -253,29 +253,17 @@ class Local(Runner):
                 dest.flush()
             buffer_.append(data)
 
-    def run_direct(self, command, warn, hide, encoding, out_stream, err_stream):
-        process = Popen(
-            command,
-            shell=True,
-            stdout=PIPE,
-            stderr=PIPE,
-        )
-
-        encoding = self._normalize_encoding(encoding)
-
-        stdout = []
-        stderr = []
+    def _start_threads(self, arg_tuples):
         threads = []
 
-        for args in (
-            (process.stdout.fileno(), out_stream, stdout, 'out' in hide, encoding),
-            (process.stderr.fileno(), err_stream, stderr, 'err' in hide, encoding),
-        ):
+        for args in arg_tuples:
             t = threading.Thread(target=self._mux, args=args)
             threads.append(t)
             t.start()
 
-        process.wait()
+        return threads
+
+    def _obtain_outputs(self, threads, stdout, stderr):
         for t in threads:
             t.join()
 
@@ -289,6 +277,28 @@ class Local(Runner):
             # it is likely to matter for these days.
             stdout = stdout.replace("\r\n", "\n").replace("\r", "\n")
             stderr = stderr.replace("\r\n", "\n").replace("\r", "\n")
+
+        return stdout, stderr
+
+    def run_direct(self, command, warn, hide, encoding, out_stream, err_stream):
+        process = Popen(
+            command,
+            shell=True,
+            stdout=PIPE,
+            stderr=PIPE,
+        )
+
+        encoding = self._normalize_encoding(encoding)
+
+        stdout, stderr = [], []
+        threads = self._start_threads((
+            (process.stdout.fileno(), out_stream, stdout, 'out' in hide, encoding),
+            (process.stderr.fileno(), err_stream, stderr, 'err' in hide, encoding),
+        ))
+
+        process.wait()
+
+        stdout, stderr = self._obtain_outputs(threads, stdout, stderr)
 
         return stdout, stderr, process.returncode, None
 
@@ -314,33 +324,14 @@ class Local(Runner):
 
         encoding = self._normalize_encoding(encoding)
 
-        def display(src_fd, dst, cap, hide):
-            def get():
-                while True:
-                    data = os.read(src_fd, 1000)
-                    if not data:
-                        break
-                    yield data
-            for data in codecs.iterdecode(get(), encoding, errors='replace'):
-                if not hide:
-                    dst.write(data)
-                    dst.flush()
-                cap.append(data)
-
-        stdout = []
-        stderr = []
-        threads = []
+        stdout, stderr = [], []
 
         # TODO: can we simply run this loop in the main thread now?
         # TODO: or is there some other benefit to threading it, such as
         # eventual stdin control?
-        for args in (
-            (parent_fd, out_stream, stdout, 'out' in hide),
-            #(process.stderr, err_stream, stderr, 'err' in hide),
-        ):
-            t = threading.Thread(target=display, args=args)
-            threads.append(t)
-            t.start()
+        threads = self._start_threads((
+            (parent_fd, out_stream, stdout, 'out' in hide, encoding),
+        ))
 
         # Wait in main thread until child appears to have exited.
         while True:
@@ -352,23 +343,9 @@ class Local(Runner):
                 break
             # TODO: io sleep?
         
-        # Derive return code from waitpid() result
+        stdout, stderr = self._obtain_outputs(threads, stdout, stderr)
+
         returncode = os.WEXITSTATUS(status)
-
-        # Join reader threads & pack things up
-        for t in threads:
-            t.join()
-
-        stdout = ''.join(stdout)
-        stderr = ''.join(stderr)
-        if WINDOWS:
-            # "Universal newlines" - replace all standard forms of
-            # newline with \n. This is not technically Windows related
-            # (\r as newline is an old Mac convention) but we only apply
-            # the translation for Windows as that's the only platform
-            # it is likely to matter for these days.
-            stdout = stdout.replace("\r\n", "\n").replace("\r", "\n")
-            stderr = stderr.replace("\r\n", "\n").replace("\r", "\n")
 
         return stdout, stderr, returncode, None
 
