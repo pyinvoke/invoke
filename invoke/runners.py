@@ -235,6 +235,24 @@ class Local(Runner):
                 func = self.run_direct
         return func
 
+    def _normalize_encoding(self, encoding):
+        return locale.getpreferredencoding(False)
+
+    def _mux(self, source_fd, dest, buffer_, hide, encoding):
+        # Inner generator yielding read data
+        def get():
+            while True:
+                data = os.read(source_fd, 1000)
+                if not data:
+                    break
+                yield data
+        # Use generator in iterdecode() to decode stream data, then print/save
+        for data in codecs.iterdecode(get(), encoding, errors='replace'):
+            if not hide:
+                dest.write(data)
+                dest.flush()
+            buffer_.append(data)
+
     def run_direct(self, command, warn, hide, encoding, out_stream, err_stream):
         process = Popen(
             command,
@@ -243,31 +261,17 @@ class Local(Runner):
             stderr=PIPE,
         )
 
-        if encoding is None:
-            encoding = locale.getpreferredencoding(False)
-
-        def display(src, dst, cap, hide):
-            def get():
-                while True:
-                    data = os.read(src.fileno(), 1000)
-                    if not data:
-                        break
-                    yield data
-            for data in codecs.iterdecode(get(), encoding, errors='replace'):
-                if not hide:
-                    dst.write(data)
-                    dst.flush()
-                cap.append(data)
+        encoding = self._normalize_encoding(encoding)
 
         stdout = []
         stderr = []
         threads = []
 
         for args in (
-            (process.stdout, out_stream, stdout, 'out' in hide),
-            (process.stderr, err_stream, stderr, 'err' in hide),
+            (process.stdout.fileno(), out_stream, stdout, 'out' in hide, encoding),
+            (process.stderr.fileno(), err_stream, stderr, 'err' in hide, encoding),
         ):
-            t = threading.Thread(target=display, args=args)
+            t = threading.Thread(target=self._mux, args=args)
             threads.append(t)
             t.start()
 
@@ -308,8 +312,7 @@ class Local(Runner):
             # write tests - integration-level if necessary - before adding it! 
             os.execv('/bin/bash', ['/bin/bash', '-c', command])
 
-        if encoding is None:
-            encoding = locale.getpreferredencoding(False)
+        encoding = self._normalize_encoding(encoding)
 
         def display(src_fd, dst, cap, hide):
             def get():
