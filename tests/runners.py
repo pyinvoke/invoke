@@ -1,5 +1,5 @@
 import sys
-from StringIO import StringIO
+from invoke.vendor.six import StringIO
 
 from spec import Spec, trap, eq_, skip
 
