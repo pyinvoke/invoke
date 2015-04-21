@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import os
 from subprocess import Popen, PIPE
 import sys
@@ -251,6 +253,11 @@ class Local(Runner):
                 data = os.read(source_fd, 1000)
                 if not data:
                     break
+                # Sometimes os.read gives us bytes under Python 3...and
+                # sometimes it doesn't. ¯\_(ツ)_/¯
+                if not isinstance(data, six.binary_type):
+                    # Can't use six.b because that just assumes latin-1 :(
+                    data = data.encode(encoding)
                 yield data
         # Use generator in iterdecode() to decode stream data, then print/save
         for data in codecs.iterdecode(get(), encoding, errors='replace'):
