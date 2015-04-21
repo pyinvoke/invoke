@@ -1,6 +1,4 @@
-import os
 import sys
-import shutil
 import time
 from os.path import join
 

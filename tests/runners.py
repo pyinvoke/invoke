@@ -1,8 +1,7 @@
 import sys
 from StringIO import StringIO
 
-from spec import Spec, trap, eq_, skip, ok_
-from mock import patch
+from spec import Spec, trap, eq_, skip
 
 from invoke import Local, Context
 
@@ -46,11 +45,11 @@ class Local_(Spec):
             eq_(err.getvalue(), "sup")
             eq_(sys.stderr.getvalue(), "")
 
-        #@mock_subprocess(out="sup")
-        def pty_output_stream_defaults_are_the_same(self):#, os_write):
-            #self._run("echo lol", pty=True)
+        # @mock_subprocess(out="sup")
+        def pty_output_stream_defaults_are_the_same(self): # , os_write):
+            # self._run("echo lol", pty=True)
             # Examine 2nd posarg, as in write(fileno, text/data)
-            #ok_("lol" in os_write.call_args[0][1])
+            # ok_("lol" in os_write.call_args[0][1])
             skip()
 
         def pty_output_stream_overrides_are_the_same(self):

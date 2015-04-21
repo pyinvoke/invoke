@@ -5,7 +5,7 @@ import threading
 import codecs
 import locale
 
-from .exceptions import Failure, PlatformError
+from .exceptions import Failure
 from .platform import WINDOWS
 
 from .vendor import six
@@ -171,8 +171,12 @@ class Runner(object):
         # Normalize 'hide' from one of the various valid input values
         opts['hide'] = normalize_hide(opts['hide'])
         # Derive stream objects
-        out_stream = sys.stdout if opts['out_stream'] is None else opts['out_stream']
-        err_stream = sys.stderr if opts['err_stream'] is None else opts['err_stream']
+        out_stream = opts['out_stream']
+        if out_stream is None:
+            out_stream = sys.stdout
+        err_stream = opts['err_stream']
+        if err_stream is None:
+            err_stream = sys.stderr
         # Do the things
         if opts['echo']:
             print("\033[1;37m{0}\033[0m".format(command))
@@ -204,7 +208,9 @@ class Runner(object):
         # NOTE: fallback not used: no falling back implemented by default.
         return getattr(self, 'run_pty' if pty else 'run_direct')
 
-    def run_direct(self, command, warn, hide, encoding, out_stream, err_stream):
+    def run_direct(
+        self, command, warn, hide, encoding, out_stream, err_stream
+    ):
         raise NotImplementedError
 
     def run_pty(self, command, warn, hide, encoding, out_stream, err_stream):
@@ -280,7 +286,9 @@ class Local(Runner):
 
         return stdout, stderr
 
-    def run_direct(self, command, warn, hide, encoding, out_stream, err_stream):
+    def run_direct(
+        self, command, warn, hide, encoding, out_stream, err_stream
+    ):
         process = Popen(
             command,
             shell=True,
@@ -292,8 +300,10 @@ class Local(Runner):
 
         stdout, stderr = [], []
         threads = self._start_threads((
-            (process.stdout.fileno(), out_stream, stdout, 'out' in hide, encoding),
-            (process.stderr.fileno(), err_stream, stderr, 'err' in hide, encoding),
+            (process.stdout.fileno(), out_stream, stdout, 'out' in hide,
+                encoding),
+            (process.stderr.fileno(), err_stream, stderr, 'err' in hide,
+                encoding),
         ))
 
         process.wait()
@@ -319,7 +329,7 @@ class Local(Runner):
             # TODO: both pty.spawn() and pexpect.spawn() do a lot of
             # setup/teardown involving tty.*, setwinsize, getrlimit, signal.
             # Ostensibly we'll want some of that eventually, but if possible
-            # write tests - integration-level if necessary - before adding it! 
+            # write tests - integration-level if necessary - before adding it!
             os.execv('/bin/bash', ['/bin/bash', '-c', command])
 
         encoding = self._normalize_encoding(encoding)
@@ -342,7 +352,7 @@ class Local(Runner):
             if pid_val != 0:
                 break
             # TODO: io sleep?
-        
+
         stdout, stderr = self._obtain_outputs(threads, stdout, stderr)
 
         returncode = os.WEXITSTATUS(status)
