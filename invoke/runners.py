@@ -50,7 +50,7 @@ class Runner(object):
     current object's ``run_direct`` or ``run_pty`` method, depending on those
     kwargs' values and environmental cues/limitations. `Runner` itself has a
     useful default implementation of this method, but overriding may be
-    sometimes useful.
+    sometimes necessary.
 
     ``run_direct`` and ``run_pty`` are fully abstract in `Runner`; in
     subclasses, they should perform actual command execution, hooking directly
