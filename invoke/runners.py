@@ -32,7 +32,8 @@ def normalize_hide(val):
 
 
 # TODO: remove 'exception' field in run_* return values, if we don't run into
-# situations similar to the one found in pexpect re: spurious IOErrors.
+# situations similar to the one found in pexpect re: spurious IOErrors on Linux
+# w/ PTYs. See #37 / 45db03ed8343ac97beefb360634f8106de92c6d7
 
 class Runner(object):
     """
