@@ -293,6 +293,20 @@ class Local(Runner):
 
         return stdout, stderr
 
+    # TODO:
+    # * make another subclass, LocalPty (or - two new subclasses?)
+    # * invert rundirect/runpty and the new subroutines, making new subroutines
+    # out of the bits that are actually different in the current functions
+    # * then run_direct/run_pty should be 100% identical and can be merged
+    # * meaning updating run()/select_method() at least a small bit to select
+    # which class is used, instead of which function
+    # * look at fabric to make sure this would still work OK (so the bits
+    # changing in fabric, which is largely just executing additional code on
+    # startup to request PTY, still fit into this pattern)
+    # * make sure no tests need to change to care about any of this
+    # * merge to master
+
+
     def run_direct(
         self, command, warn, hide, encoding, out_stream, err_stream
     ):
