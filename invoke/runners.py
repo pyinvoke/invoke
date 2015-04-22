@@ -161,7 +161,7 @@ class Runner(object):
         if opts['echo']:
             print("\033[1;37m{0}\033[0m".format(command))
         # Determine pty or no
-        using_pty = self.should_use_pty(opts['pty'], opts['fallback'])
+        self.using_pty = self.should_use_pty(opts['pty'], opts['fallback'])
         # Initiate command & kick off IO threads
         self.start(command)
         encoding = opts['encoding']
@@ -169,13 +169,16 @@ class Runner(object):
             encoding = locale.getpreferredencoding(False)
         stdout, stderr = [], []
         threads = []
-        # TODO: this differs based on pty or no
-        for args in (
+        argses = [
             (self.stdout_reader, out_stream, stdout, 'out' in opts['hide'],
                 encoding),
-            (self.stderr_reader, err_stream, stderr, 'err' in opts['hide'],
-                encoding),
-        ):
+        ]
+        if not self.using_pty:
+            argses.append(
+                (self.stderr_reader, err_stream, stderr, 'err' in opts['hide'],
+                    encoding),
+            )
+        for args in argses:
             t = threading.Thread(target=self._mux, args=args)
             threads.append(t)
             t.start()
@@ -200,7 +203,7 @@ class Runner(object):
             stdout=stdout,
             stderr=stderr,
             exited=exited,
-            pty=using_pty,
+            pty=self.using_pty,
             exception=exception,
         )
         if not (result or opts['warn']):
@@ -249,7 +252,10 @@ class Local(Runner):
     # TODO: refactor into eg self._get_reader
     @property
     def stdout_reader(self):
-        return partial(os.read, self.process.stdout.fileno())
+        if self.using_pty:
+            return partial(os.read, self.parent_fd)
+        else:
+            return partial(os.read, self.process.stdout.fileno())
 
     # TODO: ditto
     @property
@@ -278,76 +284,54 @@ class Local(Runner):
             buffer_.append(data)
 
     def start(self, command):
-        self.process = Popen(
-            command,
-            shell=True,
-            stdout=PIPE,
-            stderr=PIPE,
-        )
-
-    def mux_args(self):
-        return (
-            (self.process.stdout.fileno(), out_stream, stdout, 'out' in hide,
-                encoding),
-            (self.process.stderr.fileno(), err_stream, stderr, 'err' in hide,
-                encoding),
-        )
+        if self.using_pty:
+            # TODO: re-insert Windows "lol y u no pty" stuff here
+            import pty
+            self.pid, self.parent_fd = pty.fork()
+            # If we're the child process, load up the actual command in a
+            # shell, just as subprocess does; this replaces our process - whose
+            # pipes are all hooked up to the PTY - with the "real" one.
+            if self.pid == 0:
+                # Use execv for bare-minimum "exec w/ variable # args"
+                # behavior. No need for the 'p' (use PATH to find executable)
+                # or 'e' (define a custom/overridden shell env) variants, for
+                # now.
+                # TODO: use /bin/sh or whatever subprocess does. Only using
+                # bash for now because that's what we have been testing
+                # against.
+                # TODO: also see if subprocess is using equivalent of execvp...
+                # TODO: both pty.spawn() and pexpect.spawn() do a lot of
+                # setup/teardown involving tty.*, setwinsize, getrlimit,
+                # signal. Ostensibly we'll want some of that eventually, but if
+                # possible write tests - integration-level if necessary -
+                # before adding it!
+                os.execv('/bin/bash', ['/bin/bash', '-c', command])
+        else:
+            self.process = Popen(
+                command,
+                shell=True,
+                stdout=PIPE,
+                stderr=PIPE,
+            )
 
     def wait(self):
-        self.process.wait()
+        if self.using_pty:
+            while True:
+                # TODO: set 2nd value to os.WNOHANG in some situations?
+                pid_val, self.status = os.waitpid(self.pid, 0)
+                # waitpid() sets the 'pid' return val to 0 when no children have
+                # exited yet; when it is NOT zero, we know the child's stopped.
+                if pid_val != 0:
+                    break
+                # TODO: io sleep?
+        else:
+            self.process.wait()
 
     def returncode(self):
-        return self.process.returncode
-
-    def run_pty(self, command, warn, hide, encoding, out_stream, err_stream):
-        # self.start_command
-        # TODO: re-insert Windows "lol y u no pty" stuff here
-        import pty
-        pid, parent_fd = pty.fork()
-        # If we're the child process, load up the actual command in a shell,
-        # just as subprocess does; this replaces our process - whose pipes are
-        # all hooked up to the PTY - with the "real" one.
-        if pid == 0:
-            # Use execv for bare-minimum "exec w/ variable # args" behavior.
-            # No need for the 'p' (use PATH to find executable) or 'e' (define
-            # a custom/overridden shell env) variants, for now.
-            # TODO: use /bin/sh or whatever subprocess does. Only using bash
-            # for now because that's what we have been testing against.
-            # TODO: also see if subprocess is using equivalent of execvp...
-            # TODO: both pty.spawn() and pexpect.spawn() do a lot of
-            # setup/teardown involving tty.*, setwinsize, getrlimit, signal.
-            # Ostensibly we'll want some of that eventually, but if possible
-            # write tests - integration-level if necessary - before adding it!
-            os.execv('/bin/bash', ['/bin/bash', '-c', command])
-
-        encoding = self._normalize_encoding(encoding)
-
-        stdout, stderr = [], []
-
-        # TODO: can we simply run this loop in the main thread now?
-        # TODO: or is there some other benefit to threading it, such as
-        # eventual stdin control?
-        threads = self._start_threads((
-            (parent_fd, out_stream, stdout, 'out' in hide, encoding),
-        ))
-
-        # self.wait
-        # Wait in main thread until child appears to have exited.
-        while True:
-            # TODO: set 2nd value to os.WNOHANG in some situations?
-            pid_val, status = os.waitpid(pid, 0)
-            # waitpid() sets the 'pid' return val to 0 when no children have
-            # exited yet; when it is NOT zero, we know the child's stopped.
-            if pid_val != 0:
-                break
-            # TODO: io sleep?
-
-        stdout, stderr = self._obtain_outputs(threads, stdout, stderr)
-
-        # self.get_returncode
-        returncode = os.WEXITSTATUS(status)
-
-        return stdout, stderr, returncode, None
+        if self.using_pty:
+            return os.WEXITSTATUS(self.status)
+        else:
+            return self.process.returncode
 
 
 class Result(object):
