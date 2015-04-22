@@ -54,3 +54,14 @@ class Local_(Spec):
 
         def pty_output_stream_overrides_are_the_same(self):
             skip()
+
+        def pty_fallback_warnings_only_fire_once(self):
+            # I.e. if implementation checks pty-ness >1 time, only one warning
+            # is emitted. This is kinda implementation-specific, but...
+            skip()
+
+        def encoding_defaults_to_local_encoding(self):
+            skip()
+
+        def encoding_can_be_overridden(self):
+            skip()

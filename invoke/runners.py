@@ -6,6 +6,7 @@ import sys
 import threading
 import codecs
 import locale
+from functools import partial
 
 from .exceptions import Failure
 from .platform import WINDOWS
@@ -64,6 +65,8 @@ class Runner(object):
         """
         #: The `.Context` given to the same-named argument of `__init__`.
         self.context = context
+        # Bookkeeping re: whether pty fallback warning has been emitted.
+        self.warned_about_pty_fallback = False
 
     def run(self, command, **kwargs):
         """
@@ -154,27 +157,50 @@ class Runner(object):
         err_stream = opts['err_stream']
         if err_stream is None:
             err_stream = sys.stderr
-        # Do the things
+        # Echo
         if opts['echo']:
             print("\033[1;37m{0}\033[0m".format(command))
-        func = self.select_method(pty=opts['pty'], fallback=opts['fallback'])
-        stdout, stderr, exited, exception = func(
-            command=command,
-            warn=opts['warn'],
-            hide=opts['hide'],
-            encoding=opts['encoding'],
-            out_stream=out_stream,
-            err_stream=err_stream,
-        )
-        # TODO: make this test less gross? Feels silly to just return a bool in
-        # select_method which is tantamount to this, though.
-        func_name = getattr(func, 'func_name', getattr(func, '__name__'))
-        used_pty = func_name == 'run_pty'
+        # Determine pty or no
+        using_pty = self.should_use_pty(opts['pty'], opts['fallback'])
+        # Initiate command & kick off IO threads
+        self.start(command)
+        encoding = opts['encoding']
+        if encoding is None:
+            encoding = locale.getpreferredencoding(False)
+        stdout, stderr = [], []
+        threads = []
+        # TODO: this differs based on pty or no
+        for args in (
+            (self.stdout_reader, out_stream, stdout, 'out' in opts['hide'],
+                encoding),
+            (self.stderr_reader, err_stream, stderr, 'err' in opts['hide'],
+                encoding),
+        ):
+            t = threading.Thread(target=self._mux, args=args)
+            threads.append(t)
+            t.start()
+        # Wait for completion, then tie things off & obtain result
+        self.wait()
+        for t in threads:
+            t.join()
+        stdout = ''.join(stdout)
+        stderr = ''.join(stderr)
+        if WINDOWS:
+            # "Universal newlines" - replace all standard forms of
+            # newline with \n. This is not technically Windows related
+            # (\r as newline is an old Mac convention) but we only apply
+            # the translation for Windows as that's the only platform
+            # it is likely to matter for these days.
+            stdout = stdout.replace("\r\n", "\n").replace("\r", "\n")
+            stderr = stderr.replace("\r\n", "\n").replace("\r", "\n")
+        # Get return/exit code
+        exited = self.returncode()
+        # Return, or raise as failure, our final result
         result = Result(
             stdout=stdout,
             stderr=stderr,
             exited=exited,
-            pty=used_pty,
+            pty=using_pty,
             exception=exception,
         )
         if not (result or opts['warn']):
@@ -209,24 +235,33 @@ class Local(Runner):
         To disable this behavior (i.e. if ``os.isatty`` is causing false
         negatives in your environment), say ``fallback=False``.
     """
-    def select_method(self, pty=False, fallback=True):
-        func = self.run_direct
+    def should_use_pty(self, pty=False, fallback=True):
+        use_pty = False
         if pty:
-            func = self.run_pty
+            use_pty = True
             if not os.isatty(sys.stdin.fileno()) and fallback:
-                sys.stderr.write("WARNING: stdin is not a pty; falling back to non-pty execution!\n") # noqa
-                func = self.run_direct
-        return func
+                if not self.warned_about_pty_fallback:
+                    sys.stderr.write("WARNING: stdin is not a pty; falling back to non-pty execution!\n") # noqa
+                    self.warned_about_pty_fallback = True
+                use_pty = False
+        return use_pty
 
-    def _normalize_encoding(self, encoding):
-        return locale.getpreferredencoding(False)
+    # TODO: refactor into eg self._get_reader
+    @property
+    def stdout_reader(self):
+        return partial(os.read, self.process.stdout.fileno())
 
-    def _mux(self, source_fd, dest, buffer_, hide, encoding):
+    # TODO: ditto
+    @property
+    def stderr_reader(self):
+        return partial(os.read, self.process.stderr.fileno())
+
+    def _mux(self, read_func, dest, buffer_, hide, encoding):
         # Inner generator yielding read data
         def get():
             while True:
                 # self.read_stream
-                data = os.read(source_fd, 1000)
+                data = read_func(1000)
                 if not data:
                     break
                 # Sometimes os.read gives us bytes under Python 3...and
@@ -235,105 +270,34 @@ class Local(Runner):
                     # Can't use six.b because that just assumes latin-1 :(
                     data = data.encode(encoding)
                 yield data
-        # Use generator in iterdecode() to decode stream data, then print/save
+        # Decode stream using our generator & requested encoding
         for data in codecs.iterdecode(get(), encoding, errors='replace'):
             if not hide:
                 dest.write(data)
                 dest.flush()
             buffer_.append(data)
 
-    def _start_threads(self, arg_tuples):
-        threads = []
-
-        for args in arg_tuples:
-            t = threading.Thread(target=self._mux, args=args)
-            threads.append(t)
-            t.start()
-
-        return threads
-
-    def _obtain_outputs(self, threads, stdout, stderr):
-        for t in threads:
-            t.join()
-
-        stdout = ''.join(stdout)
-        stderr = ''.join(stderr)
-        if WINDOWS:
-            # "Universal newlines" - replace all standard forms of
-            # newline with \n. This is not technically Windows related
-            # (\r as newline is an old Mac convention) but we only apply
-            # the translation for Windows as that's the only platform
-            # it is likely to matter for these days.
-            stdout = stdout.replace("\r\n", "\n").replace("\r", "\n")
-            stderr = stderr.replace("\r\n", "\n").replace("\r", "\n")
-
-        return stdout, stderr
-
-    # TODO:
-    # * There are multiple conflicting needs:
-    #   * Simplicity of selecting overall strategy, i.e. local vs remote, means
-    #   we want run() to choose a single config-defined strategy class (Local,
-    #   Remote) and delegate to it.
-    #   * Simplicity of class hierarchy, i.e. not having a
-    #   three-classes-per-strategy setup with a top level class simply deciding
-    #   which "real" class to use (direct vs pty).
-    #      * Related: simplicity of class design, i.e. having one class per
-    #      sub-strategy (direct vs pty) instead of a single class with e.g.
-    #      two sets of methods within it.
-    #   * Encapsulation/separation of concerns, i.e. not having that "direct vs
-    #   pty" selection performed within run() itself (which would otherwise
-    #   save us the third class above) as that duplicates work once we enter
-    #   Fabric territory w/ run + local both existing.
-    # * make another subclass, LocalPty (or - two new subclasses?)
-    #   * Where does the current Runner.run go? Context.run?
-    #   * If so, who decides which 'pair' of subclasses to use? Does choosing a
-    #   different run strategy require subclassing Context instead of simply
-    #   changing config to use a different runner?
-    #   * Alternately, leave Context/Runner.run alone, and just break out
-    #   run_direct/run_pty into the new subclasses (plus a third new, fully
-    #   abstract, class those inherit from). Downside is this means Runner
-    #   barely does anything at all, which feels kind of strange.
-    # * invert rundirect/runpty and the new subroutines, making new subroutines
-    # out of the bits that are actually different in the current functions
-    # * then run_direct/run_pty should be 100% identical and can be merged
-    # * meaning updating run()/select_method() at least a small bit to select
-    # which class is used, instead of which function
-    # * look at fabric to make sure this would still work OK (so the bits
-    # changing in fabric, which is largely just executing additional code on
-    # startup to request PTY, still fit into this pattern)
-    # * make sure no tests need to change to care about any of this
-    # * merge to master
-
-
-    def run_direct(
-        self, command, warn, hide, encoding, out_stream, err_stream
-    ):
-        # self.start_command
-        process = Popen(
+    def start(self, command):
+        self.process = Popen(
             command,
             shell=True,
             stdout=PIPE,
             stderr=PIPE,
         )
 
-        encoding = self._normalize_encoding(encoding)
-
-        stdout, stderr = [], []
-        threads = self._start_threads((
-            (process.stdout.fileno(), out_stream, stdout, 'out' in hide,
+    def mux_args(self):
+        return (
+            (self.process.stdout.fileno(), out_stream, stdout, 'out' in hide,
                 encoding),
-            (process.stderr.fileno(), err_stream, stderr, 'err' in hide,
+            (self.process.stderr.fileno(), err_stream, stderr, 'err' in hide,
                 encoding),
-        ))
+        )
 
-        # self.wait
-        process.wait()
+    def wait(self):
+        self.process.wait()
 
-        stdout, stderr = self._obtain_outputs(threads, stdout, stderr)
-
-        # self.get_returncode
-
-        return stdout, stderr, process.returncode, None
+    def returncode(self):
+        return self.process.returncode
 
     def run_pty(self, command, warn, hide, encoding, out_stream, err_stream):
         # self.start_command
