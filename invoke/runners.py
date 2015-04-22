@@ -39,35 +39,9 @@ class Runner(object):
     """
     Partially-abstract core command-running API.
 
-    This class is not usable by itself and must be subclassed to implement, at
-    minimum, ``run_direct`` and ``run_pty``. An explanation of its methods
-    follows:
-
-    ``run`` is the primary API call which handles high level logic (echoing the
-    commands locally, constructing a useful `Result` object, etc) and
-    wraps/delegates to the below methods for actual execution.
-
-    ``select_method`` takes ``pty`` and ``fallback`` kwargs and returns the
-    current object's ``run_direct`` or ``run_pty`` method, depending on those
-    kwargs' values and environmental cues/limitations. `Runner` itself has a
-    useful default implementation of this method, but overriding may be
-    sometimes necessary.
-
-    ``run_direct`` and ``run_pty`` are fully abstract in `Runner`; in
-    subclasses, they should perform actual command execution, hooking directly
-    into a subprocess' stdout/stderr pipes and returning those pipes' eventual
-    full contents as distinct strings.
-
-    ``run_direct``/``run_pty`` both have a signature of ``(self, command, warn,
-    hide, encoding, out_stream, err_stream)`` (see `run` for semantics of
-    these) and must return a 4-tuple of ``(stdout, stderr, exitcode,
-    exception)`` (see `Result` for their meaning).
-
-    ``run_pty`` differs from ``run_direct`` in that it should utilize a
-    pseudo-terminal, and is expected to only return a useful ``stdout`` (with
-    ``stderr`` usually set to the empty string.)
-
-    For a subclass implementation example, see the source code for `.Local`.
+    This class is not usable by itself and must be subclassed, implementing a
+    number of methods such as `start`, `wait` and `get_returncode`. For a
+    subclass implementation example, see the source code for `.Local`.
     """
     def __init__(self, context):
         """
@@ -251,6 +225,7 @@ class Local(Runner):
         # Inner generator yielding read data
         def get():
             while True:
+                # self.read_stream
                 data = os.read(source_fd, 1000)
                 if not data:
                     break
@@ -295,7 +270,29 @@ class Local(Runner):
         return stdout, stderr
 
     # TODO:
+    # * There are multiple conflicting needs:
+    #   * Simplicity of selecting overall strategy, i.e. local vs remote, means
+    #   we want run() to choose a single config-defined strategy class (Local,
+    #   Remote) and delegate to it.
+    #   * Simplicity of class hierarchy, i.e. not having a
+    #   three-classes-per-strategy setup with a top level class simply deciding
+    #   which "real" class to use (direct vs pty).
+    #      * Related: simplicity of class design, i.e. having one class per
+    #      sub-strategy (direct vs pty) instead of a single class with e.g.
+    #      two sets of methods within it.
+    #   * Encapsulation/separation of concerns, i.e. not having that "direct vs
+    #   pty" selection performed within run() itself (which would otherwise
+    #   save us the third class above) as that duplicates work once we enter
+    #   Fabric territory w/ run + local both existing.
     # * make another subclass, LocalPty (or - two new subclasses?)
+    #   * Where does the current Runner.run go? Context.run?
+    #   * If so, who decides which 'pair' of subclasses to use? Does choosing a
+    #   different run strategy require subclassing Context instead of simply
+    #   changing config to use a different runner?
+    #   * Alternately, leave Context/Runner.run alone, and just break out
+    #   run_direct/run_pty into the new subclasses (plus a third new, fully
+    #   abstract, class those inherit from). Downside is this means Runner
+    #   barely does anything at all, which feels kind of strange.
     # * invert rundirect/runpty and the new subroutines, making new subroutines
     # out of the bits that are actually different in the current functions
     # * then run_direct/run_pty should be 100% identical and can be merged
@@ -311,6 +308,7 @@ class Local(Runner):
     def run_direct(
         self, command, warn, hide, encoding, out_stream, err_stream
     ):
+        # self.start_command
         process = Popen(
             command,
             shell=True,
@@ -328,13 +326,17 @@ class Local(Runner):
                 encoding),
         ))
 
+        # self.wait
         process.wait()
 
         stdout, stderr = self._obtain_outputs(threads, stdout, stderr)
 
+        # self.get_returncode
+
         return stdout, stderr, process.returncode, None
 
     def run_pty(self, command, warn, hide, encoding, out_stream, err_stream):
+        # self.start_command
         # TODO: re-insert Windows "lol y u no pty" stuff here
         import pty
         pid, parent_fd = pty.fork()
@@ -365,6 +367,7 @@ class Local(Runner):
             (parent_fd, out_stream, stdout, 'out' in hide, encoding),
         ))
 
+        # self.wait
         # Wait in main thread until child appears to have exited.
         while True:
             # TODO: set 2nd value to os.WNOHANG in some situations?
@@ -377,6 +380,7 @@ class Local(Runner):
 
         stdout, stderr = self._obtain_outputs(threads, stdout, stderr)
 
+        # self.get_returncode
         returncode = os.WEXITSTATUS(status)
 
         return stdout, stderr, returncode, None
