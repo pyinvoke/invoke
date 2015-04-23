@@ -5,7 +5,7 @@ from spec import Spec, trap, eq_, skip
 
 from invoke import Local, Context
 
-from _utils import mock_subprocess
+from _utils import mock_subprocess, mock_pty
 
 
 class Local_(Spec):
@@ -45,12 +45,11 @@ class Local_(Spec):
             eq_(err.getvalue(), "sup")
             eq_(sys.stderr.getvalue(), "")
 
-        # @mock_subprocess(out="sup")
-        def pty_output_stream_defaults_are_the_same(self): # , os_write):
-            # self._run("echo lol", pty=True)
-            # Examine 2nd posarg, as in write(fileno, text/data)
-            # ok_("lol" in os_write.call_args[0][1])
-            skip()
+        @trap
+        @mock_pty(out="sup")
+        def pty_output_stream_defaults_to_sys(self):
+            self._run("nope", pty=True)
+            #eq_(sys.stdout.getvalue(), "sup")
 
         def pty_output_stream_overrides_are_the_same(self):
             skip()

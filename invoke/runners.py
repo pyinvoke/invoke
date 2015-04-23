@@ -8,6 +8,14 @@ import codecs
 import locale
 from functools import partial
 
+try:
+    import pty
+except ImportError:
+    # TODO: store exception in case it blows up in unexpected ways.
+    # Typically we just expect it'll work fine on Unix and not at all on
+    # Windows.
+    pty = None
+
 from .exceptions import Failure
 from .platform import WINDOWS
 
@@ -210,17 +218,18 @@ class Runner(object):
             raise Failure(result)
         return result
 
-    def select_method(self, pty, fallback):
+    def should_use_pty(self, pty, fallback):
+        """
+        Should execution attempt to use a pseudo-terminal?
+
+        :param bool pty:
+            Whether the user explicitly asked for a pty.
+        :param bool fallback:
+            Whether falling back to non-pty execution should be allowed, in
+            situations where ``pty=True`` but a pty could not be allocated.
+        """
         # NOTE: fallback not used: no falling back implemented by default.
-        return getattr(self, 'run_pty' if pty else 'run_direct')
-
-    def run_direct(
-        self, command, warn, hide, encoding, out_stream, err_stream
-    ):
-        raise NotImplementedError
-
-    def run_pty(self, command, warn, hide, encoding, out_stream, err_stream):
-        raise NotImplementedError
+        return pty
 
 
 class Local(Runner):
@@ -285,8 +294,8 @@ class Local(Runner):
 
     def start(self, command):
         if self.using_pty:
-            # TODO: re-insert Windows "lol y u no pty" stuff here
-            import pty
+            # TODO: re-insert Windows "lol y u no pty" stuff at this point,
+            # if 'pty' is None.
             self.pid, self.parent_fd = pty.fork()
             # If we're the child process, load up the actual command in a
             # shell, just as subprocess does; this replaces our process - whose

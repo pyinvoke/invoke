@@ -137,3 +137,36 @@ def mock_subprocess(out='', err='', exit=0):
             f(*args, **kwargs)
         return wrapper
     return decorator
+
+
+# TODO: factor w/ mock_subprocess, at least re: out_file/fakeread junk
+def mock_pty(out='', err='', exit=0):
+    def decorator(f):
+        @wraps(f)
+        @patch('invoke.runners.pty')
+        @patch('invoke.runners.os')
+        def wrapper(*args, **kwargs):
+            args = list(args)
+            pty, os = args.pop(), args.pop()
+            # Don't actually fork, but pretend we did & that main thread is
+            # also the child (pid 0) to trigger execv call; & give 'parent fd'
+            # of 1 (stdout).
+            pty.fork.return_value = 0, 1
+            # We don't really need to care about waiting since not truly
+            # forking/etc, so here we just return a nonzero "pid" + dummy value
+            # (normally sent to WEXITSTATUS but we mock that anyway, so.)
+            os.waitpid.return_value = None, None
+            os.WEXITSTATUS.return_value = exit
+            out_file = StringIO(out)
+            err_file = StringIO(err)
+            def fakeread(fileno, count):
+                fd = {1: out_file, 2: err_file}[fileno]
+                return fd.read(count)
+            os.read.side_effect = fakeread
+            f(*args, **kwargs)
+            # Sanity checks to make sure the stuff we mocked, actually got ran!
+            pty.fork.assert_called_with()
+            for name in ('execv', 'waitpid', 'WEXITSTATUS'):
+                assert getattr(os, name).called
+        return wrapper
+    return decorator
