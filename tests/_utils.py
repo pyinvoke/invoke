@@ -116,30 +116,58 @@ assert_contains = partial(_assert_contains, invert=False)
 assert_not_contains = partial(_assert_contains, invert=True)
 
 
-def mock_subprocess(out='', err='', exit=0):
+
+def mock_io(patch_paths, out, err, setup, teardown=None):
     def decorator(f):
-        @wraps(f)
-        @patch('invoke.runners.Popen')
-        @patch('os.read')
         def wrapper(*args, **kwargs):
+            # Grab mock objects inserted by @patch, out of args.
             args = list(args)
-            Popen, read = args.pop(), args.pop()
-            process = Popen.return_value
-            process.returncode = exit
-            process.stdout.fileno.return_value = 1
-            process.stderr.fileno.return_value = 2
+            mocks = [args.pop() for _ in patch_paths]
+            # os mock is used by us & also handed to setup/teardown in case
+            # they need it as well.
+            mocks.append(args.pop())
+            os = mocks[-1]
+            # Run mock setup
+            setup(*mocks)
+            # Fake IO
             out_file = StringIO(out)
             err_file = StringIO(err)
             def fakeread(fileno, count):
                 fd = {1: out_file, 2: err_file}[fileno]
                 return fd.read(count)
-            read.side_effect = fakeread
+            os.read.side_effect = fakeread
+            # Actual test
             f(*args, **kwargs)
+            # Post-run asserts, if any
+            if teardown is not None:
+                teardown(*mocks)
+        # Patch the OS module to mock .read
+        wrapper = patch('invoke.runners.os')(wrapper)
+        # @patch(...)
+        for path in reversed(patch_paths):
+            wrapper = patch(path)(wrapper)
+        # @wraps(f)
+        wrapper = wraps(f)(wrapper)
         return wrapper
     return decorator
 
 
-# TODO: factor w/ mock_subprocess, at least re: out_file/fakeread junk
+def mock_subprocess(out='', err='', exit=0):
+    paths = ('invoke.runners.Popen',)
+    def setup(Popen, os):
+        process = Popen.return_value
+        process.returncode = exit
+        process.stdout.fileno.return_value = 1
+        process.stderr.fileno.return_value = 2
+
+    return mock_io(
+        patch_paths=paths,
+        out=out,
+        err=err,
+        setup=setup,
+    )
+
+
 def mock_pty(out='', err='', exit=0):
     def decorator(f):
         @wraps(f)
