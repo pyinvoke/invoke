@@ -69,3 +69,10 @@ class Local_(Spec):
 
         def encoding_can_be_overridden(self):
             skip()
+
+        @mock_pty(isatty=False)
+        def fallback_can_be_overridden(self):
+            # Do the stuff
+            self._run("true", pty=True, fallback=False)
+            # @mock_pty's asserts will be mad if pty-related os/pty calls
+            # didn't fire, so we're done.

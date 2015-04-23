@@ -139,8 +139,7 @@ def mock_subprocess(out='', err='', exit=0):
     return decorator
 
 
-# TODO: factor w/ mock_subprocess, at least re: out_file/fakeread junk
-def mock_pty(out='', err='', exit=0):
+def mock_pty(out='', err='', exit=0, isatty=None):
     def decorator(f):
         @wraps(f)
         @patch('invoke.runners.pty')
@@ -157,6 +156,9 @@ def mock_pty(out='', err='', exit=0):
             # (normally sent to WEXITSTATUS but we mock that anyway, so.)
             os.waitpid.return_value = None, None
             os.WEXITSTATUS.return_value = exit
+            # If requested, mock isatty to fake out pty detection
+            if isatty is not None:
+                os.isatty.return_value = isatty
             out_file = StringIO(out)
             err_file = StringIO(err)
             def fakeread(fileno, count):
