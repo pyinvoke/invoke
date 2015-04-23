@@ -320,12 +320,6 @@ class Run(Spec):
         def fallback_affects_result_pty_value(self, *mocks):
             eq_(run("true", pty=True).pty, False)
 
-        @_not_tty
-        @_patch_run_pty
-        def fallback_can_be_overridden(self, run_pty, isatty):
-            run("true", pty=True, fallback=False)
-            assert run_pty.called
-
         # Force our test for pty-ness to fail
         @_not_tty
         @_patch_run_pty
