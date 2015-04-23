@@ -49,7 +49,7 @@ class Local_(Spec):
         @mock_pty(out="sup")
         def pty_output_stream_defaults_to_sys(self):
             self._run("nope", pty=True)
-            #eq_(sys.stdout.getvalue(), "sup")
+            eq_(sys.stdout.getvalue(), "sup")
 
         def pty_output_stream_overrides_are_the_same(self):
             skip()
