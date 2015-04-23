@@ -179,13 +179,23 @@ class Runner(object):
         stdout, stderr = [], []
         threads = []
         argses = [
-            (self.stdout_reader, out_stream, stdout, 'out' in opts['hide'],
-                encoding),
+            (
+                self.stdout_reader(),
+                out_stream,
+                stdout,
+                'out' in opts['hide'],
+                encoding
+            ),
         ]
         if not self.using_pty:
             argses.append(
-                (self.stderr_reader, err_stream, stderr, 'err' in opts['hide'],
-                    encoding),
+                (
+                    self.stderr_reader(),
+                    err_stream,
+                    stderr,
+                    'err' in opts['hide'],
+                    encoding
+                ),
             )
         for args in argses:
             t = threading.Thread(target=self._mux, args=args)
@@ -293,15 +303,12 @@ class Local(Runner):
         return use_pty
 
     # TODO: refactor into eg self._get_reader
-    @property
     def stdout_reader(self):
         if self.using_pty:
             return partial(os.read, self.parent_fd)
         else:
             return partial(os.read, self.process.stdout.fileno())
 
-    # TODO: ditto
-    @property
     def stderr_reader(self):
         return partial(os.read, self.process.stderr.fileno())
 
