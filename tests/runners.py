@@ -2,6 +2,7 @@ import sys
 from invoke.vendor.six import StringIO
 
 from spec import Spec, trap, eq_, skip
+from mock import patch
 
 from invoke import Local, Context
 
@@ -69,3 +70,14 @@ class Local_(Spec):
 
         def encoding_can_be_overridden(self):
             skip()
+
+        @mock_pty()
+        @patch('invoke.runners.os')
+        def fallback_can_be_overridden(self, os):
+            # This would trigger fallback if was True (default)
+            os.isatty.return_value = False
+            # Do the stuff
+            self._run("true", pty=True, fallback=False)
+            # @mock_pty's asserts will be mad if pty-related os/pty calls
+            # didn't fire, so we're done.
+
