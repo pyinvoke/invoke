@@ -49,8 +49,8 @@ class Runner(object):
     Partially-abstract core command-running API.
 
     This class is not usable by itself and must be subclassed, implementing a
-    number of methods such as `start`, `wait` and `get_returncode`. For a
-    subclass implementation example, see the source code for `.Local`.
+    number of methods such as `start`, `wait` and `returncode`. For a subclass
+    implementation example, see the source code for `.Local`.
     """
     def __init__(self, context):
         """
@@ -174,6 +174,7 @@ class Runner(object):
         self.start(command)
         encoding = opts['encoding']
         if encoding is None:
+            # TODO: this needs to be a method as local.gpe is Local specific.
             encoding = locale.getpreferredencoding(False)
         stdout, stderr = [], []
         threads = []
@@ -230,6 +231,39 @@ class Runner(object):
         """
         # NOTE: fallback not used: no falling back implemented by default.
         return pty
+
+    def start(self, command):
+        """
+        Initiate execution of ``command``, e.g. in a subprocess.
+
+        Typically, this will also set subclass-specific member variables used
+        in other methods such as `wait` and/or `returncode`.
+        """
+        raise NotImplementedError
+
+    def stdout_reader(self):
+        """
+        Return a function suitable for reading from a running command's stdout.
+        """
+        raise NotImplementedError
+
+    def stderr_reader(self):
+        """
+        Return a function suitable for reading from a running command's stderr.
+        """
+        raise NotImplementedError
+
+    def wait(self):
+        """
+        Block until the running command appears to have exited.
+        """
+        raise NotImplementedError
+
+    def returncode(self):
+        """
+        Return the numeric return/exit code resulting from command execution.
+        """
+        raise NotImplementedError
 
 
 class Local(Runner):
