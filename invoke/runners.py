@@ -244,7 +244,7 @@ class Local(Runner):
         degraded execution is better than none at all, as well as printing a
         warning to stderr.
 
-        To disable this behavior (i.e. if ``os.isatty`` is causing false
+        To disable this behavior (i.e. if `os.isatty` is causing false
         negatives in your environment), say ``fallback=False``.
     """
     def should_use_pty(self, pty=False, fallback=True):
