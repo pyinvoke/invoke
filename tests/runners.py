@@ -51,8 +51,13 @@ class Local_(Spec):
             self._run("nope", pty=True)
             eq_(sys.stdout.getvalue(), "sup")
 
-        def pty_output_stream_overrides_are_the_same(self):
-            skip()
+        @trap
+        @mock_pty(out="yo")
+        def pty_output_stream_overrides_work(self):
+            out = StringIO()
+            self._run("nope", pty=True, out_stream=out)
+            eq_(out.getvalue(), "yo")
+            eq_(sys.stdout.getvalue(), "")
 
         def pty_fallback_warnings_only_fire_once(self):
             # I.e. if implementation checks pty-ness >1 time, only one warning
