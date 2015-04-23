@@ -248,6 +248,8 @@ class Local(Runner):
         negatives in your environment), say ``fallback=False``.
     """
     def should_use_pty(self, pty=False, fallback=True):
+        fallback = True
+        print >>sys.__stderr__, "os in use: {0!r}".format(os)
         use_pty = False
         if pty:
             use_pty = True

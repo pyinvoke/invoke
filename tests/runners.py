@@ -75,6 +75,7 @@ class Local_(Spec):
         @patch('invoke.runners.os')
         def fallback_can_be_overridden(self, os):
             # This would trigger fallback if was True (default)
+            print >>sys.__stderr__, "in test, os: {0!r}".format(os)
             os.isatty.return_value = False
             # Do the stuff
             self._run("true", pty=True, fallback=False)

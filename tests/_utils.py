@@ -117,18 +117,21 @@ assert_not_contains = partial(_assert_contains, invert=True)
 
 
 
-def mock_io(patch_paths, out, err, setup, teardown=None):
+def mock_io(patch_paths, out, err, set_mocks, teardown=None, patches=None):
     def decorator(f):
         def wrapper(*args, **kwargs):
             # Grab mock objects inserted by @patch, out of args.
             args = list(args)
+            print >>sys.__stderr__, "args: {0!r}".format(args)
+            print >>sys.__stderr__, "paths: {0!r}".format(patch_paths)
             mocks = [args.pop() for _ in patch_paths]
             # os mock is used by us & also handed to setup/teardown in case
             # they need it as well.
             mocks.append(args.pop())
             os = mocks[-1]
+            print >>sys.__stderr__, "mock_io os: {0!r}".format(os)
             # Run mock setup
-            setup(*mocks)
+            set_mocks(*mocks)
             # Fake IO
             out_file = StringIO(out)
             err_file = StringIO(err)
@@ -152,8 +155,8 @@ def mock_io(patch_paths, out, err, setup, teardown=None):
     return decorator
 
 
-def mock_subprocess(out='', err='', exit=0):
-    def setup(Popen, os):
+def mock_subprocess(out='', err='', exit=0, patches=None):
+    def set_mocks(Popen, os):
         process = Popen.return_value
         process.returncode = exit
         process.stdout.fileno.return_value = 1
@@ -163,12 +166,13 @@ def mock_subprocess(out='', err='', exit=0):
         patch_paths=['invoke.runners.Popen'],
         out=out,
         err=err,
-        setup=setup,
+        set_mocks=set_mocks,
+        patches=patches,
     )
 
 
-def mock_pty(out='', err='', exit=0):
-    def setup(pty, os):
+def mock_pty(out='', err='', exit=0, patches=None):
+    def set_mocks(pty, os):
         # Don't actually fork, but pretend we did & that main thread is
         # also the child (pid 0) to trigger execv call; & give 'parent fd'
         # of 1 (stdout).
@@ -185,10 +189,12 @@ def mock_pty(out='', err='', exit=0):
         for name in ('execv', 'waitpid', 'WEXITSTATUS'):
             assert getattr(os, name).called
 
-    return mock_io(
+    wat = mock_io(
         patch_paths=['invoke.runners.pty'],
         out=out,
         err=err,
-        setup=setup,
+        set_mocks=set_mocks,
         teardown=teardown,
+        patches=patches
     )
+    return wat

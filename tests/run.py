@@ -12,7 +12,7 @@ from invoke.runners import Runner, Local
 from invoke.exceptions import Failure
 from invoke.platform import WINDOWS
 
-from _utils import support, reset_cwd, skip_if_windows
+from _utils import support, reset_cwd, skip_if_windows, mock_pty
 
 
 # TODO: split this stuff up between runners.py (more correctly organized, &
@@ -60,16 +60,6 @@ def _config_check(key, config_val, kwarg_val, expected, func='run_direct'):
     r.run('whatever', **{key: kwarg_val})
     eq_(getattr(r, func).call_args[1][key], expected)
 
-
-# Shorthand for mocking Local.run_pty so tests run under non-pty environments
-# don't asplode.
-_patch_run_pty = patch.object(
-    Local,
-    'run_pty',
-    return_value=('', '', 0, None),
-    func_name='run_pty',
-    __name__='run_pty',
-)
 
 # Shorthand for mocking os.isatty
 _is_tty = patch('os.isatty', return_value=True)
@@ -319,12 +309,6 @@ class Run(Spec):
         @trap
         def fallback_affects_result_pty_value(self, *mocks):
             eq_(run("true", pty=True).pty, False)
-
-        @_not_tty
-        @_patch_run_pty
-        def fallback_can_be_overridden(self, run_pty, isatty):
-            run("true", pty=True, fallback=False)
-            assert run_pty.called
 
         # Force our test for pty-ness to fail
         @_not_tty
