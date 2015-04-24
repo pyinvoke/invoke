@@ -1,11 +1,53 @@
 import sys
 from invoke.vendor.six import StringIO
 
-from spec import Spec, trap, eq_, skip
+from spec import Spec, trap, eq_, skip, ok_
 
-from invoke import Local, Context
+from invoke import Runner, Local, Context
 
 from _utils import mock_subprocess, mock_pty
+
+
+class Dummy(Runner):
+    def start(self, command):
+        pass
+
+    def stdout_reader(self):
+        pass
+
+    def stderr_reader(self):
+        pass
+
+    def io(self, *args):
+        pass
+
+    def wait(self):
+        pass
+
+    def returncode(self):
+        return 0
+
+
+class Runner_(Spec):
+    class echoing:
+        @trap
+        def off_by_default(self):
+            Dummy(Context()).run("my command")
+            eq_(sys.stdout.getvalue(), "")
+
+        @trap
+        def enabled_via_kwarg(self):
+            Dummy(Context()).run("my command", echo=True)
+            ok_("my command" in sys.stdout.getvalue())
+
+        def enabled_via_config(self):
+            skip()
+
+        def kwarg_beats_config(self):
+            skip()
+
+        def uses_ansi_bold(self):
+            skip()
 
 
 class Local_(Spec):
