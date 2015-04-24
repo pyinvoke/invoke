@@ -198,7 +198,7 @@ class Runner(object):
                 ),
             )
         for args in argses:
-            t = threading.Thread(target=self._mux, args=args)
+            t = threading.Thread(target=self.io, args=args)
             threads.append(t)
             t.start()
         # Wait for completion, then tie things off & obtain result
@@ -263,6 +263,24 @@ class Runner(object):
         """
         raise NotImplementedError
 
+    def io(self, reader, output, buffer_, hide, encoding):
+        """
+        Perform I/O (reading, capturing & writing).
+
+        Specifically:
+
+        * Read bytes from ``reader``, giving it some number of bytes to read at
+          a time. (Typically this function is the result of `stdout_reader` or
+          `stderr_reader`.)
+        * Decode the bytes into a string according to ``encoding`` (typically
+          derived from `encoding`).
+        * Save a copy of the bytes in ``buffer_``, typically a `list`, which
+          the caller will expect to be mutated.
+        * If ``hide`` is ``False``, write bytes to ``output``, a stream such as
+          `sys.stdout`.
+        """
+        raise NotImplementedError
+
     def wait(self):
         """
         Block until the running command appears to have exited.
@@ -312,7 +330,7 @@ class Local(Runner):
     def stderr_reader(self):
         return partial(os.read, self.process.stderr.fileno())
 
-    def _mux(self, read_func, dest, buffer_, hide, encoding):
+    def io(self, read_func, dest, buffer_, hide, encoding):
         # Inner generator yielding read data
         def get():
             while True:
