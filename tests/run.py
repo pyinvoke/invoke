@@ -120,14 +120,6 @@ class Run(Spec):
             check(kwarg_val=None, expected=True)
             check(kwarg_val=False, expected=False)
 
-        @trap
-        def echo(self):
-            # honors default
-            r = _runner(key='echo', config_val=True)
-            r.run('whatever')
-            ok_('whatever' in sys.stdout.getvalue())
-            # kwarg overrides
-
         def fallback(self):
             check = partial(
                 _config_check, key='fallback', config_val=True,
@@ -325,18 +317,6 @@ class Run(Spec):
         @_patch_run_pty
         def overridden_fallback_affects_result_pty_value(self, *mocks):
             eq_(run("true", pty=True, fallback=False).pty, True)
-
-    class command_echo:
-        @trap
-        def does_not_echo_commands_run_by_default(self):
-            run("echo hi")
-            eq_(sys.stdout.getvalue().strip(), "hi")
-
-        @trap
-        def when_echo_True_commands_echoed_in_bold(self):
-            run("echo hi", echo=True)
-            expected = "\033[1;37mecho hi\033[0m\nhi"
-            eq_(sys.stdout.getvalue().strip(), expected)
 
     #
     # Random edge/corner case junk
