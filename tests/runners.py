@@ -29,30 +29,35 @@ class Dummy(Runner):
 
 
 class Runner_(Spec):
+    def _run(self, *args, **kwargs):
+        settings = kwargs.pop('settings', {})
+        context = Context(config=Config(overrides=settings))
+        return Dummy(context).run(*args, **kwargs)
+
     class echoing:
         @trap
         def off_by_default(self):
-            Dummy(Context()).run("my command")
+            self._run("my command")
             eq_(sys.stdout.getvalue(), "")
 
         @trap
         def enabled_via_kwarg(self):
-            Dummy(Context()).run("my command", echo=True)
+            self._run("my command", echo=True)
             ok_("my command" in sys.stdout.getvalue())
 
         @trap
         def enabled_via_config(self):
-            Dummy(Context(config=Config(overrides={'run': {'echo': True}}))).run("yup")
+            self._run("yup", settings={'run': {'echo': True}})
             ok_("yup" in sys.stdout.getvalue())
 
         @trap
         def kwarg_beats_config(self):
-            Dummy(Context(config=Config(overrides={'run': {'echo': False}}))).run("yup", echo=True)
+            self._run("yup", echo=True, settings={'run': {'echo': False}})
             ok_("yup" in sys.stdout.getvalue())
 
         @trap
         def uses_ansi_bold(self):
-            Dummy(Context()).run("my command", echo=True)
+            self._run("my command", echo=True)
             # TODO: vendor & use a color module
             eq_(sys.stdout.getvalue(), "\x1b[1;37mmy command\x1b[0m\n")
 
