@@ -3,7 +3,7 @@ from invoke.vendor.six import StringIO
 
 from spec import Spec, trap, eq_, skip, ok_
 
-from invoke import Runner, Local, Context
+from invoke import Runner, Local, Context, Config
 
 from _utils import mock_subprocess, mock_pty
 
@@ -40,14 +40,21 @@ class Runner_(Spec):
             Dummy(Context()).run("my command", echo=True)
             ok_("my command" in sys.stdout.getvalue())
 
+        @trap
         def enabled_via_config(self):
-            skip()
+            Dummy(Context(config=Config(overrides={'run': {'echo': True}}))).run("yup")
+            ok_("yup" in sys.stdout.getvalue())
 
+        @trap
         def kwarg_beats_config(self):
-            skip()
+            Dummy(Context(config=Config(overrides={'run': {'echo': False}}))).run("yup", echo=True)
+            ok_("yup" in sys.stdout.getvalue())
 
+        @trap
         def uses_ansi_bold(self):
-            skip()
+            Dummy(Context()).run("my command", echo=True)
+            # TODO: vendor & use a color module
+            eq_(sys.stdout.getvalue(), "\x1b[1;37mmy command\x1b[0m\n")
 
 
 class Local_(Spec):
