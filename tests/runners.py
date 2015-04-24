@@ -1,7 +1,9 @@
+import locale
 import sys
 from invoke.vendor.six import StringIO
 
 from spec import Spec, trap, eq_, skip, ok_
+from mock import patch
 
 from invoke import Runner, Local, Context, Config
 
@@ -127,7 +129,16 @@ class Local_(Spec):
             # didn't fire, so we're done.
 
     class encoding:
+        @mock_subprocess()
         def defaults_to_local_encoding(self):
+            with patch('invoke.runners.codecs') as codecs:
+                self._run("nope")
+                # TODO: use the expected new method for this? too tautological?
+                local_encoding = locale.getpreferredencoding(False)
+                for call in codecs.iterdecode.call_args_list:
+                    eq_(call[0][1], local_encoding)
+
+        def honors_config(self):
             skip()
 
         def can_be_overridden(self):
