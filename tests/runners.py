@@ -30,6 +30,12 @@ class Dummy(Runner):
         return 0
 
 
+def _expect_encoding(codecs, encoding):
+    assert codecs.iterdecode.called
+    for call in codecs.iterdecode.call_args_list:
+        eq_(call[0][1], encoding)
+
+
 class Runner_(Spec):
     def _run(self, *args, **kwargs):
         settings = kwargs.pop('settings', {})
@@ -62,6 +68,25 @@ class Runner_(Spec):
             self._run("my command", echo=True)
             # TODO: vendor & use a color module
             eq_(sys.stdout.getvalue(), "\x1b[1;37mmy command\x1b[0m\n")
+
+    class encoding:
+        # Use UTF-7 as a valid encoding unlikely to be a real default
+        def defaults_to_encoding_method_result(self):
+            runner = Dummy(Context())
+            runner.encoding.return_value = 'UTF-7'
+            with patch('invoke.runners.codecs') as codecs:
+                runner._run("nope")
+                runner.encoding.assert_called_with()
+                _expect_encoding(codecs, runner.encoding.return_value)
+
+        def honors_config(self):
+            with patch('invoke.runners.codecs') as codecs:
+                c = Context(Config(overrides={'run': {'encoding': 'UTF-7'}}))
+                Dummy(c).run("nope")
+                _expect_encoding(codecs, 'UTF-7')
+
+        def honors_kwarg(self):
+            skip()
 
 
 class Local_(Spec):
@@ -129,18 +154,9 @@ class Local_(Spec):
             # didn't fire, so we're done.
 
     class encoding:
-        @mock_subprocess()
-        def defaults_to_local_encoding(self):
+        @mock_subprocess
+        def uses_locale_module_for_desired_encoding(self):
             with patch('invoke.runners.codecs') as codecs:
                 self._run("nope")
-                # TODO: use the expected new method for this? too tautological?
                 local_encoding = locale.getpreferredencoding(False)
-                for call in codecs.iterdecode.call_args_list:
-                    eq_(call[0][1], local_encoding)
-
-        def honors_config(self):
-            skip()
-
-        def can_be_overridden(self):
-            skip()
-
+                _expect_encoding(codecs, local_encoding)
