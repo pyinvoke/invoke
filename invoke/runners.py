@@ -131,10 +131,10 @@ class Runner(object):
             Controls whether `.run` prints the command string to local stdout
             prior to executing it. Default: ``False``.
 
-        :param str encoding:
+        :param str default_encoding:
             Override auto-detection of which encoding the subprocess is using
-            for its stdout/stderr streams. Defaults to the return value of
-            ``locale.getpreferredencoding(False)``).
+            for its stdout/stderr streams (which defaults to the return value
+            of `encoding`).
 
         :param out_stream:
             A file-like stream object to which the subprocess' standard error
@@ -174,8 +174,8 @@ class Runner(object):
         self.start(command)
         encoding = opts['encoding']
         if encoding is None:
-            # TODO: this needs to be a method as local.gpe is Local specific.
-            encoding = locale.getpreferredencoding(False)
+            encoding = self.default_encoding()
+        self.encoding = encoding
         stdout, stderr = [], []
         threads = []
         argses = [
@@ -184,7 +184,6 @@ class Runner(object):
                 out_stream,
                 stdout,
                 'out' in opts['hide'],
-                encoding
             ),
         ]
         if not self.using_pty:
@@ -194,7 +193,6 @@ class Runner(object):
                     err_stream,
                     stderr,
                     'err' in opts['hide'],
-                    encoding
                 ),
             )
         for args in argses:
@@ -263,7 +261,16 @@ class Runner(object):
         """
         raise NotImplementedError
 
-    def io(self, reader, output, buffer_, hide, encoding):
+    def default_encoding(self):
+        """
+        Return a string naming the expected encoding of subprocess streams.
+
+        This return value should be suitable for use by methods such as
+        `codecs.iterdecode`.
+        """
+        raise NotImplementedError
+
+    def io(self, reader, output, buffer_, hide):
         """
         Perform I/O (reading, capturing & writing).
 
@@ -272,14 +279,31 @@ class Runner(object):
         * Read bytes from ``reader``, giving it some number of bytes to read at
           a time. (Typically this function is the result of `stdout_reader` or
           `stderr_reader`.)
-        * Decode the bytes into a string according to ``encoding`` (typically
-          derived from `encoding`).
+        * Decode the bytes into a string according to ``self.encoding``
+          (typically derived from `default_encoding` or runtime keyword args).
         * Save a copy of the bytes in ``buffer_``, typically a `list`, which
           the caller will expect to be mutated.
         * If ``hide`` is ``False``, write bytes to ``output``, a stream such as
           `sys.stdout`.
         """
-        raise NotImplementedError
+        # Inner generator yielding read data
+        def get():
+            while True:
+                data = reader(1000)
+                if not data:
+                    break
+                # Sometimes os.read gives us bytes under Python 3...and
+                # sometimes it doesn't. ¯\_(ツ)_/¯
+                if not isinstance(data, six.binary_type):
+                    # Can't use six.b because that just assumes latin-1 :(
+                    data = data.encode(self.encoding)
+                yield data
+        # Decode stream using our generator & requested encoding
+        for data in codecs.iterdecode(get(), self.encoding, errors='replace'):
+            if not hide:
+                output.write(data)
+                output.flush()
+            buffer_.append(data)
 
     def wait(self):
         """
@@ -330,27 +354,6 @@ class Local(Runner):
     def stderr_reader(self):
         return partial(os.read, self.process.stderr.fileno())
 
-    def io(self, read_func, dest, buffer_, hide, encoding):
-        # Inner generator yielding read data
-        def get():
-            while True:
-                # self.read_stream
-                data = read_func(1000)
-                if not data:
-                    break
-                # Sometimes os.read gives us bytes under Python 3...and
-                # sometimes it doesn't. ¯\_(ツ)_/¯
-                if not isinstance(data, six.binary_type):
-                    # Can't use six.b because that just assumes latin-1 :(
-                    data = data.encode(encoding)
-                yield data
-        # Decode stream using our generator & requested encoding
-        for data in codecs.iterdecode(get(), encoding, errors='replace'):
-            if not hide:
-                dest.write(data)
-                dest.flush()
-            buffer_.append(data)
-
     def start(self, command):
         if self.using_pty:
             # TODO: re-insert Windows "lol y u no pty" stuff at this point,
@@ -381,6 +384,9 @@ class Local(Runner):
                 stdout=PIPE,
                 stderr=PIPE,
             )
+
+    def default_encoding(self):
+        return locale.getpreferredencoding(False)
 
     def wait(self):
         if self.using_pty:

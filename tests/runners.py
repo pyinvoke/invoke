@@ -3,7 +3,7 @@ import sys
 from invoke.vendor.six import StringIO
 
 from spec import Spec, trap, eq_, skip, ok_
-from mock import patch
+from mock import patch, Mock
 
 from invoke import Runner, Local, Context, Config
 
@@ -20,8 +20,8 @@ class Dummy(Runner):
     def stderr_reader(self):
         pass
 
-    def io(self, *args):
-        pass
+    def default_encoding(self):
+        return ""
 
     def wait(self):
         pass
@@ -73,11 +73,12 @@ class Runner_(Spec):
         # Use UTF-7 as a valid encoding unlikely to be a real default
         def defaults_to_encoding_method_result(self):
             runner = Dummy(Context())
-            runner.encoding.return_value = 'UTF-7'
+            encoding = 'UTF-7'
+            runner.default_encoding = Mock(return_value=encoding)
             with patch('invoke.runners.codecs') as codecs:
-                runner._run("nope")
-                runner.encoding.assert_called_with()
-                _expect_encoding(codecs, runner.encoding.return_value)
+                runner.run("nope")
+                runner.default_encoding.assert_called_with()
+                _expect_encoding(codecs, encoding)
 
         def honors_config(self):
             with patch('invoke.runners.codecs') as codecs:
