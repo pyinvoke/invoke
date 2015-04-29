@@ -12,7 +12,7 @@ def _complete(invocation, collection=None):
     if collection:
         colstr = "-c {0}".format(collection)
     with expect_exit(0):
-        _dispatch("inv --complete {1} -- inv {0}".format(invocation, colstr))
+        _dispatch("inv --complete {0} -- inv {1}".format(colstr, invocation))
     return sys.stdout.getvalue()
 
 
