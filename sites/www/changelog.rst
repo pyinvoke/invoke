@@ -2,6 +2,9 @@
 Changelog
 =========
 
+* :bug:`239` Completion erroneously presented core flags instead of per-task
+  flags when both are present in the invocation being completed (e.g. ``inv
+  --debug my_task -<tab>``). This has been fixed.
 * :bug:`238` (partial fix) Update the ``zsh`` completion script to account for
   use of the ``--collection`` core flag.
 * :support:`-` Additional rearranging of ``run``/``Runner`` related concerns
