@@ -2,6 +2,9 @@
 Changelog
 =========
 
+* :bug:`237` Completion output lacked "inverse" flag names (e.g.
+  ``--no-myoption`` as a boolean negative version of a defaulting-to-True
+  boolean ``myoption``). This has been corrected.
 * :bug:`239` Completion erroneously presented core flags instead of per-task
   flags when both are present in the invocation being completed (e.g. ``inv
   --debug my_task -<tab>``). This has been fixed.
