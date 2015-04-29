@@ -59,6 +59,10 @@ class ShellCompletion(IntegrationSpec):
         assert_contains(output, '--name')
         assert_not_contains(output, '-n\n') # newline because -n is in --name
 
+    def flag_completion_includes_inverse_booleans(self):
+        output = _complete('basic_bool -', 'foo')
+        assert_contains(output, '--no-mybool')
+
     def tasks_with_positional_args_complete_with_flags(self):
         # Because otherwise completing them is invalid anyways.
         # NOTE: this currently duplicates another test because this test cares
