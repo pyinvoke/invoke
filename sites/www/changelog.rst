@@ -2,6 +2,8 @@
 Changelog
 =========
 
+* :bug:`238` (partial fix) Update the ``zsh`` completion script to account for
+  use of the ``--collection`` core flag.
 * :support:`-` Additional rearranging of ``run``/``Runner`` related concerns
   for improved subclassing, organization, and use in other libraries,
   including:
