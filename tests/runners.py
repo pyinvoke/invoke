@@ -154,6 +154,7 @@ class Local_(Spec):
             # @mock_pty's asserts will be mad if pty-related os/pty calls
             # didn't fire, so we're done.
 
+        @trap
         @mock_subprocess(isatty=False)
         def fallback_affects_result_pty_value(self, *mocks):
             eq_(self._run("nope", pty=True).pty, False)
