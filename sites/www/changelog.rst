@@ -2,14 +2,14 @@
 Changelog
 =========
 
-* :bug:`237` Completion output lacked "inverse" flag names (e.g.
+* :bug:`237 major` Completion output lacked "inverse" flag names (e.g.
   ``--no-myoption`` as a boolean negative version of a defaulting-to-True
   boolean ``myoption``). This has been corrected.
-* :bug:`239` Completion erroneously presented core flags instead of per-task
-  flags when both are present in the invocation being completed (e.g. ``inv
-  --debug my_task -<tab>``). This has been fixed.
-* :bug:`238` (partial fix) Update the ``zsh`` completion script to account for
-  use of the ``--collection`` core flag.
+* :bug:`239 major` Completion erroneously presented core flags instead of
+  per-task flags when both are present in the invocation being completed (e.g.
+  ``inv --debug my_task -<tab>``). This has been fixed.
+* :bug:`238 major` (partial fix) Update the ``zsh`` completion script to
+  account for use of the ``--collection`` core flag.
 * :support:`-` Additional rearranging of ``run``/``Runner`` related concerns
   for improved subclassing, organization, and use in other libraries,
   including:
