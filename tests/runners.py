@@ -220,9 +220,14 @@ class Local_(Spec):
             skip()
 
         @mock_pty(isatty=False)
-        def can_be_overridden(self):
-            # Do the stuff
+        def can_be_overridden_by_kwarg(self):
             self._run("nope", pty=True, fallback=False)
+            # @mock_pty's asserts will be mad if pty-related os/pty calls
+            # didn't fire, so we're done.
+
+        @mock_pty(isatty=False)
+        def can_be_overridden_by_config(self):
+            self._runner(run={'fallback': False}).run("nope", pty=True)
             # @mock_pty's asserts will be mad if pty-related os/pty calls
             # didn't fire, so we're done.
 
