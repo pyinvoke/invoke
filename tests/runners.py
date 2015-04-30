@@ -154,6 +154,14 @@ class Local_(Spec):
             # @mock_pty's asserts will be mad if pty-related os/pty calls
             # didn't fire, so we're done.
 
+        @mock_subprocess(isatty=False)
+        def fallback_affects_result_pty_value(self, *mocks):
+            eq_(self._run("nope", pty=True).pty, False)
+
+        @mock_pty(isatty=False)
+        def overridden_fallback_affects_result_pty_value(self):
+            eq_(self._run("nope", pty=True, fallback=False).pty, True)
+
     class encoding:
         @mock_subprocess
         def uses_locale_module_for_desired_encoding(self):

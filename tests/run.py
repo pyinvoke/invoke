@@ -290,28 +290,6 @@ class Run(Spec):
             expected = '      hello\t\t\r\nworld with spaces\r\n'
             eq_(run(cmd, pty=True, hide='both').stdout, expected)
 
-        @_not_tty
-        @trap
-        def pty_falls_back_to_off_if_True_and_not_isatty(self, *mocks):
-            if WINDOWS:
-                # Straight up "it shouldn't kaboom, it should fall back"
-                run("true", pty=True)
-            else:
-                # Force termios to kaboom to trigger fallback
-                import termios
-                with patch('tty.tcgetattr', side_effect=termios.error):
-                    run("true", pty=True)
-
-        @_not_tty
-        @trap
-        def fallback_affects_result_pty_value(self, *mocks):
-            eq_(run("true", pty=True).pty, False)
-
-        # Force our test for pty-ness to fail
-        @_not_tty
-        @_patch_run_pty
-        def overridden_fallback_affects_result_pty_value(self, *mocks):
-            eq_(run("true", pty=True, fallback=False).pty, True)
 
     #
     # Random edge/corner case junk
