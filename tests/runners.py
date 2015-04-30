@@ -98,11 +98,6 @@ class Runner_(Spec):
             eq_(runner.run("nope").stderr, "foo")
             eq_(sys.stderr.getvalue(), "foo")
 
-
-        #def has_exception_attr(self):
-        #    eq_(_run().exception, None)
-
-
     class echoing:
         @trap
         def off_by_default(self):

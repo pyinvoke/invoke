@@ -40,10 +40,6 @@ def normalize_hide(val):
     return hide
 
 
-# TODO: remove 'exception' field in run_* return values, if we don't run into
-# situations similar to the one found in pexpect re: spurious IOErrors on Linux
-# w/ PTYs. See #37 / 45db03ed8343ac97beefb360634f8106de92c6d7
-
 class Runner(object):
     """
     Partially-abstract core command-running API.
@@ -149,7 +145,6 @@ class Runner(object):
 
         :raises: `.Failure` (if the command exited nonzero & ``warn=False``)
         """
-        exception = False
         # Normalize kwargs w/ config
         opts = {}
         for key, value in six.iteritems(self.context.config.run):
@@ -221,7 +216,6 @@ class Runner(object):
             stderr=stderr,
             exited=exited,
             pty=self.using_pty,
-            exception=exception,
         )
         if not (result or opts['warn']):
             raise Failure(result)
@@ -424,20 +418,16 @@ class Result(object):
       nonzero return code.
     * ``pty``: A boolean describing whether the subprocess was invoked with a
       pty or not; see `.Runner.run`.
-    * ``exception``: Typically ``None``, but may be an exception object if
-      ``pty`` was ``True`` and ``run`` had to swallow an apparently-spurious
-      ``OSError``. Solely for sanity checking/debugging purposes.
 
     `Result` objects' truth evaluation is equivalent to their ``ok``
     attribute's value.
     """
     # TODO: inherit from namedtuple instead? heh
-    def __init__(self, stdout, stderr, exited, pty, exception=None):
+    def __init__(self, stdout, stderr, exited, pty):
         self.exited = self.return_code = exited
         self.stdout = stdout
         self.stderr = stderr
         self.pty = pty
-        self.exception = exception
 
     def __nonzero__(self):
         # Holy mismatch between name and implementation, Batman!
