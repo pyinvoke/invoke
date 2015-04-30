@@ -128,11 +128,6 @@ class Run(Spec):
             check(kwarg_val=None, expected=True)
             check(kwarg_val=False, expected=False)
 
-        def encoding(self):
-            check = partial(_config_check, key='encoding', config_val='UTF-7')
-            check(kwarg_val=None, expected='UTF-7')
-            check(kwarg_val='UTF-9', expected='UTF-9')
-
     class return_value:
         def return_code_in_result(self):
             """
