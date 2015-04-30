@@ -89,17 +89,6 @@ class Run(Spec):
     def teardown(self):
         reset_cwd()
 
-    class uses_context_config:
-        "Context's config values are honored"
-
-        def pty(self):
-            check = partial(
-                _config_check, key='pty', config_val=True, func='select_method'
-            )
-            check(kwarg_val=None, expected=True)
-            check(kwarg_val=False, expected=False)
-
-
     class failure_handling:
         @raises(Failure)
         def fast_failures(self):
@@ -210,15 +199,6 @@ class Run(Spec):
             eq_(run(self.out, hide='both').stdout, 'foo\n')
 
     class pseudo_terminals:
-        @trap
-        def return_value_indicates_whether_pty_was_used(self, *mocks):
-            eq_(run("true").pty, False)
-            if not WINDOWS:
-                eq_(run("true", pty=True).pty, True)
-
-        def pty_defaults_to_off(self):
-            eq_(run("true").pty, False)
-
         @skip_if_windows # Not sure how to make this work on Windows
         def complex_nesting_doesnt_break(self):
             # GH issue 191

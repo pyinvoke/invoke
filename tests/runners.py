@@ -104,6 +104,17 @@ class Runner_(Spec):
             eq_(r.stdout, 'stuff')
             eq_(sys.stdout.getvalue(), '')
 
+    class pty:
+        def pty_defaults_to_off(self):
+            eq_(self._run("nope").pty, False)
+
+        def honors_config(self):
+            runner = self._runner(run={'pty': True})
+            eq_(runner.run("nope").pty, True)
+
+        def kwarg_beats_config(self):
+            runner = self._runner(run={'pty': False})
+            eq_(runner.run("nope", pty=True).pty, True)
 
     class return_value:
         def return_code_in_result(self):
@@ -145,6 +156,10 @@ class Runner_(Spec):
             runner = self._runner(err='foo')
             eq_(runner.run("nope").stderr, "foo")
             eq_(sys.stderr.getvalue(), "foo")
+
+        def whether_pty_was_used(self):
+            eq_(self._run("nope").pty, False)
+            eq_(self._run("nope", pty=True).pty, True)
 
     class echoing:
         @trap
