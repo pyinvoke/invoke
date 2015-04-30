@@ -4,28 +4,11 @@ import shutil
 import time
 from os.path import join
 
-from invocations import docs as _docs
+from invocations.docs import docs, www
 from invocations.testing import test
 from invocations.packaging import vendorize, release
 
 from invoke import ctask as task, Collection, Context
-
-
-d = 'sites'
-
-# Usage doc/API site (published as docs.paramiko.org)
-docs_path = join(d, 'docs')
-docs = Collection.from_module(_docs, name='docs', config={
-    'sphinx': {'source': docs_path, 'target': join(docs_path, '_build')}
-})
-docs['build'].__doc__ = "Build the API docs subsite."
-
-# Main/about/changelog site ((www.)?paramiko.org)
-www_path = join(d, 'www')
-www = Collection.from_module(_docs, name='www', config={
-    'sphinx': {'source': www_path, 'target': join(www_path, '_build')}
-})
-www['build'].__doc__ = "Build the main project website."
 
 
 @task
