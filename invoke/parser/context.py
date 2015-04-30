@@ -232,6 +232,9 @@ class ParserContext(object):
 
         Specifically, all flag names, flattened, in rough order.
         """
+        # Regular flag names
         flags = sorted(self.flags.values(), key=flag_key)
-        names = (self.names_for(to_flag(x.name)) for x in flags)
+        names = [self.names_for(to_flag(x.name)) for x in flags]
+        # Inverse flag names sold separately
+        names.append(self.inverse_flags.keys())
         return tuple(itertools.chain.from_iterable(names))

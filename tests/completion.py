@@ -12,7 +12,8 @@ def _complete(invocation, collection=None):
     if collection:
         colstr = "-c {0}".format(collection)
     with expect_exit(0):
-        _dispatch("inv --complete {1} -- inv {0}".format(invocation, colstr))
+        _dispatch("inv --complete {0} -- inv {0} {1}".format(
+            colstr, invocation))
     return sys.stdout.getvalue()
 
 
@@ -58,6 +59,10 @@ class ShellCompletion(IntegrationSpec):
         output = _complete('print_name --', 'integration')
         assert_contains(output, '--name')
         assert_not_contains(output, '-n\n') # newline because -n is in --name
+
+    def flag_completion_includes_inverse_booleans(self):
+        output = _complete('basic_bool -', 'foo')
+        assert_contains(output, '--no-mybool')
 
     def tasks_with_positional_args_complete_with_flags(self):
         # Because otherwise completing them is invalid anyways.

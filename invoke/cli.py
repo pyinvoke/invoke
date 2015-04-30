@@ -80,12 +80,18 @@ def print_task_names(collection):
             print(alias)
 
 
-def complete(core, parser, initial_context, collection):
+def complete(core, initial_context, collection):
     # Strip out program name (scripts give us full command line)
     invocation = re.sub(r'^(inv|invoke) ', '', core.remainder)
     debug("Completing for invocation: {0!r}".format(invocation))
     # Tokenize (shlex will have to do)
     tokens = shlex.split(invocation)
+    # Make ourselves a parser (can't just reuse original one as it's mutated /
+    # been overwritten)
+    parser = Parser(
+        initial=initial_context,
+        contexts=collection.to_contexts()
+    )
     # Handle flags (partial or otherwise)
     if tokens and tokens[-1].startswith('-'):
         tail = tokens[-1]
@@ -94,8 +100,10 @@ def complete(core, parser, initial_context, collection):
         # Use last seen context in case of failure (required for
         # otherwise-invalid partial invocations being completed).
         try:
+            debug("Seeking context name in tokens: {0!r}".format(tokens))
             contexts = parser.parse_argv(tokens)
         except ParseError as e:
+            debug("Got parser error ({0!r}), grabbing its last-seen context {1!r}".format(e, e.context)) # noqa
             contexts = [e.context]
         # Fall back to core context if no context seen.
         debug("Parsed invocation, contexts: {0!r}".format(contexts))
@@ -350,7 +358,7 @@ def parse(argv, collection=None, version=None):
 
     # Print completion helpers if necessary
     if args.complete.value:
-        complete(core, parser, initial_context, collection)
+        complete(core, initial_context, collection)
 
     # Print help if:
     # * empty invocation

@@ -9,8 +9,15 @@ _complete_invoke() {
     # We hand it to Invoke so it can figure out the current context: spit back
     # core options, task names, the current task's options, or some combo.
     #
+    # Before doing so, we attempt to tease out any collection flag+arg so we
+    # can ensure it is applied correctly.
+    collection_arg=''
+    if [[ "${words}" =~ "(-c|--collection) [^ ]+" ]]; then
+        collection_arg=$MATCH
+    fi
     # `reply` is the array of valid completions handed back to `compctl`.
-    reply=( $(invoke --complete -- ${words}) )
+    # Use ${=...} to force whitespace splitting in expansion of $collection_arg
+    reply=( $(invoke ${=collection_arg} --complete -- ${words}) )
 }
 
 
