@@ -3,6 +3,7 @@ import os
 from spec import Spec, trap, eq_
 
 from invoke import run
+from invoke.platform import WINDOWS
 
 
 def _output_eq(cmd, expected):
@@ -51,3 +52,37 @@ class Main(Spec):
                 os.unlink(path)
             except OSError:
                 pass
+
+    def complex_nesting_under_ptys_doesnt_break(self):
+        if WINDOWS: # Not sure how to make this work on Windows
+            return
+        # GH issue 191
+        substr = "      hello\t\t\nworld with spaces"
+        cmd = """ eval 'echo "{0}" ' """.format(substr)
+        expected = '      hello\t\t\r\nworld with spaces\r\n'
+        eq_(run(cmd, pty=True, hide='both').stdout, expected)
+
+    def KeyboardInterrupt_on_stdin_doesnt_flake(self):
+        # E.g. inv test => Ctrl-C halfway => shouldn't get buffer API errors
+        skip()
+
+    class funky_characters_in_stdout:
+        def basic_nonstandard_characters(self):
+            os.chdir('_support')
+            # Crummy "doesn't explode with decode errors" test
+            if WINDOWS:
+                cmd = "type tree.out"
+            else:
+                cmd = "cat tree.out"
+            run(cmd, hide='both')
+
+        def nonprinting_bytes(self):
+            # Seriously non-printing characters (i.e. non UTF8) also don't
+            # asplode
+            run("echo '\xff'", hide='both')
+
+        def nonprinting_bytes_pty(self):
+            if WINDOWS:
+                return
+            # PTY use adds another utf-8 decode spot which can also fail.
+            run("echo '\xff'", pty=True, hide='both')

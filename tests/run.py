@@ -198,45 +198,10 @@ class Run(Spec):
         def hide_does_not_affect_capturing(self):
             eq_(run(self.out, hide='both').stdout, 'foo\n')
 
-    class pseudo_terminals:
-        @skip_if_windows # Not sure how to make this work on Windows
-        def complex_nesting_doesnt_break(self):
-            # GH issue 191
-            substr = "      hello\t\t\nworld with spaces"
-            cmd = """ eval 'echo "{0}" ' """.format(substr)
-            # TODO: consider just mocking os.execv here (and in the other
-            # tests) though that feels like maybe too much of a tautology
-            expected = '      hello\t\t\r\nworld with spaces\r\n'
-            eq_(run(cmd, pty=True, hide='both').stdout, expected)
-
 
     #
     # Random edge/corner case junk
     #
-
-    def KeyboardInterrupt_on_stdin_doesnt_flake(self):
-        # E.g. inv test => Ctrl-C halfway => shouldn't get buffer API errors
-        skip()
-
-    class funky_characters_in_stdout:
-        def basic_nonstandard_characters(self):
-            # Crummy "doesn't explode with decode errors" test
-            if WINDOWS:
-                cmd = "type tree.out"
-            else:
-                cmd = "cat tree.out"
-            run(cmd, hide='both')
-
-        def nonprinting_bytes(self):
-            # Seriously non-printing characters (i.e. non UTF8) also don't
-            # asplode
-            run("echo '\xff'", hide='both')
-
-        @skip_if_windows
-        def nonprinting_bytes_pty(self):
-            # PTY use adds another utf-8 decode spot which can also fail.
-            run("echo '\xff'", pty=True, hide='both')
-
 
 class Local_(Spec):
     def setup(self):
