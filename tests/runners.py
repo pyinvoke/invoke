@@ -45,6 +45,18 @@ class Runner_(Spec):
         context = Context(config=Config(overrides=settings))
         return Dummy(context).run(*args, **kwargs)
 
+    def _runner(self, out='', err=''):
+        runner = Dummy(Context())
+        out_file = StringIO(out)
+        err_file = StringIO(err)
+        def out_reader(count):
+            return out_file.read(count)
+        def err_reader(count):
+            return err_file.read(count)
+        runner.stdout_reader = lambda: out_reader
+        runner.stderr_reader = lambda: err_reader
+        return runner
+
     class return_value:
         def return_code_in_result(self):
             """
@@ -58,16 +70,15 @@ class Runner_(Spec):
 
         @trap
         def stdout_attribute_contains_stdout(self):
-            runner = Dummy(Context())
-            out_file = StringIO("foo")
-            def reader(count):
-                return out_file.read(count)
-            runner.stdout_reader = lambda: reader
+            runner = self._runner(out='foo')
             eq_(runner.run("nope").stdout, "foo")
             eq_(sys.stdout.getvalue(), "foo")
 
-        #def stderr_attribute_contains_stderr(self):
-        #    eq_(run(self.err, hide='both').stderr, 'bar\n')
+        @trap
+        def stderr_attribute_contains_stderr(self):
+            runner = self._runner(err='foo')
+            eq_(runner.run("nope").stderr, "foo")
+            eq_(sys.stderr.getvalue(), "foo")
 
         #def ok_attr_indicates_success(self):
         #    eq_(_run().ok, True)
