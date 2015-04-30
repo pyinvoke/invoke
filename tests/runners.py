@@ -76,6 +76,19 @@ class Runner_(Spec):
         def context_instance_is_required(self):
             Runner()
 
+    class warn:
+        def honors_config(self):
+            runner = self._runner(run={'warn': True})
+            runner.returncode = Mock(return_value=1)
+            # Doesn't raise Failure -> all good
+            runner.run("nope")
+
+        def kwarg_beats_config(self):
+            runner = self._runner(run={'warn': False})
+            runner.returncode = Mock(return_value=1)
+            # Doesn't raise Failure -> all good
+            runner.run("nope", warn=True)
+
     class return_value:
         def return_code_in_result(self):
             """
