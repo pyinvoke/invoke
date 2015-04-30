@@ -2,7 +2,7 @@ import locale
 import sys
 from invoke.vendor.six import StringIO
 
-from spec import Spec, trap, eq_, skip, ok_
+from spec import Spec, trap, eq_, skip, ok_, raises
 from mock import patch, Mock
 
 from invoke import Runner, Local, Context, Config
@@ -56,6 +56,16 @@ class Runner_(Spec):
         runner.stdout_reader = lambda: out_reader
         runner.stderr_reader = lambda: err_reader
         return runner
+
+    class init:
+        "__init__"
+        def takes_a_context_instance(self):
+            c = Context()
+            eq_(Runner(c).context, c)
+
+        @raises(TypeError)
+        def context_instance_is_required(self):
+            Runner()
 
     class return_value:
         def return_code_in_result(self):

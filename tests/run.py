@@ -89,16 +89,6 @@ class Run(Spec):
     def teardown(self):
         reset_cwd()
 
-    class init:
-        "__init__"
-        def takes_a_context_instance(self):
-            c = Context()
-            eq_(Runner(c).context, c)
-
-        @raises(TypeError)
-        def context_instance_is_required(self):
-            Runner()
-
     class uses_context_config:
         "Context's config values are honored"
 
