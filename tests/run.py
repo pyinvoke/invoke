@@ -128,39 +128,6 @@ class Run(Spec):
             check(kwarg_val=None, expected=True)
             check(kwarg_val=False, expected=False)
 
-    class return_value:
-        def return_code_in_result(self):
-            """
-            Result has .return_code (and .exited) containing exit code int
-            """
-            r = run(self.out, hide='both')
-            eq_(r.return_code, 0)
-            eq_(r.exited, 0)
-
-        def nonzero_return_code_for_failures(self):
-            result = run("false", warn=True)
-            eq_(result.exited, 1)
-            result = run("goobypls", warn=True, hide='both')
-            expected = 1 if WINDOWS else 127
-            eq_(result.exited, expected)
-
-        def stdout_attribute_contains_stdout(self):
-            eq_(run(self.out, hide='both').stdout, 'foo\n')
-
-        def stderr_attribute_contains_stderr(self):
-            eq_(run(self.err, hide='both').stderr, 'bar\n')
-
-        def ok_attr_indicates_success(self):
-            eq_(_run().ok, True)
-            eq_(_run(returns={'exited': 1}, warn=True).ok, False)
-
-        def failed_attr_indicates_failure(self):
-            eq_(_run().failed, False)
-            eq_(_run(returns={'exited': 1}, warn=True).failed, True)
-
-        def has_exception_attr(self):
-            eq_(_run().exception, None)
-
     class failure_handling:
         @raises(Failure)
         def fast_failures(self):
