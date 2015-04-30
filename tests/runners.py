@@ -39,23 +39,32 @@ def _expect_encoding(codecs, encoding):
         eq_(call[0][1], encoding)
 
 
+def _run(*args, **kwargs):
+    klass = kwargs.pop('klass', Dummy)
+    settings = kwargs.pop('settings', {})
+    context = Context(config=Config(overrides=settings))
+    return klass(context).run(*args, **kwargs)
+
+def _runner(out='', err='', **kwargs):
+    klass = kwargs.pop('klass', Dummy)
+    runner = klass(Context(config=Config(overrides=kwargs)))
+    out_file = StringIO(out)
+    err_file = StringIO(err)
+    def out_reader(count):
+        return out_file.read(count)
+    def err_reader(count):
+        return err_file.read(count)
+    runner.stdout_reader = lambda: out_reader
+    runner.stderr_reader = lambda: err_reader
+    return runner
+
+
 class Runner_(Spec):
     def _run(self, *args, **kwargs):
-        settings = kwargs.pop('settings', {})
-        context = Context(config=Config(overrides=settings))
-        return Dummy(context).run(*args, **kwargs)
+        return _run(*args, **kwargs)
 
-    def _runner(self, out='', err=''):
-        runner = Dummy(Context())
-        out_file = StringIO(out)
-        err_file = StringIO(err)
-        def out_reader(count):
-            return out_file.read(count)
-        def err_reader(count):
-            return err_file.read(count)
-        runner.stdout_reader = lambda: out_reader
-        runner.stderr_reader = lambda: err_reader
-        return runner
+    def _runner(self, *args, **kwargs):
+        return _runner(*args, **kwargs)
 
     class init:
         "__init__"
@@ -199,7 +208,10 @@ class Runner_(Spec):
 
 class Local_(Spec):
     def _run(self, *args, **kwargs):
-        return Local(Context()).run(*args, **kwargs)
+        return _run(*args, **dict(kwargs, klass=Local))
+
+    def _runner(self, *args, **kwargs):
+        return _runner(*args, **dict(kwargs, klass=Local))
 
     class pty_fallback:
         def warning_only_fires_once(self):
