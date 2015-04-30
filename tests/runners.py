@@ -89,6 +89,22 @@ class Runner_(Spec):
             # Doesn't raise Failure -> all good
             runner.run("nope", warn=True)
 
+    class hide:
+        @trap
+        def honors_config(self):
+            runner = self._runner(out='stuff', run={'hide': True})
+            r = runner.run("nope")
+            eq_(r.stdout, 'stuff')
+            eq_(sys.stdout.getvalue(), '')
+
+        @trap
+        def kwarg_beats_config(self):
+            runner = self._runner(out='stuff')
+            r = runner.run("nope", hide=True)
+            eq_(r.stdout, 'stuff')
+            eq_(sys.stdout.getvalue(), '')
+
+
     class return_value:
         def return_code_in_result(self):
             """

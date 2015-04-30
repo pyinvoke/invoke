@@ -92,17 +92,6 @@ class Run(Spec):
     class uses_context_config:
         "Context's config values are honored"
 
-        def warn(self):
-            check = partial(_config_check, key='warn', config_val='yup')
-            check(kwarg_val=None, expected='yup')
-            check(kwarg_val='nope', expected='nope')
-
-        def hide(self):
-            check = partial(_config_check, key='hide', config_val='stdout')
-            # NOTE: expected are post-normalized values
-            check(kwarg_val=None, expected=('out',))
-            check(kwarg_val='stderr', expected=('err',))
-
         def pty(self):
             check = partial(
                 _config_check, key='pty', config_val=True, func='select_method'
@@ -110,13 +99,6 @@ class Run(Spec):
             check(kwarg_val=None, expected=True)
             check(kwarg_val=False, expected=False)
 
-        def fallback(self):
-            check = partial(
-                _config_check, key='fallback', config_val=True,
-                func='select_method'
-            )
-            check(kwarg_val=None, expected=True)
-            check(kwarg_val=False, expected=False)
 
     class failure_handling:
         @raises(Failure)
