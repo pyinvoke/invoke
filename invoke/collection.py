@@ -160,6 +160,7 @@ class Collection(object):
         for candidate in ('ns', 'namespace'):
             obj = getattr(module, candidate, None)
             if obj and isinstance(obj, Collection):
+                # TODO: make this into Collection.clone() or similar
                 # Explicitly given name wins over root ns name which wins over
                 # actual module name.
                 ret = Collection(name or obj.name or module_name)
