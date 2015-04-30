@@ -45,6 +45,42 @@ class Runner_(Spec):
         context = Context(config=Config(overrides=settings))
         return Dummy(context).run(*args, **kwargs)
 
+    class return_value:
+        def return_code_in_result(self):
+            """
+            Result has .return_code (and .exited) containing exit code int
+            """
+            runner = Dummy(Context())
+            runner.returncode = Mock(return_value=17)
+            r = runner.run("nope", warn=True)
+            eq_(r.return_code, 17)
+            eq_(r.exited, 17)
+
+        @trap
+        def stdout_attribute_contains_stdout(self):
+            runner = Dummy(Context())
+            out_file = StringIO("foo")
+            def reader(count):
+                return out_file.read(count)
+            runner.stdout_reader = lambda: reader
+            eq_(runner.run("nope").stdout, "foo")
+            eq_(sys.stdout.getvalue(), "foo")
+
+        #def stderr_attribute_contains_stderr(self):
+        #    eq_(run(self.err, hide='both').stderr, 'bar\n')
+
+        #def ok_attr_indicates_success(self):
+        #    eq_(_run().ok, True)
+        #    eq_(_run(returns={'exited': 1}, warn=True).ok, False)
+
+        #def failed_attr_indicates_failure(self):
+        #    eq_(_run().failed, False)
+        #    eq_(_run(returns={'exited': 1}, warn=True).failed, True)
+
+        #def has_exception_attr(self):
+        #    eq_(_run().exception, None)
+
+
     class echoing:
         @trap
         def off_by_default(self):
