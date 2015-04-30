@@ -11,17 +11,20 @@ from _utils import mock_subprocess, mock_pty
 
 
 class Dummy(Runner):
+    """
+    Dummy runner subclass that does minimum work required to execute run().
+    """
     def start(self, command):
         pass
 
     def stdout_reader(self):
-        pass
+        return lambda n: ""
 
     def stderr_reader(self):
-        pass
+        return lambda n: ""
 
     def default_encoding(self):
-        return ""
+        return "US-ASCII"
 
     def wait(self):
         pass
