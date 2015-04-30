@@ -2,7 +2,6 @@ import os
 import sys
 import shutil
 import time
-from os.path import join
 
 from invocations.docs import docs, www
 from invocations.testing import test
