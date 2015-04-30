@@ -62,11 +62,29 @@ class Runner_(Spec):
             """
             Result has .return_code (and .exited) containing exit code int
             """
-            runner = Dummy(Context())
+            runner = self._runner()
             runner.returncode = Mock(return_value=17)
             r = runner.run("nope", warn=True)
             eq_(r.return_code, 17)
             eq_(r.exited, 17)
+
+        def ok_attr_indicates_success(self):
+            runner = self._runner()
+            eq_(runner.run("nope").ok, True) # default dummy retval is 0
+
+        def ok_attr_indicates_failure(self):
+            runner = self._runner()
+            runner.returncode = Mock(return_value=1)
+            eq_(runner.run("nope", warn=True).ok, False)
+
+        def failed_attr_indicates_success(self):
+            runner = self._runner()
+            eq_(runner.run("nope").failed, False) # default dummy retval is 0
+
+        def failed_attr_indicates_failure(self):
+            runner = self._runner()
+            runner.returncode = Mock(return_value=1)
+            eq_(runner.run("nope", warn=True).failed, True)
 
         @trap
         def stdout_attribute_contains_stdout(self):
@@ -80,13 +98,6 @@ class Runner_(Spec):
             eq_(runner.run("nope").stderr, "foo")
             eq_(sys.stderr.getvalue(), "foo")
 
-        #def ok_attr_indicates_success(self):
-        #    eq_(_run().ok, True)
-        #    eq_(_run(returns={'exited': 1}, warn=True).ok, False)
-
-        #def failed_attr_indicates_failure(self):
-        #    eq_(_run().failed, False)
-        #    eq_(_run(returns={'exited': 1}, warn=True).failed, True)
 
         #def has_exception_attr(self):
         #    eq_(_run().exception, None)
@@ -122,7 +133,7 @@ class Runner_(Spec):
     class encoding:
         # Use UTF-7 as a valid encoding unlikely to be a real default
         def defaults_to_encoding_method_result(self):
-            runner = Dummy(Context())
+            runner = self._runner()
             encoding = 'UTF-7'
             runner.default_encoding = Mock(return_value=encoding)
             with patch('invoke.runners.codecs') as codecs:
