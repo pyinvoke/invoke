@@ -7,7 +7,7 @@ from mock import patch, Mock
 
 from invoke import Runner, Local, Context, Config, Failure
 
-from _utils import mock_subprocess, mock_pty
+from _utils import mock_subprocess, mock_pty, skip_if_windows
 
 
 class Dummy(Runner):
@@ -204,7 +204,81 @@ class Runner_(Spec):
         def honors_kwarg(self):
             skip()
 
-    class stream_control:
+    class output_hiding:
+        @trap
+        def _expect_hidden(self, hide, expect_out="", expect_err=""):
+            self._runner(out='foo', err='bar').run("nope", hide=hide)
+            eq_(sys.stdout.getvalue(), expect_out)
+            eq_(sys.stderr.getvalue(), expect_err)
+
+        def hide_both_hides_everything(self):
+            self._expect_hidden('both')
+
+        def hide_True_hides_everything(self):
+            self._expect_hidden(True)
+
+        def hide_out_only_hides_stdout(self):
+            self._expect_hidden('out', expect_out="", expect_err="bar")
+
+        def hide_err_only_hides_stderr(self):
+            self._expect_hidden('err', expect_out="foo", expect_err="")
+
+        def hide_accepts_stdout_alias_for_out(self):
+            self._expect_hidden('stdout', expect_out="", expect_err="bar")
+
+        def hide_accepts_stderr_alias_for_err(self):
+            self._expect_hidden('stderr', expect_out="foo", expect_err="")
+
+        @skip_if_windows
+        def hide_both_hides_both_under_pty(self):
+            r = run(self.sub.format('both', hide='both'))
+            eq_(r.stdout, "")
+            eq_(r.stderr, "")
+
+        @skip_if_windows
+        def hide_out_hides_both_under_pty(self):
+            r = run(self.sub.format('out', hide='both'))
+            eq_(r.stdout, "")
+            eq_(r.stderr, "")
+
+        @skip_if_windows
+        @trap
+        def hide_err_has_no_effect_under_pty(self):
+            r = run(self.sub.format('err', hide='both'))
+            eq_(r.stdout, "foo\r\nbar\r\n")
+            eq_(r.stderr, "")
+
+        @trap
+        def _no_hiding(self, val):
+            run(self.both, hide=val)
+            eq_(sys.stdout.getvalue().strip(), "foo")
+            eq_(sys.stderr.getvalue().strip(), "bar")
+
+        def hide_None_hides_nothing(self):
+            self._no_hiding(None)
+
+        def hide_False_hides_nothing(self):
+            self._no_hiding(False)
+
+        @raises(ValueError)
+        def hide_unknown_vals_raises_ValueError(self):
+            run("command", hide="what")
+
+        def hide_unknown_vals_mention_value_given_in_error(self):
+            value = "penguinmints"
+            try:
+                run("command", hide=value)
+            except ValueError as e:
+                msg = "Error from run(hide=xxx) did not tell user what the bad value was!" # noqa
+                msg += "\nException msg: {0}".format(e)
+                ok_(value in str(e), msg)
+            else:
+                assert False, "run() did not raise ValueError for bad hide= value" # noqa
+
+        def hide_does_not_affect_capturing(self):
+            eq_(run(self.out, hide='both').stdout, 'foo\n')
+
+    class output_stream_overrides:
         @trap
         def out_defaults_to_sys_stdout(self):
             "out_stream defaults to sys.stdout"
