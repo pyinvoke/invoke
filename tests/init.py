@@ -55,3 +55,6 @@ class Init(Spec):
 
         def runner_class(self):
             assert invoke.Runner is invoke.runners.Runner
+
+        def failure_class(self):
+            assert invoke.Failure is invoke.runners.Failure
