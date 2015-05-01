@@ -38,7 +38,6 @@ def _expect_encoding(codecs, encoding):
     for call in codecs.iterdecode.call_args_list:
         eq_(call[0][1], encoding)
 
-
 def _run(*args, **kwargs):
     klass = kwargs.pop('klass', Dummy)
     settings = kwargs.pop('settings', {})
@@ -48,6 +47,8 @@ def _run(*args, **kwargs):
 def _runner(out='', err='', **kwargs):
     klass = kwargs.pop('klass', Dummy)
     runner = klass(Context(config=Config(overrides=kwargs)))
+    if 'exits' in kwargs:
+        runner.returncode = Mock(return_value=kwargs.pop('exits'))
     out_file = StringIO(out)
     err_file = StringIO(err)
     def out_reader(count):
@@ -78,14 +79,12 @@ class Runner_(Spec):
 
     class warn:
         def honors_config(self):
-            runner = self._runner(run={'warn': True})
-            runner.returncode = Mock(return_value=1)
+            runner = self._runner(run={'warn': True}, exits=1)
             # Doesn't raise Failure -> all good
             runner.run("nope")
 
         def kwarg_beats_config(self):
-            runner = self._runner(run={'warn': False})
-            runner.returncode = Mock(return_value=1)
+            runner = self._runner(run={'warn': False}, exits=1)
             # Doesn't raise Failure -> all good
             runner.run("nope", warn=True)
 
@@ -121,8 +120,7 @@ class Runner_(Spec):
             """
             Result has .return_code (and .exited) containing exit code int
             """
-            runner = self._runner()
-            runner.returncode = Mock(return_value=17)
+            runner = self._runner(exits=17)
             r = runner.run("nope", warn=True)
             eq_(r.return_code, 17)
             eq_(r.exited, 17)
@@ -132,8 +130,7 @@ class Runner_(Spec):
             eq_(runner.run("nope").ok, True) # default dummy retval is 0
 
         def ok_attr_indicates_failure(self):
-            runner = self._runner()
-            runner.returncode = Mock(return_value=1)
+            runner = self._runner(exits=1)
             eq_(runner.run("nope", warn=True).ok, False)
 
         def failed_attr_indicates_success(self):
@@ -141,8 +138,7 @@ class Runner_(Spec):
             eq_(runner.run("nope").failed, False) # default dummy retval is 0
 
         def failed_attr_indicates_failure(self):
-            runner = self._runner()
-            runner.returncode = Mock(return_value=1)
+            runner = self._runner(exits=1)
             eq_(runner.run("nope", warn=True).failed, True)
 
         @trap
