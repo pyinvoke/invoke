@@ -89,30 +89,6 @@ class Run(Spec):
     def teardown(self):
         reset_cwd()
 
-    class failure_handling:
-        @raises(Failure)
-        def fast_failures(self):
-            run("false")
-
-        def run_acts_as_success_boolean(self):
-            ok_(not run("false", warn=True))
-            ok_(run("true"))
-
-        def non_one_return_codes_still_act_as_False(self):
-            ok_(not run("goobypls", warn=True, hide='both'))
-
-        def warn_kwarg_allows_continuing_past_failures(self):
-            eq_(run("false", warn=True).exited, 1)
-
-        def Failure_repr_includes_stderr(self):
-            try:
-                run("{0} ohnoz && exit 1".format(error_command), hide='both')
-                assert false # noqa. Ensure failure to Failure fails
-            except Failure as f:
-                r = repr(f)
-                err = "Sentinel 'ohnoz' not found in {0!r}".format(r)
-                assert 'ohnoz' in r, err
-
     class output_controls:
         @trap
         def _hide_both(self, val):

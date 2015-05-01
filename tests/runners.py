@@ -5,7 +5,7 @@ from invoke.vendor.six import StringIO
 from spec import Spec, trap, eq_, skip, ok_, raises
 from mock import patch, Mock
 
-from invoke import Runner, Local, Context, Config
+from invoke import Runner, Local, Context, Config, Failure
 
 from _utils import mock_subprocess, mock_pty
 
@@ -245,6 +245,24 @@ class Runner_(Spec):
             eq_(out.getvalue(), "yo")
             eq_(sys.stdout.getvalue(), "")
 
+
+    class failure_handling:
+        @raises(Failure)
+        def fast_failures(self):
+            self._runner(exits=1).run("nope")
+
+        def non_one_return_codes_still_act_as_failure(self):
+            r = self._runner(exits=17).run("nope", warn=True)
+            eq_(r.failed, True)
+
+        def Failure_repr_includes_stderr(self):
+            try:
+                self._runner(exits=1, err="ohnoz").run("nope", hide=True)
+                assert false # noqa. Ensure failure to Failure fails
+            except Failure as f:
+                r = repr(f)
+                err = "Sentinel 'ohnoz' not found in {0!r}".format(r)
+                assert 'ohnoz' in r, err
 
 class Local_(Spec):
     def _run(self, *args, **kwargs):
