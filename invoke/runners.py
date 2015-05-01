@@ -338,7 +338,6 @@ class Local(Runner):
                 use_pty = False
         return use_pty
 
-    # TODO: refactor into eg self._get_reader
     def stdout_reader(self):
         if self.using_pty:
             return partial(os.read, self.parent_fd)
