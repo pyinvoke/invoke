@@ -211,35 +211,35 @@ class Runner_(Spec):
             eq_(sys.stdout.getvalue(), expect_out)
             eq_(sys.stderr.getvalue(), expect_err)
 
-        def hide_both_hides_everything(self):
+        def both_hides_everything(self):
             self._expect_hidden('both')
 
-        def hide_True_hides_everything(self):
+        def True_hides_everything(self):
             self._expect_hidden(True)
 
-        def hide_out_only_hides_stdout(self):
+        def out_only_hides_stdout(self):
             self._expect_hidden('out', expect_out="", expect_err="bar")
 
-        def hide_err_only_hides_stderr(self):
+        def err_only_hides_stderr(self):
             self._expect_hidden('err', expect_out="foo", expect_err="")
 
-        def hide_accepts_stdout_alias_for_out(self):
+        def accepts_stdout_alias_for_out(self):
             self._expect_hidden('stdout', expect_out="", expect_err="bar")
 
-        def hide_accepts_stderr_alias_for_err(self):
+        def accepts_stderr_alias_for_err(self):
             self._expect_hidden('stderr', expect_out="foo", expect_err="")
 
-        def hide_None_hides_nothing(self):
+        def None_hides_nothing(self):
             self._expect_hidden(None, expect_out="foo", expect_err="bar")
 
-        def hide_False_hides_nothing(self):
+        def False_hides_nothing(self):
             self._expect_hidden(False, expect_out="foo", expect_err="bar")
 
         @raises(ValueError)
-        def hide_unknown_vals_raises_ValueError(self):
+        def unknown_vals_raises_ValueError(self):
             self._run("nope", hide="wat?")
 
-        def hide_unknown_vals_mention_value_given_in_error(self):
+        def unknown_vals_mention_value_given_in_error(self):
             value = "penguinmints"
             try:
                 self._run("nope", hide=value)
@@ -250,7 +250,7 @@ class Runner_(Spec):
             else:
                 assert False, "run() did not raise ValueError for bad hide= value" # noqa
 
-        def hide_does_not_affect_capturing(self):
+        def does_not_affect_capturing(self):
             eq_(self._runner(out='foo').run("nope", hide=True).stdout, 'foo')
 
     class output_stream_overrides:
