@@ -229,25 +229,6 @@ class Runner_(Spec):
         def hide_accepts_stderr_alias_for_err(self):
             self._expect_hidden('stderr', expect_out="foo", expect_err="")
 
-        @skip_if_windows
-        def hide_both_hides_both_under_pty(self):
-            r = run(self.sub.format('both', hide='both'))
-            eq_(r.stdout, "")
-            eq_(r.stderr, "")
-
-        @skip_if_windows
-        def hide_out_hides_both_under_pty(self):
-            r = run(self.sub.format('out', hide='both'))
-            eq_(r.stdout, "")
-            eq_(r.stderr, "")
-
-        @skip_if_windows
-        @trap
-        def hide_err_has_no_effect_under_pty(self):
-            r = run(self.sub.format('err', hide='both'))
-            eq_(r.stdout, "foo\r\nbar\r\n")
-            eq_(r.stderr, "")
-
         @trap
         def _no_hiding(self, val):
             run(self.both, hide=val)
