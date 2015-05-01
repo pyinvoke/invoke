@@ -229,26 +229,20 @@ class Runner_(Spec):
         def hide_accepts_stderr_alias_for_err(self):
             self._expect_hidden('stderr', expect_out="foo", expect_err="")
 
-        @trap
-        def _no_hiding(self, val):
-            run(self.both, hide=val)
-            eq_(sys.stdout.getvalue().strip(), "foo")
-            eq_(sys.stderr.getvalue().strip(), "bar")
-
         def hide_None_hides_nothing(self):
-            self._no_hiding(None)
+            self._expect_hidden(None, expect_out="foo", expect_err="bar")
 
         def hide_False_hides_nothing(self):
-            self._no_hiding(False)
+            self._expect_hidden(False, expect_out="foo", expect_err="bar")
 
         @raises(ValueError)
         def hide_unknown_vals_raises_ValueError(self):
-            run("command", hide="what")
+            self._run("nope", hide="wat?")
 
         def hide_unknown_vals_mention_value_given_in_error(self):
             value = "penguinmints"
             try:
-                run("command", hide=value)
+                self._run("nope", hide=value)
             except ValueError as e:
                 msg = "Error from run(hide=xxx) did not tell user what the bad value was!" # noqa
                 msg += "\nException msg: {0}".format(e)
@@ -257,7 +251,7 @@ class Runner_(Spec):
                 assert False, "run() did not raise ValueError for bad hide= value" # noqa
 
         def hide_does_not_affect_capturing(self):
-            eq_(run(self.out, hide='both').stdout, 'foo\n')
+            eq_(self._runner(out='foo').run("nope", hide=True).stdout, 'foo')
 
     class output_stream_overrides:
         @trap
