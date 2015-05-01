@@ -197,26 +197,3 @@ class Run(Spec):
 
         def hide_does_not_affect_capturing(self):
             eq_(run(self.out, hide='both').stdout, 'foo\n')
-
-
-    #
-    # Random edge/corner case junk
-    #
-
-class Local_(Spec):
-    def setup(self):
-        os.chdir(support)
-        self.both = "echo foo && {0} bar".format(error_command)
-
-    def teardown(self):
-        reset_cwd()
-
-    @skip_if_windows
-    def stdout_contains_both_streams_under_pty(self):
-        r = run(self.both, hide='both', pty=True)
-        eq_(r.stdout, 'foo\r\nbar\r\n')
-
-    @skip_if_windows
-    def stderr_is_empty_under_pty(self):
-        r = run(self.both, hide='both', pty=True)
-        eq_(r.stderr, '')

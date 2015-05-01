@@ -1,6 +1,7 @@
 import os
+import sys
 
-from spec import Spec, trap, eq_
+from spec import Spec, trap, eq_, skip
 
 from invoke import run
 from invoke.platform import WINDOWS
@@ -86,3 +87,13 @@ class Main(Spec):
                 return
             # PTY use adds another utf-8 decode spot which can also fail.
             run("echo '\xff'", pty=True, hide='both')
+
+    def pty_puts_both_streams_in_stdout(self):
+        if WINDOWS:
+            return
+        os.chdir('_support')
+        err_echo = "{0} err.py".format(sys.executable)
+        command = "echo foo && {0} bar".format(err_echo)
+        r = run(command, hide='both', pty=True)
+        eq_(r.stdout, 'foo\r\nbar\r\n')
+        eq_(r.stderr, '')
