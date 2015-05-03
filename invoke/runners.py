@@ -242,7 +242,8 @@ class Local(Runner):
                     # Make sure no UnicodeError happens, even if the data is
                     # garbled (e.g. due to encoding mismatch with the child).
                     encoded_data = data.encode(dst.encoding, errors='replace')
-                    dst.buffer.write(encoded_data)
+                    clean_data = encoded_data.decode(dst.encoding)
+                    dst.write(clean_data)
                     dst.flush()
                 cap.append(data)
 
