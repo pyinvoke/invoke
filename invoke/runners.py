@@ -239,7 +239,11 @@ class Local(Runner):
                     yield data
             for data in codecs.iterdecode(get(), encoding, errors='replace'):
                 if not hide:
-                    dst.write(data)
+                    # Make sure no UnicodeError happens, even if the data is
+                    # garbled (e.g. due to encoding mismatch with the child).
+                    encoded_data = data.encode(dst.encoding, errors='replace')
+                    clean_data = encoded_data.decode(dst.encoding)
+                    dst.write(clean_data)
                     dst.flush()
                 cap.append(data)
 
