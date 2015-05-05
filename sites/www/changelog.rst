@@ -2,6 +2,12 @@
 Changelog
 =========
 
+* :bug:`234 major` (also :issue:`243`) Preserve task-module load location when
+  creating explicit collections with
+  `~invoke.collection.Collection.from_module`; when this was not done,
+  project-local config files were not loading correctly. Thanks to ``@brutus``
+  and Jan Willems for initial report & troubleshooting, and to Greg Back for
+  identifying the fix.
 * :bug:`237 major` Completion output lacked "inverse" flag names (e.g.
   ``--no-myoption`` as a boolean negative version of a defaulting-to-True
   boolean ``myoption``). This has been corrected.
