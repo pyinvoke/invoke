@@ -319,6 +319,11 @@ Available tasks:
             with cd(os.path.join('configs', 'yaml')):
                 _dispatch("inv mytask")
 
+        def per_project_config_files_load_with_explicit_ns(self):
+            # Re: #234
+            with cd(os.path.join('configs', 'yaml')):
+                _dispatch("inv -c explicit mytask")
+
         def runtime_config_file_honored(self):
             with cd('configs'):
                 _dispatch("inv -c runtime -f yaml/invoke.yaml mytask")

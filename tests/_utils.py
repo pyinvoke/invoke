@@ -23,10 +23,12 @@ def skip_if_windows(fn):
 
 
 @contextmanager
-def support_path():
-    sys.path.insert(0, support)
+def sys_path(filepath=None):
+    sys.path.insert(0, filepath)
     yield
     sys.path.pop(0)
+
+support_path = partial(sys_path, filepath=support)
 
 
 def load(name):
