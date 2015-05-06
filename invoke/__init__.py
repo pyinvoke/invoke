@@ -3,6 +3,7 @@ from .tasks import task, ctask, Task  # noqa
 from .collection import Collection  # noqa
 from .context import Context  # noqa
 from .config import Config # noqa
+from .runners import Runner, Local, Failure # noqa
 
 
 def run(command, **kwargs):

@@ -57,7 +57,8 @@ class PlatformError(Exception):
     """
     Raised when an illegal operation occurs for the current platform.
 
-    E.g. Windows users trying to import the ``pexpect`` module.
+    E.g. Windows users trying to use functionality requiring the ``pty``
+    module.
 
     Typically used to present a clearer error message to the user.
     """

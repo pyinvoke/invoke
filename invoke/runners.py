@@ -1,11 +1,14 @@
+# -*- coding: utf-8 -*-
+
 import os
 from subprocess import Popen, PIPE
 import sys
 import threading
 import codecs
 import locale
+from functools import partial
 
-from .exceptions import Failure, PlatformError
+from .exceptions import Failure
 from .platform import WINDOWS
 
 from .vendor import six
@@ -33,35 +36,9 @@ class Runner(object):
     """
     Partially-abstract core command-running API.
 
-    This class is not usable by itself and must be subclassed to implement, at
-    minimum, ``run_direct`` and ``run_pty``. An explanation of its methods
-    follows:
-
-    ``run`` is the primary API call which handles high level logic (echoing the
-    commands locally, constructing a useful `Result` object, etc) and
-    wraps/delegates to the below methods for actual execution.
-
-    ``select_method`` takes ``pty`` and ``fallback`` kwargs and returns the
-    current object's ``run_direct`` or ``run_pty`` method, depending on those
-    kwargs' values and environmental cues/limitations. `Runner` itself has a
-    useful default implementation of this method, but overriding may be
-    sometimes useful.
-
-    ``run_direct`` and ``run_pty`` are fully abstract in `Runner`; in
-    subclasses, they should perform actual command execution, hooking directly
-    into a subprocess' stdout/stderr pipes and returning those pipes' eventual
-    full contents as distinct strings.
-
-    ``run_direct``/``run_pty`` both have a signature of ``(self, command, warn,
-    hide, encoding)`` (see `run` for semantics of these) and must return a
-    4-tuple of ``(stdout, stderr, exitcode, exception)`` (see `Result` for
-    their meaning).
-
-    ``run_pty`` differs from ``run_direct`` in that it should utilize a
-    pseudo-terminal, and is expected to only return a useful ``stdout`` (with
-    ``stderr`` usually set to the empty string.)
-
-    For a subclass implementation example, see the source code for `.Local`.
+    This class is not usable by itself and must be subclassed, implementing a
+    number of methods such as `start`, `wait` and `returncode`. For a subclass
+    implementation example, see the source code for `.Local`.
     """
     def __init__(self, context):
         """
@@ -82,10 +59,10 @@ class Runner(object):
         :raises exceptions.ValueError:
             if not all expected default values are found in ``context``.
         """
-        #: Context this `.Runner` operates against, referenced for
-        #: configuration options (e.g. echo, warn) and possibly more,
-        #: depending on subclass needs.
+        #: The `.Context` given to the same-named argument of `__init__`.
         self.context = context
+        # Bookkeeping re: whether pty fallback warning has been emitted.
+        self.warned_about_pty_fallback = False
 
     def run(self, command, **kwargs):
         """
@@ -94,8 +71,9 @@ class Runner(object):
         .. note::
             All kwargs will default to the values found in this instance's
             `~.Runner.context` attribute, specifically in its configuration's
-            ``run`` subtree. The base default values are described in the
-            parameter list below.
+            ``run`` subtree (e.g. ``run.echo`` provides the default value for
+            the ``echo`` keyword, etc). The base default values are described
+            in the parameter list below.
 
         :param str command: The shell command to execute.
 
@@ -127,10 +105,10 @@ class Runner(object):
             .. warning::
                 Due to their nature, ptys have a single output stream, so the
                 ability to tell stdout apart from stderr is **not possible**
-                when ``pty=True``. As such, all output will appear on your
-                local stdout and be captured into the ``stdout`` result
-                attribute. Stderr and ``stderr`` will always be empty when
-                ``pty=True``.
+                when ``pty=True``. As such, all output will appear on
+                ``out_stream`` (see below) and be captured into the ``stdout``
+                result attribute. ``err_stream`` and ``stderr`` will always be
+                empty when ``pty=True``.
 
         :param bool fallback:
             Controls auto-fallback behavior re: problems offering a pty when
@@ -141,16 +119,24 @@ class Runner(object):
             Controls whether `.run` prints the command string to local stdout
             prior to executing it. Default: ``False``.
 
-        :param str encoding:
+        :param str default_encoding:
             Override auto-detection of which encoding the subprocess is using
-            for its stdout/stderr streams. Defaults to the return value of
-            ``locale.getpreferredencoding(False)``).
+            for its stdout/stderr streams (which defaults to the return value
+            of `encoding`).
+
+        :param out_stream:
+            A file-like stream object to which the subprocess' standard error
+            should be written. If ``None`` (the default), ``sys.stdout`` will
+            be used.
+
+        :param err_stream:
+            Same as ``out_stream``, except for standard error, and defaulting
+            to ``sys.stderr``.
 
         :returns: `Result`
 
         :raises: `.Failure` (if the command exited nonzero & ``warn=False``)
         """
-        exception = False
         # Normalize kwargs w/ config
         opts = {}
         for key, value in six.iteritems(self.context.config.run):
@@ -159,39 +145,162 @@ class Runner(object):
         # TODO: handle invalid kwarg keys (anything left in kwargs)
         # Normalize 'hide' from one of the various valid input values
         opts['hide'] = normalize_hide(opts['hide'])
-        # Do the things
+        # Derive stream objects
+        out_stream = opts['out_stream']
+        if out_stream is None:
+            out_stream = sys.stdout
+        err_stream = opts['err_stream']
+        if err_stream is None:
+            err_stream = sys.stderr
+        # Echo
         if opts['echo']:
             print("\033[1;37m{0}\033[0m".format(command))
-        func = self.select_method(pty=opts['pty'], fallback=opts['fallback'])
-        stdout, stderr, exited, exception = func(
-            command=command,
-            warn=opts['warn'],
-            hide=opts['hide'],
-            encoding=opts['encoding'],
-        )
-        # TODO: make this test less gross? Feels silly to just return a bool in
-        # select_method which is tantamount to this, though.
-        func_name = getattr(func, 'func_name', getattr(func, '__name__'))
-        used_pty = func_name == 'run_pty'
+        # Determine pty or no
+        self.using_pty = self.should_use_pty(opts['pty'], opts['fallback'])
+        # Initiate command & kick off IO threads
+        self.start(command)
+        encoding = opts['encoding']
+        if encoding is None:
+            encoding = self.default_encoding()
+        self.encoding = encoding
+        stdout, stderr = [], []
+        threads = []
+        argses = [
+            (
+                self.stdout_reader(),
+                out_stream,
+                stdout,
+                'out' in opts['hide'],
+            ),
+        ]
+        if not self.using_pty:
+            argses.append(
+                (
+                    self.stderr_reader(),
+                    err_stream,
+                    stderr,
+                    'err' in opts['hide'],
+                ),
+            )
+        for args in argses:
+            t = threading.Thread(target=self.io, args=args)
+            threads.append(t)
+            t.start()
+        # Wait for completion, then tie things off & obtain result
+        self.wait()
+        for t in threads:
+            t.join()
+        stdout = ''.join(stdout)
+        stderr = ''.join(stderr)
+        if WINDOWS:
+            # "Universal newlines" - replace all standard forms of
+            # newline with \n. This is not technically Windows related
+            # (\r as newline is an old Mac convention) but we only apply
+            # the translation for Windows as that's the only platform
+            # it is likely to matter for these days.
+            stdout = stdout.replace("\r\n", "\n").replace("\r", "\n")
+            stderr = stderr.replace("\r\n", "\n").replace("\r", "\n")
+        # Get return/exit code
+        exited = self.returncode()
+        # Return, or raise as failure, our final result
         result = Result(
             stdout=stdout,
             stderr=stderr,
             exited=exited,
-            pty=used_pty,
-            exception=exception,
+            pty=self.using_pty,
         )
         if not (result or opts['warn']):
             raise Failure(result)
         return result
 
-    def select_method(self, pty, fallback):
-        # NOTE: fallback not used: no falling back implemented by default.
-        return getattr(self, 'run_pty' if pty else 'run_direct')
+    def should_use_pty(self, pty, fallback):
+        """
+        Should execution attempt to use a pseudo-terminal?
 
-    def run_direct(self, command, warn, hide, encoding):
+        :param bool pty:
+            Whether the user explicitly asked for a pty.
+        :param bool fallback:
+            Whether falling back to non-pty execution should be allowed, in
+            situations where ``pty=True`` but a pty could not be allocated.
+        """
+        # NOTE: fallback not used: no falling back implemented by default.
+        return pty
+
+    def start(self, command):
+        """
+        Initiate execution of ``command``, e.g. in a subprocess.
+
+        Typically, this will also set subclass-specific member variables used
+        in other methods such as `wait` and/or `returncode`.
+        """
         raise NotImplementedError
 
-    def run_pty(self, command, warn, hide, encoding):
+    def stdout_reader(self):
+        """
+        Return a function suitable for reading from a running command's stdout.
+        """
+        raise NotImplementedError
+
+    def stderr_reader(self):
+        """
+        Return a function suitable for reading from a running command's stderr.
+        """
+        raise NotImplementedError
+
+    def default_encoding(self):
+        """
+        Return a string naming the expected encoding of subprocess streams.
+
+        This return value should be suitable for use by methods such as
+        `codecs.iterdecode`.
+        """
+        raise NotImplementedError
+
+    def io(self, reader, output, buffer_, hide):
+        """
+        Perform I/O (reading, capturing & writing).
+
+        Specifically:
+
+        * Read bytes from ``reader``, giving it some number of bytes to read at
+          a time. (Typically this function is the result of `stdout_reader` or
+          `stderr_reader`.)
+        * Decode the bytes into a string according to ``self.encoding``
+          (typically derived from `default_encoding` or runtime keyword args).
+        * Save a copy of the bytes in ``buffer_``, typically a `list`, which
+          the caller will expect to be mutated.
+        * If ``hide`` is ``False``, write bytes to ``output``, a stream such as
+          `sys.stdout`.
+        """
+        # Inner generator yielding read data
+        def get():
+            while True:
+                data = reader(1000)
+                if not data:
+                    break
+                # Sometimes os.read gives us bytes under Python 3...and
+                # sometimes it doesn't. ¯\_(ツ)_/¯
+                if not isinstance(data, six.binary_type):
+                    # Can't use six.b because that just assumes latin-1 :(
+                    data = data.encode(self.encoding)
+                yield data
+        # Decode stream using our generator & requested encoding
+        for data in codecs.iterdecode(get(), self.encoding, errors='replace'):
+            if not hide:
+                output.write(data)
+                output.flush()
+            buffer_.append(data)
+
+    def wait(self):
+        """
+        Block until the running command appears to have exited.
+        """
+        raise NotImplementedError
+
+    def returncode(self):
+        """
+        Return the numeric return/exit code resulting from command execution.
+        """
         raise NotImplementedError
 
 
@@ -207,106 +316,85 @@ class Local(Runner):
         degraded execution is better than none at all, as well as printing a
         warning to stderr.
 
-        To disable this behavior (i.e. if ``os.isatty`` is causing false
+        To disable this behavior (i.e. if `os.isatty` is causing false
         negatives in your environment), say ``fallback=False``.
     """
-    def select_method(self, pty=False, fallback=True):
-        func = self.run_direct
+    def should_use_pty(self, pty=False, fallback=True):
+        use_pty = False
         if pty:
-            func = self.run_pty
+            use_pty = True
             if not os.isatty(sys.stdin.fileno()) and fallback:
-                sys.stderr.write("WARNING: stdin is not a pty; falling back to non-pty execution!\n") # noqa
-                func = self.run_direct
-        return func
+                if not self.warned_about_pty_fallback:
+                    sys.stderr.write("WARNING: stdin is not a pty; falling back to non-pty execution!\n") # noqa
+                    self.warned_about_pty_fallback = True
+                use_pty = False
+        return use_pty
 
-    def run_direct(self, command, warn, hide, encoding):
-        process = Popen(
-            command,
-            shell=True,
-            stdout=PIPE,
-            stderr=PIPE,
-        )
+    def stdout_reader(self):
+        if self.using_pty:
+            return partial(os.read, self.parent_fd)
+        else:
+            return partial(os.read, self.process.stdout.fileno())
 
-        if encoding is None:
-            encoding = locale.getpreferredencoding(False)
+    def stderr_reader(self):
+        return partial(os.read, self.process.stderr.fileno())
 
-        def display(src, dst, cap, hide):
-            def get():
-                while True:
-                    data = os.read(src.fileno(), 1000)
-                    if not data:
-                        break
-                    yield data
-            for data in codecs.iterdecode(get(), encoding, errors='replace'):
-                if not hide:
-                    dst.write(data)
-                    dst.flush()
-                cap.append(data)
+    def start(self, command):
+        if self.using_pty:
+            try:
+                import pty
+            except ImportError:
+                sys.exit("You indicated pty=True, but your platform doesn't support the 'pty' module!") # noqa
+            self.pid, self.parent_fd = pty.fork()
+            # If we're the child process, load up the actual command in a
+            # shell, just as subprocess does; this replaces our process - whose
+            # pipes are all hooked up to the PTY - with the "real" one.
+            if self.pid == 0:
+                # Use execv for bare-minimum "exec w/ variable # args"
+                # behavior. No need for the 'p' (use PATH to find executable)
+                # or 'e' (define a custom/overridden shell env) variants, for
+                # now.
+                # TODO: use /bin/sh or whatever subprocess does. Only using
+                # bash for now because that's what we have been testing
+                # against.
+                # TODO: also see if subprocess is using equivalent of execvp...
+                # TODO: both pty.spawn() and pexpect.spawn() do a lot of
+                # setup/teardown involving tty.*, setwinsize, getrlimit,
+                # signal. Ostensibly we'll want some of that eventually, but if
+                # possible write tests - integration-level if necessary -
+                # before adding it!
+                os.execv('/bin/bash', ['/bin/bash', '-c', command])
+        else:
+            self.process = Popen(
+                command,
+                shell=True,
+                stdout=PIPE,
+                stderr=PIPE,
+            )
 
-        stdout = []
-        stderr = []
-        threads = []
+    def default_encoding(self):
+        return locale.getpreferredencoding(False)
 
-        for args in (
-            (process.stdout, sys.stdout, stdout, 'out' in hide),
-            (process.stderr, sys.stderr, stderr, 'err' in hide),
-        ):
-            t = threading.Thread(target=display, args=args)
-            threads.append(t)
-            t.start()
+    def wait(self):
+        if self.using_pty:
+            while True:
+                # TODO: possibly reinstate conditional WNOHANG as per
+                # https://github.com/pexpect/ptyprocess/blob/4058faa05e2940662ab6da1330aa0586c6f9cd9c/ptyprocess/ptyprocess.py#L680-L687
+                pid_val, self.status = os.waitpid(self.pid, 0)
+                # waitpid() sets the 'pid' return val to 0 when no children
+                # have exited yet; when it is NOT zero, we know the child's
+                # stopped.
+                if pid_val != 0:
+                    break
+                # TODO: io sleep?
+        else:
+            self.process.wait()
 
-        process.wait()
-        for t in threads:
-            t.join()
-
-        stdout = ''.join(stdout)
-        stderr = ''.join(stderr)
-        if WINDOWS:
-            # "Universal newlines" - replace all standard forms of
-            # newline with \n. This is not technically Windows related
-            # (\r as newline is an old Mac convention) but we only apply
-            # the translation for Windows as that's the only platform
-            # it is likely to matter for these days.
-            stdout = stdout.replace("\r\n", "\n").replace("\r", "\n")
-            stderr = stderr.replace("\r\n", "\n").replace("\r", "\n")
-
-        return stdout, stderr, process.returncode, None
-
-    def run_pty(self, command, warn, hide, encoding):
-        # Sanity check: platforms that can't pexpect should explode usefully
-        # here. (Without this, the pexpect import throws an inner
-        # ImportException trying to 'import pty' which is unavailable on
-        # Windows. Better to do this here than truly-fork pexpect.)
-        if WINDOWS:
-            err = "You seem to be on Windows, which doesn't support ptys!"
-            raise PlatformError(err)
-        # Proceed as normal for POSIX/etc platforms, with a runtime import
-        from .vendor import pexpect
-
-        out = []
-        def out_filter(text):
-            # Maybe use encoding here as in run() above...
-            out.append(text.decode("utf-8", 'replace'))
-            if 'out' not in hide:
-                return text
-            else:
-                return b""
-        p = pexpect.spawn("/bin/bash", ["-c", command])
-        # Ensure pexpect doesn't barf with OSError if we fall off the end of
-        # the child's input on some platforms (e.g. Linux).
-        exception = None
-        try:
-            p.interact(output_filter=out_filter)
-        except OSError as e:
-            # Only capture the OSError we expect
-            if "Input/output error" not in str(e):
-                raise
-            # Ensure it ties off the child, sets exitstatus, etc
-            p.close()
-            # Capture the exception in case it's NOT the OSError we think it
-            # is and folks need to debug
-            exception = e
-        return "".join(out), "", p.exitstatus, exception
+    def returncode(self):
+        if self.using_pty:
+            return os.WEXITSTATUS(self.status)
+        else:
+            return self.process.returncode
 
 
 class Result(object):
@@ -325,20 +413,16 @@ class Result(object):
       nonzero return code.
     * ``pty``: A boolean describing whether the subprocess was invoked with a
       pty or not; see `.Runner.run`.
-    * ``exception``: Typically ``None``, but may be an exception object if
-      ``pty`` was ``True`` and ``run`` had to swallow an apparently-spurious
-      ``OSError``. Solely for sanity checking/debugging purposes.
 
     `Result` objects' truth evaluation is equivalent to their ``ok``
     attribute's value.
     """
     # TODO: inherit from namedtuple instead? heh
-    def __init__(self, stdout, stderr, exited, pty, exception=None):
+    def __init__(self, stdout, stderr, exited, pty):
         self.exited = self.return_code = exited
         self.stdout = stdout
         self.stderr = stderr
         self.pty = pty
-        self.exception = exception
 
     def __nonzero__(self):
         # Holy mismatch between name and implementation, Batman!

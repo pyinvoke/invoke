@@ -38,11 +38,23 @@ class Init(Spec):
         def task_class(self):
             assert invoke.Task is invoke.tasks.Task
 
-        def run_function(self):
-            assert invoke.run # lol
-
         def collection_class(self):
             assert invoke.Collection is invoke.collection.Collection
 
         def context_class(self):
             assert invoke.Context is invoke.context.Context
+
+        def config_class(self):
+            assert invoke.Config is invoke.config.Config
+
+        def run_function(self):
+            assert invoke.run # lol
+
+        def local_class(self):
+            assert invoke.Local is invoke.runners.Local
+
+        def runner_class(self):
+            assert invoke.Runner is invoke.runners.Runner
+
+        def failure_class(self):
+            assert invoke.Failure is invoke.runners.Failure
