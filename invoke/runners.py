@@ -128,7 +128,7 @@ class Runner(object):
         :param str default_encoding:
             Override auto-detection of which encoding the subprocess is using
             for its stdout/stderr streams (which defaults to the return value
-            of `encoding`).
+            of `default_encoding`).
 
         :param out_stream:
             A file-like stream object to which the subprocess' standard error
