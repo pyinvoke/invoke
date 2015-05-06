@@ -2,6 +2,20 @@
 Changelog
 =========
 
+* :feature:`235` Allow custom stream objects to be used in `~invoke.run` calls,
+  to be used instead of the defaults of ``sys.stdout``/``sys.stderr``.
+
+  .. warning::
+    This change required a major cleanup/rearchitecture of the command
+    execution implementation. The vendored ``pexpect`` module has been
+    completely removed and the API of the `~invoke.runners.Runner` class has
+    changed dramatically (though **the API for run() itself has not**).
+
+    Be aware there may be edge-case terminal behaviors which have changed or
+    broken as a result of removing ``pexpect``. Please report these as bugs! We
+    expect to crib small bits of what ``pexpect`` does but need concrete test
+    cases first.
+
 * :bug:`234 major` (also :issue:`243`) Preserve task-module load location when
   creating explicit collections with
   `~invoke.collection.Collection.from_module`; when this was not done,
