@@ -7,7 +7,7 @@ from mock import patch, Mock
 
 from invoke import Runner, Local, Context, Config, Failure
 
-from _utils import mock_subprocess, mock_pty, skip_if_windows
+from _utils import mock_subprocess, mock_pty
 
 
 # Dummy command that will blow up if it ever truly hits a real shell.

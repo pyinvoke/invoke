@@ -386,8 +386,9 @@ class Local(Runner):
             while True:
                 # TODO: set 2nd value to os.WNOHANG in some situations?
                 pid_val, self.status = os.waitpid(self.pid, 0)
-                # waitpid() sets the 'pid' return val to 0 when no children have
-                # exited yet; when it is NOT zero, we know the child's stopped.
+                # waitpid() sets the 'pid' return val to 0 when no children
+                # have exited yet; when it is NOT zero, we know the child's
+                # stopped.
                 if pid_val != 0:
                     break
                 # TODO: io sleep?
