@@ -378,7 +378,8 @@ class Local(Runner):
     def wait(self):
         if self.using_pty:
             while True:
-                # TODO: set 2nd value to os.WNOHANG in some situations?
+                # TODO: possibly reinstate conditional WNOHANG as per
+                # https://github.com/pexpect/ptyprocess/blob/4058faa05e2940662ab6da1330aa0586c6f9cd9c/ptyprocess/ptyprocess.py#L680-L687
                 pid_val, self.status = os.waitpid(self.pid, 0)
                 # waitpid() sets the 'pid' return val to 0 when no children
                 # have exited yet; when it is NOT zero, we know the child's
