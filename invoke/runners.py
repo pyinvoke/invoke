@@ -8,14 +8,6 @@ import codecs
 import locale
 from functools import partial
 
-try:
-    import pty
-except ImportError:
-    # TODO: store exception in case it blows up in unexpected ways.
-    # Typically we just expect it'll work fine on Unix and not at all on
-    # Windows.
-    pty = None
-
 from .exceptions import Failure
 from .platform import WINDOWS
 
@@ -349,8 +341,10 @@ class Local(Runner):
 
     def start(self, command):
         if self.using_pty:
-            # TODO: re-insert Windows "lol y u no pty" stuff at this point,
-            # if 'pty' is None.
+            try:
+                import pty
+            except ImportError:
+                sys.exit("You indicated pty=True, but your platform doesn't support the 'pty' module!") # noqa
             self.pid, self.parent_fd = pty.fork()
             # If we're the child process, load up the actual command in a
             # shell, just as subprocess does; this replaces our process - whose
