@@ -88,6 +88,16 @@ def watch(c):
     observer.join()
 
 
+@task
+def coverage(c):
+    """
+    Run tests w/ coverage enabled, generating HTML, & opening it.
+    """
+    test(c, opts="--with-coverage --cover-branches")
+    c.run("coverage html --include='invoke/*' --omit='invoke/vendor/*'")
+    c.run("open htmlcov/index.html")
+
+
 ns = Collection(
-    test, integration, vendorize, release, www, docs, sites, watch,
+    test, integration, vendorize, release, www, docs, sites, watch, coverage
 )
