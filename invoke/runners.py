@@ -219,6 +219,41 @@ class Runner(object):
             raise Failure(result)
         return result
 
+    def io(self, reader, output, buffer_, hide):
+        """
+        Perform I/O (reading, capturing & writing).
+
+        Specifically:
+
+        * Read bytes from ``reader``, giving it some number of bytes to read at
+          a time. (Typically this function is the result of `stdout_reader` or
+          `stderr_reader`.)
+        * Decode the bytes into a string according to ``self.encoding``
+          (typically derived from `default_encoding` or runtime keyword args).
+        * Save a copy of the bytes in ``buffer_``, typically a `list`, which
+          the caller will expect to be mutated.
+        * If ``hide`` is ``False``, write bytes to ``output``, a stream such as
+          `sys.stdout`.
+        """
+        # Inner generator yielding read data
+        def get():
+            while True:
+                data = reader(1000)
+                if not data:
+                    break
+                # Sometimes os.read gives us bytes under Python 3...and
+                # sometimes it doesn't. ¯\_(ツ)_/¯
+                if not isinstance(data, six.binary_type):
+                    # Can't use six.b because that just assumes latin-1 :(
+                    data = data.encode(self.encoding)
+                yield data
+        # Decode stream using our generator & requested encoding
+        for data in codecs.iterdecode(get(), self.encoding, errors='replace'):
+            if not hide:
+                output.write(data)
+                output.flush()
+            buffer_.append(data)
+
     def should_use_pty(self, pty, fallback):
         """
         Should execution attempt to use a pseudo-terminal?
@@ -261,41 +296,6 @@ class Runner(object):
         `codecs.iterdecode`.
         """
         raise NotImplementedError
-
-    def io(self, reader, output, buffer_, hide):
-        """
-        Perform I/O (reading, capturing & writing).
-
-        Specifically:
-
-        * Read bytes from ``reader``, giving it some number of bytes to read at
-          a time. (Typically this function is the result of `stdout_reader` or
-          `stderr_reader`.)
-        * Decode the bytes into a string according to ``self.encoding``
-          (typically derived from `default_encoding` or runtime keyword args).
-        * Save a copy of the bytes in ``buffer_``, typically a `list`, which
-          the caller will expect to be mutated.
-        * If ``hide`` is ``False``, write bytes to ``output``, a stream such as
-          `sys.stdout`.
-        """
-        # Inner generator yielding read data
-        def get():
-            while True:
-                data = reader(1000)
-                if not data:
-                    break
-                # Sometimes os.read gives us bytes under Python 3...and
-                # sometimes it doesn't. ¯\_(ツ)_/¯
-                if not isinstance(data, six.binary_type):
-                    # Can't use six.b because that just assumes latin-1 :(
-                    data = data.encode(self.encoding)
-                yield data
-        # Decode stream using our generator & requested encoding
-        for data in codecs.iterdecode(get(), self.encoding, errors='replace'):
-            if not hide:
-                output.write(data)
-                output.flush()
-            buffer_.append(data)
 
     def wait(self):
         """
