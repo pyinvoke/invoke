@@ -36,6 +36,10 @@ class Dummy(Runner):
         return 0
 
 
+class OhNoz(Exception):
+    pass
+
+
 def _expect_encoding(codecs, encoding):
     assert codecs.iterdecode.called
     for call in codecs.iterdecode.call_args_list:
@@ -314,6 +318,15 @@ class Runner_(Spec):
                 r = repr(f)
                 err = "Sentinel 'ohnoz' not found in {0!r}".format(r)
                 assert 'ohnoz' in r, err
+
+    class threading:
+        @raises(OhNoz)
+        def errors_within_io_thread_body_bubble_up(self):
+            class Oops(Dummy):
+                def io(self, reader, output, buffer_, hide):
+                    raise OhNoz()
+
+            Oops(Context()).run("nah")
 
 
 class Local_(Spec):
