@@ -297,7 +297,6 @@ class Runner_(Spec):
             eq_(out.getvalue(), "yo")
             eq_(sys.stdout.getvalue(), "")
 
-
     class failure_handling:
         @raises(Failure)
         def fast_failures(self):
@@ -315,6 +314,7 @@ class Runner_(Spec):
                 r = repr(f)
                 err = "Sentinel 'ohnoz' not found in {0!r}".format(r)
                 assert 'ohnoz' in r, err
+
 
 class Local_(Spec):
     def _run(self, *args, **kwargs):
