@@ -1,8 +1,9 @@
+from functools import partial
 import sys
 import time
 
 from invocations.docs import docs, www
-from invocations.testing import test
+from invocations.testing import test, coverage as _coverage
 from invocations.packaging import vendorize, release
 
 from invoke import ctask as task, Collection, Context
@@ -88,16 +89,12 @@ def watch(c):
     observer.join()
 
 
+# TODO: allow functools.partial objects to work as tasks? hrm
 @task
 def coverage(c):
-    """
-    Run tests w/ coverage enabled, generating HTML, & opening it.
-    """
-    test(c, opts="--with-coverage --cover-branches")
-    c.run("coverage html --include='invoke/*' --omit='invoke/vendor/*'")
-    c.run("open htmlcov/index.html")
+    _coverage(c, package='invoke')
 
 
 ns = Collection(
-    test, integration, vendorize, release, www, docs, sites, watch, coverage
+    test, coverage, integration, vendorize, release, www, docs, sites, watch
 )
