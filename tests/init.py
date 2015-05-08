@@ -4,8 +4,9 @@ import six
 from spec import Spec, eq_
 
 import invoke
-import invoke.tasks
 import invoke.collection
+import invoke.exceptions
+import invoke.tasks
 
 
 class Init(Spec):
@@ -58,3 +59,11 @@ class Init(Spec):
 
         def failure_class(self):
             assert invoke.Failure is invoke.runners.Failure
+
+        def exceptions(self):
+            # Meh
+            for obj in vars(invoke.exceptions).values():
+                if isinstance(obj, type) and issubclass(obj, BaseException):
+                    top_level = getattr(invoke, obj.__name__)
+                    real = getattr(invoke.exceptions, obj.__name__)
+                    assert top_level is real
