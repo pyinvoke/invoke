@@ -38,6 +38,32 @@ def normalize_hide(val):
     return hide
 
 
+class _IOThread(threading.Thread):
+    """
+    IO thread handler making it easier for parent to handle thread exceptions.
+
+    Based in part Fabric 1's ThreadHandler. See also Fabric GH issue #204.
+    """
+    def __init__(self, *args, **kwargs):
+        super(_IOThread, self).__init__(*args, **kwargs)
+        # No record of why, but Fabric used daemon threads ever since the
+        # switch from select.select, so let's keep doing that.
+        self.daemon = True
+        # Track exceptions raised in run()
+        self.exception = None
+
+    def run(self):
+        try:
+            super(_IOThread, self).run()
+        except BaseException:
+            self.exception = sys.exc_info()
+
+    def raise_exception(self):
+        if self.exception is not None:
+            e = self.exception
+            raise e[0], e[1], e[2]
+
+
 class Runner(object):
     """
     Partially-abstract core command-running API.
@@ -189,13 +215,14 @@ class Runner(object):
                 ),
             )
         for args in argses:
-            t = threading.Thread(target=self.io, args=args)
+            t = _IOThread(target=self.io, args=args)
             threads.append(t)
             t.start()
         # Wait for completion, then tie things off & obtain result
         self.wait()
         for t in threads:
             t.join()
+            t.raise_exception()
         stdout = ''.join(stdout)
         stderr = ''.join(stderr)
         if WINDOWS:
