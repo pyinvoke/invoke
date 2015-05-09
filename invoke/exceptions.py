@@ -7,6 +7,7 @@ condition in a way easily told apart from other, truly unexpected errors".
 """
 
 from traceback import format_exception
+from pprint import pformat
 
 
 class CollectionNotFound(Exception):
@@ -116,12 +117,20 @@ class IOThreadsException(Exception):
         self.exceptions = tuple(exceptions)
 
     def __str__(self):
+        details = []
+        for x in self.exceptions:
+            detail = "Thread args: {0}\n\n{1}"
+            details.append(detail.format(
+                pformat(x.kwargs),
+                "\n".join(format_exception(x.type, x.value, x.traceback)),
+            ))
         return """
-Saw {0} exceptions within I/O threads ({1}). Details below.
+Saw {0} exceptions within I/O threads ({1}):
+
 
 {2}
 """.format(
         len(self.exceptions),
         ", ".join(x.type.__name__ for x in self.exceptions),
-        "\n\n".join("\n".join(format_exception(x.type, x.value, x.traceback)) for x in self.exceptions),
+        "\n\n".join(details),
     )

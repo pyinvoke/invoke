@@ -232,16 +232,16 @@ class Runner(object):
             t.start()
         # Wait for completion, then tie things off & obtain result
         self.wait()
-        e_tuples = []
+        exceptions = []
         for t in threads:
             t.join()
             e = t.exception()
             if e is not None:
-                e_tuples.append(e)
+                exceptions.append(e)
         # If any exceptions appeared inside the threads, raise them now as an
         # aggregate exception object.
-        if e_tuples:
-            raise IOThreadsException(e_tuples)
+        if exceptions:
+            raise IOThreadsException(exceptions)
         stdout = ''.join(stdout)
         stderr = ''.join(stderr)
         if WINDOWS:
