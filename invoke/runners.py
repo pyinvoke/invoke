@@ -6,6 +6,7 @@ import sys
 import threading
 import codecs
 import locale
+from collections import namedtuple
 from functools import partial
 
 # Import pty at top level so it can be mocked for tests.
@@ -14,7 +15,7 @@ try:
 except ImportError:
     pty = None
 
-from .exceptions import Failure
+from .exceptions import Failure, IOThreadsException
 from .platform import WINDOWS
 
 from .vendor import six
@@ -38,30 +39,36 @@ def normalize_hide(val):
     return hide
 
 
+IOExceptionWrapper = namedtuple(
+    'IOExceptionWrapper',
+    'kwargs type value traceback'
+)
+
 class _IOThread(threading.Thread):
     """
     IO thread handler making it easier for parent to handle thread exceptions.
 
     Based in part Fabric 1's ThreadHandler. See also Fabric GH issue #204.
     """
-    def __init__(self, *args, **kwargs):
-        super(_IOThread, self).__init__(*args, **kwargs)
+    def __init__(self, **kwargs):
+        super(_IOThread, self).__init__(**kwargs)
         # No record of why, but Fabric used daemon threads ever since the
         # switch from select.select, so let's keep doing that.
         self.daemon = True
         # Track exceptions raised in run()
-        self.exception = None
+        self.kwargs = kwargs
+        self.exc_info = None
 
     def run(self):
         try:
             super(_IOThread, self).run()
         except BaseException:
-            self.exception = sys.exc_info()
+            self.exc_info = sys.exc_info()
 
-    def raise_exception(self):
-        if self.exception is not None:
-            e = self.exception
-            raise e[0], e[1], e[2]
+    def exception(self):
+        if self.exc_info is None:
+            return None
+        return IOExceptionWrapper(self.kwargs, *self.exc_info)
 
 
 class Runner(object):
@@ -106,6 +113,11 @@ class Runner(object):
             ``run`` subtree (e.g. ``run.echo`` provides the default value for
             the ``echo`` keyword, etc). The base default values are described
             in the parameter list below.
+
+        .. note::
+            This method spawns several daemon threads to handle I/O; if these
+            threads encounter exceptions, they are stored & collectively
+            re-raised in the main thread as an `IOThreadsException`.
 
         :param str command: The shell command to execute.
 
@@ -220,9 +232,16 @@ class Runner(object):
             t.start()
         # Wait for completion, then tie things off & obtain result
         self.wait()
+        e_tuples = []
         for t in threads:
             t.join()
-            t.raise_exception()
+            e = t.exception()
+            if e is not None:
+                e_tuples.append(e)
+        # If any exceptions appeared inside the threads, raise them now as an
+        # aggregate exception object.
+        if e_tuples:
+            raise IOThreadsException(e_tuples)
         stdout = ''.join(stdout)
         stderr = ''.join(stderr)
         if WINDOWS:

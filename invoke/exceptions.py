@@ -6,6 +6,7 @@ exceptions used for message-passing" to simply "we needed to express an error
 condition in a way easily told apart from other, truly unexpected errors".
 """
 
+
 class CollectionNotFound(Exception):
     def __init__(self, name, start):
         self.name = name
@@ -87,3 +88,32 @@ class UnknownFileType(Exception):
     A config file of an unknown type was specified and cannot be loaded.
     """
     pass
+
+
+class IOThreadsException(Exception):
+    """
+    One or more exceptions were raised within background I/O threads.
+
+    The real underlying exceptions are stored in the `exceptions` attribute;
+    see its documentation for data structure details.
+
+    .. note::
+        Threads which did not encounter an exception, do not contribute to this
+        exception object and thus are not present inside `exceptions`.
+    """
+    #: A tuple of namedtuples containing the initial thread constructor
+    #: kwargs (because `threading.Thread` subclasses should always be called
+    #: with kwargs) and the caught exception for that thread as seen by
+    #: `sys.exc_info` (so: type, value, traceback).
+    #:
+    #: .. note::
+    #:     The ordering of this attribute is not well-defined.
+    exceptions = tuple()
+
+    def __init__(self, exceptions):
+        self.exceptions = tuple(exceptions)
+
+    def __str__(self):
+        # TODO: print all tracebacks here? Or would that be confusing? Maybe
+        # just a summary of the threads/exceptions/types?
+        pass

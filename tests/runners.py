@@ -1,11 +1,12 @@
 import locale
 import sys
+import types
 from invoke.vendor.six import StringIO
 
 from spec import Spec, trap, eq_, skip, ok_, raises
 from mock import patch, Mock
 
-from invoke import Runner, Local, Context, Config, Failure
+from invoke import Runner, Local, Context, Config, Failure, IOThreadsException
 
 from _utils import mock_subprocess, mock_pty
 
@@ -320,13 +321,25 @@ class Runner_(Spec):
                 assert 'ohnoz' in r, err
 
     class threading:
-        @raises(OhNoz)
         def errors_within_io_thread_body_bubble_up(self):
             class Oops(Dummy):
                 def io(self, reader, output, buffer_, hide):
                     raise OhNoz()
 
-            Oops(Context()).run("nah")
+            runner = Oops(Context())
+            try:
+                runner.run("nah")
+            except IOThreadsException as e:
+                # Expect two separate OhNoz objects on 'e'
+                eq_(len(e.exceptions), 2)
+                for tup in e.exceptions:
+                    ok_(isinstance(tup.value, OhNoz))
+                    ok_(isinstance(tup.traceback, types.TracebackType))
+                    eq_(tup.type, OhNoz)
+                # TODO: test the arguments part of the tuple too. It's pretty
+                # implementation-specific, though, so possibly not worthwhile.
+            else:
+                assert False, "Did not raise IOThreadsException as expected!"
 
 
 class Local_(Spec):
