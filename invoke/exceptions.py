@@ -6,6 +6,8 @@ exceptions used for message-passing" to simply "we needed to express an error
 condition in a way easily told apart from other, truly unexpected errors".
 """
 
+from traceback import format_exception
+
 
 class CollectionNotFound(Exception):
     def __init__(self, name, start):
@@ -114,6 +116,12 @@ class IOThreadsException(Exception):
         self.exceptions = tuple(exceptions)
 
     def __str__(self):
-        # TODO: print all tracebacks here? Or would that be confusing? Maybe
-        # just a summary of the threads/exceptions/types?
-        pass
+        return """
+Saw {0} exceptions within I/O threads ({1}). Details below.
+
+{2}
+""".format(
+        len(self.exceptions),
+        ", ".join(x.type.__name__ for x in self.exceptions),
+        "\n\n".join("\n".join(format_exception(x.type, x.value, x.traceback)) for x in self.exceptions),
+    )
