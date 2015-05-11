@@ -376,6 +376,15 @@ class Local_(Spec):
         def overridden_fallback_affects_result_pty_value(self):
             eq_(self._run(_, pty=True, fallback=False).pty, True)
 
+        @patch('invoke.runners.sys')
+        def replaced_stdin_objects_dont_explode(self, mock_sys):
+            # Replace sys.stdin with an object lacking .fileno(), which
+            # normally causes an AttributeError unless we are being careful.
+            mock_sys.stdin = object()
+            # Test. If bug is present, this will error.
+            runner = Local(Context())
+            eq_(runner.should_use_pty(pty=True, fallback=True), False)
+
     class encoding:
         @mock_subprocess
         def uses_locale_module_for_desired_encoding(self):
