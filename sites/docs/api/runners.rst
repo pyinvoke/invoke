@@ -4,7 +4,7 @@
 
 .. automodule:: invoke.runners
     :member-order: bysource
-    :exclude-members: IOExceptionWrapper
+    :exclude-members: ExceptionWrapper
 
-.. autoclass:: invoke.runners.IOExceptionWrapper
+.. autoclass:: invoke.runners.ExceptionWrapper
     :no-members:

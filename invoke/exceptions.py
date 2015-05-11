@@ -93,9 +93,9 @@ class UnknownFileType(Exception):
     pass
 
 
-class IOThreadsException(Exception):
+class ThreadException(Exception):
     """
-    One or more exceptions were raised within background I/O threads.
+    One or more exceptions were raised within background (usually I/O) threads.
 
     The real underlying exceptions are stored in the `exceptions` attribute;
     see its documentation for data structure details.
@@ -125,7 +125,7 @@ class IOThreadsException(Exception):
                 "\n".join(format_exception(x.type, x.value, x.traceback)),
             ))
         return """
-Saw {0} exceptions within I/O threads ({1}):
+Saw {0} exceptions within threads ({1}):
 
 
 {2}

@@ -4,7 +4,7 @@ from .collection import Collection  # noqa
 from .context import Context  # noqa
 from .config import Config # noqa
 from .exceptions import ( # noqa
-    AmbiguousEnvVar, IOThreadsException, ParseError, CollectionNotFound, # noqa
+    AmbiguousEnvVar, ThreadException, ParseError, CollectionNotFound, # noqa
     UnknownFileType, Exit, UncastableEnvVar, PlatformError, # noqa
 ) # noqa
 from .runners import Runner, Local, Failure # noqa

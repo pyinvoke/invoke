@@ -6,7 +6,7 @@ from invoke.vendor.six import StringIO
 from spec import Spec, trap, eq_, skip, ok_, raises
 from mock import patch, Mock
 
-from invoke import Runner, Local, Context, Config, Failure, IOThreadsException
+from invoke import Runner, Local, Context, Config, Failure, ThreadException
 
 from _utils import mock_subprocess, mock_pty
 
@@ -329,7 +329,7 @@ class Runner_(Spec):
             runner = Oops(Context())
             try:
                 runner.run("nah")
-            except IOThreadsException as e:
+            except ThreadException as e:
                 # Expect two separate OhNoz objects on 'e'
                 eq_(len(e.exceptions), 2)
                 for tup in e.exceptions:
@@ -339,7 +339,7 @@ class Runner_(Spec):
                 # TODO: test the arguments part of the tuple too. It's pretty
                 # implementation-specific, though, so possibly not worthwhile.
             else:
-                assert False, "Did not raise IOThreadsException as expected!"
+                assert False, "Did not raise ThreadException as expected!"
 
 
 class Local_(Spec):

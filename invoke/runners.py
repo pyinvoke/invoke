@@ -15,7 +15,7 @@ try:
 except ImportError:
     pty = None
 
-from .exceptions import Failure, IOThreadsException
+from .exceptions import Failure, ThreadException
 from .platform import WINDOWS
 
 from .vendor import six
@@ -39,8 +39,8 @@ def normalize_hide(val):
     return hide
 
 
-IOExceptionWrapper = namedtuple(
-    'IOExceptionWrapper',
+ExceptionWrapper = namedtuple(
+    'ExceptionWrapper',
     'kwargs type value traceback'
 )
 
@@ -68,7 +68,7 @@ class _IOThread(threading.Thread):
     def exception(self):
         if self.exc_info is None:
             return None
-        return IOExceptionWrapper(self.kwargs, *self.exc_info)
+        return ExceptionWrapper(self.kwargs, *self.exc_info)
 
 
 class Runner(object):
@@ -117,7 +117,7 @@ class Runner(object):
         .. note::
             This method spawns several daemon threads to handle I/O; if these
             threads encounter exceptions, they are stored & collectively
-            re-raised in the main thread as an `IOThreadsException`.
+            re-raised in the main thread as a `ThreadException`.
 
         :param str command: The shell command to execute.
 
@@ -241,7 +241,7 @@ class Runner(object):
         # If any exceptions appeared inside the threads, raise them now as an
         # aggregate exception object.
         if exceptions:
-            raise IOThreadsException(exceptions)
+            raise ThreadException(exceptions)
         stdout = ''.join(stdout)
         stderr = ''.join(stderr)
         if WINDOWS:
