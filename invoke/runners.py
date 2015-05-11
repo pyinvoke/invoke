@@ -368,7 +368,12 @@ class Local(Runner):
         use_pty = False
         if pty:
             use_pty = True
-            if not os.isatty(sys.stdin.fileno()) and fallback:
+            seems_pty = (
+                hasattr(sys.stdin, 'fileno')
+                and callable(sys.stdin.fileno)
+                and os.isatty(sys.stdin.fileno())
+            )
+            if not seems_pty and fallback:
                 if not self.warned_about_pty_fallback:
                     sys.stderr.write("WARNING: stdin is not a pty; falling back to non-pty execution!\n") # noqa
                     self.warned_about_pty_fallback = True
