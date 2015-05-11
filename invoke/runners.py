@@ -6,7 +6,6 @@ import sys
 import threading
 import codecs
 import locale
-from collections import namedtuple
 from functools import partial
 
 # Import pty at top level so it can be mocked for tests.
@@ -15,7 +14,7 @@ try:
 except ImportError:
     pty = None
 
-from .exceptions import Failure, ThreadException
+from .exceptions import Failure, ThreadException, ExceptionWrapper
 from .platform import WINDOWS
 
 from .vendor import six
@@ -38,11 +37,6 @@ def normalize_hide(val):
         hide = (val,)
     return hide
 
-
-ExceptionWrapper = namedtuple(
-    'ExceptionWrapper',
-    'kwargs type value traceback'
-)
 
 class _IOThread(threading.Thread):
     """

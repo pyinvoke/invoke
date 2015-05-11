@@ -6,6 +6,7 @@ exceptions used for message-passing" to simply "we needed to express an error
 condition in a way easily told apart from other, truly unexpected errors".
 """
 
+from collections import namedtuple
 from traceback import format_exception
 from pprint import pformat
 
@@ -93,6 +94,12 @@ class UnknownFileType(Exception):
     pass
 
 
+#: A namedtuple wrapping a thread-borne exception & that thread's arguments.
+ExceptionWrapper = namedtuple(
+    'ExceptionWrapper',
+    'kwargs type value traceback'
+)
+
 class ThreadException(Exception):
     """
     One or more exceptions were raised within background (usually I/O) threads.
@@ -104,10 +111,10 @@ class ThreadException(Exception):
         Threads which did not encounter an exception, do not contribute to this
         exception object and thus are not present inside `exceptions`.
     """
-    #: A tuple of namedtuples containing the initial thread constructor
-    #: kwargs (because `threading.Thread` subclasses should always be called
-    #: with kwargs) and the caught exception for that thread as seen by
-    #: `sys.exc_info` (so: type, value, traceback).
+    #: A tuple of `ExceptionWrappers <ExceptionWrapper>` containing the initial
+    #: thread constructor kwargs (because `threading.Thread` subclasses should
+    #: always be called with kwargs) and the caught exception for that thread
+    #: as seen by `sys.exc_info` (so: type, value, traceback).
     #:
     #: .. note::
     #:     The ordering of this attribute is not well-defined.
