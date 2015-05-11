@@ -131,13 +131,14 @@ class ThreadException(Exception):
                 pformat(x.kwargs),
                 "\n".join(format_exception(x.type, x.value, x.traceback)),
             ))
+        args = (
+            len(self.exceptions),
+            ", ".join(x.type.__name__ for x in self.exceptions),
+            "\n\n".join(details),
+        )
         return """
 Saw {0} exceptions within threads ({1}):
 
 
 {2}
-""".format(
-        len(self.exceptions),
-        ", ".join(x.type.__name__ for x in self.exceptions),
-        "\n\n".join(details),
-    )
+""".format(*args)
