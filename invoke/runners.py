@@ -108,11 +108,6 @@ class Runner(object):
             the ``echo`` keyword, etc). The base default values are described
             in the parameter list below.
 
-        .. note::
-            This method spawns several daemon threads to handle I/O; if these
-            threads encounter exceptions, they are stored & collectively
-            re-raised in the main thread as a `ThreadException`.
-
         :param str command: The shell command to execute.
 
         :param bool warn:
@@ -174,6 +169,10 @@ class Runner(object):
         :returns: `Result`
 
         :raises: `.Failure` (if the command exited nonzero & ``warn=False``)
+
+        :raises:
+            `.ThreadException` (if the background I/O threads encounter
+            exceptions)
         """
         # Normalize kwargs w/ config
         opts = {}
