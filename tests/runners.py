@@ -320,8 +320,16 @@ class Runner_(Spec):
                 err = "Sentinel 'ohnoz' not found in {0!r}".format(r)
                 assert 'ohnoz' in r, err
 
-        def failure_should_present_stdout_when_pty_was_used(self):
-            skip()
+        def Failure_repr_should_present_stdout_when_pty_was_used(self):
+            try:
+                # NOTE: using mocked stdout because that's what ptys do as
+                # well. when pty=True, nothing's even trying to read stderr.
+                self._runner(exits=1, out="ohnoz").run(_, hide=True, pty=True)
+                assert false # noqa. Ensure failure to Failure fails
+            except Failure as f:
+                r = repr(f)
+                err = "Sentinel 'ohnoz' not found in {0!r}".format(r)
+                assert 'ohnoz' in r, err
 
     class threading:
         def errors_within_io_thread_body_bubble_up(self):
