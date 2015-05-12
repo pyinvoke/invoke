@@ -28,15 +28,20 @@ class Failure(Exception):
         self.result = result
 
     def __str__(self):
+        err_label = "Stderr"
+        err_text = self.result.stderr
+        if self.result.pty:
+            err_label = "Stdout (pty=True; no stderr possible)"
+            err_text = self.result.stdout
         return """Command execution failure!
 
 Exit code: {0}
 
-Stderr:
+{1}:
 
-{1}
+{2}
 
-""".format(self.result.exited, self.result.stderr)
+""".format(self.result.exited, err_label, err_text)
 
     def __repr__(self):
         return str(self)

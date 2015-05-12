@@ -2,6 +2,10 @@
 Changelog
 =========
 
+* :bug:`- major` Display stdout instead of stderr in the ``repr()`` of
+  `~invoke.exceptions.Failure` objects, when a pseudo-terminal was used.
+  Previously, failure display focused on the stderr stream, which is always
+  empty under pseudo-terminals.
 * :bug:`- major` Correctly handle situations where `sys.stdin` has been
   replaced with an object lacking ``.fileno`` (e.g., some advanced Python
   shells, headless code execution tools, etc). Previously, this situation
