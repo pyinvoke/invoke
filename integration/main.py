@@ -1,7 +1,7 @@
 import os
 import sys
 
-from spec import Spec, trap, eq_, skip
+from spec import Spec, trap, eq_, skip, ok_
 
 from invoke import run
 from invoke.platform import WINDOWS
@@ -97,3 +97,14 @@ class Main(Spec):
         r = run(command, hide='both', pty=True)
         eq_(r.stdout, 'foo\r\nbar\r\n')
         eq_(r.stderr, '')
+
+    def simple_command_with_pty(self):
+        """
+        Run command under PTY
+        """
+        # Most Unix systems should have stty, which asplodes when not run under
+        # a pty, and prints useful info otherwise
+        result = run('stty -a', hide=True, pty=True)
+        # PTYs use \r\n, not \n, line separation
+        ok_("\r\n" in result.stdout)
+        eq_(result.pty, True)
