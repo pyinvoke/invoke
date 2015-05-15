@@ -116,6 +116,39 @@ class Task(object):
     def called(self):
         return self.times_called > 0
 
+    def get_arg_names_and_spec_dict(self, spec):
+        arg_names = spec.args[:]
+        matched_args = [reversed(x) for x in [spec.args, spec.defaults or []]]
+        spec_dict = dict(zip_longest(*matched_args, fillvalue=NO_DEFAULT))
+        return arg_names, spec_dict
+
+    def get_undecorated_func(self, func):
+        """
+        If func is a decorated function, it returns the base undecorated
+        function. Otherwise, it returns None
+        """
+        if func.func_closure:
+            try:
+                # In the vast majority of circumstances, the first function
+                # in the list of closures is a function that func is decorating
+                undecorated_func = next(
+                    cell.cell_contents
+                    for cell
+                    in func.func_closure
+                    if inspect.isfunction(cell.cell_contents)
+                )
+
+                # If the undecorated function is a decorator itself, we want to
+                # recurse and get the undecorated version of that function.
+                # Otherwise, we can return the undecorated function.
+                return self.get_undecorated_func(undecorated_func) \
+                        or undecorated_func
+            except StopIteration:
+                # Function has closure values but is not actually decorated
+                pass
+
+        return None
+
     def argspec(self, body):
         """
         Returns two-tuple:
@@ -133,13 +166,25 @@ class Task(object):
         # in argspec, or is there a way to get the "really callable" spec?
         func = body if isinstance(body, types.FunctionType) else body.__call__
         spec = inspect.getargspec(func)
-        arg_names = spec.args[:]
-        matched_args = [reversed(x) for x in [spec.args, spec.defaults or []]]
-        spec_dict = dict(zip_longest(*matched_args, fillvalue=NO_DEFAULT))
+        arg_names, spec_dict = self.get_arg_names_and_spec_dict(spec)
+
+        # Usually, a decorated function takes in *args and **kwargs, which are
+        # passed to the underlying undecorated function. This section handles
+        # the names of the arguments to the undecorated function.
+        undecorated_func = self.get_undecorated_func(func)
+        undecorated_spec = undecorated_func \
+                and inspect.getargspec(undecorated_func)
+        if undecorated_spec:
+            undecorated_arg_names, undecorated_spec_dict = \
+                self.get_arg_names_and_spec_dict(undecorated_spec)
+            arg_names.extend(undecorated_arg_names)
+            spec_dict.update(undecorated_spec_dict)
+
         # Remove context argument, if applicable
         if self.contextualized:
             context_arg = arg_names.pop(0)
             del spec_dict[context_arg]
+
         return arg_names, spec_dict
 
     def fill_implicit_positionals(self, positional):

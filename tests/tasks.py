@@ -5,7 +5,6 @@ from invoke.loader import FilesystemLoader as Loader
 
 from _utils import support
 
-
 #
 # NOTE: Most Task tests use @task as it's the primary interface and is a very
 # thin wrapper around Task itself. This way we don't have to write 2x tests for
@@ -293,3 +292,40 @@ class Task_(Spec):
             eq_(arg.names, ('longer-arg', 'l'))
             eq_(arg.attr_name, 'longer_arg')
             eq_(arg.name, 'longer_arg')
+
+        def decorated_function_names_are_preserved(self):
+            def my_decorator(func):
+                def decorator(*args, **kwargs):
+                    return func(*args, **kwargs)
+
+                return decorator
+
+            @task
+            @my_decorator
+            def mytask(argument):
+                pass
+
+            arg = mytask.get_arguments()[0]
+            eq_(arg.name, 'argument')
+
+        def multidecorated_function_names_are_preserved(self):
+            def my_decorator1(func):
+                def decorator(*args, **kwargs):
+                    return func(*args, **kwargs)
+
+                return decorator
+
+            def my_decorator2(func):
+                def decorator(*args, **kwargs):
+                    return func(*args, **kwargs)
+
+                return decorator
+
+            @task
+            @my_decorator1
+            @my_decorator2
+            def mytask(argument):
+                pass
+
+            arg = mytask.get_arguments()[0]
+            eq_(arg.name, 'argument')
