@@ -407,7 +407,7 @@ class Local(Runner):
                 # against.
                 # TODO: also see if subprocess is using equivalent of execvp...
                 # TODO: both pty.spawn() and pexpect.spawn() do a lot of
-                # setup/teardown involving tty.*, setwinsize, getrlimit,
+                # setup/teardown involving tty.setraw, setwinsize, getrlimit,
                 # signal. Ostensibly we'll want some of that eventually, but if
                 # possible write tests - integration-level if necessary -
                 # before adding it!
