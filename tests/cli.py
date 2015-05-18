@@ -43,48 +43,50 @@ class CLI(IntegrationSpec):
                 "whatevs\n",
             )
 
-    def missing_collection_yields_useful_error(self):
-        _output_eq(
-            '-c huhwhat -l',
-            stderr="Can't find any collection named 'huhwhat'!\n",
-            code=1
-        )
-
-    def missing_default_collection_doesnt_say_None(self):
-        with cd('/'):
+    class error_cases:
+        def missing_collection_yields_useful_error(self):
             _output_eq(
-                '-l',
-                stderr="Can't find any collection named 'tasks'!\n",
+                '-c huhwhat -l',
+                stderr="Can't find any collection named 'huhwhat'!\n",
                 code=1
             )
 
-    @trap
-    def missing_default_task_prints_help(self):
-        with expect_exit():
-            _dispatch("inv -c foo")
-        ok_("Core options:" in sys.stdout.getvalue())
+        def missing_default_collection_doesnt_say_None(self):
+            with cd('/'):
+                _output_eq(
+                    '-l',
+                    stderr="Can't find any collection named 'tasks'!\n",
+                    code=1
+                )
+
+        @trap
+        def missing_default_task_prints_help(self):
+            with expect_exit():
+                _dispatch("inv -c foo")
+            ok_("Core options:" in sys.stdout.getvalue())
 
     def contextualized_tasks_are_given_parser_context_arg(self):
         # go() in contextualized.py just returns its initial arg
         retval = list(_dispatch('invoke -c contextualized go').values())[0]
         assert isinstance(retval, Context)
 
-    # TODO: On Windows, we don't get a pty, so we don't get a
-    # guaranteed terminal size of 80x24. Skip for now, but maybe
-    # a suitable fix would be to just strip all whitespace from the
-    # returned and expected values before testing. Then terminal
-    # size is ignored.
-    @skip_if_windows
-    def core_help_option_prints_core_help(self):
-        # TODO: change dynamically based on parser contents?
-        # e.g. no core args == no [--core-opts],
-        # no tasks == no task stuff?
-        # NOTE: test will trigger default pty size of 80x24, so the below
-        # string is formatted appropriately.
-        # TODO: add more unit-y tests for specific behaviors:
-        # * fill terminal w/ columns + spacing
-        # * line-wrap help text in its own column
-        expected = """
+    class help:
+        # TODO: On Windows, we don't get a pty, so we don't get a
+        # guaranteed terminal size of 80x24. Skip for now, but maybe
+        # a suitable fix would be to just strip all whitespace from the
+        # returned and expected values before testing. Then terminal
+        # size is ignored.
+        @skip_if_windows
+        def core_help_option_prints_core_help(self):
+            # TODO: change dynamically based on parser contents?
+            # e.g. no core args == no [--core-opts],
+            # no tasks == no task stuff?
+            # NOTE: test will trigger default pty size of 80x24, so the below
+            # string is formatted appropriately.
+            # TODO: add more unit-y tests for specific behaviors:
+            # * fill terminal w/ columns + spacing
+            # * line-wrap help text in its own column
+            expected = """
 Usage: inv[oke] [--core-opts] task1 [--task1-opts] ... taskN [--taskN-opts]
 
 Core options:
@@ -106,11 +108,11 @@ Core options:
                                    commands fail.
 
 """.lstrip()
-        for flag in ['-h', '--help']:
-            _output_eq(flag, expected)
+            for flag in ['-h', '--help']:
+                _output_eq(flag, expected)
 
-    def per_task_help_prints_help_for_task_only(self):
-        expected = """
+        def per_task_help_prints_help_for_task_only(self):
+            expected = """
 Usage: inv[oke] [--core-opts] punch [--options] [other tasks here ...]
 
 Docstring:
@@ -121,11 +123,11 @@ Options:
   -w STRING, --who=STRING   Who to punch
 
 """.lstrip()
-        for flag in ['-h', '--help']:
-            _output_eq('-c decorator {0} punch'.format(flag), expected)
+            for flag in ['-h', '--help']:
+                _output_eq('-c decorator {0} punch'.format(flag), expected)
 
-    def per_task_help_works_for_unparameterized_tasks(self):
-        expected = """
+        def per_task_help_works_for_unparameterized_tasks(self):
+            expected = """
 Usage: inv[oke] [--core-opts] biz [other tasks here ...]
 
 Docstring:
@@ -135,10 +137,10 @@ Options:
   none
 
 """.lstrip()
-        _output_eq('-c decorator -h biz', expected)
+            _output_eq('-c decorator -h biz', expected)
 
-    def per_task_help_displays_docstrings_if_given(self):
-        expected = """
+        def per_task_help_displays_docstrings_if_given(self):
+            expected = """
 Usage: inv[oke] [--core-opts] foo [other tasks here ...]
 
 Docstring:
@@ -148,10 +150,10 @@ Options:
   none
 
 """.lstrip()
-        _output_eq('-c decorator -h foo', expected)
+            _output_eq('-c decorator -h foo', expected)
 
-    def per_task_help_dedents_correctly(self):
-        expected = """
+        def per_task_help_dedents_correctly(self):
+            expected = """
 Usage: inv[oke] [--core-opts] foo2 [other tasks here ...]
 
 Docstring:
@@ -165,10 +167,10 @@ Options:
   none
 
 """.lstrip()
-        _output_eq('-c decorator -h foo2', expected)
+            _output_eq('-c decorator -h foo2', expected)
 
-    def per_task_help_dedents_correctly_for_alternate_docstring_style(self):
-        expected = """
+        def per_task_help_dedents_correctly_for_alternate_docstring_style(self):
+            expected = """
 Usage: inv[oke] [--core-opts] foo3 [other tasks here ...]
 
 Docstring:
@@ -182,7 +184,7 @@ Options:
   none
 
 """.lstrip()
-        _output_eq('-c decorator -h foo3', expected)
+            _output_eq('-c decorator -h foo3', expected)
 
     def version_info(self):
         _output_eq('-V', "Invoke {0}\n".format(invoke.__version__))
