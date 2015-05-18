@@ -329,14 +329,14 @@ class Runner(object):
         Windows platforms or when the default stream objects in the `sys`
         module seem to have been replaced.
         """
-        if not win32:
+        if not WINDOWS:
             import fcntl
             import termios
             import struct
 
         default_cols, default_rows = 80, 24
         cols, rows = default_cols, default_rows
-        if not win32 and isatty(sys.stdout):
+        if not WINDOWS and isatty(sys.stdout):
             # We want two short unsigned integers (rows, cols)
             fmt = 'HH'
             # Create an empty (zeroed) buffer for ioctl to map onto. Yay for C!
