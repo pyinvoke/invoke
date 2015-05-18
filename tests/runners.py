@@ -130,8 +130,8 @@ class Runner_(Spec):
         class terminal_size:
             @patch('fcntl.ioctl', wraps=fcntl.ioctl)
             def calls_fcntl_with_TIOCGWINSZ(self, ioctl):
-                # Test the default (Unix) implementation because that's all we can
-                # realistically do here.
+                # Test the default (Unix) implementation because that's all we
+                # can realistically do here.
                 self._runner().terminal_size
                 eq_(ioctl.call_args_list[0][0][1], termios.TIOCGWINSZ)
 
@@ -147,8 +147,8 @@ class Runner_(Spec):
             @patch('sys.stdout')
             @patch('fcntl.ioctl')
             def defaults_to_80x24_when_stdout_not_a_tty(self, ioctl, stdout):
-                # Make sure stdout acts like a real stream (means failure is more
-                # obvious)
+                # Make sure stdout acts like a real stream (means failure is
+                # more obvious)
                 stdout.fileno.return_value = 1
                 # Ensure it fails the isatty() test
                 stdout.isatty.return_value = False
