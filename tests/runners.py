@@ -401,6 +401,11 @@ class Local_(Spec):
             self._run(_, pty=True)
             # @mock_pty's asserts check os/pty calls for us.
 
+        @mock_pty()
+        def pty_is_set_to_controlling_terminal_size(self):
+            self._run(_, pty=True)
+            # @mock_pty's asserts check fcntl calls for us
+
         def warning_only_fires_once(self):
             # I.e. if implementation checks pty-ness >1 time, only one warning
             # is emitted. This is kinda implementation-specific, but...
