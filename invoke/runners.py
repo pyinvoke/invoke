@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 
-import os
-from subprocess import Popen, PIPE
-import sys
-import threading
 import codecs
 import locale
+import os
+import sys
+import threading
 from functools import partial
+from subprocess import Popen, PIPE
 
 # Import pty at top level so it can be mocked for tests.
 try:
