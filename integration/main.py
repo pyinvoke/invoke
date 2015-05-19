@@ -109,10 +109,12 @@ class Main(Spec):
         ok_("\r\n" in result.stdout)
         eq_(result.pty, True)
 
-    def pty_size_is_not_zero(self):
+    def pty_size_is_realistic(self):
         # When we don't explicitly set pty size, 'stty size' sees it as 0x0.
-        # We don't know what it *should* be (varies depending on test!) so just
-        # make the negative assertion.
+        # When we do set it, it should be some non 0x0, non 80x24 (the default)
+        # value. (yes, this means it fails if you really do have an 80x24
+        # terminal. but who does that?)
         size = run('stty size', hide=True, pty=True).stdout.strip()
         assert size != ""
         assert size != "0 0"
+        assert size != "24 80"
