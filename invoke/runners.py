@@ -458,6 +458,7 @@ class Local(Runner):
         if self.using_pty:
             if pty is None: # Encountered ImportError
                 sys.exit("You indicated pty=True, but your platform doesn't support the 'pty' module!") # noqa
+            cols, rows = self.terminal_size
             self.pid, self.parent_fd = pty.fork()
             # If we're the child process, load up the actual command in a
             # shell, just as subprocess does; this replaces our process - whose
@@ -472,7 +473,6 @@ class Local(Runner):
                 # Set pty window size based on what our own controlling
                 # terminal's window size appears to be.
                 # TODO: make subroutine?
-                cols, rows = self.terminal_size
                 winsize = struct.pack('HHHH', rows, cols, 0, 0)
                 fcntl.ioctl(sys.stdout.fileno(), termios.TIOCSWINSZ, winsize)
                 # Use execv for bare-minimum "exec w/ variable # args"
