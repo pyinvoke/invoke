@@ -394,7 +394,13 @@ class Local_(Spec):
     def _runner(self, *args, **kwargs):
         return _runner(*args, **dict(kwargs, klass=Local))
 
-    class pty_fallback:
+    class pty_and_pty_fallback:
+        @mock_pty()
+        def when_pty_True_we_use_pty_fork_and_os_exec(self):
+            "when pty=True, we use pty.fork and os.exec*"
+            self._run(_, pty=True)
+            # @mock_pty's asserts check os/pty calls for us.
+
         def warning_only_fires_once(self):
             # I.e. if implementation checks pty-ness >1 time, only one warning
             # is emitted. This is kinda implementation-specific, but...
