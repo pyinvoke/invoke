@@ -8,11 +8,16 @@ import threading
 from functools import partial
 from subprocess import Popen, PIPE
 
-# Import pty at top level so it can be mocked for tests.
+# Import some platform-specific things at top level so they can be mocked for
+# tests.
 try:
     import pty
 except ImportError:
     pty = None
+try:
+    import fcntl
+except ImportError:
+    fcntl = None
 
 from .exceptions import Failure, ThreadException, ExceptionWrapper
 from .platform import WINDOWS

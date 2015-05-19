@@ -1,6 +1,7 @@
 import os
 import re
 import sys
+import termios
 from contextlib import contextmanager
 from functools import partial, wraps
 from invoke.vendor.six import StringIO
@@ -147,12 +148,20 @@ def mock_subprocess(out='', err='', exit=0, isatty=None):
 
 def mock_pty(out='', err='', exit=0, isatty=None):
     def decorator(f):
+        # Boy this is dumb. Windoooooows >:(
+        ioctl_patch = lambda x: x
+        if not WINDOWS:
+            import fcntl
+            ioctl_patch = patch('invoke.runners.fcntl.ioctl',
+                wraps=fcntl.ioctl)
+
         @wraps(f)
         @patch('invoke.runners.pty')
         @patch('invoke.runners.os')
+        @ioctl_patch
         def wrapper(*args, **kwargs):
             args = list(args)
-            pty, os = args.pop(), args.pop()
+            pty, os, ioctl = args.pop(), args.pop(), args.pop()
             # Don't actually fork, but pretend we did & that main thread is
             # also the child (pid 0) to trigger execv call; & give 'parent fd'
             # of 1 (stdout).
@@ -176,6 +185,7 @@ def mock_pty(out='', err='', exit=0, isatty=None):
             # TODO: inject our mocks back into the tests so they can make their
             # own assertions if desired
             pty.fork.assert_called_with()
+            eq_(ioctl.call_args_list[0][0][1], termios.TIOCSWINSZ)
             for name in ('execv', 'waitpid', 'WEXITSTATUS'):
                 assert getattr(os, name).called
         return wrapper
