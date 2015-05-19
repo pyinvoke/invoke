@@ -25,7 +25,7 @@ except ImportError:
     termios = None
 
 from .exceptions import Failure, ThreadException, ExceptionWrapper
-from .platform import WINDOWS
+from .platform import WINDOWS, pty_size
 
 from .vendor import six
 
@@ -330,47 +330,6 @@ class Runner(object):
         # NOTE: fallback not used: no falling back implemented by default.
         return pty
 
-    @property
-    def terminal_size(self):
-        """
-        The size of the local controlling tty as a ``(cols, rows)`` tuple.
-
-        Defaults to 80x24 when unable to get a realistic result, such as on
-        Windows platforms or when the default stream objects in the `sys`
-        module seem to have been replaced.
-        """
-        if not WINDOWS:
-            import fcntl
-            import termios
-            import struct
-
-        default_cols, default_rows = 80, 24
-        cols, rows = default_cols, default_rows
-        if not WINDOWS and isatty(sys.stdout):
-            # We want two short unsigned integers (rows, cols)
-            fmt = 'HH'
-            # Create an empty (zeroed) buffer for ioctl to map onto. Yay for C!
-            buf = struct.pack(fmt, 0, 0)
-            # Call TIOCGWINSZ to get window size of stdout, returns our filled
-            # buffer
-            try:
-                result = fcntl.ioctl(sys.stdout.fileno(), termios.TIOCGWINSZ,
-                    buf)
-                # Unpack buffer back into Python data types. (Note: WINSZ gives
-                # us rows-by-cols, instead of cols-by-rows.)
-                rows, cols = struct.unpack(fmt, result)
-                # Fall back to defaults if TIOCGWINSZ returns unreasonable
-                # values
-                if rows == 0:
-                    rows = default_rows
-                if cols == 0:
-                    cols = default_cols
-            # Deal with e.g. sys.stdout being monkeypatched, such as in
-            # testing. Or termios not having a TIOCGWINSZ.
-            except AttributeError:
-                pass
-        return cols, rows
-
     def start(self, command):
         """
         Initiate execution of ``command``, e.g. in a subprocess.
@@ -458,7 +417,7 @@ class Local(Runner):
         if self.using_pty:
             if pty is None: # Encountered ImportError
                 sys.exit("You indicated pty=True, but your platform doesn't support the 'pty' module!") # noqa
-            cols, rows = self.terminal_size
+            cols, rows = pty_size()
             self.pid, self.parent_fd = pty.fork()
             # If we're the child process, load up the actual command in a
             # shell, just as subprocess does; this replaces our process - whose
