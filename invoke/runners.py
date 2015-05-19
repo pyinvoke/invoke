@@ -350,12 +350,12 @@ class Runner(object):
             # We want two short unsigned integers (rows, cols)
             fmt = 'HH'
             # Create an empty (zeroed) buffer for ioctl to map onto. Yay for C!
-            buffer = struct.pack(fmt, 0, 0)
+            buf = struct.pack(fmt, 0, 0)
             # Call TIOCGWINSZ to get window size of stdout, returns our filled
             # buffer
             try:
                 result = fcntl.ioctl(sys.stdout.fileno(), termios.TIOCGWINSZ,
-                    buffer)
+                    buf)
                 # Unpack buffer back into Python data types. (Note: WINSZ gives
                 # us rows-by-cols, instead of cols-by-rows.)
                 rows, cols = struct.unpack(fmt, result)
