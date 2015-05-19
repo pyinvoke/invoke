@@ -351,10 +351,11 @@ class Runner(object):
             try:
                 result = fcntl.ioctl(sys.stdout.fileno(), termios.TIOCGWINSZ,
                     buffer)
-                # Unpack buffer back into Python data types. (Note: WINSZ gives us
-                # rows-by-cols, instead of cols-by-rows.)
+                # Unpack buffer back into Python data types. (Note: WINSZ gives
+                # us rows-by-cols, instead of cols-by-rows.)
                 rows, cols = struct.unpack(fmt, result)
-                # Fall back to defaults if TIOCGWINSZ returns unreasonable values
+                # Fall back to defaults if TIOCGWINSZ returns unreasonable
+                # values
                 if rows == 0:
                     rows = default_rows
                 if cols == 0:
