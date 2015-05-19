@@ -137,7 +137,7 @@ class Runner_(Spec):
 
             @patch('sys.stdout')
             @patch('fcntl.ioctl')
-            def defaults_to_80x24_when_stdout_lacks_fileno(self, ioctl, stdout):
+            def uses_default_when_stdout_lacks_fileno(self, ioctl, stdout):
                 # i.e. when accessing it throws AttributeError
                 stdout.fileno.side_effect = AttributeError
                 eq_(self._runner().terminal_size, (80, 24))

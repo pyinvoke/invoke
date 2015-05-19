@@ -365,8 +365,8 @@ class Runner(object):
                     rows = default_rows
                 if cols == 0:
                     cols = default_cols
-            # Deal with e.g. sys.stdout being monkeypatched, such as in testing.
-            # Or termios not having a TIOCGWINSZ.
+            # Deal with e.g. sys.stdout being monkeypatched, such as in
+            # testing. Or termios not having a TIOCGWINSZ.
             except AttributeError:
                 pass
         return cols, rows
