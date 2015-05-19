@@ -173,6 +173,8 @@ def mock_pty(out='', err='', exit=0, isatty=None):
             os.read.side_effect = fakeread
             f(*args, **kwargs)
             # Sanity checks to make sure the stuff we mocked, actually got ran!
+            # TODO: inject our mocks back into the tests so they can make their
+            # own assertions if desired
             pty.fork.assert_called_with()
             for name in ('execv', 'waitpid', 'WEXITSTATUS'):
                 assert getattr(os, name).called
