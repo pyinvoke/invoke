@@ -3,6 +3,7 @@
 import codecs
 import locale
 import os
+import struct
 import sys
 import threading
 from functools import partial
@@ -18,6 +19,10 @@ try:
     import fcntl
 except ImportError:
     fcntl = None
+try:
+    import termios
+except ImportError:
+    termios = None
 
 from .exceptions import Failure, ThreadException, ExceptionWrapper
 from .platform import WINDOWS
@@ -458,6 +463,18 @@ class Local(Runner):
             # shell, just as subprocess does; this replaces our process - whose
             # pipes are all hooked up to the PTY - with the "real" one.
             if self.pid == 0:
+                # TODO: both pty.spawn() and pexpect.spawn() do a lot of
+                # setup/teardown involving tty.setraw, getrlimit, signal.
+                # Ostensibly we'll want some of that eventually, but if
+                # possible write tests - integration-level if necessary -
+                # before adding it!
+                #
+                # Set pty window size based on what our own controlling
+                # terminal's window size appears to be.
+                # TODO: make subroutine?
+                cols, rows = self.terminal_size
+                winsize = struct.pack('HHHH', rows, cols, 0, 0)
+                fcntl.ioctl(sys.stdout.fileno(), termios.TIOCSWINSZ, winsize)
                 # Use execv for bare-minimum "exec w/ variable # args"
                 # behavior. No need for the 'p' (use PATH to find executable)
                 # or 'e' (define a custom/overridden shell env) variants, for
@@ -466,11 +483,6 @@ class Local(Runner):
                 # bash for now because that's what we have been testing
                 # against.
                 # TODO: also see if subprocess is using equivalent of execvp...
-                # TODO: both pty.spawn() and pexpect.spawn() do a lot of
-                # setup/teardown involving tty.setraw, setwinsize, getrlimit,
-                # signal. Ostensibly we'll want some of that eventually, but if
-                # possible write tests - integration-level if necessary -
-                # before adding it!
                 os.execv('/bin/bash', ['/bin/bash', '-c', command])
         else:
             self.process = Popen(
