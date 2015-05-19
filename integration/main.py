@@ -108,3 +108,11 @@ class Main(Spec):
         # PTYs use \r\n, not \n, line separation
         ok_("\r\n" in result.stdout)
         eq_(result.pty, True)
+
+    def pty_size_is_not_zero(self):
+        # When we don't explicitly set pty size, 'stty size' sees it as 0x0.
+        # We don't know what it *should* be (varies depending on test!) so just
+        # make the negative assertion.
+        size = run('stty size', hide=True, pty=True).stdout.strip()
+        assert size != ""
+        assert size != "0 0"
