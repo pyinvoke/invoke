@@ -423,6 +423,9 @@ def dispatch(argv, version=None):
         return executor.execute(*tasks)
     except Failure as f:
         sys.exit(f.result.exited)
+    except KeyboardInterrupt:
+        print("*** interrupted by keyboard ***")
+        sys.exit(1)
 
 def main():
     # Parse command line
