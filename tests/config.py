@@ -60,7 +60,9 @@ class Config_(IntegrationSpec):
         @patch.object(Config, '_load_yaml')
         def configure_project_location(self, load_yaml):
             Config(project_home='someproject')
-            load_yaml.assert_has_calls([call('someproject/invoke.yaml')])
+            # Use platform-agnostic relative path for project config file.
+            project_config_file = os.path.join('someproject', 'invoke.yaml')
+            load_yaml.assert_has_calls([call(project_config_file)])
 
         @patch.object(Config, '_load_yaml')
         def configure_runtime_path(self, load_yaml):
