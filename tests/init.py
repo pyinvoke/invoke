@@ -51,6 +51,9 @@ class Init(Spec):
         def run_function(self):
             assert invoke.run # lol
 
+        def pty_size_function(self):
+            assert invoke.pty_size is invoke.platform.pty_size
+
         def local_class(self):
             assert invoke.Local is invoke.runners.Local
 
