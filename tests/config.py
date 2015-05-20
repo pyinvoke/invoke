@@ -8,6 +8,7 @@ from invoke.config import Config
 from invoke.exceptions import (
     AmbiguousEnvVar, UncastableEnvVar, UnknownFileType
 )
+from invoke.platform import DEFAULT_SYSTEM_PREFIX
 from invoke.vendor import six
 
 from _utils import IntegrationSpec
@@ -41,11 +42,10 @@ class Config_(IntegrationSpec):
             load_yaml.assert_has_calls([call('meh.yaml')])
 
         @patch.object(Config, '_load_yaml')
-        def default_system_prefix_is_etc(self, load_yaml):
-            # TODO: make this work on Windows somehow without being a total
-            # tautology? heh.
+        def default_system_prefix(self, load_yaml):
             Config()
-            load_yaml.assert_has_calls([call('/etc/invoke.yaml')])
+            system_config_file = DEFAULT_SYSTEM_PREFIX + '.yaml'
+            load_yaml.assert_has_calls([call(system_config_file)])
 
         @patch.object(Config, '_load_yaml')
         def configure_user_location_prefix(self, load_yaml):

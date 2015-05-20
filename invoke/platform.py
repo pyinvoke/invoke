@@ -15,6 +15,8 @@ doesn't need (or want!) to use PyWin32 -- so we only test for literal Win32
 setups (vanilla Python, ActiveState etc) here.
 """
 
+DEFAULT_SYSTEM_PREFIX = "C:\invoke" if WINDOWS else "/etc/invoke"
+
 
 def pty_size():
     """
