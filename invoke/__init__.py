@@ -1,13 +1,13 @@
 from ._version import __version_info__, __version__  # noqa
-from .tasks import task, ctask, Task  # noqa
 from .collection import Collection  # noqa
-from .context import Context  # noqa
 from .config import Config # noqa
+from .context import Context  # noqa
 from .exceptions import ( # noqa
     AmbiguousEnvVar, ThreadException, ParseError, CollectionNotFound, # noqa
     UnknownFileType, Exit, UncastableEnvVar, PlatformError, # noqa
 ) # noqa
 from .runners import Runner, Local, Failure # noqa
+from .tasks import task, ctask, Task  # noqa
 
 
 def run(command, **kwargs):
