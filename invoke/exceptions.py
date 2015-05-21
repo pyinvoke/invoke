@@ -6,6 +6,11 @@ exceptions used for message-passing" to simply "we needed to express an error
 condition in a way easily told apart from other, truly unexpected errors".
 """
 
+from collections import namedtuple
+from traceback import format_exception
+from pprint import pformat
+
+
 class CollectionNotFound(Exception):
     def __init__(self, name, start):
         self.name = name
@@ -23,15 +28,20 @@ class Failure(Exception):
         self.result = result
 
     def __str__(self):
+        err_label = "Stderr"
+        err_text = self.result.stderr
+        if self.result.pty:
+            err_label = "Stdout (pty=True; no stderr possible)"
+            err_text = self.result.stdout
         return """Command execution failure!
 
 Exit code: {0}
 
-Stderr:
+{1}:
 
-{1}
+{2}
 
-""".format(self.result.exited, self.result.stderr)
+""".format(self.result.exited, err_label, err_text)
 
     def __repr__(self):
         return str(self)
@@ -57,7 +67,8 @@ class PlatformError(Exception):
     """
     Raised when an illegal operation occurs for the current platform.
 
-    E.g. Windows users trying to import the ``pexpect`` module.
+    E.g. Windows users trying to use functionality requiring the ``pty``
+    module.
 
     Typically used to present a clearer error message to the user.
     """
@@ -86,3 +97,53 @@ class UnknownFileType(Exception):
     A config file of an unknown type was specified and cannot be loaded.
     """
     pass
+
+
+#: A namedtuple wrapping a thread-borne exception & that thread's arguments.
+ExceptionWrapper = namedtuple(
+    'ExceptionWrapper',
+    'kwargs type value traceback'
+)
+
+class ThreadException(Exception):
+    """
+    One or more exceptions were raised within background (usually I/O) threads.
+
+    The real underlying exceptions are stored in the `exceptions` attribute;
+    see its documentation for data structure details.
+
+    .. note::
+        Threads which did not encounter an exception, do not contribute to this
+        exception object and thus are not present inside `exceptions`.
+    """
+    #: A tuple of `ExceptionWrappers <ExceptionWrapper>` containing the initial
+    #: thread constructor kwargs (because `threading.Thread` subclasses should
+    #: always be called with kwargs) and the caught exception for that thread
+    #: as seen by `sys.exc_info` (so: type, value, traceback).
+    #:
+    #: .. note::
+    #:     The ordering of this attribute is not well-defined.
+    exceptions = tuple()
+
+    def __init__(self, exceptions):
+        self.exceptions = tuple(exceptions)
+
+    def __str__(self):
+        details = []
+        for x in self.exceptions:
+            detail = "Thread args: {0}\n\n{1}"
+            details.append(detail.format(
+                pformat(x.kwargs),
+                "\n".join(format_exception(x.type, x.value, x.traceback)),
+            ))
+        args = (
+            len(self.exceptions),
+            ", ".join(x.type.__name__ for x in self.exceptions),
+            "\n\n".join(details),
+        )
+        return """
+Saw {0} exceptions within threads ({1}):
+
+
+{2}
+""".format(*args)

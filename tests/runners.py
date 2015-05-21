@@ -1,89 +1,79 @@
-import os
+import locale
 import sys
-from functools import partial
+import types
+from invoke.vendor.six import StringIO
 
-from spec import eq_, skip, Spec, raises, ok_, trap
+from spec import Spec, trap, eq_, skip, ok_, raises
 from mock import patch, Mock
 
-from invoke import run
-from invoke.config import Config
-from invoke.context import Context
-from invoke.runners import Runner, Local
-from invoke.exceptions import Failure
-from invoke.platform import WINDOWS
+from invoke import Runner, Local, Context, Config, Failure, ThreadException
 
-from _utils import support, reset_cwd, skip_if_windows
+from _utils import mock_subprocess, mock_pty
 
 
-# Get the right platform-specific directory separator,
-# because Windows command parsing doesn't like '/'
-error_command = "{0} err.py".format(sys.executable)
+# Dummy command that will blow up if it ever truly hits a real shell.
+_ = "nope"
 
-def _run(returns=None, **kwargs):
+class Dummy(Runner):
     """
-    Create a Runner w/ retval reflecting ``returns`` & call ``run(**kwargs)``.
+    Dummy runner subclass that does minimum work required to execute run().
     """
-    # Set up return value tuple for Runner.run_direct
-    returns = returns or {}
-    returns.setdefault('exited', 0)
-    value = map(
-        lambda x: returns.get(x, None),
-        ('stdout', 'stderr', 'exited', 'exception'),
-    )
-    class MockRunner(Runner):
-        def run_direct(self, command, **kwargs):
-            return value
-    return MockRunner(Context()).run("whatever", **kwargs)
+    def start(self, command):
+        pass
+
+    def stdout_reader(self):
+        return lambda n: ""
+
+    def stderr_reader(self):
+        return lambda n: ""
+
+    def default_encoding(self):
+        return "US-ASCII"
+
+    def wait(self):
+        pass
+
+    def returncode(self):
+        return 0
 
 
-def _runner(key, config_val):
-    # Config reflecting given data
-    c = Context(config=Config(overrides={'run': {key: config_val}}))
-    # Runner w/ methods mocked for inspection (& to prevent actual subprocess)
-    r = Runner(context=c)
-    r.run_direct = Mock(return_value=("", "", 0, None))
-    r.run_direct.__name__ = 'run_direct'
-    return r
-
-def _config_check(key, config_val, kwarg_val, expected, func='run_direct'):
-    r = _runner(key=key, config_val=config_val)
-    # NOTE: mocking select_method this way means result pty info is incorrect.
-    # Doesn't matter for these tests.
-    r.select_method = Mock(return_value=r.run_direct)
-    kwargs = {}
-    if kwarg_val is not None:
-        kwargs[key] = kwarg_val
-    r.run('whatever', **{key: kwarg_val})
-    eq_(getattr(r, func).call_args[1][key], expected)
+class OhNoz(Exception):
+    pass
 
 
-# Shorthand for mocking Local.run_pty so tests run under non-pty environments
-# don't asplode.
-_patch_run_pty = patch.object(
-    Local,
-    'run_pty',
-    return_value=('', '', 0, None),
-    func_name='run_pty',
-    __name__='run_pty',
-)
+def _expect_encoding(codecs, encoding):
+    assert codecs.iterdecode.called
+    for call in codecs.iterdecode.call_args_list:
+        eq_(call[0][1], encoding)
 
-# Shorthand for mocking os.isatty
-_is_tty = patch('os.isatty', return_value=True)
-_not_tty = patch('os.isatty', return_value=False)
+def _run(*args, **kwargs):
+    klass = kwargs.pop('klass', Dummy)
+    settings = kwargs.pop('settings', {})
+    context = Context(config=Config(overrides=settings))
+    return klass(context).run(*args, **kwargs)
+
+def _runner(out='', err='', **kwargs):
+    klass = kwargs.pop('klass', Dummy)
+    runner = klass(Context(config=Config(overrides=kwargs)))
+    if 'exits' in kwargs:
+        runner.returncode = Mock(return_value=kwargs.pop('exits'))
+    out_file = StringIO(out)
+    err_file = StringIO(err)
+    def out_reader(count):
+        return out_file.read(count)
+    def err_reader(count):
+        return err_file.read(count)
+    runner.stdout_reader = lambda: out_reader
+    runner.stderr_reader = lambda: err_reader
+    return runner
 
 
-class Run(Spec):
-    "Basic run() / Context.run() behavior"
+class Runner_(Spec):
+    def _run(self, *args, **kwargs):
+        return _run(*args, **kwargs)
 
-    def setup(self):
-        os.chdir(support)
-        self.both = "echo foo && {0} bar".format(error_command)
-        self.out = "echo foo"
-        self.err = "{0} bar".format(error_command)
-        self.sub = "inv -c pty_output hide_{0}"
-
-    def teardown(self):
-        reset_cwd()
+    def _runner(self, *args, **kwargs):
+        return _runner(*args, **kwargs)
 
     class init:
         "__init__"
@@ -95,180 +85,172 @@ class Run(Spec):
         def context_instance_is_required(self):
             Runner()
 
-    class uses_context_config:
-        "Context's config values are honored"
+    class warn:
+        def honors_config(self):
+            runner = self._runner(run={'warn': True}, exits=1)
+            # Doesn't raise Failure -> all good
+            runner.run(_)
 
-        def warn(self):
-            check = partial(_config_check, key='warn', config_val='yup')
-            check(kwarg_val=None, expected='yup')
-            check(kwarg_val='nope', expected='nope')
+        def kwarg_beats_config(self):
+            runner = self._runner(run={'warn': False}, exits=1)
+            # Doesn't raise Failure -> all good
+            runner.run(_, warn=True)
 
-        def hide(self):
-            check = partial(_config_check, key='hide', config_val='stdout')
-            # NOTE: expected are post-normalized values
-            check(kwarg_val=None, expected=('out',))
-            check(kwarg_val='stderr', expected=('err',))
-
-        def pty(self):
-            check = partial(
-                _config_check, key='pty', config_val=True, func='select_method'
-            )
-            check(kwarg_val=None, expected=True)
-            check(kwarg_val=False, expected=False)
+    class hide:
+        @trap
+        def honors_config(self):
+            runner = self._runner(out='stuff', run={'hide': True})
+            r = runner.run(_)
+            eq_(r.stdout, 'stuff')
+            eq_(sys.stdout.getvalue(), '')
 
         @trap
-        def echo(self):
-            # honors default
-            r = _runner(key='echo', config_val=True)
-            r.run('whatever')
-            ok_('whatever' in sys.stdout.getvalue())
-            # kwarg overrides
+        def kwarg_beats_config(self):
+            runner = self._runner(out='stuff')
+            r = runner.run(_, hide=True)
+            eq_(r.stdout, 'stuff')
+            eq_(sys.stdout.getvalue(), '')
 
-        def fallback(self):
-            check = partial(
-                _config_check, key='fallback', config_val=True,
-                func='select_method'
-            )
-            check(kwarg_val=None, expected=True)
-            check(kwarg_val=False, expected=False)
+    class pty:
+        def pty_defaults_to_off(self):
+            eq_(self._run(_).pty, False)
 
-        def encoding(self):
-            check = partial(_config_check, key='encoding', config_val='UTF-7')
-            check(kwarg_val=None, expected='UTF-7')
-            check(kwarg_val='UTF-9', expected='UTF-9')
+        def honors_config(self):
+            runner = self._runner(run={'pty': True})
+            eq_(runner.run(_).pty, True)
+
+        def kwarg_beats_config(self):
+            runner = self._runner(run={'pty': False})
+            eq_(runner.run(_, pty=True).pty, True)
 
     class return_value:
         def return_code_in_result(self):
             """
             Result has .return_code (and .exited) containing exit code int
             """
-            r = run(self.out, hide='both')
-            eq_(r.return_code, 0)
-            eq_(r.exited, 0)
-
-        def nonzero_return_code_for_failures(self):
-            result = run("false", warn=True)
-            eq_(result.exited, 1)
-            result = run("goobypls", warn=True, hide='both')
-            expected = 1 if WINDOWS else 127
-            eq_(result.exited, expected)
-
-        def stdout_attribute_contains_stdout(self):
-            eq_(run(self.out, hide='both').stdout, 'foo\n')
-
-        def stderr_attribute_contains_stderr(self):
-            eq_(run(self.err, hide='both').stderr, 'bar\n')
+            runner = self._runner(exits=17)
+            r = runner.run(_, warn=True)
+            eq_(r.return_code, 17)
+            eq_(r.exited, 17)
 
         def ok_attr_indicates_success(self):
-            eq_(_run().ok, True)
-            eq_(_run(returns={'exited': 1}, warn=True).ok, False)
+            runner = self._runner()
+            eq_(runner.run(_).ok, True) # default dummy retval is 0
+
+        def ok_attr_indicates_failure(self):
+            runner = self._runner(exits=1)
+            eq_(runner.run(_, warn=True).ok, False)
+
+        def failed_attr_indicates_success(self):
+            runner = self._runner()
+            eq_(runner.run(_).failed, False) # default dummy retval is 0
 
         def failed_attr_indicates_failure(self):
-            eq_(_run().failed, False)
-            eq_(_run(returns={'exited': 1}, warn=True).failed, True)
-
-        def has_exception_attr(self):
-            eq_(_run().exception, None)
-
-    class failure_handling:
-        @raises(Failure)
-        def fast_failures(self):
-            run("false")
-
-        def run_acts_as_success_boolean(self):
-            ok_(not run("false", warn=True))
-            ok_(run("true"))
-
-        def non_one_return_codes_still_act_as_False(self):
-            ok_(not run("goobypls", warn=True, hide='both'))
-
-        def warn_kwarg_allows_continuing_past_failures(self):
-            eq_(run("false", warn=True).exited, 1)
-
-        def Failure_repr_includes_stderr(self):
-            try:
-                run("{0} ohnoz && exit 1".format(error_command), hide='both')
-                assert false # noqa. Ensure failure to Failure fails
-            except Failure as f:
-                r = repr(f)
-                err = "Sentinel 'ohnoz' not found in {0!r}".format(r)
-                assert 'ohnoz' in r, err
-
-    class output_controls:
-        @trap
-        def _hide_both(self, val):
-            run(self.both, hide=val)
-            eq_(sys.stdall.getvalue(), "")
-
-        def hide_both_hides_everything(self):
-            self._hide_both('both')
-
-        def hide_True_hides_everything(self):
-            self._hide_both(True)
+            runner = self._runner(exits=1)
+            eq_(runner.run(_, warn=True).failed, True)
 
         @trap
-        def hide_out_only_hides_stdout(self):
-            run(self.both, hide='out')
-            eq_(sys.stdout.getvalue().strip(), "")
-            eq_(sys.stderr.getvalue().strip(), "bar")
+        def stdout_attribute_contains_stdout(self):
+            runner = self._runner(out='foo')
+            eq_(runner.run(_).stdout, "foo")
+            eq_(sys.stdout.getvalue(), "foo")
 
         @trap
-        def hide_err_only_hides_stderr(self):
-            run(self.both, hide='err')
-            eq_(sys.stdout.getvalue().strip(), "foo")
-            eq_(sys.stderr.getvalue().strip(), "")
+        def stderr_attribute_contains_stderr(self):
+            runner = self._runner(err='foo')
+            eq_(runner.run(_).stderr, "foo")
+            eq_(sys.stderr.getvalue(), "foo")
+
+        def whether_pty_was_used(self):
+            eq_(self._run(_).pty, False)
+            eq_(self._run(_, pty=True).pty, True)
+
+    class echoing:
+        @trap
+        def off_by_default(self):
+            self._run("my command")
+            eq_(sys.stdout.getvalue(), "")
 
         @trap
-        def hide_accepts_stderr_alias_for_err(self):
-            run(self.both, hide='stderr')
-            eq_(sys.stdout.getvalue().strip(), "foo")
-            eq_(sys.stderr.getvalue().strip(), "")
+        def enabled_via_kwarg(self):
+            self._run("my command", echo=True)
+            ok_("my command" in sys.stdout.getvalue())
 
         @trap
-        def hide_accepts_stdout_alias_for_out(self):
-            run(self.both, hide='stdout')
-            eq_(sys.stdout.getvalue().strip(), "")
-            eq_(sys.stderr.getvalue().strip(), "bar")
-
-        @skip_if_windows
-        def hide_both_hides_both_under_pty(self):
-            r = run(self.sub.format('both', hide='both'))
-            eq_(r.stdout, "")
-            eq_(r.stderr, "")
-
-        @skip_if_windows
-        def hide_out_hides_both_under_pty(self):
-            r = run(self.sub.format('out', hide='both'))
-            eq_(r.stdout, "")
-            eq_(r.stderr, "")
-
-        @skip_if_windows
-        @trap
-        def hide_err_has_no_effect_under_pty(self):
-            r = run(self.sub.format('err', hide='both'))
-            eq_(r.stdout, "foo\r\nbar\r\n")
-            eq_(r.stderr, "")
+        def enabled_via_config(self):
+            self._run("yup", settings={'run': {'echo': True}})
+            ok_("yup" in sys.stdout.getvalue())
 
         @trap
-        def _no_hiding(self, val):
-            run(self.both, hide=val)
-            eq_(sys.stdout.getvalue().strip(), "foo")
-            eq_(sys.stderr.getvalue().strip(), "bar")
+        def kwarg_beats_config(self):
+            self._run("yup", echo=True, settings={'run': {'echo': False}})
+            ok_("yup" in sys.stdout.getvalue())
 
-        def hide_None_hides_nothing(self):
-            self._no_hiding(None)
+        @trap
+        def uses_ansi_bold(self):
+            self._run("my command", echo=True)
+            # TODO: vendor & use a color module
+            eq_(sys.stdout.getvalue(), "\x1b[1;37mmy command\x1b[0m\n")
 
-        def hide_False_hides_nothing(self):
-            self._no_hiding(False)
+    class encoding:
+        # Use UTF-7 as a valid encoding unlikely to be a real default
+        def defaults_to_encoding_method_result(self):
+            runner = self._runner()
+            encoding = 'UTF-7'
+            runner.default_encoding = Mock(return_value=encoding)
+            with patch('invoke.runners.codecs') as codecs:
+                runner.run(_)
+                runner.default_encoding.assert_called_with()
+                _expect_encoding(codecs, encoding)
+
+        def honors_config(self):
+            with patch('invoke.runners.codecs') as codecs:
+                c = Context(Config(overrides={'run': {'encoding': 'UTF-7'}}))
+                Dummy(c).run(_)
+                _expect_encoding(codecs, 'UTF-7')
+
+        def honors_kwarg(self):
+            skip()
+
+    class output_hiding:
+        @trap
+        def _expect_hidden(self, hide, expect_out="", expect_err=""):
+            self._runner(out='foo', err='bar').run(_, hide=hide)
+            eq_(sys.stdout.getvalue(), expect_out)
+            eq_(sys.stderr.getvalue(), expect_err)
+
+        def both_hides_everything(self):
+            self._expect_hidden('both')
+
+        def True_hides_everything(self):
+            self._expect_hidden(True)
+
+        def out_only_hides_stdout(self):
+            self._expect_hidden('out', expect_out="", expect_err="bar")
+
+        def err_only_hides_stderr(self):
+            self._expect_hidden('err', expect_out="foo", expect_err="")
+
+        def accepts_stdout_alias_for_out(self):
+            self._expect_hidden('stdout', expect_out="", expect_err="bar")
+
+        def accepts_stderr_alias_for_err(self):
+            self._expect_hidden('stderr', expect_out="foo", expect_err="")
+
+        def None_hides_nothing(self):
+            self._expect_hidden(None, expect_out="foo", expect_err="bar")
+
+        def False_hides_nothing(self):
+            self._expect_hidden(False, expect_out="foo", expect_err="bar")
 
         @raises(ValueError)
-        def hide_unknown_vals_raises_ValueError(self):
-            run("command", hide="what")
+        def unknown_vals_raises_ValueError(self):
+            self._run(_, hide="wat?")
 
-        def hide_unknown_vals_mention_value_given_in_error(self):
+        def unknown_vals_mention_value_given_in_error(self):
             value = "penguinmints"
             try:
-                run("command", hide=value)
+                self._run(_, hide=value)
             except ValueError as e:
                 msg = "Error from run(hide=xxx) did not tell user what the bad value was!" # noqa
                 msg += "\nException msg: {0}".format(e)
@@ -276,118 +258,148 @@ class Run(Spec):
             else:
                 assert False, "run() did not raise ValueError for bad hide= value" # noqa
 
-        def hide_does_not_affect_capturing(self):
-            eq_(run(self.out, hide='both').stdout, 'foo\n')
+        def does_not_affect_capturing(self):
+            eq_(self._runner(out='foo').run(_, hide=True).stdout, 'foo')
 
-    class pseudo_terminals:
+    class output_stream_overrides:
         @trap
-        def return_value_indicates_whether_pty_was_used(self, *mocks):
-            eq_(run("true").pty, False)
-            if not WINDOWS:
-                eq_(run("true", pty=True).pty, True)
+        def out_defaults_to_sys_stdout(self):
+            "out_stream defaults to sys.stdout"
+            self._runner(out="sup").run(_)
+            eq_(sys.stdout.getvalue(), "sup")
 
-        def pty_defaults_to_off(self):
-            eq_(run("true").pty, False)
-
-        @skip_if_windows # Not sure how to make this work on Windows
-        def complex_nesting_doesnt_break(self):
-            # GH issue 191
-            substr = "      hello\t\t\nworld with spaces"
-            cmd = """ eval 'echo "{0}" ' """.format(substr)
-            # TODO: consider just mocking os.execv here (and in the other
-            # tests) though that feels like too much of a tautology / testing
-            # pexpect
-            expected = '      hello\t\t\r\nworld with spaces\r\n'
-            eq_(run(cmd, pty=True, hide='both').stdout, expected)
-
-        @_not_tty
         @trap
-        def pty_falls_back_to_off_if_True_and_not_isatty(self, *mocks):
-            if WINDOWS:
-                # Straight up "it shouldn't kaboom, it should fall back"
-                run("true", pty=True)
+        def err_defaults_to_sys_stderr(self):
+            "err_stream defaults to sys.stderr"
+            self._runner(err="sup").run(_)
+            eq_(sys.stderr.getvalue(), "sup")
+
+        @trap
+        def out_can_be_overridden(self):
+            "out_stream can be overridden"
+            out = StringIO()
+            self._runner(out="sup").run(_, out_stream=out)
+            eq_(out.getvalue(), "sup")
+            eq_(sys.stdout.getvalue(), "")
+
+        @trap
+        def err_can_be_overridden(self):
+            "err_stream can be overridden"
+            err = StringIO()
+            self._runner(err="sup").run(_, err_stream=err)
+            eq_(err.getvalue(), "sup")
+            eq_(sys.stderr.getvalue(), "")
+
+        @trap
+        def pty_defaults_to_sys(self):
+            self._runner(out="sup").run(_, pty=True)
+            eq_(sys.stdout.getvalue(), "sup")
+
+        @trap
+        def pty_out_can_be_overridden(self):
+            out = StringIO()
+            self._runner(out="yo").run(_, pty=True, out_stream=out)
+            eq_(out.getvalue(), "yo")
+            eq_(sys.stdout.getvalue(), "")
+
+    class failure_handling:
+        @raises(Failure)
+        def fast_failures(self):
+            self._runner(exits=1).run(_)
+
+        def non_one_return_codes_still_act_as_failure(self):
+            r = self._runner(exits=17).run(_, warn=True)
+            eq_(r.failed, True)
+
+        def Failure_repr_includes_stderr(self):
+            try:
+                self._runner(exits=1, err="ohnoz").run(_, hide=True)
+                assert false # noqa. Ensure failure to Failure fails
+            except Failure as f:
+                r = repr(f)
+                err = "Sentinel 'ohnoz' not found in {0!r}".format(r)
+                assert 'ohnoz' in r, err
+
+        def Failure_repr_should_present_stdout_when_pty_was_used(self):
+            try:
+                # NOTE: using mocked stdout because that's what ptys do as
+                # well. when pty=True, nothing's even trying to read stderr.
+                self._runner(exits=1, out="ohnoz").run(_, hide=True, pty=True)
+                assert false # noqa. Ensure failure to Failure fails
+            except Failure as f:
+                r = repr(f)
+                err = "Sentinel 'ohnoz' not found in {0!r}".format(r)
+                assert 'ohnoz' in r, err
+
+    class threading:
+        def errors_within_io_thread_body_bubble_up(self):
+            class Oops(Dummy):
+                def io(self, reader, output, buffer_, hide):
+                    raise OhNoz()
+
+            runner = Oops(Context())
+            try:
+                runner.run("nah")
+            except ThreadException as e:
+                # Expect two separate OhNoz objects on 'e'
+                eq_(len(e.exceptions), 2)
+                for tup in e.exceptions:
+                    ok_(isinstance(tup.value, OhNoz))
+                    ok_(isinstance(tup.traceback, types.TracebackType))
+                    eq_(tup.type, OhNoz)
+                # TODO: test the arguments part of the tuple too. It's pretty
+                # implementation-specific, though, so possibly not worthwhile.
             else:
-                # Force termios to kaboom to trigger fallback
-                import termios
-                with patch('tty.tcgetattr', side_effect=termios.error):
-                    run("true", pty=True)
-
-        @_not_tty
-        @trap
-        def fallback_affects_result_pty_value(self, *mocks):
-            eq_(run("true", pty=True).pty, False)
-
-        @_not_tty
-        @_patch_run_pty
-        def fallback_can_be_overridden(self, run_pty, isatty):
-            run("true", pty=True, fallback=False)
-            assert run_pty.called
-
-        # Force our test for pty-ness to fail
-        @_not_tty
-        @_patch_run_pty
-        def overridden_fallback_affects_result_pty_value(self, *mocks):
-            eq_(run("true", pty=True, fallback=False).pty, True)
-
-    class command_echo:
-        @trap
-        def does_not_echo_commands_run_by_default(self):
-            run("echo hi")
-            eq_(sys.stdout.getvalue().strip(), "hi")
-
-        @trap
-        def when_echo_True_commands_echoed_in_bold(self):
-            run("echo hi", echo=True)
-            expected = "\033[1;37mecho hi\033[0m\nhi"
-            eq_(sys.stdout.getvalue().strip(), expected)
-
-    #
-    # Random edge/corner case junk
-    #
-
-    def non_stupid_OSErrors_get_captured(self):
-        # Somehow trigger an OSError saying "Input/output error" within
-        # pexpect.spawn().interact() & assert it is in result.exception
-        skip()
-
-    def KeyboardInterrupt_on_stdin_doesnt_flake(self):
-        # E.g. inv test => Ctrl-C halfway => shouldn't get buffer API errors
-        skip()
-
-    class funky_characters_in_stdout:
-        def basic_nonstandard_characters(self):
-            # Crummy "doesn't explode with decode errors" test
-            if WINDOWS:
-                cmd = "type tree.out"
-            else:
-                cmd = "cat tree.out"
-            run(cmd, hide='both')
-
-        def nonprinting_bytes(self):
-            # Seriously non-printing characters (i.e. non UTF8) also don't
-            # asplode
-            run("echo '\xff'", hide='both')
-
-        @skip_if_windows
-        def nonprinting_bytes_pty(self):
-            # PTY use adds another utf-8 decode spot which can also fail.
-            run("echo '\xff'", pty=True, hide='both')
+                assert False, "Did not raise ThreadException as expected!"
 
 
 class Local_(Spec):
-    def setup(self):
-        os.chdir(support)
-        self.both = "echo foo && {0} bar".format(error_command)
+    def _run(self, *args, **kwargs):
+        return _run(*args, **dict(kwargs, klass=Local))
 
-    def teardown(self):
-        reset_cwd()
+    def _runner(self, *args, **kwargs):
+        return _runner(*args, **dict(kwargs, klass=Local))
 
-    @skip_if_windows
-    def stdout_contains_both_streams_under_pty(self):
-        r = run(self.both, hide='both', pty=True)
-        eq_(r.stdout, 'foo\r\nbar\r\n')
+    class pty_fallback:
+        def warning_only_fires_once(self):
+            # I.e. if implementation checks pty-ness >1 time, only one warning
+            # is emitted. This is kinda implementation-specific, but...
+            skip()
 
-    @skip_if_windows
-    def stderr_is_empty_under_pty(self):
-        r = run(self.both, hide='both', pty=True)
-        eq_(r.stderr, '')
+        @mock_pty(isatty=False)
+        def can_be_overridden_by_kwarg(self):
+            self._run(_, pty=True, fallback=False)
+            # @mock_pty's asserts will be mad if pty-related os/pty calls
+            # didn't fire, so we're done.
+
+        @mock_pty(isatty=False)
+        def can_be_overridden_by_config(self):
+            self._runner(run={'fallback': False}).run(_, pty=True)
+            # @mock_pty's asserts will be mad if pty-related os/pty calls
+            # didn't fire, so we're done.
+
+        @trap
+        @mock_subprocess(isatty=False)
+        def fallback_affects_result_pty_value(self, *mocks):
+            eq_(self._run(_, pty=True).pty, False)
+
+        @mock_pty(isatty=False)
+        def overridden_fallback_affects_result_pty_value(self):
+            eq_(self._run(_, pty=True, fallback=False).pty, True)
+
+        @patch('invoke.runners.sys')
+        def replaced_stdin_objects_dont_explode(self, mock_sys):
+            # Replace sys.stdin with an object lacking .fileno(), which
+            # normally causes an AttributeError unless we are being careful.
+            mock_sys.stdin = object()
+            # Test. If bug is present, this will error.
+            runner = Local(Context())
+            eq_(runner.should_use_pty(pty=True, fallback=True), False)
+
+    class encoding:
+        @mock_subprocess
+        def uses_locale_module_for_desired_encoding(self):
+            with patch('invoke.runners.codecs') as codecs:
+                self._run(_)
+                local_encoding = locale.getpreferredencoding(False)
+                _expect_encoding(codecs, local_encoding)

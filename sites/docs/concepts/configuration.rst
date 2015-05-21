@@ -80,24 +80,9 @@ For convenience, we refer to nested setting names with a dotted syntax, so e.g.
     also be overridden at runtime via :option:`--no-dedupe`.
 
 * The ``run`` tree controls the behavior of `.Runner.run`. Each member of this
-  tree maps directly to a `.Runner.run` keyword argument of the same name; see
-  its docstring for details.
-
-    * ``run.echo``: Controls echoing of commands; defaults to ``False``. CLI
-      flag: :option:`-e`.
-    * ``run.hide``: Determines whether stdout/err are hidden; defaults to
-      ``None``. CLI flag: :option:`-H`.
-    * ``run.pty``: Whether to use a pseudo-terminal during command execution;
-      defaults to ``False``. CLI flag: :option:`-p`.
-    * ``run.fallback``: Whether to fall back to non-pseudo-terminal allocation
-      when allocating one appears impossible; defaults to ``True``.  No CLI
-      flag.
-    * ``run.warn``: Controls 'warn vs abort' behavior; defaults to ``False``.
-      CLI flag: :option:`-w`.
-    * ``run.encoding``: Which encoding to use when communicating with
-      subprocesses; defaults to ``None`` (but see `.Runner.run` for details
-      on what this means). No CLI flag.
-
+  tree (such as e.g. ``run.echo`` or ``run.pty``) maps directly to a
+  `.Runner.run` keyword argument of the same name; see that method's docstring
+  for details on what these settings do & what their default values are.
 * A top level config setting, ``debug``, controls whether debug-level output is
   logged; it defaults to ``False``.
   

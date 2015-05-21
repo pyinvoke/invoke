@@ -163,7 +163,8 @@ class Collection(object):
                 # TODO: make this into Collection.clone() or similar
                 # Explicitly given name wins over root ns name which wins over
                 # actual module name.
-                ret = Collection(name or obj.name or module_name)
+                ret = Collection(name or obj.name or module_name,
+                                 loaded_from=loaded_from)
                 ret.tasks = copy.deepcopy(obj.tasks)
                 ret.collections = copy.deepcopy(obj.collections)
                 ret.default = copy.deepcopy(obj.default)

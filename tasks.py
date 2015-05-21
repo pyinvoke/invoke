@@ -1,28 +1,12 @@
-import os
 import sys
-import shutil
 import time
 
 from invocations.docs import docs, www
-from invocations.testing import test
+from invocations.testing import test, coverage as _coverage
 from invocations.packaging import vendorize, release
 
 from invoke import ctask as task, Collection, Context
 
-
-@task
-def vendorize_pexpect(ctx, version):
-    target = 'invoke/vendor'
-    package = 'pexpect'
-    vendorize(
-        distribution="pexpect-u",
-        package=package,
-        version=version,
-        vendor_dir=target,
-        license='LICENSE', # TODO: autodetect this in vendorize
-    )
-    # Nuke test dir inside package hrrgh
-    shutil.rmtree(os.path.join(target, package, 'tests'))
 
 @task(help=test.help)
 def integration(c, module=None, runner=None, opts=None):
@@ -104,7 +88,12 @@ def watch(c):
     observer.join()
 
 
+# TODO: allow functools.partial objects to work as tasks? hrm
+@task
+def coverage(c):
+    _coverage(c, package='invoke')
+
+
 ns = Collection(
-    test, integration, vendorize, release, www, docs, sites, vendorize_pexpect,
-    watch
+    test, coverage, integration, vendorize, release, www, docs, sites, watch
 )
