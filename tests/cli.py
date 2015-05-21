@@ -169,7 +169,7 @@ Options:
 """.lstrip()
             _output_eq('-c decorator -h foo2', expected)
 
-        def per_task_help_dedents_correctly_for_alternate_docstring_style(self):
+        def per_task_help_dedents_correctly_for_alt_docstring_style(self):
             expected = """
 Usage: inv[oke] [--core-opts] foo3 [other tasks here ...]
 
