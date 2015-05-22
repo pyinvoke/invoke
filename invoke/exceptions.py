@@ -10,6 +10,8 @@ from collections import namedtuple
 from traceback import format_exception
 from pprint import pformat
 
+from .vendor import six
+
 
 class CollectionNotFound(Exception):
     def __init__(self, name, start):
@@ -105,6 +107,27 @@ ExceptionWrapper = namedtuple(
     'kwargs type value traceback'
 )
 
+def _printable_kwargs(kwargs):
+    """
+    Return print-friendly version of a thread-related ``kwargs`` dict.
+
+    Extra care is taken with ``args`` members which are very long iterables -
+    those need truncating to be useful.
+    """
+    printable = {}
+    for key, value in six.iteritems(kwargs):
+        item = value
+        if key == 'args':
+            item = []
+            for arg in value:
+                new_arg = arg
+                if hasattr(arg, '__len__'):
+                    msg = "<... remainder truncated during error display ...>"
+                    new_arg = arg[:10] + [msg]
+                item.append(new_arg)
+        printable[key] = item
+    return printable
+
 class ThreadException(Exception):
     """
     One or more exceptions were raised within background (usually I/O) threads.
@@ -123,6 +146,11 @@ class ThreadException(Exception):
     #:
     #: .. note::
     #:     The ordering of this attribute is not well-defined.
+    #:
+    #: .. note::
+    #:     Thread kwargs which appear to be very long (e.g. IO
+    #:     buffers) will be truncated when printed, to avoid huge
+    #:     unreadable error display.
     exceptions = tuple()
 
     def __init__(self, exceptions):
@@ -131,9 +159,10 @@ class ThreadException(Exception):
     def __str__(self):
         details = []
         for x in self.exceptions:
+            # Build useful display
             detail = "Thread args: {0}\n\n{1}"
             details.append(detail.format(
-                pformat(x.kwargs),
+                pformat(_printable_kwargs(x.kwargs)),
                 "\n".join(format_exception(x.type, x.value, x.traceback)),
             ))
         args = (
