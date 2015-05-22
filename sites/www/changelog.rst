@@ -2,6 +2,9 @@
 Changelog
 =========
 
+* :feature:`-` Detect local controlling terminal size
+  (`~invoke.utils.pty_size`) and apply that information when creating
+  pseudoterminals in `~invoke.run` when ``pty=True``.
 * :bug:`- major` Display stdout instead of stderr in the ``repr()`` of
   `~invoke.exceptions.Failure` objects, when a pseudo-terminal was used.
   Previously, failure display focused on the stderr stream, which is always
