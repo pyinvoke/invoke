@@ -121,7 +121,7 @@ def _printable_kwargs(kwargs):
             item = []
             for arg in value:
                 new_arg = arg
-                if hasattr(arg, '__len__'):
+                if hasattr(arg, '__len__') and len(arg) > 10:
                     msg = "<... remainder truncated during error display ...>"
                     new_arg = arg[:10] + [msg]
                 item.append(new_arg)
