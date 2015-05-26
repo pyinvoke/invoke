@@ -406,7 +406,19 @@ class Local(Runner):
 
     def stdout_reader(self):
         if self.using_pty:
-            return partial(os.read, self.parent_fd)
+            # Need to handle spurious OSErrors on some Linux platforms.
+            def reader(num_bytes):
+                try:
+                    return os.read(self.parent_fd, num_bytes)
+                except OSError as e:
+                    # Only eat this specific OSError so we don't hide others
+                    if "Input/output error" not in e:
+                        raise
+                    # The bad OSErrors happen after all expected output has
+                    # appeared, so we return a falsey value, which triggers the
+                    # "end of output" logic in code using reader functions.
+                    return None
+            return reader
         else:
             return partial(os.read, self.process.stdout.fileno())
 
