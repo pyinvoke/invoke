@@ -412,7 +412,7 @@ class Local(Runner):
                     return os.read(self.parent_fd, num_bytes)
                 except OSError as e:
                     # Only eat this specific OSError so we don't hide others
-                    if "Input/output error" not in e:
+                    if "Input/output error" not in str(e):
                         raise
                     # The bad OSErrors happen after all expected output has
                     # appeared, so we return a falsey value, which triggers the
