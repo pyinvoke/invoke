@@ -146,7 +146,7 @@ def mock_subprocess(out='', err='', exit=0, isatty=None):
     return decorator
 
 
-def mock_pty(out='', err='', exit=0, isatty=None):
+def mock_pty(out='', err='', exit=0, isatty=None, trailing_error=None):
     def decorator(f):
         # Boy this is dumb. Windoooooows >:(
         ioctl_patch = lambda x: x
@@ -178,9 +178,16 @@ def mock_pty(out='', err='', exit=0, isatty=None):
             err_file = StringIO(err)
             def fakeread(fileno, count):
                 fd = {1: out_file, 2: err_file}[fileno]
-                return fd.read(count)
+                ret = fd.read(count)
+                # If asked, fake a Linux-platform trailing I/O error.
+                if not ret and trailing_error:
+                    raise trailing_error
+                return ret
             os.read.side_effect = fakeread
             f(*args, **kwargs)
+            # Short-circuit if we raised an error in fakeread()
+            if trailing_error:
+                return
             # Sanity checks to make sure the stuff we mocked, actually got ran!
             # TODO: inject our mocks back into the tests so they can make their
             # own assertions if desired

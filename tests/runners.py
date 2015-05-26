@@ -407,6 +407,20 @@ class Local_(Spec):
             runner = Local(Context())
             eq_(runner.should_use_pty(pty=True, fallback=True), False)
 
+        @mock_pty(trailing_error=OSError("Input/output error"))
+        def spurious_OSErrors_handled_gracefully(self):
+            # Doesn't-blow-up test.
+            self._run(_, pty=True)
+
+        @mock_pty(trailing_error=OSError("wat"))
+        def non_spurious_OSErrors_bubble_up(self):
+            try:
+                self._run(_, pty=True)
+            except ThreadException as e:
+                e = e.exceptions[0]
+                eq_(e.type, OSError)
+                eq_(str(e.value), "wat")
+
     class encoding:
         @mock_subprocess
         def uses_locale_module_for_desired_encoding(self):
