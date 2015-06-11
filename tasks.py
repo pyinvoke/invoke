@@ -2,7 +2,7 @@ import sys
 import time
 
 from invocations.docs import docs, www
-from invocations.testing import test, coverage as _coverage
+from invocations.testing import test, coverage
 from invocations.packaging import vendorize, release
 
 from invoke import ctask as task, Collection, Context
@@ -88,12 +88,7 @@ def watch(c):
     observer.join()
 
 
-# TODO: allow functools.partial objects to work as tasks? hrm
-@task
-def coverage(c):
-    _coverage(c, package='invoke')
-
-
 ns = Collection(
     test, coverage, integration, vendorize, release, www, docs, sites, watch
 )
+ns.configure({'coverage': {'package': 'invoke'}})
