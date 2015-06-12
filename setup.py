@@ -3,12 +3,22 @@
 # Support setuptools only, distutils has a divergent and more annoying API and
 # few folks will lack setuptools.
 from setuptools import setup, find_packages
+import sys
 
 # Version info -- read without importing
 _locals = {}
 with open('invoke/_version.py') as fp:
     exec(fp.read(), None, _locals)
 version = _locals['__version__']
+
+# select yaml package depending on pip
+PY2 = sys.version_info[0] == 2
+PY3 = sys.version_info[0] == 3
+exclude = []
+if PY3:
+    exclude.append('*.yaml2')
+else:
+    exclude.append('*.yaml3')
 
 # Frankenstein long_description: version-specific changelog note + README
 long_description = """
@@ -29,7 +39,7 @@ setup(
     author_email='jeff@bitprophet.org',
     url='http://docs.pyinvoke.org',
 
-    packages=find_packages(),
+    packages=find_packages(exclude=exclude),
     entry_points={
         'console_scripts': [
             'invoke = invoke.cli:main',
