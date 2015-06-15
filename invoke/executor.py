@@ -58,8 +58,12 @@ class Executor(object):
                 task2(arg1='val1')
 
         :returns:
-            A dict mapping task objects to their return values. This may
-            include pre- and post-tasks if any were executed.
+            A dict mapping task objects to their return values.
+
+            This dict may include pre- and post-tasks if any were executed. For
+            example, in a collection with a ``build`` task depending on another
+            task named ``setup``, executing ``build`` will result in a dict
+            with two keys, one for ``build`` and one for ``setup``.
         """
         # Handle top level kwargs (the name gets overwritten below)
         # Normalize input
