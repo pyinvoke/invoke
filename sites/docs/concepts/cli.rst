@@ -10,9 +10,7 @@ how it bridges command-line semantics with Python function calls.
     usage information.
 
 .. toctree::
-    :glob:
     :maxdepth: 1
 
     cli/intro
     cli/background
-    cli/type_mapping
