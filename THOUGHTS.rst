@@ -87,6 +87,15 @@ obviously easy/the default. What else is there?
 Parameterizing tasks
 ====================
 
+Old "previous example" (at time the below was split out of live docs, the
+actual previous example had been changed a lot and no longer applied)::
+
+    $ invoke test --module=foo test --module=bar
+    Cleaning
+    Testing foo
+    Cleaning
+    Testing bar
+
 The previous example had a bit of duplication in how it was invoked; an
 intermediate use case is to bundle up that sort of parameterization into a
 "meta" task that itself invokes other tasks in a parameterized fashion.
