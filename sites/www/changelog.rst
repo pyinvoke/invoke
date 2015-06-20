@@ -2,6 +2,8 @@
 Changelog
 =========
 
+* :feature:`-` Create `invoke.runners.Result.command` to preserve the command
+  executed for post-execution introspection.
 * :feature:`-` Detect local controlling terminal size
   (`~invoke.platform.pty_size`) and apply that information when creating
   pseudoterminals in `~invoke.run` when ``pty=True``.
