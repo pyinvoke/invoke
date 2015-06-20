@@ -492,27 +492,25 @@ class Result(object):
     """
     A container for information about the result of a command execution.
 
-    `Result` instances have the following attributes:
+    See individual attribute/method documentation below for details.
 
-    * ``stdout``: The subprocess' standard output, as a multiline string.
-    * ``stderr``: Same as ``stdout`` but containing standard error (unless
-      the process was invoked via a pty; see `.Runner.run`.)
-    * ``exited``: An integer representing the subprocess' exit/return code.
-    * ``return_code``: An alias to ``exited``.
-    * ``ok``: A boolean equivalent to ``exited == 0``.
-    * ``failed``: The inverse of ``ok``: ``True`` if the program exited with a
-      nonzero return code.
-    * ``pty``: A boolean describing whether the subprocess was invoked with a
-      pty or not; see `.Runner.run`.
-
-    `Result` objects' truth evaluation is equivalent to their ``ok``
-    attribute's value.
+    .. note::
+        `Result` objects' truth evaluation is equivalent to their `.ok`
+        attribute's value.
     """
     # TODO: inherit from namedtuple instead? heh
     def __init__(self, stdout, stderr, exited, pty):
-        self.exited = self.return_code = exited
+        #: An integer representing the subprocess' exit/return code.
+        self.exited = exited
+        #: An alias for `.exited`.
+        self.return_code = exited
+        #: The subprocess' standard output, as a multiline string.
         self.stdout = stdout
+        #: Same as `.stdout` but containing standard error (unless the process
+        #: was invoked via a pty; see `.Runner.run`.)
         self.stderr = stderr
+        #: A boolean describing whether the subprocess was invoked with a pty
+        #: or not; see `.Runner.run`.
         self.pty = pty
 
     def __nonzero__(self):
@@ -534,8 +532,17 @@ class Result(object):
 
     @property
     def ok(self):
+        """
+        A boolean equivalent to ``exited == 0``.
+        """
         return self.exited == 0
 
     @property
     def failed(self):
+        """
+        The inverse of ``ok``.
+
+        I.e., ``True`` if the program exited with a nonzero return code, and
+        ``False`` otherwise.
+        """
         return not self.ok
