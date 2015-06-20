@@ -165,6 +165,9 @@ class Runner_(Spec):
             eq_(self._run(_).pty, False)
             eq_(self._run(_, pty=True).pty, True)
 
+        def command_executed(self):
+            eq_(self._run(_).command, _)
+
     class echoing:
         @trap
         def off_by_default(self):

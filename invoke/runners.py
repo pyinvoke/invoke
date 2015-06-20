@@ -273,6 +273,7 @@ class Runner(object):
         exited = self.returncode()
         # Return, or raise as failure, our final result
         result = Result(
+            command=command,
             stdout=stdout,
             stderr=stderr,
             exited=exited,
@@ -499,7 +500,9 @@ class Result(object):
         attribute's value.
     """
     # TODO: inherit from namedtuple instead? heh
-    def __init__(self, stdout, stderr, exited, pty):
+    def __init__(self, command, stdout, stderr, exited, pty):
+        #: The command which was executed.
+        self.command = command
         #: An integer representing the subprocess' exit/return code.
         self.exited = exited
         #: An alias for `.exited`.
