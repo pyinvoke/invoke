@@ -70,3 +70,6 @@ class Init(Spec):
                     top_level = getattr(invoke, obj.__name__)
                     real = getattr(invoke.exceptions, obj.__name__)
                     assert top_level is real
+
+        def runner_result(self):
+            assert invoke.Result is invoke.runners.Result
