@@ -497,7 +497,13 @@ class Result(object):
 
     .. note::
         `Result` objects' truth evaluation is equivalent to their `.ok`
-        attribute's value.
+        attribute's value. Therefore, quick-and-dirty expressions like the
+        following are possible::
+
+            if run("some shell command"):
+                do_something()
+            else:
+                handle_problem()
     """
     # TODO: inherit from namedtuple instead? heh
     def __init__(self, command, stdout, stderr, exited, pty):
