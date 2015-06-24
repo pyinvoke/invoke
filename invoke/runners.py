@@ -123,7 +123,7 @@ class Runner(object):
 
     def run(self, command, **kwargs):
         """
-        Execute ``command``, returning a `Result` object.
+        Execute ``command``, returning an instance of `Result`.
 
         .. note::
             All kwargs will default to the values found in this instance's
@@ -190,7 +190,8 @@ class Runner(object):
             Same as ``out_stream``, except for standard error, and defaulting
             to ``sys.stderr``.
 
-        :returns: `Result`
+        :returns:
+            `Result`, or a subclass thereof.
 
         :raises: `.Failure` (if the command exited nonzero & ``warn=False``)
 
@@ -272,7 +273,7 @@ class Runner(object):
         # Get return/exit code
         exited = self.returncode()
         # Return, or raise as failure, our final result
-        result = Result(
+        result = self.generate_result(
             command=command,
             stdout=stdout,
             stderr=stderr,
@@ -282,6 +283,16 @@ class Runner(object):
         if not (result or opts['warn']):
             raise Failure(result)
         return result
+
+    def generate_result(self, **kwargs):
+        """
+        Create & return a suitable `Result` instance from the given ``kwargs``.
+
+        Subclasses may wish to override this in order to manipulate things or
+        generate a `Result` subclass (e.g. ones containing additional metadata
+        besides the default).
+        """
+        return Result(**kwargs)
 
     def io(self, reader, output, buffer_, hide):
         """
