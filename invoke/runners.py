@@ -176,7 +176,7 @@ class Runner(object):
             Controls whether `.run` prints the command string to local stdout
             prior to executing it. Default: ``False``.
 
-        :param str default_encoding:
+        :param str encoding:
             Override auto-detection of which encoding the subprocess is using
             for its stdout/stderr streams (which defaults to the return value
             of `default_encoding`).
