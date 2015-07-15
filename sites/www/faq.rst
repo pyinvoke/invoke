@@ -103,6 +103,7 @@ loading the inner Python module directly in your Invoke-using code, and call
 whichever methods its command-line stub is using - instead of using
 `~invoke.run`. This can often have other benefits too.
 
+
 Why is my command behaving differently under Invoke versus being run by hand?
 -----------------------------------------------------------------------------
 
@@ -127,3 +128,15 @@ either way.
 
 For use cases which don't care, direct invocation without a pseudo-terminal is
 faster & cleaner, so it is the default.
+
+
+Everything just exits silently after I run a command!
+-----------------------------------------------------
+
+Double check the command's exit code! By default, any nonzero exit code results
+in Invoke halting execution & exiting with that same exit code. Some programs
+(pylint, Nagios check scripts, etc) use exit codes to indicate non-fatal
+status, which can be confusing.
+
+The solution here is simple: add ``warn=True`` to your `~invoke.run` call,
+which disables the automatic exit behavior.
