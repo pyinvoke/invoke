@@ -325,7 +325,18 @@ class Runner(object):
         # Decode stream using our generator & requested encoding
         for data in codecs.iterdecode(get(), self.encoding, errors='replace'):
             if not hide:
-                output.write(data)
+                # Workaround for the bug http://bugs.python.org/issue4947
+                # which affects Python 2.6 by ensuring that we encode to
+                # bytes when writing to any file stream
+                if (
+                    sys.version_info < (2, 7) and
+                    # We can't use isinstance because the file type doesn't
+                    # exist in Python 3.x and causes flake8 errors
+                    output.__class__.__name__ == 'file'
+                ):
+                    output.write(data.encode(self.encoding))
+                else:
+                    output.write(data)
                 output.flush()
             buffer_.append(data)
 
