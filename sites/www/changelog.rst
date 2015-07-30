@@ -66,8 +66,9 @@ Changelog
 * :support:`224` Add a completion script for the ``fish`` shell, courtesy of
   Jaime Marquínez Ferrándiz.
 * :release:`0.10.1 <2015-03-17>`
-* :support:`-` Tweak README to reflect recent(-ish) changes in ``pip`` re:
-  users who install the development version via ``pip`` instead of using git.
+* :support:`- backported` Tweak README to reflect recent(-ish) changes in
+  ``pip`` re: users who install the development version via ``pip`` instead of
+  using git.
 * :release:`0.10.0 <2015-03-17>`
 * :feature:`104` Add core CLI flag ``--complete`` to support shell tab
   completion scripts, and add some 'blessed' such scripts for bash (3 and 4)
