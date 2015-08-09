@@ -205,6 +205,12 @@ def parse(argv, collection=None, version=None):
             help="Enable debug output.",
         ),
         Argument(
+            names=('write-pyc',),
+            kind=bool,
+            default=False,
+            help="Enable creating .pyc files.",
+        ),
+        Argument(
             names=('echo', 'e'),
             kind=bool,
             default=False,
@@ -258,6 +264,10 @@ def parse(argv, collection=None, version=None):
     core = parse_gracefully(parser, argv[1:])
     debug("After core-args pass, leftover argv: {0!r}".format(core.unparsed))
     args = core[0].args
+
+    # Disable creating .pyc files, unless the write-pyc flag was given.
+    if not args['write-pyc'].value:
+        sys.dont_write_bytecode = True
 
     # Enable debugging from here on out, if debug flag was given.
     if args.debug.value:
