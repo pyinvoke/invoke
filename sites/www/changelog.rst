@@ -2,7 +2,8 @@
 Changelog
 =========
 
-* :support:`-` Fix incorrect changelog URL in package metadata.
+* :release:`0.11.1 <2015-09-07>`
+* :support:`- backported` Fix incorrect changelog URL in package metadata.
 * :release:`0.11.0 <2015-09-07>`
 * :feature:`-` Create `invoke.runners.Result.command` to preserve the command
   executed for post-execution introspection.
