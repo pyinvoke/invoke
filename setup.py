@@ -13,7 +13,7 @@ version = _locals['__version__']
 # Frankenstein long_description: version-specific changelog note + README
 long_description = """
 To find out what's new in this version of Invoke, please see `the changelog
-<http://docs.pyinvoke.org/en/%s/changelog.html>`_.
+<http://pyinvoke.org/changelog.html#%s>`_.
 
 %s
 """ % (version, open('README.rst').read())
