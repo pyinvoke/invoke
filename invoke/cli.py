@@ -348,7 +348,9 @@ def parse(argv, collection=None, version=None):
             task = collection[primary]
             help_ = ""
             if task.__doc__:
-                help_ = task.__doc__.lstrip().splitlines()[0]
+                _help = task.__doc__.lstrip().splitlines()
+                # if the __doc__ is empty, _help[0] raises IndexError
+                help_ = help_ if not _help else _help[0]
             pairs.append((name, help_))
 
         # Print
