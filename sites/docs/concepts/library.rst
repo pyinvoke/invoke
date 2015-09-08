@@ -63,7 +63,7 @@ simple `.Program` to do the heavy lifting, giving it our version number &
 telling it to start things up::
 
     def main():
-        Program(version='0.1.0').main()
+        Program(version='0.1.0').run()
 
 At this point, installing ``tester`` would give you the same functionality as
 Invoke's :doc:`built-in CLI tool </api/cli>`, except named ``tester`` and
@@ -119,7 +119,7 @@ should be used as the subcommands for ``tester``, via the ``subcommands`` kwarg:
     from tester import tasks
 
     def main():
-        Program(subcommands=tasks, version='0.1.0').main()
+        Program(subcommands=tasks, version='0.1.0').run()
 
 The result?
 
