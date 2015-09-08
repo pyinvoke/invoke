@@ -7,6 +7,7 @@ from .exceptions import ( # noqa
     UnknownFileType, Exit, UncastableEnvVar, PlatformError, # noqa
 ) # noqa
 from .platform import pty_size # noqa
+from .program import Program # noqa
 from .runners import Runner, Local, Failure, Result # noqa
 from .tasks import task, ctask, Task  # noqa
 

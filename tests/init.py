@@ -7,6 +7,7 @@ import invoke
 import invoke.collection
 import invoke.exceptions
 import invoke.tasks
+import invoke.program
 
 
 class Init(Spec):
@@ -73,3 +74,6 @@ class Init(Spec):
 
         def runner_result(self):
             assert invoke.Result is invoke.runners.Result
+
+        def program(self):
+            assert invoke.Program is invoke.program.Program
