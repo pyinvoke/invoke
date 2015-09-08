@@ -487,6 +487,8 @@ class Program(object):
             both ``inv`` and ``invoke``, and sets ``name="inv[oke]"`` so its
             ``--help`` output implies both names.
         """
+        self.version = version
+        self.namespace = namespace
 
     def run(self, argv=None):
         """
