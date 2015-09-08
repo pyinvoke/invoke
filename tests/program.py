@@ -20,6 +20,12 @@ class Program_(Spec):
             foo = load('foo')
             ok_(Program(version='0.1.0', namespace=foo).namespace is foo)
 
+        def may_specify_name(self):
+            eq_(Program(version='0.1.0', name='Myapp').name, 'Myapp')
+
+        def may_specify_binary(self):
+            eq_(Program(version='0.1.0', binary='myapp').binary, 'myapp')
+
     class run:
         class argv:
             def defaults_to_sys_argv(self):

@@ -49,6 +49,8 @@ class Program(object):
         """
         self.version = version
         self.namespace = namespace
+        self.name = name
+        self.binary = binary
 
     def run(self, argv=None):
         """
