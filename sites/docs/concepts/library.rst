@@ -113,13 +113,13 @@ sake.
     e.g. via ``invoke --collection=tester.tasks --list``.
 
 Now the useful part: telling our custom `.Program` that this namespace of tasks
-should be used as the subcommands for ``tester``, via the ``subcommands`` kwarg::
+should be used as the subcommands for ``tester``, via the ``namespace`` kwarg::
 
     from invoke import Program
     from tester import tasks
 
     def main():
-        Program(subcommands=tasks, version='0.1.0').run()
+        Program(namespace=tasks, version='0.1.0').run()
 
 The result?
 
