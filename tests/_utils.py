@@ -54,6 +54,7 @@ def reset_cwd():
     os.chdir(os.path.join(os.path.dirname(__file__), '..'))
 
 
+# TODO: make this part of the real API somewhere
 @contextmanager
 def cd(where):
     cwd = os.getcwd()
