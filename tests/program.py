@@ -1,7 +1,7 @@
 from mock import patch, Mock
 from spec import Spec, eq_, ok_, raises, skip
 
-from invoke import Program
+from invoke import Program, Collection
 
 from _utils import load
 
@@ -56,6 +56,8 @@ class Program_(Spec):
                 'NotProgram'
             )
 
+        # TODO: integration test for one or both
+
     class get_binary:
         def defaults_to_argv_when_None(self):
             eq_(Program().get_binary(['program', 'args']), 'program')
@@ -66,34 +68,51 @@ class Program_(Spec):
                 'nope'
             )
 
+        # TODO: integration test for one or both
+
+    class initial_context:
+        def setup(self):
+            # TODO: probably define these within cli.py, then just iterate
+            # in the test. Prevents accidentally adding more of them later
+            # and forgetting to update tests.
+            self.task_args = (
+                '--list',
+                '--collection',
+                '--no-dedupe',
+                '--root'
+            )
+
+        def _names(self, program):
+            return program.initial_context().flag_names()
+
+        def contains_truly_core_arguments_regardless_of_namespace_value(self):
+            # Spot check. See integration-style --help tests for full argument
+            # checkup. TODO: maybe make this programmatic like the above TODO.
+            for program in (Program(), Program(namespace=Collection())):
+                names = self._names(program)
+                for arg in ('--complete', '--debug', '--warn-only'):
+                    ok_(arg in names, "{0} not in {1}".format(arg, names))
+
+        def null_namespace_triggers_task_related_args(self):
+            names = self._names(Program(namespace=None))
+            for arg in self.task_args:
+                ok_(arg in names, "{0} not in {1}".format(arg, names))
+
+        def non_null_namespace_does_not_trigger_task_related_args(self):
+            names = self._names(Program(namespace=Collection()))
+            for arg in self.task_args:
+                ok_(arg not in names, "{0} in {1}".format(arg, names))
+
     class run:
         @raises(TypeError)
         def requires_argv(self):
             Program().run()
 
         class namespace_behavior:
-            def setup(self):
-                # TODO: probably define these within cli.py, then just iterate
-                # in the test. Prevents accidentally adding more of them later
-                # and forgetting to update tests.
-                self.task_args = (
-                    '--list',
-                    '--collection',
-                    '--no-dedupe',
-                    '--root',
-                )
-
             class when_None:
                 def seeks_and_loads_tasks_module(self):
-                    skip()
-
-                def exposes_task_arguments(self):
                     skip()
 
             class when_Collection:
                 def does_not_seek(self):
                     skip()
-
-                def hides_task_arguments(self):
-                    skip()
-

@@ -16,6 +16,84 @@ class Program(object):
         :ref:`reusing-as-a-binary` for a tutorial/walkthrough of this
         functionality.
     """
+    # Arguments present always, even when wrapped as a different binary
+    core_args = (
+        Argument(
+            names=('complete',),
+            kind=bool,
+            default=False,
+            help="Print tab-completion candidates for given parse remainder.", # noqa
+        ),
+        Argument(
+            names=('debug', 'd'),
+            kind=bool,
+            default=False,
+            help="Enable debug output.",
+        ),
+        Argument(
+            names=('echo', 'e'),
+            kind=bool,
+            default=False,
+            help="Echo executed commands before running.",
+        ),
+        Argument(
+            names=('config', 'f'),
+            help="Runtime configuration file to use.",
+        ),
+        Argument(
+            names=('help', 'h'),
+            optional=True,
+            help="Show core or per-task help and exit."
+        ),
+        Argument(
+            names=('hide', 'H'),
+            help="Set default value of run()'s 'hide' kwarg.",
+        ),
+        Argument(
+            names=('pty', 'p'),
+            kind=bool,
+            default=False,
+            help="Use a pty when executing shell commands.",
+        ),
+        Argument(
+            names=('version', 'V'),
+            kind=bool,
+            default=False,
+            help="Show version and exit."
+        ),
+        Argument(
+            names=('warn-only', 'w'),
+            kind=bool,
+            default=False,
+            help="Warn, instead of failing, when shell commands fail.",
+        ),
+    )
+
+    # Arguments pertaining specifically to invocation as 'invoke' itself (or as
+    # other arbitrary-task-executing programs, like 'fab')
+    task_related_args = (
+        Argument(
+            names=('collection', 'c'),
+            help="Specify collection name to load."
+        ),
+        Argument(
+            names=('list', 'l'),
+            kind=bool,
+            default=False,
+            help="List available tasks."
+        ),
+        Argument(
+            names=('no-dedupe',),
+            kind=bool,
+            default=False,
+            help="Disable task deduplication."
+        ),
+        Argument(
+            names=('root', 'r'),
+            help="Change root directory used for finding task modules."
+        ),
+    )
+
     def __init__(self, version=None, namespace=None, name=None, binary=None,
         parser_class=Parser, executor_class=Executor):
         """
@@ -125,6 +203,18 @@ class Program(object):
         """
         return self.binary or argv[0]
 
+    def initial_context(self):
+        """
+        Return the initial parser context, aka the core program flags.
+
+        The specific arguments contained therein will differ depending on
+        whether a bundled namespace was specified in `.__init__`.
+        """
+        args = list(self.core_args)
+        if self.namespace is None:
+            args += list(self.task_related_args)
+        return ParserContext(args=args)
+
     def parse(self, argv, collection=None, version=None):
         """
         Parse ``argv`` list-of-strings into useful core & per-task structures.
@@ -136,79 +226,6 @@ class Program(object):
             list of `~.ParserContext` objects representing the requested task
             executions).
         """
-        # Initial/core parsing (core options can affect the rest of the
-        # parsing)
-        initial_context = ParserContext(args=(
-            Argument(
-                names=('complete',),
-                kind=bool,
-                default=False,
-                help="Print tab-completion candidates for given parse remainder.", # noqa
-            ),
-            Argument(
-                names=('no-dedupe',),
-                kind=bool,
-                default=False,
-                help="Disable task deduplication."
-            ),
-            Argument(
-                names=('collection', 'c'),
-                help="Specify collection name to load."
-            ),
-            Argument(
-                names=('debug', 'd'),
-                kind=bool,
-                default=False,
-                help="Enable debug output.",
-            ),
-            Argument(
-                names=('echo', 'e'),
-                kind=bool,
-                default=False,
-                help="Echo executed commands before running.",
-            ),
-            Argument(
-                names=('config', 'f'),
-                help="Runtime configuration file to use.",
-            ),
-            Argument(
-                names=('help', 'h'),
-                optional=True,
-                help="Show core or per-task help and exit."
-            ),
-            Argument(
-                names=('hide', 'H'),
-                help="Set default value of run()'s 'hide' kwarg.",
-            ),
-            Argument(
-                names=('list', 'l'),
-                kind=bool,
-                default=False,
-                help="List available tasks."
-            ),
-            Argument(
-                names=('pty', 'p'),
-                kind=bool,
-                default=False,
-                help="Use a pty when executing shell commands.",
-            ),
-            Argument(
-                names=('root', 'r'),
-                help="Change root directory used for finding task modules."
-            ),
-            Argument(
-                names=('version', 'V'),
-                kind=bool,
-                default=False,
-                help="Show version and exit."
-            ),
-            Argument(
-                names=('warn-only', 'w'),
-                kind=bool,
-                default=False,
-                help="Warn, instead of failing, when shell commands fail.",
-            ),
-        ))
         # 'core' will result an .unparsed attribute with what was left over.
         debug("Parsing initial context (core args)")
         parser = Parser(initial=initial_context, ignore_unknown=True)
