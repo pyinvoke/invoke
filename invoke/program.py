@@ -1,5 +1,7 @@
 import sys
 
+import six
+
 from .cli import *
 
 
@@ -14,12 +16,13 @@ class Program(object):
         :ref:`reusing-as-a-binary` for a tutorial/walkthrough of this
         functionality.
     """
-    def __init__(self, version, namespace=None, name=None, binary=None,
+    def __init__(self, version=None, namespace=None, name=None, binary=None,
         parser_class=Parser, executor_class=Executor):
         """
         Create a new, parameterized `.Program` instance.
 
-        :param str version: The program's version, e.g. ``"0.1.0"``.
+        :param str version:
+            The program's version, e.g. ``"0.1.0"``. Defaults to ``"unknown"``.
 
         :param namespace:
             A `.Collection` to use as this program's subcommands.
@@ -62,41 +65,54 @@ class Program(object):
             the command line. Must be `.Executor` or implement the same
             interface. Defaults to `.Executor`.
         """
-        self.version = version
+        self.version = "unknown" if version is None else version
         self.namespace = namespace
         self.name = name
         self.binary = binary
         self.parser_class = parser_class
         self.executor_class = executor_class
 
-    def run(self, argv=None):
+    def run(self, argv):
         """
         Execute main CLI logic, based on ``argv``.
 
         :param argv:
-            The arguments to execute against.
-            
-            **If None** (the default), uses `sys.argv` itself.
-
-            **If a list**, uses that in place of `sys.argv`.
-
-            **If a string**, performs a `str.split` and then executes with the
-            result.
+            The arguments to execute against. May be ``None``, a list of
+            strings, or a string. See `.normalize_argv` for details.
         """
-        if argv is None:
-            argv = sys.argv
+        argv = self.normalize_argv(argv)
         try:
             args, collection, parser_contexts = self.parse(argv)
         except Exit as e:
             # 'return' here is mostly a concession to testing. Meh :(
             # TODO: probably restructure things better so we don't need this?
             return sys.exit(e.code)
-        executor = Executor(collection, make_config(args, collection))
+        executor = self.executor_class(
+            collection, make_config(args, collection)
+        )
         try:
             tasks = tasks_from_contexts(parser_contexts, collection)
             executor.execute(*tasks)
         except Failure as f:
             sys.exit(f.result.exited)
+
+    def normalize_argv(self, argv):
+        """
+        Massages ``argv`` into a useful list of strings.
+
+        **If None** (the default), uses `sys.argv` itself.
+
+        **If a non-string iterable**, uses that in place of `sys.argv`.
+
+        **If a string**, performs a `str.split` and then executes with the
+        result. (This is mostly a convenience; when in doubt, use a list.)
+        """
+        if argv is None:
+            argv = sys.argv
+        elif isinstance(argv, six.string_types):
+            argv = argv.split()
+        return argv
+
 
     def parse(self, argv, collection=None, version=None):
         """

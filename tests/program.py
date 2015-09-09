@@ -9,50 +9,46 @@ from _utils import load
 class Program_(Spec):
     class init:
         "__init__"
+        def may_specify_version(self):
+            eq_(Program(version='1.2.3').version, '1.2.3')
 
-        @raises(TypeError)
-        def requires_version(self):
-            Program()
-
-        def only_version_is_required(self):
-            eq_(Program(version='1').version, '1')
+        def default_version_is_unknown(self):
+            eq_(Program().version, 'unknown')
 
         def may_specify_namespace(self):
             foo = load('foo')
-            ok_(Program(version='1', namespace=foo).namespace is foo)
+            ok_(Program(namespace=foo).namespace is foo)
 
         def may_specify_name(self):
-            eq_(Program(version='1', name='Myapp').name, 'Myapp')
+            eq_(Program(name='Myapp').name, 'Myapp')
 
         def may_specify_binary(self):
-            eq_(Program(version='1', binary='myapp').binary, 'myapp')
+            eq_(Program(binary='myapp').binary, 'myapp')
 
         def may_inject_parser_class(self):
             c = object
-            eq_(Program(version='1', parser_class=c).parser_class, c)
+            eq_(Program(parser_class=c).parser_class, c)
 
         def may_inject_executor_class(self):
             c = object
-            eq_(Program(version='1', executor_class=c).executor_class, c)
+            eq_(Program(executor_class=c).executor_class, c)
+
+    class normalize_argv:
+        @patch('invoke.program.sys')
+        def defaults_to_sys_argv(self, mock_sys):
+            fake_argv = ['not', 'real']
+            mock_sys.argv = fake_argv
+            eq_(Program().normalize_argv(None), fake_argv)
+
+        def uses_a_list_unaltered(self):
+            eq_(Program().normalize_argv(['foo', 'bar']), ['foo', 'bar'])
+
+        def splits_a_string(self):
+            eq_(Program().normalize_argv("foo bar"), ['foo', 'bar'])
 
     class run:
-        class argv:
-            @patch('invoke.program.sys')
-            def defaults_to_sys_argv(self, mock_sys):
-                fake_argv = ['not', 'real']
-                mock_sys.argv = fake_argv
-                parser = Mock()
-                Program(version='1', parser_class=parser).run()
-                # Expect that parser.parse_argv() was given sys.argv
-                parser.return_value.parse_argv.assert_called_with(fake_argv)
-
-            def uses_a_list_unaltered(self):
-                # same as above, how do we know for sure lol
-                skip()
-
-            def splits_a_string(self):
-                # yup
-                skip()
+        def requires_argv(self):
+            skip()
 
         class namespace_behavior:
             def setup(self):
