@@ -1,3 +1,4 @@
+from mock import patch, Mock
 from spec import Spec, eq_, ok_, raises, skip
 
 from invoke import Program
@@ -14,24 +15,36 @@ class Program_(Spec):
             Program()
 
         def only_version_is_required(self):
-            eq_(Program(version='0.1.0').version, '0.1.0')
+            eq_(Program(version='1').version, '1')
 
         def may_specify_namespace(self):
             foo = load('foo')
-            ok_(Program(version='0.1.0', namespace=foo).namespace is foo)
+            ok_(Program(version='1', namespace=foo).namespace is foo)
 
         def may_specify_name(self):
-            eq_(Program(version='0.1.0', name='Myapp').name, 'Myapp')
+            eq_(Program(version='1', name='Myapp').name, 'Myapp')
 
         def may_specify_binary(self):
-            eq_(Program(version='0.1.0', binary='myapp').binary, 'myapp')
+            eq_(Program(version='1', binary='myapp').binary, 'myapp')
+
+        def may_inject_parser_class(self):
+            c = object
+            eq_(Program(version='1', parser_class=c).parser_class, c)
+
+        def may_inject_executor_class(self):
+            c = object
+            eq_(Program(version='1', executor_class=c).executor_class, c)
 
     class run:
         class argv:
-            def defaults_to_sys_argv(self):
-                # mock sys.argv lol
-                # ensure that whatever run does, sees our mock
-                skip()
+            @patch('invoke.program.sys')
+            def defaults_to_sys_argv(self, mock_sys):
+                fake_argv = ['not', 'real']
+                mock_sys.argv = fake_argv
+                parser = Mock()
+                Program(version='1', parser_class=parser).run()
+                # Expect that parser.parse_argv() was given sys.argv
+                parser.return_value.parse_argv.assert_called_with(fake_argv)
 
             def uses_a_list_unaltered(self):
                 # same as above, how do we know for sure lol
