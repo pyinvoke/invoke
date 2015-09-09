@@ -71,23 +71,12 @@ class Program_(Spec):
         # TODO: integration test for one or both
 
     class initial_context:
-        def setup(self):
-            # TODO: probably define these within cli.py, then just iterate
-            # in the test. Prevents accidentally adding more of them later
-            # and forgetting to update tests.
-            self.task_args = (
-                '--list',
-                '--collection',
-                '--no-dedupe',
-                '--root'
-            )
-
         def _names(self, program):
             return program.initial_context().flag_names()
 
         def contains_truly_core_arguments_regardless_of_namespace_value(self):
             # Spot check. See integration-style --help tests for full argument
-            # checkup. TODO: maybe make this programmatic like the above TODO.
+            # checkup.
             for program in (Program(), Program(namespace=Collection())):
                 names = self._names(program)
                 for arg in ('--complete', '--debug', '--warn-only'):
@@ -102,6 +91,8 @@ class Program_(Spec):
             names = self._names(Program(namespace=Collection()))
             for arg in self.task_args:
                 ok_(arg not in names, "{0} in {1}".format(arg, names))
+
+        # TODO: integration tests
 
     class run:
         @raises(TypeError)
