@@ -94,8 +94,7 @@ class Program(object):
         ),
     )
 
-    def __init__(self, version=None, namespace=None, name=None, binary=None,
-        parser_class=Parser, executor_class=Executor):
+    def __init__(self, version=None, namespace=None, name=None, binary=None):
         """
         Create a new, parameterized `.Program` instance.
 
@@ -133,22 +132,11 @@ class Program(object):
             under multiple names, such as Invoke itself does - it installs as
             both ``inv`` and ``invoke``, and sets ``name="inv[oke]"`` so its
             ``--help`` output implies both names.
-
-        :param parser_class:
-            The CLI-parsing class to use for parsing the command line. Must be
-            `.Parser` or implement the same interface. Defaults to `.Parser`.
-
-        :param executor_class:
-            The task-executing class to use for executing any tasks found on
-            the command line. Must be `.Executor` or implement the same
-            interface. Defaults to `.Executor`.
         """
         self.version = "unknown" if version is None else version
         self.namespace = namespace
         self.name = name
         self.binary = binary
-        self.parser_class = parser_class
-        self.executor_class = executor_class
 
     def run(self, argv):
         """
@@ -165,7 +153,7 @@ class Program(object):
             # 'return' here is mostly a concession to testing. Meh :(
             # TODO: probably restructure things better so we don't need this?
             return sys.exit(e.code)
-        executor = self.executor_class(
+        executor = Executor(
             collection, make_config(args, collection)
         )
         try:

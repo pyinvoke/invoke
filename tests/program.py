@@ -25,14 +25,6 @@ class Program_(Spec):
         def may_specify_binary(self):
             eq_(Program(binary='myapp').binary, 'myapp')
 
-        def may_inject_parser_class(self):
-            c = object
-            eq_(Program(parser_class=c).parser_class, c)
-
-        def may_inject_executor_class(self):
-            c = object
-            eq_(Program(executor_class=c).executor_class, c)
-
     class normalize_argv:
         @patch('invoke.program.sys')
         def defaults_to_sys_argv(self, mock_sys):
