@@ -91,7 +91,7 @@ class Program_(Spec):
         def requires_argv(self):
             Program().run()
 
-        class namespace_behavior:
+        class bundled_namespace:
             class when_None:
                 def seeks_and_loads_tasks_module(self):
                     skip()

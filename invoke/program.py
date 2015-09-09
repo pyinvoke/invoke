@@ -214,15 +214,16 @@ class Program(object):
             list of `~.ParserContext` objects representing the requested task
             executions).
         """
-        # 'core' will result an .unparsed attribute with what was left over.
+        # Filter out core args, leaving any tasks or their args in .unparsed
         debug("Parsing initial context (core args)")
-        parser = Parser(initial=initial_context, ignore_unknown=True)
+        parser = Parser(initial=self.initial_context(), ignore_unknown=True)
         core = parse_gracefully(parser, argv[1:])
         msg = "After core-args pass, leftover argv: {0!r}"
         debug(msg.format(core.unparsed))
         args = core[0].args
 
         # Enable debugging from here on out, if debug flag was given.
+        # (Prior to this point, debugging requires setting INVOKE_DEBUG).
         if args.debug.value:
             enable_logging()
 
