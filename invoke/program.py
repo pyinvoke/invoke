@@ -94,7 +94,7 @@ class Program(object):
         executor = Executor(collection, make_config(args, collection))
         try:
             tasks = tasks_from_contexts(parser_contexts, collection)
-            return executor.execute(*tasks)
+            executor.execute(*tasks)
         except Failure as f:
             sys.exit(f.result.exited)
 
