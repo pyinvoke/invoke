@@ -100,7 +100,7 @@ class Program(object):
         """
         Massages ``argv`` into a useful list of strings.
 
-        **If None** (the default), uses `sys.argv` itself.
+        **If None** (the default), uses `sys.argv`.
 
         **If a non-string iterable**, uses that in place of `sys.argv`.
 
@@ -113,6 +113,17 @@ class Program(object):
             argv = argv.split()
         return argv
 
+    def get_name(self, argv):
+        """
+        Derive program's human-readable name based on init args & argv.
+        """
+        return self.name or argv[0].capitalize()
+
+    def get_binary(self, argv):
+        """
+        Derive program's help-oriented binary name(s) from init args & argv.
+        """
+        return self.binary or argv[0]
 
     def parse(self, argv, collection=None, version=None):
         """

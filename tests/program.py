@@ -46,9 +46,30 @@ class Program_(Spec):
         def splits_a_string(self):
             eq_(Program().normalize_argv("foo bar"), ['foo', 'bar'])
 
+    class get_name:
+        def defaults_to_capitalized_argv_when_None(self):
+            eq_(Program().get_name(['program', 'args']), 'Program')
+
+        def uses_overridden_value_when_given(self):
+            eq_(
+                Program(name='NotProgram').get_name(['program', 'args']),
+                'NotProgram'
+            )
+
+    class get_binary:
+        def defaults_to_argv_when_None(self):
+            eq_(Program().get_binary(['program', 'args']), 'program')
+
+        def uses_overridden_value_when_given(self):
+            eq_(
+                Program(binary='nope').get_binary(['program', 'args']),
+                'nope'
+            )
+
     class run:
+        @raises(TypeError)
         def requires_argv(self):
-            skip()
+            Program().run()
 
         class namespace_behavior:
             def setup(self):
@@ -76,16 +97,3 @@ class Program_(Spec):
                 def hides_task_arguments(self):
                     skip()
 
-        class name:
-            def defaults_to_capitalized_argv_when_None(self):
-                skip()
-
-            def may_be_overridden(self):
-                skip()
-
-        class binary:
-            def defaults_to_argv_when_None(self):
-                skip()
-
-            def may_be_overridden(self):
-                skip()
