@@ -9,7 +9,6 @@ from invoke.collection import Collection
 from invoke.context import Context
 from invoke.parser import Parser
 from invoke.tasks import task
-import invoke
 
 from _utils import (
     _dispatch, _output_eq, IntegrationSpec, cd, expect_exit,

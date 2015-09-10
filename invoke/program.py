@@ -103,12 +103,12 @@ class Program(object):
 
         :param namespace:
             A `.Collection` to use as this program's subcommands.
-            
+
             If ``None`` (the default), the program will behave like ``invoke``,
             seeking a nearby task namespace with a `.Loader` and exposing
             arguments such as :option:`--list` and :option:`--collection` for
             inspecting or selecting specific namespaces.
-            
+
             If given a `.Collection` object, will use it as if it had been
             handed to :option:`--collection`. Will also update the parser to
             remove references to tasks and task-related options, and display

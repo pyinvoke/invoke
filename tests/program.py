@@ -1,7 +1,7 @@
 import sys
 
 from mock import patch, Mock
-from spec import Spec, eq_, ok_, raises, skip, trap
+from spec import eq_, ok_, skip, trap
 
 from invoke import Program, Collection
 
