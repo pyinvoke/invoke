@@ -135,8 +135,9 @@ class Program(object):
         """
         self.version = "unknown" if version is None else version
         self.namespace = namespace
-        self.name = name
-        self.binary = binary
+        self._name = name
+        self._binary = binary
+        self.argv = None
 
     def run(self, argv=None, exit=True):
         """
@@ -156,9 +157,9 @@ class Program(object):
                 using `.Executor` and friends directly instead!
         """
         debug("argv given to Program.run: {0!r}".format(argv))
-        argv = self.normalize_argv(argv)
+        self.argv = self.normalize_argv(argv)
         try:
-            args, collection, parser_contexts = self.parse(argv)
+            args, collection, parser_contexts = self.parse()
             executor = Executor(
                 collection, make_config(args, collection)
             )
@@ -188,47 +189,46 @@ class Program(object):
             debug("argv was string-like; splitting: {0!r}".format(argv))
         return argv
 
-    def normalize_name(self, argv):
+    @property
+    def name(self):
         """
         Derive program's human-readable name based on init args & argv.
         """
-        return self.name or argv[0].capitalize()
+        return self._name or self.argv[0].capitalize()
 
-    def normalize_binary(self, argv):
+    @property
+    def binary(self):
         """
         Derive program's help-oriented binary name(s) from init args & argv.
         """
-        return self.binary or os.path.basename(argv[0])
+        return self._binary or os.path.basename(self.argv[0])
 
+    @property
     def initial_context(self):
         """
-        Return the initial parser context, aka the core program flags.
+        The initial parser context, aka core program flags.
 
         The specific arguments contained therein will differ depending on
         whether a bundled namespace was specified in `.__init__`.
         """
-        args = list(self.core_args)
+        args = list(Program.core_args)
         if self.namespace is None:
-            args += list(self.task_args)
+            args += list(Program.task_args)
         return ParserContext(args=args)
 
-    def print_version(self, argv):
-        print("{0} {1}".format(
-            self.normalize_name(argv),
-            self.version or "unknown")
-        )
+    def print_version(self):
+        print("{0} {1}".format(self.name, self.version or "unknown"))
 
-    def print_help(self, argv, initial_context):
-        program_name = self.normalize_binary(argv)
+    def print_help(self):
         # TODO: ensure invoke itself sets binary to 'inv[oke]'
-        print("Usage: {0} [--core-opts] task1 [--task1-opts] ... taskN [--taskN-opts]".format(program_name)) # noqa
+        print("Usage: {0} [--core-opts] task1 [--task1-opts] ... taskN [--taskN-opts]".format(self.binary)) # noqa
         print("")
         print("Core options:")
-        print_columns(initial_context.help_tuples())
+        print_columns(self.initial_context.help_tuples())
 
-    def parse(self, argv, collection=None, version=None):
+    def parse(self, collection=None, version=None):
         """
-        Parse ``argv`` list-of-strings into useful core & per-task structures.
+        Parse ``self.argv`` into useful core & per-task structures.
 
         :returns:
             Three-tuple of ``args`` (core, non-task `.Argument` objects),
@@ -237,13 +237,10 @@ class Program(object):
             list of `~.ParserContext` objects representing the requested task
             executions).
         """
-        # TODO: set argv on self and refer to as self.argv instead of passing
-        # it around.
         # Filter out core args, leaving any tasks or their args in .unparsed
         debug("Parsing initial context (core args)")
-        initial_context = self.initial_context()
-        parser = Parser(initial=initial_context, ignore_unknown=True)
-        core = parse_gracefully(parser, argv[1:])
+        parser = Parser(initial=self.initial_context, ignore_unknown=True)
+        core = parse_gracefully(parser, self.argv[1:])
         msg = "After core-args pass, leftover argv: {0!r}"
         debug(msg.format(core.unparsed))
         args = core[0].args
@@ -255,7 +252,7 @@ class Program(object):
 
         # Print version & exit if necessary
         if args.version.value:
-            self.print_version(argv)
+            self.print_version()
             raise Exit
 
         # Core (no value given) --help output
@@ -263,8 +260,7 @@ class Program(object):
         # help and available tasks listing; or core flags modified by
         # plugins/task modules) it will have to move farther down.
         if args.help.value is True:
-            # TODO: set initial_context as a self attr like argv
-            self.print_help(argv, initial_context)
+            self.print_help()
             raise Exit
 
         # Load collection (default or specified) and parse leftovers
@@ -356,7 +352,7 @@ class Program(object):
         # * no other "do an thing" flags were found (implicit in where this
         #   code is located - just before return)
         if not tasks and not collection.default:
-            self.print_help(argv, initial_context)
+            self.print_help()
             raise Exit
 
         # Return to caller so they can handle the results

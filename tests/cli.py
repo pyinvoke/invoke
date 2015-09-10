@@ -186,15 +186,6 @@ Options:
 """.lstrip()
             _output_eq('-c decorator -h foo3', expected)
 
-    def version_info(self):
-        _output_eq('-V', "Invoke {0}\n".format(invoke.__version__))
-
-    @trap
-    def version_override(self):
-        with expect_exit():
-            _dispatch('notinvoke -V', version="nope 1.0")
-        eq_(sys.stdout.getvalue(), "nope 1.0\n")
-
     class task_list:
         "--list"
 

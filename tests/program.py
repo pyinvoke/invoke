@@ -77,7 +77,7 @@ class Program_(Spec):
 
     class initial_context:
         def _names(self, program):
-            return program.initial_context().args.keys()
+            return program.initial_context.args.keys()
 
         def contains_truly_core_arguments_regardless_of_namespace_value(self):
             # Spot check. See integration-style --help tests for full argument
