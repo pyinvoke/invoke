@@ -182,8 +182,10 @@ class Program(object):
         """
         if argv is None:
             argv = sys.argv
+            debug("argv was None; using sys.argv: {0!r}".format(argv))
         elif isinstance(argv, six.string_types):
             argv = argv.split()
+            debug("argv was string-like; splitting: {0!r}".format(argv))
         return argv
 
     def get_name(self, argv):
@@ -210,6 +212,9 @@ class Program(object):
             args += list(self.task_args)
         return ParserContext(args=args)
 
+    def print_version(self, argv):
+        print("{0} {1}".format(self.get_name(argv), self.version or "unknown"))
+
     def parse(self, argv, collection=None, version=None):
         """
         Parse ``argv`` list-of-strings into useful core & per-task structures.
@@ -221,6 +226,8 @@ class Program(object):
             list of `~.ParserContext` objects representing the requested task
             executions).
         """
+        # TODO: set argv on self and refer to as self.argv instead of passing
+        # it around.
         # Filter out core args, leaving any tasks or their args in .unparsed
         debug("Parsing initial context (core args)")
         parser = Parser(initial=self.initial_context(), ignore_unknown=True)
@@ -236,10 +243,7 @@ class Program(object):
 
         # Print version & exit if necessary
         if args.version.value:
-            if version:
-                print(version)
-            else:
-                print("Invoke {0}".format(__version__))
+            self.print_version(argv)
             raise Exit
 
         # Core (no value given) --help output

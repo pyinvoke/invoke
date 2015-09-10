@@ -1,9 +1,11 @@
+import sys
+
 from mock import patch, Mock
-from spec import Spec, eq_, ok_, raises, skip
+from spec import Spec, eq_, ok_, raises, skip, trap
 
 from invoke import Program, Collection
 
-from _utils import load
+from _utils import load, expect_exit
 
 
 class Program_(Spec):
@@ -28,19 +30,27 @@ class Program_(Spec):
     class normalize_argv:
         @patch('invoke.program.sys')
         def defaults_to_sys_argv(self, mock_sys):
-            fake_argv = ['not', 'real']
-            mock_sys.argv = fake_argv
-            eq_(Program().normalize_argv(None), fake_argv)
+            argv = ['inv', '--version']
+            mock_sys.argv = argv
+            p = Program()
+            p.print_version = Mock()
+            p.run()
+            p.print_version.assert_called()
 
         def uses_a_list_unaltered(self):
-            eq_(Program().normalize_argv(['foo', 'bar']), ['foo', 'bar'])
+            p = Program()
+            p.print_version = Mock()
+            p.run(['inv', '--version'], exit=False)
+            p.print_version.assert_called()
 
         def splits_a_string(self):
             eq_(Program().normalize_argv("foo bar"), ['foo', 'bar'])
 
-    class get_name:
+    class normalize_name:
+        @trap
         def defaults_to_capitalized_argv_when_None(self):
-            eq_(Program().get_name(['program', 'args']), 'Program')
+            Program().run("myapp --version", exit=False)
+            eq_(sys.stdout.getvalue(), "Myapp unknown\n")
 
         def uses_overridden_value_when_given(self):
             eq_(
@@ -48,9 +58,7 @@ class Program_(Spec):
                 'NotProgram'
             )
 
-        # TODO: integration test for one or both
-
-    class get_binary:
+    class normalize_binary:
         def defaults_to_argv_when_None(self):
             eq_(Program().get_binary(['program', 'args']), 'program')
 
@@ -59,8 +67,6 @@ class Program_(Spec):
                 Program(binary='nope').get_binary(['program', 'args']),
                 'nope'
             )
-
-        # TODO: integration test for one or both
 
     class initial_context:
         def _names(self, program):
@@ -91,10 +97,6 @@ class Program_(Spec):
         # TODO: integration tests
 
     class run:
-        @raises(TypeError)
-        def requires_argv(self):
-            Program().run()
-
         class bundled_namespace:
             class when_None:
                 def seeks_and_loads_tasks_module(self):
