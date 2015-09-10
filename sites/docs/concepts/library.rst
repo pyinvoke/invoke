@@ -146,6 +146,16 @@ Notice how the 'usage' line changed (to specify 'subcommands' instead of
 'tasks'); the list of specific subcommands is now printed as part of
 ``--help``; and ``--list`` has been removed from the options.
 
+Modifying core parser arguments
+-------------------------------
+
+.. TODO: this
+
+* instantiate
+* methods lightly wrapping internal parser are exposed, call them
+* they modify the inner parser directly
+* then when done, call run() as before
+
 Wrap-up
 -------
 
