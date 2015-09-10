@@ -138,29 +138,36 @@ class Program(object):
         self.name = name
         self.binary = binary
 
-    def run(self, argv):
+    def run(self, argv=None, exit=True):
         """
         Execute main CLI logic, based on ``argv``.
 
         :param argv:
             The arguments to execute against. May be ``None``, a list of
             strings, or a string. See `.normalize_argv` for details.
+
+        :param bool exit:
+            When ``True`` (default: ``False``), will ignore `.Exit` and
+            `.Failure` exceptions, which otherwise trigger calls to `sys.exit`.
+
+            .. note::
+                This is mostly a concession to testing. If you're setting this
+                to ``True`` in a production setting, you should probably be
+                using `.Executor` and friends directly instead!
         """
+        debug("argv given to Program.run: {0!r}".format(argv))
         argv = self.normalize_argv(argv)
         try:
             args, collection, parser_contexts = self.parse(argv)
-        except Exit as e:
-            # 'return' here is mostly a concession to testing. Meh :(
-            # TODO: probably restructure things better so we don't need this?
-            return sys.exit(e.code)
-        executor = Executor(
-            collection, make_config(args, collection)
-        )
-        try:
+            executor = Executor(
+                collection, make_config(args, collection)
+            )
             tasks = tasks_from_contexts(parser_contexts, collection)
             executor.execute(*tasks)
-        except Failure as f:
-            sys.exit(f.result.exited)
+        except (Failure, Exit) as e:
+            if exit:
+                code = f.result.exited if isinstance(e, Failure) else e.code
+                sys.exit(code)
 
     def normalize_argv(self, argv):
         """
