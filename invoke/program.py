@@ -71,7 +71,7 @@ class Program(object):
 
     # Arguments pertaining specifically to invocation as 'invoke' itself (or as
     # other arbitrary-task-executing programs, like 'fab')
-    task_related_args = (
+    task_args = (
         Argument(
             names=('collection', 'c'),
             help="Specify collection name to load."
@@ -200,7 +200,7 @@ class Program(object):
         """
         args = list(self.core_args)
         if self.namespace is None:
-            args += list(self.task_related_args)
+            args += list(self.task_args)
         return ParserContext(args=args)
 
     def parse(self, argv, collection=None, version=None):

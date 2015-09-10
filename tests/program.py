@@ -64,25 +64,29 @@ class Program_(Spec):
 
     class initial_context:
         def _names(self, program):
-            return program.initial_context().flag_names()
+            return program.initial_context().args.keys()
 
         def contains_truly_core_arguments_regardless_of_namespace_value(self):
             # Spot check. See integration-style --help tests for full argument
             # checkup.
             for program in (Program(), Program(namespace=Collection())):
                 names = self._names(program)
-                for arg in ('--complete', '--debug', '--warn-only'):
+                for arg in ('complete', 'debug', 'warn-only'):
                     ok_(arg in names, "{0} not in {1}".format(arg, names))
 
         def null_namespace_triggers_task_related_args(self):
-            names = self._names(Program(namespace=None))
-            for arg in self.task_args:
-                ok_(arg in names, "{0} not in {1}".format(arg, names))
+            p = Program(namespace=None)
+            names = self._names(p)
+            for arg in p.task_args:
+                name = arg.name
+                ok_(name in names, "{0} not in {1}".format(name, names))
 
         def non_null_namespace_does_not_trigger_task_related_args(self):
-            names = self._names(Program(namespace=Collection()))
-            for arg in self.task_args:
-                ok_(arg not in names, "{0} in {1}".format(arg, names))
+            p = Program(namespace=Collection())
+            names = self._names(p)
+            for arg in p.task_args:
+                name = arg.name
+                ok_(name not in names, "{0} in {1}".format(name, names))
 
         # TODO: integration tests
 
