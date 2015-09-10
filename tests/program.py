@@ -5,10 +5,10 @@ from spec import Spec, eq_, ok_, raises, skip, trap
 
 from invoke import Program, Collection
 
-from _utils import load, expect_exit
+from _utils import load, cd, IntegrationSpec
 
 
-class Program_(Spec):
+class Program_(IntegrationSpec):
     class init:
         "__init__"
         def may_specify_version(self):
@@ -105,8 +105,11 @@ class Program_(Spec):
     class run:
         class bundled_namespace:
             class when_None:
+                @trap
                 def seeks_and_loads_tasks_module(self):
-                    skip()
+                    with cd('implicit'):
+                        Program().run('inv foo')
+                        eq_(sys.stdout.getvalue(), "Hm\n")
 
             class when_Collection:
                 def does_not_seek(self):
