@@ -76,32 +76,31 @@ class Program_(Spec):
             ok_("nope [--core-opts]" in sys.stdout.getvalue())
 
     class initial_context:
-        def _names(self, program):
-            return program.initial_context.args.keys()
-
+        @trap
         def contains_truly_core_arguments_regardless_of_namespace_value(self):
             # Spot check. See integration-style --help tests for full argument
             # checkup.
             for program in (Program(), Program(namespace=Collection())):
-                names = self._names(program)
-                for arg in ('complete', 'debug', 'warn-only'):
-                    ok_(arg in names, "{0} not in {1}".format(arg, names))
+                program.run("app --help", exit=False)
+                help_ = sys.stdout.getvalue()
+                for arg in ('--complete', '--debug', '--warn-only'):
+                    ok_(arg in help_, "{0} not in {1}".format(arg, help_))
 
+        @trap
         def null_namespace_triggers_task_related_args(self):
-            p = Program(namespace=None)
-            names = self._names(p)
-            for arg in p.task_args:
+            Program(namespace=None).run("app --help", exit=False)
+            for arg in Program.task_args:
                 name = arg.name
-                ok_(name in names, "{0} not in {1}".format(name, names))
+                help_ = sys.stdout.getvalue()
+                ok_(name in help_, "{0} not in {1}".format(name, help_))
 
+        @trap
         def non_null_namespace_does_not_trigger_task_related_args(self):
-            p = Program(namespace=Collection())
-            names = self._names(p)
-            for arg in p.task_args:
+            Program(namespace=Collection()).run("app --help", exit=False)
+            help_ = sys.stdout.getvalue()
+            for arg in Program.task_args:
                 name = arg.name
-                ok_(name not in names, "{0} in {1}".format(name, names))
-
-        # TODO: integration tests
+                ok_(name not in help_, "{0} in {1}".format(name, help_))
 
     class run:
         class bundled_namespace:
