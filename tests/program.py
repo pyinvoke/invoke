@@ -52,21 +52,28 @@ class Program_(Spec):
             Program().run("myapp --version", exit=False)
             eq_(sys.stdout.getvalue(), "Myapp unknown\n")
 
+        @trap
         def uses_overridden_value_when_given(self):
-            eq_(
-                Program(name='NotProgram').get_name(['program', 'args']),
-                'NotProgram'
-            )
+            Program(name='NotProgram').run("program --version", exit=False)
+            eq_(sys.stdout.getvalue(), "NotProgram unknown\n")
 
     class normalize_binary:
+        @trap
         def defaults_to_argv_when_None(self):
-            eq_(Program().get_binary(['program', 'args']), 'program')
+            Program().run("myapp --help", exit=False)
+            ok_("myapp [--core-opts]" in sys.stdout.getvalue())
 
+        @trap
+        def use_binary_basename_when_invoked_absolutely(self):
+            Program().run("/usr/local/bin/myapp --help", exit=False)
+            stdout = sys.stdout.getvalue()
+            ok_("myapp [--core-opts]" in stdout)
+            ok_("/usr/local/bin" not in stdout)
+
+        @trap
         def uses_overridden_value_when_given(self):
-            eq_(
-                Program(binary='nope').get_binary(['program', 'args']),
-                'nope'
-            )
+            Program(binary='nope').run("myapp --help", exit=False)
+            ok_("nope [--core-opts]" in sys.stdout.getvalue())
 
     class initial_context:
         def _names(self, program):

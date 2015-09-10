@@ -188,17 +188,17 @@ class Program(object):
             debug("argv was string-like; splitting: {0!r}".format(argv))
         return argv
 
-    def get_name(self, argv):
+    def normalize_name(self, argv):
         """
         Derive program's human-readable name based on init args & argv.
         """
         return self.name or argv[0].capitalize()
 
-    def get_binary(self, argv):
+    def normalize_binary(self, argv):
         """
         Derive program's help-oriented binary name(s) from init args & argv.
         """
-        return self.binary or argv[0]
+        return self.binary or os.path.basename(argv[0])
 
     def initial_context(self):
         """
@@ -213,7 +213,18 @@ class Program(object):
         return ParserContext(args=args)
 
     def print_version(self, argv):
-        print("{0} {1}".format(self.get_name(argv), self.version or "unknown"))
+        print("{0} {1}".format(
+            self.normalize_name(argv),
+            self.version or "unknown")
+        )
+
+    def print_help(self, argv, initial_context):
+        program_name = self.normalize_binary(argv)
+        # TODO: ensure invoke itself sets binary to 'inv[oke]'
+        print("Usage: {0} [--core-opts] task1 [--task1-opts] ... taskN [--taskN-opts]".format(program_name)) # noqa
+        print("")
+        print("Core options:")
+        print_columns(initial_context.help_tuples())
 
     def parse(self, argv, collection=None, version=None):
         """
@@ -230,7 +241,8 @@ class Program(object):
         # it around.
         # Filter out core args, leaving any tasks or their args in .unparsed
         debug("Parsing initial context (core args)")
-        parser = Parser(initial=self.initial_context(), ignore_unknown=True)
+        initial_context = self.initial_context()
+        parser = Parser(initial=initial_context, ignore_unknown=True)
         core = parse_gracefully(parser, argv[1:])
         msg = "After core-args pass, leftover argv: {0!r}"
         debug(msg.format(core.unparsed))
@@ -251,7 +263,9 @@ class Program(object):
         # help and available tasks listing; or core flags modified by
         # plugins/task modules) it will have to move farther down.
         if args.help.value is True:
-            print_help(argv, initial_context) # exits
+            # TODO: set initial_context as a self attr like argv
+            self.print_help(argv, initial_context)
+            raise Exit
 
         # Load collection (default or specified) and parse leftovers
         start = args.root.value
@@ -342,7 +356,8 @@ class Program(object):
         # * no other "do an thing" flags were found (implicit in where this
         #   code is located - just before return)
         if not tasks and not collection.default:
-            print_help(argv, initial_context) # exits
+            self.print_help(argv, initial_context)
+            raise Exit
 
         # Return to caller so they can handle the results
         return args, collection, tasks
