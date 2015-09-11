@@ -276,3 +276,80 @@ Options:
 
 """.lstrip()
                 expect('-c decorator -h foo3', out=expected)
+
+
+    class task_list:
+        "--list"
+
+        def _listing(self, lines):
+            return """
+Available tasks:
+
+{0}
+
+""".format('\n'.join("  " + x for x in lines)).lstrip()
+
+        def _list_eq(self, collection, listing):
+            cmd = '-c {0} --list'.format(collection)
+            expect(cmd, out=self._listing(listing))
+
+        def simple_output(self):
+            expected = self._listing((
+                'bar',
+                'biz',
+                'boz',
+                'foo',
+                'post1',
+                'post2',
+                'print_foo',
+                'print_name',
+                'print_underscored_arg',
+            ))
+            for flag in ('-l', '--list'):
+                expect('-c integration {0}'.format(flag), out=expected)
+
+        def namespacing(self):
+            self._list_eq('namespacing', (
+                'toplevel',
+                'module.mytask',
+            ))
+
+        def top_level_tasks_listed_first(self):
+            self._list_eq('simple_ns_list', (
+                'z_toplevel',
+                'a.b.subtask'
+            ))
+
+        def subcollections_sorted_in_depth_order(self):
+            self._list_eq('deeper_ns_list', (
+                'toplevel',
+                'a.subtask',
+                'a.nother.subtask',
+            ))
+
+        def aliases_sorted_alphabetically(self):
+            self._list_eq('alias_sorting', (
+                'toplevel (a, z)',
+            ))
+
+        def default_tasks(self):
+            # sub-ns default task display as "real.name (collection name)"
+            self._list_eq('explicit_root', (
+                'top_level (othertop)',
+                'sub.sub_task (sub, sub.othersub)',
+            ))
+
+        def docstrings_shown_alongside(self):
+            self._list_eq('docstrings', (
+                'leading_whitespace    foo',
+                'no_docstring',
+                'one_line              foo',
+                'two_lines             foo',
+                'with_aliases (a, b)   foo',
+            ))
+
+        def empty_collections_say_no_tasks(self):
+            expect(
+                "-c empty -l",
+                out="No tasks found in collection 'empty'!\n"
+            )
