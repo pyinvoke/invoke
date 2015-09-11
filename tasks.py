@@ -55,13 +55,19 @@ def watch_docs(c):
         def on_any_event(self, event):
             my_c = Context(config=c.config.clone())
             my_c.update(**docs.configuration())
-            docs['build'](my_c)
+            try:
+                docs['build'](my_c)
+            except:
+                pass
 
     class WWWBuildHandler(RegexMatchingEventHandler):
         def on_any_event(self, event):
             my_c = Context(config=c.config.clone())
             my_c.update(**www.configuration())
-            www['build'](my_c)
+            try:
+                www['build'](my_c)
+            except:
+                pass
 
     # Readme & WWW triggers WWW
     www_handler = WWWBuildHandler(
@@ -101,7 +107,10 @@ def watch_tests(c, module=None):
 
     class BuildHandler(RegexMatchingEventHandler):
         def on_any_event(self, event):
-            test(c, module=module)
+            try:
+                test(c, module=module)
+            except:
+                pass
 
     # Code and docs trigger API
     handler = BuildHandler(
