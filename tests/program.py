@@ -5,7 +5,7 @@ from spec import eq_, ok_, skip, trap
 
 from invoke import Program, Collection
 
-from _utils import load, cd, IntegrationSpec
+from _utils import load, cd, IntegrationSpec, expect
 
 
 class Program_(IntegrationSpec):
@@ -47,15 +47,12 @@ class Program_(IntegrationSpec):
             eq_(Program().normalize_argv("foo bar"), ['foo', 'bar'])
 
     class normalize_name:
-        @trap
         def defaults_to_capitalized_argv_when_None(self):
-            Program().run("myapp --version", exit=False)
-            eq_(sys.stdout.getvalue(), "Myapp unknown\n")
+            expect("myapp --version", out="Myapp unknown\n", invoke=False)
 
-        @trap
         def uses_overridden_value_when_given(self):
-            Program(name='NotProgram').run("program --version", exit=False)
-            eq_(sys.stdout.getvalue(), "NotProgram unknown\n")
+            p = Program(name='NotInvoke')
+            expect("--version", out="NotInvoke unknown\n", program=p)
 
     class normalize_binary:
         @trap
