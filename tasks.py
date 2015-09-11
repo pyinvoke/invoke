@@ -6,6 +6,7 @@ from invocations.testing import test, coverage
 from invocations.packaging import vendorize, release
 
 from invoke import ctask as task, Collection, Context
+from invoke.util import LOG_FORMAT
 
 
 @task(help=test.help)
@@ -136,4 +137,7 @@ ns = Collection(
     test, coverage, integration, vendorize, release, www, docs, sites,
     watch_docs, watch_tests
 )
-ns.configure({'coverage': {'package': 'invoke'}})
+ns.configure({
+    'coverage': {'package': 'invoke'},
+    'tests': {'logformat': LOG_FORMAT},
+})

@@ -2,10 +2,12 @@ import logging
 import os
 
 
+LOG_FORMAT = "%(name)s.%(module)s.%(funcName)s: %(message)s"
+
 def enable_logging():
     logging.basicConfig(
         level=logging.DEBUG,
-        format="%(module)s: %(message)s",
+        format=LOG_FORMAT,
     )
 
 # Allow from-the-start debugging (vs toggled during load of tasks module) via
