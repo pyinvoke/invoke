@@ -19,51 +19,6 @@ from _utils import (
 class CLI(IntegrationSpec):
     "Command-line behavior"
 
-    class basic_invocation:
-        @trap
-        def vanilla(self):
-            os.chdir('implicit')
-            _dispatch('inv foo')
-            eq_(sys.stdout.getvalue(), "Hm\n")
-
-        @trap
-        def vanilla_with_explicit_collection(self):
-            # Duplicates _output_eq, but this way that can change w/o breaking
-            # our expectations.
-            _dispatch('inv -c integration print_foo')
-            eq_(sys.stdout.getvalue(), "foo\n")
-
-        def args(self):
-            _output_eq('-c integration print_name --name inigo', "inigo\n")
-
-        def underscored_args(self):
-            _output_eq(
-                '-c integration print_underscored_arg --my-option whatevs',
-                "whatevs\n",
-            )
-
-    class error_cases:
-        def missing_collection_yields_useful_error(self):
-            _output_eq(
-                '-c huhwhat -l',
-                stderr="Can't find any collection named 'huhwhat'!\n",
-                code=1
-            )
-
-        def missing_default_collection_doesnt_say_None(self):
-            with cd('/'):
-                _output_eq(
-                    '-l',
-                    stderr="Can't find any collection named 'tasks'!\n",
-                    code=1
-                )
-
-        @trap
-        def missing_default_task_prints_help(self):
-            with expect_exit():
-                _dispatch("inv -c foo")
-            ok_("Core options:" in sys.stdout.getvalue())
-
     class help:
         # TODO: On Windows, we don't get a pty, so we don't get a
         # guaranteed terminal size of 80x24. Skip for now, but maybe

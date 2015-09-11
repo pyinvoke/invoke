@@ -1,3 +1,4 @@
+import os
 import sys
 from operator import contains, not_
 
@@ -100,18 +101,43 @@ class Program_(IntegrationSpec):
             for arg in Program.task_args:
                 expect("--help", out=arg.name, test=not_in)
 
-    class run:
-        class bundled_namespace:
-            class when_None:
-                def seeks_and_loads_tasks_module(self):
-                    with cd('implicit'):
-                        expect('foo', out="Hm\n")
+    class load_collection:
+        def complains_when_default_collection_not_found(self):
+            # NOTE: assumes system under test has no tasks.py in root. Meh.
+            with cd(os.path.abspath(os.path.sep)):
+                expect("-l", err="Can't find any collection named 'tasks'!\n")
 
-            class when_Collection:
-                def does_not_seek(self):
-                    with cd('implicit'):
-                        expect(
-                            'foo',
-                            err="No idea what 'foo' is!\n",
-                            program=Program(namespace=Collection('blank'))
-                        )
+        def complains_when_explicit_collection_not_found(self):
+            expect(
+                "-c huhwhat -l",
+                err="Can't find any collection named 'huhwhat'!\n",
+            )
+
+    class run:
+        # NOTE: some of these are integration-style tests, but they are still
+        # fast tests (so not needing to go into the integration suite) and
+        # touch on transformations to the command line that occur above, or
+        # around, the actual parser classes/methods (thus not being suitable
+        # for the parser's own unit tests).
+
+        def seeks_and_loads_tasks_module_by_default(self):
+            with cd('implicit'):
+                expect('foo', out="Hm\n")
+
+        def does_not_seek_tasks_module_if_namespace_was_given(self):
+            with cd('implicit'):
+                expect(
+                    'foo',
+                    err="No idea what 'foo' is!\n",
+                    program=Program(namespace=Collection('blank'))
+                )
+
+        def allows_explicit_task_module_specification(self):
+            expect("-c integration print_foo", out="foo\n")
+
+        def handles_task_arguments(self):
+            expect("-c integration print_name --name inigo", out="inigo\n")
+
+    class help_printing:
+        def empty_invocation_with_no_default_task_prints_help(self):
+            expect("-c foo", out="Core options:", test=contains)
