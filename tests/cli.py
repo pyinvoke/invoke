@@ -19,43 +19,6 @@ from _utils import (
 class CLI(IntegrationSpec):
     "Command-line behavior"
 
-    class autoprinting:
-        def defaults_to_off_and_no_output(self):
-            _output_eq("-c autoprint nope", "")
-
-        def prints_return_value_to_stdout_when_on(self):
-            _output_eq("-c autoprint yup", "It's alive!\n")
-
-        def prints_return_value_to_stdout_when_on_and_in_collection(self):
-            _output_eq("-c autoprint sub.yup", "It's alive!\n")
-
-        def does_not_fire_on_pre_tasks(self):
-            _output_eq("-c autoprint pre_check", "")
-
-        def does_not_fire_on_post_tasks(self):
-            _output_eq("-c autoprint post_check", "")
-
-    class run_options:
-        "run() related CLI flags affect 'run' config values"
-        def _test_flag(self, flag, key):
-            with mocked_run():
-                # The tasks themselves perform the necessary asserts.
-                _dispatch('invoke {0} -c contextualized check_{1}'.format(
-                    flag, key
-                ))
-
-        def warn_only(self):
-            self._test_flag('-w', 'warn')
-
-        def pty(self):
-            self._test_flag('-p', 'pty')
-
-        def hide(self):
-            self._test_flag('--hide both', 'hide')
-
-        def echo(self):
-            self._test_flag('-e', 'echo')
-
     class configuration:
         "Configuration-related concerns"
 

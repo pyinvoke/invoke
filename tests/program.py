@@ -7,7 +7,9 @@ from spec import eq_, ok_, skip, trap
 
 from invoke import Program, Collection, main
 
-from _utils import load, cd, IntegrationSpec, expect, skip_if_windows
+from _utils import (
+    load, cd, IntegrationSpec, expect, skip_if_windows, mocked_run,
+)
 
 
 class Program_(IntegrationSpec):
@@ -363,3 +365,42 @@ Available tasks:
                 "-c empty -l",
                 out="No tasks found in collection 'empty'!\n"
             )
+
+
+    class autoprinting:
+        def defaults_to_off_and_no_output(self):
+            expect("-c autoprint nope", out="")
+
+        def prints_return_value_to_stdout_when_on(self):
+            expect("-c autoprint yup", out="It's alive!\n")
+
+        def prints_return_value_to_stdout_when_on_and_in_collection(self):
+            expect("-c autoprint sub.yup", out="It's alive!\n")
+
+        def does_not_fire_on_pre_tasks(self):
+            expect("-c autoprint pre_check", out="")
+
+        def does_not_fire_on_post_tasks(self):
+            expect("-c autoprint post_check", out="")
+
+
+    class run_options:
+        "run() related CLI flags affect 'run' config values"
+        def _test_flag(self, flag, key):
+            with mocked_run():
+                # The tasks themselves perform the necessary asserts.
+                expect('invoke {0} -c contextualized check_{1}'.format(
+                    flag, key
+                ))
+
+        def warn_only(self):
+            self._test_flag('-w', 'warn')
+
+        def pty(self):
+            self._test_flag('-p', 'pty')
+
+        def hide(self):
+            self._test_flag('--hide both', 'hide')
+
+        def echo(self):
+            self._test_flag('-e', 'echo')
