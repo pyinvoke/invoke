@@ -230,41 +230,32 @@ class Program(object):
         """
         Filter out core args, leaving any tasks or their args for later.
 
-        :returns: Core arguments `.ParseResult`.
+        Sets ``self.core`` to the `.ParseResult` from this step.
         """
         debug("Parsing initial context (core args)")
         parser = Parser(initial=self.initial_context, ignore_unknown=True)
-        core = parse_gracefully(parser, self.argv[1:])
+        self.core = parse_gracefully(parser, self.argv[1:])
         msg = "After core-args pass, leftover argv: {0!r}"
-        debug(msg.format(core.unparsed))
-        return core
+        debug(msg.format(self.core.unparsed))
 
-    def parse_tasks(self, core):
+    def parse_tasks(self):
         """
         Load a task collection based on core args, then execute leftover args.
 
         Typically, those leftover args will be tasks & task args, or per-task
         help, etc.
 
-        :param core:
-            The `~invoke.parser.context.Context` resulting from the
-            initial/core parsing step.
-
-        :returns:
-            A three-tuple consisting of:
-        
-            * the `.Parser` used in this step;
-            * the `.Collection` that was loaded;
-            * and a list of `~invoke.parser.context.Context` objects mapping to
-              the tasks found in the command line.
+        Sets ``self.collection`` to the loaded collection, ``self.parser`` to
+        the parser used, and ``self.tasks`` to the parse result.
         """
         # Load collection (default or specified) and parse leftovers
-        args = core[0].args
+        args = self.core[0].args
         start = args.root.value
         loader = FilesystemLoader(start=start)
         coll_name = args.collection.value
         try:
-            collection = loader.load(coll_name) if coll_name else loader.load()
+            coll = loader.load(coll_name) if coll_name else loader.load()
+            self.collection = coll
         except CollectionNotFound:
             # TODO: improve sys.exit mocking in tests so we can just raise
             # Exit(msg)
@@ -274,51 +265,16 @@ class Program(object):
                 file=sys.stderr
             )
             raise Exit(1)
-        parser = Parser(contexts=collection.to_contexts())
-        debug("Parsing tasks against {0!r}".format(collection))
-        return parser, collection, parse_gracefully(parser, core.unparsed)
+        self.parser = Parser(contexts=self.collection.to_contexts())
+        debug("Parsing tasks against {0!r}".format(self.collection))
+        self.tasks = parse_gracefully(self.parser, self.core.unparsed)
 
-    def parse(self, collection=None, version=None):
+    def print_task_help(self, args, parser, collection):
         """
-        Parse ``self.argv`` into useful core & per-task structures.
-
-        :returns:
-            Three-tuple of ``args`` (core, non-task `.Argument` objects),
-            ``collection`` (compiled `.Collection` of tasks, using defaults or
-            core arguments affecting collection generation) and ``tasks`` (a
-            list of `~.ParserContext` objects representing the requested task
-            executions).
+        Print help for a specific task, e.g. ``inv --help <taskname>``.
         """
-        # Obtain core args
-        core = self.parse_core_args()
-        args = core[0].args
-
-        # Enable debugging from here on out, if debug flag was given.
-        # (Prior to this point, debugging requires setting INVOKE_DEBUG).
-        if args.debug.value:
-            enable_logging()
-
-        # Print version & exit if necessary
-        if args.version.value:
-            self.print_version()
-            raise Exit
-
-        # Core (no value given) --help output
-        # TODO: if this wants to display context sensitive help (e.g. a combo
-        # help and available tasks listing; or core flags modified by
-        # plugins/task modules) it will have to move farther down.
-        if args.help.value is True:
-            self.print_help()
-            raise Exit
-
-        # Obtain collection & task contexts & rebind 'parser' to the
-        # task-related parser used to generate them (we've still got a handle
-        # on the core parse step's 'args', so.)
-        parser, collection, tasks = self.parse_tasks(core)
-
-        # Per-task help. Use the parser's contexts dict as that's the easiest
-        # way to obtain Context objects here - which are what help output
-        # needs.
+        # Use the parser's contexts dict as that's the easiest way to obtain
+        # Context objects here - which are what help output needs.
         name = args.help.value
         if name in parser.contexts:
             # Setup
@@ -348,14 +304,55 @@ class Program(object):
                 print("")
             raise Exit
 
+    def parse(self, collection=None, version=None):
+        """
+        Parse ``self.argv`` into useful core & per-task structures.
+
+        :returns:
+            Three-tuple of ``args`` (core, non-task `.Argument` objects),
+            ``collection`` (compiled `.Collection` of tasks, using defaults or
+            core arguments affecting collection generation) and ``tasks`` (a
+            list of `~.ParserContext` objects representing the requested task
+            executions).
+        """
+        # Obtain core args (sets self.core)
+        self.parse_core_args()
+        args = self.core[0].args
+
+        # Enable debugging from here on out, if debug flag was given.
+        # (Prior to this point, debugging requires setting INVOKE_DEBUG).
+        if args.debug.value:
+            enable_logging()
+
+        # Print version & exit if necessary
+        if args.version.value:
+            self.print_version()
+            raise Exit
+
+        # Core (no value given) --help output
+        # TODO: if this wants to display context sensitive help (e.g. a combo
+        # help and available tasks listing; or core flags modified by
+        # plugins/task modules) it will have to move farther down.
+        if args.help.value is True:
+            self.print_help()
+            raise Exit
+
+        # Parse remainder into task contexts (sets
+        # self.parser/collection/tasks)
+        self.parse_tasks()
+
+        # Print per-task help, if necessary
+        if args.help.value in self.parser.contexts:
+            self.print_task_help(name)
+
         # Print discovered tasks if necessary
         if args.list.value:
             # Sort in depth, then alpha, order
-            task_names = collection.task_names
+            task_names = self.collection.task_names
             # Short circuit if no tasks to show
             if not task_names:
                 msg = "No tasks found in collection '{0}'!"
-                print(msg.format(collection.name))
+                print(msg.format(self.collection.name))
                 raise Exit
             pairs = []
             for primary in sort_names(task_names):
@@ -365,7 +362,7 @@ class Program(object):
                 if aliases:
                     name += " ({0})".format(', '.join(aliases))
                 # Add docstring 1st lines
-                task = collection[primary]
+                task = self.collection[primary]
                 help_ = ""
                 if task.__doc__:
                     help_ = task.__doc__.lstrip().splitlines()[0]
@@ -378,16 +375,17 @@ class Program(object):
 
         # Print completion helpers if necessary
         if args.complete.value:
-            complete(core, initial_context, collection)
+            # TODO: reference these within complete() after moving it here
+            complete(self.core, self.initial_context, self.collection)
 
         # Print help if:
         # * empty invocation
         # * no default task found in loaded root collection
         # * no other "do an thing" flags were found (implicit in where this
         #   code is located - just before return)
-        if not tasks and not collection.default:
+        if not self.tasks and not self.collection.default:
             self.print_help()
             raise Exit
 
         # Return to caller so they can handle the results
-        return args, collection, tasks
+        return args, self.collection, self.tasks
