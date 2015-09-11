@@ -7,7 +7,7 @@ from invoke.context import Context
 from invoke.executor import Executor
 from invoke.tasks import Task, ctask, call
 
-from _utils import _output_eq, IntegrationSpec
+from _utils import expect, IntegrationSpec
 
 
 class Executor_(IntegrationSpec):
@@ -114,7 +114,7 @@ class Executor_(IntegrationSpec):
 
     class deduping_and_chaining:
         def chaining_is_depth_first(self):
-            _output_eq('-c depth_first deploy', """
+            expect('-c depth_first deploy', out="""
 Cleaning HTML
 Cleaning .tar.gz files
 Cleaned everything
@@ -126,7 +126,7 @@ Testing
 """.lstrip())
 
         def _expect(self, args, expected):
-            _output_eq('-c integration {0}'.format(args), expected.lstrip())
+            expect('-c integration {0}'.format(args), out=expected.lstrip())
 
         class adjacent_hooks:
             def deduping(self):
