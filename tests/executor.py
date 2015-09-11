@@ -263,3 +263,19 @@ bar
                 self.executor.execute('task4'),
                 {self.task1: 7, self.task4: 15}
             )
+
+    class autoprinting:
+        def defaults_to_off_and_no_output(self):
+            expect("-c autoprint nope", out="")
+
+        def prints_return_value_to_stdout_when_on(self):
+            expect("-c autoprint yup", out="It's alive!\n")
+
+        def prints_return_value_to_stdout_when_on_and_in_collection(self):
+            expect("-c autoprint sub.yup", out="It's alive!\n")
+
+        def does_not_fire_on_pre_tasks(self):
+            expect("-c autoprint pre_check", out="")
+
+        def does_not_fire_on_post_tasks(self):
+            expect("-c autoprint post_check", out="")
