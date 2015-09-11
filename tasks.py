@@ -37,6 +37,45 @@ def sites(c):
     www['build'](www_c, opts=opts)
 
 
+
+def make_handler(c, task_, regexes, ignore_regexes, *args, **kwargs):
+    args = [c] + list(args)
+    try:
+        from watchdog.events import RegexMatchingEventHandler
+    except ImportError:
+        sys.exit("If you want to use this, 'pip install watchdog' first.")
+
+    class Handler(RegexMatchingEventHandler):
+        def on_any_event(self, event):
+            try:
+                task_(*args, **kwargs)
+            except:
+                pass
+
+    return Handler(regexes=regexes, ignore_regexes=ignore_regexes)
+
+def observe(*handlers):
+    try:
+        from watchdog.observers import Observer
+    except ImportError:
+        sys.exit("If you want to use this, 'pip install watchdog' first.")
+
+    observer = Observer()
+    # TODO: Find parent directory of tasks.py and use that.
+    for handler in handlers:
+        observer.schedule(handler, '.', recursive=True)
+    observer.start()
+    try:
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        observer.stop()
+    observer.join()
+
+def watch(c, task_, regexes, ignore_regexes, *args, **kwargs):
+    observe(make_handler(c, task_, regexes, ignore_regexes, *args, **kwargs))
+
+
 @task
 def watch_docs(c):
     """
@@ -80,18 +119,7 @@ def watch_docs(c):
         ignore_regexes=['.*/\..*\.swp', '\./sites/docs/_build'],
     )
 
-    # Run observer loop
-    observer = Observer()
-    # TODO: Find parent directory of tasks.py and use that.
-    for x in (www_handler, api_handler):
-        observer.schedule(x, '.', recursive=True)
-    observer.start()
-    try:
-        while True:
-            time.sleep(1)
-    except KeyboardInterrupt:
-        observer.stop()
-    observer.join()
+    observe(www_handler, api_handler)
 
  
 @task
@@ -99,36 +127,9 @@ def watch_tests(c, module=None):
     """
     Watch source tree and test tree for changes, rerunning tests as necessary.
     """
-    try:
-        from watchdog.observers import Observer
-        from watchdog.events import RegexMatchingEventHandler
-    except ImportError:
-        sys.exit("If you want to use this, 'pip install watchdog' first.")
-
-    class BuildHandler(RegexMatchingEventHandler):
-        def on_any_event(self, event):
-            try:
-                test(c, module=module)
-            except:
-                pass
-
-    # Code and docs trigger API
-    handler = BuildHandler(
-        regexes=['\./invoke/', '\./tests/'],
-        ignore_regexes=['.*/\..*\.swp'],
+    watch(
+        c, test, ['\./invoke/', '\./tests/'], ['.*/\..*\.swp'], module=module
     )
-
-    # Run observer loop
-    observer = Observer()
-    # TODO: Find parent directory of tasks.py and use that.
-    observer.schedule(handler, '.', recursive=True)
-    observer.start()
-    try:
-        while True:
-            time.sleep(1)
-    except KeyboardInterrupt:
-        observer.stop()
-    observer.join()
 
 
 ns = Collection(
