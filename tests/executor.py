@@ -1,4 +1,4 @@
-from spec import eq_
+from spec import eq_, ok_
 from mock import Mock, call as mock_call
 
 from invoke.collection import Collection
@@ -18,11 +18,13 @@ class Executor_(IntegrationSpec):
         self.task2 = Task(Mock(return_value=10), pre=[self.task1])
         self.task3 = Task(Mock(), pre=[self.task1])
         self.task4 = Task(Mock(return_value=15), post=[self.task1])
+        self.contextualized = Task(Mock(), contextualized=True)
         coll = Collection()
         coll.add_task(self.task1, name='task1')
         coll.add_task(self.task2, name='task2')
         coll.add_task(self.task3, name='task3')
         coll.add_task(self.task4, name='task4')
+        coll.add_task(self.contextualized, name='contextualized')
         self.executor = Executor(collection=coll)
 
     class init:
@@ -47,6 +49,12 @@ class Executor_(IntegrationSpec):
             k = {'foo': 'bar'}
             self.executor.execute(('task1', k))
             self.task1.body.assert_called_once_with(**k)
+
+        def contextualized_tasks_are_given_parser_context_arg(self):
+            self.executor.execute('contextualized')
+            args = self.contextualized.body.call_args[0]
+            eq_(len(args), 1)
+            ok_(isinstance(args[0], Context))
 
     class basic_pre_post:
         "basic pre/post task functionality"

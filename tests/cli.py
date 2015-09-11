@@ -64,11 +64,6 @@ class CLI(IntegrationSpec):
                 _dispatch("inv -c foo")
             ok_("Core options:" in sys.stdout.getvalue())
 
-    def contextualized_tasks_are_given_parser_context_arg(self):
-        # go() in contextualized.py just returns its initial arg
-        retval = list(_dispatch('invoke -c contextualized go').values())[0]
-        assert isinstance(retval, Context)
-
     class help:
         # TODO: On Windows, we don't get a pty, so we don't get a
         # guaranteed terminal size of 80x24. Skip for now, but maybe
