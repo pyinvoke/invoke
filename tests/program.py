@@ -109,4 +109,9 @@ class Program_(IntegrationSpec):
 
             class when_Collection:
                 def does_not_seek(self):
-                    skip()
+                    with cd('implicit'):
+                        expect(
+                            'foo',
+                            err="No idea what 'foo' is!\n",
+                            program=Program(namespace=Collection('blank'))
+                        )

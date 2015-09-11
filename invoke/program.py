@@ -148,8 +148,9 @@ class Program(object):
             strings, or a string. See `.normalize_argv` for details.
 
         :param bool exit:
-            When ``True`` (default: ``False``), will ignore `.Exit` and
-            `.Failure` exceptions, which otherwise trigger calls to `sys.exit`.
+            When ``True`` (default: ``False``), will ignore `.ParseError`,
+            `.Exit` and `.Failure` exceptions, which otherwise trigger calls to
+            `sys.exit`.
 
             .. note::
                 This is mostly a concession to testing. If you're setting this
@@ -165,9 +166,18 @@ class Program(object):
             )
             tasks = tasks_from_contexts(parser_contexts, collection)
             executor.execute(*tasks)
-        except (Failure, Exit) as e:
+        except (Failure, Exit, ParseError) as e:
+            # Print error message from parser if necessary.
+            if isinstance(e, ParseError):
+                sys.stderr.write("{0}\n".format(e))
+            # Terminate execution unless we were told not to.
             if exit:
-                code = f.result.exited if isinstance(e, Failure) else e.code
+                if isinstance(e, Failure):
+                    code = e.result.exited
+                elif isinstance(e, Exit):
+                    code = e.code
+                elif isinstance(e, ParseError):
+                    code = 1
                 sys.exit(code)
 
     def normalize_argv(self, argv):
@@ -234,21 +244,14 @@ class Program(object):
         """
         debug("Parsing initial context (core args)")
         parser = Parser(initial=self.initial_context, ignore_unknown=True)
-        self.core = parse_gracefully(parser, self.argv[1:])
+        self.core = parser.parse_argv(self.argv[1:])
         msg = "After core-args pass, leftover argv: {0!r}"
         debug(msg.format(self.core.unparsed))
 
-    def parse_tasks(self):
+    def load_collection(self):
         """
-        Load a task collection based on core args, then execute leftover args.
-
-        Typically, those leftover args will be tasks & task args, or per-task
-        help, etc.
-
-        Sets ``self.collection`` to the loaded collection, ``self.parser`` to
-        the parser used, and ``self.tasks`` to the parse result.
+        Load a task collection based on parsed core args, or die trying.
         """
-        # Load collection (default or specified) and parse leftovers
         args = self.core[0].args
         start = args.root.value
         loader = FilesystemLoader(start=start)
@@ -265,9 +268,17 @@ class Program(object):
                 file=sys.stderr
             )
             raise Exit(1)
+
+    def parse_tasks(self):
+        """
+        Parse leftover args, which are typically tasks & per-task args.
+
+        Sets ``self.parser`` to the parser used, and ``self.tasks`` to the
+        parse result.
+        """
         self.parser = Parser(contexts=self.collection.to_contexts())
         debug("Parsing tasks against {0!r}".format(self.collection))
-        self.tasks = parse_gracefully(self.parser, self.core.unparsed)
+        self.tasks = self.parser.parse_argv(self.core.unparsed)
 
     def print_task_help(self, args, parser, collection):
         """
@@ -336,6 +347,14 @@ class Program(object):
         if args.help.value is True:
             self.print_help()
             raise Exit
+
+        # Load a collection of tasks unless one was already set.
+        if self.namespace is not None:
+            debug("Program was given a default namespace, skipping collection loading") # noqa
+            self.collection = self.namespace
+        else:
+            debug("No default namespace provided, trying to load one from disk") # noqa
+            self.load_collection()
 
         # Parse remainder into task contexts (sets
         # self.parser/collection/tasks)

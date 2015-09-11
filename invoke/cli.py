@@ -60,6 +60,17 @@ def print_columns(tuples):
     print('')
 
 
+def print_help(argv, initial_context):
+    program_name = os.path.basename(argv[0])
+    if program_name == 'invoke' or program_name == 'inv':
+        program_name = 'inv[oke]'
+    print("Usage: {0} [--core-opts] task1 [--task1-opts] ... taskN [--taskN-opts]".format(program_name)) # noqa
+    print("")
+    print("Core options:")
+    print_columns(initial_context.help_tuples())
+    raise Exit
+
+
 def print_task_names(collection):
     for name in sort_names(collection.task_names):
         print(name)
