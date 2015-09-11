@@ -19,12 +19,6 @@ from _utils import (
 class CLI(IntegrationSpec):
     "Command-line behavior"
 
-    def debug_flag_activates_logging(self):
-        # Have to patch our logger to get in before Nose logcapture kicks in.
-        with patch('invoke.util.debug') as debug:
-            _dispatch('inv -d -c debugging foo')
-            debug.assert_called_with('my-sentinel')
-
     class autoprinting:
         def defaults_to_off_and_no_output(self):
             _output_eq("-c autoprint nope", "")

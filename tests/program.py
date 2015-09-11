@@ -30,6 +30,16 @@ class Program_(IntegrationSpec):
             eq_(Program(binary='myapp').binary, 'myapp')
 
 
+    class miscellaneous:
+        "miscellaneous behaviors"
+        def debug_flag_activates_logging(self):
+            # Have to patch our logger to get in before Nose logcapture kicks
+            # in.
+            with patch('invoke.util.debug') as debug:
+                expect('-d -c debugging foo')
+                debug.assert_called_with('my-sentinel')
+
+
     class normalize_argv:
         @patch('invoke.program.sys')
         def defaults_to_sys_argv(self, mock_sys):
