@@ -1,5 +1,5 @@
 import sys
-from operator import contains
+from operator import contains, not_
 
 from mock import patch, Mock
 from spec import eq_, ok_, skip, trap
@@ -93,22 +93,19 @@ class Program_(IntegrationSpec):
             for arg in Program.task_args:
                 expect("--help", program=program, out=arg.name, test=contains)
 
-        @trap
         def non_null_namespace_does_not_trigger_task_related_args(self):
-            Program(namespace=Collection()).run("app --help", exit=False)
-            help_ = sys.stdout.getvalue()
+            program = Program(namespace=Collection())
+            # NOTE: have to reverse args because of how contains() works
+            not_in = lambda a,b: not_(contains(b, a))
             for arg in Program.task_args:
-                name = arg.name
-                ok_(name not in help_, "{0} in {1}".format(name, help_))
+                expect("--help", out=arg.name, test=not_in)
 
     class run:
         class bundled_namespace:
             class when_None:
-                @trap
                 def seeks_and_loads_tasks_module(self):
                     with cd('implicit'):
-                        Program().run('inv foo')
-                        eq_(sys.stdout.getvalue(), "Hm\n")
+                        expect('foo', out="Hm\n")
 
             class when_Collection:
                 def does_not_seek(self):
