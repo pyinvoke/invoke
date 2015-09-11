@@ -226,6 +226,58 @@ class Program(object):
         print("Core options:")
         print_columns(self.initial_context.help_tuples())
 
+    def parse_core_args(self):
+        """
+        Filter out core args, leaving any tasks or their args for later.
+
+        :returns: Core arguments `.ParseResult`.
+        """
+        debug("Parsing initial context (core args)")
+        parser = Parser(initial=self.initial_context, ignore_unknown=True)
+        core = parse_gracefully(parser, self.argv[1:])
+        msg = "After core-args pass, leftover argv: {0!r}"
+        debug(msg.format(core.unparsed))
+        return core
+
+    def parse_tasks(self, core):
+        """
+        Load a task collection based on core args, then execute leftover args.
+
+        Typically, those leftover args will be tasks & task args, or per-task
+        help, etc.
+
+        :param core:
+            The `~invoke.parser.context.Context` resulting from the
+            initial/core parsing step.
+
+        :returns:
+            A three-tuple consisting of:
+        
+            * the `.Parser` used in this step;
+            * the `.Collection` that was loaded;
+            * and a list of `~invoke.parser.context.Context` objects mapping to
+              the tasks found in the command line.
+        """
+        # Load collection (default or specified) and parse leftovers
+        args = core[0].args
+        start = args.root.value
+        loader = FilesystemLoader(start=start)
+        coll_name = args.collection.value
+        try:
+            collection = loader.load(coll_name) if coll_name else loader.load()
+        except CollectionNotFound:
+            # TODO: improve sys.exit mocking in tests so we can just raise
+            # Exit(msg)
+            name = coll_name or DEFAULT_COLLECTION_NAME
+            six.print_(
+                "Can't find any collection named {0!r}!".format(name),
+                file=sys.stderr
+            )
+            raise Exit(1)
+        parser = Parser(contexts=collection.to_contexts())
+        debug("Parsing tasks against {0!r}".format(collection))
+        return parser, collection, parse_gracefully(parser, core.unparsed)
+
     def parse(self, collection=None, version=None):
         """
         Parse ``self.argv`` into useful core & per-task structures.
@@ -237,12 +289,8 @@ class Program(object):
             list of `~.ParserContext` objects representing the requested task
             executions).
         """
-        # Filter out core args, leaving any tasks or their args in .unparsed
-        debug("Parsing initial context (core args)")
-        parser = Parser(initial=self.initial_context, ignore_unknown=True)
-        core = parse_gracefully(parser, self.argv[1:])
-        msg = "After core-args pass, leftover argv: {0!r}"
-        debug(msg.format(core.unparsed))
+        # Obtain core args
+        core = self.parse_core_args()
         args = core[0].args
 
         # Enable debugging from here on out, if debug flag was given.
@@ -263,24 +311,10 @@ class Program(object):
             self.print_help()
             raise Exit
 
-        # Load collection (default or specified) and parse leftovers
-        start = args.root.value
-        loader = FilesystemLoader(start=start)
-        coll_name = args.collection.value
-        try:
-            collection = loader.load(coll_name) if coll_name else loader.load()
-        except CollectionNotFound:
-            # TODO: improve sys.exit mocking in tests so we can just raise
-            # Exit(msg)
-            name = coll_name or DEFAULT_COLLECTION_NAME
-            six.print_(
-                "Can't find any collection named {0!r}!".format(name),
-                file=sys.stderr
-            )
-            raise Exit(1)
-        parser = Parser(contexts=collection.to_contexts())
-        debug("Parsing tasks against {0!r}".format(collection))
-        tasks = parse_gracefully(parser, core.unparsed)
+        # Obtain collection & task contexts & rebind 'parser' to the
+        # task-related parser used to generate them (we've still got a handle
+        # on the core parse step's 'args', so.)
+        parser, collection, tasks = self.parse_tasks(core)
 
         # Per-task help. Use the parser's contexts dict as that's the easiest
         # way to obtain Context objects here - which are what help output
