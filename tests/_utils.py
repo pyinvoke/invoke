@@ -1,13 +1,15 @@
+import operator
 import os
 import re
 import sys
 import termios
 from contextlib import contextmanager
 from functools import partial, wraps
+
 from invoke.vendor.six import StringIO
 
 from mock import patch
-from spec import trap, Spec, eq_, skip
+from spec import trap, Spec, eq_, ok_, skip
 
 from invoke import Program
 from invoke.platform import WINDOWS
@@ -73,7 +75,8 @@ def _dispatch(argstr, version=None):
 
 
 @trap
-def expect(invocation, out=None, err=None, program=None, invoke=True):
+def expect(invocation, out=None, err=None, program=None, invoke=True,
+    test=None):
     """
     Run ``invocation`` via ``program`` and expect resulting output to match.
 
@@ -83,6 +86,9 @@ def expect(invocation, out=None, err=None, program=None, invoke=True):
 
     To skip automatically assuming the argv under test starts with ``"invoke
     "``, say ``invoke=False``.
+
+    To customize the operator used for testing (default: equality), use
+    ``test``.
     """
     if program is None:
         program = Program()
@@ -90,9 +96,15 @@ def expect(invocation, out=None, err=None, program=None, invoke=True):
         invocation = "invoke {0}".format(invocation)
     program.run(invocation, exit=False)
     if out is not None:
-        eq_(sys.stdout.getvalue(), out)
+        if test:
+            ok_(test(sys.stdout.getvalue(), out))
+        else:
+            eq_(sys.stdout.getvalue(), out)
     if err is not None:
-        eq_(sys.stderr.getvalue(), err)
+        if test:
+            ok_(test(sys.stderr.getvalue(), err))
+        else:
+            eq_(sys.stderr.getvalue(), err)
 
 
 @contextmanager

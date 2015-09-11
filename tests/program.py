@@ -1,4 +1,5 @@
 import sys
+from operator import contains
 
 from mock import patch, Mock
 from spec import eq_, ok_, skip, trap
@@ -55,10 +56,22 @@ class Program_(IntegrationSpec):
             expect("--version", out="NotInvoke unknown\n", program=p)
 
     class normalize_binary:
-        @trap
         def defaults_to_argv_when_None(self):
-            Program().run("myapp --help", exit=False)
-            ok_("myapp [--core-opts]" in sys.stdout.getvalue())
+            expect(
+                "myapp --help",
+                out="myapp [--core-opts]",
+                invoke=False,
+                test=contains
+            )
+
+        def uses_overridden_value_when_given(self):
+            expect(
+                "myapp --help",
+                out="nope [--core-opts]",
+                program=Program(binary='nope'),
+                invoke=False,
+                test=contains
+            )
 
         @trap
         def use_binary_basename_when_invoked_absolutely(self):
@@ -67,29 +80,18 @@ class Program_(IntegrationSpec):
             ok_("myapp [--core-opts]" in stdout)
             ok_("/usr/local/bin" not in stdout)
 
-        @trap
-        def uses_overridden_value_when_given(self):
-            Program(binary='nope').run("myapp --help", exit=False)
-            ok_("nope [--core-opts]" in sys.stdout.getvalue())
-
     class initial_context:
-        @trap
         def contains_truly_core_arguments_regardless_of_namespace_value(self):
             # Spot check. See integration-style --help tests for full argument
             # checkup.
             for program in (Program(), Program(namespace=Collection())):
-                program.run("app --help", exit=False)
-                help_ = sys.stdout.getvalue()
                 for arg in ('--complete', '--debug', '--warn-only'):
-                    ok_(arg in help_, "{0} not in {1}".format(arg, help_))
+                    expect("--help", program=program, out=arg, test=contains)
 
-        @trap
         def null_namespace_triggers_task_related_args(self):
-            Program(namespace=None).run("app --help", exit=False)
+            program = Program(namespace=None)
             for arg in Program.task_args:
-                name = arg.name
-                help_ = sys.stdout.getvalue()
-                ok_(name in help_, "{0} not in {1}".format(name, help_))
+                expect("--help", program=program, out=arg.name, test=contains)
 
         @trap
         def non_null_namespace_does_not_trigger_task_related_args(self):
