@@ -230,7 +230,6 @@ class Program(object):
         print("{0} {1}".format(self.name, self.version or "unknown"))
 
     def print_help(self):
-        # TODO: ensure invoke itself sets binary to 'inv[oke]'
         print("Usage: {0} [--core-opts] task1 [--task1-opts] ... taskN [--taskN-opts]".format(self.binary)) # noqa
         print("")
         print("Core options:")
@@ -280,19 +279,19 @@ class Program(object):
         debug("Parsing tasks against {0!r}".format(self.collection))
         self.tasks = self.parser.parse_argv(self.core.unparsed)
 
-    def print_task_help(self, args, parser, collection):
+    def print_task_help(self):
         """
         Print help for a specific task, e.g. ``inv --help <taskname>``.
         """
         # Use the parser's contexts dict as that's the easiest way to obtain
         # Context objects here - which are what help output needs.
-        name = args.help.value
-        if name in parser.contexts:
+        name = self.core[0].args.help.value
+        if name in self.parser.contexts:
             # Setup
-            ctx = parser.contexts[name]
+            ctx = self.parser.contexts[name]
             tuples = ctx.help_tuples()
-            docstring = inspect.getdoc(collection[name])
-            header = "Usage: inv[oke] [--core-opts] {0} {{0}}[other tasks here ...]".format(name) # noqa
+            docstring = inspect.getdoc(self.collection[name])
+            header = "Usage: {1} [--core-opts] {0} {{0}}[other tasks here ...]".format(name, self.binary) # noqa
             print(header.format("[--options] " if tuples else ""))
             print("")
             print("Docstring:")
@@ -362,7 +361,7 @@ class Program(object):
 
         # Print per-task help, if necessary
         if args.help.value in self.parser.contexts:
-            self.print_task_help(name)
+            self.print_task_help()
 
         # Print discovered tasks if necessary
         if args.list.value:

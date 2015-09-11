@@ -5,9 +5,9 @@ from operator import contains, not_
 from mock import patch, Mock
 from spec import eq_, ok_, skip, trap
 
-from invoke import Program, Collection
+from invoke import Program, Collection, main
 
-from _utils import load, cd, IntegrationSpec, expect
+from _utils import load, cd, IntegrationSpec, expect, skip_if_windows
 
 
 class Program_(IntegrationSpec):
@@ -138,6 +138,134 @@ class Program_(IntegrationSpec):
         def handles_task_arguments(self):
             expect("-c integration print_name --name inigo", out="inigo\n")
 
-    class help_printing:
-        def empty_invocation_with_no_default_task_prints_help(self):
-            expect("-c foo", out="Core options:", test=contains)
+    class help_:
+        "--help"
+
+        class core:
+            def empty_invocation_with_no_default_task_prints_help(self):
+                expect("-c foo", out="Core options:", test=contains)
+
+            # TODO: On Windows, we don't get a pty, so we don't get a
+            # guaranteed terminal size of 80x24. Skip for now, but maybe
+            # a suitable fix would be to just strip all whitespace from the
+            # returned and expected values before testing. Then terminal
+            # size is ignored.
+            @skip_if_windows
+            def core_help_option_prints_core_help(self):
+                # TODO: change dynamically based on parser contents?
+                # e.g. no core args == no [--core-opts],
+                # no tasks == no task stuff?
+                # NOTE: test will trigger default pty size of 80x24, so the
+                # below string is formatted appropriately.
+                # TODO: add more unit-y tests for specific behaviors:
+                # * fill terminal w/ columns + spacing
+                # * line-wrap help text in its own column
+                expected = """
+Usage: inv[oke] [--core-opts] task1 [--task1-opts] ... taskN [--taskN-opts]
+
+Core options:
+  --complete                       Print tab-completion candidates for given
+                                   parse remainder.
+  --no-dedupe                      Disable task deduplication.
+  -c STRING, --collection=STRING   Specify collection name to load.
+  -d, --debug                      Enable debug output.
+  -e, --echo                       Echo executed commands before running.
+  -f STRING, --config=STRING       Runtime configuration file to use.
+  -h [STRING], --help[=STRING]     Show core or per-task help and exit.
+  -H STRING, --hide=STRING         Set default value of run()'s 'hide' kwarg.
+  -l, --list                       List available tasks.
+  -p, --pty                        Use a pty when executing shell commands.
+  -r STRING, --root=STRING         Change root directory used for finding task
+                                   modules.
+  -V, --version                    Show version and exit.
+  -w, --warn-only                  Warn, instead of failing, when shell
+                                   commands fail.
+
+""".lstrip()
+                for flag in ['-h', '--help']:
+                    expect(flag, out=expected, program=main.program)
+
+        class per_task:
+            "per-task"
+            def prints_help_for_task_only(self):
+                expected = """
+Usage: invoke [--core-opts] punch [--options] [other tasks here ...]
+
+Docstring:
+  none
+
+Options:
+  -h STRING, --why=STRING   Motive
+  -w STRING, --who=STRING   Who to punch
+
+""".lstrip()
+                for flag in ['-h', '--help']:
+                    expect('-c decorator {0} punch'.format(flag), out=expected)
+
+            def works_for_unparameterized_tasks(self):
+                expected = """
+Usage: invoke [--core-opts] biz [other tasks here ...]
+
+Docstring:
+  none
+
+Options:
+  none
+
+""".lstrip()
+                expect('-c decorator -h biz', out=expected)
+
+            def honors_program_binary(self):
+                expect(
+                    '-c decorator -h biz',
+                    out="Usage: notinvoke",
+                    test=contains,
+                    program=Program(binary='notinvoke')
+                )
+
+            def displays_docstrings_if_given(self):
+                expected = """
+Usage: invoke [--core-opts] foo [other tasks here ...]
+
+Docstring:
+  Foo the bar.
+
+Options:
+  none
+
+""".lstrip()
+                expect('-c decorator -h foo', out=expected)
+
+            def dedents_correctly(self):
+                expected = """
+Usage: invoke [--core-opts] foo2 [other tasks here ...]
+
+Docstring:
+  Foo the bar:
+
+    example code
+
+  Added in 1.0
+
+Options:
+  none
+
+""".lstrip()
+                expect('-c decorator -h foo2', out=expected)
+
+            def dedents_correctly_for_alt_docstring_style(self):
+                expected = """
+Usage: invoke [--core-opts] foo3 [other tasks here ...]
+
+Docstring:
+  Foo the other bar:
+
+    example code
+
+  Added in 1.1
+
+Options:
+  none
+
+""".lstrip()
+                expect('-c decorator -h foo3', out=expected)
