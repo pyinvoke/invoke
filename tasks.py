@@ -38,7 +38,7 @@ def sites(c):
 
 
 @task
-def watch(c):
+def watch_docs(c):
     """
     Watch both doc trees & rebuild them if files change.
 
@@ -87,8 +87,43 @@ def watch(c):
         observer.stop()
     observer.join()
 
+ 
+@task
+def watch_tests(c, module=None):
+    """
+    Watch source tree and test tree for changes, rerunning tests as necessary.
+    """
+    try:
+        from watchdog.observers import Observer
+        from watchdog.events import RegexMatchingEventHandler
+    except ImportError:
+        sys.exit("If you want to use this, 'pip install watchdog' first.")
+
+    class BuildHandler(RegexMatchingEventHandler):
+        def on_any_event(self, event):
+            test(c, module=module)
+
+    # Code and docs trigger API
+    handler = BuildHandler(
+        regexes=['\./invoke/', '\./tests'],
+        ignore_regexes=['.*/\..*\.swp'],
+    )
+
+    # Run observer loop
+    observer = Observer()
+    # TODO: Find parent directory of tasks.py and use that.
+    observer.schedule(handler, '.', recursive=True)
+    observer.start()
+    try:
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        observer.stop()
+    observer.join()
+
 
 ns = Collection(
-    test, coverage, integration, vendorize, release, www, docs, sites, watch
+    test, coverage, integration, vendorize, release, www, docs, sites,
+    watch_docs, watch_tests
 )
 ns.configure({'coverage': {'package': 'invoke'}})
