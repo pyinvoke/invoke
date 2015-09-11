@@ -29,6 +29,7 @@ class Program_(IntegrationSpec):
         def may_specify_binary(self):
             eq_(Program(binary='myapp').binary, 'myapp')
 
+
     class normalize_argv:
         @patch('invoke.program.sys')
         def defaults_to_sys_argv(self, mock_sys):
@@ -48,6 +49,7 @@ class Program_(IntegrationSpec):
         def splits_a_string(self):
             eq_(Program().normalize_argv("foo bar"), ['foo', 'bar'])
 
+
     class normalize_name:
         def defaults_to_capitalized_argv_when_None(self):
             expect("myapp --version", out="Myapp unknown\n", invoke=False)
@@ -55,6 +57,7 @@ class Program_(IntegrationSpec):
         def uses_overridden_value_when_given(self):
             p = Program(name='NotInvoke')
             expect("--version", out="NotInvoke unknown\n", program=p)
+
 
     class normalize_binary:
         def defaults_to_argv_when_None(self):
@@ -81,6 +84,7 @@ class Program_(IntegrationSpec):
             ok_("myapp [--core-opts]" in stdout)
             ok_("/usr/local/bin" not in stdout)
 
+
     class initial_context:
         def contains_truly_core_arguments_regardless_of_namespace_value(self):
             # Spot check. See integration-style --help tests for full argument
@@ -101,6 +105,7 @@ class Program_(IntegrationSpec):
             for arg in Program.task_args:
                 expect("--help", out=arg.name, test=not_in)
 
+
     class load_collection:
         def complains_when_default_collection_not_found(self):
             # NOTE: assumes system under test has no tasks.py in root. Meh.
@@ -112,6 +117,7 @@ class Program_(IntegrationSpec):
                 "-c huhwhat -l",
                 err="Can't find any collection named 'huhwhat'!\n",
             )
+
 
     class run:
         # NOTE: some of these are integration-style tests, but they are still
@@ -137,6 +143,7 @@ class Program_(IntegrationSpec):
 
         def handles_task_arguments(self):
             expect("-c integration print_name --name inigo", out="inigo\n")
+
 
     class help_:
         "--help"
