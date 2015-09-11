@@ -9,6 +9,7 @@ from invoke.vendor.six import StringIO
 from mock import patch
 from spec import trap, Spec, eq_, skip
 
+from invoke import Program
 from invoke.platform import WINDOWS
 
 
@@ -72,18 +73,26 @@ def _dispatch(argstr, version=None):
 
 
 @trap
-def _output_eq(args, stdout=None, stderr=None, code=0):
+def expect(invocation, out=None, err=None, program=None, invoke=True):
     """
-    dispatch() 'args', matching output to 'std(out|err)'.
+    Run ``invocation`` via ``program`` and expect resulting output to match.
 
-    Must give either or both of the output-expecting args.
+    May give one or both of ``out``/``err`` (but not neither).
+
+    ``program`` defaults to ``Program()``.
+
+    To skip automatically assuming the argv under test starts with ``"invoke
+    "``, say ``invoke=False``.
     """
-    with expect_exit(code):
-        _dispatch("inv {0}".format(args))
-    if stdout is not None:
-        eq_(sys.stdout.getvalue(), stdout)
-    if stderr is not None:
-        eq_(sys.stderr.getvalue(), stderr)
+    if program is None:
+        program = Program()
+    if invoke:
+        invocation = "invoke {0}".format(invocation)
+    program.run(invocation, exit=False)
+    if out is not None:
+        eq_(sys.stdout.getvalue(), out)
+    if err is not None:
+        eq_(sys.stderr.getvalue(), err)
 
 
 @contextmanager
