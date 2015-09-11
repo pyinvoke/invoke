@@ -105,7 +105,7 @@ def watch_tests(c, module=None):
 
     # Code and docs trigger API
     handler = BuildHandler(
-        regexes=['\./invoke/', '\./tests'],
+        regexes=['\./invoke/', '\./tests/'],
         ignore_regexes=['.*/\..*\.swp'],
     )
 
