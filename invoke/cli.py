@@ -380,7 +380,7 @@ def make_config(args, collection):
     "runtime overrides" dict) and the Collection object is used to determine
     where to seek a per-project config file.
 
-    This object is then further updated within `.Executor` with per-task
+    This object is further updated within `.Executor` with per-task
     configuration values and then told to load the full hierarchy (which
     includes config files.)
     """
