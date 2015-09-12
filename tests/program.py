@@ -370,14 +370,20 @@ Available tasks:
     class run_options:
         "run() related CLI flags affect 'run' config values"
         def _test_flag(self, flag, key):
-            with mocked_run():
-                # The tasks themselves perform the necessary asserts.
-                expect('invoke {0} -c contextualized check_{1}'.format(
-                    flag, key
-                ))
+            p = Program()
+            # Just need some valid task here to avoid parse errors. It doesn't
+            # actually get executed. LOL?
+            p.normalize_argv('inv {0} foo'.format(flag))
+            p.parse()
+            config = p.config()
+            eq_(config.run[key], True)
 
         def warn_only(self):
-            self._test_flag('-w', 'warn')
+            p = Program()
+            p.normalize_argv('inv -c contextualized -w check_warn')
+            p.parse()
+            config = p.config()
+            eq_(config.run.warn, True)
 
         def pty(self):
             self._test_flag('-p', 'pty')
@@ -387,3 +393,59 @@ Available tasks:
 
         def echo(self):
             self._test_flag('-e', 'echo')
+
+
+    class configuration:
+        "Configuration-related concerns"
+
+        def per_project_config_files_are_loaded(self):
+            with cd(os.path.join('configs', 'yaml')):
+                _dispatch("inv mytask")
+
+        def per_project_config_files_load_with_explicit_ns(self):
+            # Re: #234
+            with cd(os.path.join('configs', 'yaml')):
+                _dispatch("inv -c explicit mytask")
+
+        def runtime_config_file_honored(self):
+            with cd('configs'):
+                _dispatch("inv -c runtime -f yaml/invoke.yaml mytask")
+
+        def tasks_dedupe_honors_configuration(self):
+            # Kinda-sorta duplicates some tests in executor.py, but eh.
+            with cd('configs'):
+                # Runtime conf file
+                _output_eq(
+                    '-c integration -f no-dedupe.yaml biz',
+                    """
+foo
+foo
+bar
+biz
+post1
+post2
+post2
+""".lstrip())
+                # Flag beats runtime
+                _output_eq(
+                    '-c integration -f dedupe.yaml --no-dedupe biz',
+                    """
+foo
+foo
+bar
+biz
+post1
+post2
+post2
+""".lstrip())
+
+        # * debug (top level?)
+        # * hide (run.hide...lol)
+        # * pty (run.pty)
+        # * warn (run.warn)
+
+        def env_vars_load_with_prefix(self):
+            os.environ['INVOKE_RUN_ECHO'] = "1"
+            with mocked_run():
+                # Task performs the assert
+                _dispatch('invoke -c contextualized check_echo')

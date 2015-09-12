@@ -372,43 +372,6 @@ def parse(argv, collection=None, version=None):
     return args, collection, tasks
 
 
-def make_config(args, collection):
-    """
-    Generate a `.Config` object initialized with parser & collection data.
-
-    Specifically, parser-level flags are consulted (typically as a top-level
-    "runtime overrides" dict) and the Collection object is used to determine
-    where to seek a per-project config file.
-
-    This object is further updated within `.Executor` with per-task
-    configuration values and then told to load the full hierarchy (which
-    includes config files.)
-    """
-    # Set up runtime overrides from flags.
-    # NOTE: only fill in values that would alter behavior, otherwise we want
-    # the defaults to come through.
-    run = {}
-    if args['warn-only'].value:
-        run['warn'] = True
-    if args.pty.value:
-        run['pty'] = True
-    if args.hide.value:
-        run['hide'] = args.hide.value
-    if args.echo.value:
-        run['echo'] = True
-    tasks = {}
-    if args['no-dedupe'].value:
-        tasks['dedupe'] = False
-    overrides = {'run': run, 'tasks': tasks}
-    # Stand up config object
-    c = Config(
-        overrides=overrides,
-        project_home=collection.loaded_from,
-        runtime_path=args.config.value,
-        env_prefix='INVOKE_',
-    )
-    return c
-
 def tasks_from_contexts(parser_contexts, collection):
     tasks = []
     for context in parser_contexts:

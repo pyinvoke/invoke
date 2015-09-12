@@ -139,6 +139,44 @@ class Program(object):
         self._binary = binary
         self.argv = None
 
+    def config(self):
+        """
+        Generate a `.Config` object initialized with parser & collection data.
+
+        Specifically, parser-level flags are consulted (typically as a
+        top-level "runtime overrides" dict) and the `.Collection` object is
+        used to determine where to seek a per-project config file.
+
+        This object is further updated within `.Executor` with per-task
+        configuration values and then told to load the full hierarchy (which
+        includes config files.)
+        """
+        # Set up runtime overrides from flags.
+        # NOTE: only fill in values that would alter behavior, otherwise we
+        # want the defaults to come through.
+        run = {}
+        args = self.core[0].args
+        if args['warn-only'].value:
+            run['warn'] = True
+        if args.pty.value:
+            run['pty'] = True
+        if args.hide.value:
+            run['hide'] = args.hide.value
+        if args.echo.value:
+            run['echo'] = True
+        tasks = {}
+        if args['no-dedupe'].value:
+            tasks['dedupe'] = False
+        overrides = {'run': run, 'tasks': tasks}
+        # Stand up config object
+        c = Config(
+            overrides=overrides,
+            project_home=self.collection.loaded_from,
+            runtime_path=args.config.value,
+            env_prefix='INVOKE_',
+        )
+        return c
+
     def run(self, argv=None, exit=True):
         """
         Execute main CLI logic, based on ``argv``.
@@ -157,14 +195,68 @@ class Program(object):
                 to ``True`` in a production setting, you should probably be
                 using `.Executor` and friends directly instead!
         """
+
+        # TODO: undo the self.xxx bullshit. suck it up and pass shit around.
+
+
         debug("argv given to Program.run: {0!r}".format(argv))
-        self.argv = self.normalize_argv(argv)
+        self.normalize_argv(argv)
         try:
-            args, collection, parser_contexts = self.parse()
-            executor = Executor(
-                collection, make_config(args, collection)
-            )
-            tasks = tasks_from_contexts(parser_contexts, collection)
+            # Obtain core args (sets self.core)
+            self.parse_core_args()
+            args = self.core[0].args
+
+            # Enable debugging from here on out, if debug flag was given.
+            # (Prior to this point, debugging requires setting INVOKE_DEBUG).
+            if args.debug.value:
+                enable_logging()
+
+            # Print version & exit if necessary
+            if args.version.value:
+                self.print_version()
+                raise Exit
+
+            # Core (no value given) --help output
+            # TODO: if this wants to display context sensitive help (e.g. a combo
+            # help and available tasks listing; or core flags modified by
+            # plugins/task modules) it will have to move farther down.
+            if args.help.value is True:
+                self.print_help()
+                raise Exit
+
+            # Load a collection of tasks unless one was already set.
+            if self.namespace is not None:
+                debug("Program was given a default namespace, skipping collection loading") # noqa
+                self.collection = self.namespace
+            else:
+                debug("No default namespace provided, trying to load one from disk") # noqa
+                self.load_collection()
+
+            # Parse remainder into task contexts (sets
+            # self.parser/collection/tasks)
+            self.parse_tasks()
+
+            # Print per-task help, if necessary
+            if args.help.value in self.parser.contexts:
+                self.print_task_help()
+
+            # Print discovered tasks if necessary
+            if args.list.value:
+                self.list_tasks()
+                raise Exit
+
+            # Print completion helpers if necessary
+            if args.complete.value:
+                # TODO: reference these within complete() after moving it here
+                complete(self.core, self.initial_context, self.collection)
+
+            # No tasks specified for execution & no default task = print help
+            if not self.tasks and not self.collection.default:
+                self.print_help()
+                raise Exit
+
+            executor = Executor(self.collection, self.config())
+            tasks = tasks_from_contexts(self.tasks, self.collection)
             executor.execute(*tasks)
         except (Failure, Exit, ParseError) as e:
             # Print error message from parser if necessary.
@@ -180,6 +272,8 @@ class Program(object):
                     code = 1
                 sys.exit(code)
 
+    
+
     def normalize_argv(self, argv):
         """
         Massages ``argv`` into a useful list of strings.
@@ -190,6 +284,8 @@ class Program(object):
 
         **If a string**, performs a `str.split` and then executes with the
         result. (This is mostly a convenience; when in doubt, use a list.)
+
+        Sets ``self.argv`` to the result.
         """
         if argv is None:
             argv = sys.argv
@@ -197,7 +293,7 @@ class Program(object):
         elif isinstance(argv, six.string_types):
             argv = argv.split()
             debug("argv was string-like; splitting: {0!r}".format(argv))
-        return argv
+        self.argv = argv
 
     @property
     def name(self):
@@ -314,96 +410,28 @@ class Program(object):
                 print("")
             raise Exit
 
-    def parse(self, collection=None, version=None):
-        """
-        Parse ``self.argv`` into useful core & per-task structures.
-
-        :returns:
-            Three-tuple of ``args`` (core, non-task `.Argument` objects),
-            ``collection`` (compiled `.Collection` of tasks, using defaults or
-            core arguments affecting collection generation) and ``tasks`` (a
-            list of `~.ParserContext` objects representing the requested task
-            executions).
-        """
-        # Obtain core args (sets self.core)
-        self.parse_core_args()
-        args = self.core[0].args
-
-        # Enable debugging from here on out, if debug flag was given.
-        # (Prior to this point, debugging requires setting INVOKE_DEBUG).
-        if args.debug.value:
-            enable_logging()
-
-        # Print version & exit if necessary
-        if args.version.value:
-            self.print_version()
+    def list_tasks(self):
+        # Sort in depth, then alpha, order
+        task_names = self.collection.task_names
+        # Short circuit if no tasks to show
+        if not task_names:
+            msg = "No tasks found in collection '{0}'!"
+            print(msg.format(self.collection.name))
             raise Exit
+        pairs = []
+        for primary in sort_names(task_names):
+            # Add aliases
+            aliases = sort_names(task_names[primary])
+            name = primary
+            if aliases:
+                name += " ({0})".format(', '.join(aliases))
+            # Add docstring 1st lines
+            task = self.collection[primary]
+            help_ = ""
+            if task.__doc__:
+                help_ = task.__doc__.lstrip().splitlines()[0]
+            pairs.append((name, help_))
 
-        # Core (no value given) --help output
-        # TODO: if this wants to display context sensitive help (e.g. a combo
-        # help and available tasks listing; or core flags modified by
-        # plugins/task modules) it will have to move farther down.
-        if args.help.value is True:
-            self.print_help()
-            raise Exit
-
-        # Load a collection of tasks unless one was already set.
-        if self.namespace is not None:
-            debug("Program was given a default namespace, skipping collection loading") # noqa
-            self.collection = self.namespace
-        else:
-            debug("No default namespace provided, trying to load one from disk") # noqa
-            self.load_collection()
-
-        # Parse remainder into task contexts (sets
-        # self.parser/collection/tasks)
-        self.parse_tasks()
-
-        # Print per-task help, if necessary
-        if args.help.value in self.parser.contexts:
-            self.print_task_help()
-
-        # Print discovered tasks if necessary
-        if args.list.value:
-            # Sort in depth, then alpha, order
-            task_names = self.collection.task_names
-            # Short circuit if no tasks to show
-            if not task_names:
-                msg = "No tasks found in collection '{0}'!"
-                print(msg.format(self.collection.name))
-                raise Exit
-            pairs = []
-            for primary in sort_names(task_names):
-                # Add aliases
-                aliases = sort_names(task_names[primary])
-                name = primary
-                if aliases:
-                    name += " ({0})".format(', '.join(aliases))
-                # Add docstring 1st lines
-                task = self.collection[primary]
-                help_ = ""
-                if task.__doc__:
-                    help_ = task.__doc__.lstrip().splitlines()[0]
-                pairs.append((name, help_))
-
-            # Print
-            print("Available tasks:\n")
-            print_columns(pairs)
-            raise Exit
-
-        # Print completion helpers if necessary
-        if args.complete.value:
-            # TODO: reference these within complete() after moving it here
-            complete(self.core, self.initial_context, self.collection)
-
-        # Print help if:
-        # * empty invocation
-        # * no default task found in loaded root collection
-        # * no other "do an thing" flags were found (implicit in where this
-        #   code is located - just before return)
-        if not self.tasks and not self.collection.default:
-            self.print_help()
-            raise Exit
-
-        # Return to caller so they can handle the results
-        return args, self.collection, self.tasks
+        # Print
+        print("Available tasks:\n")
+        print_columns(pairs)

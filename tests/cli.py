@@ -16,65 +16,6 @@ from _utils import (
 )
 
 
-class CLI(IntegrationSpec):
-    "Command-line behavior"
-
-    class configuration:
-        "Configuration-related concerns"
-
-        def per_project_config_files_are_loaded(self):
-            with cd(os.path.join('configs', 'yaml')):
-                _dispatch("inv mytask")
-
-        def per_project_config_files_load_with_explicit_ns(self):
-            # Re: #234
-            with cd(os.path.join('configs', 'yaml')):
-                _dispatch("inv -c explicit mytask")
-
-        def runtime_config_file_honored(self):
-            with cd('configs'):
-                _dispatch("inv -c runtime -f yaml/invoke.yaml mytask")
-
-        def tasks_dedupe_honors_configuration(self):
-            # Kinda-sorta duplicates some tests in executor.py, but eh.
-            with cd('configs'):
-                # Runtime conf file
-                _output_eq(
-                    '-c integration -f no-dedupe.yaml biz',
-                    """
-foo
-foo
-bar
-biz
-post1
-post2
-post2
-""".lstrip())
-                # Flag beats runtime
-                _output_eq(
-                    '-c integration -f dedupe.yaml --no-dedupe biz',
-                    """
-foo
-foo
-bar
-biz
-post1
-post2
-post2
-""".lstrip())
-
-        # * debug (top level?)
-        # * hide (run.hide...lol)
-        # * pty (run.pty)
-        # * warn (run.warn)
-
-        def env_vars_load_with_prefix(self):
-            os.environ['INVOKE_RUN_ECHO'] = "1"
-            with mocked_run():
-                # Task performs the assert
-                _dispatch('invoke -c contextualized check_echo')
-
-
 TB_SENTINEL = 'Traceback (most recent call last)'
 
 class HighLevelFailures(Spec):
