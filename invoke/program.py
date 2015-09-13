@@ -195,7 +195,8 @@ class Program(object):
                 using `.Executor` and friends directly instead!
         """
         try:
-            self._execute(argv)
+            self._parse(argv)
+            self._execute()
         except (Failure, Exit, ParseError) as e:
             debug("Received a possibly-skippable exception: {0!r}".format(e))
             # Print error message from parser if necessary.
@@ -213,7 +214,7 @@ class Program(object):
             else:
                 debug("Invoked as run(..., exit=False), ignoring exception")
 
-    def _execute(self, argv):
+    def _parse(self, argv):
         debug("argv given to Program.run: {0!r}".format(argv))
         self.normalize_argv(argv)
 
@@ -276,6 +277,7 @@ class Program(object):
             self.print_help()
             raise Exit
 
+    def _execute(self):
         executor = Executor(self.collection, self.config())
         tasks = tasks_from_contexts(self.tasks, self.collection)
         executor.execute(*tasks)

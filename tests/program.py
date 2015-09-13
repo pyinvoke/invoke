@@ -158,6 +158,7 @@ class Program_(IntegrationSpec):
         def handles_task_arguments(self):
             expect("-c integration print_name --name inigo", out="inigo\n")
 
+        @trap
         @patch('invoke.program.sys.exit')
         def expected_failure_types_dont_raise_exceptions(self, mock_exit):
             "expected failure types don't raise exceptions"
@@ -167,7 +168,7 @@ class Program_(IntegrationSpec):
             ):
                 p = Program()
                 p._execute = Mock(side_effect=side_effect)
-                p.run("meh")
+                p.run("-c implicit foo") # valid task name for parse step
                 # Make sure we still exited fail-wise
                 mock_exit.assert_called_with(1)
 
@@ -408,8 +409,7 @@ Available tasks:
         "run() related CLI flags affect 'run' config values"
         def _test_flag(self, flag, key, value=True):
             p = Program()
-            # Just need a valid task name here to avoid parse errors. It
-            # doesn't actually get executed.
+            p._execute = Mock() # neuter
             p.run('inv {0} foo'.format(flag))
             config = p.config()
             eq_(config.run[key], value)
