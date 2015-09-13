@@ -199,6 +199,7 @@ class Program(object):
         try:
             # Obtain core args (sets self.core)
             self.parse_core_args()
+            debug("Finished parsing core args")
 
             # Enable debugging from here on out, if debug flag was given.
             # (Prior to this point, debugging requires setting INVOKE_DEBUG).
@@ -207,6 +208,7 @@ class Program(object):
 
             # Print version & exit if necessary
             if self.args.version.value:
+                debug("Saw --version, printing version & exiting")
                 self.print_version()
                 raise Exit
 
@@ -215,6 +217,7 @@ class Program(object):
             # combo help and available tasks listing; or core flags modified by
             # plugins/task modules) it will have to move farther down.
             if self.args.help.value is True:
+                debug("Saw bare --help, printing help & exiting")
                 self.print_help()
                 raise Exit
 
@@ -232,6 +235,8 @@ class Program(object):
 
             # Print per-task help, if necessary
             if self.args.help.value in self.parser.contexts:
+                msg = "Saw --help <taskname>, printing per-task help & exiting"
+                debug(msg)
                 self.print_task_help()
 
             # Print discovered tasks if necessary
@@ -253,6 +258,7 @@ class Program(object):
             tasks = tasks_from_contexts(self.tasks, self.collection)
             executor.execute(*tasks)
         except (Failure, Exit, ParseError) as e:
+            debug("Received a possibly-skippable exception: {0!r}".format(e))
             # Print error message from parser if necessary.
             if isinstance(e, ParseError):
                 sys.stderr.write("{0}\n".format(e))
@@ -265,8 +271,8 @@ class Program(object):
                 elif isinstance(e, ParseError):
                     code = 1
                 sys.exit(code)
-
-    
+            else:
+                debug("Invoked as run(..., exit=False), ignoring exception")
 
     def normalize_argv(self, argv):
         """
@@ -341,8 +347,8 @@ class Program(object):
         debug("Parsing initial context (core args)")
         parser = Parser(initial=self.initial_context, ignore_unknown=True)
         self.core = parser.parse_argv(self.argv[1:])
-        msg = "After core-args pass, leftover argv: {0!r}"
-        debug(msg.format(self.core.unparsed))
+        msg = "Core-args parse result: {0!r} & unparsed: {1!r}"
+        debug(msg.format(self.core, self.core.unparsed))
 
     def load_collection(self):
         """
@@ -374,6 +380,7 @@ class Program(object):
         self.parser = Parser(contexts=self.collection.to_contexts())
         debug("Parsing tasks against {0!r}".format(self.collection))
         self.tasks = self.parser.parse_argv(self.core.unparsed)
+        debug("Resulting task contexts: {0!r}".format(self.tasks))
 
     def print_task_help(self):
         """
