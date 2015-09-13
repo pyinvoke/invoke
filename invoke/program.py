@@ -155,24 +155,23 @@ class Program(object):
         # NOTE: only fill in values that would alter behavior, otherwise we
         # want the defaults to come through.
         run = {}
-        args = self.core[0].args
-        if args['warn-only'].value:
+        if self.args['warn-only'].value:
             run['warn'] = True
-        if args.pty.value:
+        if self.args.pty.value:
             run['pty'] = True
-        if args.hide.value:
-            run['hide'] = args.hide.value
-        if args.echo.value:
+        if self.args.hide.value:
+            run['hide'] = self.args.hide.value
+        if self.args.echo.value:
             run['echo'] = True
         tasks = {}
-        if args['no-dedupe'].value:
+        if self.args['no-dedupe'].value:
             tasks['dedupe'] = False
         overrides = {'run': run, 'tasks': tasks}
         # Stand up config object
         c = Config(
             overrides=overrides,
             project_home=self.collection.loaded_from,
-            runtime_path=args.config.value,
+            runtime_path=self.args.config.value,
             env_prefix='INVOKE_',
         )
         return c
@@ -195,32 +194,27 @@ class Program(object):
                 to ``True`` in a production setting, you should probably be
                 using `.Executor` and friends directly instead!
         """
-
-        # TODO: undo the self.xxx bullshit. suck it up and pass shit around.
-
-
         debug("argv given to Program.run: {0!r}".format(argv))
         self.normalize_argv(argv)
         try:
             # Obtain core args (sets self.core)
             self.parse_core_args()
-            args = self.core[0].args
 
             # Enable debugging from here on out, if debug flag was given.
             # (Prior to this point, debugging requires setting INVOKE_DEBUG).
-            if args.debug.value:
+            if self.args.debug.value:
                 enable_logging()
 
             # Print version & exit if necessary
-            if args.version.value:
+            if self.args.version.value:
                 self.print_version()
                 raise Exit
 
             # Core (no value given) --help output
-            # TODO: if this wants to display context sensitive help (e.g. a combo
-            # help and available tasks listing; or core flags modified by
+            # TODO: if this wants to display context sensitive help (e.g. a
+            # combo help and available tasks listing; or core flags modified by
             # plugins/task modules) it will have to move farther down.
-            if args.help.value is True:
+            if self.args.help.value is True:
                 self.print_help()
                 raise Exit
 
@@ -237,16 +231,16 @@ class Program(object):
             self.parse_tasks()
 
             # Print per-task help, if necessary
-            if args.help.value in self.parser.contexts:
+            if self.args.help.value in self.parser.contexts:
                 self.print_task_help()
 
             # Print discovered tasks if necessary
-            if args.list.value:
+            if self.args.list.value:
                 self.list_tasks()
                 raise Exit
 
             # Print completion helpers if necessary
-            if args.complete.value:
+            if self.args.complete.value:
                 # TODO: reference these within complete() after moving it here
                 complete(self.core, self.initial_context, self.collection)
 
@@ -310,6 +304,13 @@ class Program(object):
         return self._binary or os.path.basename(self.argv[0])
 
     @property
+    def args(self):
+        """
+        Obtain core program args from ``self.core`` parse result.
+        """
+        return self.core[0].args
+
+    @property
     def initial_context(self):
         """
         The initial parser context, aka core program flags.
@@ -347,10 +348,9 @@ class Program(object):
         """
         Load a task collection based on parsed core args, or die trying.
         """
-        args = self.core[0].args
-        start = args.root.value
+        start = self.args.root.value
         loader = FilesystemLoader(start=start)
-        coll_name = args.collection.value
+        coll_name = self.args.collection.value
         try:
             coll = loader.load(coll_name) if coll_name else loader.load()
             self.collection = coll
@@ -381,7 +381,7 @@ class Program(object):
         """
         # Use the parser's contexts dict as that's the easiest way to obtain
         # Context objects here - which are what help output needs.
-        name = self.core[0].args.help.value
+        name = self.args.help.value
         if name in self.parser.contexts:
             # Setup
             ctx = self.parser.contexts[name]
