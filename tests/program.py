@@ -289,6 +289,21 @@ Options:
 """.lstrip()
                 expect('-c decorator -h foo3', out=expected)
 
+            def exits_after_printing(self):
+                # TODO: find & test the other variants of this error case, such
+                # as core --help not exiting, --list not exiting, etc
+                expected = """
+Usage: invoke [--core-opts] punch [--options] [other tasks here ...]
+
+Docstring:
+  none
+
+Options:
+  -h STRING, --why=STRING   Motive
+  -w STRING, --who=STRING   Who to punch
+
+""".lstrip()
+                expect("-c decorator -h punch --list", out=expected)
 
     class task_list:
         "--list"

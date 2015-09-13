@@ -389,33 +389,31 @@ class Program(object):
         # Use the parser's contexts dict as that's the easiest way to obtain
         # Context objects here - which are what help output needs.
         name = self.args.help.value
-        if name in self.parser.contexts:
-            # Setup
-            ctx = self.parser.contexts[name]
-            tuples = ctx.help_tuples()
-            docstring = inspect.getdoc(self.collection[name])
-            header = "Usage: {1} [--core-opts] {0} {{0}}[other tasks here ...]".format(name, self.binary) # noqa
-            print(header.format("[--options] " if tuples else ""))
+        # Setup
+        ctx = self.parser.contexts[name]
+        tuples = ctx.help_tuples()
+        docstring = inspect.getdoc(self.collection[name])
+        header = "Usage: {1} [--core-opts] {0} {{0}}[other tasks here ...]".format(name, self.binary) # noqa
+        print(header.format("[--options] " if tuples else ""))
+        print("")
+        print("Docstring:")
+        if docstring:
+            # Really wish textwrap worked better for this.
+            for line in docstring.splitlines():
+                if line.strip():
+                    print(indent + line)
+                else:
+                    print("")
             print("")
-            print("Docstring:")
-            if docstring:
-                # Really wish textwrap worked better for this.
-                for line in docstring.splitlines():
-                    if line.strip():
-                        print(indent + line)
-                    else:
-                        print("")
-                print("")
-            else:
-                print(indent + "none")
-                print("")
-            print("Options:")
-            if tuples:
-                print_columns(tuples)
-            else:
-                print(indent + "none")
-                print("")
-            raise Exit
+        else:
+            print(indent + "none")
+            print("")
+        print("Options:")
+        if tuples:
+            print_columns(tuples)
+        else:
+            print(indent + "none")
+            print("")
 
     def list_tasks(self):
         # Sort in depth, then alpha, order
