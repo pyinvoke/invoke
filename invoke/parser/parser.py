@@ -253,18 +253,18 @@ class ParseMachine(StateMachine):
 
     def check_ambiguity(self, value):
         """
-        Guard against ambiguity when currently flag takes an optional value.
+        Guard against ambiguity when current flag takes an optional value.
         """
         if not (self.flag and self.flag.optional):
             return False
         tests = []
-        # unfilled posargs still exist
+        # Unfilled posargs still exist?
         tests.append(self.context and self.context.needs_positional_arg)
-        # * value looks like it's supposed to be a flag itself.
+        # Value looks like it's supposed to be a flag itself?
         # (Doesn't have to even actually be valid - chances are if it looks
         # like a flag, the user was trying to give one.)
         tests.append(is_flag(value))
-        # * value matches another valid task/context name
+        # Value matches another valid task/context name?
         tests.append(value in self.contexts)
         if any(tests):
             msg = "{0!r} is ambiguous when given after an optional-value flag"
