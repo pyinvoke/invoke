@@ -95,11 +95,6 @@ def expect(invocation, out=None, err=None, program=None, invoke=True,
     if invoke:
         invocation = "invoke {0}".format(invocation)
     program.run(invocation, exit=False)
-    # Print untested streams so they're not accidentally hidden
-    if out is None:
-        sys.__stdout__.write(sys.stdout.getvalue())
-    if err is None:
-        sys.__stderr__.write(sys.stderr.getvalue())
     # Perform tests
     if out is not None:
         if test:
