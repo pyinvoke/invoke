@@ -314,6 +314,14 @@ class Parser_(Spec):
         def ambiguity_with_flaglike_value(self):
             self._test_for_ambiguity("--foo --bar")
 
+        def no_ambiguity_with_flaglike_value_if_option_val_was_given(self):
+            p = self._parser((
+                Argument('foo', optional=True),
+                Argument('bar')
+            ))
+            # This should NOT raise a ParseError.
+            result = self._parse("--foo hello --bar", p)
+
         def ambiguity_with_actual_other_flag(self):
             self._parser((
                 Argument('foo', optional=True),
