@@ -208,6 +208,7 @@ Core options:
 
         class per_task:
             "per-task"
+
             def prints_help_for_task_only(self):
                 expected = """
 Usage: invoke [--core-opts] punch [--options] [other tasks here ...]
