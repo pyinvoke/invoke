@@ -238,6 +238,7 @@ class Program(object):
                 msg = "Saw --help <taskname>, printing per-task help & exiting"
                 debug(msg)
                 self.print_task_help()
+                raise Exit
 
             # Print discovered tasks if necessary
             if self.args.list.value:
