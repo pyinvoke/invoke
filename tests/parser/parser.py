@@ -292,49 +292,51 @@ class Parser_(Spec):
         def not_given_at_all_uses_default_value(self):
             self._expect('', 'mydefault')
 
-        def _test_for_ambiguity(self, invoke, parser=None):
-            msg = "is ambiguous"
-            try:
-                self._parse(invoke, parser or self.parser)
-            # Expected result
-            except ParseError as e:
-                assert msg in str(e)
-            # No exception occurred at all? Bollocks.
-            else:
-                assert False
-            # Any other exceptions will naturally cause failure here.
+        class ambiguity_sanity_checks:
+            def _test_for_ambiguity(self, invoke, parser=None):
+                msg = "is ambiguous"
+                try:
+                    self._parse(invoke, parser or self.parser)
+                # Expected result
+                except ParseError as e:
+                    assert msg in str(e)
+                # No exception occurred at all? Bollocks.
+                else:
+                    assert False
+                # Any other exceptions will naturally cause failure here.
 
-        def ambiguity_with_unfilled_posargs(self):
-            p = self._parser((
-                Argument('foo', optional=True),
-                Argument('bar', positional=True)
-            ))
-            self._test_for_ambiguity("--foo uhoh", p)
+            def unfilled_posargs(self):
+                p = self._parser((
+                    Argument('foo', optional=True),
+                    Argument('bar', positional=True)
+                ))
+                self._test_for_ambiguity("--foo uhoh", p)
 
-        def ambiguity_with_flaglike_value(self):
-            self._test_for_ambiguity("--foo --bar")
+            def flaglike_value(self):
+                self._test_for_ambiguity("--foo --bar")
 
-        def no_ambiguity_with_flaglike_value_if_option_val_was_given(self):
-            p = self._parser((
-                Argument('foo', optional=True),
-                Argument('bar')
-            ))
-            # This should NOT raise a ParseError.
-            result = self._parse("--foo hello --bar", p)
+            def no_ambiguity_with_flaglike_value_if_option_val_was_given(self):
+                p = self._parser((
+                    Argument('foo', optional=True),
+                    Argument('bar')
+                ))
+                # This should NOT raise a ParseError.
+                result = self._parse("--foo hello --bar", p)
+                print result
 
-        def ambiguity_with_actual_other_flag(self):
-            self._parser((
-                Argument('foo', optional=True),
-                Argument('bar')
-            ))
-            self._test_for_ambiguity("--foo --bar")
+            def actual_other_flag(self):
+                self._parser((
+                    Argument('foo', optional=True),
+                    Argument('bar')
+                ))
+                self._test_for_ambiguity("--foo --bar")
 
-        def ambiguity_with_task_name(self):
-            # mytask --foo myothertask
-            c1 = Context('mytask', args=(Argument('foo', optional=True),))
-            c2 = Context('othertask')
-            p = Parser([c1, c2])
-            self._test_for_ambiguity("--foo othertask", p)
+            def task_name(self):
+                # mytask --foo myothertask
+                c1 = Context('mytask', args=(Argument('foo', optional=True),))
+                c2 = Context('othertask')
+                p = Parser([c1, c2])
+                self._test_for_ambiguity("--foo othertask", p)
 
     class task_repetition:
         def is_happy_to_handle_same_task_multiple_times(self):
