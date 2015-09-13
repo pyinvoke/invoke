@@ -3,9 +3,9 @@ import sys
 from operator import contains, not_
 
 from mock import patch, Mock
-from spec import eq_, ok_, trap
+from spec import eq_, ok_, trap, skip
 
-from invoke import Program, Collection, main
+from invoke import Program, Collection, main, ParseError
 
 from _utils import (
     load, cd, IntegrationSpec, expect, skip_if_windows, SimpleFailure
@@ -159,13 +159,24 @@ class Program_(IntegrationSpec):
             expect("-c integration print_name --name inigo", out="inigo\n")
 
         @patch('invoke.program.sys.exit')
-        def command_failures_dont_raise_exceptions(self, mock_exit):
-            "command failures don't raise exceptions"
-            p = Program()
-            p._execute = Mock(side_effect=SimpleFailure)
-            p.run("meh")
-            # Make sure we still exited fail-wise
-            mock_exit.assert_called_with(1)
+        def expected_failure_types_dont_raise_exceptions(self, mock_exit):
+            "expected failure types don't raise exceptions"
+            for side_effect in (
+                SimpleFailure,
+                ParseError("boo!"),
+            ):
+                p = Program()
+                p._execute = Mock(side_effect=side_effect)
+                p.run("meh")
+                # Make sure we still exited fail-wise
+                mock_exit.assert_called_with(1)
+
+        def should_show_core_usage_on_core_parse_failures(self):
+            skip()
+
+        def should_show_context_usage_on_context_parse_failures(self):
+            skip()
+
 
     class help_:
         "--help"

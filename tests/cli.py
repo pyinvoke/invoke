@@ -16,38 +16,6 @@ from _utils import (
 )
 
 
-TB_SENTINEL = 'Traceback (most recent call last)'
-
-class HighLevelFailures(Spec):
-    @trap
-    def command_failure(self):
-        "Command failure doesn't show tracebacks"
-        with patch('sys.exit') as exit:
-            _dispatch('inv -c fail simple')
-            assert TB_SENTINEL not in sys.stderr.getvalue()
-            exit.assert_called_with(1)
-
-    class parsing:
-        @trap
-        def should_not_show_tracebacks(self):
-            # Ensure we fall out of dispatch() on missing parser args,
-            # but are still able to look at stderr to ensure no TB got printed
-            with patch('sys.exit', Mock(side_effect=SystemExit)):
-                try:
-                    _dispatch("inv -c fail missing_pos")
-                except SystemExit:
-                    pass
-                assert TB_SENTINEL not in sys.stderr.getvalue()
-
-        def should_show_core_usage_on_core_failures(self):
-            skip()
-
-        def should_show_context_usage_on_context_failures(self):
-            skip()
-
-    def load_failure(self):
-        skip()
-
 
 class CLIParsing(Spec):
     """
