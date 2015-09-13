@@ -194,70 +194,8 @@ class Program(object):
                 to ``True`` in a production setting, you should probably be
                 using `.Executor` and friends directly instead!
         """
-        debug("argv given to Program.run: {0!r}".format(argv))
-        self.normalize_argv(argv)
         try:
-            # Obtain core args (sets self.core)
-            self.parse_core_args()
-            debug("Finished parsing core args")
-
-            # Enable debugging from here on out, if debug flag was given.
-            # (Prior to this point, debugging requires setting INVOKE_DEBUG).
-            if self.args.debug.value:
-                enable_logging()
-
-            # Print version & exit if necessary
-            if self.args.version.value:
-                debug("Saw --version, printing version & exiting")
-                self.print_version()
-                raise Exit
-
-            # Core (no value given) --help output
-            # TODO: if this wants to display context sensitive help (e.g. a
-            # combo help and available tasks listing; or core flags modified by
-            # plugins/task modules) it will have to move farther down.
-            if self.args.help.value is True:
-                debug("Saw bare --help, printing help & exiting")
-                self.print_help()
-                raise Exit
-
-            # Load a collection of tasks unless one was already set.
-            if self.namespace is not None:
-                debug("Program was given a default namespace, skipping collection loading") # noqa
-                self.collection = self.namespace
-            else:
-                debug("No default namespace provided, trying to load one from disk") # noqa
-                self.load_collection()
-
-            # Parse remainder into task contexts (sets
-            # self.parser/collection/tasks)
-            self.parse_tasks()
-
-            # Print per-task help, if necessary
-            if self.args.help.value in self.parser.contexts:
-                msg = "Saw --help <taskname>, printing per-task help & exiting"
-                debug(msg)
-                self.print_task_help()
-                raise Exit
-
-            # Print discovered tasks if necessary
-            if self.args.list.value:
-                self.list_tasks()
-                raise Exit
-
-            # Print completion helpers if necessary
-            if self.args.complete.value:
-                # TODO: reference these within complete() after moving it here
-                complete(self.core, self.initial_context, self.collection)
-
-            # No tasks specified for execution & no default task = print help
-            if not self.tasks and not self.collection.default:
-                self.print_help()
-                raise Exit
-
-            executor = Executor(self.collection, self.config())
-            tasks = tasks_from_contexts(self.tasks, self.collection)
-            executor.execute(*tasks)
+            self._execute(argv)
         except (Failure, Exit, ParseError) as e:
             debug("Received a possibly-skippable exception: {0!r}".format(e))
             # Print error message from parser if necessary.
@@ -274,6 +212,73 @@ class Program(object):
                 sys.exit(code)
             else:
                 debug("Invoked as run(..., exit=False), ignoring exception")
+
+    def _execute(self, argv):
+        debug("argv given to Program.run: {0!r}".format(argv))
+        self.normalize_argv(argv)
+
+        # Obtain core args (sets self.core)
+        self.parse_core_args()
+        debug("Finished parsing core args")
+
+        # Enable debugging from here on out, if debug flag was given.
+        # (Prior to this point, debugging requires setting INVOKE_DEBUG).
+        if self.args.debug.value:
+            enable_logging()
+
+        # Print version & exit if necessary
+        if self.args.version.value:
+            debug("Saw --version, printing version & exiting")
+            self.print_version()
+            raise Exit
+
+        # Core (no value given) --help output
+        # TODO: if this wants to display context sensitive help (e.g. a
+        # combo help and available tasks listing; or core flags modified by
+        # plugins/task modules) it will have to move farther down.
+        if self.args.help.value is True:
+            debug("Saw bare --help, printing help & exiting")
+            self.print_help()
+            raise Exit
+
+        # Load a collection of tasks unless one was already set.
+        if self.namespace is not None:
+            debug("Program was given a default namespace, skipping collection loading") # noqa
+            self.collection = self.namespace
+        else:
+            debug("No default namespace provided, trying to load one from disk") # noqa
+            self.load_collection()
+
+        # Parse remainder into task contexts (sets
+        # self.parser/collection/tasks)
+        self.parse_tasks()
+
+        # Print per-task help, if necessary
+        if self.args.help.value in self.parser.contexts:
+            msg = "Saw --help <taskname>, printing per-task help & exiting"
+            debug(msg)
+            self.print_task_help()
+            raise Exit
+
+        # Print discovered tasks if necessary
+        if self.args.list.value:
+            self.list_tasks()
+            raise Exit
+
+        # Print completion helpers if necessary
+        if self.args.complete.value:
+            # TODO: reference these within complete() after moving it here
+            complete(self.core, self.initial_context, self.collection)
+
+        # No tasks specified for execution & no default task = print help
+        if not self.tasks and not self.collection.default:
+            debug("No tasks specified for execution and no default task; printing global help as fallback") # noqa
+            self.print_help()
+            raise Exit
+
+        executor = Executor(self.collection, self.config())
+        tasks = tasks_from_contexts(self.tasks, self.collection)
+        executor.execute(*tasks)
 
     def normalize_argv(self, argv):
         """

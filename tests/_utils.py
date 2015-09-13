@@ -8,10 +8,10 @@ from functools import partial, wraps
 
 from invoke.vendor.six import StringIO
 
-from mock import patch
+from mock import patch, Mock
 from spec import trap, Spec, eq_, ok_, skip
 
-from invoke import Program
+from invoke import Program, Failure
 from invoke.platform import WINDOWS
 
 
@@ -123,10 +123,22 @@ def expect_exit(code=0):
             raise
 
 
-@contextmanager
-def mocked_run():
-    with patch('invoke.runners.Runner.run') as run:
-        yield run
+class SimpleFailure(Failure):
+    """
+    Failure subclass that can be raised w/o any args given.
+
+    Useful for testing failure handling w/o having to come up with a fully
+    mocked out `.Failure` & `.Result` pair each time.
+    """
+    def __init__(self):
+        pass
+
+    def __str__(self):
+        return "SimpleFailure"
+
+    @property
+    def result(self):
+        return Mock(exited=1)
 
 
 def _assert_contains(haystack, needle, invert):

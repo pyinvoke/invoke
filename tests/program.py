@@ -8,7 +8,7 @@ from spec import eq_, ok_, skip, trap
 from invoke import Program, Collection, main
 
 from _utils import (
-    load, cd, IntegrationSpec, expect, skip_if_windows, mocked_run,
+    load, cd, IntegrationSpec, expect, skip_if_windows, SimpleFailure
 )
 
 
@@ -40,6 +40,7 @@ class Program_(IntegrationSpec):
             with patch('invoke.util.debug') as debug:
                 expect('-d -c debugging foo')
                 debug.assert_called_with('my-sentinel')
+
 
 
     class normalize_argv:
@@ -158,6 +159,14 @@ class Program_(IntegrationSpec):
         def handles_task_arguments(self):
             expect("-c integration print_name --name inigo", out="inigo\n")
 
+        @patch('invoke.program.sys.exit')
+        def command_failures_dont_raise_exceptions(self, mock_exit):
+            "command failures don't raise exceptions"
+            p = Program()
+            p._execute = Mock(side_effect=SimpleFailure)
+            p.run("meh")
+            # Make sure we still exited fail-wise
+            mock_exit.assert_called_with(1)
 
     class help_:
         "--help"
@@ -464,6 +473,4 @@ post2
 
         def env_vars_load_with_prefix(self):
             os.environ['INVOKE_RUN_ECHO'] = "1"
-            with mocked_run():
-                # Task performs the assert
-                expect('-c contextualized check_echo')
+            expect('-c contextualized check_echo')
