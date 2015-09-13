@@ -387,27 +387,22 @@ Available tasks:
 
     class run_options:
         "run() related CLI flags affect 'run' config values"
-        def _test_flag(self, flag, key):
+        def _test_flag(self, flag, key, value=True):
             p = Program()
-            # Just need some valid task here to avoid parse errors. It doesn't
-            # actually get executed. LOL?
-            p.normalize_argv('inv {0} foo'.format(flag))
-            p.parse()
+            # Just need a valid task name here to avoid parse errors. It
+            # doesn't actually get executed.
+            p.run('inv {0} foo'.format(flag))
             config = p.config()
-            eq_(config.run[key], True)
+            eq_(config.run[key], value)
 
         def warn_only(self):
-            p = Program()
-            p.normalize_argv('inv -c contextualized -w check_warn')
-            p.parse()
-            config = p.config()
-            eq_(config.run.warn, True)
+            self._test_flag('-w', 'warn')
 
         def pty(self):
             self._test_flag('-p', 'pty')
 
         def hide(self):
-            self._test_flag('--hide both', 'hide')
+            self._test_flag('--hide both', 'hide', value='both')
 
         def echo(self):
             self._test_flag('-e', 'echo')
@@ -423,16 +418,16 @@ Available tasks:
 
         def per_project_config_files_are_loaded(self):
             with cd(os.path.join('configs', 'yaml')):
-                expect("inv mytask")
+                expect("mytask")
 
         def per_project_config_files_load_with_explicit_ns(self):
             # Re: #234
             with cd(os.path.join('configs', 'yaml')):
-                expect("inv -c explicit mytask")
+                expect("-c explicit mytask")
 
         def runtime_config_file_honored(self):
             with cd('configs'):
-                expect("inv -c runtime -f yaml/invoke.yaml mytask")
+                expect("-c runtime -f yaml/invoke.yaml mytask")
 
         def tasks_dedupe_honors_configuration(self):
             # Kinda-sorta duplicates some tests in executor.py, but eh.
@@ -471,4 +466,4 @@ post2
             os.environ['INVOKE_RUN_ECHO'] = "1"
             with mocked_run():
                 # Task performs the assert
-                expect('invoke -c contextualized check_echo')
+                expect('-c contextualized check_echo')
