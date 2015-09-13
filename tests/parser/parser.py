@@ -318,11 +318,12 @@ class Parser_(Spec):
             def no_ambiguity_with_flaglike_value_if_option_val_was_given(self):
                 p = self._parser((
                     Argument('foo', optional=True),
-                    Argument('bar')
+                    Argument('bar', kind=bool)
                 ))
                 # This should NOT raise a ParseError.
                 result = self._parse("--foo hello --bar", p)
-                print result
+                eq_(result[0].args['foo'].value, 'hello')
+                eq_(result[0].args['bar'].value, True)
 
             def actual_other_flag(self):
                 self._parser((

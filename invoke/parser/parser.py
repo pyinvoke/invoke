@@ -255,8 +255,17 @@ class ParseMachine(StateMachine):
         """
         Guard against ambiguity when current flag takes an optional value.
         """
+        # No flag is currently being examined, or one is but it doesn't take an
+        # optional value? Ambiguity isn't possible.
         if not (self.flag and self.flag.optional):
             return False
+        # We *are* dealing with an optional-value flag, but it's already
+        # received a value? There can't be ambiguity here either.
+        debug("Testing flag value: %r" % self.flag.raw_value)
+        if self.flag.raw_value is not None:
+            return False
+        # Otherwise, there *may* be ambiguity if 1 or more of the below tests
+        # fail.
         tests = []
         # Unfilled posargs still exist?
         tests.append(self.context and self.context.needs_positional_arg)

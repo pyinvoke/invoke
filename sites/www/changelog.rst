@@ -2,6 +2,10 @@
 Changelog
 =========
 
+* :bug:`-` Fixed a bug in the parser where ``invoke --takes-optional-arg
+  avalue --anotherflag`` was incorrectly considering ``--anotherflag`` to be an
+  ambiguity error (as if ``avalue`` had not been given to
+  ``--takes-optional-arg``.
 * :release:`0.11.1 <2015-09-07>`
 * :support:`- backported` Fix incorrect changelog URL in package metadata.
 * :release:`0.11.0 <2015-09-07>`
