@@ -59,8 +59,10 @@ class Program_(IntegrationSpec):
             p.print_version.assert_called()
 
         def splits_a_string(self):
-            eq_(Program().normalize_argv("foo bar"), ['foo', 'bar'])
-
+            p = Program()
+            p.print_version = Mock()
+            p.run("inv --version", exit=False)
+            p.print_version.assert_called()
 
     class normalize_name:
         def defaults_to_capitalized_argv_when_None(self):
