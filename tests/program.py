@@ -3,7 +3,7 @@ import sys
 from operator import contains, not_
 
 from mock import patch, Mock
-from spec import eq_, ok_, skip, trap
+from spec import eq_, ok_, trap
 
 from invoke import Program, Collection, main
 
@@ -114,9 +114,8 @@ class Program_(IntegrationSpec):
                 expect("--help", program=program, out=arg.name, test=contains)
 
         def non_null_namespace_does_not_trigger_task_related_args(self):
-            program = Program(namespace=Collection())
             # NOTE: have to reverse args because of how contains() works
-            not_in = lambda a,b: not_(contains(b, a))
+            not_in = lambda a, b: not_(contains(b, a))
             for arg in Program.task_args:
                 expect("--help", out=arg.name, test=not_in)
 
