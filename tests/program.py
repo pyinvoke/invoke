@@ -416,26 +416,31 @@ Available tasks:
     class configuration:
         "Configuration-related concerns"
 
+        # NOTE: these tests all rely on the invoked tasks to perform the
+        # necessary asserts.
+        # TODO: can probably tighten these up to assert things about
+        # Program.config instead?
+
         def per_project_config_files_are_loaded(self):
             with cd(os.path.join('configs', 'yaml')):
-                _dispatch("inv mytask")
+                expect("inv mytask")
 
         def per_project_config_files_load_with_explicit_ns(self):
             # Re: #234
             with cd(os.path.join('configs', 'yaml')):
-                _dispatch("inv -c explicit mytask")
+                expect("inv -c explicit mytask")
 
         def runtime_config_file_honored(self):
             with cd('configs'):
-                _dispatch("inv -c runtime -f yaml/invoke.yaml mytask")
+                expect("inv -c runtime -f yaml/invoke.yaml mytask")
 
         def tasks_dedupe_honors_configuration(self):
             # Kinda-sorta duplicates some tests in executor.py, but eh.
             with cd('configs'):
                 # Runtime conf file
-                _output_eq(
-                    '-c integration -f no-dedupe.yaml biz',
-                    """
+                expect(
+                    "-c integration -f no-dedupe.yaml biz",
+                    out="""
 foo
 foo
 bar
@@ -445,9 +450,9 @@ post2
 post2
 """.lstrip())
                 # Flag beats runtime
-                _output_eq(
-                    '-c integration -f dedupe.yaml --no-dedupe biz',
-                    """
+                expect(
+                    "-c integration -f dedupe.yaml --no-dedupe biz",
+                    out="""
 foo
 foo
 bar
@@ -466,4 +471,4 @@ post2
             os.environ['INVOKE_RUN_ECHO'] = "1"
             with mocked_run():
                 # Task performs the assert
-                _dispatch('invoke -c contextualized check_echo')
+                expect('invoke -c contextualized check_echo')
