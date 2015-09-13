@@ -49,7 +49,7 @@ class Program_(IntegrationSpec):
             mock_sys.argv = argv
             p = Program()
             p.print_version = Mock()
-            p.run()
+            p.run(exit=False)
             p.print_version.assert_called()
 
         def uses_a_list_unaltered(self):
