@@ -1,8 +1,6 @@
 import sys
 
-import six
-
-from .cli import *
+from invoke.vendor import six
 
 
 class Program(object):
