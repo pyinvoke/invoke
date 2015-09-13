@@ -1,7 +1,7 @@
 import sys
 
 from _utils import (
-    _output_eq, IntegrationSpec, _dispatch, trap, expect_exit, assert_contains,
+    expect, IntegrationSpec, _dispatch, trap, expect_exit, assert_contains,
     assert_not_contains, eq_
 )
 
@@ -23,10 +23,13 @@ class ShellCompletion(IntegrationSpec):
     """
 
     def no_input_means_just_task_names(self):
-        _output_eq('-c simple_ns_list --complete', "z_toplevel\na.b.subtask\n")
+        expect(
+            '-c simple_ns_list --complete',
+            out="z_toplevel\na.b.subtask\n"
+        )
 
     def no_input_with_no_tasks_yields_empty_response(self):
-        _output_eq('-c empty --complete', "")
+        expect('-c empty --complete', out="")
 
     def task_name_completion_includes_aliases(self):
         for name in ('z\n', 'toplevel'):

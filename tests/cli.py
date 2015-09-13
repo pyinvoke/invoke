@@ -1,20 +1,9 @@
-import os
-import sys
-
-from spec import eq_, skip, Spec, ok_, trap
-from mock import patch, Mock
+from spec import eq_, Spec
 
 from invoke.cli import tasks_from_contexts
 from invoke.collection import Collection
-from invoke.context import Context
 from invoke.parser import Parser
 from invoke.tasks import task
-
-from _utils import (
-    _dispatch, _output_eq, IntegrationSpec, cd, expect_exit,
-    skip_if_windows, mocked_run
-)
-
 
 
 class CLIParsing(Spec):
