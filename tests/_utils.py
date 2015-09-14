@@ -27,12 +27,10 @@ def skip_if_windows(fn):
 
 
 @contextmanager
-def sys_path(filepath=None):
-    sys.path.insert(0, filepath)
+def support_path():
+    sys.path.insert(0, support)
     yield
     sys.path.pop(0)
-
-support_path = partial(sys_path, filepath=support)
 
 
 def load(name):
@@ -46,14 +44,11 @@ class IntegrationSpec(Spec):
         os.chdir(support)
 
     def teardown(self):
-        reset_cwd()
+        # Chdir back to project root to avoid problems
+        os.chdir(os.path.join(os.path.dirname(__file__), '..'))
+        # Nuke changes to environ
         os.environ.clear()
         os.environ.update(self.old_environ)
-
-
-def reset_cwd():
-    # Chdir back to project root to avoid problems
-    os.chdir(os.path.join(os.path.dirname(__file__), '..'))
 
 
 # TODO: make this part of the real API somewhere
@@ -99,21 +94,6 @@ def expect(invocation, out=None, err=None, program=None, invoke=True,
             ok_(test(sys.stderr.getvalue(), err))
         else:
             eq_(sys.stderr.getvalue(), err)
-
-
-@contextmanager
-def expect_exit(code=0):
-    """
-    Run a block of code expected to sys.exit(), ignoring the exit.
-
-    This is so we can readily test top level things like help output, listings,
-    etc.
-    """
-    try:
-        yield
-    except SystemExit as e:
-        if e.code != code:
-            raise
 
 
 class SimpleFailure(Failure):
