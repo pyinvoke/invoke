@@ -11,6 +11,8 @@ This document outlines use cases already known to work (because downstream
 tools like `Fabric <http://fabfile.org>`_ are already utilizing them).
 
 
+.. _reusing-as-a-binary:
+
 Reusing Invoke as a distinct binary 
 ====================================
 
@@ -66,8 +68,8 @@ telling it to start things up::
         Program(version='0.1.0').run()
 
 At this point, installing ``tester`` would give you the same functionality as
-Invoke's :doc:`built-in CLI tool </api/cli>`, except named ``tester`` and
-exposing its own version number::
+Invoke's :doc:`built-in CLI tool </cli>`, except named ``tester`` and exposing
+its own version number::
 
     $ tester --version
     Tester 0.1.0

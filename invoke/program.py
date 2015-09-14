@@ -17,7 +17,7 @@ from .platform import pty_size
 
 class Program(object):
     """
-    Manages top-level CLI invocation, typically via setup.py entrypoints.
+    Manages top-level CLI invocation, typically via ``setup.py`` entrypoints.
 
     Designed for distributing Invoke task collections as standalone programs,
     but also used internally to implement the ``invoke`` program itself.
