@@ -4,6 +4,7 @@ import sys
 from spec import Spec, trap, eq_, skip, ok_
 
 from invoke import run
+from invoke._version import __version__
 from invoke.platform import WINDOWS
 
 
@@ -19,6 +20,14 @@ class Main(Spec):
     @trap
     def basic_invocation(self):
         _output_eq("invoke print_foo", "foo\n")
+
+    @trap
+    def version_output(self):
+        _output_eq("invoke --version", "Invoke {0}\n".format(__version__))
+
+    @trap
+    def help_output(self):
+        ok_("Usage: inv[oke] " in run("invoke --help").stdout)
 
     @trap
     def shorthand_binary_name(self):
