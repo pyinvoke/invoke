@@ -1,6 +1,18 @@
+import inspect
+import os
 import sys
+import textwrap
 
-from invoke.vendor import six
+from .vendor import six
+
+from .complete import complete
+from .config import Config
+from .loader import FilesystemLoader, DEFAULT_COLLECTION_NAME
+from .parser import Parser, ParserContext, Argument
+from .executor import Executor
+from .exceptions import Failure, CollectionNotFound, ParseError, Exit
+from .util import debug, enable_logging, sort_names
+from .platform import pty_size
 
 
 class Program(object):
