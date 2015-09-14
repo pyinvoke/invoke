@@ -66,8 +66,13 @@ class Program_(IntegrationSpec):
 
 
     class name:
-        def defaults_to_capitalized_argv_when_None(self):
+        def defaults_to_capitalized_binary_when_None(self):
             expect("myapp --version", out="Myapp unknown\n", invoke=False)
+
+        def benefits_from_binary_absolute_behavior(self):
+            "benefits from binary()'s absolute path behavior"
+            expect("/usr/local/bin/myapp --version", out="Myapp unknown\n",
+                invoke=False)
 
         def uses_overridden_value_when_given(self):
             p = Program(name='NotInvoke')

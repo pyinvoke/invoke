@@ -324,9 +324,9 @@ class Program(object):
     @property
     def name(self):
         """
-        Derive program's human-readable name based on init args & argv.
+        Derive program's human-readable name based on `.binary`.
         """
-        return self._name or self.argv[0].capitalize()
+        return self._name or self.binary.capitalize()
 
     @property
     def binary(self):
