@@ -32,8 +32,8 @@ setup(
     packages=find_packages(),
     entry_points={
         'console_scripts': [
-            'invoke = invoke.cli:main',
-            'inv = invoke.cli:main',
+            'invoke = invoke.main:program.run',
+            'inv = invoke.main:program.run',
         ]
     },
 
