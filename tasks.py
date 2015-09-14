@@ -86,7 +86,6 @@ def watch_docs(c):
     rebuilding the WWW docs if the README changes; etc.
     """
     try:
-        from watchdog.observers import Observer
         from watchdog.events import RegexMatchingEventHandler
     except ImportError:
         sys.exit("If you want to use this, 'pip install watchdog' first.")
@@ -122,7 +121,7 @@ def watch_docs(c):
 
     observe(www_handler, api_handler)
 
- 
+
 @task
 def watch_tests(c, module=None):
     """
