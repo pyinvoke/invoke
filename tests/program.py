@@ -100,6 +100,15 @@ class Program_(IntegrationSpec):
             ok_("/usr/local/bin" not in stdout)
 
 
+    class print_version:
+        def displays_name_and_version(self):
+            expect(
+                "--version",
+                program=Program(name="MyProgram", version='0.1.0'),
+                out="MyProgram 0.1.0\n"
+            )
+
+
     class initial_context:
         def contains_truly_core_arguments_regardless_of_namespace_value(self):
             # Spot check. See integration-style --help tests for full argument
