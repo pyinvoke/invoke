@@ -67,12 +67,6 @@ def cd(where):
         os.chdir(cwd)
 
 
-# Strings are easier to type & read than lists
-def _dispatch(argstr, version=None):
-    from invoke.cli import dispatch
-    return dispatch(argstr.split(), version)
-
-
 @trap
 def expect(invocation, out=None, err=None, program=None, invoke=True,
     test=None):
