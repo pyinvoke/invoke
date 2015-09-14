@@ -65,7 +65,7 @@ class Program_(IntegrationSpec):
             p.print_version.assert_called()
 
 
-    class normalize_name:
+    class name:
         def defaults_to_capitalized_argv_when_None(self):
             expect("myapp --version", out="Myapp unknown\n", invoke=False)
 
@@ -74,7 +74,7 @@ class Program_(IntegrationSpec):
             expect("--version", out="NotInvoke unknown\n", program=p)
 
 
-    class normalize_binary:
+    class binary:
         def defaults_to_argv_when_None(self):
             expect(
                 "myapp --help",
