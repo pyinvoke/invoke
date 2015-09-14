@@ -278,8 +278,7 @@ class Program(object):
 
     def _execute(self):
         executor = Executor(self.collection, self.config)
-        tasks = tasks_from_contexts(self.tasks, self.collection)
-        executor.execute(*tasks)
+        executor.execute(*self.tasks)
 
     def normalize_argv(self, argv):
         """

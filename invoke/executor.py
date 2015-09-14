@@ -1,5 +1,6 @@
 from .config import Config
 from .context import Context
+from .parser import ParserContext
 from .util import debug
 from .tasks import Call
 
@@ -77,7 +78,7 @@ class Executor(object):
         """
         # Handle top level kwargs (the name gets overwritten below)
         # Normalize input
-        debug("Examining top level tasks {0!r}".format([x[0] for x in tasks]))
+        debug("Examining top level tasks {0!r}".format([x for x in tasks]))
         tasks = self._normalize(tasks)
         debug("Tasks with kwargs: {0!r}".format(tasks))
         # Obtain copy of directly-given tasks since they should sometimes
@@ -117,14 +118,21 @@ class Executor(object):
         return results
 
     def _normalize(self, tasks):
-        # To two-tuples from potential combo of two-tuples & strings
-        tuples = [
-            (x, {}) if isinstance(x, six.string_types) else x
-            for x in tasks
-        ]
-        # Then to call objects (binding the task obj + kwargs together)
+        """
+        Transform arbitrary task list w/ various types, into `.Call` objects.
+
+        See docstring for `.execute` for details.
+        """
         calls = []
-        for name, kwargs in tuples:
+        for task in tasks:
+            name, kwargs = None, {}
+            if isinstance(task, six.string_types):
+                name = task
+            elif isinstance(task, ParserContext):
+                name = task.name
+                kwargs = task.as_kwargs
+            else:
+                name, kwargs = task
             c = Call(self.collection[name], **kwargs)
             c.name = name
             calls.append(c)
