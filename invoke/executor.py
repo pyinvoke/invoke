@@ -136,6 +136,8 @@ class Executor(object):
             c = Call(self.collection[name], **kwargs)
             c.name = name
             calls.append(c)
+        if not tasks and self.collection.default is not None:
+            calls = [Call(self.collection[self.collection.default])]
         return calls
 
     def _dedupe(self, tasks, dedupe):

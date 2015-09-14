@@ -56,6 +56,16 @@ class Executor_(IntegrationSpec):
             eq_(len(args), 1)
             ok_(isinstance(args[0], Context))
 
+        def default_tasks_called_when_no_tasks_specified(self):
+            # NOTE: when no tasks AND no default, Program will print global
+            # help. We just won't do anything at all, which is fine for now.
+            task = Task(Mock('default-task'))
+            coll = Collection()
+            coll.add_task(task, name='mytask', default=True)
+            executor = Executor(collection=coll)
+            executor.execute()
+            task.body.assert_called_with()
+
     class basic_pre_post:
         "basic pre/post task functionality"
 
