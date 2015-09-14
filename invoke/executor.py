@@ -30,7 +30,7 @@ class Executor(object):
             config = Config()
         self.config = config
 
-    def execute(self, *tasks, **kwargs):
+    def execute(self, *tasks):
         """
         Execute one or more ``tasks`` in sequence.
 
