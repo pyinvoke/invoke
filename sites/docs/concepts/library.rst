@@ -38,7 +38,7 @@ First, as with any distinct Python package providing CLI
         packages=['tester'],
         install_requires=['invoke'],
         entry_points={
-            'console_scripts': ['tester = tester.cli:program.run']
+            'console_scripts': ['tester = tester.main:program.run']
         }
     )
 
@@ -49,12 +49,12 @@ First, as with any distinct Python package providing CLI
 
 Nothing here is specific to Invoke - it's a standard way of telling Python to
 install a ``tester`` script that executes the ``run`` method of a ``program``
-object defined inside the module ``tester.cli``.
+object defined inside the module ``tester.main``.
 
 Creating a ``Program``
 ----------------------
 
-In our ``tester/cli.py``, we start out importing Invoke's public CLI
+In our ``tester/main.py``, we start out importing Invoke's public CLI
 functionality::
 
     from invoke import Program
