@@ -35,9 +35,17 @@ class Executor(object):
         Execute one or more ``tasks`` in sequence.
 
         :param tasks:
-            An iterable of two-tuples whose first element is a task name and
-            whose second element is a dict suitable for use as ``**kwargs``.
-            E.g.::
+            An all-purpose iterable of "tasks to execute", each member of which
+            may take one of the following forms:
+
+            **A string** naming a task from the Executor's `.Collection`. This
+            name may contain dotted syntax appropriate for calling namespaced
+            tasks, e.g. ``subcollection.taskname``. Such tasks are executed
+            without arguments.
+
+            **A two-tuple** whose first element is a task name string (as
+            above) and whose second element is a dict suitable for use as
+            ``**kwargs`` when calling the named task. E.g.::
 
                 [
                     ('task1', {}),
@@ -45,17 +53,19 @@ class Executor(object):
                     ...
                 ]
 
-            As a shorthand, a string instead of a two-tuple may be given,
-            implying an empty kwargs dict.
-
-            The string specifies which task from the Executor's `.Collection`
-            is to be executed. It may contain dotted syntax appropriate for
-            calling namespaced tasks, e.g. ``subcollection.taskname``.
-
-            Thus the above list-of-tuples is roughly equivalent to::
+            is equivalent, roughly, to::
 
                 task1()
                 task2(arg1='val1')
+
+            **A `.ParserContext`** instance, whose ``.name`` attribute is used
+            as the task name and whose ``.as_kawrgs`` attribute is used as the
+            task kwargs (again following the above specifications).
+
+            .. note::
+                When called without any arguments at all (i.e. when ``*tasks``
+                is empty), the default task from ``self.collection`` is used
+                instead, if defined.
 
         :returns:
             A dict mapping task objects to their return values.
