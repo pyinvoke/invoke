@@ -137,9 +137,10 @@ class Program(object):
         self._binary = binary
         self.argv = None
 
+    @property
     def config(self):
         """
-        Generate a `.Config` object initialized with parser & collection data.
+        A `.Config` object initialized with parser & collection data.
 
         Specifically, parser-level flags are consulted (typically as a
         top-level "runtime overrides" dict) and the `.Collection` object is
@@ -276,7 +277,7 @@ class Program(object):
             raise Exit
 
     def _execute(self):
-        executor = Executor(self.collection, self.config())
+        executor = Executor(self.collection, self.config)
         tasks = tasks_from_contexts(self.tasks, self.collection)
         executor.execute(*tasks)
 

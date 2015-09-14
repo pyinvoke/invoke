@@ -411,8 +411,7 @@ Available tasks:
             p = Program()
             p._execute = Mock() # neuter
             p.run('inv {0} foo'.format(flag))
-            config = p.config()
-            eq_(config.run[key], value)
+            eq_(p.config.run[key], value)
 
         def warn_only(self):
             self._test_flag('-w', 'warn')
