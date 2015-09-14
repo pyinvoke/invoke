@@ -38,7 +38,7 @@ First, as with any distinct Python package providing CLI
         packages=['tester'],
         install_requires=['invoke'],
         entry_points={
-            'console_scripts': ['tester = tester.cli:main']
+            'console_scripts': ['tester = tester.cli:program.run']
         }
     )
 
@@ -48,9 +48,8 @@ First, as with any distinct Python package providing CLI
     Guide <https://python-packaging-user-guide.readthedocs.org/en/latest/>`_.
 
 Nothing here is specific to Invoke - it's a standard way of telling Python to
-install a ``tester`` script that executes the ``main`` function inside the
-module ``tester.cli``. The actual module path and function name are completely
-arbitrary.
+install a ``tester`` script that executes the ``run`` method of a ``program``
+object defined inside the module ``tester.cli``.
 
 Creating a ``Program``
 ----------------------
@@ -60,12 +59,11 @@ functionality::
 
     from invoke import Program
 
-Then we define the ``main`` function we listed in ``setup.py`` and create a
-simple `.Program` to do the heavy lifting, giving it our version number &
-telling it to start things up::
+Then we define the ``program`` object we referenced in ``setup.py``, which is a
+simple `.Program` to do the heavy lifting, giving it our version number for
+starters::
 
-    def main():
-        Program(version='0.1.0').run()
+    program = Program(version='0.1.0')
 
 At this point, installing ``tester`` would give you the same functionality as
 Invoke's :doc:`built-in CLI tool </cli>`, except named ``tester`` and exposing
@@ -120,8 +118,7 @@ should be used as the subcommands for ``tester``, via the ``namespace`` kwarg::
     from invoke import Program
     from tester import tasks
 
-    def main():
-        Program(namespace=tasks, version='0.1.0').run()
+    program = Program(namespace=tasks, version='0.1.0')
 
 The result?
 
