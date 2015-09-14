@@ -42,7 +42,6 @@ class Program_(IntegrationSpec):
                 debug.assert_called_with('my-sentinel')
 
 
-
     class normalize_argv:
         @patch('invoke.program.sys')
         def defaults_to_sys_argv(self, mock_sys):
