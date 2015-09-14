@@ -1,6 +1,5 @@
 from spec import eq_, Spec
 
-from invoke.cli import tasks_from_contexts
 from invoke.collection import Collection
 from invoke.parser import Parser
 from invoke.tasks import task
@@ -61,11 +60,6 @@ class CLIParsing(Spec):
 
     def subcollection_default_tasks(self):
         self._compare_names("sub", "sub.subtask")
-
-    def loaded_collection_default_task(self):
-        result = tasks_from_contexts(self._parse(''), self.c)
-        eq_(len(result), 1)
-        eq_(result[0][0], 'mytask3')
 
     def boolean_args(self):
         "mytask --boolean"
