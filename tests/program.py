@@ -64,6 +64,7 @@ class Program_(IntegrationSpec):
             p.run("inv --version", exit=False)
             p.print_version.assert_called()
 
+
     class normalize_name:
         def defaults_to_capitalized_argv_when_None(self):
             expect("myapp --version", out="Myapp unknown\n", invoke=False)
@@ -326,6 +327,7 @@ Options:
 
 """.lstrip()
                 expect("-c decorator -h punch --list", out=expected)
+
 
     class task_list:
         "--list"
