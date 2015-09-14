@@ -19,3 +19,10 @@ if os.environ.get('INVOKE_DEBUG'):
 log = logging.getLogger('invoke')
 for x in ('debug',):
     globals()[x] = getattr(log, x)
+
+
+def sort_names(names):
+    """
+    Sort task ``names`` by nesting depth & then as regular strings.
+    """
+    return sorted(names, key=lambda x: (x.count('.'), x))

@@ -92,6 +92,12 @@ class Program(object):
         ),
     )
 
+    # Other class-level global variables a subclass might override sometime
+    # maybe?
+    indent_width = 2
+    indent = " " * indent_width
+    col_padding = 3
+
     def __init__(self, version=None, namespace=None, name=None, binary=None):
         """
         Create a new, parameterized `.Program` instance.
@@ -342,7 +348,7 @@ class Program(object):
         print("Usage: {0} [--core-opts] task1 [--task1-opts] ... taskN [--taskN-opts]".format(self.binary)) # noqa
         print("")
         print("Core options:")
-        print_columns(self.initial_context.help_tuples())
+        self.print_columns(self.initial_context.help_tuples())
 
     def parse_core_args(self):
         """
@@ -407,18 +413,18 @@ class Program(object):
             # Really wish textwrap worked better for this.
             for line in docstring.splitlines():
                 if line.strip():
-                    print(indent + line)
+                    print(self.indent + line)
                 else:
                     print("")
             print("")
         else:
-            print(indent + "none")
+            print(self.indent + "none")
             print("")
         print("Options:")
         if tuples:
-            print_columns(tuples)
+            self.print_columns(tuples)
         else:
-            print(indent + "none")
+            print(self.indent + "none")
             print("")
 
     def list_tasks(self):
@@ -445,4 +451,41 @@ class Program(object):
 
         # Print
         print("Available tasks:\n")
-        print_columns(pairs)
+        self.print_columns(pairs)
+
+    def print_columns(self, tuples):
+        """
+        Print tabbed columns from (name, help) ``tuples``.
+
+        Useful for listing tasks + docstrings, flags + help strings, etc.
+        """
+        # Calculate column sizes: don't wrap flag specs, give what's left over
+        # to the descriptions.
+        name_width = max(len(x[0]) for x in tuples)
+        desc_width = (
+            pty_size()[0]
+            - name_width
+            - self.indent_width
+            - self.col_padding
+            - 1
+        )
+        wrapper = textwrap.TextWrapper(width=desc_width)
+        for name, help_str in tuples:
+            # Wrap descriptions/help text
+            help_chunks = wrapper.wrap(help_str)
+            # Print flag spec + padding
+            name_padding = name_width - len(name)
+            spec = ''.join((
+                self.indent,
+                name,
+                name_padding * ' ',
+                self.col_padding * ' '
+            ))
+            # Print help text as needed
+            if help_chunks:
+                print(spec + help_chunks[0])
+                for chunk in help_chunks[1:]:
+                    print((' ' * len(spec)) + chunk)
+            else:
+                print(spec.rstrip())
+        print('')
