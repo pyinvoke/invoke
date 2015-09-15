@@ -285,7 +285,6 @@ class Program(object):
 
         # Print completion helpers if necessary
         if self.args.complete.value:
-            # TODO: reference these within complete() after moving it here
             complete(self.core, self.initial_context, self.collection)
 
         # No tasks specified for execution & no default task = print help
@@ -387,8 +386,6 @@ class Program(object):
             coll = loader.load(coll_name) if coll_name else loader.load()
             self.collection = coll
         except CollectionNotFound:
-            # TODO: improve sys.exit mocking in tests so we can just raise
-            # Exit(msg)
             name = coll_name or DEFAULT_COLLECTION_NAME
             six.print_(
                 "Can't find any collection named {0!r}!".format(name),
