@@ -114,10 +114,11 @@ class SimpleFailure(Failure):
         return Mock(exited=1)
 
 
-def _assert_contains(haystack, needle, invert):
-    matched = re.search(needle, haystack, re.M)
+def _assert_contains(haystack, needle, invert, escape=False):
+    myneedle = re.escape(needle) if escape else needle
+    matched = re.search(myneedle, haystack, re.M)
     if (invert and matched) or (not invert and not matched):
-        raise AssertionError("r'%s' %sfound in '%s'" % (
+        raise AssertionError("'%s' %sfound in '%s'" % (
             needle,
             "" if invert else "not ",
             haystack
