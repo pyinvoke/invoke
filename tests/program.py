@@ -5,7 +5,8 @@ from operator import contains, not_
 from mock import patch, Mock
 from spec import eq_, ok_, trap, skip
 
-from invoke import Program, Collection, main, ParseError
+from invoke import Program, Collection, ParseError, Task
+from invoke import main
 
 from _utils import (
     load, cd, IntegrationSpec, expect, skip_if_windows, SimpleFailure,
@@ -253,6 +254,28 @@ Core options:
 """.lstrip()
                 for flag in ['-h', '--help']:
                     expect(flag, out=expected, program=main.program)
+
+            @trap
+            def bundled_namspace_help_includes_subcommand_listing(self):
+                t1, t2 = Task(Mock()), Task(Mock())
+                coll = Collection(task1=t1, task2=t2)
+                Program(namespace=coll).run("myapp --help", exit=False)
+                print >>sys.__stderr__, sys.stdout.getvalue()
+                out = sys.stdout.getvalue()
+                # Spot checks for expected bits, so we don't have to change
+                # this every time core args change.
+                for expected in (
+                    # Usage line changes somewhat
+                    "Usage: myapp [--core-opts] <subcommand> [--subcommand-opts] ...\n", # noqa
+                    # Core options are still present
+                    "Core options:\n",
+                    "--echo",
+                    # Subcommands are listed
+                    "Subcommands:\n",
+                    "    task1",
+                    "    task2",
+                ):
+                    assert_contains(out, expected)
 
         class per_task:
             "per-task"
