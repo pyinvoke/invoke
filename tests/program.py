@@ -140,7 +140,12 @@ class Program_(IntegrationSpec):
 
         def non_null_namespace_does_not_trigger_task_related_args(self):
             for arg in Program.task_args:
-                expect("--help", out=arg.name, test=assert_not_contains)
+                expect(
+                    "--help",
+                    out=arg.name,
+                    program=Program(namespace=Collection()),
+                    test=assert_not_contains,
+                )
 
 
     class load_collection:
