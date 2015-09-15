@@ -8,7 +8,8 @@ from spec import eq_, ok_, trap, skip
 from invoke import Program, Collection, main, ParseError
 
 from _utils import (
-    load, cd, IntegrationSpec, expect, skip_if_windows, SimpleFailure
+    load, cd, IntegrationSpec, expect, skip_if_windows, SimpleFailure,
+    assert_contains, assert_not_contains
 )
 
 
@@ -85,7 +86,7 @@ class Program_(IntegrationSpec):
                 "myapp --help",
                 out="myapp [--core-opts]",
                 invoke=False,
-                test=contains
+                test=assert_contains
             )
 
         def uses_overridden_value_when_given(self):
@@ -94,15 +95,15 @@ class Program_(IntegrationSpec):
                 out="nope [--core-opts]",
                 program=Program(binary='nope'),
                 invoke=False,
-                test=contains
+                test=assert_contains
             )
 
         @trap
         def use_binary_basename_when_invoked_absolutely(self):
             Program().run("/usr/local/bin/myapp --help", exit=False)
             stdout = sys.stdout.getvalue()
-            ok_("myapp [--core-opts]" in stdout)
-            ok_("/usr/local/bin" not in stdout)
+            assert_contains(stdout, "myapp [--core-opts]")
+            assert_not_contains(stdout, "/usr/local/bin")
 
 
     class print_version:
@@ -120,18 +121,26 @@ class Program_(IntegrationSpec):
             # checkup.
             for program in (Program(), Program(namespace=Collection())):
                 for arg in ('--complete', '--debug', '--warn-only'):
-                    expect("--help", program=program, out=arg, test=contains)
+                    expect(
+                        "--help",
+                        program=program,
+                        out=arg,
+                        test=assert_contains
+                    )
 
         def null_namespace_triggers_task_related_args(self):
             program = Program(namespace=None)
             for arg in Program.task_args:
-                expect("--help", program=program, out=arg.name, test=contains)
+                expect(
+                    "--help",
+                    program=program,
+                    out=arg.name,
+                    test=assert_contains
+                )
 
         def non_null_namespace_does_not_trigger_task_related_args(self):
-            # NOTE: have to reverse args because of how contains() works
-            not_in = lambda a, b: not_(contains(b, a))
             for arg in Program.task_args:
-                expect("--help", out=arg.name, test=not_in)
+                expect("--help", out=arg.name, test=assert_not_contains)
 
 
     class load_collection:
@@ -198,7 +207,7 @@ class Program_(IntegrationSpec):
 
         class core:
             def empty_invocation_with_no_default_task_prints_help(self):
-                expect("-c foo", out="Core options:", test=contains)
+                expect("-c foo", out="Core options:", test=assert_contains)
 
             # TODO: On Windows, we don't get a pty, so we don't get a
             # guaranteed terminal size of 80x24. Skip for now, but maybe
@@ -275,7 +284,7 @@ Options:
                 expect(
                     '-c decorator -h biz',
                     out="Usage: notinvoke",
-                    test=contains,
+                    test=assert_contains,
                     program=Program(binary='notinvoke')
                 )
 

@@ -76,7 +76,7 @@ def expect(invocation, out=None, err=None, program=None, invoke=True,
     "``, say ``invoke=False``.
 
     To customize the operator used for testing (default: equality), use
-    ``test``.
+    ``test`` (which should be an assertion wrapper of some kind).
     """
     if program is None:
         program = Program()
@@ -86,12 +86,12 @@ def expect(invocation, out=None, err=None, program=None, invoke=True,
     # Perform tests
     if out is not None:
         if test:
-            ok_(test(sys.stdout.getvalue(), out))
+            test(sys.stdout.getvalue(), out)
         else:
             eq_(sys.stdout.getvalue(), out)
     if err is not None:
         if test:
-            ok_(test(sys.stderr.getvalue(), err))
+            test(sys.stderr.getvalue(), err)
         else:
             eq_(sys.stderr.getvalue(), err)
 

@@ -8,7 +8,7 @@ from mock import patch, Mock
 
 from invoke import Runner, Local, Context, Config, Failure, ThreadException
 
-from _utils import mock_subprocess, mock_pty
+from _utils import mock_subprocess, mock_pty, assert_contains
 
 
 # Dummy command that will blow up if it ever truly hits a real shell.
@@ -177,17 +177,17 @@ class Runner_(Spec):
         @trap
         def enabled_via_kwarg(self):
             self._run("my command", echo=True)
-            ok_("my command" in sys.stdout.getvalue())
+            assert_contains(sys.stdout.getvalue(), "my command")
 
         @trap
         def enabled_via_config(self):
             self._run("yup", settings={'run': {'echo': True}})
-            ok_("yup" in sys.stdout.getvalue())
+            assert_contains(sys.stdout.getvalue(), "yup")
 
         @trap
         def kwarg_beats_config(self):
             self._run("yup", echo=True, settings={'run': {'echo': False}})
-            ok_("yup" in sys.stdout.getvalue())
+            assert_contains(sys.stdout.getvalue(), "yup")
 
         @trap
         def uses_ansi_bold(self):
