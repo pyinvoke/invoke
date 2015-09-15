@@ -355,10 +355,15 @@ class Program(object):
         print("{0} {1}".format(self.name, self.version or "unknown"))
 
     def print_help(self):
-        print("Usage: {0} [--core-opts] task1 [--task1-opts] ... taskN [--taskN-opts]".format(self.binary)) # noqa
+        usage_suffix = "task1 [--task1-opts] ... taskN [--taskN-opts]"
+        if self.namespace is not None:
+            usage_suffix = "<subcommand> [--subcommand-opts] ..."
+        print("Usage: {0} [--core-opts] {1}".format(self.binary, usage_suffix))
         print("")
         print("Core options:")
         self.print_columns(self.initial_context.help_tuples())
+        if self.namespace is not None:
+            self.list_tasks()
 
     def parse_core_args(self):
         """
@@ -458,7 +463,10 @@ class Program(object):
             pairs.append((name, help_))
 
         # Print
-        print("Available tasks:\n")
+        if self.namespace is not None:
+            print("Subcommands:\n")
+        else:
+            print("Available tasks:\n")
         self.print_columns(pairs)
 
     def print_columns(self, tuples):

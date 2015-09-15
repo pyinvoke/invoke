@@ -144,7 +144,7 @@ class Program_(IntegrationSpec):
                 expect(
                     "--help",
                     out=arg.name,
-                    program=Program(namespace=Collection()),
+                    program=Program(namespace=Collection(mytask=Task(Mock()))),
                     test=assert_not_contains,
                 )
 
@@ -260,7 +260,6 @@ Core options:
                 t1, t2 = Task(Mock()), Task(Mock())
                 coll = Collection(task1=t1, task2=t2)
                 Program(namespace=coll).run("myapp --help", exit=False)
-                print >>sys.__stderr__, sys.stdout.getvalue()
                 out = sys.stdout.getvalue()
                 # Spot checks for expected bits, so we don't have to change
                 # this every time core args change.
@@ -272,10 +271,10 @@ Core options:
                     "--echo",
                     # Subcommands are listed
                     "Subcommands:\n",
-                    "    task1",
-                    "    task2",
+                    "  task1",
+                    "  task2",
                 ):
-                    assert_contains(out, expected)
+                    assert_contains(out, expected, escape=True)
 
         class per_task:
             "per-task"
