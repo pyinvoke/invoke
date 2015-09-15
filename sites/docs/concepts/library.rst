@@ -129,13 +129,13 @@ The result?
     $ tester --help
     Usage: tester [--core-opts] <subcommand> [--command-opts] ...
 
+    Core options:
+        ... core options here, minus task-related ones ...
+
     Subcommands:
         unit
         integration
 
-    Core options:
-        ... core options here, minus task-related ones ... 
-    
     $ tester --list
     No idea what '--list' is!
     $ tester unit
