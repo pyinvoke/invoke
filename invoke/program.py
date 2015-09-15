@@ -250,15 +250,6 @@ class Program(object):
             self.print_version()
             raise Exit
 
-        # Core (no value given) --help output
-        # TODO: if this wants to display context sensitive help (e.g. a
-        # combo help and available tasks listing; or core flags modified by
-        # plugins/task modules) it will have to move farther down.
-        if self.args.help.value is True:
-            debug("Saw bare --help, printing help & exiting")
-            self.print_help()
-            raise Exit
-
         # Load a collection of tasks unless one was already set.
         if self.namespace is not None:
             debug("Program was given a default namespace, skipping collection loading") # noqa
@@ -270,6 +261,12 @@ class Program(object):
         # Parse remainder into task contexts (sets
         # self.parser/collection/tasks)
         self.parse_tasks()
+
+        # Core (no value given) --help output
+        if self.args.help.value is True:
+            debug("Saw bare --help, printing help & exiting")
+            self.print_help()
+            raise Exit
 
         # Print per-task help, if necessary
         if self.args.help.value in self.parser.contexts:
