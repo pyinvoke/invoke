@@ -1,6 +1,5 @@
 import os
 import sys
-from operator import contains, not_
 
 from mock import patch, Mock
 from spec import eq_, ok_, trap, skip
