@@ -2,6 +2,19 @@
 Changelog
 =========
 
+* :feature:`173` Overhauled the top level CLI functionality to allow for
+  reusing Invoke as distinct binaries, optionally with bundled task namespaces
+  as subcommands. As a side effect, this functionality is now much more
+  extensible to boot. Thanks to Erich Heine for feedback/suggestions during
+  development.
+
+  .. warning::
+    This change is backwards incompatible if you imported anything from the
+    ``invoke.cli`` module (which is now rearchitected as
+    `~invoke.program.Program`). It should be transparent to everybody else.
+
+  .. seealso:: :ref:`reusing-as-a-binary`
+
 * :bug:`-` Fixed a bug in the parser where ``invoke --takes-optional-arg
   avalue --anotherflag`` was incorrectly considering ``--anotherflag`` to be an
   ambiguity error (as if ``avalue`` had not been given to
