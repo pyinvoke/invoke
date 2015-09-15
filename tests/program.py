@@ -234,6 +234,7 @@ class Program_(IntegrationSpec):
 Usage: inv[oke] [--core-opts] task1 [--task1-opts] ... taskN [--taskN-opts]
 
 Core options:
+
   --complete                       Print tab-completion candidates for given
                                    parse remainder.
   --no-dedupe                      Disable task deduplication.

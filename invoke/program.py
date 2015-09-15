@@ -361,6 +361,7 @@ class Program(object):
         print("Usage: {0} [--core-opts] {1}".format(self.binary, usage_suffix))
         print("")
         print("Core options:")
+        print("")
         self.print_columns(self.initial_context.help_tuples())
         if self.namespace is not None:
             self.list_tasks()
