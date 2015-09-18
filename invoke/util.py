@@ -1,5 +1,6 @@
 import logging
 import os
+from contextlib import contextmanager
 
 
 LOG_FORMAT = "%(name)s.%(module)s.%(funcName)s: %(message)s"
@@ -26,3 +27,16 @@ def sort_names(names):
     Sort task ``names`` by nesting depth & then as regular strings.
     """
     return sorted(names, key=lambda x: (x.count('.'), x))
+
+
+# TODO: Make part of public API sometime
+@contextmanager
+def cd(where):
+    cwd = os.getcwd()
+    os.chdir(where)
+    try:
+        yield
+    finally:
+        os.chdir(cwd)
+
+

@@ -50,17 +50,6 @@ class IntegrationSpec(Spec):
         os.environ.update(self.old_environ)
 
 
-# TODO: make this part of the real API somewhere
-@contextmanager
-def cd(where):
-    cwd = os.getcwd()
-    os.chdir(where)
-    try:
-        yield
-    finally:
-        os.chdir(cwd)
-
-
 @trap
 def expect(invocation, out=None, err=None, program=None, invoke=True,
     test=None):
