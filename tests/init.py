@@ -77,3 +77,6 @@ class Init(Spec):
 
         def program(self):
             assert invoke.Program is invoke.program.Program
+
+        def filesystemloader(self):
+            assert invoke.FilesystemLoader is invoke.loader.FilesystemLoader

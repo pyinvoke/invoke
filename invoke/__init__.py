@@ -6,6 +6,7 @@ from .exceptions import ( # noqa
     AmbiguousEnvVar, ThreadException, ParseError, CollectionNotFound, # noqa
     UnknownFileType, Exit, UncastableEnvVar, PlatformError, # noqa
 ) # noqa
+from .loader import FilesystemLoader # noqa
 from .platform import pty_size # noqa
 from .program import Program # noqa
 from .runners import Runner, Local, Failure, Result # noqa
