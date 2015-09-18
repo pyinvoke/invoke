@@ -1,14 +1,13 @@
 import os
-import re
 import sys
 import termios
 from contextlib import contextmanager
-from functools import partial, wraps
+from functools import wraps
 
 from invoke.vendor.six import StringIO
 
 from mock import patch, Mock
-from spec import trap, Spec, eq_, skip
+from spec import trap, Spec, eq_, skip, assert_contains, assert_not_contains
 
 from invoke import Program, Failure
 from invoke.platform import WINDOWS
@@ -112,20 +111,6 @@ class SimpleFailure(Failure):
     @property
     def result(self):
         return Mock(exited=1)
-
-
-def _assert_contains(haystack, needle, invert, escape=False):
-    myneedle = re.escape(needle) if escape else needle
-    matched = re.search(myneedle, haystack, re.M)
-    if (invert and matched) or (not invert and not matched):
-        raise AssertionError("'%s' %sfound in '%s'" % (
-            needle,
-            "" if invert else "not ",
-            haystack
-        ))
-
-assert_contains = partial(_assert_contains, invert=False)
-assert_not_contains = partial(_assert_contains, invert=True)
 
 
 def mock_subprocess(out='', err='', exit=0, isatty=None):
