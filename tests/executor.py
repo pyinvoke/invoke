@@ -7,7 +7,7 @@ from invoke.context import Context
 from invoke.executor import Executor
 from invoke.tasks import Task, ctask, call
 
-from _utils import expect, IntegrationSpec
+from _util import expect, IntegrationSpec
 
 
 class Executor_(IntegrationSpec):

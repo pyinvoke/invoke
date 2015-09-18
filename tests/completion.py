@@ -2,7 +2,7 @@ import sys
 
 from invoke import Program
 
-from _utils import (
+from _util import (
     expect, IntegrationSpec, trap, assert_contains, assert_not_contains, eq_
 )
 

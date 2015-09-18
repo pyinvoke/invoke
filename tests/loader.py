@@ -7,7 +7,7 @@ from invoke.loader import Loader, FilesystemLoader as FSLoader
 from invoke.collection import Collection
 from invoke.exceptions import CollectionNotFound
 
-from _utils import support
+from _util import support
 
 
 class _BasicLoader(Loader):

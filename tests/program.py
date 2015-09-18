@@ -7,7 +7,7 @@ from spec import eq_, ok_, trap, skip
 from invoke import Program, Collection, ParseError, Task
 from invoke import main
 
-from _utils import (
+from _util import (
     load, cd, IntegrationSpec, expect, skip_if_windows, SimpleFailure,
     assert_contains, assert_not_contains
 )

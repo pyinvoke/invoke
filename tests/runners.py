@@ -8,7 +8,7 @@ from mock import patch, Mock
 
 from invoke import Runner, Local, Context, Config, Failure, ThreadException
 
-from _utils import mock_subprocess, mock_pty, assert_contains
+from _util import mock_subprocess, mock_pty, assert_contains
 
 
 # Dummy command that will blow up if it ever truly hits a real shell.

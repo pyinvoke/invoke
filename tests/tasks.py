@@ -3,7 +3,7 @@ from spec import Spec, skip, eq_, raises
 from invoke.tasks import task, ctask, Task
 from invoke.loader import FilesystemLoader as Loader
 
-from _utils import support
+from _util import support
 
 
 #
