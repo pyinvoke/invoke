@@ -7,7 +7,7 @@ from .vendor import six
 
 from .complete import complete
 from .config import Config
-from .loader import FilesystemLoader, DEFAULT_COLLECTION_NAME
+from .loader import FilesystemLoader
 from .parser import Parser, ParserContext, Argument
 from .executor import Executor
 from .exceptions import Failure, CollectionNotFound, ParseError, Exit
@@ -389,7 +389,7 @@ class Program(object):
             coll = loader.load(coll_name) if coll_name else loader.load()
             self.collection = coll
         except CollectionNotFound:
-            name = coll_name or DEFAULT_COLLECTION_NAME
+            name = coll_name or loader.DEFAULT_COLLECTION_NAME
             six.print_(
                 "Can't find any collection named {0!r}!".format(name),
                 file=sys.stderr

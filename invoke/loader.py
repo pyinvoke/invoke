@@ -7,13 +7,12 @@ from .exceptions import CollectionNotFound
 from .util import debug
 
 
-DEFAULT_COLLECTION_NAME = 'tasks'
-
-
 class Loader(object):
     """
     Abstract class defining how to load a session's base `.Collection`.
     """
+    DEFAULT_COLLECTION_NAME = 'tasks'
+
     def find(self, name):
         """
         Implementation-specific finder method seeking collection ``name``.
@@ -27,7 +26,7 @@ class Loader(object):
         """
         raise NotImplementedError
 
-    def load(self, name=DEFAULT_COLLECTION_NAME):
+    def load(self, name=None):
         """
         Load and return collection identified by ``name``.
 
@@ -39,6 +38,8 @@ class Loader(object):
         import behavior (i.e. so the loaded module may load local-to-it modules
         or packages.)
         """
+        if name is None:
+            name = self.DEFAULT_COLLECTION_NAME
         # Find the named tasks module, depending on implementation.
         # Will raise an exception if not found.
         fd, path, desc = self.find(name)
