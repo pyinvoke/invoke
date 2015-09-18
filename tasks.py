@@ -1,42 +1,12 @@
 import sys
 import time
 
-from invocations.docs import docs, www
-from invocations.testing import test, coverage
+from invocations.docs import docs, www, sites
+from invocations.testing import test, coverage, integration
 from invocations.packaging import vendorize, release
 
 from invoke import ctask as task, Collection, Context
 from invoke.util import LOG_FORMAT
-
-
-@task(help=test.help)
-def integration(c, module=None, runner=None, opts=None):
-    """
-    Run the integration test suite. May be slow!
-    """
-    opts = opts or ""
-    opts += " --tests=integration/"
-    test(c, module, runner, opts)
-
-
-@task
-def sites(c):
-    """
-    Build both doc sites w/ maxed nitpicking.
-    """
-    # Turn warnings into errors, emit warnings about missing references.
-    # This gives us a maximally noisy docs build.
-    # Also enable tracebacks for easier debuggage.
-    opts = "-W -n -T"
-    # This is super lolzy but we haven't actually tackled nontrivial in-Python
-    # task calling yet, so...
-    docs_c = Context(config=c.config.clone())
-    www_c = Context(config=c.config.clone())
-    docs_c.update(**docs.configuration())
-    www_c.update(**www.configuration())
-    docs['build'](docs_c, opts=opts)
-    www['build'](www_c, opts=opts)
-
 
 
 def make_handler(c, task_, regexes, ignore_regexes, *args, **kwargs):
