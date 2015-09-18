@@ -2,8 +2,10 @@ import sys
 
 from invoke import Program
 
+from spec import assert_contains, assert_not_contains, eq_
+
 from _util import (
-    expect, IntegrationSpec, trap, assert_contains, assert_not_contains, eq_
+    expect, IntegrationSpec, trap
 )
 
 

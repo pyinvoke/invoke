@@ -2,14 +2,13 @@ import os
 import sys
 
 from mock import patch, Mock
-from spec import eq_, ok_, trap, skip
+from spec import eq_, ok_, trap, skip, assert_contains, assert_not_contains
 
 from invoke import Program, Collection, ParseError, Task
 from invoke import main
 
 from _util import (
-    load, cd, IntegrationSpec, expect, skip_if_windows, SimpleFailure,
-    assert_contains, assert_not_contains
+    load, cd, IntegrationSpec, expect, skip_if_windows, SimpleFailure
 )
 
 

@@ -3,12 +3,12 @@ import sys
 import types
 from invoke.vendor.six import StringIO
 
-from spec import Spec, trap, eq_, skip, ok_, raises
+from spec import Spec, trap, eq_, skip, ok_, raises, assert_contains
 from mock import patch, Mock
 
 from invoke import Runner, Local, Context, Config, Failure, ThreadException
 
-from _util import mock_subprocess, mock_pty, assert_contains
+from _util import mock_subprocess, mock_pty
 
 
 # Dummy command that will blow up if it ever truly hits a real shell.

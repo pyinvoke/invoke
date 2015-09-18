@@ -1,11 +1,8 @@
-import sys
-import time
-
 from invocations.docs import docs, www, sites, watch_docs
 from invocations.testing import test, coverage, integration, watch_tests
 from invocations.packaging import vendorize, release
 
-from invoke import ctask as task, Collection, Context
+from invoke import Collection
 from invoke.util import LOG_FORMAT
 
 

@@ -7,7 +7,7 @@ from functools import wraps
 from invoke.vendor.six import StringIO
 
 from mock import patch, Mock
-from spec import trap, Spec, eq_, skip, assert_contains, assert_not_contains
+from spec import trap, Spec, eq_, skip
 
 from invoke import Program, Failure
 from invoke.platform import WINDOWS
