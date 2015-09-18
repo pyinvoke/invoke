@@ -84,15 +84,9 @@ def expect(invocation, out=None, err=None, program=None, invoke=True,
     program.run(invocation, exit=False)
     # Perform tests
     if out is not None:
-        if test:
-            test(sys.stdout.getvalue(), out)
-        else:
-            eq_(sys.stdout.getvalue(), out)
+        (test or eq_)(sys.stdout.getvalue(), out)
     if err is not None:
-        if test:
-            test(sys.stderr.getvalue(), err)
-        else:
-            eq_(sys.stderr.getvalue(), err)
+        (test or eq_)(sys.stderr.getvalue(), err)
 
 
 class SimpleFailure(Failure):
