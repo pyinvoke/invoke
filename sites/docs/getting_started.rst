@@ -6,6 +6,7 @@ This document presents a whirlwind tour of Invoke's feature set. Please see the
 links throughout for detailed conceptual & API docs. For installation help, see
 the project's `installation page <http://www.pyinvoke.org/installing.html>`_.
 
+.. _defining-and-running-task-functions:
 
 Defining and running task functions
 ===================================
