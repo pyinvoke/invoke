@@ -1,5 +1,6 @@
 import os
 import sys
+from functools import partial
 
 from mock import patch, Mock, ANY
 from spec import eq_, ok_, trap, skip, assert_contains, assert_not_contains
@@ -268,12 +269,10 @@ Core options:
                 for flag in ['-h', '--help']:
                     expect(flag, out=expected, program=main.program)
 
-            @trap
             def bundled_namspace_help_includes_subcommand_listing(self):
                 t1, t2 = Task(Mock()), Task(Mock())
                 coll = Collection(task1=t1, task2=t2)
-                Program(namespace=coll).run("myapp --help", exit=False)
-                out = sys.stdout.getvalue()
+                p = Program(namespace=coll)
                 # Spot checks for expected bits, so we don't have to change
                 # this every time core args change.
                 for expected in (
@@ -287,7 +286,13 @@ Core options:
                     "  task1",
                     "  task2",
                 ):
-                    assert_contains(out, expected, escape=True)
+                    expect(
+                        "myapp --help",
+                        program=p,
+                        invoke=False,
+                        out=expected,
+                        test=partial(assert_contains, escape=True)
+                    )
 
         class per_task:
             "per-task"
