@@ -110,7 +110,8 @@ class Program(object):
     indent = " " * indent_width
     col_padding = 3
 
-    def __init__(self, version=None, namespace=None, name=None, binary=None):
+    def __init__(self, version=None, namespace=None, name=None, binary=None,
+        loader_class=None):
         """
         Create a new, parameterized `.Program` instance.
 
@@ -148,12 +149,18 @@ class Program(object):
             under multiple names, such as Invoke itself does - it installs as
             both ``inv`` and ``invoke``, and sets ``name="inv[oke]"`` so its
             ``--help`` output implies both names.
+
+        :param loader_class:
+            The `.Loader` subclass to use when loading task collections.
+
+            Defaults to `.FilesystemLoader`.
         """
         self.version = "unknown" if version is None else version
         self.namespace = namespace
         self._name = name
         self._binary = binary
         self.argv = None
+        self.loader_class = loader_class or FilesystemLoader
 
     @property
     def config(self):
@@ -383,7 +390,7 @@ class Program(object):
         Load a task collection based on parsed core args, or die trying.
         """
         start = self.args.root.value
-        loader = FilesystemLoader(start=start)
+        loader = self.loader_class(start=start)
         coll_name = self.args.collection.value
         try:
             coll = loader.load(coll_name) if coll_name else loader.load()

@@ -1,10 +1,10 @@
 import os
 import sys
 
-from mock import patch, Mock
+from mock import patch, Mock, ANY
 from spec import eq_, ok_, trap, skip, assert_contains, assert_not_contains
 
-from invoke import Program, Collection, ParseError, Task
+from invoke import Program, Collection, ParseError, Task, FilesystemLoader
 from invoke import main
 from invoke.util import cd
 
@@ -31,6 +31,13 @@ class Program_(IntegrationSpec):
 
         def may_specify_binary(self):
             eq_(Program(binary='myapp').binary, 'myapp')
+
+        def loader_class_defaults_to_FilesystemLoader(self):
+            ok_(Program().loader_class is FilesystemLoader)
+
+        def may_specify_loader_class(self):
+            klass = object()
+            eq_(Program(loader_class=klass).loader_class, klass)
 
 
     class miscellaneous:
@@ -159,6 +166,12 @@ class Program_(IntegrationSpec):
                 "-c huhwhat -l",
                 err="Can't find any collection named 'huhwhat'!\n",
             )
+
+        @trap
+        def uses_class_loader_given(self):
+            klass = Mock(side_effect=FilesystemLoader)
+            Program(loader_class=klass).run("--version", exit=False)
+            klass.assert_called_with(start=ANY)
 
 
     class run:
