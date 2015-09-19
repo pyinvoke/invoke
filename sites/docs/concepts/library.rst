@@ -148,12 +148,30 @@ Notice how the 'usage' line changed (to specify 'subcommands' instead of
 Modifying core parser arguments
 -------------------------------
 
-.. TODO: this
+A common need for this use case is tweaking the core parser arguments.
+`.Program` makes it easy: default core `Arguments <.Argument>` are returned by
+`.Program.core_args`. Extend this method's return value with ``super`` and
+you're done::
 
-* instantiate
-* methods lightly wrapping internal parser are exposed, call them
-* they modify the inner parser directly
-* then when done, call run() as before
+    # Presumably, this is your setup.py-designated CLI module...
+
+    from invoke import Program, Argument
+
+    class MyProgram(Program):
+        def core_args(self):
+            core_args = super(MyProgram, self).core_args()
+            extra_args = [
+                Argument(names=('foo', 'f'), help="Foo the bars"),
+                # ...
+            ]
+            return core_args + extra_args
+
+    program = MyProgram()
+
+.. warning::
+    We don't recommend *omitting* any of the existing core arguments; a lot of
+    basic functionality relies on their existence, even when left to default
+    values.
 
 Wrap-up
 -------
