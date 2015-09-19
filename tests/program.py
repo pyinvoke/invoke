@@ -178,6 +178,15 @@ class Program_(IntegrationSpec):
             klass.assert_called_with(start=ANY)
 
 
+    class core_args:
+        def returns_core_args(self):
+            # Mostly so we encode explicity doc'd public API member in tests.
+            # Spot checks good enough, --help tests include the full deal.
+            core_args = [x.names[0] for x in Program().core_args()]
+            for name in ('complete', 'help', 'pty', 'version'):
+                ok_(name in core_args)
+
+
     class run:
         # NOTE: some of these are integration-style tests, but they are still
         # fast tests (so not needing to go into the integration suite) and
