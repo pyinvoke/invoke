@@ -297,6 +297,12 @@ Core options:
                         test=partial(assert_contains, escape=True)
                     )
 
+            def core_help_doesnt_get_mad_if_loading_fails(self):
+                # Expects no tasks.py in root of FS
+                with cd(ROOT):
+                    expect("--help", out="Usage: ", test=assert_contains)
+
+
         class per_task:
             "per-task"
 
