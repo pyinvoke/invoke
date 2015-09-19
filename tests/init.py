@@ -80,3 +80,6 @@ class Init(Spec):
 
         def filesystemloader(self):
             assert invoke.FilesystemLoader is invoke.loader.FilesystemLoader
+
+        def argument(self):
+            assert invoke.Argument is invoke.parser.Argument
