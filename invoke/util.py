@@ -38,5 +38,3 @@ def cd(where):
         yield
     finally:
         os.chdir(cwd)
-
-
