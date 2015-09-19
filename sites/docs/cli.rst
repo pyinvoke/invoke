@@ -51,6 +51,10 @@ The core options (which must be given before any task names) are as follows:
     For more details on how to use this option, see the bundled completion
     scripts stored in ``completion/`` in the source distribution.
 
+.. option:: --hide=STRING
+
+    Set default value of run()'s 'hide' kwarg.
+
 .. option:: --no-dedupe
 
     Disable task deduplication.
@@ -75,10 +79,6 @@ The core options (which must be given before any task names) are as follows:
 .. option:: -h STRING, --help=STRING
 
     Show core or per-task help and exit.
-
-.. option:: -H STRING, --hide=STRING
-
-    Set default value of run()'s 'hide' kwarg.
 
 .. option:: -l, --list
 

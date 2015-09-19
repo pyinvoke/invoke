@@ -2,6 +2,12 @@
 Changelog
 =========
 
+* :support:`-` Removed the ``-H`` short flag, leaving just ``--hide``. This was
+  done to avoid conflicts with Fabric's host-oriented ``-H`` flag. Favoritism
+  is real! Apologies.
+
+  .. warning:: This change is backwards compatible if you used ``-H``.
+
 * :feature:`173` Overhauled the top level CLI functionality to allow for
   reusing Invoke as distinct binaries, optionally with bundled task namespaces
   as subcommands. As a side effect, this functionality is now much more

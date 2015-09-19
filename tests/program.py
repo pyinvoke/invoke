@@ -253,13 +253,13 @@ Core options:
 
   --complete                       Print tab-completion candidates for given
                                    parse remainder.
+  --hide=STRING                    Set default value of run()'s 'hide' kwarg.
   --no-dedupe                      Disable task deduplication.
   -c STRING, --collection=STRING   Specify collection name to load.
   -d, --debug                      Enable debug output.
   -e, --echo                       Echo executed commands before running.
   -f STRING, --config=STRING       Runtime configuration file to use.
   -h [STRING], --help[=STRING]     Show core or per-task help and exit.
-  -H STRING, --hide=STRING         Set default value of run()'s 'hide' kwarg.
   -l, --list                       List available tasks.
   -p, --pty                        Use a pty when executing shell commands.
   -r STRING, --root=STRING         Change root directory used for finding task

@@ -56,7 +56,7 @@ class Program(object):
             help="Show core or per-task help and exit."
         ),
         Argument(
-            names=('hide', 'H'),
+            names=('hide',),
             help="Set default value of run()'s 'hide' kwarg.",
         ),
         Argument(
