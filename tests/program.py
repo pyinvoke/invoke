@@ -14,6 +14,9 @@ from _util import (
 )
 
 
+ROOT = os.path.abspath(os.path.sep)
+
+
 class Program_(IntegrationSpec):
     class init:
         "__init__"
@@ -159,7 +162,7 @@ class Program_(IntegrationSpec):
     class load_collection:
         def complains_when_default_collection_not_found(self):
             # NOTE: assumes system under test has no tasks.py in root. Meh.
-            with cd(os.path.abspath(os.path.sep)):
+            with cd(ROOT):
                 expect("-l", err="Can't find any collection named 'tasks'!\n")
 
         def complains_when_explicit_collection_not_found(self):
