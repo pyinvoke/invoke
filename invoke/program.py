@@ -263,6 +263,13 @@ class Program(object):
             self.collection = self.namespace
         else:
             debug("No default namespace provided, trying to load one from disk") # noqa
+            # If no bundled namespace & --help was given, just print it and
+            # exit. (If we did have a bundled namespace, core --help will be
+            # handled *after* the collection is loaded & parsing is done.)
+            if self.args.help.value is True:
+                debug("No bundled namespace & bare --help given; printing help and exiting.") # noqa
+                self.print_help()
+                raise Exit
             self.load_collection()
 
         # Parse remainder into task contexts (sets
