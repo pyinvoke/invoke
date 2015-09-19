@@ -276,18 +276,25 @@ class Program(object):
         # self.parser/collection/tasks)
         self.parse_tasks()
 
+        halp = self.args.help.value
+
         # Core (no value given) --help output
-        if self.args.help.value is True:
+        if halp is True:
             debug("Saw bare --help, printing help & exiting")
             self.print_help()
             raise Exit
 
         # Print per-task help, if necessary
-        if self.args.help.value in self.parser.contexts:
-            msg = "Saw --help <taskname>, printing per-task help & exiting"
-            debug(msg)
-            self.print_task_help()
-            raise Exit
+        if halp:
+            if halp in self.parser.contexts:
+                msg = "Saw --help <taskname>, printing per-task help & exiting"
+                debug(msg)
+                self.print_task_help()
+                raise Exit
+            else:
+                # TODO: feels real dumb to factor this out of Parser, but...we
+                # should?
+                raise ParseError("No idea what '{0}' is!".format(halp))
 
         # Print discovered tasks if necessary
         if self.args.list.value:

@@ -405,6 +405,9 @@ Options:
 """.lstrip()
                 expect("-c decorator -h punch --list", out=expected)
 
+            def complains_if_given_invalid_task_name(self):
+                expect("-h this", err="No idea what 'this' is!\n")
+
 
     class task_list:
         "--list"
