@@ -26,83 +26,95 @@ class Program(object):
         :ref:`reusing-as-a-binary` for a tutorial/walkthrough of this
         functionality.
     """
-    # Arguments present always, even when wrapped as a different binary
-    core_args = (
-        Argument(
-            names=('complete',),
-            kind=bool,
-            default=False,
-            help="Print tab-completion candidates for given parse remainder.", # noqa
-        ),
-        Argument(
-            names=('debug', 'd'),
-            kind=bool,
-            default=False,
-            help="Enable debug output.",
-        ),
-        Argument(
-            names=('echo', 'e'),
-            kind=bool,
-            default=False,
-            help="Echo executed commands before running.",
-        ),
-        Argument(
-            names=('config', 'f'),
-            help="Runtime configuration file to use.",
-        ),
-        Argument(
-            names=('help', 'h'),
-            optional=True,
-            help="Show core or per-task help and exit."
-        ),
-        Argument(
-            names=('hide',),
-            help="Set default value of run()'s 'hide' kwarg.",
-        ),
-        Argument(
-            names=('pty', 'p'),
-            kind=bool,
-            default=False,
-            help="Use a pty when executing shell commands.",
-        ),
-        Argument(
-            names=('version', 'V'),
-            kind=bool,
-            default=False,
-            help="Show version and exit."
-        ),
-        Argument(
-            names=('warn-only', 'w'),
-            kind=bool,
-            default=False,
-            help="Warn, instead of failing, when shell commands fail.",
-        ),
-    )
+    def core_args(self):
+        """
+        Return default core `.Argument` objects, as a list.
+        """
+        # Arguments present always, even when wrapped as a different binary
+        return [
+            Argument(
+                names=('complete',),
+                kind=bool,
+                default=False,
+                help="Print tab-completion candidates for given parse remainder.", # noqa
+            ),
+            Argument(
+                names=('debug', 'd'),
+                kind=bool,
+                default=False,
+                help="Enable debug output.",
+            ),
+            Argument(
+                names=('echo', 'e'),
+                kind=bool,
+                default=False,
+                help="Echo executed commands before running.",
+            ),
+            Argument(
+                names=('config', 'f'),
+                help="Runtime configuration file to use.",
+            ),
+            Argument(
+                names=('help', 'h'),
+                optional=True,
+                help="Show core or per-task help and exit."
+            ),
+            Argument(
+                names=('hide',),
+                help="Set default value of run()'s 'hide' kwarg.",
+            ),
+            Argument(
+                names=('pty', 'p'),
+                kind=bool,
+                default=False,
+                help="Use a pty when executing shell commands.",
+            ),
+            Argument(
+                names=('version', 'V'),
+                kind=bool,
+                default=False,
+                help="Show version and exit."
+            ),
+            Argument(
+                names=('warn-only', 'w'),
+                kind=bool,
+                default=False,
+                help="Warn, instead of failing, when shell commands fail.",
+            ),
+        ]
 
-    # Arguments pertaining specifically to invocation as 'invoke' itself (or as
-    # other arbitrary-task-executing programs, like 'fab')
-    task_args = (
-        Argument(
-            names=('collection', 'c'),
-            help="Specify collection name to load."
-        ),
-        Argument(
-            names=('list', 'l'),
-            kind=bool,
-            default=False,
-            help="List available tasks."
-        ),
-        Argument(
-            names=('no-dedupe',),
-            kind=bool,
-            default=False,
-            help="Disable task deduplication."
-        ),
-        Argument(
-            names=('root', 'r'),
-            help="Change root directory used for finding task modules."
-        ),
-    )
+    def task_args(self):
+        """
+        Return default task-related `.Argument` objects, as a list.
+
+        These are only added to the core args in "task runner" mode (the
+        default for ``invoke`` itself) - they are omitted when the constructor
+        is given a non-empty ``namespace`` argument ("bundled namespace" mode).
+        """
+        # Arguments pertaining specifically to invocation as 'invoke' itself
+        # (or as other arbitrary-task-executing programs, like 'fab')
+        return [
+            Argument(
+                names=('collection', 'c'),
+                help="Specify collection name to load."
+            ),
+            Argument(
+                names=('list', 'l'),
+                kind=bool,
+                default=False,
+                help="List available tasks."
+            ),
+            Argument(
+                names=('no-dedupe',),
+                kind=bool,
+                default=False,
+                help="Disable task deduplication."
+            ),
+            Argument(
+                names=('root', 'r'),
+                help="Change root directory used for finding task modules."
+            ),
+        ]
 
     # Other class-level global variables a subclass might override sometime
     # maybe?
@@ -367,9 +379,9 @@ class Program(object):
         The specific arguments contained therein will differ depending on
         whether a bundled namespace was specified in `.__init__`.
         """
-        args = list(Program.core_args)
+        args = self.core_args()
         if self.namespace is None:
-            args += list(Program.task_args)
+            args += self.task_args()
         return ParserContext(args=args)
 
     def print_version(self):

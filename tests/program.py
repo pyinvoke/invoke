@@ -141,7 +141,7 @@ class Program_(IntegrationSpec):
 
         def null_namespace_triggers_task_related_args(self):
             program = Program(namespace=None)
-            for arg in Program.task_args:
+            for arg in program.task_args():
                 expect(
                     "--help",
                     program=program,
@@ -150,7 +150,7 @@ class Program_(IntegrationSpec):
                 )
 
         def non_null_namespace_does_not_trigger_task_related_args(self):
-            for arg in Program.task_args:
+            for arg in Program().task_args():
                 expect(
                     "--help",
                     out=arg.name,
@@ -179,12 +179,15 @@ class Program_(IntegrationSpec):
 
 
     class core_args:
-        def returns_core_args(self):
+        def returns_core_args_list(self):
             # Mostly so we encode explicity doc'd public API member in tests.
             # Spot checks good enough, --help tests include the full deal.
-            core_args = [x.names[0] for x in Program().core_args()]
+            core_args = Program().core_args()
+            core_arg_names = [x.names[0] for x in core_args]
             for name in ('complete', 'help', 'pty', 'version'):
-                ok_(name in core_args)
+                ok_(name in core_arg_names)
+            # Also make sure it's a list for easier tweaking/appending
+            ok_(isinstance(core_args, list))
 
 
     class run:
