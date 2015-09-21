@@ -83,3 +83,6 @@ class Init(Spec):
 
         def argument(self):
             assert invoke.Argument is invoke.parser.Argument
+
+        def executor(self):
+            assert invoke.Executor is invoke.executor.Executor
