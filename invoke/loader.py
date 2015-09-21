@@ -93,4 +93,6 @@ class FilesystemLoader(Loader):
             debug("Found module: {0!r}".format(tup[1]))
             return tup
         except ImportError:
+            msg = "ImportError loading {0!r}, raising CollectionNotFound"
+            debug(msg.format(name))
             raise CollectionNotFound(name=name, start=start)

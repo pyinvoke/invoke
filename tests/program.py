@@ -242,8 +242,8 @@ class Program_(IntegrationSpec):
                 ParseError("boo!"),
             ):
                 p = Program()
-                p._execute = Mock(side_effect=side_effect)
-                p.run("myapp -c implicit foo") # valid task name for parse step
+                p.execute = Mock(side_effect=side_effect)
+                p.run("myapp -c foo mytask") # valid task name for parse step
                 # Make sure we still exited fail-wise
                 mock_exit.assert_called_with(1)
 
