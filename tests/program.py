@@ -520,7 +520,7 @@ Available tasks:
         "run() related CLI flags affect 'run' config values"
         def _test_flag(self, flag, key, value=True):
             p = Program()
-            p._execute = Mock() # neuter
+            p.execute = Mock() # neuter
             p.run('inv {0} foo'.format(flag))
             eq_(p.config.run[key], value)
 
