@@ -123,7 +123,7 @@ class Program(object):
     col_padding = 3
 
     def __init__(self, version=None, namespace=None, name=None, binary=None,
-        loader_class=None):
+        loader_class=None, executor_class=None):
         """
         Create a new, parameterized `.Program` instance.
 
@@ -166,6 +166,11 @@ class Program(object):
             The `.Loader` subclass to use when loading task collections.
 
             Defaults to `.FilesystemLoader`.
+
+        :param executor_class:
+            The `.Executor` subclass to use when executing tasks.
+
+            Defaults to `.Executor`.
         """
         self.version = "unknown" if version is None else version
         self.namespace = namespace
@@ -173,6 +178,7 @@ class Program(object):
         self._binary = binary
         self.argv = None
         self.loader_class = loader_class or FilesystemLoader
+        self.executor_class = executor_class or Executor
 
     @property
     def config(self):

@@ -5,7 +5,9 @@ from functools import partial
 from mock import patch, Mock, ANY
 from spec import eq_, ok_, trap, skip, assert_contains, assert_not_contains
 
-from invoke import Program, Collection, ParseError, Task, FilesystemLoader
+from invoke import (
+    Program, Collection, ParseError, Task, FilesystemLoader, Executor,
+)
 from invoke import main
 from invoke.util import cd
 
@@ -42,6 +44,13 @@ class Program_(IntegrationSpec):
         def may_specify_loader_class(self):
             klass = object()
             eq_(Program(loader_class=klass).loader_class, klass)
+
+        def executor_class_defaults_to_Executor(self):
+            ok_(Program().executor_class is Executor)
+
+        def may_specify_executor_class(self):
+            klass = object()
+            eq_(Program(executor_class=klass).executor_class, klass) # noqa
 
 
     class miscellaneous:
