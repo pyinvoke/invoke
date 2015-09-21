@@ -181,7 +181,7 @@ class Program_(IntegrationSpec):
             )
 
         @trap
-        def uses_class_loader_given(self):
+        def uses_loader_class_given(self):
             klass = Mock(side_effect=FilesystemLoader)
             Program(loader_class=klass).run("--version", exit=False)
             klass.assert_called_with(start=ANY)
