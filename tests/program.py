@@ -183,7 +183,7 @@ class Program_(IntegrationSpec):
         @trap
         def uses_loader_class_given(self):
             klass = Mock(side_effect=FilesystemLoader)
-            Program(loader_class=klass).run("--version", exit=False)
+            Program(loader_class=klass).run("myapp --help foo", exit=False)
             klass.assert_called_with(start=ANY)
 
 
@@ -234,7 +234,7 @@ class Program_(IntegrationSpec):
             ):
                 p = Program()
                 p._execute = Mock(side_effect=side_effect)
-                p.run("-c implicit foo") # valid task name for parse step
+                p.run("myapp -c implicit foo") # valid task name for parse step
                 # Make sure we still exited fail-wise
                 mock_exit.assert_called_with(1)
 

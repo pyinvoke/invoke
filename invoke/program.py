@@ -296,7 +296,7 @@ class Program(object):
 
         halp = self.args.help.value
 
-        # Core (no value given) --help output
+        # Core (no value given) --help output (only when bundled namespace)
         if halp is True:
             debug("Saw bare --help, printing help & exiting")
             self.print_help()
