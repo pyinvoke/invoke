@@ -187,6 +187,15 @@ class Program_(IntegrationSpec):
             klass.assert_called_with(start=ANY)
 
 
+    class execute:
+        def uses_executor_class_given(self):
+            klass = Mock()
+            with cd('implicit'):
+                Program(executor_class=klass).run("myapp foo", exit=False)
+            klass.assert_called_with(ANY, ANY)
+            klass.return_value.execute.assert_called_with(ANY)
+
+
     class core_args:
         def returns_core_args_list(self):
             # Mostly so we encode explicity doc'd public API member in tests.
