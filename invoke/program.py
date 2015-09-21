@@ -339,7 +339,7 @@ class Program(object):
             Client code just wanting a different `.Executor` subclass can just
             set ``executor_class`` in `.__init__`.
         """
-        executor = Executor(self.collection, self.config)
+        executor = self.executor_class(self.collection, self.config)
         executor.execute(*self.tasks)
 
     def normalize_argv(self, argv):
