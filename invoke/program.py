@@ -123,7 +123,7 @@ class Program(object):
     col_padding = 3
 
     def __init__(self, version=None, namespace=None, name=None, binary=None,
-        loader_class=None, executor_class=None):
+        loader_class=None, executor_class=None, env_prefix=None):
         """
         Create a new, parameterized `.Program` instance.
 
@@ -171,6 +171,11 @@ class Program(object):
             The `.Executor` subclass to use when executing tasks.
 
             Defaults to `.Executor`.
+
+        :param str env_prefix:
+            The prefix for environment variable configuration loading.
+
+            Defaults to ``INVOKE_``.
         """
         self.version = "unknown" if version is None else version
         self.namespace = namespace
@@ -179,6 +184,7 @@ class Program(object):
         self.argv = None
         self.loader_class = loader_class or FilesystemLoader
         self.executor_class = executor_class or Executor
+        self.env_prefix = env_prefix if env_prefix is not None else 'INVOKE_'
 
     @property
     def config(self):
@@ -214,7 +220,7 @@ class Program(object):
             overrides=overrides,
             project_home=self.collection.loaded_from,
             runtime_path=self.args.config.value,
-            env_prefix='INVOKE_',
+            env_prefix=self.env_prefix,
         )
         return c
 

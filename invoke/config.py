@@ -334,7 +334,6 @@ class Config(DataProxy):
         self._project = {}
 
         #: Environment variable name prefix
-        # TODO: make this INVOKE_ and update tests to account?
         self._env_prefix = '' if env_prefix is None else env_prefix
         #: Config data loaded from the shell environment.
         self._env = {}
@@ -388,6 +387,7 @@ class Config(DataProxy):
 
         .. note:: This method triggers `.merge` after it runs.
         """
+        debug("Loading per-task/collection configuration")
         self._collection = data
         self.merge()
 

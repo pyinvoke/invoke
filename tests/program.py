@@ -6,7 +6,7 @@ from mock import patch, Mock, ANY
 from spec import eq_, ok_, trap, skip, assert_contains, assert_not_contains
 
 from invoke import (
-    Program, Collection, ParseError, Task, FilesystemLoader, Executor,
+    Program, Collection, ParseError, Task, FilesystemLoader, Executor, Context
 )
 from invoke import main
 from invoke.util import cd
@@ -51,6 +51,12 @@ class Program_(IntegrationSpec):
         def may_specify_executor_class(self):
             klass = object()
             eq_(Program(executor_class=klass).executor_class, klass) # noqa
+
+        def env_prefix_defaults_to_INVOKE_(self):
+            eq_(Program().env_prefix, 'INVOKE_')
+
+        def env_prefix_can_be_overridden(self):
+            eq_(Program(env_prefix='FOO_').env_prefix, 'FOO_')
 
 
     class miscellaneous:
@@ -594,3 +600,16 @@ post2
         def env_vars_load_with_prefix(self):
             os.environ['INVOKE_RUN_ECHO'] = "1"
             expect('-c contextualized check_echo')
+
+        @patch('invoke.executor.Context', side_effect=Context)
+        def env_var_prefix_can_be_overridden(self, context_class):
+            os.environ['MYAPP_RUN_ECHO'] = "1"
+            # This forces the execution stuff, including Executor, to run
+            # NOTE: it's not really possible to rework the impl so this test is
+            # cleaner - tasks require per-task/per-collection config, which can
+            # only be realized at the time a given task is to be executed.
+            # Unless we overhaul the Program/Executor relationship so Program
+            # does more of the heavy lifting re: task lookup/load/etc...
+            Program(env_prefix='MYAPP_').run('inv -c contextualized go')
+            # Check the config obj handed from Executor to Context
+            eq_(context_class.call_args[1]['config'].run.echo, True)
