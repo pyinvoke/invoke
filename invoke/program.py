@@ -232,7 +232,7 @@ class Program(object):
         """
         try:
             self._parse(argv)
-            self._execute()
+            self.execute()
         except (Failure, Exit, ParseError) as e:
             debug("Received a possibly-skippable exception: {0!r}".format(e))
             # Print error message from parser if necessary.
@@ -325,7 +325,14 @@ class Program(object):
             self.print_help()
             raise Exit
 
-    def _execute(self):
+    def execute(self):
+        """
+        Hand off data & tasks-to-execute specification to an `.Executor`.
+
+        .. note::
+            Client code just wanting a different `.Executor` subclass can just
+            set ``executor_class`` in `.__init__`.
+        """
         executor = Executor(self.collection, self.config)
         executor.execute(*self.tasks)
 
