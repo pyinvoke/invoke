@@ -27,9 +27,7 @@ class Executor(object):
             empty `.Config` if not given.
         """
         self.collection = collection
-        if config is None:
-            config = Config()
-        self.config = config
+        self.config = config if config is not None else Config()
 
     def execute(self, *tasks):
         """
@@ -60,7 +58,7 @@ class Executor(object):
                 task2(arg1='val1')
 
             **A `.ParserContext`** instance, whose ``.name`` attribute is used
-            as the task name and whose ``.as_kawrgs`` attribute is used as the
+            as the task name and whose ``.as_kwargs`` attribute is used as the
             task kwargs (again following the above specifications).
 
             .. note::
