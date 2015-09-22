@@ -8,11 +8,10 @@ Changelog
 
   .. warning:: This change is backwards compatible if you used ``-H``.
 
-* :feature:`173` Overhauled the top level CLI functionality to allow for
-  reusing Invoke as distinct binaries, optionally with bundled task namespaces
-  as subcommands. As a side effect, this functionality is now much more
-  extensible to boot. Thanks to Erich Heine for feedback/suggestions during
-  development.
+* :feature:`173` Overhauled top level CLI functionality to allow reusing
+  Invoke for distinct binaries, optionally with bundled task namespaces as
+  subcommands. As a side effect, this functionality is now much more extensible
+  to boot. Thanks to Erich Heine for feedback/suggestions during development.
 
   .. warning::
     This change is backwards incompatible if you imported anything from the
