@@ -77,7 +77,7 @@ class Executor(object):
         # Handle top level kwargs (the name gets overwritten below)
         # Normalize input
         debug("Examining top level tasks {0!r}".format([x for x in tasks]))
-        tasks = self._normalize(tasks)
+        tasks = self.normalize(tasks)
         debug("Tasks with kwargs: {0!r}".format(tasks))
         # Obtain copy of directly-given tasks since they should sometimes
         # behave differently
@@ -85,6 +85,7 @@ class Executor(object):
         # Expand pre/post tasks & then dedupe the entire run.
         # Load config at this point to get latest value of dedupe option
         config = self.config.clone()
+        expanded = self.expand_tasks(tasks)
         # Get some good value for dedupe option, even if config doesn't have
         # the tree we expect. (This is a concession to testing.)
         try:
@@ -92,7 +93,7 @@ class Executor(object):
         except AttributeError:
             dedupe = True
         # Actual deduping here
-        tasks = self._dedupe(self._expand_tasks(tasks), dedupe)
+        tasks = self.dedupe(expanded, dedupe)
         # Execute
         results = {}
         for task in tasks:
@@ -115,11 +116,11 @@ class Executor(object):
             results[task] = result
         return results
 
-    def _normalize(self, tasks):
+    def normalize(self, tasks):
         """
         Transform arbitrary task list w/ various types, into `.Call` objects.
 
-        See docstring for `.execute` for details.
+        See docstring for `~.Executor.execute` for details.
         """
         calls = []
         for task in tasks:
@@ -138,7 +139,18 @@ class Executor(object):
             calls = [Call(self.collection[self.collection.default])]
         return calls
 
-    def _dedupe(self, tasks, dedupe):
+    def dedupe(self, tasks, dedupe):
+        """
+        Deduplicate a list of `tasks <.Call>`, if ``dedupe``.
+
+        :param tasks: An iterable of `.Call` objects representing tasks.
+
+        :param bool dedupe: Whether or not to actually dedupe.
+
+        :returns: A list of `.Call` objects.
+        """
+        # TODO: do we reeeeeeally need to hand 'dedupe' in? surely we can fix
+        # testing to not require this, if it even still does. it's so dumb.
         deduped = []
         if dedupe:
             debug("Deduplicating tasks...")
@@ -175,10 +187,20 @@ class Executor(object):
         result = task(*args, **kwargs)
         return result
 
-    def _expand_tasks(self, tasks):
+    def expand_tasks(self, tasks):
+        """
+        Expand a list of `.Call` task objects into a near-final list of same.
+
+        The default implementation of this method simply adds a task's
+        pre/post-task list before/after the task itself, as necessary.
+
+        Subclasses may wish to do other things in addition (or instead of) the
+        above, such as multiplying the `calls <.Call>` by argument vectors or
+        similar.
+        """
         ret = []
         for task in tasks:
-            ret.extend(self._expand_tasks(task.pre))
+            ret.extend(self.expand_tasks(task.pre))
             ret.append(task)
-            ret.extend(self._expand_tasks(task.post))
+            ret.extend(self.expand_tasks(task.post))
         return ret
