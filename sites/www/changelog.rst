@@ -20,7 +20,7 @@ Changelog
 
   .. seealso:: :ref:`reusing-as-a-binary`
 
-* :bug:`-` Fixed a bug in the parser where ``invoke --takes-optional-arg
+* :bug:`- major` Fixed a bug in the parser where ``invoke --takes-optional-arg
   avalue --anotherflag`` was incorrectly considering ``--anotherflag`` to be an
   ambiguity error (as if ``avalue`` had not been given to
   ``--takes-optional-arg``.
