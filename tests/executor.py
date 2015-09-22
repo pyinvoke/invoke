@@ -1,11 +1,7 @@
 from spec import eq_, ok_
 from mock import Mock, call as mock_call
 
-from invoke.collection import Collection
-from invoke.config import Config
-from invoke.context import Context
-from invoke.executor import Executor
-from invoke.tasks import Task, ctask, call
+from invoke import Collection, Config, Context, Executor, Task, ctask, call
 
 from _util import expect, IntegrationSpec
 
