@@ -86,3 +86,6 @@ class Init(Spec):
 
         def executor(self):
             assert invoke.Executor is invoke.executor.Executor
+
+        def call(self):
+            assert invoke.call is invoke.tasks.call

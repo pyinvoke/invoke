@@ -12,7 +12,7 @@ from .parser import Argument # noqa
 from .platform import pty_size # noqa
 from .program import Program # noqa
 from .runners import Runner, Local, Failure, Result # noqa
-from .tasks import task, ctask, Task  # noqa
+from .tasks import task, ctask, call, Task  # noqa
 
 
 def run(command, **kwargs):
