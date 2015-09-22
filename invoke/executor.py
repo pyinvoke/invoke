@@ -14,9 +14,9 @@ class Executor(object):
     Subclasses may override various extension points to change, add or remove
     behavior.
     """
-    def __init__(self, collection, config=None):
+    def __init__(self, collection, config=None, core=None):
         """
-        Initialize executor with handles to a task collection & config.
+        Initialize executor with handles to necessary data structures.
 
         :param collection:
             A `.Collection` used to look up requested tasks (and their default
@@ -25,9 +25,19 @@ class Executor(object):
         :param config:
             An optional `.Config` holding configuration state Defaults to an
             empty `.Config` if not given.
+
+        :param core:
+            An optional `.ParserContext` holding core program arguments.
+            Defaults to ``None``.
+
+            .. note::
+                This is unused by the default implementation, but may be useful
+                to subclasses which care about specific core arguments re:
+                execution strategy, use of the parse remainder, etc.
         """
         self.collection = collection
         self.config = config if config is not None else Config()
+        self.core = core
 
     def execute(self, *tasks):
         """

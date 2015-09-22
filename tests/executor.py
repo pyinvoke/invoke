@@ -2,6 +2,7 @@ from spec import eq_, ok_
 from mock import Mock, call as mock_call
 
 from invoke import Collection, Config, Context, Executor, Task, ctask, call
+from invoke.parser import ParserContext
 
 from _util import expect, IntegrationSpec
 
@@ -35,6 +36,13 @@ class Executor_(IntegrationSpec):
         def uses_blank_config_by_default(self):
             e = Executor(collection=Collection())
             assert isinstance(e.config, Config)
+
+        def can_grant_access_to_core_arg_parse_result(self):
+            c = ParserContext()
+            ok_(Executor(collection=Collection(), core=c).core is c)
+
+        def core_arg_parse_result_defaults_to_None(self):
+            ok_(Executor(collection=Collection()).core is None)
 
     class execute:
         def base_case(self):

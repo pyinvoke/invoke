@@ -198,8 +198,17 @@ class Program_(IntegrationSpec):
             klass = Mock()
             with cd('implicit'):
                 Program(executor_class=klass).run("myapp foo", exit=False)
-            klass.assert_called_with(ANY, ANY)
+            klass.assert_called_with(ANY, ANY, ANY)
             klass.return_value.execute.assert_called_with(ANY)
+
+        def executor_is_given_access_to_core_args_and_remainder(self):
+            klass = Mock()
+            with cd('implicit'):
+                cmd = "myapp -e foo -- myremainder"
+                Program(executor_class=klass).run(cmd, exit=False)
+            core = klass.call_args[0][2]
+            eq_(core[0].args['echo'].value, True)
+            eq_(core.remainder, "myremainder")
 
 
     class core_args:
