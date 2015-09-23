@@ -381,13 +381,12 @@ class Config(DataProxy):
         Update collection-driven config data.
 
         `.load_collection` is intended for use by the core task execution
-        machinery, which is responsible for obtaining per-task
-        collection-driven data. See :ref:`collection-configuration` for
-        details.
+        machinery, which is responsible for obtaining collection-driven data.
+        See :ref:`collection-configuration` for details.
 
         .. note:: This method triggers `.merge` after it runs.
         """
-        debug("Loading per-task/collection configuration")
+        debug("Loading collection configuration")
         self._collection = data
         self.merge()
 

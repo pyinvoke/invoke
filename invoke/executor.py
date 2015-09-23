@@ -175,7 +175,7 @@ class Executor(object):
         )
         if task.contextualized:
             debug("Task was contextualized, loading additional configuration")
-            # Load per-task/collection config
+            # Load collection-local config
             config.load_collection(self.collection.configuration(name))
             # Load env vars, as the last step (so users can override
             # per-collection keys via the env)
