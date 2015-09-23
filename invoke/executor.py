@@ -84,7 +84,6 @@ class Executor(object):
             task named ``setup``, executing ``build`` will result in a dict
             with two keys, one for ``build`` and one for ``setup``.
         """
-        # Handle top level kwargs (the name gets overwritten below)
         # Normalize input
         debug("Examining top level tasks {0!r}".format([x for x in tasks]))
         tasks = self.normalize(tasks)
@@ -107,7 +106,7 @@ class Executor(object):
         # Execute
         results = {}
         for task in tasks:
-            args, kwargs = tuple(), {}
+            args, kwargs = (), {}
             # Unpack Call objects, including given-name handling
             name = None
             autoprint = task in direct and task.autoprint
