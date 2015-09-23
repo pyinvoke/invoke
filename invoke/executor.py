@@ -2,7 +2,7 @@ from .config import Config
 from .context import Context
 from .parser import ParserContext
 from .util import debug
-from .tasks import Call
+from .tasks import Call, Task
 
 from .vendor import six
 
@@ -86,15 +86,15 @@ class Executor(object):
         """
         # Normalize input
         debug("Examining top level tasks {0!r}".format([x for x in tasks]))
-        tasks = self.normalize(tasks)
-        debug("Tasks with kwargs: {0!r}".format(tasks))
+        calls = self.normalize(tasks)
+        debug("Tasks with kwargs: {0!r}".format(calls))
         # Obtain copy of directly-given tasks since they should sometimes
         # behave differently
-        direct = list(tasks)
+        direct = list(calls)
         # Expand pre/post tasks & then dedupe the entire run.
         # Load config at this point to get latest value of dedupe option
         config = self.config.clone()
-        expanded = self.expand_tasks(tasks)
+        expanded = self.expand_tasks(calls, config)
         # Get some good value for dedupe option, even if config doesn't have
         # the tree we expect. (This is a concession to testing.)
         try:
@@ -102,27 +102,24 @@ class Executor(object):
         except AttributeError:
             dedupe = True
         # Actual deduping here
-        tasks = self.dedupe(expanded) if dedupe else expanded
+        calls = self.dedupe(expanded) if dedupe else expanded
         # Execute
         results = {}
-        for task in tasks:
-            args, kwargs = (), {}
-            # Unpack Call objects, including given-name handling
-            name = None
-            autoprint = task in direct and task.autoprint
-            if isinstance(task, Call):
-                c = task
-                task = c.task
-                args, kwargs = c.args, c.kwargs
-                name = c.name
-            result = self._execute(
-                task=task, name=name, args=args, kwargs=kwargs, config=config
+        for call in calls:
+            autoprint = call in direct and call.autoprint
+            args = call.args
+            debug("Executing {0!r}{1}".format(
+                call,
+                (" as {0}".format(call.name)) if call.name else ""),
             )
+            if call.contextualized:
+                args = (call.context,) + args
+            result = call.task(*args, **call.kwargs)
             if autoprint:
                 print(result)
             # TODO: handle the non-dedupe case / the same-task-different-args
             # case, wherein one task obj maps to >1 result.
-            results[task] = result
+            results[call.task] = result
         return results
 
     def normalize(self, tasks):
@@ -148,50 +145,27 @@ class Executor(object):
             calls = [Call(self.collection[self.collection.default])]
         return calls
 
-    def dedupe(self, tasks):
+    def dedupe(self, calls):
         """
         Deduplicate a list of `tasks <.Call>`.
 
-        :param tasks: An iterable of `.Call` objects representing tasks.
+        :param calls: An iterable of `.Call` objects representing tasks.
 
         :returns: A list of `.Call` objects.
         """
         deduped = []
         debug("Deduplicating tasks...")
-        for task in tasks:
-            if task not in deduped:
-                debug("{0!r}: ok".format(task))
-                deduped.append(task)
+        for call in calls:
+            if call not in deduped:
+                debug("{0!r}: no duplicates found, ok".format(call))
+                deduped.append(call)
             else:
-                debug("{0!r}: skipping".format(task))
+                debug("{0!r}: found in list already, skipping".format(call))
         return deduped
 
-    def _execute(self, task, name, args, kwargs, config):
-        # Need task + possible name when invoking CLI-given tasks, so we can
-        # pass a dotted path to Collection.configuration()
-        debug("Executing {0!r}{1}".format(
-            task,
-            (" as {0}".format(name)) if name else ""),
-        )
-        if task.contextualized:
-            debug("Task was contextualized, loading additional configuration")
-            # Load collection-local config
-            config.load_collection(self.collection.configuration(name))
-            # Load env vars, as the last step (so users can override
-            # per-collection keys via the env)
-            config.load_shell_env()
-            debug("Finished loading collection & shell env configs")
-            # Set up context w/ that config
-            context = Context(config=config)
-            args = (context,) + args
-        else:
-            debug("Task uncontextualized, skipping collection/env config load")
-        result = task(*args, **kwargs)
-        return result
-
-    def expand_tasks(self, tasks):
+    def expand_tasks(self, calls, config):
         """
-        Expand a list of `.Call` task objects into a near-final list of same.
+        Expand a list of `.Call` objects into a near-final list of same.
 
         The default implementation of this method simply adds a task's
         pre/post-task list before/after the task itself, as necessary.
@@ -201,8 +175,44 @@ class Executor(object):
         similar.
         """
         ret = []
-        for task in tasks:
-            ret.extend(self.expand_tasks(task.pre))
-            ret.append(task)
-            ret.extend(self.expand_tasks(task.post))
+        for call in calls:
+            # Normalize to Call (this method is sometimes called with pre/post
+            # task lists, which may contain 'raw' Task objects)
+            if isinstance(call, Task):
+                call = Call(call)
+            debug("Expanding task-call {0!r}".format(call))
+            if call.contextualized:
+                debug("Task was contextualized, loading additional configuration") # noqa
+                task_config = config.clone()
+                # Load collection-local config
+                task_config.load_collection(
+                    self.collection.configuration(call.name)
+                )
+                # Load env vars, as the last step (so users can override
+                # per-collection keys via the env)
+                task_config.load_shell_env()
+                debug("Finished loading collection & shell env configs")
+                # Set up context w/ that config & add to call obj
+                # TODO: fab needs to override the class here & some of its
+                # kwargs, based on values that it derives from core args & the
+                # task
+                call.context = Context(config=task_config)
+            else:
+                debug("Task uncontextualized, skipping collection/env config load") # noqa
+            # NOTE: handing in original config, not the new/mutated one.
+            # Pre/post tasks may well come from a different collection, etc.
+            # Also just cleaner.
+            ret.extend(self.expand_task(call, config))
+        return ret
+
+    def expand_task(self, task, config):
+        """
+        Expand a single task into a list of one or more tasks.
+
+        By default, this prepends the task's pre-tasks (recursing) and appends
+        its post-tasks (also recursing).
+        """
+        ret = self.expand_tasks(task.pre, config)
+        ret.append(task)
+        ret.extend(self.expand_tasks(task.post, config))
         return ret

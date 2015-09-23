@@ -346,6 +346,16 @@ class Call(object):
     def __repr__(self):
         return str(self)
 
+    def __eq__(self, other):
+        # NOTE: Not comparing 'name'; a named call of a given Task with same
+        # args/kwargs should be considered same as an unnamed call of the same
+        # Task with the same args/kwargs (e.g. pre/post task specified w/o
+        # name)
+        for attr in "task args kwargs".split():
+            if getattr(self, attr) != getattr(other, attr):
+                return False
+        return True
+
 
 # Convenience/aesthetically pleasing-ish alias
 call = Call
