@@ -102,7 +102,7 @@ class Executor(object):
         except AttributeError:
             dedupe = True
         # Actual deduping here
-        tasks = self.dedupe(expanded, dedupe)
+        tasks = self.dedupe(expanded) if dedupe else expanded
         # Execute
         results = {}
         for task in tasks:
@@ -148,29 +148,22 @@ class Executor(object):
             calls = [Call(self.collection[self.collection.default])]
         return calls
 
-    def dedupe(self, tasks, dedupe):
+    def dedupe(self, tasks):
         """
-        Deduplicate a list of `tasks <.Call>`, if ``dedupe``.
+        Deduplicate a list of `tasks <.Call>`.
 
         :param tasks: An iterable of `.Call` objects representing tasks.
 
-        :param bool dedupe: Whether or not to actually dedupe.
-
         :returns: A list of `.Call` objects.
         """
-        # TODO: do we reeeeeeally need to hand 'dedupe' in? surely we can fix
-        # testing to not require this, if it even still does. it's so dumb.
         deduped = []
-        if dedupe:
-            debug("Deduplicating tasks...")
-            for task in tasks:
-                if task not in deduped:
-                    debug("{0!r}: ok".format(task))
-                    deduped.append(task)
-                else:
-                    debug("{0!r}: skipping".format(task))
-        else:
-            deduped = tasks
+        debug("Deduplicating tasks...")
+        for task in tasks:
+            if task not in deduped:
+                debug("{0!r}: ok".format(task))
+                deduped.append(task)
+            else:
+                debug("{0!r}: skipping".format(task))
         return deduped
 
     def _execute(self, task, name, args, kwargs, config):
