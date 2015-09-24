@@ -447,26 +447,35 @@ class Local(Runner):
             # shell, just as subprocess does; this replaces our process - whose
             # pipes are all hooked up to the PTY - with the "real" one.
             if self.pid == 0:
-                # TODO: both pty.spawn() and pexpect.spawn() do a lot of
-                # setup/teardown involving tty.setraw, getrlimit, signal.
-                # Ostensibly we'll want some of that eventually, but if
-                # possible write tests - integration-level if necessary -
-                # before adding it!
-                #
-                # Set pty window size based on what our own controlling
-                # terminal's window size appears to be.
-                # TODO: make subroutine?
-                winsize = struct.pack('HHHH', rows, cols, 0, 0)
-                fcntl.ioctl(sys.stdout.fileno(), termios.TIOCSWINSZ, winsize)
-                # Use execv for bare-minimum "exec w/ variable # args"
-                # behavior. No need for the 'p' (use PATH to find executable)
-                # or 'e' (define a custom/overridden shell env) variants, for
-                # now.
-                # TODO: use /bin/sh or whatever subprocess does. Only using
-                # bash for now because that's what we have been testing
-                # against.
-                # TODO: also see if subprocess is using equivalent of execvp...
-                os.execv('/bin/bash', ['/bin/bash', '-c', command])
+                try:
+                    # TODO: both pty.spawn() and pexpect.spawn() do a lot of
+                    # setup/teardown involving tty.setraw, getrlimit, signal.
+                    # Ostensibly we'll want some of that eventually, but if
+                    # possible write tests - integration-level if necessary -
+                    # before adding it!
+                    #
+                    # Set pty window size based on what our own controlling
+                    # terminal's window size appears to be.
+                    # TODO: make subroutine?
+                    winsize = struct.pack(b'HHHH', rows, cols, 0, 0)
+                    fcntl.ioctl(sys.stdout.fileno(), termios.TIOCSWINSZ, winsize)
+                    # Use execv for bare-minimum "exec w/ variable # args"
+                    # behavior. No need for the 'p' (use PATH to find executable)
+                    # or 'e' (define a custom/overridden shell env) variants, for
+                    # now.
+                    # TODO: use /bin/sh or whatever subprocess does. Only using
+                    # bash for now because that's what we have been testing
+                    # against.
+                    # TODO: also see if subprocess is using equivalent of execvp...
+                    os.execv('/bin/bash', ['/bin/bash', '-c', command])
+                except Exception:
+                    # Prevent process hanging when something wrong happened
+                    # here, for example, encoding error in `execv`
+                    import traceback
+                    traceback.print_exc()
+                    # We forcefully terminate this fork branch to simulate
+                    # no-op `execv`
+                    os._exit(1)
         else:
             self.process = Popen(
                 command,
