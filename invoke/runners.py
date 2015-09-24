@@ -481,7 +481,6 @@ class Local(Runner):
                     # We forcefully terminate this fork branch to simulate
                     # no-op `execv`
                     os._exit(1)
- 
         else:
             self.process = Popen(
                 command,
