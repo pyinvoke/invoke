@@ -89,3 +89,7 @@ class Init(Spec):
 
         def call(self):
             assert invoke.call is invoke.tasks.call
+
+        def Call(self):
+            # Starting to think we shouldn't bother with lowercase-c call...
+            assert invoke.Call is invoke.tasks.Call
