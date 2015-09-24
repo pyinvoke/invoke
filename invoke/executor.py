@@ -183,36 +183,42 @@ class Executor(object):
             debug("Expanding task-call {0!r}".format(call))
             if call.contextualized:
                 debug("Task was contextualized, loading additional configuration") # noqa
-                task_config = config.clone()
-                # Load collection-local config
-                task_config.load_collection(
-                    self.collection.configuration(call.name)
-                )
-                # Load env vars, as the last step (so users can override
-                # per-collection keys via the env)
-                task_config.load_shell_env()
-                debug("Finished loading collection & shell env configs")
-                # Set up context w/ that config & add to call obj
-                # TODO: fab needs to override the class here & some of its
-                # kwargs, based on values that it derives from core args & the
-                # task
-                call.context = Context(config=task_config)
+                call.context = Context(config=self.config_for(call, config))
             else:
                 debug("Task uncontextualized, skipping collection/env config load") # noqa
-            # NOTE: handing in original config, not the new/mutated one.
+            # NOTE: handing in original config, not the mutated one above.
             # Pre/post tasks may well come from a different collection, etc.
             # Also just cleaner.
-            ret.extend(self.expand_task(call, config))
+            ret.extend(self.expand_tasks(call.pre, config))
+            ret.append(call)
+            ret.extend(self.expand_tasks(call.post, config))
         return ret
 
-    def expand_task(self, task, config):
+    def config_for(self, call, config, anonymous=False):
         """
-        Expand a single task into a list of one or more tasks.
+        Generate a `.Config` object suitable for the given task call.
 
-        By default, this prepends the task's pre-tasks (recursing) and appends
-        its post-tasks (also recursing).
+        :param call: `.Call` object to create config for.
+
+        :param config: Core `.Config` object to clone & build upon.
+
+        :param bool anonymous:
+            If ``True``, treat task as anonymous and don't try loading
+            collection-based config for it. (Useful for downstream code which
+            may be adding non-collection-borne tasks during the load process.)
         """
-        ret = self.expand_tasks(task.pre, config)
-        ret.append(task)
-        ret.extend(self.expand_tasks(task.post, config))
-        return ret
+        task_config = config.clone()
+        if not anonymous:
+            # Load collection-local config
+            task_config.load_collection(
+                self.collection.configuration(call.name)
+            )
+        # Load env vars, as the last step (so users can override
+        # per-collection keys via the env)
+        task_config.load_shell_env()
+        debug("Finished loading collection & shell env configs")
+        # Set up context w/ that config & add to call obj
+        # TODO: fab needs to override the class here & some of its
+        # kwargs, based on values that it derives from core args & the
+        # task
+        return task_config
