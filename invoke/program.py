@@ -339,13 +339,17 @@ class Program(object):
         if self.args.complete.value:
             complete(self.core, self.initial_context, self.collection)
 
-        # No tasks specified for execution & no default task = print help
+        # Fallback behavior if no tasks were given & no default specified
+        # (mostly a subroutine for overriding purposes)
         # NOTE: when there is a default task, Executor will select it when no
         # tasks were found in CLI parsing.
         if not self.tasks and not self.collection.default:
-            debug("No tasks specified for execution and no default task; printing global help as fallback") # noqa
-            self.print_help()
-            raise Exit
+            self.no_tasks_given()
+
+    def no_tasks_given(self):
+        debug("No tasks specified for execution and no default task; printing global help as fallback") # noqa
+        self.print_help()
+        raise Exit
 
     def execute(self):
         """
