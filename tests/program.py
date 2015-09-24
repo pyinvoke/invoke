@@ -6,7 +6,8 @@ from mock import patch, Mock, ANY
 from spec import eq_, ok_, trap, skip, assert_contains, assert_not_contains
 
 from invoke import (
-    Program, Collection, ParseError, Task, FilesystemLoader, Executor, Context
+    Program, Collection, ParseError, Task, FilesystemLoader, Executor, Context,
+    Config,
 )
 from invoke import main
 from invoke.util import cd
@@ -51,6 +52,13 @@ class Program_(IntegrationSpec):
         def may_specify_executor_class(self):
             klass = object()
             eq_(Program(executor_class=klass).executor_class, klass) # noqa
+
+        def config_class_defaults_to_Config(self):
+            ok_(Program().config_class is Config)
+
+        def may_specify_config_class(self):
+            klass = object()
+            eq_(Program(config_class=klass).config_class, klass) # noqa
 
         def env_prefix_defaults_to_INVOKE_(self):
             eq_(Program().env_prefix, 'INVOKE_')
@@ -554,6 +562,12 @@ Available tasks:
 
     class configuration:
         "Configuration-related concerns"
+
+        @trap
+        def config_class_init_kwarg_is_honored(self):
+            klass = Mock()
+            Program(config_class=klass).run("myapp foo", exit=False)
+            eq_(len(klass.call_args_list), 1) # don't care about actual args
 
         # NOTE: these tests all rely on the invoked tasks to perform the
         # necessary asserts.

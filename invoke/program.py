@@ -123,7 +123,8 @@ class Program(object):
     col_padding = 3
 
     def __init__(self, version=None, namespace=None, name=None, binary=None,
-        loader_class=None, executor_class=None, env_prefix=None):
+        loader_class=None, executor_class=None, config_class=None,
+        env_prefix=None):
         """
         Create a new, parameterized `.Program` instance.
 
@@ -172,6 +173,11 @@ class Program(object):
 
             Defaults to `.Executor`.
 
+        :param config_class:
+            The `.Config` subclass to use for the base config object.
+
+            Defaults to `.Config`.
+
         :param str env_prefix:
             The prefix for environment variable configuration loading.
 
@@ -184,6 +190,7 @@ class Program(object):
         self.argv = None
         self.loader_class = loader_class or FilesystemLoader
         self.executor_class = executor_class or Executor
+        self.config_class = config_class or Config
         self.env_prefix = env_prefix if env_prefix is not None else 'INVOKE_'
 
     @property
@@ -198,6 +205,9 @@ class Program(object):
         This object is further updated within `.Executor` with per-task
         configuration values and then told to load the full hierarchy (which
         includes config files.)
+
+        The specific `.Config` subclass used may be overridden in `.__init__`
+        via ``config_class``.
         """
         # Set up runtime overrides from flags.
         # NOTE: only fill in values that would alter behavior, otherwise we
@@ -216,7 +226,7 @@ class Program(object):
             tasks['dedupe'] = False
         overrides = {'run': run, 'tasks': tasks}
         # Stand up config object
-        c = Config(
+        c = self.config_class(
             overrides=overrides,
             project_home=self.collection.loaded_from,
             runtime_path=self.args.config.value,
