@@ -360,7 +360,7 @@ class Program(object):
         whether a bundled namespace was specified in `.__init__`.
         """
         args = self.core_args()
-        debug("args is: {}".format(args))
+        debug("args is: {0}".format(args))
         return ParserContext(args=args)
 
     def print_version(self):
