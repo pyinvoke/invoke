@@ -222,8 +222,9 @@ class Program(object):
             else:
                 debug("No default namespace provided, trying to load one from disk") # noqa
                 # If no bundled namespace & --help was given, just print it and
-                # exit. (If we did have a bundled namespace, core --help will be
-                # handled *after* the collection is loaded & parsing is done.)
+                # exit. (If we did have a bundled namespace, core --help will
+                # be handled *after* the collection is loaded & parsing is
+                # done.)
                 self.load_collection()
             # Parse remainder into task contexts (sets
             # self.parser/collection/tasks)
@@ -261,8 +262,8 @@ class Program(object):
         # DEBATABLE - the following is debatable
         # This seems like it should be handled in 'handle_args()', however
         # it is a special case to turn on debugging as early as possible, and
-        # downstream users may want to use completely override handle_args, while
-        # still having a simple debug option.
+        # downstream users may want to use completely override handle_args,
+        # while still having a simple debug option.
         if self.args.debug.value:
             enable_logging()
         # END DEBATABLE

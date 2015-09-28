@@ -5,8 +5,8 @@ Dogfoods the `program` module.
 """
 
 from . import __version__, Program, Argument
-from .util import debug, enable_logging, sort_names
-from .exceptions import Failure, CollectionNotFound, ParseError, Exit
+from .util import debug, sort_names
+from .exceptions import Exit
 from .complete import complete
 
 class InvokeProgram(Program):

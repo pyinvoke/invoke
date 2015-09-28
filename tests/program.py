@@ -66,7 +66,7 @@ class Program_(IntegrationSpec):
             # in.
             with patch('invoke.util.debug') as debug:
                 p = Program()
-                p.search_collection_name='debugging'
+                p.search_collection_name = 'debugging'
                 expect('-d foo', program=p)
                 debug.assert_called_with('my-sentinel')
 

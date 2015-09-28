@@ -1,19 +1,18 @@
 import os
-import sys
 from functools import partial
 
-from mock import patch, Mock, ANY
-from spec import eq_, ok_, trap, skip, assert_contains, assert_not_contains
+from mock import patch, Mock
+from spec import eq_, ok_, trap, assert_contains
 
 from invoke import (
-    Program, Collection, ParseError, Task, FilesystemLoader, Executor, Context
+    Collection, ParseError, Task, Context
 )
 from invoke.main import InvokeProgram
 from invoke import main
 from invoke.util import cd
 
 from _util import (
-    load, IntegrationSpec, expect_inv, expect, skip_if_windows, SimpleFailure
+    IntegrationSpec, expect_inv, expect, skip_if_windows, SimpleFailure
 )
 
 
@@ -36,7 +35,8 @@ class InvokeProgram_(IntegrationSpec):
         def complains_when_default_collection_not_found(self):
             # NOTE: assumes system under test has no tasks.py in root. Meh.
             with cd(ROOT):
-                expect_inv("-l", err="Can't find any collection named 'tasks'!\n")
+                expect_inv("-l",
+                           err="Can't find any collection named 'tasks'!\n")
 
         def complains_when_explicit_collection_not_found(self):
             expect_inv(
@@ -190,7 +190,8 @@ Options:
 
 """.lstrip()
                 for flag in ['-h', '--help']:
-                    expect_inv('-c decorator {0} punch'.format(flag), out=expected)
+                    expect_inv('-c decorator {0} punch'.format(flag),
+                               out=expected)
 
             def works_for_unparameterized_tasks(self):
                 expected = """
