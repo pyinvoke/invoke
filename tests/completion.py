@@ -1,6 +1,5 @@
 import sys
 
-from invoke import Program
 from invoke.main import InvokeProgram
 
 from spec import assert_contains, assert_not_contains, eq_

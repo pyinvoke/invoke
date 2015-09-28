@@ -5,13 +5,12 @@ import textwrap
 
 from .vendor import six
 
-from .complete import complete
 from .config import Config
 from .loader import FilesystemLoader
 from .parser import Parser, ParserContext, Argument
 from .executor import Executor
 from .exceptions import Failure, CollectionNotFound, ParseError, Exit
-from .util import debug, enable_logging, sort_names
+from .util import debug, enable_logging
 from .platform import pty_size
 
 
@@ -295,7 +294,8 @@ class Program(object):
             else:
                 # TODO: feels real dumb to factor this out of Parser, but...we
                 # should?
-                raise ParseError("No idea what '{0}' is!".format(halp))
+                msg = "No idea what '{0}' is!"
+                raise ParseError(msg.format(self.args.help.value))
 
     def execute(self):
         """

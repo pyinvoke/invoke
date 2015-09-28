@@ -1,18 +1,16 @@
 import os
 import sys
-from functools import partial
 
 from mock import patch, Mock, ANY
 from spec import eq_, ok_, trap, skip, assert_contains, assert_not_contains
 
 from invoke import (
-    Program, Collection, ParseError, Task, FilesystemLoader, Executor, Context
+    Program, Collection, FilesystemLoader, Executor
 )
-from invoke import main
 from invoke.util import cd
 
 from _util import (
-    load, IntegrationSpec, expect, skip_if_windows, SimpleFailure
+    load, IntegrationSpec, expect
 )
 
 
@@ -197,5 +195,3 @@ class Program_(IntegrationSpec):
 
         def should_show_context_usage_on_context_parse_failures(self):
             skip()
-
-
