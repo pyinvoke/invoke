@@ -67,7 +67,7 @@ class InvokeProgram(Program):
     def print_help(self):
         super(InvokeProgram, self).print_help()
         if hasattr(self, 'collection'):
-            msg = "print help is aware of collection adding task list for: {}"
+            msg = "print help is aware of collection adding task list for: {0}"
             debug(msg.format(self.collection))
             self.list_tasks()
 
