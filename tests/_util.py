@@ -10,6 +10,8 @@ from mock import patch, Mock
 from spec import trap, Spec, eq_, skip
 
 from invoke import Program, Failure
+from invoke.main import InvokeProgram
+
 from invoke.platform import WINDOWS
 
 
@@ -49,6 +51,14 @@ class IntegrationSpec(Spec):
         os.environ.clear()
         os.environ.update(self.old_environ)
 
+
+def expect_inv(invocation, out=None, err=None, program=None, invoke=True,
+    test=None):
+    """Just like ``excpect`` but defaults to an InvokeProgram instance
+    rather than a bare ``Program`` instance"""
+    if program is None:
+        program = InvokeProgram()
+    return
 
 @trap
 def expect(invocation, out=None, err=None, program=None, invoke=True,

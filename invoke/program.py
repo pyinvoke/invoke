@@ -83,38 +83,6 @@ class Program(object):
             ),
         ]
 
-    def task_args(self):
-        """
-        Return default task-related `.Argument` objects, as a list.
-
-        These are only added to the core args in "task runner" mode (the
-        default for ``invoke`` itself) - they are omitted when the constructor
-        is given a non-empty ``namespace`` argument ("bundled namespace" mode).
-        """
-        # Arguments pertaining specifically to invocation as 'invoke' itself
-        # (or as other arbitrary-task-executing programs, like 'fab')
-        return [
-            Argument(
-                names=('collection', 'c'),
-                help="Specify collection name to load."
-            ),
-            Argument(
-                names=('list', 'l'),
-                kind=bool,
-                default=False,
-                help="List available tasks."
-            ),
-            Argument(
-                names=('no-dedupe',),
-                kind=bool,
-                default=False,
-                help="Disable task deduplication."
-            ),
-            Argument(
-                names=('root', 'r'),
-                help="Change root directory used for finding task modules."
-            ),
-        ]
 
     # Other class-level global variables a subclass might override sometime
     # maybe?
@@ -185,6 +153,8 @@ class Program(object):
         self.loader_class = loader_class or FilesystemLoader
         self.executor_class = executor_class or Executor
         self.env_prefix = env_prefix if env_prefix is not None else 'INVOKE_'
+        self.search_start_info = None
+        self.search_collection_name = None
 
     @property
     def config(self):
@@ -212,7 +182,7 @@ class Program(object):
         if self.args.echo.value:
             run['echo'] = True
         tasks = {}
-        if self.args['no-dedupe'].value:
+        if 'no-dedupe' in self.args and self.args['no-dedupe'].value:
             tasks['dedupe'] = False
         overrides = {'run': run, 'tasks': tasks}
         # Stand up config object
@@ -244,6 +214,22 @@ class Program(object):
         """
         try:
             self._parse(argv)
+            self.handle_args()
+            # Load a collection of tasks unless one was already set.
+            if self.namespace is not None:
+                debug("Program was given a default namespace, skipping collection loading") # noqa
+                self.collection = self.namespace
+            else:
+                debug("No default namespace provided, trying to load one from disk") # noqa
+                # If no bundled namespace & --help was given, just print it and
+                # exit. (If we did have a bundled namespace, core --help will be
+                # handled *after* the collection is loaded & parsing is done.)
+                self.load_collection()
+            # Parse remainder into task contexts (sets
+            # self.parser/collection/tasks)
+            self.parse_tasks()
+
+            self.setup_tasks()
             self.execute()
         except (Failure, Exit, ParseError) as e:
             debug("Received a possibly-skippable exception: {0!r}".format(e))
@@ -272,33 +258,22 @@ class Program(object):
 
         # Enable debugging from here on out, if debug flag was given.
         # (Prior to this point, debugging requires setting INVOKE_DEBUG).
+        # DEBATABLE - the following is debatable
+        # This seems like it should be handled in 'handle_args()', however
+        # it is a special case to turn on debugging as early as possible, and
+        # downstream users may want to use completely override handle_args, while
+        # still having a simple debug option.
         if self.args.debug.value:
             enable_logging()
+        # END DEBATABLE
 
+
+    def handle_args(self):
         # Print version & exit if necessary
         if self.args.version.value:
             debug("Saw --version, printing version & exiting")
             self.print_version()
             raise Exit
-
-        # Load a collection of tasks unless one was already set.
-        if self.namespace is not None:
-            debug("Program was given a default namespace, skipping collection loading") # noqa
-            self.collection = self.namespace
-        else:
-            debug("No default namespace provided, trying to load one from disk") # noqa
-            # If no bundled namespace & --help was given, just print it and
-            # exit. (If we did have a bundled namespace, core --help will be
-            # handled *after* the collection is loaded & parsing is done.)
-            if self.args.help.value is True:
-                debug("No bundled namespace & bare --help given; printing help and exiting.") # noqa
-                self.print_help()
-                raise Exit
-            self.load_collection()
-
-        # Parse remainder into task contexts (sets
-        # self.parser/collection/tasks)
-        self.parse_tasks()
 
         halp = self.args.help.value
 
@@ -308,9 +283,10 @@ class Program(object):
             self.print_help()
             raise Exit
 
+    def setup_tasks(self):
         # Print per-task help, if necessary
-        if halp:
-            if halp in self.parser.contexts:
+        if self.args.help.value:
+            if self.args.help.value in self.parser.contexts:
                 msg = "Saw --help <taskname>, printing per-task help & exiting"
                 debug(msg)
                 self.print_task_help()
@@ -319,23 +295,6 @@ class Program(object):
                 # TODO: feels real dumb to factor this out of Parser, but...we
                 # should?
                 raise ParseError("No idea what '{0}' is!".format(halp))
-
-        # Print discovered tasks if necessary
-        if self.args.list.value:
-            self.list_tasks()
-            raise Exit
-
-        # Print completion helpers if necessary
-        if self.args.complete.value:
-            complete(self.core, self.initial_context, self.collection)
-
-        # No tasks specified for execution & no default task = print help
-        # NOTE: when there is a default task, Executor will select it when no
-        # tasks were found in CLI parsing.
-        if not self.tasks and not self.collection.default:
-            debug("No tasks specified for execution and no default task; printing global help as fallback") # noqa
-            self.print_help()
-            raise Exit
 
     def execute(self):
         """
@@ -347,6 +306,7 @@ class Program(object):
         """
         executor = self.executor_class(self.collection, self.config)
         executor.execute(*self.tasks)
+
 
     def normalize_argv(self, argv):
         """
@@ -399,8 +359,7 @@ class Program(object):
         whether a bundled namespace was specified in `.__init__`.
         """
         args = self.core_args()
-        if self.namespace is None:
-            args += self.task_args()
+        debug("args is: {}".format(args))
         return ParserContext(args=args)
 
     def print_version(self):
@@ -415,8 +374,6 @@ class Program(object):
         print("Core options:")
         print("")
         self.print_columns(self.initial_context.help_tuples())
-        if self.namespace is not None:
-            self.list_tasks()
 
     def parse_core_args(self):
         """
@@ -434,9 +391,9 @@ class Program(object):
         """
         Load a task collection based on parsed core args, or die trying.
         """
-        start = self.args.root.value
-        loader = self.loader_class(start=start)
-        coll_name = self.args.collection.value
+        loader = self.loader_class(start=self.search_start_info)
+        coll_name = self.search_collection_name
+
         try:
             coll = loader.load(coll_name) if coll_name else loader.load()
             self.collection = coll
@@ -493,34 +450,6 @@ class Program(object):
             print(self.indent + "none")
             print("")
 
-    def list_tasks(self):
-        # Sort in depth, then alpha, order
-        task_names = self.collection.task_names
-        # Short circuit if no tasks to show
-        if not task_names:
-            msg = "No tasks found in collection '{0}'!"
-            print(msg.format(self.collection.name))
-            raise Exit
-        pairs = []
-        for primary in sort_names(task_names):
-            # Add aliases
-            aliases = sort_names(task_names[primary])
-            name = primary
-            if aliases:
-                name += " ({0})".format(', '.join(aliases))
-            # Add docstring 1st lines
-            task = self.collection[primary]
-            help_ = ""
-            if task.__doc__:
-                help_ = task.__doc__.lstrip().splitlines()[0]
-            pairs.append((name, help_))
-
-        # Print
-        if self.namespace is not None:
-            print("Subcommands:\n")
-        else:
-            print("Available tasks:\n")
-        self.print_columns(pairs)
 
     def print_columns(self, tuples):
         """
