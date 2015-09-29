@@ -474,7 +474,9 @@ class Local(Runner):
                 # bash for now because that's what we have been testing
                 # against.
                 # TODO: also see if subprocess is using equivalent of execvp...
-                os.execve('/bin/bash', ['/bin/bash', '-c', command], env=self.env)
+                os.execve(
+                    '/bin/bash', ['/bin/bash', '-c', command], env=self.env
+                )
         else:
             self.process = Popen(
                 command,
