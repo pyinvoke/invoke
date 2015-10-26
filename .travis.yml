@@ -6,6 +6,7 @@ python:
   - "3.3"
   - "3.4"
   - "3.5"
+  - "nightly"
   - "pypy"
 matrix:
   # pypy is frequentlyish unstable on Travis, don't let it mark entire status
