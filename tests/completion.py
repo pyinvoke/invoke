@@ -1,11 +1,11 @@
 import sys
 
-from invoke import Program
+from invoke.main import InvokeProgram
 
 from spec import assert_contains, assert_not_contains, eq_
 
 from _util import (
-    expect, IntegrationSpec, trap
+    expect_inv, IntegrationSpec, trap
 )
 
 
@@ -15,7 +15,7 @@ def _complete(invocation, collection=None):
     if collection:
         colstr = "-c {0}".format(collection)
     command = "inv --complete {0} -- inv {0} {1}".format(colstr, invocation)
-    Program().run(command, exit=False)
+    InvokeProgram().run(command, exit=False)
     return sys.stdout.getvalue()
 
 
@@ -25,13 +25,13 @@ class ShellCompletion(IntegrationSpec):
     """
 
     def no_input_means_just_task_names(self):
-        expect(
+        expect_inv(
             '-c simple_ns_list --complete',
             out="z_toplevel\na.b.subtask\n"
         )
 
     def no_input_with_no_tasks_yields_empty_response(self):
-        expect('-c empty --complete', out="")
+        expect_inv('-c empty --complete', out="")
 
     def task_name_completion_includes_aliases(self):
         for name in ('z\n', 'toplevel'):

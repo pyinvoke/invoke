@@ -7,7 +7,7 @@ from invoke.context import Context
 from invoke.executor import Executor
 from invoke.tasks import Task, ctask, call
 
-from _util import expect, IntegrationSpec
+from _util import expect_inv, IntegrationSpec
 
 
 class Executor_(IntegrationSpec):
@@ -124,7 +124,7 @@ class Executor_(IntegrationSpec):
 
     class deduping_and_chaining:
         def chaining_is_depth_first(self):
-            expect('-c depth_first deploy', out="""
+            expect_inv('-c depth_first deploy', out="""
 Cleaning HTML
 Cleaning .tar.gz files
 Cleaned everything
@@ -136,7 +136,8 @@ Testing
 """.lstrip())
 
         def _expect(self, args, expected):
-            expect('-c integration {0}'.format(args), out=expected.lstrip())
+            expect_inv('-c integration {0}'.format(args),
+                       out=expected.lstrip())
 
         class adjacent_hooks:
             def deduping(self):
@@ -276,16 +277,16 @@ bar
 
     class autoprinting:
         def defaults_to_off_and_no_output(self):
-            expect("-c autoprint nope", out="")
+            expect_inv("-c autoprint nope", out="")
 
         def prints_return_value_to_stdout_when_on(self):
-            expect("-c autoprint yup", out="It's alive!\n")
+            expect_inv("-c autoprint yup", out="It's alive!\n")
 
         def prints_return_value_to_stdout_when_on_and_in_collection(self):
-            expect("-c autoprint sub.yup", out="It's alive!\n")
+            expect_inv("-c autoprint sub.yup", out="It's alive!\n")
 
         def does_not_fire_on_pre_tasks(self):
-            expect("-c autoprint pre_check", out="")
+            expect_inv("-c autoprint pre_check", out="")
 
         def does_not_fire_on_post_tasks(self):
-            expect("-c autoprint post_check", out="")
+            expect_inv("-c autoprint post_check", out="")
