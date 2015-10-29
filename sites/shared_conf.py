@@ -12,7 +12,6 @@ html_theme_options = {
     'description': "Pythonic task execution",
     'github_user': 'pyinvoke',
     'github_repo': 'invoke',
-    'gittip_user': 'bitprophet',
     'analytics_id': 'UA-18486793-3',
     'travis_button': True,
 }
