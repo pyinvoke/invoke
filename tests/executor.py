@@ -121,10 +121,10 @@ class Executor_(IntegrationSpec):
                 eq_(args, (7,))
 
         def may_be_call_objects_specifying_args(self):
-            self._call_objs(False)
+            self._call_objs(contextualized=False)
 
         def call_objs_play_well_with_context_args(self):
-            self._call_objs(True)
+            self._call_objs(contextualized=True)
 
     class deduping_and_chaining:
         def chaining_is_depth_first(self):
