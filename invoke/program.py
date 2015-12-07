@@ -122,9 +122,16 @@ class Program(object):
     indent = " " * indent_width
     col_padding = 3
 
-    def __init__(self, version=None, namespace=None, name=None, binary=None,
-        loader_class=None, executor_class=None, config_class=None,
-        env_prefix=None):
+    def __init__(self,
+        version=None,
+        namespace=None,
+        name=None,
+        binary=None,
+        loader_class=None,
+        executor_class=None,
+        config_class=None,
+        env_prefix=None,
+    ):
         """
         Create a new, parameterized `.Program` instance.
 
