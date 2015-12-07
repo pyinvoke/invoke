@@ -108,10 +108,7 @@ class Executor(object):
         for call in calls:
             autoprint = call in direct and call.autoprint
             args = call.args
-            debug("Executing {0!r}{1}".format(
-                call,
-                (" as {0}".format(call.name)) if call.name else ""),
-            )
+            debug("Executing {0!r}".format(call))
             if call.contextualized:
                 args = (call.context,) + args
             result = call.task(*args, **call.kwargs)
