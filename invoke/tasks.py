@@ -329,19 +329,35 @@ class Call(object):
     Similar to `~functools.partial` with some added functionality (such as the
     delegation to the inner task, and optional tracking of a given name.)
     """
-    def __init__(self, task, *args, **kwargs):
+    def __init__(self, task, called_as=None, args=None, kwargs=None):
+        """
+        Create a new `.Call` object.
+
+        :param task: The `.Task` object to be executed.
+
+        :param str called_as:
+            The name the task is being called as, e.g. if it was called by an
+            alias or other rebinding. Defaults to ``None``, aka, the task was
+            referred to by its default name.
+
+        :param tuple args:
+            Positional arguments to call with, if any. Default: ``None``.
+
+        :param dict kwargs:
+            Keyword arguments to call with, if any. Default: ``None``.
+        """
         self.task = task
-        self.args = args
-        self.kwargs = kwargs
-        self.name = None # Mostly manipulated by client code
+        self.called_as = called_as
+        self.args = args or tuple()
+        self.kwargs = kwargs or dict()
 
     def __getattr__(self, name):
         return getattr(self.task, name)
 
     def __str__(self):
         aka = ""
-        if self.name is not None and self.name != self.task.name:
-            aka = " (called as: {0!r})".format(self.name)
+        if self.called_as is not None and self.called_as != self.task.name:
+            aka = " (called as: {0!r})".format(self.called_as)
         return "<Call {0!r}{1}, args: {2!r}, kwargs: {3!r}>".format(
             self.task.name, aka, self.args, self.kwargs
         )
@@ -350,10 +366,10 @@ class Call(object):
         return str(self)
 
     def __eq__(self, other):
-        # NOTE: Not comparing 'name'; a named call of a given Task with same
-        # args/kwargs should be considered same as an unnamed call of the same
-        # Task with the same args/kwargs (e.g. pre/post task specified w/o
-        # name)
+        # NOTE: Not comparing 'called_as'; a named call of a given Task with
+        # same args/kwargs should be considered same as an unnamed call of the
+        # same Task with the same args/kwargs (e.g. pre/post task specified w/o
+        # name). Ditto tasks with multiple aliases.
         for attr in "task args kwargs".split():
             if getattr(self, attr) != getattr(other, attr):
                 return False

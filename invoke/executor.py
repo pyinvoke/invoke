@@ -138,11 +138,10 @@ class Executor(object):
                 kwargs = task.as_kwargs
             else:
                 name, kwargs = task
-            c = Call(self.collection[name], **kwargs)
-            c.name = name
+            c = Call(task=self.collection[name], kwargs=kwargs, called_as=name)
             calls.append(c)
         if not tasks and self.collection.default is not None:
-            calls = [Call(self.collection[self.collection.default])]
+            calls = [Call(task=self.collection[self.collection.default])]
         return calls
 
     def dedupe(self, calls):
@@ -179,7 +178,7 @@ class Executor(object):
             # Normalize to Call (this method is sometimes called with pre/post
             # task lists, which may contain 'raw' Task objects)
             if isinstance(call, Task):
-                call = Call(call)
+                call = Call(task=call)
             debug("Expanding task-call {0!r}".format(call))
             if call.contextualized:
                 debug("Task was contextualized, loading additional configuration") # noqa
@@ -211,7 +210,7 @@ class Executor(object):
         if not anonymous:
             # Load collection-local config
             task_config.load_collection(
-                self.collection.configuration(call.name)
+                self.collection.configuration(call.called_as)
             )
         # Load env vars, as the last step (so users can override
         # per-collection keys via the env)

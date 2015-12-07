@@ -309,16 +309,16 @@ class Call_(Spec):
 
         def includes_args_and_kwargs(self):
             call = Call(
-                self.task, 'posarg1', 'posarg2', kwarg1='val1', kwarg2='val2'
+                self.task,
+                args=('posarg1', 'posarg2'),
+                kwargs={'kwarg1': 'val1', 'kwarg2': 'val2'},
             )
             eq_(str(call), "<Call 'mytask', args: ('posarg1', 'posarg2'), kwargs: {'kwarg1': 'val1', 'kwarg2': 'val2'}>")
 
         def includes_aka_if_explicit_name_given(self):
-            call = Call(self.task)
-            call.name = "notmytask"
+            call = Call(self.task, called_as='notmytask')
             eq_(str(call), "<Call 'mytask' (called as: 'notmytask'), args: (), kwargs: {}>")
 
         def skips_aka_if_explicit_name_same_as_task_name(self):
-            call = Call(self.task)
-            call.name = "mytask"
+            call = Call(self.task, called_as='mytask')
             eq_(str(call), "<Call 'mytask', args: (), kwargs: {}>")

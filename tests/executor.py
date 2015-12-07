@@ -1,10 +1,10 @@
 from spec import eq_, ok_
 from mock import Mock, call as mock_call
 
-from invoke import Collection, Config, Context, Executor, Task, ctask, call
+from invoke import Collection, Config, Context, Executor, Task, ctask
 from invoke.parser import ParserContext
 
-from _util import expect, IntegrationSpec
+from _util import expect, IntegrationSpec, call
 
 
 class Executor_(IntegrationSpec):
