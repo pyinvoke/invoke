@@ -313,11 +313,11 @@ class Call_(Spec):
                 args=('posarg1', 'posarg2'),
                 kwargs={'kwarg1': 'val1', 'kwarg2': 'val2'},
             )
-            eq_(str(call), "<Call 'mytask', args: ('posarg1', 'posarg2'), kwargs: {'kwarg1': 'val1', 'kwarg2': 'val2'}>")
+            eq_(str(call), "<Call 'mytask', args: ('posarg1', 'posarg2'), kwargs: {'kwarg1': 'val1', 'kwarg2': 'val2'}>") # noqa
 
         def includes_aka_if_explicit_name_given(self):
             call = Call(self.task, called_as='notmytask')
-            eq_(str(call), "<Call 'mytask' (called as: 'notmytask'), args: (), kwargs: {}>")
+            eq_(str(call), "<Call 'mytask' (called as: 'notmytask'), args: (), kwargs: {}>") # noqa
 
         def skips_aka_if_explicit_name_same_as_task_name(self):
             call = Call(self.task, called_as='mytask')
