@@ -1,6 +1,7 @@
 from spec import Spec, skip, eq_, raises
+from mock import Mock
 
-from invoke.tasks import task, ctask, Task
+from invoke.tasks import task, ctask, Task, Call
 from invoke.loader import FilesystemLoader as Loader
 
 from _util import support
@@ -293,3 +294,31 @@ class Task_(Spec):
             eq_(arg.names, ('longer-arg', 'l'))
             eq_(arg.attr_name, 'longer_arg')
             eq_(arg.name, 'longer_arg')
+
+
+class Call_(Spec):
+    class stringrep:
+        "__str__"
+
+        def setup(self):
+            self.task = Task(Mock(__name__='mytask'))
+
+        def includes_task_name(self):
+            call = Call(self.task)
+            eq_(str(call), "<Call 'mytask', args: (), kwargs: {}>")
+
+        def includes_args_and_kwargs(self):
+            call = Call(
+                self.task, 'posarg1', 'posarg2', kwarg1='val1', kwarg2='val2'
+            )
+            eq_(str(call), "<Call 'mytask', args: ('posarg1', 'posarg2'), kwargs: {'kwarg1': 'val1', 'kwarg2': 'val2'}>")
+
+        def includes_aka_if_explicit_name_given(self):
+            call = Call(self.task)
+            call.name = "notmytask"
+            eq_(str(call), "<Call 'mytask' (called as: 'notmytask'), args: (), kwargs: {}>")
+
+        def skips_aka_if_explicit_name_same_as_task_name(self):
+            call = Call(self.task)
+            call.name = "mytask"
+            eq_(str(call), "<Call 'mytask', args: (), kwargs: {}>")
