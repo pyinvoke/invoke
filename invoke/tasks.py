@@ -376,5 +376,16 @@ class Call(object):
         return True
 
 
-# Convenience/aesthetically pleasing-ish alias
-call = Call
+def call(task, *args, **kwargs):
+    """
+    Allows specifying the execution of a `.Task`, optionally with arguments.
+
+    Useful for setting up :ref:`pre/post task invocations <pre-post-tasks>`.
+    It's actually just a convenient wrapper around the `.Call` class, which may
+    be used directly instead if desired.
+
+    Please see the constructor docs for `.Call` for details - this function's
+    ``args`` and ``kwargs`` map directly to the same arguments as in that
+    method.
+    """
+    return Call(task=task, args=args, kwargs=kwargs)

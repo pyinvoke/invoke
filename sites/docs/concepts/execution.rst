@@ -110,6 +110,8 @@ With a depth-first behavior, the below is hopefully intuitive to most users::
     Deploying
 
         
+.. _pre-post-tasks:
+
 Parameterizing pre/post-tasks
 -----------------------------
 

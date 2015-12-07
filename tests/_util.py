@@ -9,7 +9,7 @@ from invoke.vendor.six import StringIO
 from mock import patch, Mock
 from spec import trap, Spec, eq_, skip
 
-from invoke import Program, Failure, Call
+from invoke import Program, Failure
 from invoke.platform import WINDOWS
 
 
@@ -175,8 +175,3 @@ def mock_pty(out='', err='', exit=0, isatty=None, trailing_error=None):
                 assert getattr(os, name).called
         return wrapper
     return decorator
-
-
-def call(task, *args, **kwargs):
-    # Convenience wrapper for Call() - mostly used in executor tests
-    return Call(task=task, args=args, kwargs=kwargs)
