@@ -201,7 +201,8 @@ class Executor(object):
         :param bool anonymous:
             If ``True``, treat task as anonymous and don't try loading
             collection-based config for it. (Useful for downstream code which
-            may be adding non-collection-borne tasks during the load process.)
+            may be adding dynamically-created, collection-less tasks during the
+            load process.)
         """
         task_config = config.clone()
         if not anonymous:
