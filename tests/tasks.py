@@ -311,9 +311,10 @@ class Call_(Spec):
             call = Call(
                 self.task,
                 args=('posarg1', 'posarg2'),
-                kwargs={'kwarg1': 'val1', 'kwarg2': 'val2'},
+                # Single-key dict to avoid dict ordering issues
+                kwargs={'kwarg1': 'val1'},
             )
-            eq_(str(call), "<Call 'mytask', args: ('posarg1', 'posarg2'), kwargs: {'kwarg1': 'val1', 'kwarg2': 'val2'}>") # noqa
+            eq_(str(call), "<Call 'mytask', args: ('posarg1', 'posarg2'), kwargs: {'kwarg1': 'val1'}>") # noqa
 
         def includes_aka_if_explicit_name_given(self):
             call = Call(self.task, called_as='notmytask')
