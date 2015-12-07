@@ -339,8 +339,11 @@ class Call(object):
         return getattr(self.task, name)
 
     def __str__(self):
-        return "<Call {0!r}, args: {1!r} kwargs: {2!r}>".format(
-            self.task.name, self.args, self.kwargs
+        aka = ""
+        if self.name is not None and self.name != self.task.name:
+            aka = " (called as: {0!r})".format(self.name)
+        return "<Call {0!r}{1}, args: {2!r}, kwargs: {3!r}>".format(
+            self.task.name, aka, self.args, self.kwargs
         )
 
     def __repr__(self):
