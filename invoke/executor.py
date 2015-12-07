@@ -182,9 +182,9 @@ class Executor(object):
                 call.context = Context(config=self.config_for(call, config))
             else:
                 debug("Task uncontextualized, skipping collection/env config load") # noqa
-            # NOTE: handing in original config, not the mutated one above.
-            # Pre/post tasks may well come from a different collection, etc.
-            # Also just cleaner.
+            # NOTE: handing in original config, not the mutated one handed to
+            # the Context above. Pre/post tasks may well come from a different
+            # collection, etc. Also just cleaner.
             ret.extend(self.expand_tasks(call.pre, config))
             ret.append(call)
             ret.extend(self.expand_tasks(call.post, config))
