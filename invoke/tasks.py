@@ -380,9 +380,9 @@ def call(task, *args, **kwargs):
     """
     Allows specifying the execution of a `.Task`, optionally with arguments.
 
-    Useful for setting up :ref:`pre/post task invocations <pre-post-tasks>`.
-    It's actually just a convenient wrapper around the `.Call` class, which may
-    be used directly instead if desired.
+    Useful for setting up :ref:`pre/post task invocations
+    <parameterizing-pre-post-tasks>`. It's actually just a convenient wrapper
+    around the `.Call` class, which may be used directly instead if desired.
 
     Please see the constructor docs for `.Call` for details - this function's
     ``args`` and ``kwargs`` map directly to the same arguments as in that
