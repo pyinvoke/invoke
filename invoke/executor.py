@@ -87,14 +87,14 @@ class Executor(object):
         # Normalize input
         debug("Examining top level tasks {0!r}".format([x for x in tasks]))
         calls = self.normalize(tasks)
-        debug("Tasks with kwargs: {0!r}".format(calls))
+        debug("Tasks (now Calls) with kwargs: {0!r}".format(calls))
         # Obtain copy of directly-given tasks since they should sometimes
         # behave differently
         direct = list(calls)
         # Expand pre/post tasks & then dedupe the entire run.
         # Load config at this point to get latest value of dedupe option
         config = self.config.clone()
-        expanded = self.expand_tasks(calls, config)
+        expanded = self.expand_calls(calls, config)
         # Get some good value for dedupe option, even if config doesn't have
         # the tree we expect. (This is a concession to testing.)
         try:
@@ -159,7 +159,7 @@ class Executor(object):
                 debug("{0!r}: found in list already, skipping".format(call))
         return deduped
 
-    def expand_tasks(self, calls, config):
+    def expand_calls(self, calls, config):
         """
         Expand a list of `.Call` objects into a near-final list of same.
 
@@ -185,9 +185,9 @@ class Executor(object):
             # NOTE: handing in original config, not the mutated one handed to
             # the Context above. Pre/post tasks may well come from a different
             # collection, etc. Also just cleaner.
-            ret.extend(self.expand_tasks(call.pre, config))
+            ret.extend(self.expand_calls(call.pre, config))
             ret.append(call)
-            ret.extend(self.expand_tasks(call.post, config))
+            ret.extend(self.expand_calls(call.post, config))
         return ret
 
     def config_for(self, call, config, anonymous=False):
