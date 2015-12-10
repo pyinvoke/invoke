@@ -332,7 +332,14 @@ class Call(object):
     delegation to the inner task, and optional tracking of the name it's being
     called by.
     """
-    def __init__(self, task, called_as=None, args=None, kwargs=None):
+    def __init__(
+        self,
+        task,
+        called_as=None,
+        args=None,
+        kwargs=None,
+        context=None,
+    ):
         """
         Create a new `.Call` object.
 
@@ -348,11 +355,16 @@ class Call(object):
 
         :param dict kwargs:
             Keyword arguments to call with, if any. Default: ``None``.
+
+        :param context:
+            `.Context` instance to be used if the wrapped `.Task` is
+            :ref:`contextualized <concepts-context>`. Default: ``None``.
         """
         self.task = task
         self.called_as = called_as
         self.args = args or tuple()
         self.kwargs = kwargs or dict()
+        self.context = context
 
     def __getattr__(self, name):
         return getattr(self.task, name)
@@ -384,17 +396,17 @@ class Call(object):
 
         Useful when parameterizing task executions.
         """
-        clone = Call(
+        context = None
+        if self.context is not None:
+            # TODO: context.clone()?
+            context = Context(config=self.context.config.clone())
+        return Call(
             task=self.task,
             called_as=self.called_as,
             args=deepcopy(self.args),
             kwargs=deepcopy(self.kwargs),
+            context=context
         )
-        # TODO: make context a real part of the API sheesh
-        if hasattr(self, 'context'):
-            # TODO: context.clone()?
-            clone.context = Context(config=self.context.config.clone())
-        return clone
 
 
 def call(task, *args, **kwargs):
