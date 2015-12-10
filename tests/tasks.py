@@ -1,6 +1,7 @@
-from spec import Spec, skip, eq_, raises
+from spec import Spec, skip, eq_, raises, ok_
 from mock import Mock
 
+from invoke.context import Context
 from invoke.tasks import task, ctask, Task, Call
 from invoke.loader import FilesystemLoader as Loader
 
@@ -323,3 +324,40 @@ class Call_(Spec):
         def skips_aka_if_explicit_name_same_as_task_name(self):
             call = Call(self.task, called_as='mytask')
             eq_(str(call), "<Call 'mytask', args: (), kwargs: {}>")
+
+    class clone:
+        def returns_new_but_equivalent_object(self):
+            orig = Call(self.task)
+            clone = orig.clone()
+            ok_(clone is not orig)
+            ok_(clone == orig)
+
+        def modifications_on_clone_do_not_alter_original(self):
+            # Setup
+            orig = Call(
+                self.task,
+                called_as='foo',
+                args=[1, 2, 3],
+                kwargs={'key': 'val'}
+            )
+            context = Context()
+            context['setting'] = 'value'
+            orig.context = context
+            # Clone & tweak
+            clone = orig.clone()
+            newtask = Task(Mock(__name__='meh'))
+            clone.task = newtask
+            clone.called_as = 'notfoo'
+            clone.args[0] = 7
+            clone.kwargs['key'] = 'notval'
+            clone.context['setting'] = 'notvalue'
+            # Compare
+            ok_(clone.task is not orig.task)
+            eq_(orig.called_as, 'foo')
+            eq_(clone.called_as, 'notfoo')
+            eq_(orig.args, [1, 2, 3])
+            eq_(clone.args, [7, 2, 3])
+            eq_(orig.kwargs['key'], 'val')
+            eq_(clone.kwargs['key'], 'notval')
+            eq_(orig.context['setting'], 'value')
+            eq_(clone.context['setting'], 'notvalue')

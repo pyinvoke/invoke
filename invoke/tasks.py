@@ -2,6 +2,8 @@
 This module contains the core `.Task` class & convenience decorators used to
 generate new tasks.
 """
+
+from copy import deepcopy
 import inspect
 import types
 
@@ -374,6 +376,24 @@ class Call(object):
             if getattr(self, attr) != getattr(other, attr):
                 return False
         return True
+
+    def clone(self):
+        """
+        Return a standalone copy of this Call.
+
+        Useful when parameterizing task executions.
+        """
+        clone = Call(
+            task=self.task,
+            called_as=self.called_as,
+            args=deepcopy(self.args),
+            kwargs=deepcopy(self.kwargs),
+        )
+        # TODO: make context a real part of the API sheesh
+        if hasattr(self, 'context'):
+            # TODO: context.clone()?
+            clone.context = Context(config=self.context.config.clone())
+        return clone
 
 
 def call(task, *args, **kwargs):
