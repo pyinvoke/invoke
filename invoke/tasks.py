@@ -329,7 +329,8 @@ class Call(object):
     Wraps its `.Task` so it can be treated as one by `.Executor`.
 
     Similar to `~functools.partial` with some added functionality (such as the
-    delegation to the inner task, and optional tracking of a given name.)
+    delegation to the inner task, and optional tracking of the name it's being
+    called by.
     """
     def __init__(self, task, called_as=None, args=None, kwargs=None):
         """
@@ -398,15 +399,15 @@ class Call(object):
 
 def call(task, *args, **kwargs):
     """
-    Allows specifying the execution of a `.Task`, optionally with arguments.
+    Describes execution of a `.Task`, typically with pre-supplied arguments.
 
     Useful for setting up :ref:`pre/post task invocations
     <parameterizing-pre-post-tasks>`. It's actually just a convenient wrapper
     around the `.Call` class, which may be used directly instead if desired.
 
     For example, here's two build-like tasks that both refer to a ``setup``
-    pre-task, one with no baked-in argument values, and one that toggles a
-    boolean flag::
+    pre-task, one with no baked-in argument values (and thus no need to use
+    `.call`), and one that toggles a boolean flag::
 
         @task
         def setup(ctx, clean=False):
