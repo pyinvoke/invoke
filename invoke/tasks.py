@@ -384,6 +384,25 @@ def call(task, *args, **kwargs):
     <parameterizing-pre-post-tasks>`. It's actually just a convenient wrapper
     around the `.Call` class, which may be used directly instead if desired.
 
+    For example, here's two build-like tasks that both refer to a ``setup``
+    pre-task, one with no baked-in argument values, and one that toggles a
+    boolean flag::
+
+        @task
+        def setup(ctx, clean=False):
+            if clean:
+                ctx.run("rm -rf target")
+            # ... setup things here ...
+            ctx.run("tar czvf target.tgz target")
+
+        @task(pre=[setup])
+        def build(ctx):
+            ctx.run("build, accounting for leftover files...")
+
+        @task(pre=[call(setup, clean=True)])
+        def clean_build(ctx):
+            ctx.run("build, assuming clean slate...")
+
     Please see the constructor docs for `.Call` for details - this function's
     ``args`` and ``kwargs`` map directly to the same arguments as in that
     method.
