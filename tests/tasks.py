@@ -297,11 +297,11 @@ class Task_(Spec):
 
 
 class Call_(Spec):
+    def setup(self):
+        self.task = Task(Mock(__name__='mytask'))
+
     class stringrep:
         "__str__"
-
-        def setup(self):
-            self.task = Task(Mock(__name__='mytask'))
 
         def includes_task_name(self):
             call = Call(self.task)
