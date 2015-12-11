@@ -148,10 +148,7 @@ class Runner(object):
         # Start executing the actual command (runs in background)
         self.start(command)
         # Arrive at final encoding if neither config nor kwargs had one
-        encoding = opts['encoding']
-        if encoding is None:
-            encoding = self.default_encoding()
-        self.encoding = encoding
+        self.encoding = opts['encoding'] or self.default_encoding()
         # Organize and start the IO threads
         stdout, stderr = [], []
         threads = []
