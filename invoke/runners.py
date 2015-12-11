@@ -131,6 +131,17 @@ class Runner(object):
             Same as ``out_stream``, except for standard error, and defaulting
             to ``sys.stderr``.
 
+        :param dict responses:
+            A `dict` whose keys are regular expressions to be searched for in
+            the program's ``stdout`` or ``stderr``, and whose values may be any
+            value one desires to write into a stdin text/binary stream
+            (typically `str` or `bytes` objects, depending on Python version)
+            in response.
+
+            See :doc:`/concepts/responses` for details on this functionality.
+
+            Default: ``{}``.
+
         :returns:
             `Result`, or a subclass thereof.
 
@@ -256,6 +267,8 @@ class Runner(object):
           (typically derived from `default_encoding` or runtime keyword args).
         * Append a copy of the bytes to ``buffer_``, typically a `list`, which
           the calling thread will expect to be mutated.
+        * Run ``buffer_`` through `respond` so it has the opportunity to write
+          responses to the command's stdin (see `respond` for details).
         * If ``hide`` is ``False``, write bytes to ``output``, a stream such as
           `sys.stdout`.
         """
@@ -277,6 +290,16 @@ class Runner(object):
                 output.write(data)
                 output.flush()
             buffer_.append(data)
+
+    def respond(self, buffer_):
+        """
+        Write to the program's ``stdin`` in response to ``buffer_`` patterns.
+
+        This functionality is driven by the key/value pairs in the
+        ``responses`` kwarg of `run` - see its documentation for format
+        details, and :doc:`/concepts/responses` for a conceptual overview.
+        """
+        pass
 
     def should_use_pty(self, pty, fallback):
         """
