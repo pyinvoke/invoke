@@ -14,7 +14,7 @@ from _util import mock_subprocess, mock_pty
 # Dummy command that will blow up if it ever truly hits a real shell.
 _ = "nope"
 
-class Dummy(Runner):
+class _Dummy(Runner):
     """
     Dummy runner subclass that does minimum work required to execute run().
     """
@@ -47,13 +47,13 @@ def _expect_encoding(codecs, encoding):
         eq_(call[0][1], encoding)
 
 def _run(*args, **kwargs):
-    klass = kwargs.pop('klass', Dummy)
+    klass = kwargs.pop('klass', _Dummy)
     settings = kwargs.pop('settings', {})
     context = Context(config=Config(overrides=settings))
     return klass(context).run(*args, **kwargs)
 
 def _runner(out='', err='', **kwargs):
-    klass = kwargs.pop('klass', Dummy)
+    klass = kwargs.pop('klass', _Dummy)
     runner = klass(Context(config=Config(overrides=kwargs)))
     if 'exits' in kwargs:
         runner.returncode = Mock(return_value=kwargs.pop('exits'))
@@ -69,6 +69,9 @@ def _runner(out='', err='', **kwargs):
 
 
 class Runner_(Spec):
+    # NOTE: these copies of _run and _runner form the base case of "test Runner
+    # subclasses via self._run/_runner helpers" functionality. See how e.g.
+    # Local_ uses the same approach but bakes in the dummy class used.
     def _run(self, *args, **kwargs):
         return _run(*args, **kwargs)
 
@@ -209,7 +212,7 @@ class Runner_(Spec):
         def honors_config(self):
             with patch('invoke.runners.codecs') as codecs:
                 c = Context(Config(overrides={'run': {'encoding': 'UTF-7'}}))
-                Dummy(c).run(_)
+                _Dummy(c).run(_)
                 _expect_encoding(codecs, 'UTF-7')
 
         def honors_kwarg(self):
@@ -336,7 +339,7 @@ class Runner_(Spec):
 
     class threading:
         def errors_within_io_thread_body_bubble_up(self):
-            class Oops(Dummy):
+            class Oops(_Dummy):
                 def io(self, reader, output, buffer_, hide):
                     raise OhNoz()
 
