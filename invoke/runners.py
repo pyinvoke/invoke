@@ -135,8 +135,8 @@ class Runner(object):
             A `dict` whose keys are regular expressions to be searched for in
             the program's ``stdout`` or ``stderr``, and whose values may be any
             value one desires to write into a stdin text/binary stream
-            (typically `str` or `bytes` objects, depending on Python version)
-            in response.
+            (typically ``str`` or ``bytes`` objects depending on Python
+            version) in response.
 
             See :doc:`/concepts/responses` for details on this functionality.
 
