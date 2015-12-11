@@ -30,73 +30,6 @@ from .platform import WINDOWS, pty_size
 from .vendor import six
 
 
-def normalize_hide(val):
-    hide_vals = (None, False, 'out', 'stdout', 'err', 'stderr', 'both', True)
-    if val not in hide_vals:
-        err = "'hide' got {0!r} which is not in {1!r}"
-        raise ValueError(err.format(val, hide_vals))
-    if val in (None, False):
-        hide = ()
-    elif val in ('both', True):
-        hide = ('out', 'err')
-    elif val == 'stdout':
-        hide = ('out',)
-    elif val == 'stderr':
-        hide = ('err',)
-    else:
-        hide = (val,)
-    return hide
-
-
-def isatty(stream):
-    """
-    Check if a stream is a tty.
-
-    Not all file-like objects implement the `isatty` method.
-    """
-    # TODO: fallback to checking os.isatty(stream)? is that ever true when a
-    # stream lacks .isatty? (alt platforms? etc?)
-    fn = getattr(stream, 'isatty', None)
-    if fn is None:
-        return False
-    return fn()
-
-
-class _IOThread(threading.Thread):
-    """
-    IO thread handler making it easier for parent to handle thread exceptions.
-
-    Based in part Fabric 1's ThreadHandler. See also Fabric GH issue #204.
-    """
-    def __init__(self, **kwargs):
-        super(_IOThread, self).__init__(**kwargs)
-        # No record of why, but Fabric used daemon threads ever since the
-        # switch from select.select, so let's keep doing that.
-        self.daemon = True
-        # Track exceptions raised in run()
-        self.kwargs = kwargs
-        self.exc_info = None
-
-    def run(self):
-        try:
-            super(_IOThread, self).run()
-        except BaseException:
-            self.exc_info = sys.exc_info()
-
-    def exception(self):
-        """
-        If an exception occurred, return an `.ExceptionWrapper` around it.
-
-        :returns:
-            An `.ExceptionWrapper` managing the result of `sys.exc_info`, if an
-            exception was raised during thread execution. If no exception
-            occurred, returns ``None`` instead.
-        """
-        if self.exc_info is None:
-            return None
-        return ExceptionWrapper(self.kwargs, *self.exc_info)
-
-
 class Runner(object):
     """
     Partially-abstract core command-running API.
@@ -574,3 +507,70 @@ class Result(object):
         ``False`` otherwise.
         """
         return not self.ok
+
+
+class _IOThread(threading.Thread):
+    """
+    IO thread handler making it easier for parent to handle thread exceptions.
+
+    Based in part Fabric 1's ThreadHandler. See also Fabric GH issue #204.
+    """
+    def __init__(self, **kwargs):
+        super(_IOThread, self).__init__(**kwargs)
+        # No record of why, but Fabric used daemon threads ever since the
+        # switch from select.select, so let's keep doing that.
+        self.daemon = True
+        # Track exceptions raised in run()
+        self.kwargs = kwargs
+        self.exc_info = None
+
+    def run(self):
+        try:
+            super(_IOThread, self).run()
+        except BaseException:
+            self.exc_info = sys.exc_info()
+
+    def exception(self):
+        """
+        If an exception occurred, return an `.ExceptionWrapper` around it.
+
+        :returns:
+            An `.ExceptionWrapper` managing the result of `sys.exc_info`, if an
+            exception was raised during thread execution. If no exception
+            occurred, returns ``None`` instead.
+        """
+        if self.exc_info is None:
+            return None
+        return ExceptionWrapper(self.kwargs, *self.exc_info)
+
+
+def isatty(stream):
+    """
+    Check if a stream is a tty.
+
+    Not all file-like objects implement the `isatty` method.
+    """
+    # TODO: fallback to checking os.isatty(stream)? is that ever true when a
+    # stream lacks .isatty? (alt platforms? etc?)
+    fn = getattr(stream, 'isatty', None)
+    if fn is None:
+        return False
+    return fn()
+
+
+def normalize_hide(val):
+    hide_vals = (None, False, 'out', 'stdout', 'err', 'stderr', 'both', True)
+    if val not in hide_vals:
+        err = "'hide' got {0!r} which is not in {1!r}"
+        raise ValueError(err.format(val, hide_vals))
+    if val in (None, False):
+        hide = ()
+    elif val in ('both', True):
+        hide = ('out', 'err')
+    elif val == 'stdout':
+        hide = ('out',)
+    elif val == 'stderr':
+        hide = ('err',)
+    else:
+        hide = (val,)
+    return hide
