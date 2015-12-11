@@ -246,7 +246,7 @@ class Runner(object):
           `stderr_reader`.)
         * Decode the bytes into a string according to ``self.encoding``
           (typically derived from `default_encoding` or runtime keyword args).
-        * Save a copy of the bytes in ``buffer_``, typically a `list`, which
+        * Append a copy of the bytes to ``buffer_``, typically a `list`, which
           the calling thread will expect to be mutated.
         * If ``hide`` is ``False``, write bytes to ``output``, a stream such as
           `sys.stdout`.
