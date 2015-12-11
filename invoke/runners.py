@@ -393,8 +393,8 @@ class Local(Runner):
         When Invoke itself is executed without a valid PTY (i.e.
         ``os.isatty(sys.stdin)`` is ``False``), it's not possible to present a
         handle on our PTY to local subprocesses. In such situations, `Local`
-        will fallback to behaving as if ``pty=False``, on the theory that
-        degraded execution is better than none at all, as well as printing a
+        will fallback to behaving as if ``pty=False`` (on the theory that
+        degraded execution is better than none at all) as well as printing a
         warning to stderr.
 
         To disable this behavior (i.e. if `os.isatty` is causing false
