@@ -141,31 +141,18 @@ class Runner(object):
             exceptions)
         """
         # Normalize kwargs w/ config
-        opts = {}
-        for key, value in six.iteritems(self.context.config.run):
-            runtime = kwargs.pop(key, None)
-            opts[key] = value if runtime is None else runtime
-        # TODO: handle invalid kwarg keys (anything left in kwargs)
-        # Normalize 'hide' from one of the various valid input values
-        opts['hide'] = normalize_hide(opts['hide'])
-        # Derive stream objects
-        out_stream = opts['out_stream']
-        if out_stream is None:
-            out_stream = sys.stdout
-        err_stream = opts['err_stream']
-        if err_stream is None:
-            err_stream = sys.stderr
+        opts, out_stream, err_stream = self._run_opts(kwargs)
         # Echo
         if opts['echo']:
             print("\033[1;37m{0}\033[0m".format(command))
-        # Determine pty or no
-        self.using_pty = self.should_use_pty(opts['pty'], opts['fallback'])
-        # Initiate command & kick off IO threads
+        # Start executing the actual command (runs in background)
         self.start(command)
+        # Arrive at final encoding if neither config nor kwargs had one
         encoding = opts['encoding']
         if encoding is None:
             encoding = self.default_encoding()
         self.encoding = encoding
+        # Organize and start the IO threads
         stdout, stderr = [], []
         threads = []
         argses = [
@@ -224,6 +211,30 @@ class Runner(object):
         if not (result or opts['warn']):
             raise Failure(result)
         return result
+
+    def _run_opts(self, kwargs):
+        """
+        Unify `run` kwargs with config options to arrive at local options.
+
+        :returns: Three-tuple of ``(opts_dict, stdout_stream, stderr_stream)``.
+        """
+        opts = {}
+        for key, value in six.iteritems(self.context.config.run):
+            runtime = kwargs.pop(key, None)
+            opts[key] = value if runtime is None else runtime
+        # TODO: handle invalid kwarg keys (anything left in kwargs)
+        # Normalize 'hide' from one of the various valid input values
+        opts['hide'] = normalize_hide(opts['hide'])
+        # Derive stream objects
+        out_stream = opts['out_stream']
+        if out_stream is None:
+            out_stream = sys.stdout
+        err_stream = opts['err_stream']
+        if err_stream is None:
+            err_stream = sys.stderr
+        # Determine pty or no
+        self.using_pty = self.should_use_pty(opts['pty'], opts['fallback'])
+        return opts, out_stream, err_stream
 
     def generate_result(self, **kwargs):
         """
@@ -285,10 +296,13 @@ class Runner(object):
 
     def start(self, command):
         """
-        Initiate execution of ``command``, e.g. in a subprocess.
+        Initiate execution of ``command`` in the background.
 
-        Typically, this will also set subclass-specific member variables used
-        in other methods such as `wait` and/or `returncode`.
+        Typically this means use of a forked subprocess or requesting start of
+        execution on a remote system.
+
+        In most cases, this method will also set subclass-specific member
+        variables used in other methods such as `wait` and/or `returncode`.
         """
         raise NotImplementedError
 
