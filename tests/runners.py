@@ -27,6 +27,9 @@ class _Dummy(Runner):
     def stderr_reader(self):
         return lambda n: ""
 
+    def get_stdin(self):
+        return StringIO()
+
     def default_encoding(self):
         return "US-ASCII"
 
@@ -357,6 +360,30 @@ class Runner_(Spec):
                 # implementation-specific, though, so possibly not worthwhile.
             else:
                 assert False, "Did not raise ThreadException as expected!"
+
+    class responding:
+        def _with_mock_stdin(self, responses=None, out="don't be empty"):
+            responses = responses or {}
+            # Obtain Runner with mocked stdin
+            mock_stdin = Mock(spec=StringIO)
+            class MockStdin(_Dummy):
+                def get_stdin(self):
+                    return mock_stdin
+            # Call its run() as needed by test
+            runner = self._runner(klass=MockStdin, out=out)
+            runner.run(_, hide=True, responses=responses)
+            # Hand mocked stdin back to test for asserts
+            return mock_stdin
+
+        def nothing_is_written_to_stdin_by_default(self):
+            stdin = self._with_mock_stdin()
+            eq_(len(stdin.write.call_args_list), 0)
+
+        def string_keys_in_responses_kwarg_yield_values_as_stdin_writes(self):
+            skip()
+
+        def regex_keys_also_work(self):
+            skip()
 
 
 class Local_(Spec):

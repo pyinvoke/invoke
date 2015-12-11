@@ -290,12 +290,16 @@ class Runner(object):
                 output.write(data)
                 output.flush()
             buffer_.append(data)
+            self.respond(buffer_)
 
     def respond(self, buffer_):
         """
         Write to the program's ``stdin`` in response to ``buffer_`` patterns.
 
-        This functionality is driven by the key/value pairs in the
+        ``stdin`` is defined as "the stream returned by `get_stdin`", which
+        will vary by implementation.
+
+        The patterns and responses are driven by the key/value pairs in the
         ``responses`` kwarg of `run` - see its documentation for format
         details, and :doc:`/concepts/responses` for a conceptual overview.
         """
@@ -336,6 +340,14 @@ class Runner(object):
         """
         Return a function suitable for reading from a running command's stderr.
         """
+        raise NotImplementedError
+
+    def get_stdin(self):
+        """
+        Return a function suitable for writing to a running command's stdin.
+        """
+        # TODO: any reason not to make this a closed-over func return like
+        # out/err?
         raise NotImplementedError
 
     def default_encoding(self):
