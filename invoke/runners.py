@@ -84,6 +84,14 @@ class _IOThread(threading.Thread):
             self.exc_info = sys.exc_info()
 
     def exception(self):
+        """
+        If an exception occurred, return an `.ExceptionWrapper` around it.
+
+        :returns:
+            An `.ExceptionWrapper` managing the result of `sys.exc_info`, if an
+            exception was raised during thread execution. If no exception
+            occurred, returns ``None`` instead.
+        """
         if self.exc_info is None:
             return None
         return ExceptionWrapper(self.kwargs, *self.exc_info)
