@@ -149,9 +149,8 @@ class Runner(object):
         self.start(command)
         # Arrive at final encoding if neither config nor kwargs had one
         self.encoding = opts['encoding'] or self.default_encoding()
-        # Organize and start the IO threads
+        # Set up IO thread parameters
         stdout, stderr = [], []
-        threads = []
         argses = [
             (
                 self.stdout_reader(),
@@ -169,13 +168,14 @@ class Runner(object):
                     'err' in opts['hide'],
                 ),
             )
+        # Kick off IO threads
+        threads, exceptions = [], []
         for args in argses:
             t = _IOThread(target=self.io, args=args)
             threads.append(t)
             t.start()
         # Wait for completion, then tie things off & obtain result
         self.wait()
-        exceptions = []
         for t in threads:
             t.join()
             e = t.exception()
