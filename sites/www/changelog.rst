@@ -2,6 +2,9 @@
 Changelog
 =========
 
+* :feature:`228` (partial) Modified and expanded implementation of
+  `~invoke.executor.Executor`, `~invoke.tasks.Task` and `~invoke.tasks.Call` to
+  make implementing task parameterization easier.
 * :support:`-` Removed the ``-H`` short flag, leaving just ``--hide``. This was
   done to avoid conflicts with Fabric's host-oriented ``-H`` flag. Favoritism
   is real! Apologies.
