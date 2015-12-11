@@ -171,7 +171,7 @@ def mock_pty(out='', err='', exit=0, isatty=None, trailing_error=None):
             pty.fork.assert_called_with()
             # Test the 2nd call to ioctl; the 1st call is doing TIOGSWINSZ
             eq_(ioctl.call_args_list[1][0][1], termios.TIOCSWINSZ)
-            for name in ('execv', 'waitpid', 'WEXITSTATUS'):
+            for name in ('execve', 'waitpid', 'WEXITSTATUS'):
                 assert getattr(os, name).called
         return wrapper
     return decorator

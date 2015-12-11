@@ -205,6 +205,7 @@ class Runner(object):
             runtime = kwargs.pop(key, None)
             opts[key] = value if runtime is None else runtime
         # TODO: handle invalid kwarg keys (anything left in kwargs)
+        env = kwargs.pop('env', None)
         # Normalize 'hide' from one of the various valid input values
         opts['hide'] = normalize_hide(opts['hide'])
         # Derive stream objects
@@ -219,6 +220,13 @@ class Runner(object):
             print("\033[1;37m{0}\033[0m".format(command))
         # Determine pty or no
         self.using_pty = self.should_use_pty(opts['pty'], opts['fallback'])
+        # Environment variables
+        self.env = os.environ.copy()
+        if env is not None:
+            if env:
+                self.env.update(env)
+            else:
+                self.env = {}
         # Initiate command & kick off IO threads
         self.start(command)
         encoding = opts['encoding']
@@ -466,13 +474,16 @@ class Local(Runner):
                 # bash for now because that's what we have been testing
                 # against.
                 # TODO: also see if subprocess is using equivalent of execvp...
-                os.execv('/bin/bash', ['/bin/bash', '-c', command])
+                os.execve(
+                    '/bin/bash', ['/bin/bash', '-c', command], env=self.env
+                )
         else:
             self.process = Popen(
                 command,
                 shell=True,
                 stdout=PIPE,
                 stderr=PIPE,
+                env=self.env,
             )
 
     def default_encoding(self):
