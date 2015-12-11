@@ -237,7 +237,7 @@ class Runner(object):
 
     def io(self, reader, output, buffer_, hide):
         """
-        Perform I/O (reading, capturing & writing).
+        Perform I/O (reading, capturing & writing) as the body of 1+ threads.
 
         Specifically:
 
@@ -247,7 +247,7 @@ class Runner(object):
         * Decode the bytes into a string according to ``self.encoding``
           (typically derived from `default_encoding` or runtime keyword args).
         * Save a copy of the bytes in ``buffer_``, typically a `list`, which
-          the caller will expect to be mutated.
+          the calling thread will expect to be mutated.
         * If ``hide`` is ``False``, write bytes to ``output``, a stream such as
           `sys.stdout`.
         """
