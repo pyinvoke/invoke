@@ -380,7 +380,8 @@ class Runner_(Spec):
             eq_(len(stdin.write.call_args_list), 0)
 
         def string_keys_in_responses_kwarg_yield_values_as_stdin_writes(self):
-            skip()
+            stdin = self._with_mock_stdin(responses={"empty": "handed"})
+            stdin.write.assert_called_once_with("handed")
 
         def regex_keys_also_work(self):
             skip()

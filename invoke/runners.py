@@ -3,6 +3,7 @@
 import codecs
 import locale
 import os
+import re
 import struct
 import sys
 import threading
@@ -61,6 +62,8 @@ class Runner(object):
         self.context = context
         # Bookkeeping re: whether pty fallback warning has been emitted.
         self.warned_about_pty_fallback = False
+        # Bookkeeping re: call/response settings
+        self.responses = None
 
     def run(self, command, **kwargs):
         """
@@ -242,6 +245,8 @@ class Runner(object):
             err_stream = sys.stderr
         # Determine pty or no
         self.using_pty = self.should_use_pty(opts['pty'], opts['fallback'])
+        # Responses
+        self.responses = opts.get('responses', {})
         return opts, out_stream, err_stream
 
     def generate_result(self, **kwargs):
@@ -303,7 +308,20 @@ class Runner(object):
         ``responses`` kwarg of `run` - see its documentation for format
         details, and :doc:`/concepts/responses` for a conceptual overview.
         """
-        pass
+        # Join buffer contents into a single string; without this, we can't be
+        # sure that the pattern we seek isn't split up across chunks in the
+        # buffer.
+        # NOTE: using string.join should be "efficient enough" for now, re:
+        # speed and memory use. Should that turn up false, consider using
+        # StringIO or cStringIO (tho the latter doesn't do Unicode well?)
+        # which is apparently even more efficient.
+        # NOTE: alternately, examine whether only preserving a (still join'd)
+        # tail of the overall buffer would help - would probably help w/ memory
+        # at expense of performing more operations per cycle?
+        stream = u''.join(buffer_)
+        for pattern, response in six.iteritems(self.responses):
+            if re.search(pattern, stream):
+                self.get_stdin().write(response)
 
     def should_use_pty(self, pty, fallback):
         """

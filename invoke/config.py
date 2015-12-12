@@ -220,6 +220,7 @@ class Config(DataProxy):
                 'encoding': None,
                 'out_stream': None,
                 'err_stream': None,
+                'responses': {},
             },
             'tasks': {'dedupe': True},
         }
