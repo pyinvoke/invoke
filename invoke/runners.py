@@ -259,7 +259,7 @@ class Runner(object):
         """
         return Result(**kwargs)
 
-    def io(self, reader, output, buffer_, hide):
+    def io(self, reader, writer, buffer_, hide):
         """
         Perform I/O (reading, capturing & writing) as the body of 1+ threads.
 
@@ -274,7 +274,7 @@ class Runner(object):
           the calling thread will expect to be mutated.
         * Run ``buffer_`` through `respond` so it has the opportunity to write
           responses to the command's stdin (see `respond` for details).
-        * If ``hide`` is ``False``, write bytes to ``output``, a stream such as
+        * If ``hide`` is ``False``, write bytes to ``writer``, a stream such as
           `sys.stdout`.
         """
         # Inner generator yielding read data
@@ -292,8 +292,8 @@ class Runner(object):
         # Decode stream using our generator & requested encoding
         for data in codecs.iterdecode(get(), self.encoding, errors='replace'):
             if not hide:
-                output.write(data)
-                output.flush()
+                writer.write(data)
+                writer.flush()
             buffer_.append(data)
             self.respond(buffer_)
 
