@@ -165,27 +165,27 @@ class Runner(object):
         self.encoding = opts['encoding'] or self.default_encoding()
         # Set up IO thread parameters
         stdout, stderr = [], []
-        argses = [
-            (
-                self.stdout_reader(),
-                out_stream,
-                stdout,
-                'out' in opts['hide'],
-            ),
+        kwargses = [
+            {
+                'reader': self.stdout_reader(),
+                'writer': out_stream,
+                'buffer_': stdout,
+                'hide': 'out' in opts['hide'],
+            },
         ]
         if not self.using_pty:
-            argses.append(
-                (
-                    self.stderr_reader(),
-                    err_stream,
-                    stderr,
-                    'err' in opts['hide'],
-                ),
+            kwargses.append(
+                {
+                    'reader': self.stderr_reader(),
+                    'writer': err_stream,
+                    'buffer_': stderr,
+                    'hide': 'err' in opts['hide'],
+                },
             )
         # Kick off IO threads
         threads, exceptions = [], []
-        for args in argses:
-            t = _IOThread(target=self.io, args=args)
+        for kwargs in kwargses:
+            t = _IOThread(target=self.io, kwargs=kwargs)
             threads.append(t)
             t.start()
         # Wait for completion, then tie things off & obtain result
@@ -259,23 +259,35 @@ class Runner(object):
         """
         return Result(**kwargs)
 
-    def io(self, reader, writer, buffer_, hide):
+    def io(
+        self,
+        reader=None,
+        writer=None,
+        is_output=True,
+        buffer_=None,
+        hide=None,
+    ):
         """
         Perform I/O (reading, capturing & writing) as the body of 1+ threads.
 
-        Specifically:
+        At the very least, each call will copy data between two streams:
 
         * Read bytes from ``reader``, giving it some number of bytes to read at
           a time. (Typically this function is the result of `stdout_reader` or
-          `stderr_reader`.)
+          its siblings.)
         * Decode the bytes into a string according to ``self.encoding``
           (typically derived from `default_encoding` or runtime keyword args).
+        * If ``hide`` is ``False``, write those bytes to ``writer``, a stream
+          such as `sys.stdout`.
+
+        And if ``is_output`` is ``True`` (the default), it will also treat the
+        read side as process output, storing it & scanning for response
+        playback triggers:
+
         * Append a copy of the bytes to ``buffer_``, typically a `list`, which
           the calling thread will expect to be mutated.
         * Run ``buffer_`` through `respond` so it has the opportunity to write
           responses to the command's stdin (see `respond` for details).
-        * If ``hide`` is ``False``, write bytes to ``writer``, a stream such as
-          `sys.stdout`.
         """
         # Inner generator yielding read data
         def get():
@@ -294,8 +306,9 @@ class Runner(object):
             if not hide:
                 writer.write(data)
                 writer.flush()
-            buffer_.append(data)
-            self.respond(buffer_)
+            if is_output:
+                buffer_.append(data)
+                self.respond(buffer_)
 
     def respond(self, buffer_):
         """

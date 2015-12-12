@@ -343,7 +343,7 @@ class Runner_(Spec):
     class threading:
         def errors_within_io_thread_body_bubble_up(self):
             class Oops(_Dummy):
-                def io(self, reader, output, buffer_, hide):
+                def io(self, **kwargs):
                     raise OhNoz()
 
             runner = Oops(Context())
