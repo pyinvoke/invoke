@@ -134,6 +134,10 @@ class Runner(object):
             Same as ``out_stream``, except for standard error, and defaulting
             to ``sys.stderr``.
 
+        :param in_stream:
+            A file-like stream object to used as the subprocess' standard
+            input. If ``None`` (the default), ``sys.stdin`` will be used.
+
         :param dict responses:
             A `dict` whose keys are regular expressions to be searched for in
             the program's ``stdout`` or ``stderr``, and whose values may be any
@@ -155,7 +159,7 @@ class Runner(object):
             exceptions)
         """
         # Normalize kwargs w/ config
-        opts, out_stream, err_stream = self._run_opts(kwargs)
+        opts, out_stream, err_stream, in_stream = self._run_opts(kwargs)
         # Echo
         if opts['echo']:
             print("\033[1;37m{0}\033[0m".format(command))
@@ -172,6 +176,13 @@ class Runner(object):
                 'buffer_': stdout,
                 'hide': 'out' in opts['hide'],
             },
+            {
+                # Notice how these are reversed from the stdout/err threads!
+                'reader': in_stream,
+                'writer': self.stdin_writer(),
+                # Don't buffer or respond.
+                'is_output': False,
+            }
         ]
         if not self.using_pty:
             kwargses.append(
@@ -227,7 +238,9 @@ class Runner(object):
         """
         Unify `run` kwargs with config options to arrive at local options.
 
-        :returns: Three-tuple of ``(opts_dict, stdout_stream, stderr_stream)``.
+        :returns:
+            Four-tuple of ``(opts_dict, stdout_stream, stderr_stream,
+            stdin_stream)``.
         """
         opts = {}
         for key, value in six.iteritems(self.context.config.run):
@@ -243,11 +256,14 @@ class Runner(object):
         err_stream = opts['err_stream']
         if err_stream is None:
             err_stream = sys.stderr
+        in_stream = opts['in_stream']
+        if in_stream is None:
+            in_stream = sys.stdin
         # Determine pty or no
         self.using_pty = self.should_use_pty(opts['pty'], opts['fallback'])
         # Responses
         self.responses = opts.get('responses', {})
-        return opts, out_stream, err_stream
+        return opts, out_stream, err_stream, in_stream
 
     def generate_result(self, **kwargs):
         """
@@ -373,12 +389,10 @@ class Runner(object):
         """
         raise NotImplementedError
 
-    def get_stdin(self):
+    def stdin_writer(self):
         """
         Return a function suitable for writing to a running command's stdin.
         """
-        # TODO: any reason not to make this a closed-over func return like
-        # out/err?
         raise NotImplementedError
 
     def default_encoding(self):
@@ -453,7 +467,15 @@ class Local(Runner):
             return partial(os.read, self.process.stdout.fileno())
 
     def stderr_reader(self):
+        # NOTE: when using a pty, this will never be used.
+        # TODO: do we ever get those OSErrors on stderr? Feels like we could?
         return partial(os.read, self.process.stderr.fileno())
+
+    def stdin_writer(self):
+        # NOTE: parent_fd from os.fork() is a read/write pipe attached to our
+        # forked process' stdout/stdin, respectively.
+        fd = self.parent_fd if self.using_pty else self.process.stdin.fileno()
+        return partial(os.write, fd)
 
     def start(self, command):
         if self.using_pty:
@@ -491,6 +513,7 @@ class Local(Runner):
                 shell=True,
                 stdout=PIPE,
                 stderr=PIPE,
+                stdin=PIPE,
             )
 
     def default_encoding(self):
