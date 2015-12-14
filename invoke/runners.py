@@ -172,13 +172,13 @@ class Runner(object):
         kwargses = [
             {
                 'reader': self.stdout_reader(),
-                'writer': out_stream,
+                'writer': self.stdout_writer(out_stream),
                 'buffer_': stdout,
                 'hide': 'out' in opts['hide'],
             },
             {
                 # Notice how these are reversed from the stdout/err threads!
-                'reader': in_stream,
+                'reader': self.stdin_reader(in_stream),
                 'writer': self.stdin_writer(),
                 # Don't buffer or respond.
                 'is_output': False,
@@ -288,17 +288,17 @@ class Runner(object):
 
         At the very least, each call will copy data between two streams:
 
-        * Read bytes from ``reader``, giving it some number of bytes to read at
-          a time. (Typically this function is the result of `stdout_reader` or
-          its siblings.)
+        * Read bytes from a stream using the ``reader``function , giving it an
+          integer number of bytes to read.
         * Decode the bytes into a string according to ``self.encoding``
           (typically derived from `default_encoding` or runtime keyword args).
-        * If ``hide`` is ``False``, write those bytes to ``writer``, a stream
-          such as `sys.stdout`.
+        * If ``hide`` is ``False``, write those bytes using the ``writer``
+          function, which takes a ``str``/``bytes`` object and should write to
+          (and flush, if necessary) a stream.
 
-        And if ``is_output`` is ``True`` (the default), it will also treat the
-        read side as process output, storing it & scanning for response
-        playback triggers:
+        If ``is_output`` is ``True`` (the default), `io` will also treat the
+        output of ``reader`` as process output, storing it & scanning for
+        response playback triggers:
 
         * Append a copy of the bytes to ``buffer_``, typically a `list`, which
           the calling thread will expect to be mutated.
@@ -320,8 +320,7 @@ class Runner(object):
         # Decode stream using our generator & requested encoding
         for data in codecs.iterdecode(get(), self.encoding, errors='replace'):
             if not hide:
-                writer.write(data)
-                writer.flush()
+                writer(data)
             if is_output:
                 buffer_.append(data)
                 self.respond(buffer_)
@@ -364,6 +363,40 @@ class Runner(object):
         """
         # NOTE: fallback not used: no falling back implemented by default.
         return pty
+
+    def default_writer(self, stream):
+        """
+        Return a generic local-stream-writing function closing over ``stream``.
+
+        `default_writer` is effectively private and should never be called
+        directly. By default, `stdout_writer` and `stderr_writer` pass through
+        to `default_writer`, but the former are still the public interface -
+        this gives subclasses the option of altering their implementation.
+        """
+        def writer(data):
+            stream.write(data)
+            stream.flush()
+        return writer
+
+    def stdout_writer(self, stream):
+        """
+        Return a function suitable for writing data to a stdout ``stream``.
+        """
+        return self.default_writer(stream)
+
+    def stderr_writer(self, stream):
+        """
+        Return a function suitable for writing data to a stderr ``stream``.
+        """
+        return self.default_writer(stream)
+
+    def stdin_reader(self, stream):
+        """
+        Return a function suitable for reading data from a stdin ``stream``.
+        """
+        def reader(count):
+            return stream.read(count)
+        return reader
 
     def start(self, command):
         """
