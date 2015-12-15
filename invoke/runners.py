@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
 
 import codecs
+from functools import partial
 import locale
 import os
 import re
+import select
 import struct
+from subprocess import Popen, PIPE
 import sys
 import threading
-from functools import partial
-from subprocess import Popen, PIPE
 
 # Import some platform-specific things at top level so they can be mocked for
 # tests.
@@ -64,6 +65,13 @@ class Runner(object):
         self.warned_about_pty_fallback = False
         # Bookkeeping re: call/response settings
         self.responses = None
+        #: A `threading.Event` signaling program completion.
+        #:
+        #: Typically set after `wait` returns. Some IO mechanisms rely on this
+        #: to know when to exit an infinite read loop.
+        self.program_finished = threading.Event()
+        #: How many bytes (at maximum) to read per iteration of stream reads.
+        self.read_chunk_size = 1000
 
     def run(self, command, **kwargs):
         """
@@ -171,7 +179,7 @@ class Runner(object):
         stdout, stderr = [], []
         kwargses = [
             {
-                'reader': self.stdout_reader(),
+                'reader': self.stdout_reader,
                 'writer': self.stdout_writer(out_stream),
                 'buffer_': stdout,
                 'hide': 'out' in opts['hide'],
@@ -187,8 +195,8 @@ class Runner(object):
         if not self.using_pty:
             kwargses.append(
                 {
-                    'reader': self.stderr_reader(),
-                    'writer': err_stream,
+                    'reader': self.stderr_reader,
+                    'writer': self.stderr_writer(err_stream),
                     'buffer_': stderr,
                     'hide': 'err' in opts['hide'],
                 },
@@ -201,6 +209,7 @@ class Runner(object):
             t.start()
         # Wait for completion, then tie things off & obtain result
         self.wait()
+        self.program_finished.set()
         for t in threads:
             t.join()
             e = t.exception()
@@ -275,6 +284,17 @@ class Runner(object):
         """
         return Result(**kwargs)
 
+    def encode(self, data):
+        """
+        Encode ``data`` read from some I/O stream.
+        """
+        # Sometimes os.read gives us bytes under Python 3...and
+        # sometimes it doesn't. ¯\_(ツ)_/¯
+        if not isinstance(data, six.binary_type):
+            # Can't use six.b because that just assumes latin-1 :(
+            data = data.encode(self.encoding)
+        return data
+
     def io(
         self,
         reader=None,
@@ -288,13 +308,16 @@ class Runner(object):
 
         At the very least, each call will copy data between two streams:
 
-        * Read bytes from a stream using the ``reader``function , giving it an
-          integer number of bytes to read.
-        * Decode the bytes into a string according to ``self.encoding``
-          (typically derived from `default_encoding` or runtime keyword args).
+        * Read bytes from a stream using the ``reader`` generator, which
+          typically yields `read_chunk_size` bytes per iteration.
+
+            * ``reader`` is also responsible for decoding the bytes into a
+              string according to ``self.encoding`` (typically derived from
+              `default_encoding` or runtime keyword args)
+
         * If ``hide`` is ``False``, write those bytes using the ``writer``
           function, which takes a ``str``/``bytes`` object and should write to
-          (and flush, if necessary) a stream.
+          (and flush, if necessary) a stream (file-like object).
 
         If ``is_output`` is ``True`` (the default), `io` will also treat the
         output of ``reader`` as process output, storing it & scanning for
@@ -305,20 +328,10 @@ class Runner(object):
         * Run ``buffer_`` through `respond` so it has the opportunity to write
           responses to the command's stdin (see `respond` for details).
         """
-        # Inner generator yielding read data
-        def get():
-            while True:
-                data = reader(1000)
-                if not data:
-                    break
-                # Sometimes os.read gives us bytes under Python 3...and
-                # sometimes it doesn't. ¯\_(ツ)_/¯
-                if not isinstance(data, six.binary_type):
-                    # Can't use six.b because that just assumes latin-1 :(
-                    data = data.encode(self.encoding)
-                yield data
         # Decode stream using our generator & requested encoding
-        for data in codecs.iterdecode(get(), self.encoding, errors='replace'):
+        for data in codecs.iterdecode(
+            reader(), self.encoding, errors='replace'
+        ):
             if not hide:
                 writer(data)
             if is_output:
@@ -392,10 +405,53 @@ class Runner(object):
 
     def stdin_reader(self, stream):
         """
-        Return a function suitable for reading data from a stdin ``stream``.
+        Return a generator yielding data from a stdin ``stream``.
+
+        Unlike the other 'read' actions in this class (namely, reading from
+        the subprocess' out and err streams) reading from an actual terminal
+        stdin is trickier:
+        
+        * reading from stdin tends to block since there may never be any of it,
+          and when there is, it's typically sporadic;
+        * there's no clear 'stop' signal such as "perfomed a ``read`` and got
+          no data back".
+
+        Thus, most implementations of this method will use nonblocking read
+        solutions such as combining `select.select` and `time.sleep`, and refer
+        to `program_finished` as an explicit signal for when to stop reading.
         """
-        def reader(count):
-            return stream.read(count)
+        def reader():
+            while not self.program_finished.is_set():
+                # Much of this is taken directly from Fabric 1.x's io.input_loop
+                # function as of f6475e3f4cd09862bcf6e732f28bf52b42129104.
+                if WINDOWS:
+                    #have_char = msvcrt.kbhit()
+                    pass # TODO: reinstate above
+                else:
+                    # TODO: how to handle file-LIKE objects here? won't
+                    # select die on anything without a real fileno? Should we
+                    # detect fileno and switch to .read in its absense,
+                    # assuming that filelike objects won't block?
+                    r, w, x = select.select([stream], [], [], 0.0)
+                    have_char = (r and r[0] == stream)
+                # TODO: reinstate lock/whatever thread logic from fab v1 which
+                # prevents reading from stdin while other parts of the code are
+                # prompting for runtime passwords? (search for 'input_enabled')
+                if have_char and chan.input_enabled:
+                    # Send all local stdin to remote end's stdin
+                    #byte = msvcrt.getch() if WINDOWS else sys.stdin.read(1)
+                    # TODO: use read_chunk_size? otherwise multibyte==broked
+                    yield self.encode(sys.stdin.read(1))
+                    # Optionally echo locally, if needed.
+                    # TODO: how to truly do this? access the out_stream which
+                    # isn't visible to us? don't bother?
+                    #if not using_pty and env.echo_stdin:
+                        # Not using fastprint() here -- it prints as 'user'
+                        # output level, don't want it to be accidentally hidden
+                    #    sys.stdout.write(byte)
+                    #    sys.stdout.flush()
+                # TODO: is sleeping still necessary now that it's a generator?
+                #time.sleep(0.01) # TODO: store this in config
         return reader
 
     def start(self, command):
@@ -412,13 +468,13 @@ class Runner(object):
 
     def stdout_reader(self):
         """
-        Return a function suitable for reading from a running command's stdout.
+        Return a generator yielding data from a running command's stdout.
         """
         raise NotImplementedError
 
     def stderr_reader(self):
         """
-        Return a function suitable for reading from a running command's stderr.
+        Return a generator yielding data from a running command's stderr.
         """
         raise NotImplementedError
 
@@ -481,10 +537,12 @@ class Local(Runner):
                 use_pty = False
         return use_pty
 
-    def stdout_reader(self):
+    def _stdout_reader(self):
+        # Obtain useful read-some-bytes function
+        get_bytes = partial(os.read, self.process.stdout.fileno())
         if self.using_pty:
             # Need to handle spurious OSErrors on some Linux platforms.
-            def reader(num_bytes):
+            def get_bytes(num_bytes):
                 try:
                     return os.read(self.parent_fd, num_bytes)
                 except OSError as e:
@@ -495,14 +553,28 @@ class Local(Runner):
                     # appeared, so we return a falsey value, which triggers the
                     # "end of output" logic in code using reader functions.
                     return None
-            return reader
-        else:
-            return partial(os.read, self.process.stdout.fileno())
+        return get_bytes
+
+    def stdout_reader(self):
+        # Have to obtain reader func after .start has been called;
+        # otherwise self.process won't exist yet.
+        get_bytes = self._stdout_reader()
+        while True:
+            data = get_bytes(self.read_chunk_size)
+            if not data:
+                break
+            yield self.encode(data)
 
     def stderr_reader(self):
         # NOTE: when using a pty, this will never be used.
         # TODO: do we ever get those OSErrors on stderr? Feels like we could?
-        return partial(os.read, self.process.stderr.fileno())
+        while True:
+            data = os.read(
+                self.process.stderr.fileno(), self.read_chunk_size
+            )
+            if not data:
+                break
+            yield self.encode(data)
 
     def stdin_writer(self):
         # NOTE: parent_fd from os.fork() is a read/write pipe attached to our

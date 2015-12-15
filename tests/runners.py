@@ -62,10 +62,10 @@ def _runner(out='', err='', **kwargs):
         runner.returncode = Mock(return_value=kwargs.pop('exits'))
     out_file = StringIO(out)
     err_file = StringIO(err)
-    def out_reader(count):
-        return out_file.read(count)
-    def err_reader(count):
-        return err_file.read(count)
+    def out_reader():
+        return out_file.read(runner.read_chunk_size)
+    def err_reader():
+        return err_file.read(runner.read_chunk_size)
     runner.stdout_reader = lambda: out_reader
     runner.stderr_reader = lambda: err_reader
     return runner
