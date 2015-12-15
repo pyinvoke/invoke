@@ -386,6 +386,15 @@ class Runner_(Spec):
         def regex_keys_also_work(self):
             skip()
 
+        def parent_stdin_is_passed_through(self):
+            skip()
+
+        def input_defaults_to_sys_stdin(self):
+            skip()
+
+        def input_stream_can_be_overridden(self):
+            skip()
+
 
 class Local_(Spec):
     def _run(self, *args, **kwargs):
