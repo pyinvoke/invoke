@@ -1,3 +1,5 @@
+|build-status| |coverage-status|
+
 Invoke is a Python (2.6+ and 3.2+) task execution tool & library, drawing
 inspiration from various sources to arrive at a powerful & clean feature set.
 
@@ -50,3 +52,8 @@ http://pyinvoke.org. Post-install usage information may be found in ``invoke
 You can install the `development version
 <https://github.com/pyinvoke/invoke/tarball/master#egg=invoke-dev>`_ via ``pip
 install invoke==dev --allow-unverified invoke``.
+
+.. |build-status| image:: https://travis-ci.org/pyinvoke/invoke.svg?branch=master
+   :target: https://travis-ci.org/pyinvoke/invoke
+.. |coverage-status| image:: https://coveralls.io/repos/pyinvoke/invoke/badge.png
+   :target: https://coveralls.io/r/pyinvoke/invoke
