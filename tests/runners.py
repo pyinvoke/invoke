@@ -308,36 +308,30 @@ class Runner_(Spec):
             eq_(sys.stdout.getvalue(), "")
 
     class input_stream_handling:
-        def _mock_stdin(self):
-            # TODO: figure out how to use decorator instead, but still callable
-            # from other tests, see what we do elsewhere
-            with patch('invoke.runners.sys.stdin', StringIO()) as sys_stdin:
-                # Runner subclass with mocked stdin-writing method
-                class MockStdin(_Dummy):
-                    pass
-                write_stdin = Mock()
-                MockStdin.write_stdin = write_stdin
-                # Prime mocked sys.stdin with data.
-                # TODO: write during execution instead of before? Go the other
-                # way and just put it in the StringIO constructor?)
-                sys_stdin.write("Standard input!")
-                sys_stdin.seek(0) # Otherwise .read() does jack-all
-                # Execute w/ that runner class
-                runner = self._runner(klass=MockStdin)
-                runner.run(_)
-                # Make assertions about what happened w/ write_stdin
-                write_stdin.assert_called_once_with("Standard input!")
-
         # NOTE: actual autoresponder tests are elsewhere. These just test that
         # stdin works normally & can be overridden.
-        def input_defaults_to_sys_stdin(self):
-            self._mock_stdin()
-            #class 
-            #sys_stdin.write("Standard input!")
+        def _mock_stdin_writer(self):
+            """
+            Return new _Dummy-based class whose write_stdin() method is a mock.
+            """
+            class MockedStdin(_Dummy):
+                pass
+            MockedStdin.write_stdin = Mock()
+            return MockedStdin
 
+        @patch('invoke.runners.sys.stdin', StringIO("Text!"))
+        def input_defaults_to_sys_stdin(self):
+            # Execute w/ runner class that has a mocked stdin_writer
+            klass = self._mock_stdin_writer()
+            self._runner(klass=klass).run(_)
+            # Check that mocked writer was called w/ expected data
+            klass.write_stdin.assert_called_once_with("Text!")
 
         def input_stream_can_be_overridden(self):
-            skip()
+            klass = self._mock_stdin_writer()
+            in_stream = StringIO("Hey, listen!")
+            self._runner(klass=klass).run(_, in_stream=in_stream)
+            klass.write_stdin.assert_called_once_with("Hey, listen!")
 
     class failure_handling:
         @raises(Failure)
