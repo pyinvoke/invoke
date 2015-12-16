@@ -426,7 +426,7 @@ class Runner_(Spec):
             self._expect_response(
                 out="jump, wait, jump, wait",
                 responses={'jump': 'how high?'},
-            ).assert_has_calls([holla, holla, holla])
+            ).assert_has_calls([holla, holla])
 
 
 class Local_(Spec):

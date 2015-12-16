@@ -462,7 +462,9 @@ class Runner(object):
         # at expense of performing more operations per cycle?
         stream = u''.join(buffer_)
         for pattern, response in six.iteritems(self.responses):
-            if re.search(pattern, stream):
+            # Iterate over findall() response in case >1 match occurred
+            # TODO: we need to keep track of what we've already responded to!
+            for match in re.findall(pattern, stream):
                 # TODO: automatically append system-appropriate newline if
                 # response doesn't end with it, w/ option to disable?
                 self.write_stdin(response)
