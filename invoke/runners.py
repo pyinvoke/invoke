@@ -183,13 +183,9 @@ class Runner(object):
                 'hide': 'out' in opts['hide'],
                 'output': out_stream,
             },
-            #self.handle_stdin: {
-            #    # Notice how these are reversed from the stdout/err threads!
-            #    'reader': self.stdin_reader(in_stream),
-            #    'writer': self.stdin_writer(),
-            #    # Don't buffer or respond.
-            #    'is_output': False,
-            #}
+            self.handle_stdin: {
+                'input_': in_stream,
+            }
         }
         if not self.using_pty:
             thread_args[self.handle_stderr] = {
@@ -320,7 +316,7 @@ class Runner(object):
             # insofar as no reading occurs until after the thread is join()'d.
             buffer_.append(data)
             # Run the current buffer contents through the autoresponder.
-            self.respond(buffer_)
+            #self.respond(buffer_)
 
     def handle_stdout(self, buffer_, hide, output):
         """
@@ -340,6 +336,8 @@ class Runner(object):
         # Stdout and stderr have identical behavior in most implementations,
         # differing only by the actual read action, which is delegated to
         # self.read_stdout/read_stderr.
+        # TODO: uh did we stop being able to override faked input streams? why
+        # don't the tests fail??
         self._handle_output(buffer_, hide, output, reader=self.read_stdout)
 
     def handle_stderr(self, buffer_, hide, output):
@@ -352,7 +350,7 @@ class Runner(object):
         # NOTE: see comment above in handle_stdout re: why the delegation
         self._handle_output(buffer_, hide, output, reader=self.read_stderr)
 
-    def handle_stdin(self):
+    def handle_stdin(self, input_):
         """
         Read local stdin, copying into process' stdin as necessary.
 
@@ -360,7 +358,7 @@ class Runner(object):
         "end", this method terminates when it sees that `program_finished` has
         been set.
 
-        :param meh:
+        :param input_: Stream (file-like object) from which to read.
 
         :returns: ``None``.
         """
@@ -370,7 +368,57 @@ class Runner(object):
         #   the encoding performed on stdout/err is necessary because we need
         #   to present it as a string to the user. Not the case here, and
         #   arguably could cause problems if we did.
-        #   - write to process stdin (impl dependent)
+        #   - write to process stdin (impl dependent - use .write_stdin())
+        #       - TODO: then have respond() use .write_stdin() too
+        
+        # TODO: all TODOs in commented chunk below this one!
+        while not self.program_finished.is_set():
+            reads, _, _ = select.select([input_], [], [], 0.0)
+            if reads and reads[0] is input_:
+                # TODO: will regular sys.stdin.read still honor the "up-to"
+                # behavior of the int arg, or will it block anyways? Fab v1
+                # always read 1 char at a time, presumably for reasons, but
+                # this will preclude doing anything useful with multibyte
+                # encodings if we actually care. If we continue to blindly
+                # pass-through, though, we probably don't care...
+                self.write_stdin(input_.read(self.read_chunk_size))
+
+        #while not self.program_finished.is_set():
+        #    # Much of this is taken directly from Fabric 1.x's io.input_loop
+        #    # function as of f6475e3f4cd09862bcf6e732f28bf52b42129104.
+        #    if WINDOWS:
+        #        #have_char = msvcrt.kbhit()
+        #        pass # TODO: reinstate above
+        #    else:
+        #        # Use select() instead of stream.read, because stdin will
+        #        # block otherwise
+        #        # TODO: how to handle file-LIKE objects here? won't
+        #        # select die on anything without a real fileno? Should we
+        #        # detect fileno and switch to .read in its absense,
+        #        # assuming that filelike objects won't block?
+        #        r, w, x = select.select([stream], [], [], 0.0)
+        #        have_char = (r and r[0] == stream)
+        #    # TODO: reinstate lock/whatever thread logic from fab v1 which
+        #    # prevents reading from stdin while other parts of the code are
+        #    # prompting for runtime passwords? (search for 'input_enabled')
+        #    if have_char and chan.input_enabled:
+        #        # Send all local stdin to remote end's stdin
+        #        #byte = msvcrt.getch() if WINDOWS else sys.stdin.read(1)
+        #        # TODO: use read_chunk_size? otherwise multibyte==broked
+        #        yield self.encode(sys.stdin.read(1))
+        #        # Optionally echo locally, if needed.
+        #        # TODO: how to truly do this? access the out_stream which
+        #        # isn't currently visible to us? if we just skip this part,
+        #        # interactive users may not have their input echoed...ISTR we
+        #        # used to assume remote would send it back down stdout/err, but
+        #        # clearly not?
+        #        #if not using_pty and env.echo_stdin:
+        #            # Not using fastprint() here -- it prints as 'user'
+        #            # output level, don't want it to be accidentally hidden
+        #        #    sys.stdout.write(byte)
+        #        #    sys.stdout.flush()
+        #    # TODO: is sleeping still necessary now that it's a generator?
+        #    #time.sleep(0.01) # TODO: store this in config
 
     def respond(self, buffer_):
         """
@@ -411,57 +459,6 @@ class Runner(object):
         # NOTE: fallback not used: no falling back implemented by default.
         return pty
 
-    def stdin_reader(self, stream):
-        """
-        Return a generator yielding data from a stdin ``stream``.
-
-        Unlike the other 'read' actions in this class (namely, reading from
-        the subprocess' out and err streams) reading from an actual terminal
-        stdin is trickier:
-        
-        * reading from stdin tends to block since there may never be any of it,
-          and when there is, it's typically sporadic;
-        * there's no clear 'stop' signal such as "perfomed a ``read`` and got
-          no data back".
-
-        Thus, most implementations of this method will use nonblocking read
-        solutions such as combining `select.select` and `time.sleep`, and refer
-        to `program_finished` as an explicit signal for when to stop reading.
-        """
-        def reader():
-            while not self.program_finished.is_set():
-                # Much of this is taken directly from Fabric 1.x's io.input_loop
-                # function as of f6475e3f4cd09862bcf6e732f28bf52b42129104.
-                if WINDOWS:
-                    #have_char = msvcrt.kbhit()
-                    pass # TODO: reinstate above
-                else:
-                    # TODO: how to handle file-LIKE objects here? won't
-                    # select die on anything without a real fileno? Should we
-                    # detect fileno and switch to .read in its absense,
-                    # assuming that filelike objects won't block?
-                    r, w, x = select.select([stream], [], [], 0.0)
-                    have_char = (r and r[0] == stream)
-                # TODO: reinstate lock/whatever thread logic from fab v1 which
-                # prevents reading from stdin while other parts of the code are
-                # prompting for runtime passwords? (search for 'input_enabled')
-                if have_char and chan.input_enabled:
-                    # Send all local stdin to remote end's stdin
-                    #byte = msvcrt.getch() if WINDOWS else sys.stdin.read(1)
-                    # TODO: use read_chunk_size? otherwise multibyte==broked
-                    yield self.encode(sys.stdin.read(1))
-                    # Optionally echo locally, if needed.
-                    # TODO: how to truly do this? access the out_stream which
-                    # isn't visible to us? don't bother?
-                    #if not using_pty and env.echo_stdin:
-                        # Not using fastprint() here -- it prints as 'user'
-                        # output level, don't want it to be accidentally hidden
-                    #    sys.stdout.write(byte)
-                    #    sys.stdout.flush()
-                # TODO: is sleeping still necessary now that it's a generator?
-                #time.sleep(0.01) # TODO: store this in config
-        return reader
-
     def start(self, command):
         """
         Initiate execution of ``command`` in the background.
@@ -494,9 +491,9 @@ class Runner(object):
         """
         raise NotImplementedError
 
-    def stdin_writer(self):
+    def write_stdin(self, data):
         """
-        Return a function suitable for writing to a running command's stdin.
+        Write ``data`` to the running process' stdin.
         """
         raise NotImplementedError
 

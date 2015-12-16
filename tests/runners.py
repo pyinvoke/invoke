@@ -27,6 +27,9 @@ class _Dummy(Runner):
     def read_stderr(self, num_bytes):
         return ""
 
+    def write_stdin(self, data):
+        pass
+
     def default_encoding(self):
         return "US-ASCII"
 
@@ -304,6 +307,36 @@ class Runner_(Spec):
             eq_(out.getvalue(), "yo")
             eq_(sys.stdout.getvalue(), "")
 
+    class input_stream_handling:
+        def _mock_stdin(self):
+            # TODO: figure out how to use decorator instead, but still callable
+            # from other tests, see what we do elsewhere
+            with patch('invoke.runners.sys.stdin', StringIO()) as sys_stdin:
+                # Runner subclass with mocked stdin-writing method
+                class MockStdin(_Dummy):
+                    pass
+                write_stdin = Mock()
+                MockStdin.write_stdin = write_stdin
+                # Prime mocked sys.stdin with data (TODO: write during execution?)
+                sys_stdin.write("Standard input!")
+                # Execute w/ that runner class
+                runner = self._runner(klass=MockStdin)
+                runner.run(_)
+                # Make assertions about what happened w/ write_stdin
+                print write_stdin.mock_calls
+                assert False
+
+        # NOTE: actual autoresponder tests are elsewhere. These just test that
+        # stdin works normally & can be overridden.
+        def input_defaults_to_sys_stdin(self):
+            self._mock_stdin()
+            #class 
+            #sys_stdin.write("Standard input!")
+
+
+        def input_stream_can_be_overridden(self):
+            skip()
+
     class failure_handling:
         @raises(Failure)
         def fast_failures(self):
@@ -357,39 +390,20 @@ class Runner_(Spec):
                 assert False, "Did not raise ThreadException as expected!"
 
     class responding:
-        def _with_mock_stdin(self, responses=None, out="don't be empty"):
-            skip()
-            responses = responses or {}
-            # Obtain Runner with mocked stdin
-            mock_stdin = Mock(spec=StringIO)
-            class MockStdin(_Dummy):
-                def get_stdin(self):
-                    return mock_stdin
-            # Call its run() as needed by test
-            runner = self._runner(klass=MockStdin, out=out)
-            runner.run(_, hide=True, responses=responses)
-            # Hand mocked stdin back to test for asserts
-            return mock_stdin
-
+        # TODO: how best to access _with_mock_stdin() above?
         def nothing_is_written_to_stdin_by_default(self):
+            skip()
             stdin = self._with_mock_stdin()
             eq_(len(stdin.write.call_args_list), 0)
 
         def string_keys_in_responses_kwarg_yield_values_as_stdin_writes(self):
+            skip()
             stdin = self._with_mock_stdin(responses={"empty": "handed"})
             stdin.write.assert_called_once_with("handed")
 
         def regex_keys_also_work(self):
             skip()
 
-        def parent_stdin_is_passed_through(self):
-            skip()
-
-        def input_defaults_to_sys_stdin(self):
-            skip()
-
-        def input_stream_can_be_overridden(self):
-            skip()
 
 
 class Local_(Spec):
