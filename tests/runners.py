@@ -4,7 +4,7 @@ import types
 from invoke.vendor.six import StringIO
 
 from spec import Spec, trap, eq_, skip, ok_, raises, assert_contains
-from mock import patch, Mock
+from mock import patch, Mock, call
 
 from invoke import Runner, Local, Context, Config, Failure, ThreadException
 
@@ -389,17 +389,44 @@ class Runner_(Spec):
     class responding:
         # TODO: how best to access _with_mock_stdin() above?
         def nothing_is_written_to_stdin_by_default(self):
-            skip()
-            stdin = self._with_mock_stdin()
-            eq_(len(stdin.write.call_args_list), 0)
+            # NOTE: technically if some goofus ran the tests by hand and mashed
+            # keys while doing so...this would fail. LOL?
+            # NOTE: this test seems not too useful but is a) a sanity test and
+            # b) guards against e.g. breaking the autoresponder such that it
+            # responds to "" or "\n" or etc.
+            klass = self._mock_stdin_writer()
+            self._runner(klass=klass).run(_)
+            ok_(not klass.write_stdin.called)
+
+        def _expect_response(self, out, responses):
+            """
+            Execute a run() w/ proc output ``out`` & ``responses`` set.
+
+            :returns: The mocked ``write_stdin`` method of the runner.
+            """
+            klass = self._mock_stdin_writer()
+            runner = self._runner(klass=klass, out=out)
+            runner.run(_, responses=responses, hide=True)
+            return klass.write_stdin
 
         def string_keys_in_responses_kwarg_yield_values_as_stdin_writes(self):
-            skip()
-            stdin = self._with_mock_stdin(responses={"empty": "handed"})
-            stdin.write.assert_called_once_with("handed")
+            self._expect_response(
+                out="the house was empty",
+                responses={'empty': 'handed'},
+            ).assert_called_once_with("handed")
 
         def regex_keys_also_work(self):
-            skip()
+            self._expect_response(
+                out="technically, it's still debt",
+                responses={r'tech.*debt': 'pay it down'},
+            ).assert_called_once_with('pay it down')
+
+        def multiple_hits_yields_multiple_responses(self):
+            holla = call('how high?')
+            self._expect_response(
+                out="jump, wait, jump, wait",
+                responses={'jump': 'how high?'},
+            ).assert_has_calls([holla, holla, holla])
 
 
 class Local_(Spec):

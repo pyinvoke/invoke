@@ -317,7 +317,7 @@ class Runner(object):
             # insofar as no reading occurs until after the thread is join()'d.
             buffer_.append(data)
             # Run the current buffer contents through the autoresponder.
-            #self.respond(buffer_)
+            self.respond(buffer_)
 
     def handle_stdout(self, buffer_, hide, output):
         """
@@ -442,10 +442,9 @@ class Runner(object):
 
     def respond(self, buffer_):
         """
-        Write to the program's ``stdin`` in response to ``buffer_`` patterns.
+        Write to the program's stdin in response to ``buffer_`` patterns.
 
-        ``stdin`` is defined as "the stream returned by `get_stdin`", which
-        will vary by implementation.
+        Writing is accomplished by use of `write_stdin`.
 
         The patterns and responses are driven by the key/value pairs in the
         ``responses`` kwarg of `run` - see its documentation for format
@@ -464,7 +463,9 @@ class Runner(object):
         stream = u''.join(buffer_)
         for pattern, response in six.iteritems(self.responses):
             if re.search(pattern, stream):
-                self.get_stdin().write(response)
+                # TODO: automatically append system-appropriate newline if
+                # response doesn't end with it, w/ option to disable?
+                self.write_stdin(response)
 
     def should_use_pty(self, pty, fallback):
         """
