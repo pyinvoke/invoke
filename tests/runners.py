@@ -401,7 +401,6 @@ class Runner_(Spec):
             skip()
 
 
-
 class Local_(Spec):
     def _run(self, *args, **kwargs):
         return _run(*args, **dict(kwargs, klass=Local))
