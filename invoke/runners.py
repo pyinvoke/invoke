@@ -355,34 +355,53 @@ class Runner(object):
         """
         Read local stdin, copying into process' stdin as necessary.
 
-        Intended for use as a thread target. Because stdin has no reliable
-        "end", this method terminates when it sees that `program_finished` has
-        been set.
+        Intended for use as a thread target.
+
+        .. note::
+            Because real terminal stdin streams have no well-defined "end", if
+            such a stream is detected (based on existence of a callable
+            ``.fileno()``) this method will wait until `program_finished` is
+            set, before terminating.
+
+            When the stream doesn't appear to be from a terminal, the same
+            semantics as `handle_stdout` are used - the stream is simply
+            ``read()`` from until it returns an empty value.
 
         :param input_: Stream (file-like object) from which to read.
 
         :returns: ``None``.
         """
-        # While not program_finished.set:
-        #   - read from in_stream (generic)
-        #   TODO: bother encoding? we probably don't want to get in the way;
-        #   the encoding performed on stdout/err is necessary because we need
-        #   to present it as a string to the user. Not the case here, and
-        #   arguably could cause problems if we did.
-        #   - write to process stdin (impl dependent - use .write_stdin())
-        #       - TODO: then have respond() use .write_stdin() too
-        
         # TODO: all TODOs in commented chunk below this one!
+        use_select = is_terminal_stream(input_)
         while not self.program_finished.is_set():
-            reads, _, _ = select.select([input_], [], [], 0.0)
-            if reads and reads[0] is input_:
+            # "real" terminal stdin needs select() to tell us when it's ready
+            # for a nonblocking read().
+            if use_select:
+                reads, _, _ = select.select([input_], [], [], 0.0)
+                ready = reads and reads[0] is input_
+            # Otherwise, assume a "safer" file-like object that can be
+            # read from in a nonblocking fashion (e.g. a StringIO or regular
+            # file).
+            else:
+                ready = True
+            if ready:
                 # TODO: will regular sys.stdin.read still honor the "up-to"
                 # behavior of the int arg, or will it block anyways? Fab v1
                 # always read 1 char at a time, presumably for reasons, but
                 # this will preclude doing anything useful with multibyte
                 # encodings if we actually care. If we continue to blindly
                 # pass-through, though, we probably don't care...
-                self.write_stdin(input_.read(self.read_chunk_size))
+                data = input_.read(self.read_chunk_size)
+                # Short-circuit if not using select() and appeared to hit
+                # end-of-stream.
+                if not use_select and not data:
+                    break
+                # NOTE: while .handle_stdout\err perform encoding/decoding
+                # between read & write, we've explicitly chosen NOT to do so
+                # here as it feels risky and there's no clear reason to at this
+                # time.
+                # Just write the data to the process as-is.
+                self.write_stdin(data)
 
         #while not self.program_finished.is_set():
         #    # Much of this is taken directly from Fabric 1.x's io.input_loop

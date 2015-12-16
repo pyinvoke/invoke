@@ -317,14 +317,16 @@ class Runner_(Spec):
                     pass
                 write_stdin = Mock()
                 MockStdin.write_stdin = write_stdin
-                # Prime mocked sys.stdin with data (TODO: write during execution?)
+                # Prime mocked sys.stdin with data.
+                # TODO: write during execution instead of before? Go the other
+                # way and just put it in the StringIO constructor?)
                 sys_stdin.write("Standard input!")
+                sys_stdin.seek(0) # Otherwise .read() does jack-all
                 # Execute w/ that runner class
                 runner = self._runner(klass=MockStdin)
                 runner.run(_)
                 # Make assertions about what happened w/ write_stdin
-                print write_stdin.mock_calls
-                assert False
+                write_stdin.assert_called_once_with("Standard input!")
 
         # NOTE: actual autoresponder tests are elsewhere. These just test that
         # stdin works normally & can be overridden.
