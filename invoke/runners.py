@@ -28,6 +28,7 @@ except ImportError:
 
 from .exceptions import Failure, ThreadException, ExceptionWrapper
 from .platform import WINDOWS, pty_size
+from .util import is_terminal_stream
 
 from .vendor import six
 
@@ -539,8 +540,7 @@ class Local(Runner):
         if pty:
             use_pty = True
             seems_pty = (
-                hasattr(sys.stdin, 'fileno')
-                and callable(sys.stdin.fileno)
+                is_terminal_stream(sys.stdin)
                 and os.isatty(sys.stdin.fileno())
             )
             if not seems_pty and fallback:
