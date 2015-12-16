@@ -446,15 +446,23 @@ class Runner(object):
         #    # TODO: is sleeping still necessary now that it's a generator?
         #    #time.sleep(0.01) # TODO: store this in config
 
-    def respond(self, buffer_):
+    def respond(self, data):
         """
-        Write to the program's stdin in response to ``buffer_`` patterns.
-
-        Writing is accomplished by use of `write_stdin`.
+        Write to the program's stdin in response to patterns in ``data``.
 
         The patterns and responses are driven by the key/value pairs in the
         ``responses`` kwarg of `run` - see its documentation for format
         details, and :doc:`/concepts/responses` for a conceptual overview.
+
+        .. warning::
+            ``data`` should be **new** stream data read by the caller, who is
+            responsible for ensuring that this method isn't handed data it's
+            already seen. (If that happens, the responder may duplicate
+            responses!)
+
+        :param data: String/bytes data read from a stdout/stderr stream.
+
+        :returns: ``None``.
         """
         # Join buffer contents into a single string; without this, we can't be
         # sure that the pattern we seek isn't split up across chunks in the
