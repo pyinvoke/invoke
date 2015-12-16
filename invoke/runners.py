@@ -41,7 +41,6 @@ class Runner(object):
     number of methods such as `start`, `wait` and `returncode`. For a subclass
     implementation example, see the source code for `.Local`.
     """
-    #: How many bytes (at maximum) to read per iteration of stream reads.
     read_chunk_size = 1000
 
     def __init__(self, context):
@@ -74,6 +73,12 @@ class Runner(object):
         #: Typically set after `wait` returns. Some IO mechanisms rely on this
         #: to know when to exit an infinite read loop.
         self.program_finished = threading.Event()
+        # I wish Sphinx would organize all class/instance attrs in the same
+        # place. If I don't do this here, it goes 'class vars -> __init__
+        # docstring -> instance vars' :( TODO: consider just merging class and
+        # __init__ docstrings, though that's annoying too.
+        #: How many bytes (at maximum) to read per iteration of stream reads.
+        self.read_chunk_size = self.__class__.read_chunk_size
 
     def run(self, command, **kwargs):
         """
