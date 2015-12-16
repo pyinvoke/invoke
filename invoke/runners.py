@@ -175,36 +175,32 @@ class Runner(object):
         self.start(command)
         # Arrive at final encoding if neither config nor kwargs had one
         self.encoding = opts['encoding'] or self.default_encoding()
-        # Set up IO thread parameters
+        # Set up IO thread parameters (format - body_func: {kwargs})
         stdout, stderr = [], []
-        kwargses = [
-            {
-                'reader': self.stdout_reader,
-                'writer': self.stdout_writer(out_stream),
+        thread_args = {
+            self.handle_stdout: {
                 'buffer_': stdout,
                 'hide': 'out' in opts['hide'],
+                'output': out_stream,
             },
-            {
-                # Notice how these are reversed from the stdout/err threads!
-                'reader': self.stdin_reader(in_stream),
-                'writer': self.stdin_writer(),
-                # Don't buffer or respond.
-                'is_output': False,
-            }
-        ]
+            #self.handle_stdin: {
+            #    # Notice how these are reversed from the stdout/err threads!
+            #    'reader': self.stdin_reader(in_stream),
+            #    'writer': self.stdin_writer(),
+            #    # Don't buffer or respond.
+            #    'is_output': False,
+            #}
+        }
         if not self.using_pty:
-            kwargses.append(
-                {
-                    'reader': self.stderr_reader,
-                    'writer': self.stderr_writer(err_stream),
-                    'buffer_': stderr,
-                    'hide': 'err' in opts['hide'],
-                },
-            )
+            thread_args[self.handle_stderr] = {
+                'buffer_': stderr,
+                'hide': 'err' in opts['hide'],
+                'output': err_stream,
+            }
         # Kick off IO threads
         threads, exceptions = [], []
-        for kwargs in kwargses:
-            t = _IOThread(target=self.io, kwargs=kwargs)
+        for target, kwargs in six.iteritems(thread_args):
+            t = _IOThread(target=target, kwargs=kwargs)
             threads.append(t)
             t.start()
         # Wait for completion, then tie things off & obtain result
@@ -286,7 +282,7 @@ class Runner(object):
 
     def encode(self, data):
         """
-        Encode ``data`` read from some I/O stream.
+        Encode ``data`` read from some I/O stream, into a useful str/bytes.
         """
         # Sometimes os.read gives us bytes under Python 3...and
         # sometimes it doesn't. ¯\_(ツ)_/¯
@@ -295,48 +291,86 @@ class Runner(object):
             data = data.encode(self.encoding)
         return data
 
-    def io(
-        self,
-        reader=None,
-        writer=None,
-        is_output=True,
-        buffer_=None,
-        hide=None,
-    ):
-        """
-        Perform I/O (reading, capturing & writing) as the body of 1+ threads.
-
-        At the very least, each call will copy data between two streams:
-
-        * Read bytes from a stream using the ``reader`` generator, which
-          typically yields `read_chunk_size` bytes per iteration.
-
-            * ``reader`` is also responsible for decoding the bytes into a
-              string according to ``self.encoding`` (typically derived from
-              `default_encoding` or runtime keyword args)
-
-        * If ``hide`` is ``False``, write those bytes using the ``writer``
-          function, which takes a ``str``/``bytes`` object and should write to
-          (and flush, if necessary) a stream (file-like object).
-
-        If ``is_output`` is ``True`` (the default), `io` will also treat the
-        output of ``reader`` as process output, storing it & scanning for
-        response playback triggers:
-
-        * Append a copy of the bytes to ``buffer_``, typically a `list`, which
-          the calling thread will expect to be mutated.
-        * Run ``buffer_`` through `respond` so it has the opportunity to write
-          responses to the command's stdin (see `respond` for details).
-        """
-        # Decode stream using our generator & requested encoding
+    def _handle_output(self, buffer_, hide, output, reader):
+        # Create a generator yielding stdout data.
+        # NOTE: Typically, reading from any stdout/err (local, remote or
+        # otherwise) can be thought of as "read until you get nothing back".
+        # This is preferable over "wait until an out-of-band signal claims the
+        # process is done running" because sometimes that signal will appear
+        # before we've actually read all the data in the stream (i.e.: a race
+        # condition).
+        def get():
+            while True:
+                data = reader(self.read_chunk_size)
+                if not data:
+                    break
+                yield self.encode(data)
+        # Use that generator in iterdecode so it ends up in our local encoding.
         for data in codecs.iterdecode(
-            reader(), self.encoding, errors='replace'
+            get(), self.encoding, errors='replace'
         ):
+            # Echo to local stdout if necessary
+            # TODO: should we rephrase this as "if you want to hide, give me a
+            # dummy output stream, e.g. something like /dev/null"?
             if not hide:
-                writer(data)
-            if is_output:
-                buffer_.append(data)
-                self.respond(buffer_)
+                output.write(data)
+                output.flush
+            # Store in shared buffer so main thread can do things with the
+            # result after execution completes. NOTE: this is threadsafe
+            # insofar as no reading occurs until after the thread is join()'d.
+            buffer_.append(data)
+            # Run the current buffer contents through the autoresponder.
+            self.respond(buffer_)
+
+    def handle_stdout(self, buffer_, hide, output):
+        """
+        Read process' stdout, storing into a buffer & printing/parsing.
+
+        Intended for use as a thread target. Only terminates when all stdout
+        from the subprocess has been read.
+
+        :param list buffer_: The capture buffer shared with the main thread.
+        :param bool hide: Whether or not to replay data into ``output``.
+        :param output:
+            Output stream (file-like object) to write data into when not
+            hiding.
+        
+        :returns: ``None``.
+        """
+        # Stdout and stderr have identical behavior in most implementations,
+        # differing only by the actual read action, which is delegated to
+        # self.read_stdout/read_stderr.
+        self._handle_output(buffer_, hide, output, reader=self.read_stdout)
+
+    def handle_stderr(self, buffer_, hide, output):
+        """
+        Read process' stderr, storing into a buffer & printing/parsing.
+
+        Identical to `handle_stdout` except for the stream read from; see its
+        docstring for API details.
+        """
+        # NOTE: see comment above in handle_stdout re: why the delegation
+        self._handle_output(buffer_, hide, output, reader=self.read_stderr)
+
+    def handle_stdin(self):
+        """
+        Read local stdin, copying into process' stdin as necessary.
+
+        Intended for use as a thread target. Because stdin has no reliable
+        "end", this method terminates when it sees that `program_finished` has
+        been set.
+
+        :param meh:
+
+        :returns: ``None``.
+        """
+        # While not program_finished.set:
+        #   - read from in_stream (generic)
+        #   TODO: bother encoding? we probably don't want to get in the way;
+        #   the encoding performed on stdout/err is necessary because we need
+        #   to present it as a string to the user. Not the case here, and
+        #   arguably could cause problems if we did.
+        #   - write to process stdin (impl dependent)
 
     def respond(self, buffer_):
         """
@@ -376,32 +410,6 @@ class Runner(object):
         """
         # NOTE: fallback not used: no falling back implemented by default.
         return pty
-
-    def default_writer(self, stream):
-        """
-        Return a generic local-stream-writing function closing over ``stream``.
-
-        `default_writer` is effectively private and should never be called
-        directly. By default, `stdout_writer` and `stderr_writer` pass through
-        to `default_writer`, but the former are still the public interface -
-        this gives subclasses the option of altering their implementation.
-        """
-        def writer(data):
-            stream.write(data)
-            stream.flush()
-        return writer
-
-    def stdout_writer(self, stream):
-        """
-        Return a function suitable for writing data to a stdout ``stream``.
-        """
-        return self.default_writer(stream)
-
-    def stderr_writer(self, stream):
-        """
-        Return a function suitable for writing data to a stderr ``stream``.
-        """
-        return self.default_writer(stream)
 
     def stdin_reader(self, stream):
         """
@@ -466,15 +474,23 @@ class Runner(object):
         """
         raise NotImplementedError
 
-    def stdout_reader(self):
+    def read_stdout(self, num_bytes):
         """
-        Return a generator yielding data from a running command's stdout.
+        Read ``num_bytes`` from the running process' stdout stream.
+
+        :param int num_bytes: Number of bytes to read at maximum.
+
+        :returns: A string/bytes object.
         """
         raise NotImplementedError
 
-    def stderr_reader(self):
+    def read_stderr(self, num_bytes):
         """
-        Return a generator yielding data from a running command's stderr.
+        Read ``num_bytes`` from the running process' stderr stream.
+
+        :param int num_bytes: Number of bytes to read at maximum.
+
+        :returns: A string/bytes object.
         """
         raise NotImplementedError
 
@@ -537,44 +553,28 @@ class Local(Runner):
                 use_pty = False
         return use_pty
 
-    def _stdout_reader(self):
+    def read_stdout(self, num_bytes):
         # Obtain useful read-some-bytes function
-        get_bytes = partial(os.read, self.process.stdout.fileno())
         if self.using_pty:
             # Need to handle spurious OSErrors on some Linux platforms.
-            def get_bytes(num_bytes):
-                try:
-                    return os.read(self.parent_fd, num_bytes)
-                except OSError as e:
-                    # Only eat this specific OSError so we don't hide others
-                    if "Input/output error" not in str(e):
-                        raise
-                    # The bad OSErrors happen after all expected output has
-                    # appeared, so we return a falsey value, which triggers the
-                    # "end of output" logic in code using reader functions.
-                    return None
-        return get_bytes
+            try:
+                data = os.read(self.parent_fd, num_bytes)
+            except OSError as e:
+                # Only eat this specific OSError so we don't hide others
+                if "Input/output error" not in str(e):
+                    raise
+                # The bad OSErrors happen after all expected output has
+                # appeared, so we return a falsey value, which triggers the
+                # "end of output" logic in code using reader functions.
+                data = None
+        else:
+            data = os.read(self.process.stdout.fileno(), num_bytes)
+        return data
 
-    def stdout_reader(self):
-        # Have to obtain reader func after .start has been called;
-        # otherwise self.process won't exist yet.
-        get_bytes = self._stdout_reader()
-        while True:
-            data = get_bytes(self.read_chunk_size)
-            if not data:
-                break
-            yield self.encode(data)
-
-    def stderr_reader(self):
-        # NOTE: when using a pty, this will never be used.
+    def read_stderr(self, num_bytes):
+        # NOTE: when using a pty, this will never be called.
         # TODO: do we ever get those OSErrors on stderr? Feels like we could?
-        while True:
-            data = os.read(
-                self.process.stderr.fileno(), self.read_chunk_size
-            )
-            if not data:
-                break
-            yield self.encode(data)
+        return os.read(self.process.stderr.fileno(), num_bytes)
 
     def stdin_writer(self):
         # NOTE: parent_fd from os.fork() is a read/write pipe attached to our
