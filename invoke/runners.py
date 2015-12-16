@@ -64,10 +64,6 @@ class Runner(object):
         """
         #: The `.Context` given to the same-named argument of `__init__`.
         self.context = context
-        # Bookkeeping re: whether pty fallback warning has been emitted.
-        self.warned_about_pty_fallback = False
-        # Bookkeeping re: call/response settings
-        self.responses = None
         #: A `threading.Event` signaling program completion.
         #:
         #: Typically set after `wait` returns. Some IO mechanisms rely on this
@@ -79,6 +75,10 @@ class Runner(object):
         # __init__ docstrings, though that's annoying too.
         #: How many bytes (at maximum) to read per iteration of stream reads.
         self.read_chunk_size = self.__class__.read_chunk_size
+        #: Whether pty fallback warning has been emitted.
+        self.warned_about_pty_fallback = False
+        #: The trigger/response mapping for use by `respond`.
+        self.responses = None
 
     def run(self, command, **kwargs):
         """
