@@ -77,6 +77,16 @@ class Runner_(Spec):
     def _runner(self, *args, **kwargs):
         return _runner(*args, **kwargs)
 
+    def _mock_stdin_writer(self):
+        """
+        Return new _Dummy-based class whose write_stdin() method is a mock.
+        """
+        class MockedStdin(_Dummy):
+            pass
+        MockedStdin.write_stdin = Mock()
+        return MockedStdin
+
+
     class init:
         "__init__"
         def takes_a_context_instance(self):
@@ -310,15 +320,6 @@ class Runner_(Spec):
     class input_stream_handling:
         # NOTE: actual autoresponder tests are elsewhere. These just test that
         # stdin works normally & can be overridden.
-        def _mock_stdin_writer(self):
-            """
-            Return new _Dummy-based class whose write_stdin() method is a mock.
-            """
-            class MockedStdin(_Dummy):
-                pass
-            MockedStdin.write_stdin = Mock()
-            return MockedStdin
-
         @patch('invoke.runners.sys.stdin', StringIO("Text!"))
         def input_defaults_to_sys_stdin(self):
             # Execute w/ runner class that has a mocked stdin_writer
