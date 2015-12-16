@@ -428,6 +428,15 @@ class Runner_(Spec):
                 responses={'jump': 'how high?'},
             ).assert_has_calls([holla, holla])
 
+        def multiple_respond_calls_track_position_in_stream(self):
+            klass = self._mock_stdin_writer()
+            klass.read_chunk_size = 4 # Not 1000!
+            responses = {'jump': 'how high?'}
+            runner = self._runner(klass=klass, out="jump, wait, jump, wait")
+            runner.run(_, responses=responses, hide=True)
+            holla = call('how high?')
+            klass.write_stdin.assert_has_calls([holla, holla])
+
 
 class Local_(Spec):
     def _run(self, *args, **kwargs):
