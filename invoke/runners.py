@@ -343,8 +343,6 @@ class Runner(object):
         # Stdout and stderr have identical behavior in most implementations,
         # differing only by the actual read action, which is delegated to
         # self.read_stdout/read_stderr.
-        # TODO: uh did we stop being able to override faked input streams? why
-        # don't the tests fail??
         self._handle_output(buffer_, hide, output, reader=self.read_stdout)
 
     def handle_stderr(self, buffer_, hide, output):
