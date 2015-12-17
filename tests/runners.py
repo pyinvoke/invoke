@@ -431,12 +431,15 @@ class Runner_(Spec):
 
         def chunk_sizes_smaller_than_patterns_still_work_ok(self):
             klass = self._mock_stdin_writer()
-            klass.read_chunk_size = 4 # Not 1000!
+            klass.read_chunk_size = 1 # < len('jump')
             responses = {'jump': 'how high?'}
             runner = self._runner(klass=klass, out="jump, wait, jump, wait")
             runner.run(_, responses=responses, hide=True)
             holla = call('how high?')
+            # Responses happened, period.
             klass.write_stdin.assert_has_calls([holla, holla])
+            # And there weren't duplicates!
+            eq_(len(klass.write_stdin.call_args_list), 2)
 
         def both_out_and_err_are_scanned(self):
             bye = call("goodbye")

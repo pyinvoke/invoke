@@ -294,7 +294,7 @@ class Runner(object):
             data = data.encode(self.encoding)
         return data
 
-    def _handle_output(self, buffer_, hide, output, reader):
+    def _handle_output(self, buffer_, hide, output, reader, indices):
         # Create a generator yielding stdout data.
         # NOTE: Typically, reading from any stdout/err (local, remote or
         # otherwise) can be thought of as "read until you get nothing back".
@@ -319,11 +319,12 @@ class Runner(object):
                 output.write(data)
                 output.flush
             # Store in shared buffer so main thread can do things with the
-            # result after execution completes. NOTE: this is threadsafe
-            # insofar as no reading occurs until after the thread is join()'d.
+            # result after execution completes.
+            # NOTE: this is threadsafe insofar as no reading occurs until after
+            # the thread is join()'d.
             buffer_.append(data)
-            # Run the current buffer contents through the autoresponder.
-            self.respond(buffer_)
+            # Run our specific buffer & indices through the autoresponder
+            self.respond(buffer_, indices)
 
     def handle_stdout(self, buffer_, hide, output):
         """
@@ -340,10 +341,13 @@ class Runner(object):
         
         :returns: ``None``.
         """
-        # Stdout and stderr have identical behavior in most implementations,
-        # differing only by the actual read action, which is delegated to
-        # self.read_stdout/read_stderr.
-        self._handle_output(buffer_, hide, output, reader=self.read_stdout)
+        self._handle_output(
+            buffer_,
+            hide,
+            output,
+            reader=self.read_stdout,
+            indices=threading.local(),
+        )
 
     def handle_stderr(self, buffer_, hide, output):
         """
@@ -352,8 +356,13 @@ class Runner(object):
         Identical to `handle_stdout` except for the stream read from; see its
         docstring for API details.
         """
-        # NOTE: see comment above in handle_stdout re: why the delegation
-        self._handle_output(buffer_, hide, output, reader=self.read_stderr)
+        self._handle_output(
+            buffer_,
+            hide,
+            output,
+            reader=self.read_stderr,
+            indices=threading.local(),
+        )
 
     def handle_stdin(self, input_):
         """
@@ -444,24 +453,29 @@ class Runner(object):
         #    # TODO: is sleeping still necessary now that it's a generator?
         #    #time.sleep(0.01) # TODO: store this in config
 
-    def respond(self, data):
+    def respond(self, buffer_, indices):
         """
-        Write to the program's stdin in response to patterns in ``data``.
+        Write to the program's stdin in response to patterns in ``buffer_``.
 
         The patterns and responses are driven by the key/value pairs in the
         ``responses`` kwarg of `run` - see its documentation for format
         details, and :doc:`/concepts/responses` for a conceptual overview.
 
-        .. warning::
-            ``data`` should be **new** stream data read by the caller, who is
-            responsible for ensuring that this method isn't handed data it's
-            already seen. (If that happens, the responder may duplicate
-            responses!)
+        :param list buffer:
+            The capture buffer for this thread's particular IO stream.
 
-        :param data: String/bytes data read from a stdout/stderr stream.
+        :param indices:
+            A `threading.local` object upon which is (or will be) stored the
+            last-seen index for each key in ``responses``. Allows the responder
+            functionality to be used by multiple threads (typically, one each
+            for stdout and stderr) without conflicting.
 
         :returns: ``None``.
         """
+        # Short-circuit if there are no responses to respond to. This saves us
+        # the effort of joining the buffer and so forth.
+        if not self.responses:
+            return
         # Join buffer contents into a single string; without this, we can't be
         # sure that the pattern we seek isn't split up across chunks in the
         # buffer.
@@ -473,10 +487,20 @@ class Runner(object):
         # tail of the overall buffer would help - would probably help w/ memory
         # at expense of performing more operations per cycle?
         stream = u''.join(buffer_)
+        # Initialize seek indices
+        if not hasattr(indices, 'seek'):
+            indices.seek = {}
+            for pattern in self.responses:
+                indices.seek[pattern] = 0
         for pattern, response in six.iteritems(self.responses):
-            # Iterate over findall() response in case >1 match occurred
-            # TODO: we need to keep track of what we've already responded to!
-            for match in re.findall(pattern, stream):
+            # Only look at stream contents we haven't seen yet, to avoid dupes.
+            new_ = stream[indices.seek[pattern]:]
+            matches = re.findall(pattern, new_)
+            # Update seek index if we've matched
+            if matches:
+                indices.seek[pattern] += len(new_)
+            # Iterate over findall() response in case >1 match occurred.
+            for match in matches:
                 # TODO: automatically append system-appropriate newline if
                 # response doesn't end with it, w/ option to disable?
                 self.write_stdin(response)
