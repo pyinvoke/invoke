@@ -447,6 +447,29 @@ class Runner_(Spec):
             # Would only be one 'bye' if only scanning stdout
             ).assert_has_calls([bye, bye])
 
+        def multiple_patterns_works_as_expected(self):
+            calls = [call('betty'), call('carnival')]
+            self._expect_response(
+                out="beep boop I am a robot",
+                responses={'boop': 'betty', 'robot': 'carnival'},
+            ).assert_has_calls(calls)
+
+        def multiple_patterns_across_both_streams(self):
+            responses = {
+                'boop': 'betty',
+                'robot': 'carnival',
+                'Destroy': 'your ego',
+                'humans': 'are awful',
+            }
+            calls = map(call, responses.values())
+            self._expect_response(
+                out="beep boop, I am a robot",
+                err="Destroy all humans!",
+                responses=responses,
+            # CANNOT assume order due to simultaneous streams.
+            # If we didn't say any_order=True we could get race condition fails
+            ).assert_has_calls(calls, any_order=True)
+
 
 class Local_(Spec):
     def _run(self, *args, **kwargs):
