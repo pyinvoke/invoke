@@ -270,6 +270,7 @@ class Runner(object):
         # Determine pty or no
         self.using_pty = self.should_use_pty(opts['pty'], opts['fallback'])
         # Responses
+        # TODO: precompile the keys into regex objects
         self.responses = opts.get('responses', {})
         return opts, out_stream, err_stream, in_stream
 
@@ -495,7 +496,8 @@ class Runner(object):
         for pattern, response in six.iteritems(self.responses):
             # Only look at stream contents we haven't seen yet, to avoid dupes.
             new_ = stream[indices.seek[pattern]:]
-            matches = re.findall(pattern, new_)
+            # Search, across lines if necessary
+            matches = re.findall(pattern, new_, re.S)
             # Update seek index if we've matched
             if matches:
                 indices.seek[pattern] += len(new_)

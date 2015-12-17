@@ -441,6 +441,19 @@ class Runner_(Spec):
             # And there weren't duplicates!
             eq_(len(klass.write_stdin.call_args_list), 2)
 
+        def patterns_span_multiple_lines(self):
+            output = """
+You only call me
+when you have a problem
+You never call me
+Just to say hi
+"""
+            calls = self._expect_response(
+                out=output,
+                responses={r'call.*problem': 'So sorry'},
+            ).call_args_list
+            eq_(calls, [call('So sorry')])
+
         def both_out_and_err_are_scanned(self):
             bye = call("goodbye")
             self._expect_response(
