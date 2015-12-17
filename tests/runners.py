@@ -398,15 +398,16 @@ class Runner_(Spec):
             self._runner(klass=klass).run(_)
             ok_(not klass.write_stdin.called)
 
-        def _expect_response(self, out, responses):
+        def _expect_response(self, **kwargs):
             """
-            Execute a run() w/ proc output ``out`` & ``responses`` set.
+            Execute a run() w/ ``responses`` set & _runner() ``kwargs`` given.
 
             :returns: The mocked ``write_stdin`` method of the runner.
             """
             klass = self._mock_stdin_writer()
-            runner = self._runner(klass=klass, out=out)
-            runner.run(_, responses=responses, hide=True)
+            kwargs['klass'] = klass
+            runner = self._runner(**kwargs)
+            runner.run(_, responses=kwargs['responses'], hide=True)
             return klass.write_stdin
 
         def string_keys_in_responses_kwarg_yield_values_as_stdin_writes(self):
@@ -428,7 +429,7 @@ class Runner_(Spec):
                 responses={'jump': 'how high?'},
             ).assert_has_calls([holla, holla])
 
-        def multiple_respond_calls_track_position_in_stream(self):
+        def small_read_chunk_sizes_still_work_ok(self):
             klass = self._mock_stdin_writer()
             klass.read_chunk_size = 4 # Not 1000!
             responses = {'jump': 'how high?'}
@@ -436,6 +437,15 @@ class Runner_(Spec):
             runner.run(_, responses=responses, hide=True)
             holla = call('how high?')
             klass.write_stdin.assert_has_calls([holla, holla])
+
+        def both_out_and_err_are_scanned(self):
+            bye = call("goodbye")
+            self._expect_response(
+                out="hello my name is inigo",
+                err="hello how are you",
+                responses={"hello": "goodbye"},
+            # Would only be one 'bye' if only scanning stdout
+            ).assert_has_calls([bye, bye])
 
 
 class Local_(Spec):
