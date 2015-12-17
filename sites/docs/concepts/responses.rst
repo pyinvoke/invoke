@@ -51,3 +51,59 @@ the existence of ``"Are you ready? [Y/n] "`` and automatically write
 Subclasses of `.Runner` may extend this functionality further, for example
 auto-responding to password prompts (as seen in `Fabric
 <http://fabfile.org>`_).
+
+Design rationale
+================
+
+.. warning::
+    For reasons outlined below, **multiline patterns cannot be used in the
+    autoresponder**; a ``responses`` key containing newlines will effectively
+    never be triggered.
+
+Due to how regular expressions are implemented (at least in Python's `re`
+module) it's not feasible to apply a regex to a true stream of text. Matching a
+regular expression on the standard output or error of a program thus requires
+one of a few strategies, most of which are flawed:
+
+* Wait for the entire program's output to finish, then match once on the entire
+  thing. For a feature focused on interactive feedback, this is a non-starter.
+* Match on the entire contents of the capture buffer after every successful
+  read. This "works", but will submit duplicate responses. Without a
+  potentially complex and ambiguity-laden "how many times to expect/respond to
+  which patterns" DSL, this approach is also unacceptable.
+* Match on one chunk of stream output at a time. This has a serious flaw: what
+  happens when the pattern you seek exists in the stream, but is broken up by
+  the chunked data?
+
+    * Using the actual read chunk size (which is simply some integer tuned for
+      efficiency reasons) will always exhibit some chance of this problem, even
+      when set to a large value (and doing so not always feasible, either).
+    * Chunking the read buffer in a logical fashion (e.g. line-by-line) isn't
+      ideal either, but at least allows us to frame the problem: if your
+      pattern can be expressed to always fall within the logical chunk, we can
+      guarantee that matching will work 100% of the time.
+
+As you can guess based on the above warning, the default implementation of our
+autoresponder (`.Runner.respond`) opts for the final approach: it keeps a
+"linewise" buffer, which is flushed each time a newline character is found.
+This allows reliably responding to prompts (the typical use case of this
+feature) while avoiding the pitfalls of other solutions.
+
+Other solutions based on this one are also possible, but have their own
+problems:
+
+* If we cared only about responding to static strings and not regular
+  expressions, we could simply "chunk" the stream data by the length of the
+  longest key in ``responses`` - if such a chunk didn't match, there's no way
+  additional reads could make a match possible.
+
+    * An alternate responder implementation opting for this approach might well
+      appear in the future.
+
+* If we cared about multiline regex patterns, we could try keeping a larger,
+  multiline buffer - but this runs afoul of the same problem
+
+.. TODO: uhhhh how DO we know when to actually match, if we're keeping a buffer
+and have no idea when to execute a match on it, we're gonna match on it
+multiple times, aren't we? I think we need a fabric 1 style "buffer that gets
+emptied out when matches are found" for each key in the responses dict???
