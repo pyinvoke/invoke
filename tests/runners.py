@@ -429,7 +429,7 @@ class Runner_(Spec):
                 responses={'jump': 'how high?'},
             ).assert_has_calls([holla, holla])
 
-        def small_read_chunk_sizes_still_work_ok(self):
+        def chunk_sizes_smaller_than_patterns_still_work_ok(self):
             klass = self._mock_stdin_writer()
             klass.read_chunk_size = 4 # Not 1000!
             responses = {'jump': 'how high?'}
