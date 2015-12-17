@@ -609,11 +609,11 @@ class Local(Runner):
         # TODO: do we ever get those OSErrors on stderr? Feels like we could?
         return os.read(self.process.stderr.fileno(), num_bytes)
 
-    def stdin_writer(self):
+    def write_stdin(self, data):
         # NOTE: parent_fd from os.fork() is a read/write pipe attached to our
         # forked process' stdout/stdin, respectively.
         fd = self.parent_fd if self.using_pty else self.process.stdin.fileno()
-        return partial(os.write, fd)
+        return os.write(fd, data)
 
     def start(self, command):
         if self.using_pty:
