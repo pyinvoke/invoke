@@ -317,6 +317,20 @@ class Runner_(Spec):
             eq_(out.getvalue(), "yo")
             eq_(sys.stdout.getvalue(), "")
 
+    class output_stream_handling:
+        # Mostly corner cases, generic behavior's covered above
+        def writes_and_flushes_to_stdout(self):
+            out = Mock(spec=file)
+            self._runner(out="meh").run(_, out_stream=out)
+            out.write.assert_called_once_with("meh")
+            out.flush.assert_called_once_with()
+
+        def writes_and_flushes_to_stderr(self):
+            err = Mock(spec=file)
+            self._runner(err="whatever").run(_, err_stream=err)
+            err.write.assert_called_once_with("whatever")
+            err.flush.assert_called_once_with()
+
     class input_stream_handling:
         # NOTE: actual autoresponder tests are elsewhere. These just test that
         # stdin works normally & can be overridden.

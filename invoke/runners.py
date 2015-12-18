@@ -318,7 +318,7 @@ class Runner(object):
             # dummy output stream, e.g. something like /dev/null"?
             if not hide:
                 output.write(data)
-                output.flush
+                output.flush()
             # Store in shared buffer so main thread can do things with the
             # result after execution completes.
             # NOTE: this is threadsafe insofar as no reading occurs until after
