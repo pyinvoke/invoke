@@ -1,7 +1,7 @@
 import locale
 import sys
 import types
-from invoke.vendor.six import StringIO
+from invoke.vendor.six import StringIO, b
 
 from spec import Spec, trap, eq_, skip, ok_, raises, assert_contains
 from mock import patch, Mock, call
@@ -427,16 +427,16 @@ class Runner_(Spec):
             self._expect_response(
                 out="the house was empty",
                 responses={'empty': 'handed'},
-            ).assert_called_once_with("handed")
+            ).assert_called_once_with(b("handed"))
 
         def regex_keys_also_work(self):
             self._expect_response(
                 out="technically, it's still debt",
                 responses={r'tech.*debt': 'pay it down'},
-            ).assert_called_once_with('pay it down')
+            ).assert_called_once_with(b('pay it down'))
 
         def multiple_hits_yields_multiple_responses(self):
-            holla = call('how high?')
+            holla = call(b('how high?'))
             self._expect_response(
                 out="jump, wait, jump, wait",
                 responses={'jump': 'how high?'},
@@ -448,7 +448,7 @@ class Runner_(Spec):
             responses = {'jump': 'how high?'}
             runner = self._runner(klass=klass, out="jump, wait, jump, wait")
             runner.run(_, responses=responses, hide=True)
-            holla = call('how high?')
+            holla = call(b('how high?'))
             # Responses happened, period.
             klass.write_stdin.assert_has_calls([holla, holla])
             # And there weren't duplicates!
@@ -461,14 +461,13 @@ when you have a problem
 You never call me
 Just to say hi
 """
-            calls = self._expect_response(
+            self._expect_response(
                 out=output,
                 responses={r'call.*problem': 'So sorry'},
-            ).call_args_list
-            eq_(calls, [call('So sorry')])
+            ).assert_called_once_with(b('So sorry'))
 
         def both_out_and_err_are_scanned(self):
-            bye = call("goodbye")
+            bye = call(b("goodbye"))
             # Would only be one 'bye' if only scanning stdout
             self._expect_response(
                 out="hello my name is inigo",
@@ -477,7 +476,7 @@ Just to say hi
             ).assert_has_calls([bye, bye])
 
         def multiple_patterns_works_as_expected(self):
-            calls = [call('betty'), call('carnival')]
+            calls = [call(b('betty')), call(b('carnival'))]
             # Technically, I'd expect 'betty' to get called before 'carnival',
             # but under Python 3 it's reliably backwards from Python 2.
             # In real world situations where each prompt sits & waits for its
@@ -495,7 +494,7 @@ Just to say hi
                 'Destroy': 'your ego',
                 'humans': 'are awful',
             }
-            calls = map(call, responses.values())
+            calls = map(lambda x: call(b(x)), responses.values())
             # CANNOT assume order due to simultaneous streams.
             # If we didn't say any_order=True we could get race condition fails
             self._expect_response(
