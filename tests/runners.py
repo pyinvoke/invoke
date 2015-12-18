@@ -320,13 +320,13 @@ class Runner_(Spec):
     class output_stream_handling:
         # Mostly corner cases, generic behavior's covered above
         def writes_and_flushes_to_stdout(self):
-            out = Mock(spec=file)
+            out = Mock(spec=StringIO)
             self._runner(out="meh").run(_, out_stream=out)
             out.write.assert_called_once_with("meh")
             out.flush.assert_called_once_with()
 
         def writes_and_flushes_to_stderr(self):
-            err = Mock(spec=file)
+            err = Mock(spec=StringIO)
             self._runner(err="whatever").run(_, err_stream=err)
             err.write.assert_called_once_with("whatever")
             err.flush.assert_called_once_with()
@@ -478,10 +478,15 @@ Just to say hi
 
         def multiple_patterns_works_as_expected(self):
             calls = [call('betty'), call('carnival')]
+            # Technically, I'd expect 'betty' to get called before 'carnival',
+            # but under Python 3 it's reliably backwards from Python 2.
+            # In real world situations where each prompt sits & waits for its
+            # response, this probably wouldn't be an issue, so using
+            # any_order=True for now. Thanks again Python 3.
             self._expect_response(
                 out="beep boop I am a robot",
                 responses={'boop': 'betty', 'robot': 'carnival'},
-            ).assert_has_calls(calls)
+            ).assert_has_calls(calls, any_order=True)
 
         def multiple_patterns_across_both_streams(self):
             responses = {

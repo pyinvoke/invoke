@@ -1,6 +1,8 @@
+from contextlib import contextmanager
 import logging
 import os
-from contextlib import contextmanager
+
+from invoke.vendor.six import StringIO
 
 
 LOG_FORMAT = "%(name)s.%(module)s.%(funcName)s: %(message)s"
@@ -44,4 +46,8 @@ def is_terminal_stream(stream):
     """
     Detect whether a given file-like-object seems to be a real terminal stream.
     """
-    return hasattr(stream, 'fileno') and callable(stream.fileno)
+    return (
+        hasattr(stream, 'fileno')
+        and callable(stream.fileno)
+        and not isinstance(stream, StringIO) # Thanks, Python 3 -_-
+    )
