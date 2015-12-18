@@ -140,3 +140,18 @@ status, which can be confusing.
 
 The solution here is simple: add ``warn=True`` to your `~invoke.run` call,
 which disables the automatic exit behavior.
+
+
+The auto-responder functionality isn't working for my password prompts!
+-----------------------------------------------------------------------
+
+Some programs write password prompts or other output *directly* to the local
+terminal, bypassing the usual stdout/stderr streams. For example, this is
+exactly what `the stdlib's getpass module<~python:getpass.getpass>` does, if
+you're calling a program that happens to be written in Python.
+
+When this happens, we're powerless, because all we get to see is the
+subprocess' regular output streams. Thankfully, the solution is usually easy:
+just add ``pty=True`` to your `~invoke.run` call. Forcing use of an explicit
+pseudo-terminal usually tricks these kinds of programs into behaving and
+writing prompts to stderr.
