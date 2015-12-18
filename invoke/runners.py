@@ -399,12 +399,6 @@ class Runner(object):
             else:
                 ready = True
             if ready:
-                # TODO: will regular sys.stdin.read still honor the "up-to"
-                # behavior of the int arg, or will it block anyways? Fab v1
-                # always read 1 char at a time, presumably for reasons, but
-                # this will preclude doing anything useful with multibyte
-                # encodings if we actually care. If we continue to blindly
-                # pass-through, though, we probably don't care...
                 data = input_.read(self.read_chunk_size)
                 # Short-circuit if not using select() and appeared to hit
                 # end-of-stream.
