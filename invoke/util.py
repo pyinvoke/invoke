@@ -40,14 +40,3 @@ def cd(where):
         yield
     finally:
         os.chdir(cwd)
-
-
-def is_terminal_stream(stream):
-    """
-    Detect whether a given file-like-object seems to be a real terminal stream.
-    """
-    return (
-        hasattr(stream, 'fileno')
-        and callable(stream.fileno)
-        and not isinstance(stream, StringIO) # Thanks, Python 3 -_-
-    )

@@ -552,7 +552,7 @@ class Local_(Spec):
 
         @patch('invoke.runners.sys')
         def replaced_stdin_objects_dont_explode(self, mock_sys):
-            # Replace sys.stdin with an object lacking .fileno(), which
+            # Replace sys.stdin with an object lacking .isatty(), which
             # normally causes an AttributeError unless we are being careful.
             mock_sys.stdin = object()
             # Test. If bug is present, this will error.

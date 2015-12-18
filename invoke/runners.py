@@ -27,7 +27,6 @@ except ImportError:
 
 from .exceptions import Failure, ThreadException, ExceptionWrapper
 from .platform import WINDOWS, pty_size
-from .util import is_terminal_stream
 
 from .vendor import six
 
@@ -384,7 +383,7 @@ class Runner(object):
 
         :returns: ``None``.
         """
-        use_select = is_terminal_stream(input_)
+        use_select = input_.isatty()
         while not self.program_finished.is_set():
             # "real" terminal stdin needs select() to tell us when it's ready
             # for a nonblocking read().
@@ -587,8 +586,7 @@ class Local(Runner):
         if pty:
             use_pty = True
             seems_pty = (
-                is_terminal_stream(sys.stdin)
-                and os.isatty(sys.stdin.fileno())
+                hasattr(sys.stdin, 'fileno') and os.isatty(sys.stdin.fileno())
             )
             if not seems_pty and fallback:
                 if not self.warned_about_pty_fallback:
