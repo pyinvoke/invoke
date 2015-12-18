@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import codecs
-from functools import partial
 import locale
 import os
 import re
@@ -339,7 +338,7 @@ class Runner(object):
         :param output:
             Output stream (file-like object) to write data into when not
             hiding.
-        
+
         :returns: ``None``.
         """
         self._handle_output(
@@ -410,7 +409,7 @@ class Runner(object):
                 # Just write the data to the process as-is.
                 self.write_stdin(data)
 
-        #while not self.program_finished.is_set():
+        # while not self.program_finished.is_set():
         #    # Much of this is taken directly from Fabric 1.x's io.input_loop
         #    # function as of f6475e3f4cd09862bcf6e732f28bf52b42129104.
         #    if WINDOWS:
@@ -432,7 +431,7 @@ class Runner(object):
         #        # TODO: how to truly do this? access the out_stream which
         #        # isn't currently visible to us? if we just skip this part,
         #        # interactive users may not have their input echoed...ISTR we
-        #        # used to assume remote would send it back down stdout/err, but
+        #        # used to assume remote would send it back down stdout/err...
         #        # clearly not?
         #        #if not using_pty and env.echo_stdin:
         #            # Not using fastprint() here -- it prints as 'user'

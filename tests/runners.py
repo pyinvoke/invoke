@@ -46,8 +46,8 @@ class OhNoz(Exception):
 
 def _expect_encoding(codecs, encoding):
     assert codecs.iterdecode.called
-    for call in codecs.iterdecode.call_args_list:
-        eq_(call[0][1], encoding)
+    for c in codecs.iterdecode.call_args_list:
+        eq_(c[0][1], encoding)
 
 def _run(*args, **kwargs):
     klass = kwargs.pop('klass', _Dummy)
@@ -469,11 +469,11 @@ Just to say hi
 
         def both_out_and_err_are_scanned(self):
             bye = call("goodbye")
+            # Would only be one 'bye' if only scanning stdout
             self._expect_response(
                 out="hello my name is inigo",
                 err="hello how are you",
                 responses={"hello": "goodbye"},
-            # Would only be one 'bye' if only scanning stdout
             ).assert_has_calls([bye, bye])
 
         def multiple_patterns_works_as_expected(self):
@@ -491,12 +491,12 @@ Just to say hi
                 'humans': 'are awful',
             }
             calls = map(call, responses.values())
+            # CANNOT assume order due to simultaneous streams.
+            # If we didn't say any_order=True we could get race condition fails
             self._expect_response(
                 out="beep boop, I am a robot",
                 err="Destroy all humans!",
                 responses=responses,
-            # CANNOT assume order due to simultaneous streams.
-            # If we didn't say any_order=True we could get race condition fails
             ).assert_has_calls(calls, any_order=True)
 
 
