@@ -489,7 +489,10 @@ class Runner(object):
             for match in matches:
                 # TODO: automatically append system-appropriate newline if
                 # response doesn't end with it, w/ option to disable?
-                self.write_stdin(response)
+                # NOTE: use six.b here else people with str values in their
+                # responds settings will get an irritating TypeError under
+                # Python 3.
+                self.write_stdin(six.b(response))
 
     def should_use_pty(self, pty, fallback):
         """
