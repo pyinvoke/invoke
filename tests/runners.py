@@ -401,7 +401,6 @@ class Runner_(Spec):
                 assert False, "Did not raise ThreadException as expected!"
 
     class responding:
-        # TODO: how best to access _with_mock_stdin() above?
         def nothing_is_written_to_stdin_by_default(self):
             # NOTE: technically if some goofus ran the tests by hand and mashed
             # keys while doing so...this would fail. LOL?

@@ -385,7 +385,6 @@ class Runner(object):
 
         :returns: ``None``.
         """
-        # TODO: all TODOs in commented chunk below this one!
         use_select = is_terminal_stream(input_)
         while not self.program_finished.is_set():
             # "real" terminal stdin needs select() to tell us when it's ready
@@ -420,10 +419,6 @@ class Runner(object):
         #    else:
         #        # Use select() instead of stream.read, because stdin will
         #        # block otherwise
-        #        # TODO: how to handle file-LIKE objects here? won't
-        #        # select die on anything without a real fileno? Should we
-        #        # detect fileno and switch to .read in its absense,
-        #        # assuming that filelike objects won't block?
         #        r, w, x = select.select([stream], [], [], 0.0)
         #        have_char = (r and r[0] == stream)
         #    # TODO: reinstate lock/whatever thread logic from fab v1 which
@@ -432,7 +427,6 @@ class Runner(object):
         #    if have_char and chan.input_enabled:
         #        # Send all local stdin to remote end's stdin
         #        #byte = msvcrt.getch() if WINDOWS else sys.stdin.read(1)
-        #        # TODO: use read_chunk_size? otherwise multibyte==broked
         #        yield self.encode(sys.stdin.read(1))
         #        # Optionally echo locally, if needed.
         #        # TODO: how to truly do this? access the out_stream which
