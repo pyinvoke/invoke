@@ -383,7 +383,7 @@ class Runner(object):
 
         :returns: ``None``.
         """
-        use_select = input_.isatty()
+        use_select = isatty(input_)
         while not self.program_finished.is_set():
             # "real" terminal stdin needs select() to tell us when it's ready
             # for a nonblocking read().
@@ -571,23 +571,20 @@ class Local(Runner):
 
     .. note::
         When Invoke itself is executed without a valid PTY (i.e.
-        ``os.isatty(sys.stdin)`` is ``False``), it's not possible to present a
+        ``sys.stdin.isatty()`` is ``False``), it's not possible to present a
         handle on our PTY to local subprocesses. In such situations, `Local`
         will fallback to behaving as if ``pty=False`` (on the theory that
         degraded execution is better than none at all) as well as printing a
         warning to stderr.
 
-        To disable this behavior (i.e. if `os.isatty` is causing false
+        To disable this behavior (i.e. if ``.isatty`` is causing false
         negatives in your environment), say ``fallback=False``.
     """
     def should_use_pty(self, pty=False, fallback=True):
         use_pty = False
         if pty:
             use_pty = True
-            seems_pty = (
-                hasattr(sys.stdin, 'fileno') and os.isatty(sys.stdin.fileno())
-            )
-            if not seems_pty and fallback:
+            if not isatty(sys.stdin) and fallback:
                 if not self.warned_about_pty_fallback:
                     sys.stderr.write("WARNING: stdin is not a pty; falling back to non-pty execution!\n") # noqa
                     self.warned_about_pty_fallback = True

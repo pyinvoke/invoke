@@ -101,17 +101,17 @@ def mock_subprocess(out='', err='', exit=0, isatty=None):
         @wraps(f)
         @patch('invoke.runners.Popen')
         @patch('os.read')
-        @patch('os.isatty')
+        @patch('sys.stdin', new_callable=StringIO)
         def wrapper(*args, **kwargs):
             args = list(args)
-            Popen, read, os_isatty = args.pop(), args.pop(), args.pop()
+            Popen, read, sys_stdin = args.pop(), args.pop(), args.pop()
             process = Popen.return_value
             process.returncode = exit
             process.stdout.fileno.return_value = 1
             process.stderr.fileno.return_value = 2
             # If requested, mock isatty to fake out pty detection
             if isatty is not None:
-                os_isatty.return_value = isatty
+                sys_stdin.isatty = Mock(return_value=isatty)
             out_file = StringIO(out)
             err_file = StringIO(err)
             def fakeread(fileno, count):
