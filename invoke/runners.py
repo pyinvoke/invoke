@@ -484,9 +484,6 @@ class Runner(object):
         # speed and memory use. Should that turn up false, consider using
         # StringIO or cStringIO (tho the latter doesn't do Unicode well?)
         # which is apparently even more efficient.
-        # NOTE: alternately, examine whether only preserving a (still join'd)
-        # tail of the overall buffer would help - would probably help w/ memory
-        # at expense of performing more operations per cycle?
         stream = u''.join(buffer_)
         # Initialize seek indices
         if not hasattr(indices, 'seek'):
