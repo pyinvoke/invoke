@@ -2,8 +2,6 @@ from contextlib import contextmanager
 import logging
 import os
 
-from invoke.vendor.six import StringIO
-
 
 LOG_FORMAT = "%(name)s.%(module)s.%(funcName)s: %(message)s"
 
