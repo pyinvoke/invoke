@@ -386,7 +386,8 @@ class Runner(object):
         """
         use_select = isatty(input_)
         with character_buffered(input_):
-            while not self.program_finished.is_set():
+            while True:
+                data = None
                 # "real" terminal stdin needs select() to tell us when it's
                 # ready for a nonblocking read().
                 if use_select:
@@ -398,8 +399,6 @@ class Runner(object):
                 else:
                     ready = True
                 if ready:
-                    from .util import debug
-                    #data = input_.read(self.read_chunk_size)
                     # Read 1 byte at a time for interactivity's sake.
                     data = input_.read(1)
                     debug("read {0} bytes from stdin: {1!r}".format(self.read_chunk_size, data))
@@ -413,6 +412,12 @@ class Runner(object):
                     # at this time.
                     # Just write the data to the process as-is.
                     self.write_stdin(data)
+                # Dual all-done signals: program being executed is done
+                # running, *and* we don't seem to be reading anything out of
+                # stdin. (If we only test the former, we may encounter race
+                # conditions re: unread stdin.)
+                if self.program_finished.is_set() and not data:
+                    break
 
         # while not self.program_finished.is_set():
         #    # Much of this is taken directly from Fabric 1.x's io.input_loop

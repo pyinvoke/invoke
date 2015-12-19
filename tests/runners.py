@@ -340,13 +340,17 @@ class Runner_(Spec):
             klass = self._mock_stdin_writer()
             self._runner(klass=klass).run(_)
             # Check that mocked writer was called w/ expected data
-            klass.write_stdin.assert_called_once_with("Text!")
+            # stdin mirroring occurs byte-by-byte
+            calls = map(call, "Text!")
+            klass.write_stdin.assert_has_calls(calls, any_order=False)
 
         def input_stream_can_be_overridden(self):
             klass = self._mock_stdin_writer()
             in_stream = StringIO("Hey, listen!")
             self._runner(klass=klass).run(_, in_stream=in_stream)
-            klass.write_stdin.assert_called_once_with("Hey, listen!")
+            # stdin mirroring occurs byte-by-byte
+            calls = map(call, "Hey, listen!")
+            klass.write_stdin.assert_has_calls(calls, any_order=False)
 
     class failure_handling:
         @raises(Failure)
