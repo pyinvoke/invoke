@@ -29,6 +29,7 @@ except ImportError:
 from .exceptions import Failure, ThreadException, ExceptionWrapper
 from .platform import WINDOWS, pty_size, character_buffered
 from .util import isatty
+from .util import debug
 
 from .vendor import six
 
@@ -190,6 +191,9 @@ class Runner(object):
                 'hide': 'out' in opts['hide'],
                 'output': out_stream,
             },
+            # TODO: make this & related functionality optional, for users who
+            # don't care about autoresponding & are encountering issues with
+            # the stdin mirroring
             self.handle_stdin: {
                 'input_': in_stream,
             }
@@ -791,6 +795,8 @@ class _IOThread(threading.Thread):
             super(_IOThread, self).run()
         except BaseException:
             self.exc_info = sys.exc_info()
+            msg = "Encountered exception {0!r} in IO thread for {1!r}"
+            debug(msg.format(self.exc_info[1], self.kwargs['target'].__name__))
 
     def exception(self):
         """
