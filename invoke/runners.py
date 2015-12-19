@@ -387,13 +387,14 @@ class Runner(object):
         use_select = isatty(input_)
         with character_buffered(input_):
             while not self.program_finished.is_set():
-                # "real" terminal stdin needs select() to tell us when it's ready
-                # for a nonblocking read().
+                # "real" terminal stdin needs select() to tell us when it's
+                # ready for a nonblocking read().
                 if use_select:
                     reads, _, _ = select.select([input_], [], [], 0.0)
                     ready = bool(reads and reads[0] is input_)
                 # Otherwise, assume a "safer" file-like object that can be read
-                # from in a nonblocking fashion (e.g. a StringIO or regular file).
+                # from in a nonblocking fashion (e.g. a StringIO or regular
+                # file).
                 else:
                     ready = True
                 if ready:
@@ -407,9 +408,9 @@ class Runner(object):
                     if not use_select and not data:
                         break
                     # NOTE: while .handle_stdout\err perform encoding/decoding
-                    # between read & write, we've explicitly chosen NOT to do so
-                    # here as it feels risky and there's no clear reason to at this
-                    # time.
+                    # between read & write, we've explicitly chosen NOT to do
+                    # so here as it feels risky and there's no clear reason to
+                    # at this time.
                     # Just write the data to the process as-is.
                     self.write_stdin(data)
 
