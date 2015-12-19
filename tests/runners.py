@@ -341,7 +341,7 @@ class Runner_(Spec):
             self._runner(klass=klass).run(_)
             # Check that mocked writer was called w/ expected data
             # stdin mirroring occurs byte-by-byte
-            calls = map(call, "Text!")
+            calls = list(map(lambda x: call(b(x)), "Text!"))
             klass.write_stdin.assert_has_calls(calls, any_order=False)
 
         def input_stream_can_be_overridden(self):
@@ -349,8 +349,26 @@ class Runner_(Spec):
             in_stream = StringIO("Hey, listen!")
             self._runner(klass=klass).run(_, in_stream=in_stream)
             # stdin mirroring occurs byte-by-byte
-            calls = map(call, "Hey, listen!")
+            calls = list(map(lambda x: call(b(x)), "Hey, listen!"))
             klass.write_stdin.assert_has_calls(calls, any_order=False)
+
+        @patch('invoke.runners.debug')
+        def input_handling_exceptions_get_logged(self, mock_debug):
+            # Make write_stdin asplode
+            klass = self._mock_stdin_writer()
+            klass.write_stdin.side_effect = OhNoz("oh god why")
+            # Execute with some stdin to trigger that asplode (but skip the
+            # actual bubbled-up raising of it so we can check things out)
+            try:
+                stdin = StringIO("non-empty")
+                self._runner(klass=klass).run(_, in_stream=stdin)
+            except ThreadException:
+                pass
+            # Assert debug() was called w/ expected format
+            # TODO: make the debug call a method on IOThread, then make thread
+            # class configurable somewhere in Runner, and pass in a customized
+            # IOThread that has a Mock for that method?
+            mock_debug.assert_called_with("Encountered exception OhNoz('oh god why',) in IO thread for 'handle_stdin'") # noqa
 
     class failure_handling:
         @raises(Failure)

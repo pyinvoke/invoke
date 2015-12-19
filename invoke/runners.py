@@ -411,12 +411,15 @@ class Runner(object):
                     # end-of-stream.
                     if not use_select and not data:
                         break
-                    # NOTE: while .handle_stdout\err perform encoding/decoding
-                    # between read & write, we've explicitly chosen NOT to do
-                    # so here as it feels risky and there's no clear reason to
-                    # at this time.
-                    # Just write the data to the process as-is.
-                    self.write_stdin(data)
+                    # Mirror what we just read to process' stdin.
+                    # We perform an encode so Python 3 gets bytes (streams +
+                    # str's in Python 3 == no bueno) but skip the decode step,
+                    # since there's presumably no need (nobody's interacting
+                    # with this data programmatically).
+                    # TODO: consider baking the encode call into write_stdin
+                    # (needs indirection as actual impl of write_stdin differs
+                    # between subclasses...)
+                    self.write_stdin(self.encode(data))
                 # Dual all-done signals: program being executed is done
                 # running, *and* we don't seem to be reading anything out of
                 # stdin. (If we only test the former, we may encounter race
@@ -794,7 +797,10 @@ class _IOThread(threading.Thread):
         try:
             super(_IOThread, self).run()
         except BaseException:
+            # Store for actual reraising later
             self.exc_info = sys.exc_info()
+            # And log now, in case we never get to later (e.g. if executing
+            # program is hung waiting for us to do something)
             msg = "Encountered exception {0!r} in IO thread for {1!r}"
             debug(msg.format(self.exc_info[1], self.kwargs['target'].__name__))
 
