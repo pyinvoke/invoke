@@ -78,7 +78,8 @@ class Runner(object):
         self.read_chunk_size = self.__class__.read_chunk_size
         #: Whether pty fallback warning has been emitted.
         self.warned_about_pty_fallback = False
-        #: The trigger/response mapping for use by `respond`.
+        #: The trigger/response mapping for use by `respond`. Is filled in at
+        #: runtime by `run`.
         self.responses = None
 
     def run(self, command, **kwargs):
