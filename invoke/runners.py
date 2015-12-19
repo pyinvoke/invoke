@@ -390,9 +390,8 @@ class Runner(object):
             if use_select:
                 reads, _, _ = select.select([input_], [], [], 0.0)
                 ready = bool(reads and reads[0] is input_)
-            # Otherwise, assume a "safer" file-like object that can be
-            # read from in a nonblocking fashion (e.g. a StringIO or regular
-            # file).
+            # Otherwise, assume a "safer" file-like object that can be read
+            # from in a nonblocking fashion (e.g. a StringIO or regular file).
             else:
                 ready = True
             if ready:
