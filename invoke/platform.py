@@ -6,6 +6,8 @@ logic-flow interruptions.
 """
 
 import sys
+
+
 WINDOWS = (sys.platform == 'win32')
 """
 Whether or not the current platform appears to be Windows in nature.
