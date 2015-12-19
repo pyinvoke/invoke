@@ -395,7 +395,8 @@ class Runner(object):
             else:
                 ready = True
             if ready:
-                data = input_.read(self.read_chunk_size)
+                # Read 1 byte at a time for interactivity's sake.
+                data = input_.read(1)
                 # Short-circuit if not using select() and appeared to hit
                 # end-of-stream.
                 if not use_select and not data:
