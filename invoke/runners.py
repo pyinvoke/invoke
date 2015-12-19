@@ -9,6 +9,7 @@ import struct
 from subprocess import Popen, PIPE
 import sys
 import threading
+import time
 
 # Import some platform-specific things at top level so they can be mocked for
 # tests.
@@ -418,6 +419,8 @@ class Runner(object):
                 # conditions re: unread stdin.)
                 if self.program_finished.is_set() and not data:
                     break
+                # Take a nap so we're not chewing CPU.
+                time.sleep(0.01)
 
         # while not self.program_finished.is_set():
         #    # Much of this is taken directly from Fabric 1.x's io.input_loop
