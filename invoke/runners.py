@@ -26,7 +26,7 @@ except ImportError:
     termios = None
 
 from .exceptions import Failure, ThreadException, ExceptionWrapper
-from .platform import WINDOWS, pty_size
+from .platform import WINDOWS, pty_size, character_buffered
 
 from .vendor import six
 
@@ -384,29 +384,33 @@ class Runner(object):
         :returns: ``None``.
         """
         use_select = isatty(input_)
-        while not self.program_finished.is_set():
-            # "real" terminal stdin needs select() to tell us when it's ready
-            # for a nonblocking read().
-            if use_select:
-                reads, _, _ = select.select([input_], [], [], 0.0)
-                ready = bool(reads and reads[0] is input_)
-            # Otherwise, assume a "safer" file-like object that can be read
-            # from in a nonblocking fashion (e.g. a StringIO or regular file).
-            else:
-                ready = True
-            if ready:
-                # Read 1 byte at a time for interactivity's sake.
-                data = input_.read(1)
-                # Short-circuit if not using select() and appeared to hit
-                # end-of-stream.
-                if not use_select and not data:
-                    break
-                # NOTE: while .handle_stdout\err perform encoding/decoding
-                # between read & write, we've explicitly chosen NOT to do so
-                # here as it feels risky and there's no clear reason to at this
-                # time.
-                # Just write the data to the process as-is.
-                self.write_stdin(data)
+        with character_buffered(input_):
+            while not self.program_finished.is_set():
+                # "real" terminal stdin needs select() to tell us when it's ready
+                # for a nonblocking read().
+                if use_select:
+                    reads, _, _ = select.select([input_], [], [], 0.0)
+                    ready = bool(reads and reads[0] is input_)
+                # Otherwise, assume a "safer" file-like object that can be read
+                # from in a nonblocking fashion (e.g. a StringIO or regular file).
+                else:
+                    ready = True
+                if ready:
+                    from .util import debug
+                    #data = input_.read(self.read_chunk_size)
+                    # Read 1 byte at a time for interactivity's sake.
+                    data = input_.read(1)
+                    debug("read {0} bytes from stdin: {1!r}".format(self.read_chunk_size, data))
+                    # Short-circuit if not using select() and appeared to hit
+                    # end-of-stream.
+                    if not use_select and not data:
+                        break
+                    # NOTE: while .handle_stdout\err perform encoding/decoding
+                    # between read & write, we've explicitly chosen NOT to do so
+                    # here as it feels risky and there's no clear reason to at this
+                    # time.
+                    # Just write the data to the process as-is.
+                    self.write_stdin(data)
 
         # while not self.program_finished.is_set():
         #    # Much of this is taken directly from Fabric 1.x's io.input_loop
