@@ -27,6 +27,7 @@ except ImportError:
 
 from .exceptions import Failure, ThreadException, ExceptionWrapper
 from .platform import WINDOWS, pty_size, character_buffered
+from .util import isatty
 
 from .vendor import six
 
@@ -794,20 +795,6 @@ class _IOThread(threading.Thread):
         if self.exc_info is None:
             return None
         return ExceptionWrapper(self.kwargs, *self.exc_info)
-
-
-def isatty(stream):
-    """
-    Check if a stream is a tty.
-
-    Not all file-like objects implement the `isatty` method.
-    """
-    # TODO: fallback to checking os.isatty(stream)? is that ever true when a
-    # stream lacks .isatty? (alt platforms? etc?)
-    fn = getattr(stream, 'isatty', None)
-    if fn is None:
-        return False
-    return fn()
 
 
 def normalize_hide(val):
