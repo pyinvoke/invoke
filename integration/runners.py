@@ -27,3 +27,12 @@ class Runner_(Spec):
                 "standard error": "between chair and keyboard\n",
             }
             run("python -u respond_both.py", responses=responses, hide=True)
+
+        def stdin_mirroring_isnt_cpu_heavy(self):
+            "stdin mirroring isn't CPU-heavy"
+            # Run something for a couple seconds (assuming 1s or sub-second
+            # execution doesn't look reliable, I bet it doesn't)
+            # Capture CPU usage in same way that carbon's self-reporting shit
+            # does
+            # Find good metric for it and assert it's below that
+            # Verify by undoing the sleep
