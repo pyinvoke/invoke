@@ -4,6 +4,8 @@ from spec import Spec
 
 from invoke import run
 
+from _util import assert_cpu_usage
+
 
 class Runner_(Spec):
     class responding:
@@ -30,9 +32,5 @@ class Runner_(Spec):
 
         def stdin_mirroring_isnt_cpu_heavy(self):
             "stdin mirroring isn't CPU-heavy"
-            # Run something for a couple seconds (assuming 1s or sub-second
-            # execution doesn't look reliable, I bet it doesn't)
-            # Capture CPU usage in same way that carbon's self-reporting shit
-            # does
-            # Find good metric for it and assert it's below that
-            # Verify by undoing the sleep
+            with assert_cpu_usage(lt=5.0):
+                run("python -u busywork.py 10", pty=True, hide=True)
