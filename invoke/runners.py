@@ -640,11 +640,6 @@ class Local(Runner):
         # NOTE: parent_fd from os.fork() is a read/write pipe attached to our
         # forked process' stdout/stdin, respectively.
         fd = self.parent_fd if self.using_pty else self.process.stdin.fileno()
-        # TODO: why is an exception here being 100% preempted by a
-        # KeyboardInterrupt in the main thread, and never being printed?
-        # Same reason as the multiprocess stuff in fab 1 parallel maybe?
-        # (where we had to do something extra to track and raise exceptions
-        # from something other than the main proc/thread)
         return os.write(fd, data)
 
     def start(self, command):
