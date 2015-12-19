@@ -407,7 +407,6 @@ class Runner(object):
                 if ready:
                     # Read 1 byte at a time for interactivity's sake.
                     data = input_.read(1)
-                    debug("read {0} bytes from stdin: {1!r}".format(self.read_chunk_size, data))
                     # Short-circuit if not using select() and appeared to hit
                     # end-of-stream.
                     if not use_select and not data:

@@ -1,5 +1,4 @@
 from contextlib import contextmanager
-import io
 import logging
 import os
 
