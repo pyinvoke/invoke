@@ -1,4 +1,4 @@
-Invoke is a Python (2.6+ and 3.2+) task execution tool & library, drawing
+Invoke is a Python (2.6+ and 3.3+) task execution tool & library, drawing
 inspiration from various sources to arrive at a powerful & clean feature set.
 
 * Like Ruby's Rake tool and Invoke's own predecessor Fabric 1.x, it provides a
