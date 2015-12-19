@@ -2,6 +2,8 @@
 Changelog
 =========
 
+* :support:`-` Removed official Python 3.2 support; sibling projects also did
+  this recently, it's simply not worth the annoyance given the userbase size.
 * :feature:`228` (partial) Modified and expanded implementation of
   `~invoke.executor.Executor`, `~invoke.tasks.Task` and `~invoke.tasks.Call` to
   make implementing task parameterization easier.
