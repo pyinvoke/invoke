@@ -9,9 +9,12 @@ def current_cpu_usage():
 
 
 @contextmanager
-def assert_cpu_usage(lt):
+def assert_cpu_usage(lt, verbose=False):
     """
     Execute wrapped block, asserting CPU utilization was less than ``lt``%.
+
+    :param float lt: CPU use percentage above which failure will occur.
+    :param bool verbose: Whether to print out the calculated percentage.
     """
     start_usage = current_cpu_usage()
     start_time = time.time()
@@ -26,5 +29,8 @@ def assert_cpu_usage(lt):
         time_diff = 0.000001
 
     percentage = (usage_diff / time_diff) * 100.0
+
+    if verbose:
+        print("Used {0:.2}% CPU over {1:.2}s".format(percentage, time_diff))
 
     assert percentage < lt
