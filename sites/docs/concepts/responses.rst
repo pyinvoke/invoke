@@ -1,3 +1,5 @@
+.. _autoresponding:
+
 ==========================================
 Automatically responding to program output
 ==========================================
@@ -11,12 +13,9 @@ Well-designed programs offer options for pre-empting such prompts, resulting in
 an easily automated workflow -- but with the rest, interactivity is
 unavoidable.
 
-By default, Invoke's `.Runner` class attaches your local ``stdin`` to the
-program's, letting you interact with prompts directly. That's fine for cases
-where you truly want a human at the wheel -- but because Invoke is sitting
-between you and the program, it can act on your behalf, similar to the
-``expect`` program or its emulations like `pexpect
-<https://pexpect.readthedocs.org>`_.
+Thankfully, Invoke's `.Runner` class not only forwards your standard input to
+the running program (allowing you to manually respond to prompts) but it can
+also be configured to respond automatically on your behalf.
 
 Basic use
 =========
@@ -39,9 +38,9 @@ prompt, and mash Y by hand. But if you instead supply ``responses`` like so::
     responses = {r"Are you ready? \[Y/n\] ": "y\n"}
     run("excitable-program", responses=responses)
 
-Then `.Runner` will monitor the program's ``stdout`` and ``stderr`` for
-the existence of ``"Are you ready? [Y/n] "`` and automatically write
-``"y\n"`` to its ``stdin`` on your behalf.
+Then `.Runner` will monitor the program's ``stdout`` and ``stderr`` for the
+existence of ``"Are you ready? [Y/n] "`` and automatically write ``y`` (plus
+``\n`` to simulate hitting Enter/Return) to its ``stdin``.
 
 .. note::
     Keep in mind that ``responses`` keys are treated as `regular expressions
@@ -49,5 +48,4 @@ the existence of ``"Are you ready? [Y/n] "`` and automatically write
     square-brackets in the above example) but provides more power as well.
 
 Subclasses of `.Runner` may extend this functionality further, for example
-auto-responding to password prompts (as seen in `Fabric
-<http://fabfile.org>`_).
+auto-responding to specific password prompts.

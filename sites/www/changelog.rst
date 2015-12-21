@@ -2,6 +2,8 @@
 Changelog
 =========
 
+* :feature:`289` (also :issue:`263`) Implement :ref:`autoresponding
+  <autoresponding>` for `~invoke.run`.
 * :support:`-` Removed official Python 3.2 support; sibling projects also did
   this recently, it's simply not worth the annoyance given the userbase size.
 * :feature:`228` (partial) Modified and expanded implementation of
