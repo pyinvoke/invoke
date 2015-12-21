@@ -272,7 +272,6 @@ class Runner(object):
             opts['echo'] = False
         # Then normalize 'hide' from one of the various valid input values,
         # into a stream-names tuple.
-        orig_hide = opts['hide']
         opts['hide'] = normalize_hide(opts['hide'])
         # Derive stream objects
         out_stream = opts['out_stream']

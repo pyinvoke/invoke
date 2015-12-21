@@ -280,7 +280,7 @@ class Runner_(Spec):
 
         @trap
         def overrides_echoing(self):
-            result = self._runner().run('invisible', hide=True, echo=True)
+            self._runner().run('invisible', hide=True, echo=True)
             assert_not_contains(sys.stdout.getvalue(), 'invisible')
 
     class output_stream_overrides:
