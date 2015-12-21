@@ -2,6 +2,8 @@
 Changelog
 =========
 
+* :bug:`296 major` Don't mutate ``sys.path`` on collection load if task's
+  parent directory is already on ``sys.path``.
 * :feature:`289` (also :issue:`263`) Implement :ref:`autoresponding
   <autoresponding>` for `~invoke.run`.
 * :support:`-` Removed official Python 3.2 support; sibling projects also did
