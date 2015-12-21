@@ -3,7 +3,9 @@ import sys
 import types
 from invoke.vendor.six import StringIO, b
 
-from spec import Spec, trap, eq_, skip, ok_, raises, assert_contains
+from spec import (
+    Spec, trap, eq_, skip, ok_, raises, assert_contains, assert_not_contains
+)
 from mock import patch, Mock, call
 
 from invoke import Runner, Local, Context, Config, Failure, ThreadException
@@ -275,6 +277,11 @@ class Runner_(Spec):
 
         def does_not_affect_capturing(self):
             eq_(self._runner(out='foo').run(_, hide=True).stdout, 'foo')
+
+        @trap
+        def overrides_echoing(self):
+            result = self._runner().run('invisible', hide=True, echo=True)
+            assert_not_contains(sys.stdout.getvalue(), 'invisible')
 
     class output_stream_overrides:
         @trap

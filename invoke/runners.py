@@ -114,6 +114,10 @@ class Runner(object):
                 Stdout and stderr are always captured and stored in the
                 ``Result`` object, regardless of ``hide``'s value.
 
+            .. note::
+                ``hide=True`` will also override ``echo=True`` if both are
+                given (either as kwargs or via config/CLI).
+
         :param bool pty:
             By default, ``run`` connects directly to the invoked process and
             reads its stdout/stderr streams. Some programs will buffer (or even
@@ -136,6 +140,9 @@ class Runner(object):
         :param bool echo:
             Controls whether `.run` prints the command string to local stdout
             prior to executing it. Default: ``False``.
+
+            .. note::
+                ``hide=True`` will override ``echo=True`` if both are given.
 
         :param str encoding:
             Override auto-detection of which encoding the subprocess is using
@@ -260,7 +267,12 @@ class Runner(object):
             runtime = kwargs.pop(key, None)
             opts[key] = value if runtime is None else runtime
         # TODO: handle invalid kwarg keys (anything left in kwargs)
-        # Normalize 'hide' from one of the various valid input values
+        # If hide was True, turn off echoing
+        if opts['hide'] is True:
+            opts['echo'] = False
+        # Then normalize 'hide' from one of the various valid input values,
+        # into a stream-names tuple.
+        orig_hide = opts['hide']
         opts['hide'] = normalize_hide(opts['hide'])
         # Derive stream objects
         out_stream = opts['out_stream']
