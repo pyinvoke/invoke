@@ -2,6 +2,9 @@
 Changelog
 =========
 
+* :bug:`295 major` Make sure that `~invoke.run`'s ``hide=True`` also disables
+  echoing. Otherwise, "hidden" helper ``run`` calls will still pollute output
+  when run as e.g. ``invoke --echo ...``.
 * :feature:`289` (also :issue:`263`) Implement :ref:`autoresponding
   <autoresponding>` for `~invoke.run`.
 * :support:`-` Removed official Python 3.2 support; sibling projects also did
