@@ -30,6 +30,7 @@ script:
   - pip uninstall -y invoke # To undo the implicit -e install from above
   - pip install . # NO -e!
   - inv -l # Sanity check
+  # I have this in my git pre-push hook, but contributors probably don't
   - flake8
 notifications:
   irc:
