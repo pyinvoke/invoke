@@ -23,7 +23,8 @@ Basic use
 The mechanism for this automation is the ``responses`` kwarg to the
 `.Runner.run` method (and its wrappers elsewhere, such as `.Context.run` and
 `invoke.run`), which is simply a dict mapping expected patterns to their
-responses.
+responses. As with all other arguments to ``run``, you can also set the default
+value globally via :doc:`configuration files <configuration>`.
 
 Take for example this mock shell session::
 

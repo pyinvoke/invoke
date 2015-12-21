@@ -80,9 +80,9 @@ For convenience, we refer to nested setting names with a dotted syntax, so e.g.
     also be overridden at runtime via :option:`--no-dedupe`.
 
 * The ``run`` tree controls the behavior of `.Runner.run`. Each member of this
-  tree (such as e.g. ``run.echo`` or ``run.pty``) maps directly to a
-  `.Runner.run` keyword argument of the same name; see that method's docstring
-  for details on what these settings do & what their default values are.
+  tree (such as ``run.echo`` or ``run.pty``) maps directly to a `.Runner.run`
+  keyword argument of the same name; see that method's docstring for details on
+  what these settings do & what their default values are.
 * A top level config setting, ``debug``, controls whether debug-level output is
   logged; it defaults to ``False``.
   
