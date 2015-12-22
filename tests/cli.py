@@ -12,7 +12,8 @@ class CLIParsing(Spec):
     def setup(self):
         @task(positional=[])
         def mytask(mystring, s, boolean=False, b=False, v=False,
-            long_name=False, true_bool=True):
+            long_name=False, true_bool=True, _leading_underscore=False,
+            trailing_underscore_=False):
             pass
         @task(aliases=['mytask27'])
         def mytask2():
@@ -45,6 +46,12 @@ class CLIParsing(Spec):
 
     def underscored_flags_can_be_given_as_dashed(self):
         self._compare('--long-name', 'long_name', True)
+
+    def leading_underscores_are_ignored(self):
+        self._compare('--leading-underscore', '_leading_underscore', True)
+
+    def trailing_underscores_are_ignored(self):
+        self._compare('--trailing-underscore', 'trailing_underscore_', True)
 
     def inverse_boolean_flags(self):
         self._compare('--no-true-bool', 'true_bool', False)

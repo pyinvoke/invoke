@@ -10,7 +10,7 @@ import types
 from .vendor import six
 
 from .context import Context
-from .parser import Argument
+from .parser import Argument, translate_underscores
 
 if six.PY3:
     from itertools import zip_longest
@@ -166,7 +166,7 @@ class Task(object):
         # and move the underscored version to be the attr_name instead.)
         if '_' in name:
             opts['attr_name'] = name
-            name = name.replace('_', '-')
+            name = translate_underscores(name)
         names = [name]
         if self.auto_shortflags:
             # Must know what short names are available
