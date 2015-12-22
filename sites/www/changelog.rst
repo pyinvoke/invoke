@@ -2,6 +2,8 @@
 Changelog
 =========
 
+* :bug:`297 major` Ignore leading and trailing underscores when turning task
+  arguments into CLI flag names.
 * :bug:`296 major` Don't mutate ``sys.path`` on collection load if task's
   parent directory is already on ``sys.path``.
 * :feature:`289` (also :issue:`263`) Implement :ref:`autoresponding
