@@ -3,7 +3,7 @@ Changelog
 =========
 
 * :support:`144` Add code-coverage reporting to our CI builds (albeit `CodeCov
-  <https://codecov.io>`_ instead of `coveralls.io <https://coveralls.io>`).
+  <https://codecov.io>`_ instead of `coveralls.io <https://coveralls.io>`_).
   Includes rejiggering our project-specific coverage-generating tasks. Thanks
   to David Baumgold for the original request/PR and to Justin Abrahms for the
   tipoff re: CodeCov.
