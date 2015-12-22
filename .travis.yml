@@ -20,10 +20,9 @@ install:
   # Install remaining dev requirements (test runner, etc)
   - pip install -r dev-requirements.txt
 script:
-  # Main test suite
-  - inv test
-  # Slow, annoying-to-run-every-time integration suite
-  - inv integration
+  # Run unit and integration tests, generating coverage report.
+  # This will fail if the tests fail.
+  - inv coverage
   # Websites build OK?
   - inv sites
   # Did we break setup.py?
@@ -32,6 +31,9 @@ script:
   - inv -l # Sanity check
   # I have this in my git pre-push hook, but contributors probably don't
   - flake8
+after_success:
+  # Upload coverage data to codecov
+  - codecov
 notifications:
   irc:
     channels: "irc.freenode.org#invoke"

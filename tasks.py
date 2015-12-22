@@ -13,6 +13,5 @@ ns = Collection(
 ns.configure({
     'tests': {
         'logformat': LOG_FORMAT,
-        'package': 'invoke',
     },
 })
