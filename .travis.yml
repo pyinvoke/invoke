@@ -20,9 +20,9 @@ install:
   # Install remaining dev requirements (test runner, etc)
   - pip install -r dev-requirements.txt
 script:
-  # Run unit and integration tests, generating coverage report.
+  # Run unit and integration tests, generating coverage report (skipping html)
   # This will fail if the tests fail.
-  - inv coverage
+  - "inv coverage --no-html"
   # Websites build OK?
   - inv sites
   # Did we break setup.py?
