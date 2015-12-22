@@ -2,6 +2,10 @@
 Changelog
 =========
 
+* :bug:`297 major` Ignore leading and trailing underscores when turning task
+  arguments into CLI flag names.
+* :bug:`296 major` Don't mutate ``sys.path`` on collection load if task's
+  parent directory is already on ``sys.path``.
 * :bug:`295 major` Make sure that `~invoke.run`'s ``hide=True`` also disables
   echoing. Otherwise, "hidden" helper ``run`` calls will still pollute output
   when run as e.g. ``invoke --echo ...``.

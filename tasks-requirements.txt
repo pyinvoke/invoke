@@ -8,3 +8,5 @@ wheel==0.24
 twine==1.5
 # And this is required for the coverage task
 coverage==3.7.1
+# Technically only needed for Travis, but might as well add it here
+codecov==1.6.3

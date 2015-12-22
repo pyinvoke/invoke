@@ -28,8 +28,10 @@ def skip_if_windows(fn):
 @contextmanager
 def support_path():
     sys.path.insert(0, support)
-    yield
-    sys.path.pop(0)
+    try:
+        yield
+    finally:
+        sys.path.pop(0)
 
 
 def load(name):
