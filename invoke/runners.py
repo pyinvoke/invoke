@@ -28,8 +28,7 @@ except ImportError:
 
 from .exceptions import Failure, ThreadException, ExceptionWrapper
 from .platform import WINDOWS, pty_size, character_buffered
-from .util import isatty
-from .util import debug
+from .util import isatty, debug
 
 from .vendor import six
 
