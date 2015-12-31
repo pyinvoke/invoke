@@ -4,7 +4,6 @@ import codecs
 import locale
 import os
 import re
-import select
 import struct
 from subprocess import Popen, PIPE
 import sys
@@ -27,7 +26,9 @@ except ImportError:
     termios = None
 
 from .exceptions import Failure, ThreadException, ExceptionWrapper
-from .platform import WINDOWS, pty_size, character_buffered
+from .platform import (
+    WINDOWS, pty_size, character_buffered, ready_for_reading, read_byte,
+)
 from .util import isatty, debug
 
 from .vendor import six
@@ -400,26 +401,15 @@ class Runner(object):
 
         :returns: ``None``.
         """
-        use_select = isatty(input_)
         with character_buffered(input_):
             while True:
-                data = None
-                # "real" terminal stdin needs select() to tell us when it's
-                # ready for a nonblocking read().
-                if use_select:
-                    reads, _, _ = select.select([input_], [], [], 0.0)
-                    ready = bool(reads and reads[0] is input_)
-                # Otherwise, assume a "safer" file-like object that can be read
-                # from in a nonblocking fashion (e.g. a StringIO or regular
-                # file).
-                else:
-                    ready = True
-                if ready:
+                byte = None
+                if ready_for_reading(input_):
                     # Read 1 byte at a time for interactivity's sake.
-                    data = input_.read(1)
-                    # Short-circuit if not using select() and appeared to hit
-                    # end-of-stream.
-                    if not use_select and not data:
+                    byte = read_byte(input_)
+                    # Short-circuit if not a real stream and appeared to hit
+                    # end-of-file.
+                    if not isatty(input_) and not byte:
                         break
                     # Mirror what we just read to process' stdin.
                     # We perform an encode so Python 3 gets bytes (streams +
@@ -429,27 +419,19 @@ class Runner(object):
                     # TODO: consider baking the encode call into write_stdin
                     # (needs indirection as actual impl of write_stdin differs
                     # between subclasses...)
-                    self.write_stdin(self.encode(data))
+                    # TODO: will this break with multibyte input character
+                    # encoding?
+                    self.write_stdin(self.encode(byte))
                 # Dual all-done signals: program being executed is done
                 # running, *and* we don't seem to be reading anything out of
                 # stdin. (If we only test the former, we may encounter race
                 # conditions re: unread stdin.)
-                if self.program_finished.is_set() and not data:
+                if self.program_finished.is_set() and not byte:
                     break
                 # Take a nap so we're not chewing CPU.
                 time.sleep(0.01)
 
         # while not self.program_finished.is_set():
-        #    # Much of this is taken directly from Fabric 1.x's io.input_loop
-        #    # function as of f6475e3f4cd09862bcf6e732f28bf52b42129104.
-        #    if WINDOWS:
-        #        #have_char = msvcrt.kbhit()
-        #        pass # TODO: reinstate above
-        #    else:
-        #        # Use select() instead of stream.read, because stdin will
-        #        # block otherwise
-        #        r, w, x = select.select([stream], [], [], 0.0)
-        #        have_char = (r and r[0] == stream)
         #    # TODO: reinstate lock/whatever thread logic from fab v1 which
         #    # prevents reading from stdin while other parts of the code are
         #    # prompting for runtime passwords? (search for 'input_enabled')
@@ -468,8 +450,6 @@ class Runner(object):
         #            # output level, don't want it to be accidentally hidden
         #        #    sys.stdout.write(byte)
         #        #    sys.stdout.flush()
-        #    # TODO: is sleeping still necessary now that it's a generator?
-        #    #time.sleep(0.01) # TODO: store this in config
 
     def respond(self, buffer_, indices):
         """
