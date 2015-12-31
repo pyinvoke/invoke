@@ -182,7 +182,7 @@ class Runner_(Spec):
         def command_executed(self):
             eq_(self._run(_).command, _)
 
-    class echoing:
+    class command_echoing:
         @trap
         def off_by_default(self):
             self._run("my command")
@@ -342,7 +342,7 @@ class Runner_(Spec):
         # NOTE: actual autoresponder tests are elsewhere. These just test that
         # stdin works normally & can be overridden.
         @patch('invoke.runners.sys.stdin', StringIO("Text!"))
-        def input_defaults_to_sys_stdin(self):
+        def defaults_to_sys_stdin(self):
             # Execute w/ runner class that has a mocked stdin_writer
             klass = self._mock_stdin_writer()
             self._runner(klass=klass).run(_)
@@ -351,7 +351,7 @@ class Runner_(Spec):
             calls = list(map(lambda x: call(b(x)), "Text!"))
             klass.write_stdin.assert_has_calls(calls, any_order=False)
 
-        def input_stream_can_be_overridden(self):
+        def can_be_overridden(self):
             klass = self._mock_stdin_writer()
             in_stream = StringIO("Hey, listen!")
             self._runner(klass=klass).run(_, in_stream=in_stream)
@@ -360,7 +360,7 @@ class Runner_(Spec):
             klass.write_stdin.assert_has_calls(calls, any_order=False)
 
         @patch('invoke.runners.debug')
-        def input_handling_exceptions_get_logged(self, mock_debug):
+        def exceptions_get_logged(self, mock_debug):
             # Make write_stdin asplode
             klass = self._mock_stdin_writer()
             klass.write_stdin.side_effect = OhNoz("oh god why")
