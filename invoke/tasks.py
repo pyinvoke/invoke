@@ -339,6 +339,7 @@ class Call(object):
         args=None,
         kwargs=None,
         context=None,
+        hook_type=None
     ):
         """
         Create a new `.Call` object.
@@ -359,12 +360,17 @@ class Call(object):
         :param context:
             `.Context` instance to be used if the wrapped `.Task` is
             :ref:`contextualized <concepts-context>`. Default: ``None``.
+
+        :param hook_type:
+            The type of the actual task calling. Used for deduplication.
+            Can be 'direct', 'pre', or 'post'.
         """
         self.task = task
         self.called_as = called_as
         self.args = args or tuple()
         self.kwargs = kwargs or dict()
         self.context = context
+        self.hook_type = hook_type
 
     def __getattr__(self, name):
         return getattr(self.task, name)

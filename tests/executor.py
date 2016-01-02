@@ -169,8 +169,8 @@ post2
 foo
 bar
 boz
-post2
 post1
+post2
 """)
 
             def no_deduping(self):
@@ -180,6 +180,17 @@ bar
 foo
 boz
 post2
+post1
+post2
+""")
+
+        class shared_pre_and_post_hooks:
+            def deduping(self):
+                self._expect('biz boz', """
+foo
+bar
+biz
+boz
 post1
 post2
 """)
