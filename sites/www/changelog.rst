@@ -2,6 +2,9 @@
 Changelog
 =========
 
+* :bug:`298 major` During the deduplication keep the last of the post-hooked
+  task, not the first. (Make sure that the post task run after the original
+  task)
 * :support:`144` Add code-coverage reporting to our CI builds (albeit `CodeCov
   <https://codecov.io>`_ instead of `coveralls.io <https://coveralls.io>`_).
   Includes rejiggering our project-specific coverage-generating tasks. Thanks

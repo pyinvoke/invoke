@@ -94,15 +94,20 @@ class Executor(object):
         # Expand pre/post tasks & then dedupe the entire run.
         # Load config at this point to get latest value of dedupe option
         config = self.config.clone()
-        expanded = self.expand_calls(calls, config)
+        expanded = self.expand_calls(calls, 'direct', config)
         # Get some good value for dedupe option, even if config doesn't have
         # the tree we expect. (This is a concession to testing.)
         try:
             dedupe = config.tasks.dedupe
         except AttributeError:
             dedupe = True
+        calls = expanded
         # Actual deduping here
-        calls = self.dedupe(expanded) if dedupe else expanded
+        if dedupe:
+            # Keep the first 'pre' tasks
+            calls = self.dedupe(calls, 'pre')
+            # Keep the last 'post' tasks
+            calls = reversed(self.dedupe(reversed(calls), 'post'))
         # Execute
         results = {}
         for call in calls:
@@ -141,7 +146,7 @@ class Executor(object):
             calls = [Call(task=self.collection[self.collection.default])]
         return calls
 
-    def dedupe(self, calls):
+    def dedupe(self, calls, hook_type):
         """
         Deduplicate a list of `tasks <.Call>`.
 
@@ -150,16 +155,19 @@ class Executor(object):
         :returns: A list of `.Call` objects.
         """
         deduped = []
-        debug("Deduplicating tasks...")
+        debug("Deduplicating {0!r} tasks...".format(hook_type))
         for call in calls:
-            if call not in deduped:
+            if call.hook_type != hook_type:
+                debug("{0!r}: different type, don't handle now".format(call))
+                deduped.append(call)
+            elif call not in deduped:
                 debug("{0!r}: no duplicates found, ok".format(call))
                 deduped.append(call)
             else:
                 debug("{0!r}: found in list already, skipping".format(call))
         return deduped
 
-    def expand_calls(self, calls, config):
+    def expand_calls(self, calls, hook_type, config):
         """
         Expand a list of `.Call` objects into a near-final list of same.
 
@@ -175,7 +183,9 @@ class Executor(object):
             # Normalize to Call (this method is sometimes called with pre/post
             # task lists, which may contain 'raw' Task objects)
             if isinstance(call, Task):
-                call = Call(task=call)
+                call = Call(task=call, hook_type=hook_type)
+            else:
+                call.hook_type = hook_type
             debug("Expanding task-call {0!r}".format(call))
             if call.contextualized:
                 debug("Task was contextualized, loading additional configuration") # noqa
@@ -185,9 +195,9 @@ class Executor(object):
             # NOTE: handing in original config, not the mutated one handed to
             # the Context above. Pre/post tasks may well come from a different
             # collection, etc. Also just cleaner.
-            ret.extend(self.expand_calls(call.pre, config))
+            ret.extend(self.expand_calls(call.pre, 'pre', config))
             ret.append(call)
-            ret.extend(self.expand_calls(call.post, config))
+            ret.extend(self.expand_calls(call.post, 'post', config))
         return ret
 
     def config_for(self, call, config, anonymous=False):
