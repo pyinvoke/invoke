@@ -602,7 +602,7 @@ class Local_(Spec):
                 eq_(str(e.value), "wat")
 
     class encoding:
-        @mock_subprocess
+        @mock_subprocess()
         def uses_locale_module_for_desired_encoding(self):
             with patch('invoke.runners.codecs') as codecs:
                 self._run(_)
