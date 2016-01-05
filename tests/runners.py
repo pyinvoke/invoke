@@ -20,6 +20,10 @@ class _Dummy(Runner):
     """
     Dummy runner subclass that does minimum work required to execute run().
     """
+    # Neuter the input loop sleep, so tests aren't slow (at the expense of CPU,
+    # which isn't a problem for testing).
+    input_sleep = 0
+
     def start(self, command):
         pass
 
@@ -550,12 +554,17 @@ Just to say hi
             eq_(mock_time.sleep.call_args_list, [call(0.007)] * 3)
 
 
+class _FastLocal(Local):
+    # Neuter this for same reason as in _Dummy above
+    input_sleep = 0
+
+
 class Local_(Spec):
     def _run(self, *args, **kwargs):
-        return _run(*args, **dict(kwargs, klass=Local))
+        return _run(*args, **dict(kwargs, klass=_FastLocal))
 
     def _runner(self, *args, **kwargs):
-        return _runner(*args, **dict(kwargs, klass=Local))
+        return _runner(*args, **dict(kwargs, klass=_FastLocal))
 
     class pty_and_pty_fallback:
         @mock_pty()

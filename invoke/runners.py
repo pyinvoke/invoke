@@ -43,6 +43,7 @@ class Runner(object):
     implementation example, see the source code for `.Local`.
     """
     read_chunk_size = 1000
+    input_sleep = 0.01
 
     def __init__(self, context):
         """
@@ -76,6 +77,9 @@ class Runner(object):
         # __init__ docstrings, though that's annoying too.
         #: How many bytes (at maximum) to read per iteration of stream reads.
         self.read_chunk_size = self.__class__.read_chunk_size
+        # Ditto re: declaring this in 2 places for doc reasons.
+        #: How many seconds to sleep on each iteration of the stdin read loop.
+        self.input_sleep = self.__class__.input_sleep
         #: Whether pty fallback warning has been emitted.
         self.warned_about_pty_fallback = False
         #: The trigger/response mapping for use by `respond`. Is filled in at
@@ -429,7 +433,7 @@ class Runner(object):
                 if self.program_finished.is_set() and not byte:
                     break
                 # Take a nap so we're not chewing CPU.
-                time.sleep(0.01)
+                time.sleep(self.input_sleep)
 
         # while not self.program_finished.is_set():
         #    # TODO: reinstate lock/whatever thread logic from fab v1 which
