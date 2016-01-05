@@ -532,6 +532,23 @@ Just to say hi
                 responses=responses,
             ).assert_has_calls(calls, any_order=True)
 
+    class io_sleeping:
+        # NOTE: there's an explicit CPU-measuring test in the integration suite
+        # which ensures the *point* of the sleeping - avoiding CPU hogging - is
+        # actually functioning. These tests below just unit-test the mechanisms
+        # around the sleep functionality (ensuring they are visible and can be
+        # altered as needed).
+        def input_sleep_attribute_defaults_to_hundredth_of_second(self):
+            eq_(Runner(Context()).input_sleep, 0.01)
+
+        @mock_subprocess()
+        def subclasses_can_override_input_sleep(self):
+            class MyRunner(_Dummy):
+                input_sleep = 0.007
+            with patch('invoke.runners.time') as mock_time:
+                MyRunner(Context()).run(_, in_stream=StringIO("foo"))
+            eq_(mock_time.sleep.call_args_list, [call(0.007)] * 3)
+
 
 class Local_(Spec):
     def _run(self, *args, **kwargs):
