@@ -123,9 +123,11 @@ class Main(Spec):
         # When we do set it, it should be some non 0x0, non 80x24 (the default)
         # value. (yes, this means it fails if you really do have an 80x24
         # terminal. but who does that?)
-        # NOTE: Travis-CI *used* to do that, but as of 2015.12.12 or so, it now
-        # reports as "80 40".
         size = run('stty size', hide=True, pty=True).stdout.strip()
         assert size != ""
         assert size != "0 0"
-        assert size != "24 80"
+        # Apparently true-headless execution like Travis does that!
+        if os.environ.get('TRAVIS', False):
+            assert size == "24 80"
+        else:
+            assert size != "24 80"

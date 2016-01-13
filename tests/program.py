@@ -76,6 +76,13 @@ class Program_(IntegrationSpec):
                 expect('-d -c debugging foo')
                 debug.assert_called_with('my-sentinel')
 
+        def bytecode_skipped_by_default(self):
+            expect('-c foo mytask')
+            eq_(sys.dont_write_bytecode, True)
+
+        def write_pyc_explicitly_enables_bytecode_writing(self):
+            expect('--write-pyc -c foo mytask')
+            eq_(sys.dont_write_bytecode, False)
 
     class normalize_argv:
         @patch('invoke.program.sys')
@@ -308,6 +315,7 @@ Core options:
                                    parse remainder.
   --hide=STRING                    Set default value of run()'s 'hide' kwarg.
   --no-dedupe                      Disable task deduplication.
+  --write-pyc                      Enable creation of .pyc files.
   -c STRING, --collection=STRING   Specify collection name to load.
   -d, --debug                      Enable debug output.
   -e, --echo                       Echo executed commands before running.

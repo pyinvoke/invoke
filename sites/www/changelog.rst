@@ -2,6 +2,16 @@
 Changelog
 =========
 
+* :support:`265` Update our Travis config to select its newer build
+  infrastructure and also run on PyPy3. Thanks to Omer Katz.
+* :support:`254` Add an ``exclude`` option in our ``setup.py`` so setuptools
+  doesn't try loading our vendored PyYAML's Python 2 sub-package under Python 3
+  (or vice versa - though all reports were from Python 3 users). Thanks to
+  ``@yoshiya0503`` for catch & initial patch.
+* :feature:`68` Disable Python's bytecode caching by default, as it complicates
+  our typical use case (frequently-changing .py files) and offers little
+  benefit for human-facing startup times. Thanks to Jochen Breuer for feature
+  request and ``@brutus`` for initial patchset.
 * :support:`144` Add code-coverage reporting to our CI builds (albeit `CodeCov
   <https://codecov.io>`_ instead of `coveralls.io <https://coveralls.io>`_).
   Includes rejiggering our project-specific coverage-generating tasks. Thanks
