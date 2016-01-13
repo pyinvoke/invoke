@@ -13,8 +13,9 @@ Changelog
   ``@yoshiya0503`` for catch & initial patch.
 * :feature:`68` Disable Python's bytecode caching by default, as it complicates
   our typical use case (frequently-changing .py files) and offers little
-  benefit for human-facing startup times. Thanks to Jochen Breuer for feature
-  request and ``@brutus`` for initial patchset.
+  benefit for human-facing startup times. Bytecode caching can be explicitly
+  re-enabled by specifying ``--write-pyc`` at runtime. Thanks to Jochen Breuer
+  for feature request and ``@brutus`` for initial patchset.
 * :support:`144` Add code-coverage reporting to our CI builds (albeit `CodeCov
   <https://codecov.io>`_ instead of `coveralls.io <https://coveralls.io>`_).
   Includes rejiggering our project-specific coverage-generating tasks. Thanks
