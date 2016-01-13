@@ -11,14 +11,10 @@ with open('invoke/_version.py') as fp:
     exec(fp.read(), None, _locals)
 version = _locals['__version__']
 
-# select yaml package depending on pip
-PY2 = sys.version_info[0] == 2
-PY3 = sys.version_info[0] == 3
-exclude = []
-if PY3:
-    exclude.append('*.yaml2')
-else:
-    exclude.append('*.yaml3')
+# PyYAML ships a split Python 2/3 codebase. Unfortunately, some pip versions
+# attempt to interpret both halves of PyYAML, yielding SyntaxErrors. Thus, we
+# exclude whichever appears inappropriate for the installing interpreter.
+exclude = ['*.yaml3' if sys.version_info[0] == 2 else '*.yaml2']
 
 # Frankenstein long_description: version-specific changelog note + README
 long_description = """
