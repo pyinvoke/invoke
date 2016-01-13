@@ -2,6 +2,10 @@
 Changelog
 =========
 
+* :support:`254` Add an ``exclude`` option in our ``setup.py`` so setuptools
+  doesn't try loading our vendored PyYAML's Python 2 sub-package under Python 3
+  (or vice versa - though all reports were from Python 3 users). Thanks to
+  ``@yoshiya0503`` for catch & initial patch.
 * :feature:`68` Disable Python's bytecode caching by default, as it complicates
   our typical use case (frequently-changing .py files) and offers little
   benefit for human-facing startup times. Thanks to Jochen Breuer for feature
