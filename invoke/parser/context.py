@@ -5,8 +5,11 @@ from ..vendor.lexicon import Lexicon
 from .argument import Argument
 
 
+def translate_underscores(name):
+    return name.lstrip('_').rstrip('_').replace('_', '-')
+
 def to_flag(name):
-    name = name.replace('_', '-')
+    name = translate_underscores(name)
     if len(name) == 1:
         return '-' + name
     return '--' + name

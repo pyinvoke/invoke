@@ -23,7 +23,7 @@ else:
 # Frankenstein long_description: version-specific changelog note + README
 long_description = """
 To find out what's new in this version of Invoke, please see `the changelog
-<http://docs.pyinvoke.org/en/%s/changelog.html>`_.
+<http://pyinvoke.org/changelog.html#%s>`_.
 
 %s
 """ % (version, open('README.rst').read())
@@ -42,8 +42,8 @@ setup(
     packages=find_packages(exclude=exclude),
     entry_points={
         'console_scripts': [
-            'invoke = invoke.cli:main',
-            'inv = invoke.cli:main',
+            'invoke = invoke.main:program.run',
+            'inv = invoke.main:program.run',
         ]
     },
 
@@ -57,10 +57,14 @@ setup(
         'Operating System :: Unix',
         'Operating System :: POSIX',
         'Programming Language :: Python',
+        'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.2',
         'Programming Language :: Python :: 3.3',
+        'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
         'Topic :: Software Development',
         'Topic :: Software Development :: Build Tools',
         'Topic :: Software Development :: Libraries',

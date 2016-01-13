@@ -5,7 +5,13 @@ This is its own module to abstract away what would otherwise be distracting
 logic-flow interruptions.
 """
 
+from contextlib import contextmanager
 import sys
+
+# TODO: move in here? It's currently platform-agnostic...
+from .util import isatty
+
+
 WINDOWS = (sys.platform == 'win32')
 """
 Whether or not the current platform appears to be Windows in nature.
@@ -91,3 +97,23 @@ def _win_pty_size():
         return sizex, sizey
     else:
         return (None, None)
+
+
+@contextmanager
+def character_buffered(stream):
+    """
+    Force local terminal ``stream`` be character, not line, buffered.
+
+    Only applies to Unix-based systems; on Windows this is a no-op.
+    """
+    if WINDOWS or not isatty(stream):
+        yield
+    else:
+        import termios
+        import tty
+        old_settings = termios.tcgetattr(stream)
+        tty.setcbreak(stream)
+        try:
+            yield
+        finally:
+            termios.tcsetattr(stream, termios.TCSADRAIN, old_settings)

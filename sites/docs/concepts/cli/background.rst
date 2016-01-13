@@ -7,6 +7,10 @@ needs are a little on the unique side. This document outlines the various
 possible approaches to this problem, and why Invoke ended up with the mechanism
 it currently provides.
 
+.. note::
+    This is purely design documentation; you don't need to understand it in
+    order to use the software!
+
 Basics
 ======
 

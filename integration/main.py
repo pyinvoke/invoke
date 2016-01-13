@@ -4,6 +4,7 @@ import sys
 from spec import Spec, trap, eq_, skip, ok_
 
 from invoke import run
+from invoke._version import __version__
 from invoke.platform import WINDOWS
 
 
@@ -19,6 +20,14 @@ class Main(Spec):
     @trap
     def basic_invocation(self):
         _output_eq("invoke print_foo", "foo\n")
+
+    @trap
+    def version_output(self):
+        _output_eq("invoke --version", "Invoke {0}\n".format(__version__))
+
+    @trap
+    def help_output(self):
+        ok_("Usage: inv[oke] " in run("invoke --help").stdout)
 
     @trap
     def shorthand_binary_name(self):
@@ -114,11 +123,9 @@ class Main(Spec):
         # When we do set it, it should be some non 0x0, non 80x24 (the default)
         # value. (yes, this means it fails if you really do have an 80x24
         # terminal. but who does that?)
+        # NOTE: Travis-CI *used* to do that, but as of 2015.12.12 or so, it now
+        # reports as "80 40".
         size = run('stty size', hide=True, pty=True).stdout.strip()
         assert size != ""
         assert size != "0 0"
-        # Apparently true-headless execution like Travis does that!
-        if os.environ.get('TRAVIS', False):
-            assert size == "24 80"
-        else:
-            assert size != "24 80"
+        assert size != "24 80"

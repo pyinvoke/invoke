@@ -201,6 +201,7 @@ class ParseMachine(StateMachine):
         # Unknown
         else:
             if not self.ignore_unknown:
+                debug("Can't find context named {0!r}, erroring".format(token))
                 self.error("No idea what {0!r} is!".format(token))
             else:
                 debug("Bottom-of-handle() see_unknown({0!r})".format(token))
@@ -252,18 +253,27 @@ class ParseMachine(StateMachine):
 
     def check_ambiguity(self, value):
         """
-        Guard against ambiguity when currently flag takes an optional value.
+        Guard against ambiguity when current flag takes an optional value.
         """
+        # No flag is currently being examined, or one is but it doesn't take an
+        # optional value? Ambiguity isn't possible.
         if not (self.flag and self.flag.optional):
             return False
+        # We *are* dealing with an optional-value flag, but it's already
+        # received a value? There can't be ambiguity here either.
+        debug("Testing flag value: %r" % self.flag.raw_value)
+        if self.flag.raw_value is not None:
+            return False
+        # Otherwise, there *may* be ambiguity if 1 or more of the below tests
+        # fail.
         tests = []
-        # unfilled posargs still exist
+        # Unfilled posargs still exist?
         tests.append(self.context and self.context.needs_positional_arg)
-        # * value looks like it's supposed to be a flag itself.
+        # Value looks like it's supposed to be a flag itself?
         # (Doesn't have to even actually be valid - chances are if it looks
         # like a flag, the user was trying to give one.)
         tests.append(is_flag(value))
-        # * value matches another valid task/context name
+        # Value matches another valid task/context name?
         tests.append(value in self.contexts)
         if any(tests):
             msg = "{0!r} is ambiguous when given after an optional-value flag"

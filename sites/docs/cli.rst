@@ -1,19 +1,19 @@
-=======
-``cli``
-=======
+======================
+Command-line interface
+======================
 
 .. seealso::
     This page documents the ``invoke`` command-line program itself. For
-    background on how parsing works, please see :doc:`/concepts/cli`. For
-    details on task execution, see :doc:`/concepts/execution`.
+    background on how argument parsing works, please see :doc:`/concepts/cli`.
+    For details on task execution, see :doc:`/concepts/execution`.
 
 
 ``inv[oke]`` command-line program
 =================================
 
-One of the main ways to use Invoke is via its command-line program, which can
-load task modules and execute their tasks, optionally with flags for
-parameterization.
+One of the main ways to use Invoke is via its command-line program, ``invoke``
+(also available as the shorter name ``inv``), which can load task modules and
+execute their tasks, optionally with flags for parameterization.
 
 .. TODO: autodoc-like ext that spits out option nodes automatically
 
@@ -51,6 +51,10 @@ The core options (which must be given before any task names) are as follows:
     For more details on how to use this option, see the bundled completion
     scripts stored in ``completion/`` in the source distribution.
 
+.. option:: --hide=STRING
+
+    Set default value of run()'s 'hide' kwarg.
+
 .. option:: --no-dedupe
 
     Disable task deduplication.
@@ -75,10 +79,6 @@ The core options (which must be given before any task names) are as follows:
 .. option:: -h STRING, --help=STRING
 
     Show core or per-task help and exit.
-
-.. option:: -H STRING, --hide=STRING
-
-    Set default value of run()'s 'hide' kwarg.
 
 .. option:: -l, --list
 
@@ -133,12 +133,3 @@ using Bash or Zsh, simply do the following:
 
     * For example, prior to typing a task name, ``--config <tab>`` will
       complete local file paths to assist in filling in a config file.
-
-
-The internal ``cli`` module's API docs
-======================================
-
-Potentially useful if you need to make your own command-line tool instead of
-using ``invoke`` directly.
-
-.. automodule:: invoke.cli

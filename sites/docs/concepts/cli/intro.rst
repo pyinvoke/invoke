@@ -165,6 +165,10 @@ command-line parser flags.
 Therefore, the two examples above actually work fine together -- ``my_option``
 ends up mapping to ``--my-option``.
 
+In addition, leading (``_myopt``) and trailing (``myopt_``) underscores are
+ignored, since ``invoke ---myopt`` and ``invoke --myopt-`` don't make much
+sense.
+
 Automatic Boolean inverse flags
 -------------------------------
 

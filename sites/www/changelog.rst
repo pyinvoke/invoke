@@ -2,6 +2,56 @@
 Changelog
 =========
 
+* :feature:`68` Disable Python's bytecode caching by default, as it complicates
+  our typical use case (frequently-changing .py files) and offers little
+  benefit for human-facing startup times. Thanks to Jochen Breuer for feature
+  request and ``@brutus`` for initial patchset.
+* :support:`144` Add code-coverage reporting to our CI builds (albeit `CodeCov
+  <https://codecov.io>`_ instead of `coveralls.io <https://coveralls.io>`_).
+  Includes rejiggering our project-specific coverage-generating tasks. Thanks
+  to David Baumgold for the original request/PR and to Justin Abrahms for the
+  tipoff re: CodeCov.
+* :bug:`297 major` Ignore leading and trailing underscores when turning task
+  arguments into CLI flag names.
+* :bug:`296 major` Don't mutate ``sys.path`` on collection load if task's
+  parent directory is already on ``sys.path``.
+* :bug:`295 major` Make sure that `~invoke.run`'s ``hide=True`` also disables
+  echoing. Otherwise, "hidden" helper ``run`` calls will still pollute output
+  when run as e.g. ``invoke --echo ...``.
+* :feature:`289` (also :issue:`263`) Implement :ref:`autoresponding
+  <autoresponding>` for `~invoke.run`.
+* :support:`-` Removed official Python 3.2 support; sibling projects also did
+  this recently, it's simply not worth the annoyance given the userbase size.
+* :feature:`228` (partial) Modified and expanded implementation of
+  `~invoke.executor.Executor`, `~invoke.tasks.Task` and `~invoke.tasks.Call` to
+  make implementing task parameterization easier.
+* :support:`-` Removed the ``-H`` short flag, leaving just ``--hide``. This was
+  done to avoid conflicts with Fabric's host-oriented ``-H`` flag. Favoritism
+  is real! Apologies.
+
+  .. warning:: This change is backwards compatible if you used ``-H``.
+
+* :feature:`173` Overhauled top level CLI functionality to allow reusing
+  Invoke for distinct binaries, optionally with bundled task namespaces as
+  subcommands. As a side effect, this functionality is now much more extensible
+  to boot. Thanks to Erich Heine for feedback/suggestions during development.
+
+  .. warning::
+    This change is backwards incompatible if you imported anything from the
+    ``invoke.cli`` module (which is now rearchitected as
+    `~invoke.program.Program`). It should be transparent to everybody else.
+
+  .. seealso:: :ref:`reusing-as-a-binary`
+
+* :bug:`- major` Fixed a bug in the parser where ``invoke --takes-optional-arg
+  avalue --anotherflag`` was incorrectly considering ``--anotherflag`` to be an
+  ambiguity error (as if ``avalue`` had not been given to
+  ``--takes-optional-arg``.
+* :release:`0.11.1 <2015-09-07>`
+* :support:`- backported` Fix incorrect changelog URL in package metadata.
+* :release:`0.11.0 <2015-09-07>`
+* :feature:`-` Create `invoke.runners.Result.command` to preserve the command
+  executed for post-execution introspection.
 * :feature:`-` Detect local controlling terminal size
   (`~invoke.platform.pty_size`) and apply that information when creating
   pseudoterminals in `~invoke.run` when ``pty=True``.
@@ -64,8 +114,9 @@ Changelog
 * :support:`224` Add a completion script for the ``fish`` shell, courtesy of
   Jaime Marquínez Ferrándiz.
 * :release:`0.10.1 <2015-03-17>`
-* :support:`-` Tweak README to reflect recent(-ish) changes in ``pip`` re:
-  users who install the development version via ``pip`` instead of using git.
+* :support:`- backported` Tweak README to reflect recent(-ish) changes in
+  ``pip`` re: users who install the development version via ``pip`` instead of
+  using git.
 * :release:`0.10.0 <2015-03-17>`
 * :feature:`104` Add core CLI flag ``--complete`` to support shell tab
   completion scripts, and add some 'blessed' such scripts for bash (3 and 4)
