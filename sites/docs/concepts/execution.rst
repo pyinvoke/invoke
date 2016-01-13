@@ -110,6 +110,8 @@ With a depth-first behavior, the below is hopefully intuitive to most users::
     Deploying
 
         
+.. _parameterizing-pre-post-tasks:
+
 Parameterizing pre/post-tasks
 -----------------------------
 
@@ -155,7 +157,7 @@ to inclusion in pre/post tasks), will only be run once. Example task file::
         print("Packaging")
 
 With deduplication turned off (see below), the above would execute ``clean`` ->
-``build`` -> ``build`` again -> ``package``. With duplication, the double
+``build`` -> ``build`` again -> ``package``. With deduplication, the double
 ``build`` does not occur::
 
     $ invoke build package

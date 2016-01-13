@@ -1,7 +1,8 @@
 from .config import Config
 from .context import Context
+from .parser import ParserContext
 from .util import debug
-from .tasks import Call
+from .tasks import Call, Task
 
 from .vendor import six
 
@@ -13,9 +14,9 @@ class Executor(object):
     Subclasses may override various extension points to change, add or remove
     behavior.
     """
-    def __init__(self, collection, config=None):
+    def __init__(self, collection, config=None, core=None):
         """
-        Initialize executor with handles to a task collection & config.
+        Initialize executor with handles to necessary data structures.
 
         :param collection:
             A `.Collection` used to look up requested tasks (and their default
@@ -24,20 +25,36 @@ class Executor(object):
         :param config:
             An optional `.Config` holding configuration state Defaults to an
             empty `.Config` if not given.
+
+        :param core:
+            An optional `.ParserContext` holding core program arguments.
+            Defaults to ``None``.
+
+            .. note::
+                This is unused by the default implementation, but may be useful
+                to subclasses which care about specific core arguments re:
+                execution strategy, use of the parse remainder, etc.
         """
         self.collection = collection
-        if config is None:
-            config = Config()
-        self.config = config
+        self.config = config if config is not None else Config()
+        self.core = core
 
-    def execute(self, *tasks, **kwargs):
+    def execute(self, *tasks):
         """
         Execute one or more ``tasks`` in sequence.
 
         :param tasks:
-            An iterable of two-tuples whose first element is a task name and
-            whose second element is a dict suitable for use as ``**kwargs``.
-            E.g.::
+            An all-purpose iterable of "tasks to execute", each member of which
+            may take one of the following forms:
+
+            **A string** naming a task from the Executor's `.Collection`. This
+            name may contain dotted syntax appropriate for calling namespaced
+            tasks, e.g. ``subcollection.taskname``. Such tasks are executed
+            without arguments.
+
+            **A two-tuple** whose first element is a task name string (as
+            above) and whose second element is a dict suitable for use as
+            ``**kwargs`` when calling the named task. E.g.::
 
                 [
                     ('task1', {}),
@@ -45,17 +62,19 @@ class Executor(object):
                     ...
                 ]
 
-            As a shorthand, a string instead of a two-tuple may be given,
-            implying an empty kwargs dict.
-
-            The string specifies which task from the Executor's `.Collection`
-            is to be executed. It may contain dotted syntax appropriate for
-            calling namespaced tasks, e.g. ``subcollection.taskname``.
-
-            Thus the above list-of-tuples is roughly equivalent to::
+            is equivalent, roughly, to::
 
                 task1()
                 task2(arg1='val1')
+
+            **A `.ParserContext`** instance, whose ``.name`` attribute is used
+            as the task name and whose ``.as_kwargs`` attribute is used as the
+            task kwargs (again following the above specifications).
+
+            .. note::
+                When called without any arguments at all (i.e. when ``*tasks``
+                is empty), the default task from ``self.collection`` is used
+                instead, if defined.
 
         :returns:
             A dict mapping task objects to their return values.
@@ -65,17 +84,17 @@ class Executor(object):
             task named ``setup``, executing ``build`` will result in a dict
             with two keys, one for ``build`` and one for ``setup``.
         """
-        # Handle top level kwargs (the name gets overwritten below)
         # Normalize input
-        debug("Examining top level tasks {0!r}".format([x[0] for x in tasks]))
-        tasks = self._normalize(tasks)
-        debug("Tasks with kwargs: {0!r}".format(tasks))
+        debug("Examining top level tasks {0!r}".format([x for x in tasks]))
+        calls = self.normalize(tasks)
+        debug("Tasks (now Calls) with kwargs: {0!r}".format(calls))
         # Obtain copy of directly-given tasks since they should sometimes
         # behave differently
-        direct = list(tasks)
+        direct = list(calls)
         # Expand pre/post tasks & then dedupe the entire run.
         # Load config at this point to get latest value of dedupe option
         config = self.config.clone()
+        expanded = self.expand_calls(calls, config)
         # Get some good value for dedupe option, even if config doesn't have
         # the tree we expect. (This is a concession to testing.)
         try:
@@ -83,80 +102,120 @@ class Executor(object):
         except AttributeError:
             dedupe = True
         # Actual deduping here
-        tasks = self._dedupe(self._expand_tasks(tasks), dedupe)
+        calls = self.dedupe(expanded) if dedupe else expanded
         # Execute
         results = {}
-        for task in tasks:
-            args, kwargs = tuple(), {}
-            # Unpack Call objects, including given-name handling
-            name = None
-            autoprint = task in direct and task.autoprint
-            if isinstance(task, Call):
-                c = task
-                task = c.task
-                args, kwargs = c.args, c.kwargs
-                name = c.name
-            result = self._execute(
-                task=task, name=name, args=args, kwargs=kwargs, config=config
-            )
+        for call in calls:
+            autoprint = call in direct and call.autoprint
+            args = call.args
+            debug("Executing {0!r}".format(call))
+            if call.contextualized:
+                args = (call.context,) + args
+            result = call.task(*args, **call.kwargs)
             if autoprint:
                 print(result)
             # TODO: handle the non-dedupe case / the same-task-different-args
             # case, wherein one task obj maps to >1 result.
-            results[task] = result
+            results[call.task] = result
         return results
 
-    def _normalize(self, tasks):
-        # To two-tuples from potential combo of two-tuples & strings
-        tuples = [
-            (x, {}) if isinstance(x, six.string_types) else x
-            for x in tasks
-        ]
-        # Then to call objects (binding the task obj + kwargs together)
+    def normalize(self, tasks):
+        """
+        Transform arbitrary task list w/ various types, into `.Call` objects.
+
+        See docstring for `~.Executor.execute` for details.
+        """
         calls = []
-        for name, kwargs in tuples:
-            c = Call(self.collection[name], **kwargs)
-            c.name = name
+        for task in tasks:
+            name, kwargs = None, {}
+            if isinstance(task, six.string_types):
+                name = task
+            elif isinstance(task, ParserContext):
+                name = task.name
+                kwargs = task.as_kwargs
+            else:
+                name, kwargs = task
+            c = Call(task=self.collection[name], kwargs=kwargs, called_as=name)
             calls.append(c)
+        if not tasks and self.collection.default is not None:
+            calls = [Call(task=self.collection[self.collection.default])]
         return calls
 
-    def _dedupe(self, tasks, dedupe):
+    def dedupe(self, calls):
+        """
+        Deduplicate a list of `tasks <.Call>`.
+
+        :param calls: An iterable of `.Call` objects representing tasks.
+
+        :returns: A list of `.Call` objects.
+        """
         deduped = []
-        if dedupe:
-            debug("Deduplicating tasks...")
-            for task in tasks:
-                if task not in deduped:
-                    debug("{0!r}: ok".format(task))
-                    deduped.append(task)
-                else:
-                    debug("{0!r}: skipping".format(task))
-        else:
-            deduped = tasks
+        debug("Deduplicating tasks...")
+        for call in calls:
+            if call not in deduped:
+                debug("{0!r}: no duplicates found, ok".format(call))
+                deduped.append(call)
+            else:
+                debug("{0!r}: found in list already, skipping".format(call))
         return deduped
 
-    def _execute(self, task, name, args, kwargs, config):
-        # Need task + possible name when invoking CLI-given tasks, so we can
-        # pass a dotted path to Collection.configuration()
-        debug("Executing {0!r}{1}".format(
-            task,
-            (" as {0}".format(name)) if name else ""),
-        )
-        if task.contextualized:
-            # Load per-task/collection config
-            config.load_collection(self.collection.configuration(name))
-            # Load env vars, as the last step (so users can override
-            # per-collection keys via the env)
-            config.load_shell_env()
-            # Set up context w/ that config
-            context = Context(config=config)
-            args = (context,) + args
-        result = task(*args, **kwargs)
-        return result
+    def expand_calls(self, calls, config):
+        """
+        Expand a list of `.Call` objects into a near-final list of same.
 
-    def _expand_tasks(self, tasks):
+        The default implementation of this method simply adds a task's
+        pre/post-task list before/after the task itself, as necessary.
+
+        Subclasses may wish to do other things in addition (or instead of) the
+        above, such as multiplying the `calls <.Call>` by argument vectors or
+        similar.
+        """
         ret = []
-        for task in tasks:
-            ret.extend(self._expand_tasks(task.pre))
-            ret.append(task)
-            ret.extend(self._expand_tasks(task.post))
+        for call in calls:
+            # Normalize to Call (this method is sometimes called with pre/post
+            # task lists, which may contain 'raw' Task objects)
+            if isinstance(call, Task):
+                call = Call(task=call)
+            debug("Expanding task-call {0!r}".format(call))
+            if call.contextualized:
+                debug("Task was contextualized, loading additional configuration") # noqa
+                call.context = Context(config=self.config_for(call, config))
+            else:
+                debug("Task uncontextualized, skipping collection/env config load") # noqa
+            # NOTE: handing in original config, not the mutated one handed to
+            # the Context above. Pre/post tasks may well come from a different
+            # collection, etc. Also just cleaner.
+            ret.extend(self.expand_calls(call.pre, config))
+            ret.append(call)
+            ret.extend(self.expand_calls(call.post, config))
         return ret
+
+    def config_for(self, call, config, anonymous=False):
+        """
+        Generate a `.Config` object suitable for the given task call.
+
+        :param call: `.Call` object to create config for.
+
+        :param config: Core `.Config` object to clone & build upon.
+
+        :param bool anonymous:
+            If ``True``, treat task as anonymous and don't try loading
+            collection-based config for it. (Useful for downstream code which
+            may be adding dynamically-created, collection-less tasks during the
+            load process.)
+        """
+        task_config = config.clone()
+        if not anonymous:
+            # Load collection-local config
+            task_config.load_collection(
+                self.collection.configuration(call.called_as)
+            )
+        # Load env vars, as the last step (so users can override
+        # per-collection keys via the env)
+        task_config.load_shell_env()
+        debug("Finished loading collection & shell env configs")
+        # Set up context w/ that config & add to call obj
+        # TODO: fab needs to override the class here & some of its
+        # kwargs, based on values that it derives from core args & the
+        # task
+        return task_config

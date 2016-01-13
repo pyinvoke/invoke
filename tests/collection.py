@@ -7,7 +7,7 @@ from invoke.tasks import task, Task
 from invoke.vendor import six
 from invoke.vendor.six.moves import reduce
 
-from _utils import load, support_path
+from _util import load, support_path
 
 
 @task

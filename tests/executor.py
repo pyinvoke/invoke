@@ -1,13 +1,10 @@
-from spec import eq_
+from spec import eq_, ok_
 from mock import Mock, call as mock_call
 
-from invoke.collection import Collection
-from invoke.config import Config
-from invoke.context import Context
-from invoke.executor import Executor
-from invoke.tasks import Task, ctask, call
+from invoke import Collection, Config, Context, Executor, Task, ctask, call
+from invoke.parser import ParserContext
 
-from _utils import _output_eq, IntegrationSpec
+from _util import expect, IntegrationSpec
 
 
 class Executor_(IntegrationSpec):
@@ -18,11 +15,13 @@ class Executor_(IntegrationSpec):
         self.task2 = Task(Mock(return_value=10), pre=[self.task1])
         self.task3 = Task(Mock(), pre=[self.task1])
         self.task4 = Task(Mock(return_value=15), post=[self.task1])
+        self.contextualized = Task(Mock(), contextualized=True)
         coll = Collection()
         coll.add_task(self.task1, name='task1')
         coll.add_task(self.task2, name='task2')
         coll.add_task(self.task3, name='task3')
         coll.add_task(self.task4, name='task4')
+        coll.add_task(self.contextualized, name='contextualized')
         self.executor = Executor(collection=coll)
 
     class init:
@@ -38,6 +37,13 @@ class Executor_(IntegrationSpec):
             e = Executor(collection=Collection())
             assert isinstance(e.config, Config)
 
+        def can_grant_access_to_core_arg_parse_result(self):
+            c = ParserContext()
+            ok_(Executor(collection=Collection(), core=c).core is c)
+
+        def core_arg_parse_result_defaults_to_None(self):
+            ok_(Executor(collection=Collection()).core is None)
+
     class execute:
         def base_case(self):
             self.executor.execute('task1')
@@ -47,6 +53,22 @@ class Executor_(IntegrationSpec):
             k = {'foo': 'bar'}
             self.executor.execute(('task1', k))
             self.task1.body.assert_called_once_with(**k)
+
+        def contextualized_tasks_are_given_parser_context_arg(self):
+            self.executor.execute('contextualized')
+            args = self.contextualized.body.call_args[0]
+            eq_(len(args), 1)
+            ok_(isinstance(args[0], Context))
+
+        def default_tasks_called_when_no_tasks_specified(self):
+            # NOTE: when no tasks AND no default, Program will print global
+            # help. We just won't do anything at all, which is fine for now.
+            task = Task(Mock('default-task'))
+            coll = Collection()
+            coll.add_task(task, name='mytask', default=True)
+            executor = Executor(collection=coll)
+            executor.execute()
+            task.body.assert_called_with()
 
     class basic_pre_post:
         "basic pre/post task functionality"
@@ -99,14 +121,14 @@ class Executor_(IntegrationSpec):
                 eq_(args, (7,))
 
         def may_be_call_objects_specifying_args(self):
-            self._call_objs(False)
+            self._call_objs(contextualized=False)
 
         def call_objs_play_well_with_context_args(self):
-            self._call_objs(True)
+            self._call_objs(contextualized=True)
 
     class deduping_and_chaining:
         def chaining_is_depth_first(self):
-            _output_eq('-c depth_first deploy', """
+            expect('-c depth_first deploy', out="""
 Cleaning HTML
 Cleaning .tar.gz files
 Cleaned everything
@@ -118,7 +140,7 @@ Testing
 """.lstrip())
 
         def _expect(self, args, expected):
-            _output_eq('-c integration {0}'.format(args), expected.lstrip())
+            expect('-c integration {0}'.format(args), out=expected.lstrip())
 
         class adjacent_hooks:
             def deduping(self):
@@ -255,3 +277,19 @@ bar
                 self.executor.execute('task4'),
                 {self.task1: 7, self.task4: 15}
             )
+
+    class autoprinting:
+        def defaults_to_off_and_no_output(self):
+            expect("-c autoprint nope", out="")
+
+        def prints_return_value_to_stdout_when_on(self):
+            expect("-c autoprint yup", out="It's alive!\n")
+
+        def prints_return_value_to_stdout_when_on_and_in_collection(self):
+            expect("-c autoprint sub.yup", out="It's alive!\n")
+
+        def does_not_fire_on_pre_tasks(self):
+            expect("-c autoprint pre_check", out="")
+
+        def does_not_fire_on_post_tasks(self):
+            expect("-c autoprint post_check", out="")

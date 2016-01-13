@@ -50,6 +50,11 @@ Exit code: {0}
 
 
 class ParseError(Exception):
+    """
+    An error arising from the parsing of command-line flags/arguments.
+
+    Ambiguous input, invalid task names, invalid flags, etc.
+    """
     def __init__(self, msg, context=None):
         super(ParseError, self).__init__(msg)
         self.context = context

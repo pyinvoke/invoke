@@ -220,6 +220,8 @@ class Config(DataProxy):
                 'encoding': None,
                 'out_stream': None,
                 'err_stream': None,
+                'in_stream': None,
+                'responses': {},
             },
             'tasks': {'dedupe': True},
         }
@@ -334,7 +336,6 @@ class Config(DataProxy):
         self._project = {}
 
         #: Environment variable name prefix
-        # TODO: make this INVOKE_ and update tests to account?
         self._env_prefix = '' if env_prefix is None else env_prefix
         #: Config data loaded from the shell environment.
         self._env = {}
@@ -382,12 +383,12 @@ class Config(DataProxy):
         Update collection-driven config data.
 
         `.load_collection` is intended for use by the core task execution
-        machinery, which is responsible for obtaining per-task
-        collection-driven data. See :ref:`collection-configuration` for
-        details.
+        machinery, which is responsible for obtaining collection-driven data.
+        See :ref:`collection-configuration` for details.
 
         .. note:: This method triggers `.merge` after it runs.
         """
+        debug("Loading collection configuration")
         self._collection = data
         self.merge()
 

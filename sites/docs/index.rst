@@ -30,6 +30,15 @@ Dig deeper into specific topics:
 
     concepts/*
 
+The ``invoke`` CLI tool
+-----------------------
+
+Details on the CLI interface to Invoke, available core flags, and tab
+completion options.
+
+.. toctree::
+    cli
+
 API
 ---
 

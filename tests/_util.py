@@ -1,14 +1,15 @@
 import os
-import re
 import sys
 import termios
 from contextlib import contextmanager
-from functools import partial, wraps
+from functools import wraps
+
 from invoke.vendor.six import StringIO
 
-from mock import patch
+from mock import patch, Mock
 from spec import trap, Spec, eq_, skip
 
+from invoke import Program, Failure
 from invoke.platform import WINDOWS
 
 
@@ -25,12 +26,12 @@ def skip_if_windows(fn):
 
 
 @contextmanager
-def sys_path(filepath=None):
-    sys.path.insert(0, filepath)
-    yield
-    sys.path.pop(0)
-
-support_path = partial(sys_path, filepath=support)
+def support_path():
+    sys.path.insert(0, support)
+    try:
+        yield
+    finally:
+        sys.path.pop(0)
 
 
 def load(name):
@@ -44,79 +45,57 @@ class IntegrationSpec(Spec):
         os.chdir(support)
 
     def teardown(self):
-        reset_cwd()
+        # Chdir back to project root to avoid problems
+        os.chdir(os.path.join(os.path.dirname(__file__), '..'))
+        # Nuke changes to environ
         os.environ.clear()
         os.environ.update(self.old_environ)
 
 
-def reset_cwd():
-    # Chdir back to project root to avoid problems
-    os.chdir(os.path.join(os.path.dirname(__file__), '..'))
-
-
-@contextmanager
-def cd(where):
-    cwd = os.getcwd()
-    os.chdir(where)
-    try:
-        yield
-    finally:
-        os.chdir(cwd)
-
-
-# Strings are easier to type & read than lists
-def _dispatch(argstr, version=None):
-    from invoke.cli import dispatch
-    return dispatch(argstr.split(), version)
-
-
 @trap
-def _output_eq(args, stdout=None, stderr=None, code=0):
+def expect(invocation, out=None, err=None, program=None, invoke=True,
+    test=None):
     """
-    dispatch() 'args', matching output to 'std(out|err)'.
+    Run ``invocation`` via ``program`` and expect resulting output to match.
 
-    Must give either or both of the output-expecting args.
+    May give one or both of ``out``/``err`` (but not neither).
+
+    ``program`` defaults to ``Program()``.
+
+    To skip automatically assuming the argv under test starts with ``"invoke
+    "``, say ``invoke=False``.
+
+    To customize the operator used for testing (default: equality), use
+    ``test`` (which should be an assertion wrapper of some kind).
     """
-    with expect_exit(code):
-        _dispatch("inv {0}".format(args))
-    if stdout is not None:
-        eq_(sys.stdout.getvalue(), stdout)
-    if stderr is not None:
-        eq_(sys.stderr.getvalue(), stderr)
+    if program is None:
+        program = Program()
+    if invoke:
+        invocation = "invoke {0}".format(invocation)
+    program.run(invocation, exit=False)
+    # Perform tests
+    if out is not None:
+        (test or eq_)(sys.stdout.getvalue(), out)
+    if err is not None:
+        (test or eq_)(sys.stderr.getvalue(), err)
 
 
-@contextmanager
-def expect_exit(code=0):
+class SimpleFailure(Failure):
     """
-    Run a block of code expected to sys.exit(), ignoring the exit.
+    Failure subclass that can be raised w/o any args given.
 
-    This is so we can readily test top level things like help output, listings,
-    etc.
+    Useful for testing failure handling w/o having to come up with a fully
+    mocked out `.Failure` & `.Result` pair each time.
     """
-    try:
-        yield
-    except SystemExit as e:
-        if e.code != code:
-            raise
+    def __init__(self):
+        pass
 
+    def __str__(self):
+        return "SimpleFailure"
 
-@contextmanager
-def mocked_run():
-    with patch('invoke.runners.Runner.run') as run:
-        yield run
-
-
-def _assert_contains(haystack, needle, invert):
-    matched = re.search(needle, haystack, re.M)
-    if (invert and matched) or (not invert and not matched):
-        raise AssertionError("r'%s' %sfound in '%s'" % (
-            needle,
-            "" if invert else "not ",
-            haystack
-        ))
-
-assert_contains = partial(_assert_contains, invert=False)
-assert_not_contains = partial(_assert_contains, invert=True)
+    @property
+    def result(self):
+        return Mock(exited=1)
 
 
 def mock_subprocess(out='', err='', exit=0, isatty=None):
@@ -124,17 +103,17 @@ def mock_subprocess(out='', err='', exit=0, isatty=None):
         @wraps(f)
         @patch('invoke.runners.Popen')
         @patch('os.read')
-        @patch('os.isatty')
+        @patch('sys.stdin', new_callable=StringIO)
         def wrapper(*args, **kwargs):
             args = list(args)
-            Popen, read, os_isatty = args.pop(), args.pop(), args.pop()
+            Popen, read, sys_stdin = args.pop(), args.pop(), args.pop()
             process = Popen.return_value
             process.returncode = exit
             process.stdout.fileno.return_value = 1
             process.stderr.fileno.return_value = 2
             # If requested, mock isatty to fake out pty detection
             if isatty is not None:
-                os_isatty.return_value = isatty
+                sys_stdin.isatty = Mock(return_value=isatty)
             out_file = StringIO(out)
             err_file = StringIO(err)
             def fakeread(fileno, count):

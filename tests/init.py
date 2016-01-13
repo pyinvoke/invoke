@@ -7,6 +7,7 @@ import invoke
 import invoke.collection
 import invoke.exceptions
 import invoke.tasks
+import invoke.program
 
 
 class Init(Spec):
@@ -73,3 +74,22 @@ class Init(Spec):
 
         def runner_result(self):
             assert invoke.Result is invoke.runners.Result
+
+        def program(self):
+            assert invoke.Program is invoke.program.Program
+
+        def filesystemloader(self):
+            assert invoke.FilesystemLoader is invoke.loader.FilesystemLoader
+
+        def argument(self):
+            assert invoke.Argument is invoke.parser.Argument
+
+        def executor(self):
+            assert invoke.Executor is invoke.executor.Executor
+
+        def call(self):
+            assert invoke.call is invoke.tasks.call
+
+        def Call(self):
+            # Starting to think we shouldn't bother with lowercase-c call...
+            assert invoke.Call is invoke.tasks.Call

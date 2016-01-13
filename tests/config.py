@@ -10,7 +10,7 @@ from invoke.exceptions import (
 )
 from invoke.vendor import six
 
-from _utils import IntegrationSpec
+from _util import IntegrationSpec
 
 
 CONFIGS_PATH = 'configs'

@@ -1,9 +1,11 @@
-from spec import Spec, skip, eq_, raises
+from spec import Spec, skip, eq_, raises, ok_
+from mock import Mock
 
-from invoke.tasks import task, ctask, Task
+from invoke.context import Context
+from invoke.tasks import task, ctask, Task, Call
 from invoke.loader import FilesystemLoader as Loader
 
-from _utils import support
+from _util import support
 
 
 #
@@ -293,3 +295,69 @@ class Task_(Spec):
             eq_(arg.names, ('longer-arg', 'l'))
             eq_(arg.attr_name, 'longer_arg')
             eq_(arg.name, 'longer_arg')
+
+
+class Call_(Spec):
+    def setup(self):
+        self.task = Task(Mock(__name__='mytask'))
+
+    class stringrep:
+        "__str__"
+
+        def includes_task_name(self):
+            call = Call(self.task)
+            eq_(str(call), "<Call 'mytask', args: (), kwargs: {}>")
+
+        def includes_args_and_kwargs(self):
+            call = Call(
+                self.task,
+                args=('posarg1', 'posarg2'),
+                # Single-key dict to avoid dict ordering issues
+                kwargs={'kwarg1': 'val1'},
+            )
+            eq_(str(call), "<Call 'mytask', args: ('posarg1', 'posarg2'), kwargs: {'kwarg1': 'val1'}>") # noqa
+
+        def includes_aka_if_explicit_name_given(self):
+            call = Call(self.task, called_as='notmytask')
+            eq_(str(call), "<Call 'mytask' (called as: 'notmytask'), args: (), kwargs: {}>") # noqa
+
+        def skips_aka_if_explicit_name_same_as_task_name(self):
+            call = Call(self.task, called_as='mytask')
+            eq_(str(call), "<Call 'mytask', args: (), kwargs: {}>")
+
+    class clone:
+        def returns_new_but_equivalent_object(self):
+            orig = Call(self.task)
+            clone = orig.clone()
+            ok_(clone is not orig)
+            ok_(clone == orig)
+
+        def modifications_on_clone_do_not_alter_original(self):
+            # Setup
+            orig = Call(
+                self.task,
+                called_as='foo',
+                args=[1, 2, 3],
+                kwargs={'key': 'val'}
+            )
+            context = Context()
+            context['setting'] = 'value'
+            orig.context = context
+            # Clone & tweak
+            clone = orig.clone()
+            newtask = Task(Mock(__name__='meh'))
+            clone.task = newtask
+            clone.called_as = 'notfoo'
+            clone.args[0] = 7
+            clone.kwargs['key'] = 'notval'
+            clone.context['setting'] = 'notvalue'
+            # Compare
+            ok_(clone.task is not orig.task)
+            eq_(orig.called_as, 'foo')
+            eq_(clone.called_as, 'notfoo')
+            eq_(orig.args, [1, 2, 3])
+            eq_(clone.args, [7, 2, 3])
+            eq_(orig.kwargs['key'], 'val')
+            eq_(clone.kwargs['key'], 'notval')
+            eq_(orig.context['setting'], 'value')
+            eq_(clone.context['setting'], 'notvalue')
