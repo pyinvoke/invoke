@@ -2,6 +2,9 @@
 Changelog
 =========
 
+* :bug:`257` Fix a RecursionError under Python 3 due to lack of
+  ``__deepcopy__`` on `~invoke.tasks.Call` objects. Thanks to Markus
+  Zapke-Gründemann for initial report and Máté Farkas for the patch.
 * :support:`265` Update our Travis config to select its newer build
   infrastructure and also run on PyPy3. Thanks to Omer Katz.
 * :support:`254` Add an ``exclude`` option in our ``setup.py`` so setuptools
