@@ -553,6 +553,13 @@ Just to say hi
                 MyRunner(Context()).run(_, in_stream=StringIO("foo"))
             eq_(mock_time.sleep.call_args_list, [call(0.007)] * 3)
 
+    class stdin_mirroring_when_pty_False:
+        def when_pty_is_True_no_mirroring_occurs(self):
+            skip()
+
+        def when_pty_is_False_we_write_stdin_back_to_stdout(self):
+            skip()
+
 
 class _FastLocal(Local):
     # Neuter this for same reason as in _Dummy above

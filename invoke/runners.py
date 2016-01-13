@@ -208,6 +208,7 @@ class Runner(object):
             # the stdin mirroring
             self.handle_stdin: {
                 'input_': in_stream,
+                'output': out_stream,
             }
         }
         if not self.using_pty:
@@ -385,7 +386,7 @@ class Runner(object):
             indices=threading.local(),
         )
 
-    def handle_stdin(self, input_):
+    def handle_stdin(self, input_, output):
         """
         Read local stdin, copying into process' stdin as necessary.
 
@@ -402,6 +403,7 @@ class Runner(object):
             ``read()`` from until it returns an empty value.
 
         :param input_: Stream (file-like object) from which to read.
+        :param output: Stream (file-like object) to which echoing may occur.
 
         :returns: ``None``.
         """
