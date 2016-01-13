@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :release:`0.12.0 <2016-01-12>`
 * :bug:`257` Fix a RecursionError under Python 3 due to lack of
   ``__deepcopy__`` on `~invoke.tasks.Call` objects. Thanks to Markus
   Zapke-Gründemann for initial report and Máté Farkas for the patch.
