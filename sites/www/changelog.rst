@@ -2,6 +2,8 @@
 Changelog
 =========
 
+* :support:`265` Update our Travis config to select its newer build
+  infrastructure and also run on PyPy3. Thanks to Omer Katz.
 * :support:`254` Add an ``exclude`` option in our ``setup.py`` so setuptools
   doesn't try loading our vendored PyYAML's Python 2 sub-package under Python 3
   (or vice versa - though all reports were from Python 3 users). Thanks to
