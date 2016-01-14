@@ -25,6 +25,10 @@ try:
     import termios
 except ImportError:
     termios = None
+try:
+    import msvcrt
+except ImportError:
+    msvcrt = None
 
 from .exceptions import Failure, ThreadException, ExceptionWrapper
 from .platform import WINDOWS, pty_size, character_buffered
@@ -401,13 +405,17 @@ class Runner(object):
 
         :returns: ``None``.
         """
-        use_select = isatty(input_)
+        input_is_tty = isatty(input_)
         with character_buffered(input_):
             while True:
                 data = None
+                # On Windows, if we're reading a terminal, the MSVCRT function
+                # kbhit tells us if data is ready
+                if WINDOWS and input_is_tty:
+                    ready = msvcrt.kbhit()
                 # "real" terminal stdin needs select() to tell us when it's
                 # ready for a nonblocking read().
-                if use_select:
+                elif input_is_tty:
                     reads, _, _ = select.select([input_], [], [], 0.0)
                     ready = bool(reads and reads[0] is input_)
                 # Otherwise, assume a "safer" file-like object that can be read
@@ -417,10 +425,14 @@ class Runner(object):
                     ready = True
                 if ready:
                     # Read 1 byte at a time for interactivity's sake.
+                    # TODO: Review this - it's unclear whether input_ is
+                    # intended to be open in byte mode or string mode (this
+                    # is a critical distinction in Python 3) and if we get
+                    # the wrong mode, we're going to be in a world of pain.
                     data = input_.read(1)
                     # Short-circuit if not using select() and appeared to hit
                     # end-of-stream.
-                    if not use_select and not data:
+                    if not input_is_tty and not data:
                         break
                     # Mirror what we just read to process' stdin.
                     # We perform an encode so Python 3 gets bytes (streams +
@@ -555,7 +567,7 @@ class Runner(object):
 
         :param int num_bytes: Number of bytes to read at maximum.
 
-        :returns: A string/bytes object.
+        :returns: A bytes object.
         """
         raise NotImplementedError
 
@@ -565,13 +577,15 @@ class Runner(object):
 
         :param int num_bytes: Number of bytes to read at maximum.
 
-        :returns: A string/bytes object.
+        :returns: A bytes object.
         """
         raise NotImplementedError
 
     def write_stdin(self, data):
         """
         Write ``data`` to the running process' stdin.
+
+        ``data`` is a bytes object.
         """
         raise NotImplementedError
 
