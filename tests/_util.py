@@ -1,6 +1,10 @@
 import os
 import sys
-import termios
+try:
+    import termios
+except ImportError:
+    # Not available on Windows
+    termios = None
 from contextlib import contextmanager
 from functools import wraps
 
@@ -126,13 +130,15 @@ def mock_subprocess(out='', err='', exit=0, isatty=None):
 
 
 def mock_pty(out='', err='', exit=0, isatty=None, trailing_error=None):
+    # Windows doesn't have ptys, so all the pty tests should be
+    # skipped anyway...
+    if WINDOWS:
+        return skip_if_windows
+
     def decorator(f):
-        # Boy this is dumb. Windoooooows >:(
-        ioctl_patch = lambda x: x
-        if not WINDOWS:
-            import fcntl
-            ioctl_patch = patch('invoke.runners.fcntl.ioctl',
-                wraps=fcntl.ioctl)
+        import fcntl
+        ioctl_patch = patch('invoke.runners.fcntl.ioctl',
+            wraps=fcntl.ioctl)
 
         @wraps(f)
         @patch('invoke.runners.pty')
