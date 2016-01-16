@@ -45,6 +45,12 @@ class Program(object):
                 help="Enable debug output.",
             ),
             Argument(
+                names=('write-pyc',),
+                kind=bool,
+                default=False,
+                help="Enable creation of .pyc files.",
+            ),
+            Argument(
                 names=('echo', 'e'),
                 kind=bool,
                 default=False,
@@ -286,6 +292,9 @@ class Program(object):
         # Obtain core args (sets self.core)
         self.parse_core_args()
         debug("Finished parsing core args")
+
+        # Set interpreter bytecode-writing flag
+        sys.dont_write_bytecode = not self.args['write-pyc'].value
 
         # Enable debugging from here on out, if debug flag was given.
         # (Prior to this point, debugging requires setting INVOKE_DEBUG).

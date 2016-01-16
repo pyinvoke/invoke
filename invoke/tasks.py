@@ -369,6 +369,9 @@ class Call(object):
     def __getattr__(self, name):
         return getattr(self.task, name)
 
+    def __deepcopy__(self, memo):
+        return self.clone()
+
     def __str__(self):
         aka = ""
         if self.called_as is not None and self.called_as != self.task.name:
