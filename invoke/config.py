@@ -25,8 +25,8 @@ else:
 
 from .env import Environment
 from .exceptions import UnknownFileType
+from .platform import DEFAULT_SYSTEM_PREFIX
 from .util import debug
-from .platform import WINDOWS
 
 
 class DataProxy(object):
@@ -251,7 +251,8 @@ class Config(DataProxy):
             include everything but the dot & file extension.
 
             Default: ``/etc/invoke`` (e.g. ``/etc/invoke.yaml`` or
-            ``/etc/invoke.json``).
+            ``/etc/invoke.json``) on POSIX, ``C:\invoke (e.g
+            ``C:\invoke.yaml`` or ``C:\invoke.json``) on Windows.
 
         :param str user_prefix:
             Like ``system_prefix`` but for the per-user config file.
@@ -298,9 +299,8 @@ class Config(DataProxy):
         self._collection = {}
 
         #: Path prefix searched for the system config file.
-        #: There is no default system prefix on Windows
         if system_prefix is None:
-            self._system_prefix = (None if WINDOWS else '/etc/invoke')
+            self._system_prefix = DEFAULT_SYSTEM_PREFIX
         else:
             self._system_prefix = system_prefix
         #: Path to loaded system config file, if any.
