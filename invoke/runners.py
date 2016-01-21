@@ -336,7 +336,9 @@ class Runner(object):
         ):
             # Echo to local stdout if necessary
             # TODO: should we rephrase this as "if you want to hide, give me a
-            # dummy output stream, e.g. something like /dev/null"?
+            # dummy output stream, e.g. something like /dev/null"? Otherwise, a
+            # combo of 'hide=stdout' + 'here is an explicit out_stream' means
+            # out_stream is never written to, and that seems...odd.
             if not hide:
                 output.write(data)
                 output.flush()
