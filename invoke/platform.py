@@ -153,4 +153,6 @@ def read_byte(input_):
     :returns:
         The read byte (a ``str`` or ``bytes`` depending on Python version.)
     """
+    # NOTE: there may be dragons here re: what exactly input_ is and what mode
+    # it has been opened in.
     return msvcrt.getch() if WINDOWS else input_.read(1)
