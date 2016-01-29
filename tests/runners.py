@@ -570,7 +570,7 @@ Just to say hi
 
         def when_pty_is_False_we_write_in_stream_back_to_out_stream(self):
             output = self._test_output(pty=False)
-            eq_(output.write.call_args_list, map(call, self.fake_in))
+            eq_(output.write.call_args_list, list(map(call, self.fake_in)))
             eq_(len(output.flush.call_args_list), len(self.fake_in))
 
 
