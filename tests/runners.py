@@ -349,7 +349,7 @@ class Runner_(Spec):
         def defaults_to_sys_stdin(self):
             # Execute w/ runner class that has a mocked stdin_writer
             klass = self._mock_stdin_writer()
-            self._runner(klass=klass).run(_)
+            self._runner(klass=klass).run(_, out_stream=StringIO())
             # Check that mocked writer was called w/ expected data
             # stdin mirroring occurs byte-by-byte
             calls = list(map(lambda x: call(b(x)), "Text!"))
@@ -358,7 +358,11 @@ class Runner_(Spec):
         def can_be_overridden(self):
             klass = self._mock_stdin_writer()
             in_stream = StringIO("Hey, listen!")
-            self._runner(klass=klass).run(_, in_stream=in_stream)
+            self._runner(klass=klass).run(
+                _,
+                in_stream=in_stream,
+                out_stream=StringIO(),
+            )
             # stdin mirroring occurs byte-by-byte
             calls = list(map(lambda x: call(b(x)), "Hey, listen!"))
             klass.write_stdin.assert_has_calls(calls, any_order=False)
@@ -550,7 +554,11 @@ Just to say hi
             class MyRunner(_Dummy):
                 input_sleep = 0.007
             with patch('invoke.runners.time') as mock_time:
-                MyRunner(Context()).run(_, in_stream=StringIO("foo"))
+                MyRunner(Context()).run(
+                    _,
+                    in_stream=StringIO("foo"),
+                    out_stream=StringIO(), # null output to not pollute tests
+                )
             eq_(mock_time.sleep.call_args_list, [call(0.007)] * 3)
 
     class stdin_mirroring_when_pty_False:
