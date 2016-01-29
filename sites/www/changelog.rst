@@ -2,6 +2,18 @@
 Changelog
 =========
 
+* :bug:`289` Continued poking at unresolved issues re: :issue:`289` which
+  didn't make it out the door for 0.12.0. More are on the way but these should
+  address blockers for some users:
+
+    * Windows support for the new stdin replication functionality (this was
+      totally blocking Windows users, sorry!);
+    * Stdin is now mirrored to stdout when no PTY is present, so you can see
+      what you're typing;
+    * Exposed the stdin read loop's sleep time as `Runner.input_sleep
+      <invoke.runners.Runner.input_sleep>`;
+    * Sped up some tests a bit.
+
 * :release:`0.12.0 <2016-01-12>`
 * :bug:`257 major` Fix a RecursionError under Python 3 due to lack of
   ``__deepcopy__`` on `~invoke.tasks.Call` objects. Thanks to Markus
