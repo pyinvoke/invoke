@@ -2,9 +2,9 @@
 Changelog
 =========
 
-* :bug:`289` Continued poking at unresolved issues re: :issue:`289` which
-  didn't make it out the door for 0.12.0. More are on the way but these should
-  address blockers for some users:
+* :bug:`289` Continued poking at unresolved issues which didn't make it out the
+  door for 0.12.0. More are on the way but these should address blockers for
+  some users:
 
     * Windows support for the new stdin replication functionality (this was
       totally blocking Windows users, sorry!);
