@@ -2,13 +2,14 @@
 Changelog
 =========
 
-* :bug:`289` Continued poking at unresolved issues which didn't make it out the
-  door for 0.12.0. More are on the way but these should address blockers for
-  some users:
+* :bug:`289` Handful of issues, all fallout from :issue:`289`, which failed to
+  make it out the door for 0.12.0. More are on the way but these should address
+  blockers for some users:
 
     * Windows support for the new stdin replication functionality (this was
       totally blocking Windows users, sorry!);
-    * Additional Windows fixes for the test suite (thanks @pfmoore!);
+    * Additional Windows fixes for the test suite (:issue:`306`) (thanks
+      ``@pfmoore``!);
     * Stdin is now mirrored to stdout when no PTY is present, so you can see
       what you're typing...;
     * Exposed the stdin read loop's sleep time as `Runner.input_sleep
