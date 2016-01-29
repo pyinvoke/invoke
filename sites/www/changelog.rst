@@ -8,8 +8,9 @@ Changelog
 
     * Windows support for the new stdin replication functionality (this was
       totally blocking Windows users, sorry!);
+    * Additional Windows fixes for the test suite (thanks @pfmoore!);
     * Stdin is now mirrored to stdout when no PTY is present, so you can see
-      what you're typing;
+      what you're typing...;
     * Exposed the stdin read loop's sleep time as `Runner.input_sleep
       <invoke.runners.Runner.input_sleep>`;
     * Sped up some tests a bit.
