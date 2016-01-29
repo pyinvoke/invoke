@@ -126,7 +126,8 @@ class Runner(object):
             By default, ``run`` connects directly to the invoked process and
             reads its stdout/stderr streams. Some programs will buffer (or even
             behave) differently in this situation compared to using an actual
-            terminal or pty. To use a pty, specify ``pty=True``.
+            terminal or pseudoterminal (pty). To use a pty instead of the
+            default behavior, specify ``pty=True``.
 
             .. warning::
                 Due to their nature, ptys have a single output stream, so the
