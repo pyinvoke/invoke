@@ -430,6 +430,12 @@ class Runner(object):
                     # TODO: will this break with multibyte input character
                     # encoding?
                     self.write_stdin(self.encode(byte))
+                    # Also echo it back to local stdout (or whatever
+                    # out_stream is set to) when no pty has been allocated
+                    # (ptys will perform their own echoing).
+                    if not self.using_pty:
+                        output.write(byte) # TODO: encode?
+                        output.flush()
                 # Dual all-done signals: program being executed is done
                 # running, *and* we don't seem to be reading anything out of
                 # stdin. (If we only test the former, we may encounter race

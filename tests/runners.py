@@ -554,11 +554,24 @@ Just to say hi
             eq_(mock_time.sleep.call_args_list, [call(0.007)] * 3)
 
     class stdin_mirroring_when_pty_False:
-        def when_pty_is_True_no_mirroring_occurs(self):
-            skip()
+        def setup(self):
+            self.fake_in = "I'm typing!"
 
-        def when_pty_is_False_we_write_stdin_back_to_stdout(self):
-            skip()
+        def _test_output(self, pty):
+            output = Mock()
+            self._run(
+                _, in_stream=StringIO(self.fake_in), out_stream=output, pty=pty
+            )
+            return output
+
+        def when_pty_is_True_no_mirroring_occurs(self):
+            output = self._test_output(pty=True)
+            eq_(output.write.call_args_list, [])
+
+        def when_pty_is_False_we_write_in_stream_back_to_out_stream(self):
+            output = self._test_output(pty=False)
+            eq_(output.write.call_args_list, map(call, self.fake_in))
+            eq_(len(output.flush.call_args_list), len(self.fake_in))
 
 
 class _FastLocal(Local):
