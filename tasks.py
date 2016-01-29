@@ -14,4 +14,8 @@ ns.configure({
     'tests': {
         'logformat': LOG_FORMAT,
     },
+    'packaging': {
+        'sign': True,
+        'wheel': True,
+    },
 })

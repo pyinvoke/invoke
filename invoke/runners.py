@@ -4,7 +4,6 @@ import codecs
 import locale
 import os
 import re
-import select
 import struct
 from subprocess import Popen, PIPE
 import sys
@@ -27,9 +26,10 @@ except ImportError:
     termios = None
 
 from .exceptions import Failure, ThreadException, ExceptionWrapper
-from .platform import WINDOWS, pty_size, character_buffered
-from .util import isatty
-from .util import debug
+from .platform import (
+    WINDOWS, pty_size, character_buffered, ready_for_reading, read_byte,
+)
+from .util import isatty, debug
 
 from .vendor import six
 
@@ -43,6 +43,7 @@ class Runner(object):
     implementation example, see the source code for `.Local`.
     """
     read_chunk_size = 1000
+    input_sleep = 0.01
 
     def __init__(self, context):
         """
@@ -76,6 +77,9 @@ class Runner(object):
         # __init__ docstrings, though that's annoying too.
         #: How many bytes (at maximum) to read per iteration of stream reads.
         self.read_chunk_size = self.__class__.read_chunk_size
+        # Ditto re: declaring this in 2 places for doc reasons.
+        #: How many seconds to sleep on each iteration of the stdin read loop.
+        self.input_sleep = self.__class__.input_sleep
         #: Whether pty fallback warning has been emitted.
         self.warned_about_pty_fallback = False
         #: The trigger/response mapping for use by `respond`. Is filled in at
@@ -122,7 +126,8 @@ class Runner(object):
             By default, ``run`` connects directly to the invoked process and
             reads its stdout/stderr streams. Some programs will buffer (or even
             behave) differently in this situation compared to using an actual
-            terminal or pty. To use a pty, specify ``pty=True``.
+            terminal or pseudoterminal (pty). To use a pty instead of the
+            default behavior, specify ``pty=True``.
 
             .. warning::
                 Due to their nature, ptys have a single output stream, so the
@@ -204,6 +209,7 @@ class Runner(object):
             # the stdin mirroring
             self.handle_stdin: {
                 'input_': in_stream,
+                'output': out_stream,
             }
         }
         if not self.using_pty:
@@ -331,7 +337,9 @@ class Runner(object):
         ):
             # Echo to local stdout if necessary
             # TODO: should we rephrase this as "if you want to hide, give me a
-            # dummy output stream, e.g. something like /dev/null"?
+            # dummy output stream, e.g. something like /dev/null"? Otherwise, a
+            # combo of 'hide=stdout' + 'here is an explicit out_stream' means
+            # out_stream is never written to, and that seems...odd.
             if not hide:
                 output.write(data)
                 output.flush()
@@ -381,7 +389,7 @@ class Runner(object):
             indices=threading.local(),
         )
 
-    def handle_stdin(self, input_):
+    def handle_stdin(self, input_, output):
         """
         Read local stdin, copying into process' stdin as necessary.
 
@@ -398,29 +406,19 @@ class Runner(object):
             ``read()`` from until it returns an empty value.
 
         :param input_: Stream (file-like object) from which to read.
+        :param output: Stream (file-like object) to which echoing may occur.
 
         :returns: ``None``.
         """
-        use_select = isatty(input_)
         with character_buffered(input_):
             while True:
-                data = None
-                # "real" terminal stdin needs select() to tell us when it's
-                # ready for a nonblocking read().
-                if use_select:
-                    reads, _, _ = select.select([input_], [], [], 0.0)
-                    ready = bool(reads and reads[0] is input_)
-                # Otherwise, assume a "safer" file-like object that can be read
-                # from in a nonblocking fashion (e.g. a StringIO or regular
-                # file).
-                else:
-                    ready = True
-                if ready:
+                byte = None
+                if ready_for_reading(input_):
                     # Read 1 byte at a time for interactivity's sake.
-                    data = input_.read(1)
-                    # Short-circuit if not using select() and appeared to hit
-                    # end-of-stream.
-                    if not use_select and not data:
+                    byte = read_byte(input_)
+                    # Short-circuit if not a real stream and appeared to hit
+                    # end-of-file.
+                    if not isatty(input_) and not byte:
                         break
                     # Mirror what we just read to process' stdin.
                     # We perform an encode so Python 3 gets bytes (streams +
@@ -430,27 +428,25 @@ class Runner(object):
                     # TODO: consider baking the encode call into write_stdin
                     # (needs indirection as actual impl of write_stdin differs
                     # between subclasses...)
-                    self.write_stdin(self.encode(data))
+                    # TODO: will this break with multibyte input character
+                    # encoding?
+                    self.write_stdin(self.encode(byte))
+                    # Also echo it back to local stdout (or whatever
+                    # out_stream is set to) when no pty has been allocated
+                    # (ptys will perform their own echoing).
+                    if not self.using_pty:
+                        output.write(byte) # TODO: encode?
+                        output.flush()
                 # Dual all-done signals: program being executed is done
                 # running, *and* we don't seem to be reading anything out of
                 # stdin. (If we only test the former, we may encounter race
                 # conditions re: unread stdin.)
-                if self.program_finished.is_set() and not data:
+                if self.program_finished.is_set() and not byte:
                     break
                 # Take a nap so we're not chewing CPU.
-                time.sleep(0.01)
+                time.sleep(self.input_sleep)
 
         # while not self.program_finished.is_set():
-        #    # Much of this is taken directly from Fabric 1.x's io.input_loop
-        #    # function as of f6475e3f4cd09862bcf6e732f28bf52b42129104.
-        #    if WINDOWS:
-        #        #have_char = msvcrt.kbhit()
-        #        pass # TODO: reinstate above
-        #    else:
-        #        # Use select() instead of stream.read, because stdin will
-        #        # block otherwise
-        #        r, w, x = select.select([stream], [], [], 0.0)
-        #        have_char = (r and r[0] == stream)
         #    # TODO: reinstate lock/whatever thread logic from fab v1 which
         #    # prevents reading from stdin while other parts of the code are
         #    # prompting for runtime passwords? (search for 'input_enabled')
@@ -469,8 +465,6 @@ class Runner(object):
         #            # output level, don't want it to be accidentally hidden
         #        #    sys.stdout.write(byte)
         #        #    sys.stdout.flush()
-        #    # TODO: is sleeping still necessary now that it's a generator?
-        #    #time.sleep(0.01) # TODO: store this in config
 
     def respond(self, buffer_, indices):
         """

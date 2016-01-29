@@ -20,6 +20,10 @@ class _Dummy(Runner):
     """
     Dummy runner subclass that does minimum work required to execute run().
     """
+    # Neuter the input loop sleep, so tests aren't slow (at the expense of CPU,
+    # which isn't a problem for testing).
+    input_sleep = 0
+
     def start(self, command):
         pass
 
@@ -182,7 +186,7 @@ class Runner_(Spec):
         def command_executed(self):
             eq_(self._run(_).command, _)
 
-    class echoing:
+    class command_echoing:
         @trap
         def off_by_default(self):
             self._run("my command")
@@ -342,25 +346,29 @@ class Runner_(Spec):
         # NOTE: actual autoresponder tests are elsewhere. These just test that
         # stdin works normally & can be overridden.
         @patch('invoke.runners.sys.stdin', StringIO("Text!"))
-        def input_defaults_to_sys_stdin(self):
+        def defaults_to_sys_stdin(self):
             # Execute w/ runner class that has a mocked stdin_writer
             klass = self._mock_stdin_writer()
-            self._runner(klass=klass).run(_)
+            self._runner(klass=klass).run(_, out_stream=StringIO())
             # Check that mocked writer was called w/ expected data
             # stdin mirroring occurs byte-by-byte
             calls = list(map(lambda x: call(b(x)), "Text!"))
             klass.write_stdin.assert_has_calls(calls, any_order=False)
 
-        def input_stream_can_be_overridden(self):
+        def can_be_overridden(self):
             klass = self._mock_stdin_writer()
             in_stream = StringIO("Hey, listen!")
-            self._runner(klass=klass).run(_, in_stream=in_stream)
+            self._runner(klass=klass).run(
+                _,
+                in_stream=in_stream,
+                out_stream=StringIO(),
+            )
             # stdin mirroring occurs byte-by-byte
             calls = list(map(lambda x: call(b(x)), "Hey, listen!"))
             klass.write_stdin.assert_has_calls(calls, any_order=False)
 
         @patch('invoke.runners.debug')
-        def input_handling_exceptions_get_logged(self, mock_debug):
+        def exceptions_get_logged(self, mock_debug):
             # Make write_stdin asplode
             klass = self._mock_stdin_writer()
             klass.write_stdin.side_effect = OhNoz("oh god why")
@@ -532,13 +540,59 @@ Just to say hi
                 responses=responses,
             ).assert_has_calls(calls, any_order=True)
 
+    class io_sleeping:
+        # NOTE: there's an explicit CPU-measuring test in the integration suite
+        # which ensures the *point* of the sleeping - avoiding CPU hogging - is
+        # actually functioning. These tests below just unit-test the mechanisms
+        # around the sleep functionality (ensuring they are visible and can be
+        # altered as needed).
+        def input_sleep_attribute_defaults_to_hundredth_of_second(self):
+            eq_(Runner(Context()).input_sleep, 0.01)
+
+        @mock_subprocess()
+        def subclasses_can_override_input_sleep(self):
+            class MyRunner(_Dummy):
+                input_sleep = 0.007
+            with patch('invoke.runners.time') as mock_time:
+                MyRunner(Context()).run(
+                    _,
+                    in_stream=StringIO("foo"),
+                    out_stream=StringIO(), # null output to not pollute tests
+                )
+            eq_(mock_time.sleep.call_args_list, [call(0.007)] * 3)
+
+    class stdin_mirroring_when_pty_False:
+        def setup(self):
+            self.fake_in = "I'm typing!"
+
+        def _test_output(self, pty):
+            output = Mock()
+            self._run(
+                _, in_stream=StringIO(self.fake_in), out_stream=output, pty=pty
+            )
+            return output
+
+        def when_pty_is_True_no_mirroring_occurs(self):
+            output = self._test_output(pty=True)
+            eq_(output.write.call_args_list, [])
+
+        def when_pty_is_False_we_write_in_stream_back_to_out_stream(self):
+            output = self._test_output(pty=False)
+            eq_(output.write.call_args_list, list(map(call, self.fake_in)))
+            eq_(len(output.flush.call_args_list), len(self.fake_in))
+
+
+class _FastLocal(Local):
+    # Neuter this for same reason as in _Dummy above
+    input_sleep = 0
+
 
 class Local_(Spec):
     def _run(self, *args, **kwargs):
-        return _run(*args, **dict(kwargs, klass=Local))
+        return _run(*args, **dict(kwargs, klass=_FastLocal))
 
     def _runner(self, *args, **kwargs):
-        return _runner(*args, **dict(kwargs, klass=Local))
+        return _runner(*args, **dict(kwargs, klass=_FastLocal))
 
     class pty_and_pty_fallback:
         @mock_pty()
@@ -602,7 +656,7 @@ class Local_(Spec):
                 eq_(str(e.value), "wat")
 
     class encoding:
-        @mock_subprocess
+        @mock_subprocess()
         def uses_locale_module_for_desired_encoding(self):
             with patch('invoke.runners.codecs') as codecs:
                 self._run(_)

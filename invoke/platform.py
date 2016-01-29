@@ -6,6 +6,7 @@ logic-flow interruptions.
 """
 
 from contextlib import contextmanager
+import select
 import sys
 
 # TODO: move in here? It's currently platform-agnostic...
@@ -20,6 +21,9 @@ Note that Cygwin's Python is actually close enough to "real" UNIXes that it
 doesn't need (or want!) to use PyWin32 -- so we only test for literal Win32
 setups (vanilla Python, ActiveState etc) here.
 """
+
+if WINDOWS:
+    import msvcrt
 
 
 def pty_size():
@@ -117,3 +121,38 @@ def character_buffered(stream):
             yield
         finally:
             termios.tcsetattr(stream, termios.TCSADRAIN, old_settings)
+
+
+def ready_for_reading(input_):
+    """
+    Test ``input_`` to determine whether a read action will succeed.
+
+    :param input_: Input stream object (file-like).
+
+    :returns: ``True`` if a read should succeed, ``False`` otherwise.
+    """
+    # A "real" terminal stdin needs select/kbhit to tell us when it's ready for
+    # a nonblocking read().
+    # Otherwise, assume a "safer" file-like object that can be read from in a
+    # nonblocking fashion (e.g. a StringIO or regular file).
+    if not isatty(input_):
+        return True
+    if WINDOWS:
+        return msvcrt.kbhit()
+    else:
+        reads, _, _ = select.select([input_], [], [], 0.0)
+        return bool(reads and reads[0] is input_)
+
+
+def read_byte(input_):
+    """
+    Read 1 byte from stdin stream ``input_``.
+
+    :param input_: Input stream object (file-like).
+
+    :returns:
+        The read byte (a ``str`` or ``bytes`` depending on Python version.)
+    """
+    # NOTE: there may be dragons here re: what exactly input_ is and what mode
+    # it has been opened in.
+    return msvcrt.getch() if WINDOWS else input_.read(1)
