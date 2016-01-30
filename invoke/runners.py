@@ -206,7 +206,9 @@ class Runner(object):
             },
             # TODO: make this & related functionality optional, for users who
             # don't care about autoresponding & are encountering issues with
-            # the stdin mirroring
+            # the stdin mirroring? Downside is it fragments expected behavior &
+            # puts folks with true interactive use cases in a different support
+            # class.
             self.handle_stdin: {
                 'input_': in_stream,
                 'output': out_stream,
