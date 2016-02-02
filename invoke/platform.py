@@ -49,25 +49,27 @@ def _pty_size():
 
     # Sentinel values to be replaced w/ defaults by caller
     size = (None, None)
-    # Can only get useful values from real TTYs
-    if has_fileno(sys.stdout):
-        # We want two short unsigned integers (rows, cols)
-        fmt = 'HH'
-        # Create an empty (zeroed) buffer for ioctl to map onto. Yay for C!
-        buf = struct.pack(fmt, 0, 0)
-        # Call TIOCGWINSZ to get window size of stdout, returns our filled
-        # buffer
-        try:
-            result = fcntl.ioctl(sys.stdout, termios.TIOCGWINSZ, buf)
-            # Unpack buffer back into Python data types
-            # NOTE: this unpack gives us rows x cols, but we return the
-            # inverse.
-            rows, cols = struct.unpack(fmt, result)
-            return (cols, rows)
-        # Deal with e.g. sys.stdout being monkeypatched, such as in testing.
-        # Or termios not having a TIOCGWINSZ.
-        except AttributeError:
-            pass
+    # We want two short unsigned integers (rows, cols)
+    fmt = 'HH'
+    # Create an empty (zeroed) buffer for ioctl to map onto. Yay for C!
+    buf = struct.pack(fmt, 0, 0)
+    # Call TIOCGWINSZ to get window size of stdout, returns our filled
+    # buffer
+    try:
+        result = fcntl.ioctl(sys.stdout, termios.TIOCGWINSZ, buf)
+        # Unpack buffer back into Python data types
+        # NOTE: this unpack gives us rows x cols, but we return the
+        # inverse.
+        rows, cols = struct.unpack(fmt, result)
+        return (cols, rows)
+    # Fallback to emptyish return value in various failure cases:
+    # * sys.stdout being monkeypatched, such as in testing, and lacking .fileno
+    # * sys.stdout having a .fileno but not actually being attached to a TTY
+    # * termios not having a TIOCGWINSZ attribute (happens sometimes...)
+    # * other situations where ioctl doesn't explode but the result isn't
+    #   something unpack can deal with
+    except (struct.error, TypeError, IOError, AttributeError):
+        pass
     return size
 
 

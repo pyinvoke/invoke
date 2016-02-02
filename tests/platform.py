@@ -22,22 +22,26 @@ if not WINDOWS:
 
             @patch('sys.stdout')
             @patch('fcntl.ioctl')
-            def uses_default_when_stdout_lacks_fileno(self, ioctl, stdout):
-                # i.e. when accessing it throws AttributeError
-                stdout.fileno.side_effect = AttributeError
-                eq_(pty_size(), (80, 24))
-                # Make sure we skipped over ioctl
-                assert not ioctl.called
-
-            @patch('sys.stdout')
-            @patch('fcntl.ioctl')
             def defaults_to_80x24_when_stdout_not_a_tty(self, ioctl, stdout):
                 # Make sure stdout acts like a real stream (means failure is
                 # more obvious)
                 stdout.fileno.return_value = 1
-                # Ensure it fails the isatty() test
+                # Ensure it fails the isatty() test too
                 stdout.isatty.return_value = False
                 # Test
                 eq_(pty_size(), (80, 24))
-                # Make sure we skipped over ioctl
-                assert not ioctl.called
+
+            @patch('sys.stdout')
+            @patch('fcntl.ioctl')
+            def uses_default_when_stdout_lacks_fileno(self, ioctl, stdout):
+                # i.e. when accessing it throws AttributeError
+                stdout.fileno.side_effect = AttributeError
+                eq_(pty_size(), (80, 24))
+
+            @patch('sys.stdout')
+            @patch('fcntl.ioctl')
+            def uses_default_when_stdout_triggers_ioctl_error(
+                self, ioctl, stdout
+            ):
+                ioctl.side_effect = TypeError
+                eq_(pty_size(), (80, 24))
