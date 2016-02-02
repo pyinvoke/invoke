@@ -29,7 +29,7 @@ from .exceptions import Failure, ThreadException, ExceptionWrapper
 from .platform import (
     WINDOWS, pty_size, character_buffered, ready_for_reading, read_byte,
 )
-from .util import isatty, debug
+from .util import has_fileno, debug
 
 from .vendor import six
 
@@ -418,9 +418,9 @@ class Runner(object):
                 if ready_for_reading(input_):
                     # Read 1 byte at a time for interactivity's sake.
                     byte = read_byte(input_)
-                    # Short-circuit if not a real stream and appeared to hit
-                    # end-of-file.
-                    if not isatty(input_) and not byte:
+                    # When reading from file-like objects that aren't "real"
+                    # terminal streams, an empty byte signals EOF.
+                    if not byte:
                         break
                     # Mirror what we just read to process' stdin.
                     # We perform an encode so Python 3 gets bytes (streams +
@@ -598,23 +598,23 @@ class Local(Runner):
     Execute a command on the local system in a subprocess.
 
     .. note::
-        When Invoke itself is executed without a valid PTY (i.e.
-        ``sys.stdin.isatty()`` is ``False``), it's not possible to present a
-        handle on our PTY to local subprocesses. In such situations, `Local`
-        will fallback to behaving as if ``pty=False`` (on the theory that
-        degraded execution is better than none at all) as well as printing a
-        warning to stderr.
+        When Invoke itself is executed without a controlling terminal (e.g.
+        when ``sys.stdin`` lacks a useful ``fileno``), it's not possible to
+        present a handle on our PTY to local subprocesses. In such situations,
+        `Local` will fallback to behaving as if ``pty=False`` (on the theory
+        that degraded execution is better than none at all) as well as printing
+        a warning to stderr.
 
-        To disable this behavior (i.e. if ``.isatty`` is causing false
-        negatives in your environment), say ``fallback=False``.
+        To disable this behavior, say ``fallback=False``.
     """
     def should_use_pty(self, pty=False, fallback=True):
         use_pty = False
         if pty:
             use_pty = True
-            if not isatty(sys.stdin) and fallback:
+            # TODO: pass in & test in_stream, not sys.stdin
+            if not has_fileno(sys.stdin) and fallback:
                 if not self.warned_about_pty_fallback:
-                    sys.stderr.write("WARNING: stdin is not a pty; falling back to non-pty execution!\n") # noqa
+                    sys.stderr.write("WARNING: stdin has no fileno; falling back to non-pty execution!\n") # noqa
                     self.warned_about_pty_fallback = True
                 use_pty = False
         return use_pty

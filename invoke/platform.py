@@ -9,8 +9,8 @@ from contextlib import contextmanager
 import select
 import sys
 
-# TODO: move in here? It's currently platform-agnostic...
-from .util import isatty
+# TODO: move in here? They're currently platform-agnostic...
+from .util import has_fileno, isatty
 
 
 WINDOWS = (sys.platform == 'win32')
@@ -50,7 +50,7 @@ def _pty_size():
     # Sentinel values to be replaced w/ defaults by caller
     size = (None, None)
     # Can only get useful values from real TTYs
-    if sys.stdout.isatty():
+    if has_fileno(sys.stdout):
         # We want two short unsigned integers (rows, cols)
         fmt = 'HH'
         # Create an empty (zeroed) buffer for ioctl to map onto. Yay for C!
@@ -58,7 +58,7 @@ def _pty_size():
         # Call TIOCGWINSZ to get window size of stdout, returns our filled
         # buffer
         try:
-            result = fcntl.ioctl(sys.stdout.fileno(), termios.TIOCGWINSZ, buf)
+            result = fcntl.ioctl(sys.stdout, termios.TIOCGWINSZ, buf)
             # Unpack buffer back into Python data types
             # NOTE: this unpack gives us rows x cols, but we return the
             # inverse.
@@ -135,7 +135,7 @@ def ready_for_reading(input_):
     # a nonblocking read().
     # Otherwise, assume a "safer" file-like object that can be read from in a
     # nonblocking fashion (e.g. a StringIO or regular file).
-    if not isatty(input_):
+    if not has_fileno(input_):
         return True
     if WINDOWS:
         return msvcrt.kbhit()

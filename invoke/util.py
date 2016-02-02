@@ -1,4 +1,5 @@
 from contextlib import contextmanager
+import io
 import logging
 import os
 
@@ -40,26 +41,53 @@ def cd(where):
         os.chdir(cwd)
 
 
-def isatty(stream):
+def has_fileno(stream):
     """
-    Attempt to rigorously determine whether ``stream`` is input from a TTY.
+    Cleanly determine whether ``stream`` has a useful ``.fileno()``.
 
-    Used in a few spots where we care whether stdin is a real live terminal or
-    something else (for example, a ``StringIO``, or any other mocked/replaced
-    stream - some of which may not correctly implement the ``isatty`` method!)
+    .. note::
+        This function helps determine if a given file-like object can be used
+        with various terminal-oriented modules and functions such as `select`,
+        `termios`, and `tty`. For most of those, a fileno is all that is
+        required; they'll function even if ``stream.isatty()`` is ``False``.
 
-    :param stream: The stream object in question; it's usually `sys.stdin`.
+    :param stream: A file-like object.
 
     :returns:
-        ``True`` if ``stream`` does seem to be a TTY, ``False`` otherwise.
+        ``True`` if ``stream.fileno()`` returns an integer, ``False`` otherwise
+        (this includes when ``stream`` lacks a ``fileno`` method).
+    """
+    try:
+        return isinstance(stream.fileno(), int)
+    except (AttributeError, io.UnsupportedOperation):
+        return False
+
+
+def isatty(stream):
+    """
+    Cleanly determine whether ``stream`` is a TTY.
+
+    Specifically, first try calling ``stream.isatty()``, and if that fails
+    (e.g. due to lacking the method entirely) fallback to `os.isatty`.
+
+    .. note::
+        Most of the time, we don't actually care about true TTY-ness, but
+        merely whether the stream seems to have a fileno (per `has_fileno`).
+        However, in some cases (notably the use of `pty.fork` to present a
+        local pseudoterminal) we need to tell if a given stream has a valid
+        fileno but *isn't* tied to an actual terminal. Thus, this function.
+
+    :param stream: A file-like object.
+
+    :returns:
+        A boolean depending on the result of calling ``.isatty()`` and/or
+        `os.isatty`.
     """
     # If there *is* an .isatty, ask it.
     if hasattr(stream, 'isatty') and callable(stream.isatty):
         return stream.isatty()
     # If there wasn't, see if it has a fileno, and if so, ask os.isatty
-    if hasattr(stream, 'fileno') and callable(stream.fileno):
-        # NOTE: the default impl of io classes actually has an exploding
-        # .fileno(), but the same impl has a useful .isatty(), so...
+    elif has_fileno(stream):
         return os.isatty(stream.fileno())
     # If we got here, none of the above worked, so it's reasonable to assume
     # the darn thing isn't a real TTY.
