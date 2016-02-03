@@ -222,6 +222,7 @@ class Config(DataProxy):
                 'err_stream': None,
                 'in_stream': None,
                 'responses': {},
+                'echo_stdin': None,
             },
             'tasks': {'dedupe': True},
         }

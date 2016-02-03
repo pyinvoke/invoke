@@ -561,25 +561,93 @@ Just to say hi
                 )
             eq_(mock_time.sleep.call_args_list, [call(0.007)] * 3)
 
-    class stdin_mirroring_when_pty_False:
-        def setup(self):
-            self.fake_in = "I'm typing!"
-
-        def _test_output(self, pty):
+    class stdin_mirroring:
+        def _test_mirroring(
+            self,
+            expect_mirroring,
+            **kwargs
+        ):
+            # Setup
+            fake_in = "I'm typing!"
             output = Mock()
+            input_ = StringIO(fake_in)
+            input_is_pty = kwargs.pop('in_pty', None)
+
+            class MyRunner(_Dummy):
+                def echo_stdin(self, input_, output):
+                    # Fake result of isatty() test here and only here; if we do
+                    # this farther up, it will affect stuff trying to run
+                    # termios & such, which is harder to mock successfully.
+                    if input_is_pty is not None:
+                        input_.isatty = lambda: input_is_pty
+                    return super(MyRunner, self).echo_stdin(input_, output)
+
+            # Execute basic command with given parameters
             self._run(
-                _, in_stream=StringIO(self.fake_in), out_stream=output, pty=pty
+                _,
+                klass=MyRunner,
+                in_stream=input_,
+                out_stream=output,
+                **kwargs
             )
-            return output
+            # Examine mocked output stream to see if it was mirrored to
+            if expect_mirroring:
+                eq_(output.write.call_args_list, list(map(call, fake_in)))
+                eq_(len(output.flush.call_args_list), len(fake_in))
+            # Or not mirrored to
+            else:
+                eq_(output.write.call_args_list, [])
 
         def when_pty_is_True_no_mirroring_occurs(self):
-            output = self._test_output(pty=True)
-            eq_(output.write.call_args_list, [])
+            self._test_mirroring(
+                pty=True,
+                expect_mirroring=False,
+            )
 
         def when_pty_is_False_we_write_in_stream_back_to_out_stream(self):
-            output = self._test_output(pty=False)
-            eq_(output.write.call_args_list, list(map(call, self.fake_in)))
-            eq_(len(output.flush.call_args_list), len(self.fake_in))
+            self._test_mirroring(
+                pty=False,
+                in_pty=True,
+                expect_mirroring=True,
+            )
+
+        def mirroring_is_skipped_when_our_input_is_not_a_tty(self):
+            self._test_mirroring(
+                in_pty=False,
+                expect_mirroring=False,
+            )
+
+        def mirroring_can_be_forced_on(self):
+            self._test_mirroring(
+                # Subprocess pty normally disables echoing
+                pty=True,
+                # But then we forcibly enable it
+                echo_stdin=True,
+                # And expect it to happen
+                expect_mirroring=True,
+            )
+
+        def mirroring_can_be_forced_off(self):
+            # Make subprocess pty False, stdin tty True, echo_stdin False,
+            # prove no mirroring
+            self._test_mirroring(
+                # Subprocess lack of pty normally enables echoing
+                pty=False,
+                # Provided the controlling terminal _is_ a tty
+                in_pty=True,
+                # But then we forcibly disable it
+                echo_stdin=False,
+                # And expect it to not happen
+                expect_mirroring=False,
+            )
+
+        def mirroring_honors_configuration(self):
+            self._test_mirroring(
+                pty=False,
+                in_pty=True,
+                settings={'run': {'echo_stdin': False}},
+                expect_mirroring=False,
+            )
 
 
 class _FastLocal(Local):

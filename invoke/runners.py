@@ -29,7 +29,7 @@ from .exceptions import Failure, ThreadException, ExceptionWrapper
 from .platform import (
     WINDOWS, pty_size, character_buffered, ready_for_reading, read_byte,
 )
-from .util import has_fileno, debug
+from .util import has_fileno, isatty, debug
 
 from .vendor import six
 
@@ -178,6 +178,35 @@ class Runner(object):
 
             Default: ``{}``.
 
+        :param bool echo_stdin:
+            Whether to write data from ``in_stream`` back to ``out_stream``.
+
+            In other words, in normal interactive usage, this parameter
+            controls whether Invoke mirrors what you type back to your
+            terminal.
+
+            By default (when ``None``), this behavior is triggered by the
+            following:
+
+                * Not using a pty to run the subcommand (i.e. ``pty=False``),
+                  as ptys natively echo stdin to stdout on their own;
+                * And when the controlling terminal of Invoke itself (as per
+                  ``in_stream``) appears to be a valid terminal device or TTY.
+                  (Specifically, when `~invoke.utils.isatty` yields a ``True``
+                  result when given ``in_stream``.)
+
+                  .. note::
+                      This property tends to be ``False`` when piping another
+                      program's output into an Invoke session, or when running
+                      Invoke within another program (e.g. running Invoke from
+                      itself).
+
+            If both of those properties are true, echoing will occur; if either
+            is false, no echoing will be performed.
+
+            When not ``None``, this parameter will override that auto-detection
+            and force, or disable, echoing.
+
         :returns:
             `Result`, or a subclass thereof.
 
@@ -189,7 +218,7 @@ class Runner(object):
         """
         # Normalize kwargs w/ config
         opts, out_stream, err_stream, in_stream = self._run_opts(kwargs)
-        # Echo
+        # Echo running command
         if opts['echo']:
             print("\033[1;37m{0}\033[0m".format(command))
         # Start executing the actual command (runs in background)
@@ -212,6 +241,7 @@ class Runner(object):
             self.handle_stdin: {
                 'input_': in_stream,
                 'output': out_stream,
+                'echo': opts['echo_stdin'],
             }
         }
         if not self.using_pty:
@@ -391,7 +421,7 @@ class Runner(object):
             indices=threading.local(),
         )
 
-    def handle_stdin(self, input_, output):
+    def handle_stdin(self, input_, output, echo):
         """
         Read local stdin, copying into process' stdin as necessary.
 
@@ -409,6 +439,7 @@ class Runner(object):
 
         :param input_: Stream (file-like object) from which to read.
         :param output: Stream (file-like object) to which echoing may occur.
+        :param bool echo: User override option for stdin-stdout echoing.
 
         :returns: ``None``.
         """
@@ -434,10 +465,10 @@ class Runner(object):
                     # encoding?
                     self.write_stdin(self.encode(byte))
                     # Also echo it back to local stdout (or whatever
-                    # out_stream is set to) when no pty has been allocated
-                    # (ptys will perform their own echoing).
-                    # TODO: only do this if stdin appears to be isatty?
-                    if not self.using_pty:
+                    # out_stream is set to) when necessary.
+                    if echo is None:
+                        echo = self.echo_stdin(input_, output)
+                    if echo:
                         output.write(byte) # TODO: encode?
                         output.flush()
                 # Dual all-done signals: program being executed is done
@@ -468,6 +499,18 @@ class Runner(object):
         #            # output level, don't want it to be accidentally hidden
         #        #    sys.stdout.write(byte)
         #        #    sys.stdout.flush()
+
+    def echo_stdin(self, input_, output):
+        """
+        Determine whether data read from ``input_`` should echo to ``output``.
+
+        Used by `handle_stdin`; tests attributes of ``input_`` and ``output``.
+
+        :param input_: Input stream (file-like object).
+        :param output: Output stream (file-like object).
+        :returns: A ``bool``.
+        """
+        return (not self.using_pty) and isatty(input_)
 
     def respond(self, buffer_, indices):
         """
