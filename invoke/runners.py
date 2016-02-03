@@ -436,6 +436,7 @@ class Runner(object):
                     # Also echo it back to local stdout (or whatever
                     # out_stream is set to) when no pty has been allocated
                     # (ptys will perform their own echoing).
+                    # TODO: only do this if stdin appears to be isatty?
                     if not self.using_pty:
                         output.write(byte) # TODO: encode?
                         output.flush()
@@ -646,7 +647,14 @@ class Local(Runner):
         # NOTE: parent_fd from os.fork() is a read/write pipe attached to our
         # forked process' stdout/stdin, respectively.
         fd = self.parent_fd if self.using_pty else self.process.stdin.fileno()
-        return os.write(fd, data)
+        # Try to write, ignoring broken pipes if encountered (implies child
+        # process exited before the process piping stdin to us finished;
+        # there's nothing we can do about that!)
+        try:
+            return os.write(fd, data)
+        except OSError as e:
+            if 'Broken pipe' not in str(e):
+                raise
 
     def start(self, command):
         if self.using_pty:
