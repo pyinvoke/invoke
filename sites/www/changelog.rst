@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :release:`0.12.1 <2016-02-03>`
 * :bug:`308` Earlier changes to TTY detection & its use in determining features
   such as stdin pass-through, were insufficient to handle edge cases such as
   nested Invoke sessions or piped stdin to Invoke processes. This manifested as
