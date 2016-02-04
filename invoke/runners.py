@@ -192,7 +192,7 @@ class Runner(object):
                   as ptys natively echo stdin to stdout on their own;
                 * And when the controlling terminal of Invoke itself (as per
                   ``in_stream``) appears to be a valid terminal device or TTY.
-                  (Specifically, when `~invoke.utils.isatty` yields a ``True``
+                  (Specifically, when `~invoke.util.isatty` yields a ``True``
                   result when given ``in_stream``.)
 
                   .. note::
