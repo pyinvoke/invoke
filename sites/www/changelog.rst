@@ -2,6 +2,17 @@
 Changelog
 =========
 
+* :bug:`308` Earlier changes to TTY detection & its use in determining features
+  such as stdin pass-through, were insufficient to handle edge cases such as
+  nested Invoke sessions or piped stdin to Invoke processes. This manifested as
+  hangs and ``OSError`` messages about broken pipes.
+
+  The issue has been fixed by overhauling all related code to use more specific
+  and accurate checks (e.g. examining just ``fileno`` and/or just ``isatty``).
+
+  Thanks to Tuukka Mustonen and Máté Farkas for the report (and for enduring
+  the subsequent flood of the project maintainer's stream-of-consciousness
+  ticket updates).
 * :bug:`305` (also :issue:`306`) Fix up some test-suite issues causing failures
   on Windows/Appveyor. Thanks to Paul Moore.
 * :bug:`289` Handful of issues, all fallout from :issue:`289`, which failed to
@@ -11,7 +22,8 @@ Changelog
     * Windows support for the new stdin replication functionality (this was
       totally blocking Windows users, as reported in :issue:`302` - sorry!);
     * Stdin is now mirrored to stdout when no PTY is present, so you can see
-      what you're typing...;
+      what you're typing (plus a new `~invoke.runners.Runner.run` option and
+      config param, ``echo_stdin``, allowing user override of this behavior);
     * Exposed the stdin read loop's sleep time as `Runner.input_sleep
       <invoke.runners.Runner.input_sleep>`;
     * Sped up some tests a bit.
