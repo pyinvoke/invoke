@@ -1,4 +1,4 @@
-from invoke import run, ctask
+from invoke import ctask
 
 @ctask
 def calls_foo(c):
