@@ -77,6 +77,12 @@ class Program(object):
                 help="Echo executed commands before running.",
             ),
             Argument(
+                names=('dry', 'D'),
+                kind=bool,
+                default=False,
+                help="Echo commands instead of running.",
+            ),
+            Argument(
                 names=("config", "f"),
                 help="Runtime configuration file to use.",
             ),
@@ -302,6 +308,8 @@ class Program(object):
             run["hide"] = self.args.hide.value
         if self.args.echo.value:
             run["echo"] = True
+        if self.args.dry.value:
+            run['dry'] = True
         tasks = {}
         if "no-dedupe" in self.args and self.args["no-dedupe"].value:
             tasks["dedupe"] = False
