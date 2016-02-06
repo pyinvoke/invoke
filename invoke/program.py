@@ -62,6 +62,12 @@ class Program(object):
                 help="Enable debug output.",
             ),
             Argument(
+                names=('dry', 'D'),
+                kind=bool,
+                default=False,
+                help="Echo commands instead of running.",
+            ),
+            Argument(
                 names=("echo", "e"),
                 kind=bool,
                 default=False,
@@ -307,6 +313,8 @@ class Program(object):
             run["hide"] = self.args.hide.value
         if self.args.echo.value:
             run["echo"] = True
+        if self.args.dry.value:
+            run['dry'] = True
         tasks = {}
         if "no-dedupe" in self.args and self.args["no-dedupe"].value:
             tasks["dedupe"] = False
