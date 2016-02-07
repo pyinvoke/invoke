@@ -10,7 +10,7 @@ from mock import patch, Mock, call
 
 from invoke import Runner, Local, Context, Config, Failure, ThreadException
 
-from _util import mock_subprocess, mock_pty
+from _util import mock_subprocess, mock_pty, skip_if_windows
 
 
 # Dummy command that will blow up if it ever truly hits a real shell.
@@ -647,6 +647,33 @@ Just to say hi
                 in_pty=True,
                 settings={'run': {'echo_stdin': False}},
                 expect_mirroring=False,
+            )
+
+    class character_buffered_stdin:
+        @patch('invoke.platform.tty')
+        @patch('invoke.platform.termios') # stub
+        @skip_if_windows
+        def setcbreak_called_on_tty_stdins(self, mock_termios, mock_tty):
+            self._run(_)
+            mock_tty.setcbreak.assert_called_with(sys.stdin)
+
+        @patch('invoke.platform.tty')
+        @skip_if_windows
+        def setcbreak_not_called_on_non_tty_stdins(self, mock_tty):
+            self._run(_, in_stream=StringIO())
+            eq_(mock_tty.setcbreak.call_args_list, [])
+
+        @patch('invoke.platform.tty') # stub
+        @patch('invoke.platform.termios')
+        @skip_if_windows
+        def tty_stdins_have_settings_restored_by_default(
+            self, mock_termios, mock_tty
+        ):
+            sentinel = [1, 7, 3, 27]
+            mock_termios.tcgetattr.return_value = sentinel
+            self._run(_)
+            mock_termios.tcsetattr.assert_called_once_with(
+                sys.stdin, mock_termios.TCSADRAIN, sentinel
             )
 
 
