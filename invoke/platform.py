@@ -24,6 +24,13 @@ setups (vanilla Python, ActiveState etc) here.
 
 if WINDOWS:
     import msvcrt
+    from ctypes import Structure, c_ushort, windll, POINTER, byref
+    from ctypes.wintypes import HANDLE, _COORD, _SMALL_RECT
+else:
+    import fcntl
+    import struct
+    import termios
+    import tty
 
 
 def pty_size():
@@ -43,10 +50,6 @@ def _pty_size():
     """
     Suitable for most POSIX platforms.
     """
-    import fcntl
-    import struct
-    import termios
-
     # Sentinel values to be replaced w/ defaults by caller
     size = (None, None)
     # We want two short unsigned integers (rows, cols)
@@ -74,9 +77,6 @@ def _pty_size():
 
 
 def _win_pty_size():
-    from ctypes import Structure, c_ushort, windll, POINTER, byref
-    from ctypes.wintypes import HANDLE, _COORD, _SMALL_RECT
-
     class CONSOLE_SCREEN_BUFFER_INFO(Structure):
         _fields_ = [
             ('dwSize', _COORD),
@@ -115,8 +115,6 @@ def character_buffered(stream):
     if WINDOWS or not isatty(stream):
         yield
     else:
-        import termios
-        import tty
         old_settings = termios.tcgetattr(stream)
         tty.setcbreak(stream)
         try:
