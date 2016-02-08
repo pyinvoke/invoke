@@ -3,10 +3,10 @@ Changelog
 =========
 
 * :release:`0.12.2 <2016-02-07>`
-* :support:`314` (Partial fix.) Update ``MANIFEST.in`` so source distributions
-  include some missing project-management files (e.g. our internal
-  ``tasks.py``). This makes unpacked sdists more useful for things like running
-  the doc or build tasks.
+* :support:`314 backported` (Partial fix.) Update ``MANIFEST.in`` so source
+  distributions include some missing project-management files (e.g. our
+  internal ``tasks.py``). This makes unpacked sdists more useful for things
+  like running the doc or build tasks.
 * :bug:`303` Make sure `~invoke.run` waits for its IO worker threads to cleanly
   exit (such as allowing a ``finally`` block to revert TTY settings) when
   ``KeyboardInterrupt`` (or similar) aborts execution in the main thread.
