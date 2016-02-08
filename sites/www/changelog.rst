@@ -2,6 +2,10 @@
 Changelog
 =========
 
+* :bug:`303` Make sure `~invoke.run` waits for its IO worker threads to cleanly
+  exit (such as allowing a ``finally`` block to revert TTY settings) when
+  ``KeyboardInterrupt`` (or similar) aborts execution in the main thread.
+  Thanks to Tony S Yu and Máté Farkas for the report.
 * :release:`0.12.1 <2016-02-03>`
 * :bug:`308` Earlier changes to TTY detection & its use in determining features
   such as stdin pass-through, were insufficient to handle edge cases such as
