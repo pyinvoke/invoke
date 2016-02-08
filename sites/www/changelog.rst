@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :release:`0.12.2 <2016-02-07>`
 * :support:`314` (Partial fix.) Update ``MANIFEST.in`` so source distributions
   include some missing project-management files (e.g. our internal
   ``tasks.py``). This makes unpacked sdists more useful for things like running
