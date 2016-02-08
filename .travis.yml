@@ -36,7 +36,8 @@ script:
   - pip install . # NO -e!
   - inv -l # Sanity check
   # Did we break actual dist archive generation?
-  - "inv release.publish --no-sign --dry-run --directory=tmp"
+  # Have to use env var to override our normal config defaults. Ho hum.
+  - "INVOKE_PACKAGING_SIGN=0 inv release.publish --dry-run --directory=tmp"
   # Interpreter-specific wheel
   - pip uninstall -y invoke
   - "[[ $TRAVIS_PYTHON_VERSION == 3* ]] && pip install tmp/dist/*py3*.whl"
