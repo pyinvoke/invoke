@@ -36,15 +36,15 @@ script:
   - pip install . # NO -e!
   - inv -l # Sanity check
   # Did we break actual dist archive generation?
-  - "inv release.publish --no-sign --dry-run"
+  - "inv release.publish --no-sign --dry-run --directory=tmp"
   # Interpreter-specific wheel
   - pip uninstall -y invoke
-  - "[[ $TRAVIS_PYTHON_VERSION == 3* ]] && pip install dist/*py3*.whl"
-  - "[[ $TRAVIS_PYTHON_VERSION == 2* ]] && pip install dist/*py2*.whl"
+  - "[[ $TRAVIS_PYTHON_VERSION == 3* ]] && pip install tmp/dist/*py3*.whl"
+  - "[[ $TRAVIS_PYTHON_VERSION == 2* ]] && pip install tmp/dist/*py2*.whl"
   - inv -l
   # Source distribution
   - pip uninstall -y invoke
-  - "pip install dist/*.tar.gz"
+  - "pip install tmp/dist/*.tar.gz"
   - inv -l
   # I have this in my git pre-push hook, but contributors probably don't
   - flake8
