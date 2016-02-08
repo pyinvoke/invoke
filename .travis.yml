@@ -41,7 +41,7 @@ script:
   - "pip install dist/*.whl"
   - inv -l
   - pip uninstall -y invoke
-  - "pip install dist/*.tgz"
+  - "pip install dist/*.tar.gz"
   - inv -l
   # I have this in my git pre-push hook, but contributors probably don't
   - flake8
