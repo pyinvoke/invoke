@@ -257,13 +257,23 @@ class Runner(object):
             threads.append(t)
             t.start()
         # Wait for completion, then tie things off & obtain result
-        self.wait()
+        # And make sure we perform that tying off even if things asplode.
+        exception = None
+        try:
+            self.wait()
+        except BaseException as e: # Make sure we nab ^C etc
+            debug("aw shit got {0!r} in main thread".format(e))
+            exception = e
         self.program_finished.set()
         for t in threads:
             t.join()
             e = t.exception()
             if e is not None:
                 exceptions.append(e)
+        # If we got a main-thread exception while wait()ing, raise it now that
+        # we've closed our worker threads.
+        if exception is not None:
+            raise exception
         # If any exceptions appeared inside the threads, raise them now as an
         # aggregate exception object.
         if exceptions:

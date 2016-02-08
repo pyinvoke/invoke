@@ -676,6 +676,30 @@ Just to say hi
                 sys.stdin, mock_termios.TCSADRAIN, sentinel
             )
 
+        @patch('invoke.platform.tty') # stub
+        @patch('invoke.platform.termios')
+        @skip_if_windows
+        def tty_stdins_have_settings_restored_on_KeyboardExit(
+            self, mock_termios, mock_tty
+        ):
+            # This test is re: GH issue #303
+            # Runner that fakes ^C during subprocess exec
+            class _KeyboardInterruptingRunner(_Dummy):
+                def wait(self):
+                    raise KeyboardInterrupt
+            # tcgetattr returning some arbitrary value
+            sentinel = [1, 7, 3, 27]
+            mock_termios.tcgetattr.return_value = sentinel
+            # Don't actually bubble up the KeyboardInterrupt...
+            try:
+                self._run(_, klass=_KeyboardInterruptingRunner)
+            except KeyboardInterrupt:
+                pass
+            # Did we restore settings?!
+            mock_termios.tcsetattr.assert_called_once_with(
+                sys.stdin, mock_termios.TCSADRAIN, sentinel
+            )
+
 
 class _FastLocal(Local):
     # Neuter this for same reason as in _Dummy above
