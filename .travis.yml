@@ -35,7 +35,10 @@ script:
   - pip uninstall -y invoke # To undo the implicit -e install from above
   - pip install . # NO -e!
   - inv -l # Sanity check
-  # Did we break actual dist archive generation?
+  # Test distribution builds.
+  # First, make sure the alternate interpeter has wheel installed
+  - "[[ $TRAVIS_PYTHON_VERSION == 2* ]] && pip3 install wheel"
+  - "[[ $TRAVIS_PYTHON_VERSION == 3* ]] && pip2 install wheel"
   # Have to use env var to override our normal config defaults. Ho hum.
   - "INVOKE_PACKAGING_SIGN=0 inv release.publish --dry-run --directory=tmp"
   # Interpreter-specific wheel
