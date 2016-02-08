@@ -36,10 +36,13 @@ script:
   - pip install . # NO -e!
   - inv -l # Sanity check
   # Did we break actual dist archive generation?
-  - inv release.build
+  - "inv release.publish --no-sign --dry-run"
+  # Interpreter-specific wheel
   - pip uninstall -y invoke
-  - "pip install dist/*.whl"
+  - "[[ $TRAVIS_PYTHON_VERSION == 3* ]] && pip install dist/*py3*.whl"
+  - "[[ $TRAVIS_PYTHON_VERSION == 2* ]] && pip install dist/*py2*.whl"
   - inv -l
+  # Source distribution
   - pip uninstall -y invoke
   - "pip install dist/*.tar.gz"
   - inv -l
