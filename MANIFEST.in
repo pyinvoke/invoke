@@ -1,7 +1,9 @@
 include LICENSE
 include README.rst
-recursive-include docs *
-recursive-exclude docs/_build *
+include tasks.py
+recursive-include sites *
+recursive-exclude sites/*/_build *
 include dev-requirements.txt
+include tasks-requirements.txt
 recursive-include tests *
 recursive-exclude tests *.pyc *.pyo
