@@ -17,5 +17,7 @@ ns.configure({
     'packaging': {
         'sign': True,
         'wheel': True,
+        # Because of PyYAML's dual source nonsense =/
+        'dual_wheels': True,
     },
 })
