@@ -35,6 +35,14 @@ script:
   - pip uninstall -y invoke # To undo the implicit -e install from above
   - pip install . # NO -e!
   - inv -l # Sanity check
+  # Did we break actual dist archive generation?
+  - inv release.build
+  - pip uninstall -y invoke
+  - "pip install dist/*.whl"
+  - inv -l
+  - pip uninstall -y invoke
+  - "pip install dist/*.tgz"
+  - inv -l
   # I have this in my git pre-push hook, but contributors probably don't
   - flake8
 after_success:
