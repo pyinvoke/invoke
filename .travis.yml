@@ -17,6 +17,7 @@ matrix:
   allow_failures:
     - python: pypy
     - python: pypy3
+  fast_finish: true
 install:
   # Pre-requirements sanity test (again, resembles pure, non-dev install
   # environment.) Avoids e.g. spec's 'six' from gumming up our attempts to
