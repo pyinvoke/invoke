@@ -27,8 +27,10 @@ install:
   # Install remaining dev requirements (test runner, etc)
   - pip install -r dev-requirements.txt
   # Also create a workable alt-interpreter venv for testing dual package builds
+  # Python 3 is nicely namespaced, globally. Python 2 is masked by Travis'
+  # default venv, so we gotta hardcode it.
   - "[[ $TRAVIS_PYTHON_VERSION == 2* ]] && virtualenv alt_env --python=python3"
-  - "[[ $TRAVIS_PYTHON_VERSION == 3* ]] && virtualenv alt_env --python=python2"
+  - "[[ $TRAVIS_PYTHON_VERSION == 3* ]] && virtualenv alt_env --python=/usr/bin/python"
   - alt_env/bin/pip install wheel
 script:
   # Run unit and integration tests, generating coverage report (skipping html)
