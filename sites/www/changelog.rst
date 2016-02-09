@@ -2,6 +2,17 @@
 Changelog
 =========
 
+* :support:`319 backported` Fixed an issue resulting from :issue:`255` which
+  caused problems with how we generate release wheels (notably, some releases
+  such as 0.12.1 fail when installing from wheels on Python 2).
+
+  .. note::
+    As part of this fix, the next release will distribute individual Python 2
+    and Python 3 wheels instead of one 'universal' wheel. This change should be
+    transparent to users.
+
+  Thanks to ``@ojos`` for the initial report and Frazer McLean for some
+  particularly useful feedback.
 * :release:`0.12.2 <2016-02-07>`
 * :support:`314 backported` (Partial fix.) Update ``MANIFEST.in`` so source
   distributions include some missing project-management files (e.g. our
