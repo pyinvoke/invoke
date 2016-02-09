@@ -26,6 +26,10 @@ install:
   - inv --list
   # Install remaining dev requirements (test runner, etc)
   - pip install -r dev-requirements.txt
+  # Also create a workable alt-interpreter venv for testing dual package builds
+  - "[[ $TRAVIS_PYTHON_VERSION == 2* ]] && virtualenv alt_env --python=python3"
+  - "[[ $TRAVIS_PYTHON_VERSION == 3* ]] && virtualenv alt_env --python=python2"
+  - alt_env/bin/pip install wheel
 script:
   # Run unit and integration tests, generating coverage report (skipping html)
   # This will fail if the tests fail.
@@ -36,12 +40,14 @@ script:
   - pip uninstall -y invoke # To undo the implicit -e install from above
   - pip install . # NO -e!
   - inv -l # Sanity check
+  # I have this in my git pre-push hook, but contributors probably don't
+  - flake8
+after_success:
   # Test distribution builds.
-  # First, make sure the alternate interpeter has wheel installed
-  - "[[ $TRAVIS_PYTHON_VERSION == 2* ]] && pip3 install wheel"
-  - "[[ $TRAVIS_PYTHON_VERSION == 3* ]] && pip2 install wheel"
   # Have to use env var to override our normal config defaults. Ho hum.
-  - "INVOKE_PACKAGING_SIGN=0 inv release.publish --dry-run --directory=tmp"
+  # Also specify the virtualenv we made for the 'alternate' Python version, for
+  # the dual wheel build step.
+  - "INVOKE_PACKAGING_SIGN=0 inv release.publish --dry-run --directory=tmp --alt-python=alt_env/bin/python"
   # Interpreter-specific wheel
   - pip uninstall -y invoke
   - "[[ $TRAVIS_PYTHON_VERSION == 3* ]] && pip install tmp/dist/*py3*.whl"
@@ -51,9 +57,7 @@ script:
   - pip uninstall -y invoke
   - "pip install tmp/dist/*.tar.gz"
   - inv -l
-  # I have this in my git pre-push hook, but contributors probably don't
-  - flake8
-after_success:
+after_script:
   # Upload coverage data to codecov
   - codecov
 notifications:
