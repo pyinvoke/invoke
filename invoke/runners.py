@@ -27,7 +27,8 @@ except ImportError:
 
 from .exceptions import Failure, ThreadException, ExceptionWrapper
 from .platform import (
-    WINDOWS, pty_size, character_buffered, ready_for_reading, read_byte, stream_in_binary_mode
+    WINDOWS, pty_size, character_buffered, ready_for_reading, read_byte,
+    stream_in_binary_mode,
 )
 from .util import has_fileno, isatty, debug
 
