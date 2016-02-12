@@ -6,6 +6,7 @@ logic-flow interruptions.
 """
 
 from contextlib import contextmanager
+import os
 import select
 import sys
 
@@ -121,6 +122,36 @@ def character_buffered(stream):
             yield
         finally:
             termios.tcsetattr(stream, termios.TCSADRAIN, old_settings)
+
+
+@contextmanager
+def stream_in_binary_mode(stream):
+    """
+    Temporarily change the mode of the given stream to binary.
+
+    Only applies to files on Windows; otherwise this is a no-op.
+    """
+    should_change_mode = False
+    fileno = None
+    if WINDOWS and hasattr(stream, 'fileno'):
+        fileno = stream.fileno()
+        try:
+            msvcrt.get_osfhandle(fileno)
+        except IOError:
+            pass
+        else:
+            should_change_mode = True
+
+    if should_change_mode:
+        original_mode = None
+        try:
+            original_mode = msvcrt.setmode(fileno, os.O_BINARY)
+            yield
+        finally:
+            if original_mode is not None:
+                msvcrt.setmode(fileno, original_mode)
+    else:
+        yield
 
 
 def ready_for_reading(input_):
