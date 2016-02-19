@@ -26,6 +26,12 @@ if WINDOWS:
     import msvcrt
     from ctypes import Structure, c_ushort, windll, POINTER, byref
     from ctypes.wintypes import HANDLE, _COORD, _SMALL_RECT
+    # Dummy definitions for modules imported under Unix, as the tests
+    # (that are skipped under Windows anyway) patch them
+    fcntl = None
+    struct = None
+    termios = None
+    tty = None
 else:
     import fcntl
     import struct
