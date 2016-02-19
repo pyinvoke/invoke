@@ -650,22 +650,22 @@ Just to say hi
             )
 
     class character_buffered_stdin:
+        @skip_if_windows
         @patch('invoke.platform.tty')
         @patch('invoke.platform.termios') # stub
-        @skip_if_windows
         def setcbreak_called_on_tty_stdins(self, mock_termios, mock_tty):
             self._run(_)
             mock_tty.setcbreak.assert_called_with(sys.stdin)
 
-        @patch('invoke.platform.tty')
         @skip_if_windows
+        @patch('invoke.platform.tty')
         def setcbreak_not_called_on_non_tty_stdins(self, mock_tty):
             self._run(_, in_stream=StringIO())
             eq_(mock_tty.setcbreak.call_args_list, [])
 
+        @skip_if_windows
         @patch('invoke.platform.tty') # stub
         @patch('invoke.platform.termios')
-        @skip_if_windows
         def tty_stdins_have_settings_restored_by_default(
             self, mock_termios, mock_tty
         ):
@@ -676,9 +676,9 @@ Just to say hi
                 sys.stdin, mock_termios.TCSADRAIN, sentinel
             )
 
+        @skip_if_windows
         @patch('invoke.platform.tty') # stub
         @patch('invoke.platform.termios')
-        @skip_if_windows
         def tty_stdins_have_settings_restored_on_KeyboardExit(
             self, mock_termios, mock_tty
         ):
