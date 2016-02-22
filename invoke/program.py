@@ -268,6 +268,9 @@ class Program(object):
         try:
             self._parse(argv)
             self.execute()
+        except KeyboardInterrupt:
+            debug("Received keyboard interrupt")
+            sys.exit(130)
         except (Failure, Exit, ParseError) as e:
             debug("Received a possibly-skippable exception: {0!r}".format(e))
             # Print error message from parser if necessary.
