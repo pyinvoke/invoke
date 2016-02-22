@@ -35,6 +35,7 @@ class Failure(Exception):
         if self.result.pty:
             err_label = "Stdout (pty=True; no stderr possible)"
             err_text = self.result.stdout
+        err_text = '\n'.join([repr(i)[1:-1] for i in err_text.splitlines()])
         return """Command execution failure!
 
 Exit code: {0}
