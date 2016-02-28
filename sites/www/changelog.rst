@@ -3,10 +3,10 @@ Changelog
 =========
 
 * :bug:`152 major` (also :issue:`251`, :issue:`331`) Correctly handle
-  ``KeyboardInterupt`` during `~invoke.runners.Runner.run`, re: both mirroring
+  ``KeyboardInterrupt`` during `~invoke.runners.Runner.run`, re: both mirroring
   the interrupt signal to the subprocess *and* capturing the local exception
-  within Invoke's CLI handler (so there's no messy traceback, just exiting
-  with code ``130``).
+  within Invoke's CLI handler (so there's no messy traceback, just exiting with
+  code ``130``).
 
   Thanks to Peter Darrow for the report, and to Mika Eloranta & Máté Farkas for
   early versions of the patchset.
