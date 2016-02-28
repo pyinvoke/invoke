@@ -46,6 +46,12 @@ class _Dummy(Runner):
         return 0
 
 
+# Runner that fakes ^C during subprocess exec
+class _KeyboardInterruptingRunner(_Dummy):
+    def wait(self):
+        raise KeyboardInterrupt
+
+
 class OhNoz(Exception):
     pass
 
@@ -679,14 +685,10 @@ Just to say hi
         @skip_if_windows
         @patch('invoke.platform.tty') # stub
         @patch('invoke.platform.termios')
-        def tty_stdins_have_settings_restored_on_KeyboardExit(
+        def tty_stdins_have_settings_restored_on_KeyboardInterrupt(
             self, mock_termios, mock_tty
         ):
             # This test is re: GH issue #303
-            # Runner that fakes ^C during subprocess exec
-            class _KeyboardInterruptingRunner(_Dummy):
-                def wait(self):
-                    raise KeyboardInterrupt
             # tcgetattr returning some arbitrary value
             sentinel = [1, 7, 3, 27]
             mock_termios.tcgetattr.return_value = sentinel
