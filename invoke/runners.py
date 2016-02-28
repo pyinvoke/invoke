@@ -9,6 +9,7 @@ from subprocess import Popen, PIPE
 import sys
 import threading
 import time
+import signal
 
 # Import some platform-specific things at top level so they can be mocked for
 # tests.
@@ -753,16 +754,23 @@ class Local(Runner):
 
     def wait(self):
         if self.using_pty:
+            exception_to_raise = None
             while True:
-                # TODO: possibly reinstate conditional WNOHANG as per
-                # https://github.com/pexpect/ptyprocess/blob/4058faa05e2940662ab6da1330aa0586c6f9cd9c/ptyprocess/ptyprocess.py#L680-L687
-                pid_val, self.status = os.waitpid(self.pid, 0)
-                # waitpid() sets the 'pid' return val to 0 when no children
-                # have exited yet; when it is NOT zero, we know the child's
-                # stopped.
-                if pid_val != 0:
-                    break
-                # TODO: io sleep?
+                try:
+                    # TODO: possibly reinstate conditional WNOHANG as per
+                    # https://github.com/pexpect/ptyprocess/blob/4058faa05e2940662ab6da1330aa0586c6f9cd9c/ptyprocess/ptyprocess.py#L680-L687
+                    pid_val, self.status = os.waitpid(self.pid, 0)
+                    # waitpid() sets the 'pid' return val to 0 when no children
+                    # have exited yet; when it is NOT zero, we know the child's
+                    # stopped.
+                    if pid_val != 0:
+                        break
+                    # TODO: io sleep?
+                except KeyboardInterrupt as exception:
+                    exception_to_raise = exception
+                    os.killpg(self.pid, signal.SIGINT)
+            if exception_to_raise:
+                raise exception_to_raise
         else:
             self.process.wait()
 
