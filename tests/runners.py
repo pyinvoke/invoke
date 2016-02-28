@@ -702,6 +702,16 @@ Just to say hi
                 sys.stdin, mock_termios.TCSADRAIN, sentinel
             )
 
+    class keyboard_interrupts_act_transparently:
+        def send_interrupt_called_on_KeyboardInterrupt(self):
+            skip()
+
+        def send_interrupt_not_called_for_other_exceptions(self):
+            skip()
+
+        def KeyboardInterrupt_is_still_raised(self):
+            skip()
+
 
 class _FastLocal(Local):
     # Neuter this for same reason as in _Dummy above
@@ -783,3 +793,6 @@ class Local_(Spec):
                 self._run(_)
                 local_encoding = locale.getpreferredencoding(False)
                 _expect_encoding(codecs, local_encoding)
+
+    def send_interrupt_uses_killpg_to_interrupt_subprocess(self):
+        skip()
