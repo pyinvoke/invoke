@@ -10,7 +10,7 @@ Changelog
 
   Thanks to Peter Darrow for the report, and to Mika Eloranta & Máté Farkas for
   early versions of the patchset.
-* :support:`319 backported` Fixed an issue resulting from :issue:`255` which
+* :support:`319` Fixed an issue resulting from :issue:`255` which
   caused problems with how we generate release wheels (notably, some releases
   such as 0.12.1 fail when installing from wheels on Python 2).
 
