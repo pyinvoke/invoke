@@ -210,11 +210,21 @@ class Runner(object):
         :returns:
             `Result`, or a subclass thereof.
 
-        :raises: `.Failure` (if the command exited nonzero & ``warn=False``)
+        :raises: `.Failure`, if the command exited nonzero & ``warn=False``.
 
         :raises:
             `.ThreadException` (if the background I/O threads encounter
             exceptions)
+
+        :raises:
+            ``KeyboardInterrupt``, if the user generates one during command
+            execution by pressing Ctrl-C.
+
+            .. note::
+                In normal usage, Invoke's top-level CLI tooling will catch
+                these & exit with return code ``130`` (typical POSIX behavior)
+                instead of printing a traceback and exiting ``1`` (which is
+                what Python normally does).
         """
         # Normalize kwargs w/ config
         opts, out_stream, err_stream, in_stream = self._run_opts(kwargs)
