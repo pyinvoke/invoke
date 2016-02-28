@@ -272,7 +272,6 @@ class Runner(object):
         try:
             self.wait()
         except BaseException as e: # Make sure we nab ^C etc
-            debug("aw shit got {0!r} in main thread".format(e))
             exception = e
         self.program_finished.set()
         for t in threads:
