@@ -84,6 +84,7 @@ class Program_(IntegrationSpec):
             expect('--write-pyc -c foo mytask')
             eq_(sys.dont_write_bytecode, False)
 
+
     class normalize_argv:
         @patch('invoke.program.sys')
         def defaults_to_sys_argv(self, mock_sys):
