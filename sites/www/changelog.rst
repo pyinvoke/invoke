@@ -2,6 +2,14 @@
 Changelog
 =========
 
+* :bug:`152 major` (also :issue:`251`, :issue:`331`) Correctly handle
+  ``KeyboardInterupt`` during `~invoke.runners.Runner.run`, re: both mirroring
+  the interrupt signal to the subprocess *and* capturing the local exception
+  within Invoke's CLI handler (so there's no messy traceback, just exiting
+  with code ``130``).
+
+  Thanks to Peter Darrow for the report, and to Mika Eloranta & Máté Farkas for
+  early versions of the patchset.
 * :support:`319 backported` Fixed an issue resulting from :issue:`255` which
   caused problems with how we generate release wheels (notably, some releases
   such as 0.12.1 fail when installing from wheels on Python 2).
