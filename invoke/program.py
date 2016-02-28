@@ -284,6 +284,8 @@ class Program(object):
                 sys.exit(code)
             else:
                 debug("Invoked as run(..., exit=False), ignoring exception")
+        except KeyboardInterrupt:
+            sys.exit(130) # Standard POSIX exit code for SIGINT
 
     def _parse(self, argv):
         debug("argv given to Program.run: {0!r}".format(argv))

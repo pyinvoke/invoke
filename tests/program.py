@@ -284,8 +284,13 @@ class Program_(IntegrationSpec):
         def should_show_context_usage_on_context_parse_failures(self):
             skip()
 
-        def turns_KeyboardInterrupt_into_exit_code_130(self):
-            skip()
+        @trap
+        @patch('invoke.program.sys.exit')
+        def turns_KeyboardInterrupt_into_exit_code_130(self, mock_exit):
+            p = Program()
+            p.execute = Mock(side_effect=KeyboardInterrupt)
+            p.run("myapp -c foo mytask")
+            mock_exit.assert_called_with(130)
 
 
     class help_:
