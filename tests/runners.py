@@ -45,6 +45,9 @@ class _Dummy(Runner):
     def returncode(self):
         return 0
 
+    def send_interrupt(self):
+        pass
+
 
 # Runner that fakes ^C during subprocess exec
 class _KeyboardInterruptingRunner(_Dummy):

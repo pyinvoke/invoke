@@ -283,8 +283,7 @@ class Runner(object):
         # we've closed our worker threads.
         if exception is not None:
             if isinstance(exception, KeyboardInterrupt):
-                # TODO: if KeyboardInterrupt, call self.send_interrupt()
-                pass
+                self.send_interrupt()
             raise exception
         # If any exceptions appeared inside the threads, raise them now as an
         # aggregate exception object.
@@ -649,6 +648,12 @@ class Runner(object):
     def wait(self):
         """
         Block until the running command appears to have exited.
+        """
+        raise NotImplementedError
+
+    def send_interrupt(self):
+        """
+        Submit an interrupt signal to the running subprocess.
         """
         raise NotImplementedError
 
