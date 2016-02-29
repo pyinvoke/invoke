@@ -284,6 +284,13 @@ class Runner(object):
         if exception is not None:
             if isinstance(exception, KeyboardInterrupt):
                 self.send_interrupt()
+                # TODO: consider ignoring the KeyboardInterrupt instead of
+                # raising it below; this would allow for subprocesses which
+                # don't actually exist right away on Ctrl-C.
+                # TODO: generally, but especially if we do ignore
+                # KeyboardInterrupt, try honoring other signals sent to our own
+                # process and transmit them to the subprocess before handling
+                # 'normally'.
             raise exception
         # If any exceptions appeared inside the threads, raise them now as an
         # aggregate exception object.
