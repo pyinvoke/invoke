@@ -282,7 +282,9 @@ class Runner(object):
         # If we got a main-thread exception while wait()ing, raise it now that
         # we've closed our worker threads.
         if exception is not None:
-            # TODO: if KeyboardInterrupt, call self.signal_interrupt()
+            if isinstance(exception, KeyboardInterrupt):
+                # TODO: if KeyboardInterrupt, call self.send_interrupt()
+                pass
             raise exception
         # If any exceptions appeared inside the threads, raise them now as an
         # aggregate exception object.

@@ -703,14 +703,35 @@ Just to say hi
             )
 
     class keyboard_interrupts_act_transparently:
+        def _run_with_mocked_interrupt(self, klass):
+            runner = klass(Context(config=Config()))
+            runner.send_interrupt = Mock()
+            try:
+                runner.run(_)
+            except:
+                pass
+            return runner
+
         def send_interrupt_called_on_KeyboardInterrupt(self):
-            skip()
+            runner = self._run_with_mocked_interrupt(
+                _KeyboardInterruptingRunner
+            )
+            assert runner.send_interrupt.called
 
         def send_interrupt_not_called_for_other_exceptions(self):
-            skip()
+            class _GenericExceptingRunner(_Dummy):
+                def wait(self):
+                    raise Exception
+            runner = self._run_with_mocked_interrupt(_GenericExceptingRunner)
+            assert not runner.send_interrupt.called
 
         def KeyboardInterrupt_is_still_raised(self):
-            skip()
+            raised = None
+            try:
+                self._run(_, klass=_KeyboardInterruptingRunner)
+            except KeyboardInterrupt as e:
+                raised = e
+            assert raised is not None
 
 
 class _FastLocal(Local):
