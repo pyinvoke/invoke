@@ -4,6 +4,7 @@ import codecs
 import locale
 import os
 import re
+from signal import SIGINT, SIGTERM
 import struct
 from subprocess import Popen, PIPE
 import sys
@@ -789,6 +790,19 @@ class Local(Runner):
                 # TODO: io sleep?
         else:
             self.process.wait()
+
+    def send_interrupt(self):
+        if self.using_pty:
+            # Use killpg for maximum interrupting power
+            os.killpg(self.pid, SIGINT)
+        else:
+            # Use send_signal with platform-appropriate signal (Windows doesn't
+            # support SIGINT unfortunately, only SIGTERM).
+            # NOTE: could use subproces.terminate() (which is cross-platform)
+            # but feels best to use SIGINT as much as we possibly can as it's
+            # most appropriate. terminate() always sends SIGTERM.
+            #self.process.send_signal(SIGINT if not WINDOWS else SIGTERM)
+            pass
 
     def returncode(self):
         if self.using_pty:

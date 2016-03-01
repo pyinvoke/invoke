@@ -2,6 +2,7 @@ import locale
 import sys
 import types
 from invoke.vendor.six import StringIO, b
+from signal import SIGINT
 
 from spec import (
     Spec, trap, eq_, skip, ok_, raises, assert_contains, assert_not_contains
@@ -818,5 +819,25 @@ class Local_(Spec):
                 local_encoding = locale.getpreferredencoding(False)
                 _expect_encoding(codecs, local_encoding)
 
-    def send_interrupt_uses_killpg_to_interrupt_subprocess(self):
-        skip()
+    class send_interrupt:
+        @mock_pty(skip_asserts=True)
+        def uses_killpg_when_pty_True(self):
+            class _KeyboardInterruptingFastLocal(_FastLocal):
+                def wait(self):
+                    raise KeyboardInterrupt
+
+            with patch('invoke.runners.os.killpg') as killpg:
+                runner = _KeyboardInterruptingFastLocal(
+                    Context(config=Config())
+                )
+                try:
+                    runner.run(_, pty=True)
+                except KeyboardInterrupt:
+                    pass
+                killpg.assert_called_once_with(runner.pid, SIGINT)
+
+        def uses_subprocess_send_signal_SIGINT_when_pty_False(self):
+            skip()
+
+        def uses_send_signal_SIGTERM_when_pty_False_and_Windows(self):
+            skip()
