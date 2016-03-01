@@ -793,8 +793,7 @@ class Local(Runner):
 
     def send_interrupt(self):
         if self.using_pty:
-            # Use killpg for maximum interrupting power
-            os.killpg(self.pid, SIGINT)
+            os.kill(self.pid, SIGINT)
         else:
             # Use send_signal with platform-appropriate signal (Windows doesn't
             # support SIGINT unfortunately, only SIGTERM).

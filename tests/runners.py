@@ -821,12 +821,12 @@ class Local_(Spec):
 
     class send_interrupt:
         @mock_pty(skip_asserts=True)
-        def uses_killpg_when_pty_True(self):
+        def uses_os_kill_when_pty_True(self):
             class _KeyboardInterruptingFastLocal(_FastLocal):
                 def wait(self):
                     raise KeyboardInterrupt
 
-            with patch('invoke.runners.os.killpg') as killpg:
+            with patch('invoke.runners.os.kill') as kill:
                 runner = _KeyboardInterruptingFastLocal(
                     Context(config=Config())
                 )
@@ -834,7 +834,7 @@ class Local_(Spec):
                     runner.run(_, pty=True)
                 except KeyboardInterrupt:
                     pass
-                killpg.assert_called_once_with(runner.pid, SIGINT)
+                kill.assert_called_once_with(runner.pid, SIGINT)
 
         def uses_subprocess_send_signal_SIGINT_when_pty_False(self):
             skip()
