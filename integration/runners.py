@@ -44,3 +44,23 @@ class Runner_(Spec):
         def nested_invoke_sessions_not_conflated_with_mocked_stdin(self):
             # Also re: GH issue #308. This one will just hang forever. Woo!
             run("inv -c nested_or_piped calls_foo", hide=True)
+
+    def KeyboardInterrupt_triggers_SIGINT(self):
+        # TODO:
+        # - my run() of invoke needs to submit the kill signal to the
+        # sub-invoke - so we either need an async API now (hrrgh) or I need to
+        # just use shelly bits in the top level invocation, e.g. & + kill %1
+        # type stuff (needs to work on bash obvs)
+        # - then the inner invoke should get KeyboardInterrupt, respond
+        # accordingly, and the sub-subprocess of signals.py should receive
+        # SIGINT and assert True
+        #   - I guess this means it needs a timeout so if the signal does NOT
+        #   appear, it doesn't just sleep forever
+        #   - check to see if I have prior art for that heh...
+        # TODO: figure out whether KeyboardInterrupt is truly always launched
+        # when Python receives a SIGINT. May need to just switch everything to
+        # signal handling if not (which is probably cleaner regardless).
+        # NOTE: we may need to sleep between launch & signal-send, because
+        # if we're too fast on the signal, it may get sent before the innermost
+        # Python process is actually fully set up w/ its signal handlers...
+        run("inv -c signal_tasks expect SIGINT")
