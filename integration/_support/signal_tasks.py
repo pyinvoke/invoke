@@ -14,4 +14,4 @@ def expect(c, subroutine):
     controlled-by-the-test-suite subprocess, without actually signaling the
     test runner itself.
     """
-    c.run("python signaling.py {0}".format(subroutine))
+    c.run("python signaling.py {0}".format(subroutine), pty=True)

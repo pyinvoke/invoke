@@ -46,21 +46,39 @@ class Runner_(Spec):
             run("inv -c nested_or_piped calls_foo", hide=True)
 
     def KeyboardInterrupt_triggers_SIGINT(self):
-        # TODO:
-        # - my run() of invoke needs to submit the kill signal to the
-        # sub-invoke - so we either need an async API now (hrrgh) or I need to
-        # just use shelly bits in the top level invocation, e.g. & + kill %1
-        # type stuff (needs to work on bash obvs)
-        # - then the inner invoke should get KeyboardInterrupt, respond
-        # accordingly, and the sub-subprocess of signals.py should receive
-        # SIGINT and assert True
-        #   - I guess this means it needs a timeout so if the signal does NOT
-        #   appear, it doesn't just sleep forever
-        #   - check to see if I have prior art for that heh...
-        # TODO: figure out whether KeyboardInterrupt is truly always launched
-        # when Python receives a SIGINT. May need to just switch everything to
-        # signal handling if not (which is probably cleaner regardless).
-        # NOTE: we may need to sleep between launch & signal-send, because
-        # if we're too fast on the signal, it may get sent before the innermost
-        # Python process is actually fully set up w/ its signal handlers...
-        run("inv -c signal_tasks expect SIGINT")
+        import threading, time
+        class ExceptionCapturingThread(threading.Thread):
+            def run(self):
+                self.exception = None
+                try:
+                    super(ExceptionCapturingThread, self).run()
+                except BaseException as e:
+                    self.exception = e
+
+        def bg_body():
+            # Hide output; if there's an exception, we capture + raise it
+            # TODO: clone this to test both pty and non? probably worthwhile
+            # TODO: use 'expect exit of 130' when that's implemented
+            result = run(
+                "inv -c signal_tasks expect SIGINT", hide=True, warn=True
+            )
+            if result.exited != 130:
+                err = "SIGINT'd subprocess did not exit 130! Result follows:"
+                raise Exception("{0}\n\n{1}".format(err, result))
+
+
+        # Execute sub-invoke in a thread so we can talk to its subprocess while
+        # it's running.
+        # TODO: useful async API for run() which at least wraps threads for
+        # you, and exposes the inner PID
+        bg = ExceptionCapturingThread(target=bg_body)
+        bg.start()
+        # Wait a bit to ensure subprocess is in the right state & not still
+        # starting up (lolpython?)
+        time.sleep(1)
+        # Send expected signal
+        run("pkill -INT -f signal_tasks")
+        # Rejoin subprocess thread & check for exceptions
+        bg.join()
+        if bg.exception:
+            raise bg.exception

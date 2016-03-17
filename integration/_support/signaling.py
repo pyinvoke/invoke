@@ -46,7 +46,7 @@ def wait():
     # NOTE: may want to sleep longer than 1s in order to accomodate an
     # outer-layer sleep which is ensuring we actually get to this point (vs
     # signaling during interpreter setup or the top of expect())
-    signal.alarm(60)
+    signal.alarm(1)
     # Wait for a sign~
     signal.pause()
 
