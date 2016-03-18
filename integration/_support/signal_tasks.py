@@ -2,7 +2,7 @@ from invoke import ctask
 
 
 @ctask
-def expect(c, subroutine):
+def expect(c, subroutine, pty=True):
     """
     Call a subroutine within signaling.py, then sleep, waiting for a signal.
 
@@ -14,4 +14,4 @@ def expect(c, subroutine):
     controlled-by-the-test-suite subprocess, without actually signaling the
     test runner itself.
     """
-    c.run("python signaling.py {0}".format(subroutine), pty=True)
+    c.run("python signaling.py {0}".format(subroutine), pty=pty)

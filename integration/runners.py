@@ -60,7 +60,7 @@ class Runner_(Spec):
             # TODO: clone this to test both pty and non? probably worthwhile
             # TODO: use 'expect exit of 130' when that's implemented
             result = run(
-                "inv -c signal_tasks expect SIGINT", hide=True, warn=True
+                "inv -c signal_tasks expect SIGINT --pty", hide=True, warn=True
             )
             if result.exited != 130:
                 err = "SIGINT'd subprocess did not exit 130! Result follows:"
