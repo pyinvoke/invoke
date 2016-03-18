@@ -742,6 +742,10 @@ class _FastLocal(Local):
     # Neuter this for same reason as in _Dummy above
     input_sleep = 0
 
+class _KeyboardInterruptingFastLocal(_FastLocal):
+    def wait(self):
+        raise KeyboardInterrupt
+
 
 class Local_(Spec):
     def _run(self, *args, **kwargs):
@@ -820,16 +824,13 @@ class Local_(Spec):
                 _expect_encoding(codecs, local_encoding)
 
     class send_interrupt:
+        def  _runner(self):
+            return _KeyboardInterruptingFastLocal(Context(config=Config()))
+
         @mock_pty(skip_asserts=True)
         def uses_os_kill_when_pty_True(self):
-            class _KeyboardInterruptingFastLocal(_FastLocal):
-                def wait(self):
-                    raise KeyboardInterrupt
-
             with patch('invoke.runners.os.kill') as kill:
-                runner = _KeyboardInterruptingFastLocal(
-                    Context(config=Config())
-                )
+                runner = self._runner()
                 try:
                     runner.run(_, pty=True)
                 except KeyboardInterrupt:
