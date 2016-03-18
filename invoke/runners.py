@@ -274,6 +274,19 @@ class Runner(object):
             self.wait()
         except BaseException as e: # Make sure we nab ^C etc
             exception = e
+            # TODO: consider consuming the KeyboardInterrupt instead of storing
+            # it for later raise; this would allow for subprocesses which don't
+            # actually exit on Ctrl-C (e.g. vim). NOTE: but this would make it
+            # harder to correctly detect it and exit 130 once everything wraps
+            # up...
+            # TODO: generally, but especially if we do ignore
+            # KeyboardInterrupt, honor other signals sent to our own process
+            # and transmit them to the subprocess before handling 'normally'.
+            # NOTE: we handle this now instead of at actual-exception-handling
+            # time because otherwise the stdout/err reader threads may block
+            # until the subprocess exits.
+            if isinstance(exception, KeyboardInterrupt):
+                self.send_interrupt()
         self.program_finished.set()
         for t in threads:
             t.join()
@@ -283,15 +296,6 @@ class Runner(object):
         # If we got a main-thread exception while wait()ing, raise it now that
         # we've closed our worker threads.
         if exception is not None:
-            if isinstance(exception, KeyboardInterrupt):
-                self.send_interrupt()
-                # TODO: consider ignoring the KeyboardInterrupt instead of
-                # raising it below; this would allow for subprocesses which
-                # don't actually exist right away on Ctrl-C.
-                # TODO: generally, but especially if we do ignore
-                # KeyboardInterrupt, try honoring other signals sent to our own
-                # process and transmit them to the subprocess before handling
-                # 'normally'.
             raise exception
         # If any exceptions appeared inside the threads, raise them now as an
         # aggregate exception object.
@@ -795,6 +799,14 @@ class Local(Runner):
         if self.using_pty:
             os.kill(self.pid, SIGINT)
         else:
+            # NOTE: this isn't strictly necessary because non-pty scenarios
+            # (under POSIX, anyways) involve process groups and an interactive
+            # Ctrl-C targets the entire group, not just the foreground process.
+            # TODO: figure out if this is the case on Windows terminals, which
+            # may not be POSIX...
+            # TODO: for a 'normal' non-interactive SIGINT, though, we would
+            # still have to submit it manually...
+
             # Use send_signal with platform-appropriate signal (Windows doesn't
             # support SIGINT unfortunately, only SIGTERM).
             # NOTE: could use subprocess.terminate() (which is cross-platform)
