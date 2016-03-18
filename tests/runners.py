@@ -824,17 +824,18 @@ class Local_(Spec):
                 _expect_encoding(codecs, local_encoding)
 
     class send_interrupt:
-        def  _runner(self):
-            return _KeyboardInterruptingFastLocal(Context(config=Config()))
+        def  _run(self, pty):
+            runner = _KeyboardInterruptingFastLocal(Context(config=Config()))
+            try:
+                runner.run(_, pty=pty)
+            except KeyboardInterrupt:
+                pass
+            return runner
 
         @mock_pty(skip_asserts=True)
         def uses_os_kill_when_pty_True(self):
             with patch('invoke.runners.os.kill') as kill:
-                runner = self._runner()
-                try:
-                    runner.run(_, pty=True)
-                except KeyboardInterrupt:
-                    pass
+                runner = self._run(pty=True)
                 kill.assert_called_once_with(runner.pid, SIGINT)
 
         def uses_subprocess_send_signal_SIGINT_when_pty_False(self):
