@@ -797,7 +797,7 @@ class Local(Runner):
         else:
             # Use send_signal with platform-appropriate signal (Windows doesn't
             # support SIGINT unfortunately, only SIGTERM).
-            # NOTE: could use subproces.terminate() (which is cross-platform)
+            # NOTE: could use subprocess.terminate() (which is cross-platform)
             # but feels best to use SIGINT as much as we possibly can as it's
             # most appropriate. terminate() always sends SIGTERM.
             #self.process.send_signal(SIGINT if not WINDOWS else SIGTERM)
