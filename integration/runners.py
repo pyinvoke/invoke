@@ -79,8 +79,9 @@ class Runner_(Spec):
         # Wait a bit to ensure subprocess is in the right state & not still
         # starting up (lolpython?)
         time.sleep(1)
-        # Send expected signal
-        run("pkill -INT -f signal_tasks")
+        # Send expected signal (use pty to ensure no intermediate 'sh'
+        # processes on Linux; is of no consequence on Darwin.)
+        run("pkill -INT -f \"python.*inv -c signal_tasks\"", pty=True)
         # Rejoin subprocess thread & check for exceptions
         bg.join()
         if bg.exception:
