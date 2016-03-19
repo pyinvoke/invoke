@@ -799,21 +799,17 @@ class Local(Runner):
         if self.using_pty:
             os.kill(self.pid, SIGINT)
         else:
-            # NOTE: this isn't strictly necessary because non-pty scenarios
-            # (under POSIX, anyways) involve process groups and an interactive
-            # Ctrl-C targets the entire group, not just the foreground process.
-            # TODO: figure out if this is the case on Windows terminals, which
-            # may not be POSIX...
-            # TODO: for a 'normal' non-interactive SIGINT, though, we would
-            # still have to submit it manually...
-
             # Use send_signal with platform-appropriate signal (Windows doesn't
             # support SIGINT unfortunately, only SIGTERM).
             # NOTE: could use subprocess.terminate() (which is cross-platform)
             # but feels best to use SIGINT as much as we possibly can as it's
             # most appropriate. terminate() always sends SIGTERM.
-            #self.process.send_signal(SIGINT if not WINDOWS else SIGTERM)
-            pass
+            # NOTE: in interactive POSIX terminals, this is technically
+            # unnecessary as Ctrl-C submits the INT to the entire foreground
+            # process group (which will be both Invoke and its spawned
+            # subprocess). However, it doesn't seem to hurt, & ensures that a
+            # *non-interactive* SIGINT is forwarded correctly.
+            self.process.send_signal(SIGINT if not WINDOWS else SIGTERM)
 
     def returncode(self):
         if self.using_pty:

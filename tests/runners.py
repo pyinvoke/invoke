@@ -2,7 +2,7 @@ import locale
 import sys
 import types
 from invoke.vendor.six import StringIO, b
-from signal import SIGINT
+from signal import SIGINT, SIGTERM
 
 from spec import (
     Spec, trap, eq_, skip, ok_, raises, assert_contains, assert_not_contains
@@ -10,6 +10,7 @@ from spec import (
 from mock import patch, Mock, call
 
 from invoke import Runner, Local, Context, Config, Failure, ThreadException
+from invoke.platform import WINDOWS
 
 from _util import mock_subprocess, mock_pty, skip_if_windows
 
@@ -838,8 +839,9 @@ class Local_(Spec):
                 runner = self._run(pty=True)
                 kill.assert_called_once_with(runner.pid, SIGINT)
 
-        def uses_subprocess_send_signal_SIGINT_when_pty_False(self):
-            skip()
-
-        def uses_send_signal_SIGTERM_when_pty_False_and_Windows(self):
-            skip()
+        @mock_subprocess()
+        def uses_subprocess_send_signal_when_pty_False(self):
+            runner = self._run(pty=False)
+            # Don't see a great way to test this w/o replicating the logic.
+            expected = SIGTERM if WINDOWS else SIGINT
+            runner.process.send_signal.assert_called_once_with(expected)
