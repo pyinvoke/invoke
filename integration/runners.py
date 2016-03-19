@@ -56,14 +56,17 @@ class Runner_(Spec):
                     self.exception = e
 
         def bg_body():
-            # Hide output; if there's an exception, we capture + raise it
             # TODO: clone this to test both pty and non? probably worthwhile
             # TODO: use 'expect exit of 130' when that's implemented
+            # Hide output by default, then assume an error & display stderr, if
+            # there's any stderr. (There's no reliable way to tell the
+            # subprocess raised an exception, because we'll be interrupted
+            # before completion, and won't have access to its exit code.)
             result = run(
                 "inv -c signal_tasks expect SIGINT --pty", hide=True, warn=True
             )
-            if result.exited != 130:
-                err = "SIGINT'd subprocess did not exit 130! Result follows:"
+            if result.exited != 130 or result.stdout or result.stderr:
+                err = "Subprocess had output and/or bad exit! Result follows:"
                 raise Exception("{0}\n\n{1}".format(err, result))
 
 

@@ -29,9 +29,10 @@ def _fail(signum, frame):
     raise Exception("Received unexpected {0}".format(_hr(signum)))
 
 def _succeed(signum, frame):
-    # NOTE: typically, the tests running this will hide stdout, so this is just
-    # a more-verbose 'pass' really.
-    print("Received expected {0}".format(_hr(signum)))
+    # NOTE: had to end up using 'any output == problem' to communicate with
+    # test runner, so that makes us a good Unix utility I guess - no news is
+    # good news.
+    pass
 
 
 #
