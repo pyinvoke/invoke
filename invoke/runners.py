@@ -26,11 +26,11 @@ try:
 except ImportError:
     termios = None
 
-from .exceptions import Failure, ThreadException, ExceptionWrapper
+from .exceptions import Failure, ThreadException
 from .platform import (
     WINDOWS, pty_size, character_buffered, ready_for_reading, read_byte,
 )
-from .util import has_fileno, isatty, debug
+from .util import has_fileno, isatty, ExceptionHandlingThread
 
 from .vendor import six
 
@@ -264,7 +264,7 @@ class Runner(object):
         # Kick off IO threads
         threads, exceptions = [], []
         for target, kwargs in six.iteritems(thread_args):
-            t = _IOThread(target=target, kwargs=kwargs)
+            t = ExceptionHandlingThread(target=target, kwargs=kwargs)
             threads.append(t)
             t.start()
         # Wait for completion, then tie things off & obtain result
@@ -884,46 +884,6 @@ class Result(object):
         ``False`` otherwise.
         """
         return not self.ok
-
-
-class _IOThread(threading.Thread):
-    """
-    IO thread handler making it easier for parent to handle thread exceptions.
-
-    Based in part Fabric 1's ThreadHandler. See also Fabric GH issue #204.
-    """
-    def __init__(self, **kwargs):
-        super(_IOThread, self).__init__(**kwargs)
-        # No record of why, but Fabric used daemon threads ever since the
-        # switch from select.select, so let's keep doing that.
-        self.daemon = True
-        # Track exceptions raised in run()
-        self.kwargs = kwargs
-        self.exc_info = None
-
-    def run(self):
-        try:
-            super(_IOThread, self).run()
-        except BaseException:
-            # Store for actual reraising later
-            self.exc_info = sys.exc_info()
-            # And log now, in case we never get to later (e.g. if executing
-            # program is hung waiting for us to do something)
-            msg = "Encountered exception {0!r} in IO thread for {1!r}"
-            debug(msg.format(self.exc_info[1], self.kwargs['target'].__name__))
-
-    def exception(self):
-        """
-        If an exception occurred, return an `.ExceptionWrapper` around it.
-
-        :returns:
-            An `.ExceptionWrapper` managing the result of `sys.exc_info`, if an
-            exception was raised during thread execution. If no exception
-            occurred, returns ``None`` instead.
-        """
-        if self.exc_info is None:
-            return None
-        return ExceptionWrapper(self.kwargs, *self.exc_info)
 
 
 def normalize_hide(val):

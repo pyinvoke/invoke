@@ -378,7 +378,7 @@ class Runner_(Spec):
             calls = list(map(lambda x: call(b(x)), "Hey, listen!"))
             klass.write_stdin.assert_has_calls(calls, any_order=False)
 
-        @patch('invoke.runners.debug')
+        @patch('invoke.util.debug')
         def exceptions_get_logged(self, mock_debug):
             # Make write_stdin asplode
             klass = self._mock_stdin_writer()
@@ -391,10 +391,11 @@ class Runner_(Spec):
             except ThreadException:
                 pass
             # Assert debug() was called w/ expected format
-            # TODO: make the debug call a method on IOThread, then make thread
-            # class configurable somewhere in Runner, and pass in a customized
-            # IOThread that has a Mock for that method?
-            mock_debug.assert_called_with("Encountered exception OhNoz('oh god why',) in IO thread for 'handle_stdin'") # noqa
+            # TODO: make the debug call a method on ExceptionHandlingThread,
+            # then make thread class configurable somewhere in Runner, and pass
+            # in a customized ExceptionHandlingThread that has a Mock for that
+            # method?
+            mock_debug.assert_called_with("Encountered exception OhNoz('oh god why',) in thread for 'handle_stdin'") # noqa
 
     class failure_handling:
         @raises(Failure)
@@ -825,7 +826,7 @@ class Local_(Spec):
                 _expect_encoding(codecs, local_encoding)
 
     class send_interrupt:
-        def  _run(self, pty):
+        def _run(self, pty):
             runner = _KeyboardInterruptingFastLocal(Context(config=Config()))
             try:
                 runner.run(_, pty=pty)

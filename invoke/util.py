@@ -2,6 +2,10 @@ from contextlib import contextmanager
 import io
 import logging
 import os
+import threading
+import sys
+
+from .exceptions import ExceptionWrapper
 
 
 LOG_FORMAT = "%(name)s.%(module)s.%(funcName)s: %(message)s"
@@ -92,3 +96,43 @@ def isatty(stream):
     # If we got here, none of the above worked, so it's reasonable to assume
     # the darn thing isn't a real TTY.
     return False
+
+
+class ExceptionHandlingThread(threading.Thread):
+    """
+    Thread handler making it easier for parent to handle thread exceptions.
+
+    Based in part on Fabric 1's ThreadHandler. See also Fabric GH issue #204.
+    """
+    def __init__(self, **kwargs):
+        super(ExceptionHandlingThread, self).__init__(**kwargs)
+        # No record of why, but Fabric used daemon threads ever since the
+        # switch from select.select, so let's keep doing that.
+        self.daemon = True
+        # Track exceptions raised in run()
+        self.kwargs = kwargs
+        self.exc_info = None
+
+    def run(self):
+        try:
+            super(ExceptionHandlingThread, self).run()
+        except BaseException:
+            # Store for actual reraising later
+            self.exc_info = sys.exc_info()
+            # And log now, in case we never get to later (e.g. if executing
+            # program is hung waiting for us to do something)
+            msg = "Encountered exception {0!r} in thread for {1!r}"
+            debug(msg.format(self.exc_info[1], self.kwargs['target'].__name__)) # noqa
+
+    def exception(self):
+        """
+        If an exception occurred, return an `.ExceptionWrapper` around it.
+
+        :returns:
+            An `.ExceptionWrapper` managing the result of `sys.exc_info`, if an
+            exception was raised during thread execution. If no exception
+            occurred, returns ``None`` instead.
+        """
+        if self.exc_info is None:
+            return None
+        return ExceptionWrapper(self.kwargs, *self.exc_info)
