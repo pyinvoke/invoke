@@ -2,6 +2,12 @@
 Changelog
 =========
 
+* :feature:`67` Added ``shell`` option to `~invoke.runners.Runner.run`,
+  allowing control of the shell used when invoking commands. Previously,
+  ``pty=True`` used ``/bin/bash`` and ``pty=False`` (the default) used
+  ``/bin/sh``; the new unified default value is ``/bin/bash``.
+
+  Thanks to Jochen Breuer for the report.
 * :bug:`152 major` (also :issue:`251`, :issue:`331`) Correctly handle
   ``KeyboardInterrupt`` during `~invoke.runners.Runner.run`, re: both mirroring
   the interrupt signal to the subprocess *and* capturing the local exception

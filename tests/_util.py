@@ -102,7 +102,7 @@ class SimpleFailure(Failure):
         return Mock(exited=1)
 
 
-def mock_subprocess(out='', err='', exit=0, isatty=None):
+def mock_subprocess(out='', err='', exit=0, isatty=None, insert_Popen=False):
     def decorator(f):
         @wraps(f)
         @patch('invoke.runners.Popen')
@@ -124,13 +124,15 @@ def mock_subprocess(out='', err='', exit=0, isatty=None):
                 fd = {1: out_file, 2: err_file}[fileno]
                 return fd.read(count)
             read.side_effect = fakeread
+            if insert_Popen:
+                args.append(Popen)
             f(*args, **kwargs)
         return wrapper
     return decorator
 
 
 def mock_pty(out='', err='', exit=0, isatty=None, trailing_error=None,
-    skip_asserts=False):
+    skip_asserts=False, insert_os=False):
     # Windows doesn't have ptys, so all the pty tests should be
     # skipped anyway...
     if WINDOWS:
@@ -170,6 +172,8 @@ def mock_pty(out='', err='', exit=0, isatty=None, trailing_error=None,
                     raise trailing_error
                 return ret
             os.read.side_effect = fakeread
+            if insert_os:
+                args.append(os)
             f(*args, **kwargs)
             # Short-circuit if we raised an error in fakeread()
             if trailing_error:

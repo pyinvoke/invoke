@@ -152,6 +152,24 @@ class Runner_(Spec):
             runner = self._runner(run={'pty': False})
             eq_(runner.run(_, pty=True).pty, True)
 
+    class shell:
+        def defaults_to_bash_when_pty_True(self):
+            eq_(self._run(_, pty=True).shell, '/bin/bash')
+
+        def defaults_to_bash_when_pty_False(self):
+            eq_(self._run(_, pty=False).shell, '/bin/bash')
+
+        def may_be_overridden(self):
+            eq_(self._run(_, shell='/bin/zsh').shell, '/bin/zsh')
+
+        def may_be_configured(self):
+            runner = self._runner(run={'shell': '/bin/tcsh'})
+            eq_(runner.run(_).shell, '/bin/tcsh')
+
+        def kwarg_beats_config(self):
+            runner = self._runner(run={'shell': '/bin/tcsh'})
+            eq_(runner.run(_, shell='/bin/zsh').shell, '/bin/zsh')
+
     class return_value:
         def return_code_in_result(self):
             """
@@ -196,6 +214,9 @@ class Runner_(Spec):
 
         def command_executed(self):
             eq_(self._run(_).command, _)
+
+        def shell_used(self):
+            eq_(self._run(_).shell, '/bin/bash')
 
     class command_echoing:
         @trap
@@ -846,3 +867,24 @@ class Local_(Spec):
             # Don't see a great way to test this w/o replicating the logic.
             expected = SIGTERM if WINDOWS else SIGINT
             runner.process.send_signal.assert_called_once_with(expected)
+
+    class shell:
+        @mock_pty(insert_os=True)
+        def defaults_to_bash_when_pty_True(self, mock_os):
+            self._run(_, pty=True)
+            eq_(mock_os.execv.call_args_list[0][0][0], '/bin/bash')
+
+        @mock_subprocess(insert_Popen=True)
+        def defaults_to_bash_when_pty_False(self, mock_Popen):
+            self._run(_, pty=False)
+            eq_(mock_Popen.call_args_list[0][1]['executable'], '/bin/bash')
+
+        @mock_pty(insert_os=True)
+        def may_be_overridden_when_pty_True(self, mock_os):
+            self._run(_, pty=True, shell='/bin/zsh')
+            eq_(mock_os.execv.call_args_list[0][0][0], '/bin/zsh')
+
+        @mock_subprocess(insert_Popen=True)
+        def may_be_overridden_when_pty_False(self, mock_Popen):
+            self._run(_, pty=False, shell='/bin/zsh')
+            eq_(mock_Popen.call_args_list[0][1]['executable'], '/bin/zsh')

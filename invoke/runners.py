@@ -100,6 +100,8 @@ class Runner(object):
 
         :param str command: The shell command to execute.
 
+        :param str shell: Which shell binary to use. Default: ``/bin/bash``.
+
         :param bool warn:
             Whether to warn and continue, instead of raising `.Failure`, when
             the executed command exits with a nonzero status. Default:
@@ -763,10 +765,7 @@ class Local(Runner):
                 # behavior. No need for the 'p' (use PATH to find executable)
                 # or 'e' (define a custom/overridden shell env) variants, for
                 # now.
-                # TODO: use /bin/sh or whatever subprocess does. Only using
-                # bash for now because that's what we have been testing
-                # against.
-                # TODO: also see if subprocess is using equivalent of execvp...
+                # TODO: see if subprocess is using equivalent of execvp...
                 os.execv('/bin/bash', ['/bin/bash', '-c', command])
         else:
             self.process = Popen(
