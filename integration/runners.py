@@ -1,7 +1,7 @@
 import os
 import time
 
-from spec import Spec, skip
+from spec import Spec
 
 from invoke import run
 from invoke.util import ExceptionHandlingThread
@@ -91,4 +91,4 @@ class Runner_(Spec):
             self._run_and_kill(pty=True)
 
         def pty_False(self):
-            skip()
+            self._run_and_kill(pty=False)
