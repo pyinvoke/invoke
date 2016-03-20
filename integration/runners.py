@@ -1,8 +1,10 @@
 import os
+import time
 
-from spec import Spec
+from spec import Spec, skip
 
 from invoke import run
+from invoke.util import ExceptionHandlingThread
 
 from _util import assert_cpu_usage
 
@@ -45,44 +47,48 @@ class Runner_(Spec):
             # Also re: GH issue #308. This one will just hang forever. Woo!
             run("inv -c nested_or_piped calls_foo", hide=True)
 
-    def KeyboardInterrupt_triggers_SIGINT(self):
-        import threading, time
-        class ExceptionCapturingThread(threading.Thread):
-            def run(self):
-                self.exception = None
-                try:
-                    super(ExceptionCapturingThread, self).run()
-                except BaseException as e:
-                    self.exception = e
 
-        def bg_body():
-            # TODO: clone this to test both pty and non? probably worthwhile
-            # TODO: use 'expect exit of 130' when that's implemented
-            # Hide output by default, then assume an error & display stderr, if
-            # there's any stderr. (There's no reliable way to tell the
-            # subprocess raised an exception, because we'll be interrupted
-            # before completion, and won't have access to its exit code.)
-            result = run(
-                "inv -c signal_tasks expect SIGINT --pty", hide=True, warn=True
-            )
-            if result.exited != 130 or result.stdout or result.stderr:
-                err = "Subprocess had output and/or bad exit! Result follows:"
-                raise Exception("{0}\n\n{1}".format(err, result))
+    class interrupts:
+        def _run_and_kill(self, pty):
+            def bg_body():
+                # TODO: use 'expect exit of 130' when that's implemented Hide
+                # output by default, then assume an error & display stderr, if
+                # there's any stderr. (There's no reliable way to tell the
+                # subprocess raised an exception, because we'll be interrupted
+                # before completion, and won't have access to its exit code.)
+                pty_flag = "--pty" if pty else "--no-pty"
+                result = run(
+                    "inv -c signal_tasks expect SIGINT {0}".format(pty_flag),
+                    hide=True,
+                    warn=True,
+                )
+                if result.exited != 130 or result.stdout or result.stderr:
+                    err = "Subprocess had output and/or bad exit:"
+                    raise Exception("{0}\n\n{1}".format(err, result))
 
+            # Execute sub-invoke in a thread so we can talk to its subprocess
+            # while it's running.
+            # TODO: useful async API for run() which at least wraps threads for
+            # you, and exposes the inner PID
+            bg = ExceptionHandlingThread(target=bg_body)
+            bg.start()
+            # Wait a bit to ensure subprocess is in the right state & not still
+            # starting up (lolpython?)
+            time.sleep(1)
+            # Send expected signal (use pty to ensure no intermediate 'sh'
+            # processes on Linux; is of no consequence on Darwin.)
+            run("pkill -INT -f \"python.*inv -c signal_tasks\"", pty=True)
+            # Rejoin subprocess thread & check for exceptions
+            bg.join()
+            wrapper = bg.exception()
+            if wrapper:
+                # This is an ExceptionWrapper, not an actual exception, since
+                # most places using ExceptionHandlingThread need access to the
+                # thread's arguments & such. We just want the exception here.
+                raise wrapper.value
 
-        # Execute sub-invoke in a thread so we can talk to its subprocess while
-        # it's running.
-        # TODO: useful async API for run() which at least wraps threads for
-        # you, and exposes the inner PID
-        bg = ExceptionCapturingThread(target=bg_body)
-        bg.start()
-        # Wait a bit to ensure subprocess is in the right state & not still
-        # starting up (lolpython?)
-        time.sleep(1)
-        # Send expected signal (use pty to ensure no intermediate 'sh'
-        # processes on Linux; is of no consequence on Darwin.)
-        run("pkill -INT -f \"python.*inv -c signal_tasks\"", pty=True)
-        # Rejoin subprocess thread & check for exceptions
-        bg.join()
-        if bg.exception:
-            raise bg.exception
+        def pty_True(self):
+            self._run_and_kill(pty=True)
+
+        def pty_False(self):
+            skip()
