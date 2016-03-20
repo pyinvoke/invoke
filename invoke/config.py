@@ -214,6 +214,7 @@ class Config(DataProxy):
             'run': {
                 'warn': False,
                 'hide': None,
+                'shell': '/bin/bash',
                 'pty': False,
                 'fallback': True,
                 'echo': False,

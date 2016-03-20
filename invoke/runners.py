@@ -231,11 +231,12 @@ class Runner(object):
         """
         # Normalize kwargs w/ config
         opts, out_stream, err_stream, in_stream = self._run_opts(kwargs)
+        shell = opts['shell']
         # Echo running command
         if opts['echo']:
             print("\033[1;37m{0}\033[0m".format(command))
         # Start executing the actual command (runs in background)
-        self.start(command)
+        self.start(command, shell)
         # Arrive at final encoding if neither config nor kwargs had one
         self.encoding = opts['encoding'] or self.default_encoding()
         # Set up IO thread parameters (format - body_func: {kwargs})
@@ -318,6 +319,7 @@ class Runner(object):
         # Return, or raise as failure, our final result
         result = self.generate_result(
             command=command,
+            shell=shell,
             stdout=stdout,
             stderr=stderr,
             exited=exited,
@@ -612,9 +614,9 @@ class Runner(object):
         # NOTE: fallback not used: no falling back implemented by default.
         return pty
 
-    def start(self, command):
+    def start(self, command, shell):
         """
-        Initiate execution of ``command`` in the background.
+        Initiate execution of ``command`` (via ``shell``) in the background.
 
         Typically this means use of a forked subprocess or requesting start of
         execution on a remote system.
@@ -740,7 +742,7 @@ class Local(Runner):
             if 'Broken pipe' not in str(e):
                 raise
 
-    def start(self, command):
+    def start(self, command, shell):
         if self.using_pty:
             if pty is None: # Encountered ImportError
                 sys.exit("You indicated pty=True, but your platform doesn't support the 'pty' module!") # noqa
@@ -766,11 +768,12 @@ class Local(Runner):
                 # or 'e' (define a custom/overridden shell env) variants, for
                 # now.
                 # TODO: see if subprocess is using equivalent of execvp...
-                os.execv('/bin/bash', ['/bin/bash', '-c', command])
+                os.execv(shell, [shell, '-c', command])
         else:
             self.process = Popen(
                 command,
                 shell=True,
+                executable=shell,
                 stdout=PIPE,
                 stderr=PIPE,
                 stdin=PIPE,
@@ -834,9 +837,11 @@ class Result(object):
                 handle_problem()
     """
     # TODO: inherit from namedtuple instead? heh
-    def __init__(self, command, stdout, stderr, exited, pty):
+    def __init__(self, command, shell, stdout, stderr, exited, pty):
         #: The command which was executed.
         self.command = command
+        #: The shell binary used for execution.
+        self.shell = shell
         #: An integer representing the subprocess' exit/return code.
         self.exited = exited
         #: An alias for `.exited`.

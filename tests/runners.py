@@ -26,7 +26,7 @@ class _Dummy(Runner):
     # which isn't a problem for testing).
     input_sleep = 0
 
-    def start(self, command):
+    def start(self, command, shell):
         pass
 
     def read_stdout(self, num_bytes):
