@@ -1,4 +1,5 @@
 import locale
+import os
 import sys
 import types
 from invoke.vendor.six import StringIO, b
@@ -169,6 +170,17 @@ class Runner_(Spec):
         def kwarg_beats_config(self):
             runner = self._runner(run={'shell': '/bin/tcsh'})
             eq_(runner.run(_, shell='/bin/zsh').shell, '/bin/zsh')
+
+    class env:
+        def defaults_to_os_environ(self):
+            eq_(self._run(_).env, os.environ)
+
+        def updates_when_dict_given(self):
+            expected = dict(os.environ, FOO='BAR')
+            eq_(self._run(_, env={'FOO': 'BAR'}).env, expected)
+
+        def replaces_when_replace_env_True(self):
+            eq_(self._run(_, env={'JUST': 'ME'}).env, {'JUST': 'ME'})
 
     class return_value:
         def return_code_in_result(self):
@@ -888,3 +900,25 @@ class Local_(Spec):
         def may_be_overridden_when_pty_False(self, mock_Popen):
             self._run(_, pty=False, shell='/bin/zsh')
             eq_(mock_Popen.call_args_list[0][1]['executable'], '/bin/zsh')
+
+    class env:
+        # NOTE: update-vs-replace semantics are tested 'purely' up above in
+        # regular Runner tests.
+
+        @mock_subprocess(insert_Popen=True)
+        def uses_Popen_kwarg_for_pty_False(self, mock_Popen):
+            self._run(_, pty=False, env={'FOO': 'BAR'})
+            expected = dict(os.environ, FOO='BAR')
+            eq_(
+                mock_Popen.call_args_list[0][1]['env'],
+                expected
+            )
+
+        @mock_pty(insert_os=True)
+        def uses_execve_for_pty_True(self, mock_os):
+            self._run(_, pty=True, env={'FOO': 'BAR'})
+            expected = dict(os.environ, FOO='BAR')
+            eq_(
+                mock_os.execve.call_args_list[0][0][2],
+                expected
+            )

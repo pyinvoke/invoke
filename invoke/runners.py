@@ -152,6 +152,24 @@ class Runner(object):
             .. note::
                 ``hide=True`` will override ``echo=True`` if both are given.
 
+        :param dict env:
+            By default, subprocesses recieve a copy of Invoke's own environment
+            (i.e. ``os.environ``). Supply a dict here to update that child
+            environment.
+
+            For example, ``run('command', env={'PYTHONPATH':
+            '/some/virtual/env/maybe'})`` would modify the ``PYTHONPATH`` env
+            var, with the rest of the child's env looking identical to the
+            parent.
+
+            .. seealso:: ``replace_env`` for changing 'update' to 'replace'.
+
+        :param bool replace_env:
+            When ``True``, causes the subprocess to receive the dictionary
+            given to ``env`` as its entire shell environment, instead of
+            updating a copy of ``os.environ`` (which is the default behavior).
+            Default: ``False``.
+
         :param str encoding:
             Override auto-detection of which encoding the subprocess is using
             for its stdout/stderr streams (which defaults to the return value
