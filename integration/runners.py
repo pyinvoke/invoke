@@ -47,7 +47,6 @@ class Runner_(Spec):
             # Also re: GH issue #308. This one will just hang forever. Woo!
             run("inv -c nested_or_piped calls_foo", hide=True)
 
-
     class interrupts:
         def _run_and_kill(self, pty):
             def bg_body():
