@@ -2,6 +2,11 @@
 Changelog
 =========
 
+* :feature:`259` (also :issue:`280`) Allow updating (or replacing) subprocess
+  shell environments, via the ``env`` and ``replace_env`` kwargs to
+  `~invoke.runners.Runner.run`. Thanks to Fotis Gimian for the report,
+  ``@philtay`` for an early version of the final patch, and Erich Heine & Vlad
+  Frolov for feedback.
 * :feature:`67` Added ``shell`` option to `~invoke.runners.Runner.run`,
   allowing control of the shell used when invoking commands. Previously,
   ``pty=True`` used ``/bin/bash`` and ``pty=False`` (the default) used
