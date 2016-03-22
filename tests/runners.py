@@ -180,7 +180,10 @@ class Runner_(Spec):
             eq_(self._run(_, env={'FOO': 'BAR'}).env, expected)
 
         def replaces_when_replace_env_True(self):
-            eq_(self._run(_, env={'JUST': 'ME'}).env, {'JUST': 'ME'})
+            eq_(
+                self._run(_, env={'JUST': 'ME'}, replace_env=True).env,
+                {'JUST': 'ME'}
+            )
 
     class return_value:
         def return_code_in_result(self):
