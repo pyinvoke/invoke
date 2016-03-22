@@ -151,7 +151,7 @@ def mock_pty(out='', err='', exit=0, isatty=None, trailing_error=None,
             args = list(args)
             pty, os, ioctl = args.pop(), args.pop(), args.pop()
             # Don't actually fork, but pretend we did & that main thread is
-            # also the child (pid 0) to trigger execv call; & give 'parent fd'
+            # also the child (pid 0) to trigger execve call; & give 'parent fd'
             # of 1 (stdout).
             pty.fork.return_value = 0, 1
             # We don't really need to care about waiting since not truly
@@ -185,7 +185,7 @@ def mock_pty(out='', err='', exit=0, isatty=None, trailing_error=None,
             # Test the 2nd call to ioctl; the 1st call is doing TIOGSWINSZ
             eq_(ioctl.call_args_list[1][0][1], termios.TIOCSWINSZ)
             if not skip_asserts:
-                for name in ('execv', 'waitpid', 'WEXITSTATUS'):
+                for name in ('execve', 'waitpid', 'WEXITSTATUS'):
                     assert getattr(os, name).called
         return wrapper
     return decorator

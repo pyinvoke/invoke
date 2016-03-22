@@ -250,11 +250,13 @@ class Runner(object):
         # Normalize kwargs w/ config
         opts, out_stream, err_stream, in_stream = self._run_opts(kwargs)
         shell = opts['shell']
+        # Environment setup
+        env = self.generate_env(opts['env'], opts['replace_env'])
         # Echo running command
         if opts['echo']:
             print("\033[1;37m{0}\033[0m".format(command))
         # Start executing the actual command (runs in background)
-        self.start(command, shell)
+        self.start(command, shell, env)
         # Arrive at final encoding if neither config nor kwargs had one
         self.encoding = opts['encoding'] or self.default_encoding()
         # Set up IO thread parameters (format - body_func: {kwargs})
@@ -338,6 +340,7 @@ class Runner(object):
         result = self.generate_result(
             command=command,
             shell=shell,
+            env=env,
             stdout=stdout,
             stderr=stderr,
             exited=exited,
@@ -619,6 +622,20 @@ class Runner(object):
                 # bytes, otherwise os.write gets its knickers atwist.
                 self.write_stdin(self.encode(response))
 
+    def generate_env(self, env, replace_env):
+        """
+        Return a suitable environment dict based on user input & behavior.
+
+        :param dict env: Dict supplying overrides or full env, depending.
+        :param bool replace_env:
+            Whether ``env`` updates, or is used in place of, the value of
+            `os.environ`.
+
+        :returns: A dictionary of shell environment vars.
+        """
+        from invoke.util import debug
+        return env if replace_env else dict(os.environ, **env)
+
     def should_use_pty(self, pty, fallback):
         """
         Should execution attempt to use a pseudo-terminal?
@@ -632,9 +649,9 @@ class Runner(object):
         # NOTE: fallback not used: no falling back implemented by default.
         return pty
 
-    def start(self, command, shell):
+    def start(self, command, shell, env):
         """
-        Initiate execution of ``command`` (via ``shell``) in the background.
+        Initiate execution of ``command`` (via ``shell``, with ``env``).
 
         Typically this means use of a forked subprocess or requesting start of
         execution on a remote system.
@@ -760,7 +777,7 @@ class Local(Runner):
             if 'Broken pipe' not in str(e):
                 raise
 
-    def start(self, command, shell):
+    def start(self, command, shell, env):
         if self.using_pty:
             if pty is None: # Encountered ImportError
                 sys.exit("You indicated pty=True, but your platform doesn't support the 'pty' module!") # noqa
@@ -781,17 +798,17 @@ class Local(Runner):
                 # TODO: make subroutine?
                 winsize = struct.pack('HHHH', rows, cols, 0, 0)
                 fcntl.ioctl(sys.stdout.fileno(), termios.TIOCSWINSZ, winsize)
-                # Use execv for bare-minimum "exec w/ variable # args"
+                # Use execve for bare-minimum "exec w/ variable # args + env"
                 # behavior. No need for the 'p' (use PATH to find executable)
-                # or 'e' (define a custom/overridden shell env) variants, for
-                # now.
+                # for now.
                 # TODO: see if subprocess is using equivalent of execvp...
-                os.execv(shell, [shell, '-c', command])
+                os.execve(shell, [shell, '-c', command], env)
         else:
             self.process = Popen(
                 command,
                 shell=True,
                 executable=shell,
+                env=env,
                 stdout=PIPE,
                 stderr=PIPE,
                 stdin=PIPE,
@@ -855,11 +872,13 @@ class Result(object):
                 handle_problem()
     """
     # TODO: inherit from namedtuple instead? heh
-    def __init__(self, command, shell, stdout, stderr, exited, pty):
+    def __init__(self, command, shell, env, stdout, stderr, exited, pty):
         #: The command which was executed.
         self.command = command
         #: The shell binary used for execution.
         self.shell = shell
+        #: The shell environment used for execution.
+        self.env = env
         #: An integer representing the subprocess' exit/return code.
         self.exited = exited
         #: An alias for `.exited`.

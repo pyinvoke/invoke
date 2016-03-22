@@ -217,6 +217,8 @@ class Config(DataProxy):
                 'shell': '/bin/bash',
                 'pty': False,
                 'fallback': True,
+                'env': {},
+                'replace_env': False,
                 'echo': False,
                 'encoding': None,
                 'out_stream': None,

@@ -27,7 +27,7 @@ class _Dummy(Runner):
     # which isn't a problem for testing).
     input_sleep = 0
 
-    def start(self, command, shell):
+    def start(self, command, shell, env):
         pass
 
     def read_stdout(self, num_bytes):
@@ -187,16 +187,16 @@ class Runner_(Spec):
 
         def config_can_be_used(self):
             eq_(
-                self._run(_, settings={'env': {'FOO': 'BAR'}}).env,
+                self._run(_, settings={'run': {'env': {'FOO': 'BAR'}}}).env,
                 dict(os.environ, FOO='BAR'),
             )
 
         def kwarg_wins_over_config(self):
-            settings = {'env': {'FOO': 'BAR'}}
+            settings = {'run': {'env': {'FOO': 'BAR'}}}
             kwarg = {'FOO': 'NOTBAR'}
             eq_(
-                self._run(_, settings=settings, env=kwarg).env,
-                kwarg,
+                self._run(_, settings=settings, env=kwarg).env['FOO'],
+                'NOTBAR'
             )
 
     class return_value:
@@ -901,7 +901,7 @@ class Local_(Spec):
         @mock_pty(insert_os=True)
         def defaults_to_bash_when_pty_True(self, mock_os):
             self._run(_, pty=True)
-            eq_(mock_os.execv.call_args_list[0][0][0], '/bin/bash')
+            eq_(mock_os.execve.call_args_list[0][0][0], '/bin/bash')
 
         @mock_subprocess(insert_Popen=True)
         def defaults_to_bash_when_pty_False(self, mock_Popen):
@@ -911,7 +911,7 @@ class Local_(Spec):
         @mock_pty(insert_os=True)
         def may_be_overridden_when_pty_True(self, mock_os):
             self._run(_, pty=True, shell='/bin/zsh')
-            eq_(mock_os.execv.call_args_list[0][0][0], '/bin/zsh')
+            eq_(mock_os.execve.call_args_list[0][0][0], '/bin/zsh')
 
         @mock_subprocess(insert_Popen=True)
         def may_be_overridden_when_pty_False(self, mock_Popen):
@@ -933,8 +933,9 @@ class Local_(Spec):
 
         @mock_pty(insert_os=True)
         def uses_execve_for_pty_True(self, mock_os):
+            type(mock_os).environ = {'OTHERVAR': 'OTHERVAL'}
             self._run(_, pty=True, env={'FOO': 'BAR'})
-            expected = dict(os.environ, FOO='BAR')
+            expected = {'OTHERVAR': 'OTHERVAL', 'FOO': 'BAR'}
             eq_(
                 mock_os.execve.call_args_list[0][0][2],
                 expected
