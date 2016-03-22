@@ -633,7 +633,6 @@ class Runner(object):
 
         :returns: A dictionary of shell environment vars.
         """
-        from invoke.util import debug
         return env if replace_env else dict(os.environ, **env)
 
     def should_use_pty(self, pty, fallback):
