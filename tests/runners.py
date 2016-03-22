@@ -185,6 +185,20 @@ class Runner_(Spec):
                 {'JUST': 'ME'}
             )
 
+        def config_can_be_used(self):
+            eq_(
+                self._run(_, settings={'env': {'FOO': 'BAR'}}).env,
+                dict(os.environ, FOO='BAR'),
+            )
+
+        def kwarg_wins_over_config(self):
+            settings = {'env': {'FOO': 'BAR'}}
+            kwarg = {'FOO': 'NOTBAR'}
+            eq_(
+                self._run(_, settings=settings, env=kwarg).env,
+                kwarg,
+            )
+
     class return_value:
         def return_code_in_result(self):
             """
