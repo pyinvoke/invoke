@@ -120,7 +120,7 @@ class Collection(object):
         return self.name == other.name and self.tasks == other.tasks
 
     @classmethod
-    def from_module(self, module, name=None, config=None, loaded_from=None):
+    def from_module(cls, module, name=None, config=None, loaded_from=None):
         """
         Return a new `.Collection` created from ``module``.
 
@@ -180,7 +180,7 @@ class Collection(object):
             vars(module).values()
         )
         # Again, explicit name wins over implicit one from module path
-        collection = Collection(name or module_name, loaded_from=loaded_from)
+        collection = cls(name or module_name, loaded_from=loaded_from)
         for task in tasks:
             collection.add_task(task)
         if config:
