@@ -35,6 +35,7 @@ script:
   # Run unit and integration tests, generating coverage report (skipping html)
   # This will fail if the tests fail.
   - "inv coverage --no-html"
+  - "LC_ALL=C inv coverage --no-html"
   # Websites build OK?
   - inv sites
   # Did we break setup.py?

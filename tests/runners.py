@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 import locale
 import os
 import sys
@@ -269,10 +271,17 @@ class Runner_(Spec):
             assert_contains(sys.stdout.getvalue(), "yup")
 
         @trap
-        def uses_ansi_bold(self):
+        def uses_ansi_bold_for_unicode(self):
             self._run("my command", echo=True)
             # TODO: vendor & use a color module
             eq_(sys.stdout.getvalue(), "\x1b[1;37mmy command\x1b[0m\n")
+
+        @trap
+        def uses_ansi_bold_for_bytes(self):
+            self._run(b"my command", echo=True)
+            # TODO: vendor & use a color module
+            eq_(sys.stdout.getvalue(), "\x1b[1;37mb'my command'\x1b[0m\n")
+
 
     class encoding:
         # Use UTF-7 as a valid encoding unlikely to be a real default
