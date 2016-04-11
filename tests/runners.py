@@ -442,7 +442,7 @@ class Runner_(Spec):
         def exceptions_get_logged(self, mock_debug):
             # Make write_stdin asplode
             klass = self._mock_stdin_writer()
-            klass.write_stdin.side_effect = OhNoz("oh god why")
+            klass.write_stdin.side_effect = OhNoz(str("oh god why"))
             # Execute with some stdin to trigger that asplode (but skip the
             # actual bubbled-up raising of it so we can check things out)
             try:
