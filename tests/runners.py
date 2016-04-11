@@ -883,7 +883,8 @@ class Local_(Spec):
             with patch('invoke.runners.codecs') as codecs:
                 self._run(_)
                 local_encoding = locale.getpreferredencoding(False)
-                # Please, read more about this in invoke.runners.Local.default_encoding.
+                # Please, read more about this in
+                # invoke.runners.Local.default_encoding.
                 if six.PY2 and not WINDOWS:
                     default_locale_encoding = locale.getdefaultlocale()[1]
                     if default_locale_encoding is not None:
