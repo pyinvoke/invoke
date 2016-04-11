@@ -14,6 +14,7 @@ from mock import patch, Mock, call
 
 from invoke import Runner, Local, Context, Config, Failure, ThreadException
 from invoke.platform import WINDOWS
+from invoke.vendor import six
 
 from _util import mock_subprocess, mock_pty, skip_if_windows
 
@@ -882,6 +883,11 @@ class Local_(Spec):
             with patch('invoke.runners.codecs') as codecs:
                 self._run(_)
                 local_encoding = locale.getpreferredencoding(False)
+                # Please, read more about this in invoke.runners.Local.default_encoding.
+                if six.PY2 and not WINDOWS:
+                    default_locale_encoding = locale.getdefaultlocale()[1]
+                    if default_locale_encoding is not None:
+                        local_encoding = default_locale_encoding
                 _expect_encoding(codecs, local_encoding)
 
     class send_interrupt:
