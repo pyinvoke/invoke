@@ -29,6 +29,7 @@ except ImportError:
 from .exceptions import Failure, ThreadException
 from .platform import (
     WINDOWS, pty_size, character_buffered, ready_for_reading, read_byte,
+    stream_in_binary_mode,
 )
 from .util import has_fileno, isatty, ExceptionHandlingThread
 
@@ -431,8 +432,9 @@ class Runner(object):
             # combo of 'hide=stdout' + 'here is an explicit out_stream' means
             # out_stream is never written to, and that seems...odd.
             if not hide:
-                output.write(data)
-                output.flush()
+                with stream_in_binary_mode(output):
+                    output.write(data)
+                    output.flush()
             # Store in shared buffer so main thread can do things with the
             # result after execution completes.
             # NOTE: this is threadsafe insofar as no reading occurs until after
