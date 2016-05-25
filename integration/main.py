@@ -84,18 +84,22 @@ class Main(Spec):
                 cmd = "type tree.out"
             else:
                 cmd = "cat tree.out"
-            run(cmd, hide='both')
+            # Have to actually coerce to string for all Python 2 decode errors
+            # to surface. TODO: ideally, hand in some more realistic (and
+            # multiple encodings too) out_stream or something. I'm sure just
+            # str()ing it is still subject to test runner's environment.
+            str(run(cmd, hide='both'))
 
         def nonprinting_bytes(self):
             # Seriously non-printing characters (i.e. non UTF8) also don't
             # asplode
-            run("echo '\xff'", hide='both')
+            str(run("echo '\xff'", hide='both'))
 
         def nonprinting_bytes_pty(self):
             if WINDOWS:
                 return
             # PTY use adds another utf-8 decode spot which can also fail.
-            run("echo '\xff'", pty=True, hide='both')
+            str(run("echo '\xff'", pty=True, hide='both'))
 
     def pty_puts_both_streams_in_stdout(self):
         if WINDOWS:
