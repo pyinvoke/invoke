@@ -456,7 +456,27 @@ class Runner(object):
             # documented round-tripping?
             yield data
 
+    def write_our_output(self, stream, string):
+        """
+        Encode ``string`` (Unicode) data to bytes, then write to ``stream``.
+
+        Also calls ``.flush()`` on ``stream`` to ensure that real terminal
+        streams don't buffer.
+
+        :param stream:
+            A file-like stream object, mapping to the ``out_stream`` or
+            ``err_stream`` parameters of `run`.
+
+        :param string: A Unicode string object.
+
+        :returns: ``None``.
+        """
+        # TODO: encode
+        stream.write(string)
+        stream.flush()
+
     def _handle_output(self, buffer_, hide, output, reader, indices):
+        # TODO: store un-decoded/raw bytes somewhere as well...
         for data in self.read_proc_output(reader):
             # Echo to local stdout if necessary
             # TODO: should we rephrase this as "if you want to hide, give me a
@@ -464,8 +484,7 @@ class Runner(object):
             # combo of 'hide=stdout' + 'here is an explicit out_stream' means
             # out_stream is never written to, and that seems...odd.
             if not hide:
-                output.write(data)
-                output.flush()
+                self.write_our_output(stream=output, string=data)
             # Store in shared buffer so main thread can do things with the
             # result after execution completes.
             # NOTE: this is threadsafe insofar as no reading occurs until after
