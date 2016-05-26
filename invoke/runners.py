@@ -569,7 +569,7 @@ class Runner(object):
                     # str's in Python 3 == no bueno) but skip the decode step,
                     # since there's presumably no need (nobody's interacting
                     # with this data programmatically).
-                    self.write_stdin(byte)
+                    self.write_proc_stdin(byte)
                     # Also echo it back to local stdout (or whatever
                     # out_stream is set to) when necessary.
                     if echo is None:
@@ -673,7 +673,7 @@ class Runner(object):
                 # response doesn't end with it, w/ option to disable?
                 # NOTE: have to 'encode' response here so Python 3 gets actual
                 # bytes, otherwise os.write gets its knickers atwist.
-                self.write_stdin(self.encode(response))
+                self.write_proc_stdin(self.encode(response))
 
     def generate_env(self, env, replace_env):
         """
@@ -733,7 +733,7 @@ class Runner(object):
         """
         raise NotImplementedError
 
-    def write_stdin(self, data):
+    def write_proc_stdin(self, data):
         """
         Write ``data`` to the running process' stdin.
         """
@@ -816,7 +816,7 @@ class Local(Runner):
         # TODO: do we ever get those OSErrors on stderr? Feels like we could?
         return os.read(self.process.stderr.fileno(), num_bytes)
 
-    def write_stdin(self, data):
+    def write_proc_stdin(self, data):
         # NOTE: parent_fd from os.fork() is a read/write pipe attached to our
         # forked process' stdout/stdin, respectively.
         fd = self.parent_fd if self.using_pty else self.process.stdin.fileno()

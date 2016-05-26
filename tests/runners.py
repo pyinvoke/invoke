@@ -36,7 +36,7 @@ class _Dummy(Runner):
     def read_proc_stderr(self, num_bytes):
         return ""
 
-    def write_stdin(self, data):
+    def write_proc_stdin(self, data):
         pass
 
     def default_encoding(self):
@@ -97,11 +97,11 @@ class Runner_(Spec):
 
     def _mock_stdin_writer(self):
         """
-        Return new _Dummy-based class whose write_stdin() method is a mock.
+        Return new _Dummy-based class whose write_proc_stdin() method is a mock.
         """
         class MockedStdin(_Dummy):
             pass
-        MockedStdin.write_stdin = Mock()
+        MockedStdin.write_proc_stdin = Mock()
         return MockedStdin
 
 
@@ -414,7 +414,7 @@ class Runner_(Spec):
             # Check that mocked writer was called w/ expected data
             # stdin mirroring occurs byte-by-byte
             calls = list(map(lambda x: call(b(x)), "Text!"))
-            klass.write_stdin.assert_has_calls(calls, any_order=False)
+            klass.write_proc_stdin.assert_has_calls(calls, any_order=False)
 
         def can_be_overridden(self):
             klass = self._mock_stdin_writer()
@@ -426,13 +426,13 @@ class Runner_(Spec):
             )
             # stdin mirroring occurs byte-by-byte
             calls = list(map(lambda x: call(b(x)), "Hey, listen!"))
-            klass.write_stdin.assert_has_calls(calls, any_order=False)
+            klass.write_proc_stdin.assert_has_calls(calls, any_order=False)
 
         @patch('invoke.util.debug')
         def exceptions_get_logged(self, mock_debug):
-            # Make write_stdin asplode
+            # Make write_proc_stdin asplode
             klass = self._mock_stdin_writer()
-            klass.write_stdin.side_effect = OhNoz("oh god why")
+            klass.write_proc_stdin.side_effect = OhNoz("oh god why")
             # Execute with some stdin to trigger that asplode (but skip the
             # actual bubbled-up raising of it so we can check things out)
             try:
@@ -508,19 +508,19 @@ class Runner_(Spec):
             # responds to "" or "\n" or etc.
             klass = self._mock_stdin_writer()
             self._runner(klass=klass).run(_)
-            ok_(not klass.write_stdin.called)
+            ok_(not klass.write_proc_stdin.called)
 
         def _expect_response(self, **kwargs):
             """
             Execute a run() w/ ``responses`` set & _runner() ``kwargs`` given.
 
-            :returns: The mocked ``write_stdin`` method of the runner.
+            :returns: The mocked ``write_proc_stdin`` method of the runner.
             """
             klass = self._mock_stdin_writer()
             kwargs['klass'] = klass
             runner = self._runner(**kwargs)
             runner.run(_, responses=kwargs['responses'], hide=True)
-            return klass.write_stdin
+            return klass.write_proc_stdin
 
         def string_keys_in_responses_kwarg_yield_values_as_stdin_writes(self):
             self._expect_response(
@@ -549,9 +549,9 @@ class Runner_(Spec):
             runner.run(_, responses=responses, hide=True)
             holla = call(b('how high?'))
             # Responses happened, period.
-            klass.write_stdin.assert_has_calls([holla, holla])
+            klass.write_proc_stdin.assert_has_calls([holla, holla])
             # And there weren't duplicates!
-            eq_(len(klass.write_stdin.call_args_list), 2)
+            eq_(len(klass.write_proc_stdin.call_args_list), 2)
 
         def patterns_span_multiple_lines(self):
             output = """
