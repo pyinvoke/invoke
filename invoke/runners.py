@@ -594,8 +594,7 @@ class Runner(object):
                     if echo is None:
                         echo = self.should_echo_stdin(input_, output)
                     if echo:
-                        output.write(byte) # TODO: encode?
-                        output.flush()
+                        self.write_our_output(byte)
                 else:
                     # When reading from file-like objects that aren't "real"
                     # terminal streams, an empty byte signals EOF.
