@@ -573,7 +573,7 @@ class Runner(object):
                     # Also echo it back to local stdout (or whatever
                     # out_stream is set to) when necessary.
                     if echo is None:
-                        echo = self.echo_stdin(input_, output)
+                        echo = self.should_echo_stdin(input_, output)
                     if echo:
                         output.write(byte) # TODO: encode?
                         output.flush()
@@ -611,7 +611,7 @@ class Runner(object):
         #        #    sys.stdout.write(byte)
         #        #    sys.stdout.flush()
 
-    def echo_stdin(self, input_, output):
+    def should_echo_stdin(self, input_, output):
         """
         Determine whether data read from ``input_`` should echo to ``output``.
 

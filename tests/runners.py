@@ -636,13 +636,14 @@ Just to say hi
             input_is_pty = kwargs.pop('in_pty', None)
 
             class MyRunner(_Dummy):
-                def echo_stdin(self, input_, output):
+                def should_echo_stdin(self, input_, output):
                     # Fake result of isatty() test here and only here; if we do
                     # this farther up, it will affect stuff trying to run
                     # termios & such, which is harder to mock successfully.
                     if input_is_pty is not None:
                         input_.isatty = lambda: input_is_pty
-                    return super(MyRunner, self).echo_stdin(input_, output)
+                    return super(MyRunner, self).should_echo_stdin(
+                        input_, output)
 
             # Execute basic command with given parameters
             self._run(
