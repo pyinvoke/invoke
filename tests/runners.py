@@ -36,7 +36,7 @@ class _Dummy(Runner):
     def read_proc_stderr(self, num_bytes):
         return ""
 
-    def write_proc_stdin(self, data):
+    def _write_proc_stdin(self, data):
         pass
 
     def default_encoding(self):
@@ -411,9 +411,9 @@ class Runner_(Spec):
             # Execute w/ runner class that has a mocked stdin_writer
             klass = self._mock_stdin_writer()
             self._runner(klass=klass).run(_, out_stream=StringIO())
-            # Check that mocked writer was called w/ expected data
-            # stdin mirroring occurs byte-by-byte
-            calls = list(map(lambda x: call(b(x)), "Text!"))
+            # Check that mocked writer was called w/ the data from our patched
+            # sys.stdin (one char at a time)
+            calls = list(map(lambda x: call(x), "Text!"))
             klass.write_proc_stdin.assert_has_calls(calls, any_order=False)
 
         def can_be_overridden(self):
@@ -424,8 +424,8 @@ class Runner_(Spec):
                 in_stream=in_stream,
                 out_stream=StringIO(),
             )
-            # stdin mirroring occurs byte-by-byte
-            calls = list(map(lambda x: call(b(x)), "Hey, listen!"))
+            # stdin mirroring occurs char-by-char
+            calls = list(map(lambda x: call(x), "Hey, listen!"))
             klass.write_proc_stdin.assert_has_calls(calls, any_order=False)
 
         @patch('invoke.util.debug')
@@ -547,7 +547,7 @@ class Runner_(Spec):
             responses = {'jump': 'how high?'}
             runner = self._runner(klass=klass, out="jump, wait, jump, wait")
             runner.run(_, responses=responses, hide=True)
-            holla = call(b('how high?'))
+            holla = call('how high?')
             # Responses happened, period.
             klass.write_proc_stdin.assert_has_calls([holla, holla])
             # And there weren't duplicates!

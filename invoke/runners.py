@@ -689,9 +689,7 @@ class Runner(object):
             for _ in matches:
                 # TODO: automatically append system-appropriate newline if
                 # response doesn't end with it, w/ option to disable?
-                # NOTE: have to 'encode' response here so Python 3 gets actual
-                # bytes, otherwise os.write gets its knickers atwist.
-                self.write_proc_stdin(self.encode(response))
+                self.write_proc_stdin(response)
 
     def generate_env(self, env, replace_env):
         """
@@ -718,6 +716,17 @@ class Runner(object):
         """
         # NOTE: fallback not used: no falling back implemented by default.
         return pty
+
+    def write_proc_stdin(self, data):
+        """
+        Write encoded ``data`` to the running process' stdin.
+
+        :param data: A Unicode string.
+
+        :returns: ``None``.
+        """
+        # TODO: correctly encode, in here, not using self.encode
+        self._write_proc_stdin(self.encode(data))
 
     def start(self, command, shell, env):
         """
@@ -751,9 +760,16 @@ class Runner(object):
         """
         raise NotImplementedError
 
-    def write_proc_stdin(self, data):
+    def _write_proc_stdin(self, data):
         """
-        Write ``data`` to the running process' stdin.
+        Write ``data`` to running process' stdin.
+
+        This should never be called directly; it's for subclasses to implement.
+        See `write_proc_stdin` for the public API call.
+
+        :param data: Already-encoded byte data suitable for writing.
+
+        :returns: ``None``.
         """
         raise NotImplementedError
 
@@ -834,7 +850,7 @@ class Local(Runner):
         # TODO: do we ever get those OSErrors on stderr? Feels like we could?
         return os.read(self.process.stderr.fileno(), num_bytes)
 
-    def write_proc_stdin(self, data):
+    def _write_proc_stdin(self, data):
         # NOTE: parent_fd from os.fork() is a read/write pipe attached to our
         # forked process' stdout/stdin, respectively.
         fd = self.parent_fd if self.using_pty else self.process.stdin.fileno()
