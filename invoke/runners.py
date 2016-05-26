@@ -235,7 +235,7 @@ class Runner(object):
 
         :raises:
             `.ThreadException` (if the background I/O threads encounter
-            exceptions)
+            exceptions).
 
         :raises:
             ``KeyboardInterrupt``, if the user generates one during command
