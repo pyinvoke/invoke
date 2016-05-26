@@ -686,7 +686,7 @@ class Runner(object):
             if matches:
                 indices.seek[pattern] += len(new_)
             # Iterate over findall() response in case >1 match occurred.
-            for match in matches:
+            for _ in matches:
                 # TODO: automatically append system-appropriate newline if
                 # response doesn't end with it, w/ option to disable?
                 # NOTE: have to 'encode' response here so Python 3 gets actual
