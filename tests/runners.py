@@ -30,10 +30,10 @@ class _Dummy(Runner):
     def start(self, command, shell, env):
         pass
 
-    def read_stdout(self, num_bytes):
+    def read_proc_stdout(self, num_bytes):
         return ""
 
-    def read_stderr(self, num_bytes):
+    def read_proc_stderr(self, num_bytes):
         return ""
 
     def write_stdin(self, data):
@@ -80,8 +80,8 @@ def _runner(out='', err='', **kwargs):
         runner.returncode = Mock(return_value=kwargs.pop('exits'))
     out_file = StringIO(out)
     err_file = StringIO(err)
-    runner.read_stdout = out_file.read
-    runner.read_stderr = err_file.read
+    runner.read_proc_stdout = out_file.read
+    runner.read_proc_stderr = err_file.read
     return runner
 
 
@@ -654,7 +654,10 @@ Just to say hi
             )
             # Examine mocked output stream to see if it was mirrored to
             if expect_mirroring:
-                eq_(output.write.call_args_list, list(map(call, fake_in)))
+                eq_(
+                    output.write.call_args_list,
+                    list(map(lambda x: call(b(x)), fake_in))
+                )
                 eq_(len(output.flush.call_args_list), len(fake_in))
             # Or not mirrored to
             else:
