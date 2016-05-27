@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import codecs
 import locale
 import os
 import re
@@ -757,8 +756,7 @@ class Runner(object):
         """
         Return a string naming the expected encoding of subprocess streams.
 
-        This return value should be suitable for use by methods such as
-        `codecs.iterdecode`.
+        This return value should be suitable for use by encode/decode methods.
         """
         raise NotImplementedError
 

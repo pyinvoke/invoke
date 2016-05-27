@@ -2,7 +2,7 @@ import locale
 import os
 import sys
 import types
-from invoke.vendor.six import StringIO, b
+from invoke.vendor.six import StringIO
 from signal import SIGINT, SIGTERM
 
 from spec import (
@@ -97,7 +97,7 @@ class Runner_(Spec):
 
     def _mock_stdin_writer(self):
         """
-        Return new _Dummy-based class whose write_proc_stdin() method is a mock.
+        Return new _Dummy subclass whose write_proc_stdin() method is a mock.
         """
         class MockedStdin(_Dummy):
             pass
