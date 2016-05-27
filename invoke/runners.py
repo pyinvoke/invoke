@@ -396,19 +396,6 @@ class Runner(object):
         """
         return Result(**kwargs)
 
-    def encode(self, data):
-        """
-        Encode ``data`` read from some I/O stream, into a useful str/bytes.
-        """
-        # TODO: shouldn't this decode, not encode? oh god
-        # Sometimes os.read gives us bytes under Python 3...and
-        # sometimes it doesn't. ¯\_(ツ)_/¯
-        # TODO: this is dumb, as pfmoore has probably said before.
-        if not isinstance(data, six.binary_type):
-            # Can't use six.b because that just assumes latin-1 :(
-            data = data.encode(self.encoding)
-        return data
-
     def read_proc_output(self, reader):
         """
         Iteratively read & decode bytes from a subprocess' out/err stream.
@@ -426,7 +413,7 @@ class Runner(object):
             A generator yielding Unicode strings (`unicode` on Python 2; `str`
             on Python 3).
 
-            Specifically, each resulting string is the result of encoding
+            Specifically, each resulting string is the result of decoding
             `read_chunk_size` bytes read from the subprocess' out/err stream.
         """
         # Create a generator yielding stdout data.
@@ -441,9 +428,10 @@ class Runner(object):
                 data = reader(self.read_chunk_size)
                 if not data:
                     break
-                # TODO: potentially move/copy self.encode in here, depending on
-                # where else it's used
-                yield self.encode(data)
+                # TODO: why was this calling self.encode before, if it's ALSO
+                # being run through iterdecode? Doublecheck where things stood
+                # when pfmoore added the iterdecode.
+                yield data
         # Use that generator in iterdecode so it ends up in our local encoding.
         for data in codecs.iterdecode(
             # TODO: errors= may need to change depending on discussion from
@@ -471,8 +459,7 @@ class Runner(object):
 
         :returns: ``None``.
         """
-        # TODO: encode
-        stream.write(string)
+        stream.write(string.encode(self.encoding))
         stream.flush()
 
     def _handle_output(self, buffer_, hide, output, reader, indices):
@@ -553,7 +540,10 @@ class Runner(object):
             if byte:
                 # TODO: will this break with multibyte input character
                 # encoding?
-                byte = self.encode(byte)
+                # TODO: there may be cases (Python 2; StringIOs; custom
+                # file-like objects) where it's already a string, handle that
+                # (or reinstate self.encode somehow)
+                byte = byte.decode(self.encoding)
         return byte
 
     def handle_stdin(self, input_, output, echo):
@@ -725,8 +715,7 @@ class Runner(object):
 
         :returns: ``None``.
         """
-        # TODO: correctly encode, in here, not using self.encode
-        self._write_proc_stdin(self.encode(data))
+        self._write_proc_stdin(data.encode(self.encoding))
 
     def start(self, command, shell, env):
         """
@@ -901,6 +890,8 @@ class Local(Runner):
             )
 
     def default_encoding(self):
+        # TODO: see notes about this in #274, determine if we should change
+        # this, handle corner cases, or make it easier for users to override
         return locale.getpreferredencoding(False)
 
     def wait(self):
