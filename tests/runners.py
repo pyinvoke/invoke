@@ -526,16 +526,16 @@ class Runner_(Spec):
             self._expect_response(
                 out="the house was empty",
                 responses={'empty': 'handed'},
-            ).assert_called_once_with(b("handed"))
+            ).assert_called_once_with("handed")
 
         def regex_keys_also_work(self):
             self._expect_response(
                 out="technically, it's still debt",
                 responses={r'tech.*debt': 'pay it down'},
-            ).assert_called_once_with(b('pay it down'))
+            ).assert_called_once_with('pay it down')
 
         def multiple_hits_yields_multiple_responses(self):
-            holla = call(b('how high?'))
+            holla = call('how high?')
             self._expect_response(
                 out="jump, wait, jump, wait",
                 responses={'jump': 'how high?'},
@@ -563,10 +563,10 @@ Just to say hi
             self._expect_response(
                 out=output,
                 responses={r'call.*problem': 'So sorry'},
-            ).assert_called_once_with(b('So sorry'))
+            ).assert_called_once_with('So sorry')
 
         def both_out_and_err_are_scanned(self):
-            bye = call(b("goodbye"))
+            bye = call("goodbye")
             # Would only be one 'bye' if only scanning stdout
             self._expect_response(
                 out="hello my name is inigo",
@@ -575,7 +575,7 @@ Just to say hi
             ).assert_has_calls([bye, bye])
 
         def multiple_patterns_works_as_expected(self):
-            calls = [call(b('betty')), call(b('carnival'))]
+            calls = [call('betty'), call('carnival')]
             # Technically, I'd expect 'betty' to get called before 'carnival',
             # but under Python 3 it's reliably backwards from Python 2.
             # In real world situations where each prompt sits & waits for its
@@ -593,7 +593,7 @@ Just to say hi
                 'Destroy': 'your ego',
                 'humans': 'are awful',
             }
-            calls = map(lambda x: call(b(x)), responses.values())
+            calls = map(lambda x: call(x), responses.values())
             # CANNOT assume order due to simultaneous streams.
             # If we didn't say any_order=True we could get race condition fails
             self._expect_response(
@@ -657,7 +657,7 @@ Just to say hi
             if expect_mirroring:
                 eq_(
                     output.write.call_args_list,
-                    list(map(lambda x: call(b(x)), fake_in))
+                    list(map(lambda x: call(x), fake_in))
                 )
                 eq_(len(output.flush.call_args_list), len(fake_in))
             # Or not mirrored to

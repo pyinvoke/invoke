@@ -416,37 +416,26 @@ class Runner(object):
             Specifically, each resulting string is the result of decoding
             `read_chunk_size` bytes read from the subprocess' out/err stream.
         """
-        # Create a generator yielding stdout data.
         # NOTE: Typically, reading from any stdout/err (local, remote or
         # otherwise) can be thought of as "read until you get nothing back".
         # This is preferable over "wait until an out-of-band signal claims the
         # process is done running" because sometimes that signal will appear
         # before we've actually read all the data in the stream (i.e.: a race
         # condition).
-        def get():
-            while True:
-                data = reader(self.read_chunk_size)
-                if not data:
-                    break
-                # TODO: why was this calling self.encode before, if it's ALSO
-                # being run through iterdecode? Doublecheck where things stood
-                # when pfmoore added the iterdecode.
-                yield data
-        # Use that generator in iterdecode so it ends up in our local encoding.
-        for data in codecs.iterdecode(
-            # TODO: errors= may need to change depending on discussion from
-            # #274?
-            get(), self.encoding, errors='replace'
-        ):
-            # TODO: presumably this can become 'return codecs.iterdecode(...)'?
-            # TODO: I sitll dunno why we are using iterdecode exactly, nor why
-            # we self.encode and then iterdecode, is this just a poorly
-            # documented round-tripping?
+        while True:
+            data = reader(self.read_chunk_size)
+            if not data:
+                break
+            # Only decode if the data seems binary. If it already seems to be a
+            # Unicode string (e.g. we're reading from some in-memory object
+            # and not a terminal stream), assume it's already decoded/okay.
+            if isinstance(data, six.binary_type):
+                data = data.decode(self.encoding, 'replace')
             yield data
 
     def write_our_output(self, stream, string):
         """
-        Encode ``string`` (Unicode) data to bytes, then write to ``stream``.
+        Write ``string`` to ``stream``.
 
         Also calls ``.flush()`` on ``stream`` to ensure that real terminal
         streams don't buffer.
@@ -459,7 +448,10 @@ class Runner(object):
 
         :returns: ``None``.
         """
-        stream.write(string.encode(self.encoding))
+        # TODO: originally thought we would want to encode first, but
+        # io.TextIOWrapper wants to do the encoding itself. Are there any
+        # situations where that is NOT the case and we DO want to encode?
+        stream.write(string)
         stream.flush()
 
     def _handle_output(self, buffer_, hide, output, reader, indices):
@@ -537,12 +529,11 @@ class Runner(object):
         byte = None
         if ready_for_reading(input_):
             byte = read_byte(input_)
-            if byte:
-                # TODO: will this break with multibyte input character
-                # encoding?
-                # TODO: there may be cases (Python 2; StringIOs; custom
-                # file-like objects) where it's already a string, handle that
-                # (or reinstate self.encode somehow)
+            # Decode if it appears to be binary-type. (From real terminal
+            # streams, usually yes; from file-like objects, often no.)
+            if byte and isinstance(byte, six.binary_type):
+                # TODO: will decoding 1 byte at a time break multibyte
+                # character encodings? How to square interactivity with that?
                 byte = byte.decode(self.encoding)
         return byte
 
