@@ -581,20 +581,20 @@ class Runner(object):
         with character_buffered(input_):
             while True:
                 # Read 1 byte at a time for interactivity's sake.
-                byte = self.read_our_stdin(input_)
-                if byte:
+                char = self.read_our_stdin(input_)
+                if char:
                     # Mirror what we just read to process' stdin.
                     # We perform an encode so Python 3 gets bytes (streams +
                     # str's in Python 3 == no bueno) but skip the decode step,
                     # since there's presumably no need (nobody's interacting
                     # with this data programmatically).
-                    self.write_proc_stdin(byte)
+                    self.write_proc_stdin(char)
                     # Also echo it back to local stdout (or whatever
                     # out_stream is set to) when necessary.
                     if echo is None:
                         echo = self.should_echo_stdin(input_, output)
                     if echo:
-                        self.write_our_output(byte)
+                        self.write_our_output(stream=output, string=char)
                 else:
                     # When reading from file-like objects that aren't "real"
                     # terminal streams, an empty byte signals EOF.
@@ -603,8 +603,8 @@ class Runner(object):
                 # running, *and* we don't seem to be reading anything out of
                 # stdin. (If we only test the former, we may encounter race
                 # conditions re: unread stdin.)
-                # TODO: shouldn't the 'not byte' always end up break'ing above?
-                if self.program_finished.is_set() and not byte:
+                # TODO: shouldn't the 'not char' always end up break'ing above?
+                if self.program_finished.is_set() and not char:
                     break
                 # Take a nap so we're not chewing CPU.
                 time.sleep(self.input_sleep)
