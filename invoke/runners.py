@@ -892,11 +892,13 @@ class Result(object):
         self.pty = pty
 
     def __nonzero__(self):
-        # Holy mismatch between name and implementation, Batman!
-        return self.exited == 0
+        # NOTE: This is the method that (under Python 2) determines Boolean
+        # behavior for objects.
+        return self.ok
 
-    # Python 3 ahoy
     def __bool__(self):
+        # NOTE: And this is the Python 3 equivalent of __nonzero__. Much better
+        # name...
         return self.__nonzero__()
 
     def __str__(self):
