@@ -705,6 +705,8 @@ class Runner(object):
 
         :returns: ``None``.
         """
+        # Encode always, then request implementing subclass to perform the
+        # actual write to subprocess' stdin.
         self._write_proc_stdin(data.encode(self.encoding))
 
     def start(self, command, shell, env):

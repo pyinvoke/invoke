@@ -62,11 +62,6 @@ class OhNoz(Exception):
     pass
 
 
-def _expect_encoding(codecs, encoding):
-    assert codecs.iterdecode.called
-    for c in codecs.iterdecode.call_args_list:
-        eq_(c[0][1], encoding)
-
 def _run(*args, **kwargs):
     klass = kwargs.pop('klass', _Dummy)
     settings = kwargs.pop('settings', {})
@@ -275,21 +270,33 @@ class Runner_(Spec):
             eq_(sys.stdout.getvalue(), "\x1b[1;37mmy command\x1b[0m\n")
 
     class encoding:
-        # Use UTF-7 as a valid encoding unlikely to be a real default
+        # NOTE: these tests just check what Runner.encoding ends up as; it's
+        # difficult/impossible to mock string objects themselves to see what
+        # .decode() is being given :(
+        #
+        # TODO: consider using truly "nonstandard"-encoded byte sequences as
+        # fixtures, encoded with something that isn't compatible with UTF-8
+        # (UTF-7 kinda is, so...) so we can assert that the decoded string is
+        # equal to its Unicode equivalent.
+        #
+        # Use UTF-7 as a valid encoding unlikely to be a real default derived
+        # from test-runner's locale.getpreferredencoding()
         def defaults_to_encoding_method_result(self):
+            # Setup
             runner = self._runner()
             encoding = 'UTF-7'
             runner.default_encoding = Mock(return_value=encoding)
-            with patch('invoke.runners.codecs') as codecs:
-                runner.run(_)
-                runner.default_encoding.assert_called_with()
-                _expect_encoding(codecs, encoding)
+            # Execution & assertion
+            runner.run(_)
+            runner.default_encoding.assert_called_with()
+            eq_(runner.encoding, 'UTF-7')
 
         def honors_config(self):
-            with patch('invoke.runners.codecs') as codecs:
-                c = Context(Config(overrides={'run': {'encoding': 'UTF-7'}}))
-                _Dummy(c).run(_)
-                _expect_encoding(codecs, 'UTF-7')
+            c = Context(Config(overrides={'run': {'encoding': 'UTF-7'}}))
+            runner = _Dummy(c)
+            runner.default_encoding = Mock(return_value='UTF-not-7')
+            runner.run(_)
+            eq_(runner.encoding, 'UTF-7')
 
         def honors_kwarg(self):
             skip()
@@ -872,12 +879,14 @@ class Local_(Spec):
                 eq_(str(e.value), "wat")
 
     class encoding:
+        # NOTE: see comments under tests for Runner.encoding re: this test
+        # strategy of examining <Runner instance>.encoding.
         @mock_subprocess()
         def uses_locale_module_for_desired_encoding(self):
-            with patch('invoke.runners.codecs') as codecs:
-                self._run(_)
-                local_encoding = locale.getpreferredencoding(False)
-                _expect_encoding(codecs, local_encoding)
+            local_encoding = locale.getpreferredencoding(False)
+            runner = self._runner()
+            runner.run(_)
+            eq_(runner.encoding, local_encoding)
 
     class send_interrupt:
         def _run(self, pty):
