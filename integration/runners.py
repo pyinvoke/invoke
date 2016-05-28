@@ -103,7 +103,7 @@ class Runner_(Spec):
 
     class IO_hangs:
         "IO hangs"
-        def child_proc_should_not_hang_if_IO_thread_has_an_exception(self):
+        def _hang_on_full_pipe(self, pty):
             runner = Local(Context())
             # Force runner IO thread-body method to raise an exception to mimic
             # real world encoding explosions/etc. When bug is present, this
@@ -112,5 +112,11 @@ class Runner_(Spec):
             # NOTE: both Darwin (10.10) and Linux (Travis' docker image) have
             # this file. It's plenty large enough to fill most pipe buffers,
             # which is the triggering behavior.
-            runner.run("cat /usr/share/dict/words")
+            runner.run("cat /usr/share/dict/words", pty=pty)
             # If we get here, no hang occurred, so we're done/happy.
+
+        def pty_subproc_should_not_hang_if_IO_thread_has_an_exception(self):
+            self._hang_on_full_pipe(pty=True)
+
+        def nonpty_subproc_should_not_hang_if_IO_thread_has_an_exception(self):
+            self._hang_on_full_pipe(pty=False)
