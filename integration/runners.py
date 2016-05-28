@@ -72,7 +72,11 @@ class Runner_(Spec):
             bg = ExceptionHandlingThread(target=bg_body)
             bg.start()
             # Wait a bit to ensure subprocess is in the right state & not still
-            # starting up (lolpython?)
+            # starting up (lolpython?). NOTE: if you bump this you must also
+            # bump the `signal.alarm` call within _support/signaling.py!
+            # Otherwise both tests will always fail as the ALARM fires
+            # (resulting in "Never got any signals!" in debug log) before this
+            # here sleep finishes.
             time.sleep(1)
             # Send expected signal (use pty to ensure no intermediate 'sh'
             # processes on Linux; is of no consequence on Darwin.)
