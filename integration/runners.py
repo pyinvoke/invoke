@@ -50,11 +50,11 @@ class Runner_(Spec):
     class interrupts:
         def _run_and_kill(self, pty):
             def bg_body():
-                # TODO: use 'expect exit of 130' when that's implemented Hide
-                # output by default, then assume an error & display stderr, if
-                # there's any stderr. (There's no reliable way to tell the
-                # subprocess raised an exception, because we'll be interrupted
-                # before completion, and won't have access to its exit code.)
+                # Hide output by default, then assume an error & display
+                # stderr, if there's any stderr. (There's no reliable way to
+                # tell the subprocess raised an exception, because we'll be
+                # interrupted before completion, and won't have access to its
+                # exit code.)
                 pty_flag = "--pty" if pty else "--no-pty"
                 result = run(
                     "inv -c signal_tasks expect SIGINT {0}".format(pty_flag),
