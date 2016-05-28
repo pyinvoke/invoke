@@ -1,9 +1,10 @@
 import os
 import time
 
+from mock import Mock
 from spec import Spec
 
-from invoke import run
+from invoke import run, Local, Context
 from invoke.util import ExceptionHandlingThread
 
 from _util import assert_cpu_usage
@@ -99,3 +100,17 @@ class Runner_(Spec):
 
         def pty_False(self):
             self._run_and_kill(pty=False)
+
+    class IO_hangs:
+        "IO hangs"
+        def child_proc_should_not_hang_if_IO_thread_has_an_exception(self):
+            runner = Local(Context())
+            # Force runner IO thread-body method to raise an exception to mimic
+            # real world encoding explosions/etc. When bug is present, this
+            # will make the test hang until forcibly terminated.
+            runner.handle_stdout = Mock(side_effect=Exception, __name__='sigh')
+            # NOTE: both Darwin (10.10) and Linux (Travis' docker image) have
+            # this file. It's plenty large enough to fill most pipe buffers,
+            # which is the triggering behavior.
+            runner.run("cat /usr/share/dict/words")
+            # If we get here, no hang occurred, so we're done/happy.
