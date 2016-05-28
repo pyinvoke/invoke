@@ -50,18 +50,22 @@ class Runner_(Spec):
     class interrupts:
         def _run_and_kill(self, pty):
             def bg_body():
-                # Hide output by default, then assume an error & display
-                # stderr, if there's any stderr. (There's no reliable way to
-                # tell the subprocess raised an exception, because we'll be
-                # interrupted before completion, and won't have access to its
-                # exit code.)
+                # No reliable way to detect "an exception happened in the inner
+                # child that wasn't KeyboardInterrupt", so best we can do is:
+                # * Ensure exited 130
+                # * Get mad if any output is seen that doesn't look like
+                # KeyboardInterrupt stacktrace (because it's probably some
+                # OTHER stacktrace).
                 pty_flag = "--pty" if pty else "--no-pty"
                 result = run(
                     "inv -c signal_tasks expect SIGINT {0}".format(pty_flag),
                     hide=True,
                     warn=True,
                 )
-                if result.exited != 130 or result.stdout or result.stderr:
+                bad_signal = result.exited != 130
+                output = result.stdout + result.stderr
+                had_keyboardint = 'KeyboardInterrupt' in output
+                if bad_signal or (output and not had_keyboardint):
                     err = "Subprocess had output and/or bad exit:"
                     raise Exception("{0}\n\n{1}".format(err, result))
 
