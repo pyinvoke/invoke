@@ -30,7 +30,7 @@ from .exceptions import Failure, ThreadException
 from .platform import (
     WINDOWS, pty_size, character_buffered, ready_for_reading, read_byte,
 )
-from .util import has_fileno, isatty, ExceptionHandlingThread
+from .util import has_fileno, isatty, ExceptionHandlingThread, debug
 
 from .vendor import six
 
@@ -290,12 +290,14 @@ class Runner(object):
         for target, kwargs in six.iteritems(thread_args):
             t = ExceptionHandlingThread(target=target, kwargs=kwargs)
             self.threads.append(t)
+            debug("Starting I/O thread for '{0!r}'".format(t))
             t.start()
         # Wait for completion, then tie things off & obtain result
         # And make sure we perform that tying off even if things asplode.
         exception = None
         try:
             self.wait()
+            debug("Wait over - subprocess has terminated")
         except BaseException as e: # Make sure we nab ^C etc
             exception = e
             # TODO: consider consuming the KeyboardInterrupt instead of storing
@@ -799,6 +801,7 @@ class Local(Runner):
             if pty is None: # Encountered ImportError
                 sys.exit("You indicated pty=True, but your platform doesn't support the 'pty' module!") # noqa
             cols, rows = pty_size()
+            debug("using_pty==True, forking...")
             self.pid, self.parent_fd = pty.fork()
             # If we're the child process, load up the actual command in a
             # shell, just as subprocess does; this replaces our process - whose
@@ -836,6 +839,7 @@ class Local(Runner):
 
     def wait(self):
         if self.using_pty:
+            debug("Waiting for our fork (pid {0}) to exit...".format(self.pid))
             while True:
                 # NOTE:
                 # https://github.com/pexpect/ptyprocess/blob/4058faa05e2940662ab6da1330aa0586c6f9cd9c/ptyprocess/ptyprocess.py#L680-L687
@@ -864,6 +868,8 @@ class Local(Runner):
                 # Sleep a bit so as to not hog CPU.
                 time.sleep(self.input_sleep)
         else:
+            msg = "Waiting for our regular subprocess (pid {0}) to exit..."
+            debug(msg.format(self.process.pid))
             self.process.wait()
 
     def send_interrupt(self):
