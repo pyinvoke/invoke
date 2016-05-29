@@ -79,7 +79,8 @@ class Runner(object):
         #: How many bytes (at maximum) to read per iteration of stream reads.
         self.read_chunk_size = self.__class__.read_chunk_size
         # Ditto re: declaring this in 2 places for doc reasons.
-        #: How many seconds to sleep on each iteration of the stdin read loop.
+        #: How many seconds to sleep on each iteration of the stdin read loop
+        #: and other otherwise-fast loops.
         self.input_sleep = self.__class__.input_sleep
         #: Whether pty fallback warning has been emitted.
         self.warned_about_pty_fallback = False
@@ -713,6 +714,8 @@ class Runner(object):
     def wait(self):
         """
         Block until the running command appears to have exited.
+
+        :returns: ``None``.
         """
         raise NotImplementedError
 

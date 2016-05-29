@@ -136,3 +136,7 @@ class ExceptionHandlingThread(threading.Thread):
         if self.exc_info is None:
             return None
         return ExceptionWrapper(self.kwargs, *self.exc_info)
+
+    def __repr__(self):
+        # TODO: beef this up more
+        return self.kwargs['target'].__name__
