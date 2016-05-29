@@ -285,10 +285,10 @@ class Runner(object):
                 'output': err_stream,
             }
         # Kick off IO threads
-        threads, exceptions = [], []
+        self.threads, exceptions = [], []
         for target, kwargs in six.iteritems(thread_args):
             t = ExceptionHandlingThread(target=target, kwargs=kwargs)
-            threads.append(t)
+            self.threads.append(t)
             t.start()
         # Wait for completion, then tie things off & obtain result
         # And make sure we perform that tying off even if things asplode.
@@ -311,7 +311,7 @@ class Runner(object):
             if isinstance(exception, KeyboardInterrupt):
                 self.send_interrupt()
         self.program_finished.set()
-        for t in threads:
+        for t in self.threads:
             t.join()
             e = t.exception()
             if e is not None:
@@ -648,6 +648,21 @@ class Runner(object):
         # NOTE: fallback not used: no falling back implemented by default.
         return pty
 
+    @property
+    def has_dead_threads(self):
+        """
+        Detect whether any IO threads appear to have terminated unexpectedly.
+
+        Used during process-completion waiting (in `wait`) to ensure we don't
+        deadlock our child process if our IO processing threads have
+        errored/died.
+
+        :returns:
+            ``True`` if any threads appear not to be running, ``False``
+            otherwise.
+        """
+        return any(not x.is_alive() for x in self.threads)
+
     def start(self, command, shell, env):
         """
         Initiate execution of ``command`` (via ``shell``, with ``env``).
@@ -819,15 +834,32 @@ class Local(Runner):
     def wait(self):
         if self.using_pty:
             while True:
-                # TODO: possibly reinstate conditional WNOHANG as per
+                # NOTE:
                 # https://github.com/pexpect/ptyprocess/blob/4058faa05e2940662ab6da1330aa0586c6f9cd9c/ptyprocess/ptyprocess.py#L680-L687
-                pid_val, self.status = os.waitpid(self.pid, 0)
+                # implies that Linux "requires" use of the blocking,
+                # non-WNOHANG version of this call. Our testing doesn't verify
+                # this, however, so...
+                # NOTE: It does appear to be totally blocking on Windows, so
+                # our issue #350 may be totally unsolvable there. Unclear.
+                #
+                # Wait, in non-blocking fashion, for pid to exit.
+                pid_val, self.status = os.waitpid(self.pid, os.WNOHANG)
                 # waitpid() sets the 'pid' return val to 0 when no children
                 # have exited yet; when it is NOT zero, we know the child's
                 # stopped.
                 if pid_val != 0:
                     break
-                # TODO: io sleep?
+                # Here, it was apparently 0, meaning it's not done yet.
+                #
+                # Sanity-check our IO threads (if they die, we can enter limbo,
+                # see #350)
+                if self.has_dead_threads:
+                    # TODO: is this the right thing to do here? (It's PTY
+                    # specific)
+                    self.status = None
+                    break
+                # Sleep a bit so as to not hog CPU.
+                time.sleep(self.input_sleep)
         else:
             self.process.wait()
 
