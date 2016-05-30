@@ -317,7 +317,13 @@ class Runner(object):
                 self.send_interrupt()
         self.program_finished.set()
         for t in self.threads:
-            t.join()
+            # NOTE: using a join timeout for corner case from #350 (one pipe
+            # excepts, fills up, prevents subproc from exiting, and other pipe
+            # then has a blocking read() call, causing its thread to block on
+            # join). In normal, non-#350 situations this should function
+            # similarly to a non-timeout'd join.
+            # TODO: make the timeout configurable
+            t.join(1)
             e = t.exception()
             if e is not None:
                 exceptions.append(e)
@@ -872,7 +878,14 @@ class Local(Runner):
         else:
             msg = "Waiting for our regular subprocess (pid {0}) to exit..."
             debug(msg.format(self.process.pid))
-            self.process.wait()
+            while True:
+                # Popen.poll() returns None if proc is running, exitcode
+                # (integer) otherwise.
+                if self.process.poll() is not None or self.has_dead_threads:
+                    break
+                # Sleep a bit so as to not hog CPU.
+                # TODO: refactor this & the above w/ other branch
+                time.sleep(self.input_sleep)
 
     def send_interrupt(self):
         if self.using_pty:
