@@ -674,6 +674,32 @@ class Runner(object):
         """
         return any(not x.is_alive() for x in self.threads)
 
+    def wait(self):
+        """
+        Block until the running command appears to have exited.
+
+        :returns: ``None``.
+        """
+        while True:
+            if self.process_is_finished or self.has_dead_threads:
+                break
+            time.sleep(self.input_sleep)
+
+    @property
+    def process_is_finished(self):
+        """
+        Determine whether our subprocess has terminated.
+
+        .. note::
+            The implementation of this method should be nonblocking, as it is
+            used within a query/poll loop.
+
+        :returns:
+            ``True`` if the subprocess has finished running, ``False``
+            otherwise.
+        """
+        raise NotImplementedError
+
     def start(self, command, shell, env):
         """
         Initiate execution of ``command`` (via ``shell``, with ``env``).
@@ -721,14 +747,6 @@ class Runner(object):
         """
         raise NotImplementedError
 
-    def wait(self):
-        """
-        Block until the running command appears to have exited.
-
-        :returns: ``None``.
-        """
-        raise NotImplementedError
-
     def send_interrupt(self):
         """
         Submit an interrupt signal to the running subprocess.
@@ -756,6 +774,11 @@ class Local(Runner):
 
         To disable this behavior, say ``fallback=False``.
     """
+    def __init__(self, context):
+        super(Local, self).__init__(context)
+        # Bookkeeping var for pty use case
+        self.status = None
+
     def should_use_pty(self, pty=False, fallback=True):
         use_pty = False
         if pty:
@@ -845,47 +868,20 @@ class Local(Runner):
     def default_encoding(self):
         return locale.getpreferredencoding(False)
 
-    def wait(self):
+    @property
+    def process_is_finished(self):
         if self.using_pty:
-            debug("Waiting for our fork (pid {0}) to exit...".format(self.pid))
-            while True:
-                # NOTE:
-                # https://github.com/pexpect/ptyprocess/blob/4058faa05e2940662ab6da1330aa0586c6f9cd9c/ptyprocess/ptyprocess.py#L680-L687
-                # implies that Linux "requires" use of the blocking,
-                # non-WNOHANG version of this call. Our testing doesn't verify
-                # this, however, so...
-                # NOTE: It does appear to be totally blocking on Windows, so
-                # our issue #350 may be totally unsolvable there. Unclear.
-                #
-                # Wait, in non-blocking fashion, for pid to exit.
-                pid_val, self.status = os.waitpid(self.pid, os.WNOHANG)
-                # waitpid() sets the 'pid' return val to 0 when no children
-                # have exited yet; when it is NOT zero, we know the child's
-                # stopped.
-                if pid_val != 0:
-                    break
-                # Here, it was apparently 0, meaning it's not done yet.
-                #
-                # Sanity-check our IO threads (if they die, we can enter limbo,
-                # see #350)
-                if self.has_dead_threads:
-                    # TODO: is this the right thing to do here? (It's PTY
-                    # specific)
-                    self.status = None
-                    break
-                # Sleep a bit so as to not hog CPU.
-                time.sleep(self.input_sleep)
+            # NOTE:
+            # https://github.com/pexpect/ptyprocess/blob/4058faa05e2940662ab6da1330aa0586c6f9cd9c/ptyprocess/ptyprocess.py#L680-L687
+            # implies that Linux "requires" use of the blocking, non-WNOHANG
+            # version of this call. Our testing doesn't verify this, however,
+            # so...
+            # NOTE: It does appear to be totally blocking on Windows, so our
+            # issue #350 may be totally unsolvable there. Unclear.
+            pid_val, self.status = os.waitpid(self.pid, os.WNOHANG)
+            return pid_val != 0
         else:
-            msg = "Waiting for our regular subprocess (pid {0}) to exit..."
-            debug(msg.format(self.process.pid))
-            while True:
-                # Popen.poll() returns None if proc is running, exitcode
-                # (integer) otherwise.
-                if self.process.poll() is not None or self.has_dead_threads:
-                    break
-                # Sleep a bit so as to not hog CPU.
-                # TODO: refactor this & the above w/ other branch
-                time.sleep(self.input_sleep)
+            return self.process.poll() is not None
 
     def send_interrupt(self):
         if self.using_pty:
