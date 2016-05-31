@@ -530,8 +530,9 @@ class Runner(object):
             object.
 
         :returns:
-            A Unicode string, the result of decoding the read byte; or ``None``
-            if the stream didn't appear ready for reading.
+            A Unicode string, the result of decoding the read byte (this might
+            be the empty string if the pipe has closed/reached EOF); or
+            ``None`` if stdin wasn't ready for reading yet.
         """
         # TODO: consider moving the character_buffered contextmanager call in
         # here? Downside is it would be flipping those switches for every byte
@@ -586,7 +587,8 @@ class Runner(object):
                         echo = self.should_echo_stdin(input_, output)
                     if echo:
                         self.write_our_output(stream=output, string=char)
-                else:
+                # Empty string/char/byte != None. Can't just use 'else' here.
+                elif char is not None:
                     # When reading from file-like objects that aren't "real"
                     # terminal streams, an empty byte signals EOF.
                     break
@@ -594,8 +596,7 @@ class Runner(object):
                 # running, *and* we don't seem to be reading anything out of
                 # stdin. (If we only test the former, we may encounter race
                 # conditions re: unread stdin.)
-                # TODO: shouldn't the 'not char' always end up break'ing above?
-                if self.program_finished.is_set() and not char:
+                if self.program_finished.is_set():
                     break
                 # Take a nap so we're not chewing CPU.
                 time.sleep(self.input_sleep)
