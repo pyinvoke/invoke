@@ -2,7 +2,7 @@
 Changelog
 =========
 
-* :bug:`350` Protect against ``run`` deadlocks involving exceptions in I/O
+* :bug:`351` Protect against ``run`` deadlocks involving exceptions in I/O
   threads & nontrivial amounts of unread data in the corresponding subprocess
   pipe(s). This situation should now always result in exceptions instead of
   hangs.

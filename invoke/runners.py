@@ -317,10 +317,10 @@ class Runner(object):
                 self.send_interrupt()
         self.program_finished.set()
         for t in self.threads:
-            # NOTE: using a join timeout for corner case from #350 (one pipe
+            # NOTE: using a join timeout for corner case from #351 (one pipe
             # excepts, fills up, prevents subproc from exiting, and other pipe
             # then has a blocking read() call, causing its thread to block on
-            # join). In normal, non-#350 situations this should function
+            # join). In normal, non-#351 situations this should function
             # similarly to a non-timeout'd join.
             # TODO: make the timeout configurable
             t.join(1)
@@ -877,7 +877,7 @@ class Local(Runner):
             # version of this call. Our testing doesn't verify this, however,
             # so...
             # NOTE: It does appear to be totally blocking on Windows, so our
-            # issue #350 may be totally unsolvable there. Unclear.
+            # issue #351 may be totally unsolvable there. Unclear.
             pid_val, self.status = os.waitpid(self.pid, os.WNOHANG)
             return pid_val != 0
         else:
