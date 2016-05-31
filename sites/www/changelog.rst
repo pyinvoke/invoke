@@ -2,6 +2,10 @@
 Changelog
 =========
 
+* :bug:`350` Protect against ``run`` deadlocks involving exceptions in I/O
+  threads & nontrivial amounts of unread data in the corresponding subprocess
+  pipe(s). This situation should now always result in exceptions instead of
+  hangs.
 * :feature:`259` (also :issue:`280`) Allow updating (or replacing) subprocess
   shell environments, via the ``env`` and ``replace_env`` kwargs to
   `~invoke.runners.Runner.run`. Thanks to Fotis Gimian for the report,

@@ -29,7 +29,7 @@ from .exceptions import Failure, ThreadException
 from .platform import (
     WINDOWS, pty_size, character_buffered, ready_for_reading, read_byte,
 )
-from .util import has_fileno, isatty, ExceptionHandlingThread
+from .util import has_fileno, isatty, ExceptionHandlingThread, debug
 
 from .vendor import six
 
@@ -78,7 +78,8 @@ class Runner(object):
         #: How many bytes (at maximum) to read per iteration of stream reads.
         self.read_chunk_size = self.__class__.read_chunk_size
         # Ditto re: declaring this in 2 places for doc reasons.
-        #: How many seconds to sleep on each iteration of the stdin read loop.
+        #: How many seconds to sleep on each iteration of the stdin read loop
+        #: and other otherwise-fast loops.
         self.input_sleep = self.__class__.input_sleep
         #: Whether pty fallback warning has been emitted.
         self.warned_about_pty_fallback = False
@@ -284,16 +285,18 @@ class Runner(object):
                 'output': err_stream,
             }
         # Kick off IO threads
-        threads, exceptions = [], []
+        self.threads, exceptions = [], []
         for target, kwargs in six.iteritems(thread_args):
             t = ExceptionHandlingThread(target=target, kwargs=kwargs)
-            threads.append(t)
+            self.threads.append(t)
+            debug("Starting I/O thread for '{0!r}'".format(t))
             t.start()
         # Wait for completion, then tie things off & obtain result
         # And make sure we perform that tying off even if things asplode.
         exception = None
         try:
             self.wait()
+            debug("Wait over - subprocess has terminated")
         except BaseException as e: # Make sure we nab ^C etc
             exception = e
             # TODO: consider consuming the KeyboardInterrupt instead of storing
@@ -304,14 +307,22 @@ class Runner(object):
             # TODO: generally, but especially if we do ignore
             # KeyboardInterrupt, honor other signals sent to our own process
             # and transmit them to the subprocess before handling 'normally'.
+            # TODO: we should probably re-raise anything that's not
+            # KeyboardInterrupt? This is quite possibly swallowing things.
             # NOTE: we handle this now instead of at actual-exception-handling
             # time because otherwise the stdout/err reader threads may block
             # until the subprocess exits.
             if isinstance(exception, KeyboardInterrupt):
                 self.send_interrupt()
         self.program_finished.set()
-        for t in threads:
-            t.join()
+        for t in self.threads:
+            # NOTE: using a join timeout for corner case from #350 (one pipe
+            # excepts, fills up, prevents subproc from exiting, and other pipe
+            # then has a blocking read() call, causing its thread to block on
+            # join). In normal, non-#350 situations this should function
+            # similarly to a non-timeout'd join.
+            # TODO: make the timeout configurable
+            t.join(1)
             e = t.exception()
             if e is not None:
                 exceptions.append(e)
@@ -697,6 +708,32 @@ class Runner(object):
         # NOTE: fallback not used: no falling back implemented by default.
         return pty
 
+    @property
+    def has_dead_threads(self):
+        """
+        Detect whether any IO threads appear to have terminated unexpectedly.
+
+        Used during process-completion waiting (in `wait`) to ensure we don't
+        deadlock our child process if our IO processing threads have
+        errored/died.
+
+        :returns:
+            ``True`` if any threads appear not to be running, ``False``
+            otherwise.
+        """
+        return any(not x.is_alive() for x in self.threads)
+
+    def wait(self):
+        """
+        Block until the running command appears to have exited.
+
+        :returns: ``None``.
+        """
+        while True:
+            if self.process_is_finished or self.has_dead_threads:
+                break
+            time.sleep(self.input_sleep)
+
     def write_proc_stdin(self, data):
         """
         Write encoded ``data`` to the running process' stdin.
@@ -708,6 +745,21 @@ class Runner(object):
         # Encode always, then request implementing subclass to perform the
         # actual write to subprocess' stdin.
         self._write_proc_stdin(data.encode(self.encoding))
+
+    @property
+    def process_is_finished(self):
+        """
+        Determine whether our subprocess has terminated.
+
+        .. note::
+            The implementation of this method should be nonblocking, as it is
+            used within a query/poll loop.
+
+        :returns:
+            ``True`` if the subprocess has finished running, ``False``
+            otherwise.
+        """
+        raise NotImplementedError
 
     def start(self, command, shell, env):
         """
@@ -762,12 +814,6 @@ class Runner(object):
         """
         raise NotImplementedError
 
-    def wait(self):
-        """
-        Block until the running command appears to have exited.
-        """
-        raise NotImplementedError
-
     def send_interrupt(self):
         """
         Submit an interrupt signal to the running subprocess.
@@ -795,6 +841,11 @@ class Local(Runner):
 
         To disable this behavior, say ``fallback=False``.
     """
+    def __init__(self, context):
+        super(Local, self).__init__(context)
+        # Bookkeeping var for pty use case
+        self.status = None
+
     def should_use_pty(self, pty=False, fallback=True):
         use_pty = False
         if pty:
@@ -848,6 +899,7 @@ class Local(Runner):
             if pty is None: # Encountered ImportError
                 sys.exit("You indicated pty=True, but your platform doesn't support the 'pty' module!") # noqa
             cols, rows = pty_size()
+            debug("using_pty==True, forking...")
             self.pid, self.parent_fd = pty.fork()
             # If we're the child process, load up the actual command in a
             # shell, just as subprocess does; this replaces our process - whose
@@ -885,20 +937,20 @@ class Local(Runner):
         # this, handle corner cases, or make it easier for users to override
         return locale.getpreferredencoding(False)
 
-    def wait(self):
+    @property
+    def process_is_finished(self):
         if self.using_pty:
-            while True:
-                # TODO: possibly reinstate conditional WNOHANG as per
-                # https://github.com/pexpect/ptyprocess/blob/4058faa05e2940662ab6da1330aa0586c6f9cd9c/ptyprocess/ptyprocess.py#L680-L687
-                pid_val, self.status = os.waitpid(self.pid, 0)
-                # waitpid() sets the 'pid' return val to 0 when no children
-                # have exited yet; when it is NOT zero, we know the child's
-                # stopped.
-                if pid_val != 0:
-                    break
-                # TODO: io sleep?
+            # NOTE:
+            # https://github.com/pexpect/ptyprocess/blob/4058faa05e2940662ab6da1330aa0586c6f9cd9c/ptyprocess/ptyprocess.py#L680-L687
+            # implies that Linux "requires" use of the blocking, non-WNOHANG
+            # version of this call. Our testing doesn't verify this, however,
+            # so...
+            # NOTE: It does appear to be totally blocking on Windows, so our
+            # issue #350 may be totally unsolvable there. Unclear.
+            pid_val, self.status = os.waitpid(self.pid, os.WNOHANG)
+            return pid_val != 0
         else:
-            self.process.wait()
+            return self.process.poll() is not None
 
     def send_interrupt(self):
         if self.using_pty:
@@ -961,11 +1013,13 @@ class Result(object):
         self.pty = pty
 
     def __nonzero__(self):
-        # Holy mismatch between name and implementation, Batman!
-        return self.exited == 0
+        # NOTE: This is the method that (under Python 2) determines Boolean
+        # behavior for objects.
+        return self.ok
 
-    # Python 3 ahoy
     def __bool__(self):
+        # NOTE: And this is the Python 3 equivalent of __nonzero__. Much better
+        # name...
         return self.__nonzero__()
 
     def __str__(self):

@@ -1,9 +1,10 @@
 import os
 import time
 
-from spec import Spec
+from mock import Mock
+from spec import Spec, eq_, ok_
 
-from invoke import run
+from invoke import run, Local, Context, ThreadException
 from invoke.util import ExceptionHandlingThread
 
 from _util import assert_cpu_usage
@@ -50,18 +51,22 @@ class Runner_(Spec):
     class interrupts:
         def _run_and_kill(self, pty):
             def bg_body():
-                # TODO: use 'expect exit of 130' when that's implemented Hide
-                # output by default, then assume an error & display stderr, if
-                # there's any stderr. (There's no reliable way to tell the
-                # subprocess raised an exception, because we'll be interrupted
-                # before completion, and won't have access to its exit code.)
+                # No reliable way to detect "an exception happened in the inner
+                # child that wasn't KeyboardInterrupt", so best we can do is:
+                # * Ensure exited 130
+                # * Get mad if any output is seen that doesn't look like
+                # KeyboardInterrupt stacktrace (because it's probably some
+                # OTHER stacktrace).
                 pty_flag = "--pty" if pty else "--no-pty"
                 result = run(
                     "inv -c signal_tasks expect SIGINT {0}".format(pty_flag),
                     hide=True,
                     warn=True,
                 )
-                if result.exited != 130 or result.stdout or result.stderr:
+                bad_signal = result.exited != 130
+                output = result.stdout + result.stderr
+                had_keyboardint = 'KeyboardInterrupt' in output
+                if bad_signal or (output and not had_keyboardint):
                     err = "Subprocess had output and/or bad exit:"
                     raise Exception("{0}\n\n{1}".format(err, result))
 
@@ -72,7 +77,11 @@ class Runner_(Spec):
             bg = ExceptionHandlingThread(target=bg_body)
             bg.start()
             # Wait a bit to ensure subprocess is in the right state & not still
-            # starting up (lolpython?)
+            # starting up (lolpython?). NOTE: if you bump this you must also
+            # bump the `signal.alarm` call within _support/signaling.py!
+            # Otherwise both tests will always fail as the ALARM fires
+            # (resulting in "Never got any signals!" in debug log) before this
+            # here sleep finishes.
             time.sleep(1)
             # Send expected signal (use pty to ensure no intermediate 'sh'
             # processes on Linux; is of no consequence on Darwin.)
@@ -91,3 +100,30 @@ class Runner_(Spec):
 
         def pty_False(self):
             self._run_and_kill(pty=False)
+
+    class IO_hangs:
+        "IO hangs"
+        def _hang_on_full_pipe(self, pty):
+            class Whoops(Exception):
+                pass
+            runner = Local(Context())
+            # Force runner IO thread-body method to raise an exception to mimic
+            # real world encoding explosions/etc. When bug is present, this
+            # will make the test hang until forcibly terminated.
+            runner.handle_stdout = Mock(side_effect=Whoops, __name__='sigh')
+            # NOTE: both Darwin (10.10) and Linux (Travis' docker image) have
+            # this file. It's plenty large enough to fill most pipe buffers,
+            # which is the triggering behavior.
+            try:
+                runner.run("cat /usr/share/dict/words", pty=pty)
+            except ThreadException as e:
+                eq_(len(e.exceptions), 1)
+                ok_(e.exceptions[0].type is Whoops)
+            else:
+                assert False, "Did not receive expected ThreadException!"
+
+        def pty_subproc_should_not_hang_if_IO_thread_has_an_exception(self):
+            self._hang_on_full_pipe(pty=True)
+
+        def nonpty_subproc_should_not_hang_if_IO_thread_has_an_exception(self):
+            self._hang_on_full_pipe(pty=False)
