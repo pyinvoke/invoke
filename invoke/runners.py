@@ -599,9 +599,9 @@ class Runner(object):
                     break
                 # Dual all-done signals: program being executed is done
                 # running, *and* we don't seem to be reading anything out of
-                # stdin. (If we only test the former, we may encounter race
-                # conditions re: unread stdin.)
-                if self.program_finished.is_set():
+                # stdin. (NOTE: If we only test the former, we may encounter
+                # race conditions re: unread stdin.)
+                if self.program_finished.is_set() and not char:
                     break
                 # Take a nap so we're not chewing CPU.
                 time.sleep(self.input_sleep)
