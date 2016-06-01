@@ -415,7 +415,7 @@ class Runner(object):
         """
         Iteratively read & decode bytes from a subprocess' out/err stream.
 
-        :param function reader:
+        :param reader:
             A literal reader function/partial, wrapping the actual stream
             object in question, which takes a number of bytes to read, and
             returns that many bytes (or ``None``).
