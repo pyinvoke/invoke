@@ -321,8 +321,13 @@ class Runner(object):
             # then has a blocking read() call, causing its thread to block on
             # join). In normal, non-#351 situations this should function
             # similarly to a non-timeout'd join.
-            # TODO: make the timeout configurable
-            t.join(1)
+            # NOTE: but we avoid a timeout for the stdin handler as it has its
+            # own termination conditions & isn't subject to this corner case.
+            timeout = None
+            if t.kwargs['target'] != self.handle_stdin:
+                # TODO: make the timeout configurable
+                timeout = 1
+            t.join(timeout)
             e = t.exception()
             if e is not None:
                 exceptions.append(e)
