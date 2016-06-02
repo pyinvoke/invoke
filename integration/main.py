@@ -88,18 +88,18 @@ class Main(Spec):
             # to surface. TODO: ideally, hand in some more realistic (and
             # multiple encodings too) out_stream or something. I'm sure just
             # str()ing it is still subject to test runner's environment.
-            str(run(cmd, hide='both'))
+            str(run(cmd, hide='both').stdout)
 
         def nonprinting_bytes(self):
             # Seriously non-printing characters (i.e. non UTF8) also don't
             # asplode
-            str(run("echo '\xff'", hide='both'))
+            str(run("echo '\xff'", hide='both').stdout)
 
         def nonprinting_bytes_pty(self):
             if WINDOWS:
                 return
             # PTY use adds another utf-8 decode spot which can also fail.
-            str(run("echo '\xff'", pty=True, hide='both'))
+            str(run("echo '\xff'", pty=True, hide='both').stdout)
 
     def pty_puts_both_streams_in_stdout(self):
         if WINDOWS:
