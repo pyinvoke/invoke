@@ -447,7 +447,18 @@ class Runner(object):
             # combo of 'hide=stdout' + 'here is an explicit out_stream' means
             # out_stream is never written to, and that seems...odd.
             if not hide:
-                output.write(data)
+                # Workaround for the bug http://bugs.python.org/issue4947
+                # which affects Python 2.6 by ensuring that we encode to
+                # bytes when writing to any file stream
+                if (
+                    sys.version_info < (2, 7) and
+                    # We can't use isinstance because the file type doesn't
+                    # exist in Python 3.x and causes flake8 errors
+                    output.__class__.__name__ == 'file'
+                ):
+                    output.write(data.encode(self.encoding))
+                else:
+                    output.write(data)
                 output.flush()
             # Store in shared buffer so main thread can do things with the
             # result after execution completes.
