@@ -944,6 +944,8 @@ class Local(Runner):
     def default_encoding(self):
         # TODO: see notes about this in #274, determine if we should change
         # this, handle corner cases, or make it easier for users to override
+        # TODO: may want to break this up into "local encoding" (can be in
+        # Runner) and "subprocess encoding" (still here)
         return locale.getpreferredencoding(False)
 
     @property
