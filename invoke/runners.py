@@ -1035,10 +1035,10 @@ class Result(object):
         ret = ["Command exited with status {0}.".format(self.exited)]
         for x in ('stdout', 'stderr'):
             val = getattr(self, x)
-            ret.append("""=== {0} ===
+            ret.append(u"""=== {0} ===
 {1}
-""".format(x, val.rstrip()) if val else "(no {0})".format(x))
-        return "\n".join(ret)
+""".format(x, val.rstrip()) if val else u"(no {0})".format(x))
+        return u"\n".join(ret)
 
     @property
     def ok(self):
