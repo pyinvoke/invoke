@@ -155,9 +155,8 @@ def read_byte(input_):
     """
     # NOTE: there may be dragons here re: what exactly input_ is and what mode
     # it has been opened in.
-    # NOTE: changed from
-    #       return msvcrt.getch() if WINDOWS else input_.read(1)
-    # Using msvcrt.getch is unequivocally wrong - it ignores the argument
+    # NOTE: used to use msvcrt.getch() on Win which is why it's in platform.py.
+    # NOTE: msvcrt.getch was unequivocally wrong - it ignores the argument
     # input_, and its behaviour isn't even what we want if input_ is
     # the console. It returns a byte, which is not what input_.read() does
     # (in spite of the function name!) when input_is opened in text mode
