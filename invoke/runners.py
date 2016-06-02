@@ -445,7 +445,7 @@ class Runner(object):
             # Unicode string (e.g. we're reading from some in-memory object
             # and not a terminal stream), assume it's already decoded/okay.
             if isinstance(data, six.binary_type):
-                data = data.decode(self.encoding, 'replace')
+                data = self.decode(data)
             yield data
 
     def write_our_output(self, stream, string):
@@ -550,7 +550,7 @@ class Runner(object):
             if byte and isinstance(byte, six.binary_type):
                 # TODO: will decoding 1 byte at a time break multibyte
                 # character encodings? How to square interactivity with that?
-                byte = byte.decode(self.encoding)
+                byte = self.decode(byte)
         return byte
 
     def handle_stdin(self, input_, output, echo):
@@ -751,6 +751,12 @@ class Runner(object):
         # Encode always, then request implementing subclass to perform the
         # actual write to subprocess' stdin.
         self._write_proc_stdin(data.encode(self.encoding))
+
+    def decode(self, data):
+        """
+        Decode some ``data`` bytes, returning Unicode.
+        """
+        return data.decode(self.encoding, 'replace')
 
     @property
     def process_is_finished(self):
