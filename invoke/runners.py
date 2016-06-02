@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 
 import codecs
 import locale
@@ -255,7 +256,18 @@ class Runner(object):
         env = self.generate_env(opts['env'], opts['replace_env'])
         # Echo running command
         if opts['echo']:
-            print("\033[1;37m{0}\033[0m".format(command))
+            if isinstance(command, six.text_type):
+                unicode_command = command
+            else:
+                if six.PY2:
+                    unicode_command = "b{0}".format(repr(command))
+                else:
+                    unicode_command = repr(command)
+            # Use a wrapped sys.stdout to avoid encoding errors (errors will
+            # be replaced with backslashed unicode codes)
+            self._wrap_output(sys.stdout).write(
+                "\033[1;37m{0}\033[0m\n".format(unicode_command)
+            )
         # Start executing the actual command (runs in background)
         self.start(command, shell, env)
         # Arrive at final encoding if neither config nor kwargs had one
@@ -388,10 +400,10 @@ class Runner(object):
         # Derive stream objects
         out_stream = opts['out_stream']
         if out_stream is None:
-            out_stream = sys.stdout
+            out_stream = self._wrap_output(sys.stdout)
         err_stream = opts['err_stream']
         if err_stream is None:
-            err_stream = sys.stderr
+            err_stream = self._wrap_output(sys.stderr)
         in_stream = opts['in_stream']
         if in_stream is None:
             in_stream = sys.stdin
@@ -651,6 +663,27 @@ class Runner(object):
         """
         return env if replace_env else dict(os.environ, **env)
 
+    def _wrap_output(self, stream):
+        """
+        Wraps a ``stream`` with ``codecs.StreamWriter`` where encoding errors
+        are replaced.
+        """
+        if hasattr(stream, 'buffer'):
+            output_buffer = stream.buffer
+        else:
+            output_buffer = stream
+
+        # NOTE: sys.stdout.encoding returns None on Python 2.x when
+        # C locale is used
+        stream_encoding = getattr(stream, 'encoding', None)
+        if stream_encoding is None:
+            stream_encoding = self.default_encoding()
+
+        return codecs.getwriter(stream_encoding)(
+            output_buffer,
+            errors='backslashreplace'
+        )
+
     def should_use_pty(self, pty, fallback):
         """
         Should execution attempt to use a pseudo-terminal?
@@ -843,22 +876,33 @@ class Local(Runner):
             # shell, just as subprocess does; this replaces our process - whose
             # pipes are all hooked up to the PTY - with the "real" one.
             if self.pid == 0:
-                # TODO: both pty.spawn() and pexpect.spawn() do a lot of
-                # setup/teardown involving tty.setraw, getrlimit, signal.
-                # Ostensibly we'll want some of that eventually, but if
-                # possible write tests - integration-level if necessary -
-                # before adding it!
-                #
-                # Set pty window size based on what our own controlling
-                # terminal's window size appears to be.
-                # TODO: make subroutine?
-                winsize = struct.pack('HHHH', rows, cols, 0, 0)
-                fcntl.ioctl(sys.stdout.fileno(), termios.TIOCSWINSZ, winsize)
-                # Use execve for bare-minimum "exec w/ variable # args + env"
-                # behavior. No need for the 'p' (use PATH to find executable)
-                # for now.
-                # TODO: see if subprocess is using equivalent of execvp...
-                os.execve(shell, [shell, '-c', command], env)
+                try:
+                    # TODO: both pty.spawn() and pexpect.spawn() do a lot of
+                    # setup/teardown involving tty.setraw, getrlimit, signal.
+                    # Ostensibly we'll want some of that eventually, but if
+                    # possible write tests - integration-level if necessary -
+                    # before adding it!
+                    #
+                    # Set pty window size based on what our own controlling
+                    # terminal's window size appears to be.
+                    # TODO: make subroutine?
+                    winsize = struct.pack(b'HHHH', rows, cols, 0, 0)
+                    fcntl.ioctl(
+                        sys.stdout.fileno(), termios.TIOCSWINSZ, winsize
+                    )
+                    # Use execve for bare-minimum
+                    # "exec w/ variable args + env" behavior. No need for the
+                    # 'p' (use PATH to find executable) # for now.
+                    # TODO: see if subprocess is using equivalent of execvp...
+                    os.execve(shell, [shell, '-c', command], env)
+                except Exception:
+                    # Prevent process hanging when something wrong happened
+                    # here, for example, encoding error in `execve`
+                    import traceback
+                    traceback.print_exc()
+                    # We forcefully terminate this fork branch to simulate
+                    # no-op `execve`
+                    os._exit(1)
         else:
             self.process = Popen(
                 command,
@@ -871,6 +915,20 @@ class Local(Runner):
             )
 
     def default_encoding(self):
+        # Based on some experiments there is an issue with
+        # `locale.getpreferredencoding(do_setlocale=False)` in Python 2.x on
+        # Linux and OS X, and `locale.getpreferredencoding(do_setlocale=True)`
+        # triggers some global state changes:
+        # https://github.com/pyinvoke/invoke/pull/274/
+        if six.PY2 and not WINDOWS:
+            # This is a workaround, please, report if there is a case when it
+            # doesn't work.
+            default_locale_encoding = locale.getdefaultlocale()[1]
+            # It is known that when default locale is C (POSIX), Python
+            # returns None.
+            if default_locale_encoding is not None:
+                return default_locale_encoding
+        # This is a preferred way of getting a default encoding.
         return locale.getpreferredencoding(False)
 
     @property
@@ -911,6 +969,7 @@ class Local(Runner):
             return self.process.returncode
 
 
+@six.python_2_unicode_compatible
 class Result(object):
     """
     A container for information about the result of a command execution.
@@ -962,9 +1021,10 @@ class Result(object):
         ret = ["Command exited with status {0}.".format(self.exited)]
         for x in ('stdout', 'stderr'):
             val = getattr(self, x)
-            ret.append("""=== {0} ===
-{1}
-""".format(x, val.rstrip()) if val else "(no {0})".format(x))
+            if val:
+                ret.append("=== {0} ===\n{1}".format(x, val.rstrip()))
+            else:
+                ret.append("(no {0})".format(x))
         return "\n".join(ret)
 
     @property

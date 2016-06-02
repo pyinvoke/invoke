@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 import os
 import sys
 
@@ -5,6 +7,7 @@ from spec import Spec, trap, eq_, skip, ok_
 
 from invoke import run
 from invoke._version import __version__
+from invoke.exceptions import Failure
 from invoke.platform import WINDOWS
 
 
@@ -84,18 +87,56 @@ class Main(Spec):
                 cmd = "type tree.out"
             else:
                 cmd = "cat tree.out"
-            run(cmd, hide='both')
+            run(cmd)
 
         def nonprinting_bytes(self):
             # Seriously non-printing characters (i.e. non UTF8) also don't
             # asplode
-            run("echo '\xff'", hide='both')
+            try:
+                run(b"echo '\xff'")
+            except TypeError:
+                if sys.version_info > (3, 0) and sys.version_info < (3, 3):
+                    # Python 3.2 is known to raise TypeError here
+                    pass
+                else:
+                    raise
 
         def nonprinting_bytes_pty(self):
             if WINDOWS:
                 return
             # PTY use adds another utf-8 decode spot which can also fail.
-            run("echo '\xff'", pty=True, hide='both')
+            run(b"echo '\xff'", pty=True)
+
+        def nonprinting_bytes_in_unicode(self):
+            # Seriously non-printing characters (i.e. non UTF8) should fail as
+            # we cannot just automatically ignore/replace encoding issues in
+            # user commands
+            try:
+                run("echo '\xff'")
+            except (TypeError, UnicodeEncodeError):
+                if sys.stdout.encoding == 'UTF-8':
+                    raise
+            else:
+                if sys.stdout.encoding != 'UTF-8':
+                    raise Exception(
+                        "Non-printing bytes in unicode command must fail"
+                    )
+
+        def nonprinting_bytes_in_unicode_pty(self):
+            if WINDOWS:
+                return
+            # PTY use adds another utf-8 decode spot which should also fail
+            # when user command has non-encodable symbols.
+            try:
+                run("echo '\xff'", pty=True)
+            except Failure:
+                if sys.stdout.encoding == 'UTF-8':
+                    raise
+            else:
+                if sys.stdout.encoding != 'UTF-8':
+                    raise Exception(
+                        "Non-printing bytes in unicode command must fail"
+                    )
 
     def pty_puts_both_streams_in_stdout(self):
         if WINDOWS:

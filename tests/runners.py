@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 import locale
 import os
 import sys
@@ -12,6 +14,7 @@ from mock import patch, Mock, call
 
 from invoke import Runner, Local, Context, Config, Failure, ThreadException
 from invoke.platform import WINDOWS
+from invoke.vendor import six
 
 from _util import mock_subprocess, mock_pty, skip_if_windows
 
@@ -269,10 +272,17 @@ class Runner_(Spec):
             assert_contains(sys.stdout.getvalue(), "yup")
 
         @trap
-        def uses_ansi_bold(self):
+        def uses_ansi_bold_for_unicode(self):
             self._run("my command", echo=True)
             # TODO: vendor & use a color module
             eq_(sys.stdout.getvalue(), "\x1b[1;37mmy command\x1b[0m\n")
+
+        @trap
+        def uses_ansi_bold_for_bytes(self):
+            self._run(b"my command", echo=True)
+            # TODO: vendor & use a color module
+            eq_(sys.stdout.getvalue(), "\x1b[1;37mb'my command'\x1b[0m\n")
+
 
     class encoding:
         # Use UTF-7 as a valid encoding unlikely to be a real default
@@ -432,7 +442,7 @@ class Runner_(Spec):
         def exceptions_get_logged(self, mock_debug):
             # Make write_stdin asplode
             klass = self._mock_stdin_writer()
-            klass.write_stdin.side_effect = OhNoz("oh god why")
+            klass.write_stdin.side_effect = OhNoz(str("oh god why"))
             # Execute with some stdin to trigger that asplode (but skip the
             # actual bubbled-up raising of it so we can check things out)
             try:
@@ -873,6 +883,12 @@ class Local_(Spec):
             with patch('invoke.runners.codecs') as codecs:
                 self._run(_)
                 local_encoding = locale.getpreferredencoding(False)
+                # Please, read more about this in
+                # invoke.runners.Local.default_encoding.
+                if six.PY2 and not WINDOWS:
+                    default_locale_encoding = locale.getdefaultlocale()[1]
+                    if default_locale_encoding is not None:
+                        local_encoding = default_locale_encoding
                 _expect_encoding(codecs, local_encoding)
 
     class send_interrupt:
