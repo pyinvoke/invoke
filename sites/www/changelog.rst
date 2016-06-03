@@ -2,12 +2,12 @@
 Changelog
 =========
 
-* :bug:`350` (also :issue:`274`, :issue:`241`, :issue:`262`, :issue:`242`)
-  Clean up and reorganize encoding-related parts of the code to avoid some of
-  the more common or egregious encode/decode errors surrounding clearly
-  non-ASCII-compatible text. Bug reports, assistance, feedback and code
-  examples courtesy of Paul Moore, Vlad Frolov, Christian Aichinger, Fotis
-  Gimian, and others.
+* :bug:`350` (also :issue:`274`, :issue:`241`, :issue:`262`, :issue:`242`,
+  :issue:`321`, :issue:`338`) Clean up and reorganize encoding-related parts of
+  the code to avoid some of the more common or egregious encode/decode errors
+  surrounding clearly non-ASCII-compatible text. Bug reports, assistance,
+  feedback and code examples courtesy of Paul Moore, Vlad Frolov, Christian
+  Aichinger, Fotis Gimian, Daniel Nunes, and others.
 * :bug:`351` Protect against ``run`` deadlocks involving exceptions in I/O
   threads & nontrivial amounts of unread data in the corresponding subprocess
   pipe(s). This situation should now always result in exceptions instead of
