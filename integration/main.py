@@ -10,6 +10,8 @@ from invoke import run
 from invoke._version import __version__
 from invoke.platform import WINDOWS
 
+from _util import only_utf8
+
 
 def _output_eq(cmd, expected):
     return eq_(run(cmd, hide=True).stdout, expected)
@@ -87,17 +89,20 @@ class Main(Spec):
                         data.encode('ascii')
             self.bad_stdout = BadlyBehavedStdout()
 
+        @only_utf8
         def basic_nonstandard_characters(self):
             os.chdir('_support')
             # Crummy "doesn't explode with decode errors" test
             cmd = ("type" if WINDOWS else "cat") + " tree.out"
             run(cmd, hide='stderr', out_stream=self.bad_stdout)
 
+        @only_utf8
         def nonprinting_bytes(self):
             # Seriously non-printing characters (i.e. non UTF8) also don't
             # asplode (they would print as escapes normally, but still)
             run("echo '\xff'", hide='stderr', out_stream=self.bad_stdout)
 
+        @only_utf8
         def nonprinting_bytes_pty(self):
             if WINDOWS:
                 return
