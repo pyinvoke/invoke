@@ -39,8 +39,9 @@ class _Dummy(Runner):
     def _write_proc_stdin(self, data):
         pass
 
-    def wait(self):
-        pass
+    @property
+    def process_is_finished(self):
+        return True
 
     def returncode(self):
         return 0
