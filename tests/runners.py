@@ -10,6 +10,8 @@ from spec import (
 )
 from mock import patch, Mock, call
 
+from invoke.vendor import six
+
 from invoke import Runner, Local, Context, Config, Failure, ThreadException
 from invoke.platform import WINDOWS
 
@@ -300,8 +302,22 @@ class Runner_(Spec):
             skip()
 
         def uses_locale_module_for_default_encoding(self):
-            local_encoding = locale.getpreferredencoding()
-            eq_(self._runner().default_encoding(), local_encoding)
+            # Actually testing this highly OS/env specific stuff is very
+            # error-prone; so we degrade to just testing expected function
+            # calls for now :(
+            with patch('invoke.runners.locale') as fake_locale:
+                fake_locale.getdefaultlocale.return_value = ('meh', 'UHF-8')
+                fake_locale.getpreferredencoding.return_value = 'FALLBACK'
+                expected = 'UHF-8' if six.PY2 else 'FALLBACK'
+                eq_(self._runner().default_encoding(), expected)
+
+        def falls_back_to_defaultlocale_when_preferredencoding_is_None(self):
+            if not six.PY3:
+                skip()
+            with patch('invoke.runners.locale') as fake_locale:
+                fake_locale.getdefaultlocale.return_value = (None, None)
+                fake_locale.getpreferredencoding.return_value = 'FALLBACK'
+                eq_(self._runner().default_encoding(), 'FALLBACK')
 
     class output_hiding:
         @trap
