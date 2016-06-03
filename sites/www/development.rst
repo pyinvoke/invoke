@@ -20,6 +20,11 @@ We follow `contribution-guide.org`_ for all of our development - please `go
 there`_ for details on submitting patches, which branch(es) to work out of,
 and so on. Our issue tracker is on `our GitHub page`_.
 
+Changelog location
+==================
+
+Invoke's changelog lives in ``sites/www/changelog.rst`` and is formatted
+using the `Releases <https://releases.readthedocs.io>`_ Sphinx plugin.
 
 Running management tasks
 ========================
