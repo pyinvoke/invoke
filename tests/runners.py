@@ -40,7 +40,7 @@ class _Dummy(Runner):
         pass
 
     def default_encoding(self):
-        return "US-ASCII"
+        return "UTF-8"
 
     def wait(self):
         pass
@@ -883,7 +883,7 @@ class Local_(Spec):
         # strategy of examining <Runner instance>.encoding.
         @mock_subprocess()
         def uses_locale_module_for_desired_encoding(self):
-            local_encoding = locale.getpreferredencoding(False)
+            local_encoding = locale.getpreferredencoding()
             runner = self._runner()
             runner.run(_)
             eq_(runner.encoding, local_encoding)
