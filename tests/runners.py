@@ -39,9 +39,6 @@ class _Dummy(Runner):
     def _write_proc_stdin(self, data):
         pass
 
-    def default_encoding(self):
-        return "UTF-8"
-
     def wait(self):
         pass
 
@@ -300,6 +297,10 @@ class Runner_(Spec):
 
         def honors_kwarg(self):
             skip()
+
+        def uses_locale_module_for_default_encoding(self):
+            local_encoding = locale.getpreferredencoding()
+            eq_(self._runner().default_encoding(), local_encoding)
 
     class output_hiding:
         @trap
@@ -877,16 +878,6 @@ class Local_(Spec):
                 e = e.exceptions[0]
                 eq_(e.type, OSError)
                 eq_(str(e.value), "wat")
-
-    class encoding:
-        # NOTE: see comments under tests for Runner.encoding re: this test
-        # strategy of examining <Runner instance>.encoding.
-        @mock_subprocess()
-        def uses_locale_module_for_desired_encoding(self):
-            local_encoding = locale.getpreferredencoding()
-            runner = self._runner()
-            runner.run(_)
-            eq_(runner.encoding, local_encoding)
 
     class send_interrupt:
         def _run(self, pty):

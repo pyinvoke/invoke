@@ -831,7 +831,9 @@ class Runner(object):
 
         This return value should be suitable for use by encode/decode methods.
         """
-        raise NotImplementedError
+        # TODO: probably wants to be 2 methods, one for local and one for
+        # subprocess. For now, good enough to assume both are the same.
+        return locale.getpreferredencoding()
 
     def send_interrupt(self):
         """
@@ -949,14 +951,6 @@ class Local(Runner):
                 stderr=PIPE,
                 stdin=PIPE,
             )
-
-    def default_encoding(self):
-        # TODO: see notes about this in #274, determine if we should change
-        # this, handle corner cases, or make it easier for users to override
-        # TODO: may want to break this up into "local encoding" (can be in
-        # Runner) and "subprocess encoding" (still here)
-        # TODO: test for the problems with using False???
-        return locale.getpreferredencoding()
 
     @property
     def process_is_finished(self):
