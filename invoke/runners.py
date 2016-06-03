@@ -833,7 +833,17 @@ class Runner(object):
         """
         # TODO: probably wants to be 2 methods, one for local and one for
         # subprocess. For now, good enough to assume both are the same.
-        return locale.getpreferredencoding()
+        #
+        # Based on some experiments there is an issue with
+        # `locale.getpreferredencoding(do_setlocale=False)` in Python 2.x on
+        # Linux and OS X, and `locale.getpreferredencoding(do_setlocale=True)`
+        # triggers some global state changes. (See #274 for discussion.)
+        encoding = locale.getpreferredencoding(False)
+        if six.PY2 and not WINDOWS:
+            default = locale.getdefaultlocale()[1]
+            if default is not None:
+                encoding = default
+        return encoding
 
     def send_interrupt(self):
         """
