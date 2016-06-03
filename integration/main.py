@@ -85,7 +85,7 @@ class Main(Spec):
         def setup(self):
             class BadlyBehavedStdout(io.TextIOBase):
                 def write(self, data):
-                    if not isinstance(data, six.binary_type):
+                    if six.PY2 and not isinstance(data, six.binary_type):
                         data.encode('ascii')
             self.bad_stdout = BadlyBehavedStdout()
 
