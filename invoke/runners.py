@@ -29,7 +29,7 @@ from .exceptions import Failure, ThreadException
 from .platform import (
     WINDOWS, pty_size, character_buffered, ready_for_reading, read_byte,
 )
-from .util import has_fileno, isatty, ExceptionHandlingThread, debug
+from .util import has_fileno, isatty, ExceptionHandlingThread
 
 from .vendor import six
 
