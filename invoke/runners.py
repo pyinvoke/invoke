@@ -461,9 +461,18 @@ class Runner(object):
 
         :returns: ``None``.
         """
-        # TODO: originally thought we would want to encode first, but
-        # io.TextIOWrapper wants to do the encoding itself. Are there any
-        # situations where that is NOT the case and we DO want to encode?
+        # Encode under Python 2 only, because of the common problem where
+        # sys.stdout/err on Python 2 end up using sys.getdefaultencoding(),
+        # which is frequently NOT the same thing as the real local terminal
+        # encoding (reflected as sys.stdout.encoding). I.e. even when
+        # sys.stdout.encoding is UTF-8, ascii is still actually used, and
+        # explodes.
+        # Python 3 doesn't have this problem, so we delegate encoding to the
+        # io.*Writer classes involved.
+        if six.PY2:
+            # TODO: split up self.encoding, only use the one for 'local
+            # encoding' here.
+            string = string.encode(self.encoding)
         stream.write(string)
         stream.flush()
 

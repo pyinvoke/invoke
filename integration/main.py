@@ -1,7 +1,10 @@
+import io
 import os
 import sys
 
 from spec import Spec, trap, eq_, skip, ok_
+
+from invoke.vendor import six
 
 from invoke import run
 from invoke._version import __version__
@@ -77,29 +80,30 @@ class Main(Spec):
         skip()
 
     class funky_characters_in_stdout:
+        def setup(self):
+            class BadlyBehavedStdout(io.TextIOBase):
+                def write(self, data):
+                    if not isinstance(data, six.binary_type):
+                        data.encode('ascii')
+            self.bad_stdout = BadlyBehavedStdout()
+
         def basic_nonstandard_characters(self):
             os.chdir('_support')
             # Crummy "doesn't explode with decode errors" test
-            if WINDOWS:
-                cmd = "type tree.out"
-            else:
-                cmd = "cat tree.out"
-            # Have to actually coerce to string for all Python 2 decode errors
-            # to surface. TODO: ideally, hand in some more realistic (and
-            # multiple encodings too) out_stream or something. I'm sure just
-            # str()ing it is still subject to test runner's environment.
-            str(run(cmd, hide='both').stdout)
+            cmd = ("type" if WINDOWS else "cat") + " tree.out"
+            run(cmd, hide='stderr', out_stream=self.bad_stdout)
 
         def nonprinting_bytes(self):
             # Seriously non-printing characters (i.e. non UTF8) also don't
-            # asplode
-            str(run("echo '\xff'", hide='both').stdout)
+            # asplode (they would print as escapes normally, but still)
+            run("echo '\xff'", hide='stderr', out_stream=self.bad_stdout)
 
         def nonprinting_bytes_pty(self):
             if WINDOWS:
                 return
             # PTY use adds another utf-8 decode spot which can also fail.
-            str(run("echo '\xff'", pty=True, hide='both').stdout)
+            run("echo '\xff'", pty=True, hide='stderr',
+                out_stream=self.bad_stdout)
 
     def pty_puts_both_streams_in_stdout(self):
         if WINDOWS:
