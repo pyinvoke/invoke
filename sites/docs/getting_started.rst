@@ -14,9 +14,11 @@ Defining and running task functions
 The core use case for Invoke is setting up a collection of task functions and
 executing them. This is pretty easy -- all you need is to make a file called
 ``tasks.py`` importing the `.task` decorator and decorating one or more
-functions. You will also need to add a
-context argument (named anything you want) as the first positional arg.
-Don't worry about using this context parameter yet. Let's start making a Sphinx docs building task::
+functions. You will also need to add an arbitrarily-named context argument
+(convention is to use ``c``, ``ctx`` or ``context``) as the first positional
+arg. Don't worry about using this context parameter yet.
+
+Let's start with a dummy Sphinx docs building task::
 
     from invoke import task
 
@@ -149,7 +151,7 @@ execution of your task, indicated by name.
 Let's expand our docs builder with a new cleanup task that runs before every
 build (but which, of course, can still be executed on its own)::
 
-    from invoke import task, run
+    from invoke import task
 
     @task
     def clean(ctx):
@@ -187,7 +189,7 @@ task and the ``docs`` module into a single explicit namespace.  When Invoke
 loads your task module, if a `.Collection` object bound as ``ns`` or
 ``namespace`` exists it will get used for the root namespace::
 
-    from invoke import Collection, task, run
+    from invoke import Collection, task
     import docs
 
     @task

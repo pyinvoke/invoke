@@ -282,7 +282,7 @@ values, and build up to using the various configuration mechanisms. A small
 module for building `Sphinx <http://sphinx-doc.org>`_ docs might start out like
 this::
 
-    from invoke import task, run
+    from invoke import task
 
     @task
     def clean(ctx):

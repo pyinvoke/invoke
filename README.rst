@@ -7,10 +7,10 @@ inspiration from various sources to arrive at a powerful & clean feature set.
 
   .. code-block:: python
 
-    from invoke import run, task
+    from invoke import task
 
     @task
-    def clean(docs=False, bytecode=False, extra=''):
+    def clean(ctx, docs=False, bytecode=False, extra=''):
         patterns = ['build']
         if docs:
             patterns.append('docs/_build')
@@ -19,13 +19,13 @@ inspiration from various sources to arrive at a powerful & clean feature set.
         if extra:
             patterns.append(extra)
         for pattern in patterns:
-            run("rm -rf %s" % pattern)
+            ctx.run("rm -rf %s" % pattern)
 
     @task
-    def build(docs=False):
-        run("python setup.py build")
+    def build(ctx, docs=False):
+        ctx.run("python setup.py build")
         if docs:
-            run("sphinx-build docs docs/_build")
+            ctx.run("sphinx-build docs docs/_build")
 
 * From GNU Make, it inherits an emphasis on minimal boilerplate for common
   patterns and the ability to run multiple tasks in a single invocation::
