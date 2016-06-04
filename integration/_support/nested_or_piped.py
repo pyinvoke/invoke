@@ -1,9 +1,9 @@
-from invoke import ctask
+from invoke import task
 
-@ctask
+@task
 def calls_foo(c):
     c.run("inv -c nested_or_piped foo")
 
-@ctask
+@task
 def foo(c):
     c.run("echo meh")

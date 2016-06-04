@@ -1,7 +1,7 @@
-from invoke import ctask
+from invoke import task
 
 
-@ctask
+@task
 def expect(c, subroutine, pty=True):
     """
     Call a subroutine within signaling.py, then sleep, waiting for a signal.
