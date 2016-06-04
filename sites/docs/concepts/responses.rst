@@ -37,7 +37,7 @@ You *could* simply call ``run("excitable-program")``, manually watch for the
 prompt, and mash Y by hand. But if you instead supply ``responses`` like so::
 
     responses = {r"Are you ready? \[Y/n\] ": "y\n"}
-    run("excitable-program", responses=responses)
+    ctx.run("excitable-program", responses=responses)
 
 Then `.Runner` will monitor the program's ``stdout`` and ``stderr`` for the
 existence of ``"Are you ready? [Y/n] "`` and automatically write ``y`` (plus

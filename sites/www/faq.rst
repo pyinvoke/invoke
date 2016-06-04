@@ -43,16 +43,14 @@ Defining/executing tasks
 My task's first argument isn't showing up in ``--help``!
 --------------------------------------------------------
 
-Make sure your task isn't :ref:`contextualized <concepts-context>`
-unexpectedly! Put another way, this problem pops up if you're using `@ctask
-<invoke.tasks.ctask>` and forget to define an initial context argument for
+This problem pops up if you forget to define an initial context argument for
 your task.
 
 For example, can you spot the problem in this sample task file?
 
 ::
 
-    from invoke import ctask as task
+    from invoke import task
 
     @task
     def build(ctx, where, clean=False):

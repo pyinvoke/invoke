@@ -14,12 +14,14 @@ Defining and running task functions
 The core use case for Invoke is setting up a collection of task functions and
 executing them. This is pretty easy -- all you need is to make a file called
 ``tasks.py`` importing the `.task` decorator and decorating one or more
-functions. Let's start making a Sphinx docs building task::
+functions. You will also need to add a
+context argument (named anything you want) as the first positional arg.
+Don't worry about using this context parameter yet. Let's start making a Sphinx docs building task::
 
     from invoke import task
 
     @task
-    def build():
+    def build(ctx):
         print("Building!")
 
 You can then execute that new task by telling Invoke's command line runner,
@@ -41,7 +43,7 @@ a ``clean`` argument and give it a boolean default, it will show up as a set of
 toggle flags, ``--clean`` and ``-c``::
 
     @task
-    def build(clean=False):
+    def build(ctx, clean=False):
         if clean:
             print("Cleaning!")
         print("Building!")
@@ -57,7 +59,7 @@ also be given as positional arguments. Take this incredibly contrived snippet
 for example::
 
     @task
-    def hi(name):
+    def hi(ctx, name):
         print("Hi %s!" % name)
 
 It can be invoked in the following ways, all resulting in "Hi Jeff!"::
@@ -115,13 +117,13 @@ Running shell commands
 ======================
 
 Many use cases for Invoke involve running local shell commands, similar to
-programs like Make or Rake. This is done via the `~invoke.run` function::
+programs like Make or Rake. This is done via the `~.Context.run` function::
 
     from invoke import task, run
 
     @task
-    def build():
-        run("sphinx-build docs docs/_build")
+    def build(ctx):
+        ctx.run("sphinx-build docs docs/_build")
 
 You'll see the command's output in your terminal as it runs::
 
@@ -131,10 +133,10 @@ You'll see the command's output in your terminal as it runs::
     ...
     build succeeded, 2 warnings.
 
-`~invoke.run` returns a useful `.Result` object providing access to the
+`~.Context.run` returns a useful `.Result` object providing access to the
 captured output, exit code, and so forth; it also allows you to activate a PTY,
 hide output (so it is captured only), and more. See `its API docs
-<invoke.run>` for details.
+<Context.run>` for details.
 
 
 Declaring pre-tasks
@@ -150,12 +152,12 @@ build (but which, of course, can still be executed on its own)::
     from invoke import task, run
 
     @task
-    def clean():
-        run("rm -rf docs/_build")
+    def clean(ctx):
+        ctx.run("rm -rf docs/_build")
 
     @task(clean)
-    def build():
-        run("sphinx-build docs docs/_build")
+    def build(ctx):
+        ctx.run("sphinx-build docs docs/_build")
 
 Now when you ``invoke build``, it will automatically run ``clean`` first.
 
@@ -189,8 +191,8 @@ loads your task module, if a `.Collection` object bound as ``ns`` or
     import docs
 
     @task
-    def deploy():
-        run("python setup.py sdist register upload")
+    def deploy(ctx):
+        ctx.run("python setup.py sdist register upload")
 
     namespace = Collection(docs, deploy)
 
@@ -205,36 +207,3 @@ The result::
 
 For a more detailed breakdown of how namespacing works, please see :doc:`the
 docs <concepts/namespaces>`.
-
-
-Using contexts
-==============
-
-While fully configurable via keyword arguments, `~invoke.run` is a pure
-function and knows nothing about the greater application. This is a problem
-when you want to alter behavior globally, such as changing the default
-fail-fast behavior, or always using a pty when running commands. It's possible
-to use module-level globals in Python, but this is a bad idea for many reasons.
-
-Instead, Invoke lets you *contextualize* tasks by passing in a context object
-containing information from whatever's executing the task (typically, the CLI
-parser.)
-
-It's quite easy: use `@ctask <.ctask>` instead of `@task <.task>` and add a
-context argument (named anything you want) as the first positional arg. Then
-use the context object's `~.Context.run` method instead of the global
-function::
-
-    from invoke import ctask as task
-
-    @task
-    def mytask(ctx, other_args):
-        ctx.run("some command")
-
-This method wraps the same machinery that `~invoke.run` uses, but is able to
-honor CLI flags like :option:`-e` or :option:`-p`.
-
-Context objects can also serve as vectors for arbitrary config values -
-allowing greater reuse of your task modules.
-
-See :doc:`the detailed context docs </concepts/context>` for details.

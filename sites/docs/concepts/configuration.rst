@@ -251,7 +251,7 @@ the root will win, versus inner ones closer to the task being invoked.
 
 A quick example of what this means::
 
-    from invoke import Collection, ctask as task
+    from invoke import Collection, task
 
     # This task & collection could just as easily come from another module
     # somewhere.
@@ -277,7 +277,7 @@ Example
 Setup
 -----
 
-As an example, we'll start out with some semi-realistic, non-contextualized
+As an example, we'll start out with some semi-realistic
 tasks that hardcode their values, and build up to using the various
 configuration mechanisms. A small module for building `Sphinx
 <http://sphinx-doc.org>`_ docs might start out like this::
@@ -285,11 +285,11 @@ configuration mechanisms. A small module for building `Sphinx
     from invoke import task, run
 
     @task
-    def clean():
+    def clean(ctx):
         run("rm -rf docs/_build")
 
     @task
-    def build():
+    def build(ctx):
         run("sphinx-build docs docs/_build")
 
 Then maybe you refactor the build target::
@@ -297,11 +297,11 @@ Then maybe you refactor the build target::
     target = "docs/_build"
 
     @task
-    def clean():
+    def clean(ctx):
         run("rm -rf {0}".format(target))
 
     @task
-    def build():
+    def build(ctx):
         run("sphinx-build docs {0}".format(target))
 
 We can also allow runtime parameterization::
@@ -309,16 +309,16 @@ We can also allow runtime parameterization::
     default_target = "docs/_build"
 
     @task
-    def clean(target=default_target):
+    def clean(ctx, target=default_target):
         run("rm -rf {0}".format(target))
 
     @task
-    def build(target=default_target):
+    def build(ctx, target=default_target):
         run("sphinx-build docs {0}".format(target))
 
 This task module works for a single set of users, but what if we want to allow
 reuse? Somebody may want to use this module with a different default target.
-You *can* kludge it using non-contextualized tasks, but using a context to
+You *can* kludge it without using the task context, but using the context to
 configure these settings is usually the better solution [1]_.
 
 Switching to contexts
@@ -327,10 +327,9 @@ Switching to contexts
 The configuration `setting <.Collection.configure>` and `getting
 <.Context.config>` APIs make it easy to move otherwise 'hardcoded' default
 values into a config structure which downstream users are free to redefine.
-Let's apply this to our example. First we switch to using contextualized tasks
-and add an explicit namespace object::
+Let's apply this to our example. First we add an explicit namespace object::
 
-    from invoke import Collection, ctask as task
+    from invoke import Collection, task
 
     default_target = "docs/_build"
 
@@ -374,7 +373,7 @@ tree into which a distributed module has been imported. E.g. if the above
 module is distributed as ``myproject.docs``, someone can define a ``tasks.py``
 that does this::
 
-    from invoke import Collection, ctask as task
+    from invoke import Collection, task
     from myproject import docs
 
     @task

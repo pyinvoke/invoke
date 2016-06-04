@@ -181,7 +181,7 @@ However, in some cases, you want the opposite - a default of ``True``, which
 can be easily disabled. For example, colored output::
 
     @task
-    def run_tests(color=True):
+    def run_tests(ctx, color=True):
         # ...
 
 Here, what we really want on the command line is a ``--no-color`` flag that

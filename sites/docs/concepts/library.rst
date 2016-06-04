@@ -96,11 +96,11 @@ like)::
     from invoke import task
 
     @task
-    def unit():
+    def unit(ctx):
         print("Running unit tests!")
 
     @task
-    def integration():
+    def integration(ctx):
         print("Running integration tests!")
 
 As described in :doc:`/concepts/namespaces`, you can arrange this module

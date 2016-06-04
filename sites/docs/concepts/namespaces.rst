@@ -33,7 +33,7 @@ Add tasks with `.Collection.add_task`. `~.Collection.add_task` can take an
     from invoke import Collection, task, run
 
     @task
-    def release():
+    def release(ctx):
         run("python setup.py sdist register upload")
 
     ns = Collection()
@@ -60,7 +60,7 @@ Naming your function itself ``dir`` is a bad idea, but you can name the
 function something like ``dir_`` and then tell ``@task`` the "real" name::
 
     @task(name='dir')
-    def dir_():
+    def dir_(ctx):
         # ...
 
 On the other side, you might have obtained a task object that doesn't fit with
@@ -119,11 +119,11 @@ collection via `.Collection.add_collection`. For example, let's say we have a
 couple of documentation tasks::
 
     @task
-    def build_docs():
+    def build_docs(ctx):
         run("sphinx-build docs docs/_build")
 
     @task
-    def clean_docs():
+    def clean_docs(ctx):
         run("rm -rf docs/_build")
 
 We can bundle them up into a new, named collection like so::
@@ -186,7 +186,7 @@ package with several submodules. First, ``tasks/release.py``::
     from invoke import task, run
 
     @task
-    def release():
+    def release(ctx):
         run("python setup.py sdist register upload")
 
 And ``tasks/docs.py``::
@@ -194,11 +194,11 @@ And ``tasks/docs.py``::
     from invoke import task, run
 
     @task
-    def build():
+    def build(ctx):
         run("sphinx-build docs docs/_build")
 
     @task
-    def clean():
+    def clean(ctx):
         run("rm -rf docs/_build")
 
 Tying them together is ``tasks/__init__.py``::
@@ -243,7 +243,7 @@ far, the ``build`` task makes sense as a default, so we can say things like
 ``invoke docs`` as a shortcut to ``invoke docs.build``. This is easy to do::
 
     @task(default=True)
-    def build():
+    def build(ctx):
         # ...
 
 When imported into the root namespace (as shown above) this alters the output
