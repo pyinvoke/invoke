@@ -439,12 +439,7 @@ class Runner(object):
             data = reader(self.read_chunk_size)
             if not data:
                 break
-            # Only decode if the data seems binary. If it already seems to be a
-            # Unicode string (e.g. we're reading from some in-memory object
-            # and not a terminal stream), assume it's already decoded/okay.
-            if isinstance(data, six.binary_type):
-                data = self.decode(data)
-            yield data
+            yield self.decode(data)
 
     def write_our_output(self, stream, string):
         """

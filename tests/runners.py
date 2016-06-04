@@ -1,8 +1,10 @@
 import os
 import sys
 import types
-from invoke.vendor.six import StringIO
+from io import BytesIO
 from signal import SIGINT, SIGTERM
+
+from invoke.vendor.six import StringIO, b
 
 from spec import (
     Spec, trap, eq_, skip, ok_, raises, assert_contains, assert_not_contains
@@ -72,8 +74,8 @@ def _runner(out='', err='', **kwargs):
     runner = klass(Context(config=Config(overrides=kwargs)))
     if 'exits' in kwargs:
         runner.returncode = Mock(return_value=kwargs.pop('exits'))
-    out_file = StringIO(out)
-    err_file = StringIO(err)
+    out_file = BytesIO(b(out))
+    err_file = BytesIO(b(err))
     runner.read_proc_stdout = out_file.read
     runner.read_proc_stderr = err_file.read
     return runner
