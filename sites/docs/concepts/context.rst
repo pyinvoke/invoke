@@ -18,3 +18,5 @@ Invoke encapsulates its state in an explicit `~.Context` object, handed to
 tasks when they execute or instantiated and used by hand. The context is the
 primary API endpoint, offering methods which honor the current state (such as
 `.Context.run`) as well as access to that state itself.
+
+.. TODO: consolidate this with something else now that it's smaller
