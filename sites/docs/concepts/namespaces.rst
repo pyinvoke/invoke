@@ -34,7 +34,7 @@ Add tasks with `.Collection.add_task`. `~.Collection.add_task` can take an
 
     @task
     def release(ctx):
-        run("python setup.py sdist register upload")
+        ctx.run("python setup.py sdist register upload")
 
     ns = Collection()
     ns.add_task(release)
@@ -120,11 +120,11 @@ couple of documentation tasks::
 
     @task
     def build_docs(ctx):
-        run("sphinx-build docs docs/_build")
+        ctx.run("sphinx-build docs docs/_build")
 
     @task
     def clean_docs(ctx):
-        run("rm -rf docs/_build")
+        ctx.run("rm -rf docs/_build")
 
 We can bundle them up into a new, named collection like so::
 
@@ -187,7 +187,7 @@ package with several submodules. First, ``tasks/release.py``::
 
     @task
     def release(ctx):
-        run("python setup.py sdist register upload")
+        ctx.run("python setup.py sdist register upload")
 
 And ``tasks/docs.py``::
 
@@ -195,11 +195,11 @@ And ``tasks/docs.py``::
 
     @task
     def build(ctx):
-        run("sphinx-build docs docs/_build")
+        ctx.run("sphinx-build docs docs/_build")
 
     @task
     def clean(ctx):
-        run("rm -rf docs/_build")
+        ctx.run("rm -rf docs/_build")
 
 Tying them together is ``tasks/__init__.py``::
 
