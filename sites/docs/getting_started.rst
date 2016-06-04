@@ -138,7 +138,7 @@ You'll see the command's output in your terminal as it runs::
 `~.Context.run` returns a useful `.Result` object providing access to the
 captured output, exit code, and so forth; it also allows you to activate a PTY,
 hide output (so it is captured only), and more. See `its API docs
-<Context.run>` for details.
+<.Context.run>` for details.
 
 
 Declaring pre-tasks
