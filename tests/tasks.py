@@ -155,6 +155,25 @@ class Task_(Spec):
         def can_override_name(self):
             eq_(Task(_func, name='foo').name, 'foo')
 
+    class call_types:
+        def can_be_functions(self):
+            @task
+            def a_task():
+                return 10
+            eq_(a_task(), 10)
+        def can_be_classes(self):
+            class ATask(object):
+                def __call__(self):
+                    return 10
+            a_task = task(ATask())
+            eq_(a_task(), 10)
+        def can_be_methods(self):
+            class AnObj(object):
+                def foo(self):
+                    return 10
+            a_task = task(AnObj().foo)
+            eq_(a_task(), 10)
+
     class callability:
         def setup(self):
             @task

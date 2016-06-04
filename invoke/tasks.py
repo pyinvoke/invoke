@@ -133,15 +133,28 @@ class Task(object):
         # Handle callable-but-not-function objects
         # TODO: __call__ exhibits the 'self' arg; do we manually nix 1st result
         # in argspec, or is there a way to get the "really callable" spec?
-        func = body if isinstance(body, types.FunctionType) else body.__call__
-        spec = inspect.getargspec(func)
-        arg_names = spec.args[:]
-        matched_args = [reversed(x) for x in [spec.args, spec.defaults or []]]
+        if isinstance(body, types.FunctionType):
+            spec = inspect.getargspec(body)
+            arg_names = spec.args[:]
+        elif isinstance(body, types.MethodType):
+            spec = inspect.getargspec(body)
+            arg_names = spec.args[1:]
+        else:
+            spec = inspect.getargspec(body.__call__)
+            arg_names = spec.args[1:]
+
+        #func = body if isinstance(body, types.FunctionType) else body.__call__
+        #spec = inspect.getargspec(func)
+        #arg_names = spec.args[:]
+
+        matched_args = [reversed(x) for x in [arg_names, spec.defaults or []]]
         spec_dict = dict(zip_longest(*matched_args, fillvalue=NO_DEFAULT))
+
         # Remove context argument, if applicable
         if self.contextualized:
             context_arg = arg_names.pop(0)
             del spec_dict[context_arg]
+
         return arg_names, spec_dict
 
     def fill_implicit_positionals(self, positional):
