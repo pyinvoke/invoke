@@ -13,3 +13,20 @@ from .platform import pty_size # noqa
 from .program import Program # noqa
 from .runners import Runner, Local, Failure, Result # noqa
 from .tasks import task, call, Call, Task  # noqa
+
+
+def run(command, **kwargs):
+    """
+    Invoke ``command`` in a local subprocess and return a `.Result` object.
+
+    See `.Runner.run` for API details.
+
+    .. note::
+        This function is a convenience wrapper around Invoke's `.Context` and
+        `.Runner` APIs.
+
+        Specifically, it creates an anonymous `.Context` instance and calls its
+        `~.Context.run` method, which in turn defaults to using a `.Local`
+        runner subclass for command execution.
+    """
+    return Context().run(command, **kwargs)
