@@ -11,21 +11,21 @@ class CLIParsing(Spec):
     """
     def setup(self):
         @task(positional=[])
-        def mytask(mystring, s, boolean=False, b=False, v=False,
+        def mytask(ctx, mystring, s, boolean=False, b=False, v=False,
             long_name=False, true_bool=True, _leading_underscore=False,
             trailing_underscore_=False):
             pass
         @task(aliases=['mytask27'])
-        def mytask2():
+        def mytask2(ctx):
             pass
         @task(default=True)
-        def mytask3(mystring):
+        def mytask3(ctx, mystring):
             pass
         @task
-        def mytask4(clean=False, browse=False):
+        def mytask4(ctx, clean=False, browse=False):
             pass
         @task(aliases=['other'], default=True)
-        def subtask():
+        def subtask(ctx):
             pass
         subcoll = Collection('sub', subtask)
         self.c = Collection(mytask, mytask2, mytask3, mytask4, subcoll)

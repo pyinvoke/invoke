@@ -109,8 +109,7 @@ class Executor(object):
             autoprint = call in direct and call.autoprint
             args = call.args
             debug("Executing {0!r}".format(call))
-            if call.contextualized:
-                args = (call.context,) + args
+            args = (call.context,) + args
             result = call.task(*args, **call.kwargs)
             if autoprint:
                 print(result)
@@ -177,11 +176,8 @@ class Executor(object):
             if isinstance(call, Task):
                 call = Call(task=call)
             debug("Expanding task-call {0!r}".format(call))
-            if call.contextualized:
-                debug("Task was contextualized, loading additional configuration") # noqa
-                call.context = Context(config=self.config_for(call, config))
-            else:
-                debug("Task uncontextualized, skipping collection/env config load") # noqa
+            debug("Task was contextualized, loading additional configuration") # noqa
+            call.context = Context(config=self.config_for(call, config))
             # NOTE: handing in original config, not the mutated one handed to
             # the Context above. Pre/post tasks may well come from a different
             # collection, etc. Also just cleaner.

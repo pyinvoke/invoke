@@ -34,9 +34,6 @@ class Init(Spec):
         def task_decorator(self):
             assert invoke.task is invoke.tasks.task
 
-        def ctask_decorator(self):
-            assert invoke.ctask is invoke.tasks.ctask
-
         def task_class(self):
             assert invoke.Task is invoke.tasks.Task
 
@@ -48,9 +45,6 @@ class Init(Spec):
 
         def config_class(self):
             assert invoke.Config is invoke.config.Config
-
-        def run_function(self):
-            assert invoke.run # lol
 
         def pty_size_function(self):
             assert invoke.pty_size is invoke.platform.pty_size

@@ -3,5 +3,5 @@ from invoke.util import debug
 
 
 @task
-def foo():
+def foo(ctx):
     debug("my-sentinel")

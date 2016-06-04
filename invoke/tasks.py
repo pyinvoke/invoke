@@ -34,7 +34,6 @@ class Task(object):
     def __init__(self,
         body,
         name=None,
-        contextualized=False,
         aliases=(),
         positional=None,
         optional=(),
@@ -50,8 +49,6 @@ class Task(object):
         # Must copy doc/name here because Sphinx is stupid about properties.
         self.__doc__ = getattr(body, '__doc__', '')
         self.__name__ = getattr(body, '__name__', '')
-        # Is this a contextualized task?
-        self.contextualized = contextualized
         # Default name, alternate names, and whether it should act as the
         # default for its parent collection
         self._name = name
@@ -106,9 +103,9 @@ class Task(object):
         return hash(self.name) + hash(self.body)
 
     def __call__(self, *args, **kwargs):
-        # Guard against calling contextualized tasks with no context.
-        if self.contextualized and not isinstance(args[0], Context):
-            err = "Contextualized task expected a Context, got {0} instead!"
+        # Guard against calling tasks with no context.
+        if not isinstance(args[0], Context):
+            err = "Task expected a Context, got {0} instead!"
             raise TypeError(err.format(type(args[0])))
         result = self.body(*args, **kwargs)
         self.times_called += 1
@@ -138,10 +135,9 @@ class Task(object):
         arg_names = spec.args[:]
         matched_args = [reversed(x) for x in [spec.args, spec.defaults or []]]
         spec_dict = dict(zip_longest(*matched_args, fillvalue=NO_DEFAULT))
-        # Remove context argument, if applicable
-        if self.contextualized:
-            context_arg = arg_names.pop(0)
-            del spec_dict[context_arg]
+        # Remove context argument
+        context_arg = arg_names.pop(0)
+        del spec_dict[context_arg]
         return arg_names, spec_dict
 
     def fill_implicit_positionals(self, positional):
@@ -229,9 +225,6 @@ def task(*args, **kwargs):
     * ``name``: Default name to use when binding to a `.Collection`. Useful for
       avoiding Python namespace issues (i.e. when the desired CLI level name
       can't or shouldn't be used as the Python level name.)
-    * ``contextualized``: Hints to callers (especially the CLI) that this task
-      expects to be given a `.Context` object as its first argument when
-      called.
     * ``aliases``: Specify one or more aliases for this task, allowing it to be
       invoked as multiple different names. For example, a task named ``mytask``
       with a simple ``@task`` wrapper may only be invoked as ``"mytask"``.
@@ -265,8 +258,6 @@ def task(*args, **kwargs):
     ``*args`` and ``pre`` at the same time.)
     """
     # @task -- no options were (probably) given.
-    # Also handles ctask's use case when given as @ctask, equivalent to
-    # @task(obj, contextualized=True).
     if len(args) == 1 and callable(args[0]) and not isinstance(args[0], Task):
         return Task(args[0], **kwargs)
     # @task(pre, tasks, here)
@@ -279,7 +270,6 @@ def task(*args, **kwargs):
     # @task(options)
     # TODO: pull in centrally defined defaults here (see Task)
     name = kwargs.pop('name', None)
-    contextualized = kwargs.pop('contextualized', False)
     aliases = kwargs.pop('aliases', ())
     positional = kwargs.pop('positional', None)
     optional = tuple(kwargs.pop('optional', ()))
@@ -297,7 +287,6 @@ def task(*args, **kwargs):
         obj = Task(
             obj,
             name=name,
-            contextualized=contextualized,
             aliases=aliases,
             positional=positional,
             optional=optional,
@@ -310,16 +299,6 @@ def task(*args, **kwargs):
         )
         return obj
     return inner
-
-
-def ctask(*args, **kwargs):
-    """
-    Wrapper for `.task` which sets ``contextualized=True`` by default.
-
-    Please see `.task` for documentation.
-    """
-    kwargs.setdefault('contextualized', True)
-    return task(*args, **kwargs)
 
 
 class Call(object):
@@ -357,8 +336,7 @@ class Call(object):
             Keyword arguments to call with, if any. Default: ``None``.
 
         :param context:
-            `.Context` instance to be used if the wrapped `.Task` is
-            :ref:`contextualized <concepts-context>`. Default: ``None``.
+            `.Context` instance to be used. Default: ``None``.
         """
         self.task = task
         self.called_as = called_as

@@ -11,10 +11,10 @@ from _util import load, support_path
 
 
 @task
-def _mytask():
+def _mytask(ctx):
     six.print_("woo!")
 
-def _func():
+def _func(ctx):
     pass
 
 
@@ -24,10 +24,10 @@ class Collection_(Spec):
         def can_accept_task_varargs(self):
             "can accept tasks as *args"
             @task
-            def task1():
+            def task1(ctx):
                 pass
             @task
-            def task2():
+            def task2(ctx):
                 pass
             c = Collection(task1, task2)
             assert 'task1' in c
@@ -41,7 +41,7 @@ class Collection_(Spec):
         def kwargs_act_as_name_args_for_given_objects(self):
             sub = Collection()
             @task
-            def task1():
+            def task1(ctx):
                 pass
             ns = Collection(loltask=task1, notsub=sub)
             eq_(ns['loltask'], task1)
@@ -54,10 +54,10 @@ class Collection_(Spec):
 
         def initial_string_arg_meshes_with_varargs_and_kwargs(self):
             @task
-            def task1():
+            def task1(ctx):
                 pass
             @task
-            def task2():
+            def task2(ctx):
                 pass
             sub = Collection('sub')
             ns = Collection('root', task1, sub, sometask=task2)
@@ -76,10 +76,10 @@ class Collection_(Spec):
     class useful_special_methods:
         def _meh(self):
             @task
-            def task1():
+            def task1(ctx):
                 pass
             @task
-            def task2():
+            def task2(ctx):
                 pass
             return Collection('meh', task1=task1, task2=task2)
 
@@ -251,7 +251,7 @@ class Collection_(Spec):
 
         def specifying_default_False_overrides_task_setting(self):
             @task(default=True)
-            def its_me():
+            def its_me(ctx):
                 pass
             self.c.add_task(its_me, default=False)
             eq_(self.c.default, None)
@@ -333,13 +333,13 @@ class Collection_(Spec):
     class to_contexts:
         def setup(self):
             @task
-            def mytask(text, boolean=False, number=5):
+            def mytask(ctx, text, boolean=False, number=5):
                 six.print_(text)
             @task(aliases=['mytask27'])
-            def mytask2():
+            def mytask2(ctx):
                 pass
             @task(aliases=['othertask'], default=True)
-            def subtask():
+            def subtask(ctx):
                 pass
             sub = Collection('sub', subtask)
             self.c = Collection(mytask, mytask2, sub)
@@ -358,7 +358,7 @@ class Collection_(Spec):
 
         def positional_arglist_preserves_order_given(self):
             @task(positional=('second', 'first'))
-            def mytask(first, second, third):
+            def mytask(ctx, first, second, third):
                 pass
             c = Collection()
             c.add_task(mytask)

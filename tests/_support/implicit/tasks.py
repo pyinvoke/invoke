@@ -2,5 +2,5 @@ from invoke.tasks import task
 
 
 @task
-def foo():
+def foo(ctx):
     print("Hm")

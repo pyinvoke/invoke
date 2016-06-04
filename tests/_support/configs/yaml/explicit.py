@@ -1,9 +1,9 @@
 from spec import eq_
 
-from invoke import ctask, Collection
+from invoke import task, Collection
 
 
-@ctask
+@task
 def mytask(c):
     eq_(c.hooray, 'yaml')
 

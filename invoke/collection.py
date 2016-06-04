@@ -381,7 +381,7 @@ class Collection(object):
         (Recursively) merge ``options`` into the current `.configuration`.
 
         Options configured this way will be available to all
-        :doc:`contextualized tasks </concepts/context>`. It is recommended to
+        tasks. It is recommended to
         use unique keys to avoid potential clashes with other config options
 
         For example, if you were configuring a Sphinx docs build target

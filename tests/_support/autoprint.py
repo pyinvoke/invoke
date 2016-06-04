@@ -3,22 +3,22 @@ from invoke.collection import Collection
 
 
 @task
-def nope():
+def nope(ctx):
     return "You can't see this"
 
 
 @task(autoprint=True)
-def yup():
+def yup(ctx):
     return "It's alive!"
 
 
 @task(pre=[yup])
-def pre_check():
+def pre_check(ctx):
     pass
 
 
 @task(post=[yup])
-def post_check():
+def post_check(ctx):
     pass
 
 
