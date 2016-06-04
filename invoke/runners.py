@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import codecs
 import locale
 import os
 import re
@@ -30,7 +29,7 @@ from .exceptions import Failure, ThreadException
 from .platform import (
     WINDOWS, pty_size, character_buffered, ready_for_reading, read_byte,
 )
-from .util import has_fileno, isatty, ExceptionHandlingThread, debug
+from .util import has_fileno, isatty, ExceptionHandlingThread
 
 from .vendor import six
 
@@ -236,7 +235,7 @@ class Runner(object):
 
         :raises:
             `.ThreadException` (if the background I/O threads encounter
-            exceptions)
+            exceptions).
 
         :raises:
             ``KeyboardInterrupt``, if the user generates one during command
@@ -290,14 +289,12 @@ class Runner(object):
         for target, kwargs in six.iteritems(thread_args):
             t = ExceptionHandlingThread(target=target, kwargs=kwargs)
             self.threads.append(t)
-            debug("Starting I/O thread for '{0!r}'".format(t))
             t.start()
         # Wait for completion, then tie things off & obtain result
         # And make sure we perform that tying off even if things asplode.
         exception = None
         try:
             self.wait()
-            debug("Wait over - subprocess has terminated")
         except BaseException as e: # Make sure we nab ^C etc
             exception = e
             # TODO: consider consuming the KeyboardInterrupt instead of storing
@@ -412,43 +409,78 @@ class Runner(object):
         """
         return Result(**kwargs)
 
-    def encode(self, data):
+    def read_proc_output(self, reader):
         """
-        Encode ``data`` read from some I/O stream, into a useful str/bytes.
-        """
-        # Sometimes os.read gives us bytes under Python 3...and
-        # sometimes it doesn't. ¯\_(ツ)_/¯
-        if not isinstance(data, six.binary_type):
-            # Can't use six.b because that just assumes latin-1 :(
-            data = data.encode(self.encoding)
-        return data
+        Iteratively read & decode bytes from a subprocess' out/err stream.
 
-    def _handle_output(self, buffer_, hide, output, reader, indices):
-        # Create a generator yielding stdout data.
+        :param reader:
+            A literal reader function/partial, wrapping the actual stream
+            object in question, which takes a number of bytes to read, and
+            returns that many bytes (or ``None``).
+
+            ``reader`` should be a reference to either `read_proc_stdout` or
+            `read_proc_stderr`, which perform the actual, platform/library
+            specific read calls.
+
+        :returns:
+            A generator yielding Unicode strings (`unicode` on Python 2; `str`
+            on Python 3).
+
+            Specifically, each resulting string is the result of decoding
+            `read_chunk_size` bytes read from the subprocess' out/err stream.
+        """
         # NOTE: Typically, reading from any stdout/err (local, remote or
         # otherwise) can be thought of as "read until you get nothing back".
         # This is preferable over "wait until an out-of-band signal claims the
         # process is done running" because sometimes that signal will appear
         # before we've actually read all the data in the stream (i.e.: a race
         # condition).
-        def get():
-            while True:
-                data = reader(self.read_chunk_size)
-                if not data:
-                    break
-                yield self.encode(data)
-        # Use that generator in iterdecode so it ends up in our local encoding.
-        for data in codecs.iterdecode(
-            get(), self.encoding, errors='replace'
-        ):
+        while True:
+            data = reader(self.read_chunk_size)
+            if not data:
+                break
+            yield self.decode(data)
+
+    def write_our_output(self, stream, string):
+        """
+        Write ``string`` to ``stream``.
+
+        Also calls ``.flush()`` on ``stream`` to ensure that real terminal
+        streams don't buffer.
+
+        :param stream:
+            A file-like stream object, mapping to the ``out_stream`` or
+            ``err_stream`` parameters of `run`.
+
+        :param string: A Unicode string object.
+
+        :returns: ``None``.
+        """
+        # Encode under Python 2 only, because of the common problem where
+        # sys.stdout/err on Python 2 end up using sys.getdefaultencoding(),
+        # which is frequently NOT the same thing as the real local terminal
+        # encoding (reflected as sys.stdout.encoding). I.e. even when
+        # sys.stdout.encoding is UTF-8, ascii is still actually used, and
+        # explodes.
+        # Python 3 doesn't have this problem, so we delegate encoding to the
+        # io.*Writer classes involved.
+        if six.PY2:
+            # TODO: split up self.encoding, only use the one for 'local
+            # encoding' here.
+            string = string.encode(self.encoding)
+        stream.write(string)
+        stream.flush()
+
+    def _handle_output(self, buffer_, hide, output, reader, indices):
+        # TODO: store un-decoded/raw bytes somewhere as well...
+        for data in self.read_proc_output(reader):
             # Echo to local stdout if necessary
             # TODO: should we rephrase this as "if you want to hide, give me a
             # dummy output stream, e.g. something like /dev/null"? Otherwise, a
             # combo of 'hide=stdout' + 'here is an explicit out_stream' means
             # out_stream is never written to, and that seems...odd.
             if not hide:
-                output.write(data)
-                output.flush()
+                self.write_our_output(stream=output, string=data)
             # Store in shared buffer so main thread can do things with the
             # result after execution completes.
             # NOTE: this is threadsafe insofar as no reading occurs until after
@@ -476,7 +508,7 @@ class Runner(object):
             buffer_,
             hide,
             output,
-            reader=self.read_stdout,
+            reader=self.read_proc_stdout,
             indices=threading.local(),
         )
 
@@ -491,9 +523,37 @@ class Runner(object):
             buffer_,
             hide,
             output,
-            reader=self.read_stderr,
+            reader=self.read_proc_stderr,
             indices=threading.local(),
         )
+
+    def read_our_stdin(self, input_):
+        """
+        Read & decode one byte from a local stdin stream.
+
+        :param input_:
+            Actual stream object to read from. Maps to ``in_stream`` in `run`,
+            so will often be ``sys.stdin``, but might be any stream-like
+            object.
+
+        :returns:
+            A Unicode string, the result of decoding the read byte (this might
+            be the empty string if the pipe has closed/reached EOF); or
+            ``None`` if stdin wasn't ready for reading yet.
+        """
+        # TODO: consider moving the character_buffered contextmanager call in
+        # here? Downside is it would be flipping those switches for every byte
+        # read instead of once per session, which could be costly (?).
+        byte = None
+        if ready_for_reading(input_):
+            byte = read_byte(input_)
+            # Decode if it appears to be binary-type. (From real terminal
+            # streams, usually yes; from file-like objects, often no.)
+            if byte and isinstance(byte, six.binary_type):
+                # TODO: will decoding 1 byte at a time break multibyte
+                # character encodings? How to square interactivity with that?
+                byte = self.decode(byte)
+        return byte
 
     def handle_stdin(self, input_, output, echo):
         """
@@ -519,37 +579,31 @@ class Runner(object):
         """
         with character_buffered(input_):
             while True:
-                byte = None
-                if ready_for_reading(input_):
-                    # Read 1 byte at a time for interactivity's sake.
-                    byte = read_byte(input_)
-                    # When reading from file-like objects that aren't "real"
-                    # terminal streams, an empty byte signals EOF.
-                    if not byte:
-                        break
+                # Read 1 byte at a time for interactivity's sake.
+                char = self.read_our_stdin(input_)
+                if char:
                     # Mirror what we just read to process' stdin.
                     # We perform an encode so Python 3 gets bytes (streams +
                     # str's in Python 3 == no bueno) but skip the decode step,
                     # since there's presumably no need (nobody's interacting
                     # with this data programmatically).
-                    # TODO: consider baking the encode call into write_stdin
-                    # (needs indirection as actual impl of write_stdin differs
-                    # between subclasses...)
-                    # TODO: will this break with multibyte input character
-                    # encoding?
-                    self.write_stdin(self.encode(byte))
+                    self.write_proc_stdin(char)
                     # Also echo it back to local stdout (or whatever
                     # out_stream is set to) when necessary.
                     if echo is None:
-                        echo = self.echo_stdin(input_, output)
+                        echo = self.should_echo_stdin(input_, output)
                     if echo:
-                        output.write(byte) # TODO: encode?
-                        output.flush()
+                        self.write_our_output(stream=output, string=char)
+                # Empty string/char/byte != None. Can't just use 'else' here.
+                elif char is not None:
+                    # When reading from file-like objects that aren't "real"
+                    # terminal streams, an empty byte signals EOF.
+                    break
                 # Dual all-done signals: program being executed is done
                 # running, *and* we don't seem to be reading anything out of
-                # stdin. (If we only test the former, we may encounter race
-                # conditions re: unread stdin.)
-                if self.program_finished.is_set() and not byte:
+                # stdin. (NOTE: If we only test the former, we may encounter
+                # race conditions re: unread stdin.)
+                if self.program_finished.is_set() and not char:
                     break
                 # Take a nap so we're not chewing CPU.
                 time.sleep(self.input_sleep)
@@ -574,7 +628,7 @@ class Runner(object):
         #        #    sys.stdout.write(byte)
         #        #    sys.stdout.flush()
 
-    def echo_stdin(self, input_, output):
+    def should_echo_stdin(self, input_, output):
         """
         Determine whether data read from ``input_`` should echo to ``output``.
 
@@ -631,12 +685,10 @@ class Runner(object):
             if matches:
                 indices.seek[pattern] += len(new_)
             # Iterate over findall() response in case >1 match occurred.
-            for match in matches:
+            for _ in matches:
                 # TODO: automatically append system-appropriate newline if
                 # response doesn't end with it, w/ option to disable?
-                # NOTE: have to 'encode' response here so Python 3 gets actual
-                # bytes, otherwise os.write gets its knickers atwist.
-                self.write_stdin(self.encode(response))
+                self.write_proc_stdin(response)
 
     def generate_env(self, env, replace_env):
         """
@@ -690,6 +742,26 @@ class Runner(object):
                 break
             time.sleep(self.input_sleep)
 
+    def write_proc_stdin(self, data):
+        """
+        Write encoded ``data`` to the running process' stdin.
+
+        :param data: A Unicode string.
+
+        :returns: ``None``.
+        """
+        # Encode always, then request implementing subclass to perform the
+        # actual write to subprocess' stdin.
+        self._write_proc_stdin(data.encode(self.encoding))
+
+    def decode(self, data):
+        """
+        Decode some ``data`` bytes, returning Unicode.
+        """
+        # NOTE: yes, this is a 1-liner. The point is to make it much harder to
+        # forget to use 'replace' when decoding :)
+        return data.decode(self.encoding, 'replace')
+
     @property
     def process_is_finished(self):
         """
@@ -717,7 +789,7 @@ class Runner(object):
         """
         raise NotImplementedError
 
-    def read_stdout(self, num_bytes):
+    def read_proc_stdout(self, num_bytes):
         """
         Read ``num_bytes`` from the running process' stdout stream.
 
@@ -727,7 +799,7 @@ class Runner(object):
         """
         raise NotImplementedError
 
-    def read_stderr(self, num_bytes):
+    def read_proc_stderr(self, num_bytes):
         """
         Read ``num_bytes`` from the running process' stderr stream.
 
@@ -737,9 +809,16 @@ class Runner(object):
         """
         raise NotImplementedError
 
-    def write_stdin(self, data):
+    def _write_proc_stdin(self, data):
         """
-        Write ``data`` to the running process' stdin.
+        Write ``data`` to running process' stdin.
+
+        This should never be called directly; it's for subclasses to implement.
+        See `write_proc_stdin` for the public API call.
+
+        :param data: Already-encoded byte data suitable for writing.
+
+        :returns: ``None``.
         """
         raise NotImplementedError
 
@@ -747,10 +826,21 @@ class Runner(object):
         """
         Return a string naming the expected encoding of subprocess streams.
 
-        This return value should be suitable for use by methods such as
-        `codecs.iterdecode`.
+        This return value should be suitable for use by encode/decode methods.
         """
-        raise NotImplementedError
+        # TODO: probably wants to be 2 methods, one for local and one for
+        # subprocess. For now, good enough to assume both are the same.
+        #
+        # Based on some experiments there is an issue with
+        # `locale.getpreferredencoding(do_setlocale=False)` in Python 2.x on
+        # Linux and OS X, and `locale.getpreferredencoding(do_setlocale=True)`
+        # triggers some global state changes. (See #274 for discussion.)
+        encoding = locale.getpreferredencoding(False)
+        if six.PY2 and not WINDOWS:
+            default = locale.getdefaultlocale()[1]
+            if default is not None:
+                encoding = default
+        return encoding
 
     def send_interrupt(self):
         """
@@ -796,7 +886,7 @@ class Local(Runner):
                 use_pty = False
         return use_pty
 
-    def read_stdout(self, num_bytes):
+    def read_proc_stdout(self, num_bytes):
         # Obtain useful read-some-bytes function
         if self.using_pty:
             # Need to handle spurious OSErrors on some Linux platforms.
@@ -814,12 +904,12 @@ class Local(Runner):
             data = os.read(self.process.stdout.fileno(), num_bytes)
         return data
 
-    def read_stderr(self, num_bytes):
+    def read_proc_stderr(self, num_bytes):
         # NOTE: when using a pty, this will never be called.
         # TODO: do we ever get those OSErrors on stderr? Feels like we could?
         return os.read(self.process.stderr.fileno(), num_bytes)
 
-    def write_stdin(self, data):
+    def _write_proc_stdin(self, data):
         # NOTE: parent_fd from os.fork() is a read/write pipe attached to our
         # forked process' stdout/stdin, respectively.
         fd = self.parent_fd if self.using_pty else self.process.stdin.fileno()
@@ -837,7 +927,6 @@ class Local(Runner):
             if pty is None: # Encountered ImportError
                 sys.exit("You indicated pty=True, but your platform doesn't support the 'pty' module!") # noqa
             cols, rows = pty_size()
-            debug("using_pty==True, forking...")
             self.pid, self.parent_fd = pty.fork()
             # If we're the child process, load up the actual command in a
             # shell, just as subprocess does; this replaces our process - whose
@@ -869,9 +958,6 @@ class Local(Runner):
                 stderr=PIPE,
                 stdin=PIPE,
             )
-
-    def default_encoding(self):
-        return locale.getpreferredencoding(False)
 
     @property
     def process_is_finished(self):
@@ -962,10 +1048,10 @@ class Result(object):
         ret = ["Command exited with status {0}.".format(self.exited)]
         for x in ('stdout', 'stderr'):
             val = getattr(self, x)
-            ret.append("""=== {0} ===
+            ret.append(u"""=== {0} ===
 {1}
-""".format(x, val.rstrip()) if val else "(no {0})".format(x))
-        return "\n".join(ret)
+""".format(x, val.rstrip()) if val else u"(no {0})".format(x))
+        return u"\n".join(ret)
 
     @property
     def ok(self):

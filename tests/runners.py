@@ -1,14 +1,17 @@
-import locale
 import os
 import sys
 import types
-from invoke.vendor.six import StringIO, b
+from io import BytesIO
 from signal import SIGINT, SIGTERM
+
+from invoke.vendor.six import StringIO, b
 
 from spec import (
     Spec, trap, eq_, skip, ok_, raises, assert_contains, assert_not_contains
 )
 from mock import patch, Mock, call
+
+from invoke.vendor import six
 
 from invoke import Runner, Local, Context, Config, Failure, ThreadException
 from invoke.platform import WINDOWS
@@ -30,20 +33,18 @@ class _Dummy(Runner):
     def start(self, command, shell, env):
         pass
 
-    def read_stdout(self, num_bytes):
+    def read_proc_stdout(self, num_bytes):
         return ""
 
-    def read_stderr(self, num_bytes):
+    def read_proc_stderr(self, num_bytes):
         return ""
 
-    def write_stdin(self, data):
+    def _write_proc_stdin(self, data):
         pass
 
-    def default_encoding(self):
-        return "US-ASCII"
-
-    def wait(self):
-        pass
+    @property
+    def process_is_finished(self):
+        return True
 
     def returncode(self):
         return 0
@@ -62,11 +63,6 @@ class OhNoz(Exception):
     pass
 
 
-def _expect_encoding(codecs, encoding):
-    assert codecs.iterdecode.called
-    for c in codecs.iterdecode.call_args_list:
-        eq_(c[0][1], encoding)
-
 def _run(*args, **kwargs):
     klass = kwargs.pop('klass', _Dummy)
     settings = kwargs.pop('settings', {})
@@ -78,10 +74,10 @@ def _runner(out='', err='', **kwargs):
     runner = klass(Context(config=Config(overrides=kwargs)))
     if 'exits' in kwargs:
         runner.returncode = Mock(return_value=kwargs.pop('exits'))
-    out_file = StringIO(out)
-    err_file = StringIO(err)
-    runner.read_stdout = out_file.read
-    runner.read_stderr = err_file.read
+    out_file = BytesIO(b(out))
+    err_file = BytesIO(b(err))
+    runner.read_proc_stdout = out_file.read
+    runner.read_proc_stderr = err_file.read
     return runner
 
 
@@ -97,11 +93,11 @@ class Runner_(Spec):
 
     def _mock_stdin_writer(self):
         """
-        Return new _Dummy-based class whose write_stdin() method is a mock.
+        Return new _Dummy subclass whose write_proc_stdin() method is a mock.
         """
         class MockedStdin(_Dummy):
             pass
-        MockedStdin.write_stdin = Mock()
+        MockedStdin.write_proc_stdin = Mock()
         return MockedStdin
 
 
@@ -275,24 +271,54 @@ class Runner_(Spec):
             eq_(sys.stdout.getvalue(), "\x1b[1;37mmy command\x1b[0m\n")
 
     class encoding:
-        # Use UTF-7 as a valid encoding unlikely to be a real default
+        # NOTE: these tests just check what Runner.encoding ends up as; it's
+        # difficult/impossible to mock string objects themselves to see what
+        # .decode() is being given :(
+        #
+        # TODO: consider using truly "nonstandard"-encoded byte sequences as
+        # fixtures, encoded with something that isn't compatible with UTF-8
+        # (UTF-7 kinda is, so...) so we can assert that the decoded string is
+        # equal to its Unicode equivalent.
+        #
+        # Use UTF-7 as a valid encoding unlikely to be a real default derived
+        # from test-runner's locale.getpreferredencoding()
         def defaults_to_encoding_method_result(self):
+            # Setup
             runner = self._runner()
             encoding = 'UTF-7'
             runner.default_encoding = Mock(return_value=encoding)
-            with patch('invoke.runners.codecs') as codecs:
-                runner.run(_)
-                runner.default_encoding.assert_called_with()
-                _expect_encoding(codecs, encoding)
+            # Execution & assertion
+            runner.run(_)
+            runner.default_encoding.assert_called_with()
+            eq_(runner.encoding, 'UTF-7')
 
         def honors_config(self):
-            with patch('invoke.runners.codecs') as codecs:
-                c = Context(Config(overrides={'run': {'encoding': 'UTF-7'}}))
-                _Dummy(c).run(_)
-                _expect_encoding(codecs, 'UTF-7')
+            c = Context(Config(overrides={'run': {'encoding': 'UTF-7'}}))
+            runner = _Dummy(c)
+            runner.default_encoding = Mock(return_value='UTF-not-7')
+            runner.run(_)
+            eq_(runner.encoding, 'UTF-7')
 
         def honors_kwarg(self):
             skip()
+
+        def uses_locale_module_for_default_encoding(self):
+            # Actually testing this highly OS/env specific stuff is very
+            # error-prone; so we degrade to just testing expected function
+            # calls for now :(
+            with patch('invoke.runners.locale') as fake_locale:
+                fake_locale.getdefaultlocale.return_value = ('meh', 'UHF-8')
+                fake_locale.getpreferredencoding.return_value = 'FALLBACK'
+                expected = 'UHF-8' if six.PY2 else 'FALLBACK'
+                eq_(self._runner().default_encoding(), expected)
+
+        def falls_back_to_defaultlocale_when_preferredencoding_is_None(self):
+            if not six.PY3:
+                skip()
+            with patch('invoke.runners.locale') as fake_locale:
+                fake_locale.getdefaultlocale.return_value = (None, None)
+                fake_locale.getpreferredencoding.return_value = 'FALLBACK'
+                eq_(self._runner().default_encoding(), 'FALLBACK')
 
     class output_hiding:
         @trap
@@ -411,10 +437,10 @@ class Runner_(Spec):
             # Execute w/ runner class that has a mocked stdin_writer
             klass = self._mock_stdin_writer()
             self._runner(klass=klass).run(_, out_stream=StringIO())
-            # Check that mocked writer was called w/ expected data
-            # stdin mirroring occurs byte-by-byte
-            calls = list(map(lambda x: call(b(x)), "Text!"))
-            klass.write_stdin.assert_has_calls(calls, any_order=False)
+            # Check that mocked writer was called w/ the data from our patched
+            # sys.stdin (one char at a time)
+            calls = list(map(lambda x: call(x), "Text!"))
+            klass.write_proc_stdin.assert_has_calls(calls, any_order=False)
 
         def can_be_overridden(self):
             klass = self._mock_stdin_writer()
@@ -424,15 +450,15 @@ class Runner_(Spec):
                 in_stream=in_stream,
                 out_stream=StringIO(),
             )
-            # stdin mirroring occurs byte-by-byte
-            calls = list(map(lambda x: call(b(x)), "Hey, listen!"))
-            klass.write_stdin.assert_has_calls(calls, any_order=False)
+            # stdin mirroring occurs char-by-char
+            calls = list(map(lambda x: call(x), "Hey, listen!"))
+            klass.write_proc_stdin.assert_has_calls(calls, any_order=False)
 
         @patch('invoke.util.debug')
         def exceptions_get_logged(self, mock_debug):
-            # Make write_stdin asplode
+            # Make write_proc_stdin asplode
             klass = self._mock_stdin_writer()
-            klass.write_stdin.side_effect = OhNoz("oh god why")
+            klass.write_proc_stdin.side_effect = OhNoz("oh god why")
             # Execute with some stdin to trigger that asplode (but skip the
             # actual bubbled-up raising of it so we can check things out)
             try:
@@ -508,34 +534,34 @@ class Runner_(Spec):
             # responds to "" or "\n" or etc.
             klass = self._mock_stdin_writer()
             self._runner(klass=klass).run(_)
-            ok_(not klass.write_stdin.called)
+            ok_(not klass.write_proc_stdin.called)
 
         def _expect_response(self, **kwargs):
             """
             Execute a run() w/ ``responses`` set & _runner() ``kwargs`` given.
 
-            :returns: The mocked ``write_stdin`` method of the runner.
+            :returns: The mocked ``write_proc_stdin`` method of the runner.
             """
             klass = self._mock_stdin_writer()
             kwargs['klass'] = klass
             runner = self._runner(**kwargs)
             runner.run(_, responses=kwargs['responses'], hide=True)
-            return klass.write_stdin
+            return klass.write_proc_stdin
 
         def string_keys_in_responses_kwarg_yield_values_as_stdin_writes(self):
             self._expect_response(
                 out="the house was empty",
                 responses={'empty': 'handed'},
-            ).assert_called_once_with(b("handed"))
+            ).assert_called_once_with("handed")
 
         def regex_keys_also_work(self):
             self._expect_response(
                 out="technically, it's still debt",
                 responses={r'tech.*debt': 'pay it down'},
-            ).assert_called_once_with(b('pay it down'))
+            ).assert_called_once_with('pay it down')
 
         def multiple_hits_yields_multiple_responses(self):
-            holla = call(b('how high?'))
+            holla = call('how high?')
             self._expect_response(
                 out="jump, wait, jump, wait",
                 responses={'jump': 'how high?'},
@@ -547,11 +573,11 @@ class Runner_(Spec):
             responses = {'jump': 'how high?'}
             runner = self._runner(klass=klass, out="jump, wait, jump, wait")
             runner.run(_, responses=responses, hide=True)
-            holla = call(b('how high?'))
+            holla = call('how high?')
             # Responses happened, period.
-            klass.write_stdin.assert_has_calls([holla, holla])
+            klass.write_proc_stdin.assert_has_calls([holla, holla])
             # And there weren't duplicates!
-            eq_(len(klass.write_stdin.call_args_list), 2)
+            eq_(len(klass.write_proc_stdin.call_args_list), 2)
 
         def patterns_span_multiple_lines(self):
             output = """
@@ -563,10 +589,10 @@ Just to say hi
             self._expect_response(
                 out=output,
                 responses={r'call.*problem': 'So sorry'},
-            ).assert_called_once_with(b('So sorry'))
+            ).assert_called_once_with('So sorry')
 
         def both_out_and_err_are_scanned(self):
-            bye = call(b("goodbye"))
+            bye = call("goodbye")
             # Would only be one 'bye' if only scanning stdout
             self._expect_response(
                 out="hello my name is inigo",
@@ -575,7 +601,7 @@ Just to say hi
             ).assert_has_calls([bye, bye])
 
         def multiple_patterns_works_as_expected(self):
-            calls = [call(b('betty')), call(b('carnival'))]
+            calls = [call('betty'), call('carnival')]
             # Technically, I'd expect 'betty' to get called before 'carnival',
             # but under Python 3 it's reliably backwards from Python 2.
             # In real world situations where each prompt sits & waits for its
@@ -593,7 +619,7 @@ Just to say hi
                 'Destroy': 'your ego',
                 'humans': 'are awful',
             }
-            calls = map(lambda x: call(b(x)), responses.values())
+            calls = map(lambda x: call(x), responses.values())
             # CANNOT assume order due to simultaneous streams.
             # If we didn't say any_order=True we could get race condition fails
             self._expect_response(
@@ -636,13 +662,14 @@ Just to say hi
             input_is_pty = kwargs.pop('in_pty', None)
 
             class MyRunner(_Dummy):
-                def echo_stdin(self, input_, output):
+                def should_echo_stdin(self, input_, output):
                     # Fake result of isatty() test here and only here; if we do
                     # this farther up, it will affect stuff trying to run
                     # termios & such, which is harder to mock successfully.
                     if input_is_pty is not None:
                         input_.isatty = lambda: input_is_pty
-                    return super(MyRunner, self).echo_stdin(input_, output)
+                    return super(MyRunner, self).should_echo_stdin(
+                        input_, output)
 
             # Execute basic command with given parameters
             self._run(
@@ -654,7 +681,10 @@ Just to say hi
             )
             # Examine mocked output stream to see if it was mirrored to
             if expect_mirroring:
-                eq_(output.write.call_args_list, list(map(call, fake_in)))
+                eq_(
+                    output.write.call_args_list,
+                    list(map(lambda x: call(x), fake_in))
+                )
                 eq_(len(output.flush.call_args_list), len(fake_in))
             # Or not mirrored to
             else:
@@ -866,14 +896,6 @@ class Local_(Spec):
                 e = e.exceptions[0]
                 eq_(e.type, OSError)
                 eq_(str(e.value), "wat")
-
-    class encoding:
-        @mock_subprocess()
-        def uses_locale_module_for_desired_encoding(self):
-            with patch('invoke.runners.codecs') as codecs:
-                self._run(_)
-                local_encoding = locale.getpreferredencoding(False)
-                _expect_encoding(codecs, local_encoding)
 
     class send_interrupt:
         def _run(self, pty):
