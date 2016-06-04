@@ -1,5 +1,5 @@
 from spec import eq_, ok_
-from mock import Mock, call as mock_call
+from mock import Mock
 
 from invoke import Collection, Config, Context, Executor, Task, call, task
 from invoke.parser import ParserContext
