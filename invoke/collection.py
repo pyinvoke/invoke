@@ -380,9 +380,9 @@ class Collection(object):
         """
         (Recursively) merge ``options`` into the current `.configuration`.
 
-        Options configured this way will be available to all
-        tasks. It is recommended to
-        use unique keys to avoid potential clashes with other config options
+        Options configured this way will be available to all tasks. It is
+        recommended to use unique keys to avoid potential clashes with other
+        config options
 
         For example, if you were configuring a Sphinx docs build target
         directory, it's better to use a key like ``'sphinx.target'`` than

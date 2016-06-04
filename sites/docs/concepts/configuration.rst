@@ -277,20 +277,20 @@ Example
 Setup
 -----
 
-As an example, we'll start out with some semi-realistic
-tasks that hardcode their values, and build up to using the various
-configuration mechanisms. A small module for building `Sphinx
-<http://sphinx-doc.org>`_ docs might start out like this::
+As an example, we'll start out with semi-realistic tasks that hardcode their
+values, and build up to using the various configuration mechanisms. A small
+module for building `Sphinx <http://sphinx-doc.org>`_ docs might start out like
+this::
 
     from invoke import task, run
 
     @task
     def clean(ctx):
-        run("rm -rf docs/_build")
+        ctx.run("rm -rf docs/_build")
 
     @task
     def build(ctx):
-        run("sphinx-build docs docs/_build")
+        ctx.run("sphinx-build docs docs/_build")
 
 Then maybe you refactor the build target::
 
@@ -298,11 +298,11 @@ Then maybe you refactor the build target::
 
     @task
     def clean(ctx):
-        run("rm -rf {0}".format(target))
+        ctx.run("rm -rf {0}".format(target))
 
     @task
     def build(ctx):
-        run("sphinx-build docs {0}".format(target))
+        ctx.run("sphinx-build docs {0}".format(target))
 
 We can also allow runtime parameterization::
 
@@ -310,19 +310,19 @@ We can also allow runtime parameterization::
 
     @task
     def clean(ctx, target=default_target):
-        run("rm -rf {0}".format(target))
+        ctx.run("rm -rf {0}".format(target))
 
     @task
     def build(ctx, target=default_target):
-        run("sphinx-build docs {0}".format(target))
+        ctx.run("sphinx-build docs {0}".format(target))
 
 This task module works for a single set of users, but what if we want to allow
 reuse? Somebody may want to use this module with a different default target.
-You *can* kludge it without using the task context, but using the context to
-configure these settings is usually the better solution [1]_.
+Using the configuration data (made available via the context arg) to configure
+these settings is usually the better solution [1]_.
 
-Switching to contexts
----------------------
+Configuring via task collection
+-------------------------------
 
 The configuration `setting <.Collection.configure>` and `getting
 <.Context.config>` APIs make it easy to move otherwise 'hardcoded' default
@@ -358,8 +358,6 @@ runtime value was given.  The result::
 
     ns = Collection(clean, build)
     ns.configure({'sphinx': {'target': "docs/_build"}})
-
-.. TODO: change all [foo.bar] shit into [foo][bar]
 
 The result isn't significantly more complex than what we began with, and as
 we'll see next, it's now trivial for users to override your defaults in various
@@ -411,4 +409,3 @@ additional configuration methods which may be suitable depending on your needs.
     module-level ``default_path`` variable won't play well with concurrency;
     wrapping the tasks with different default arguments works but is fragile
     and adds boilerplate.
-
