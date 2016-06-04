@@ -153,6 +153,12 @@ class Task_(Spec):
                 pass
             mytask(5)
 
+        @raises(TypeError)
+        def errors_if_no_first_arg_at_all(self):
+            @task
+            def mytask():
+                pass
+
         def tracks_times_called(self):
             context = Context()
             eq_(self.task.called, False)

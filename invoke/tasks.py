@@ -136,8 +136,12 @@ class Task(object):
         arg_names = spec.args[:]
         matched_args = [reversed(x) for x in [spec.args, spec.defaults or []]]
         spec_dict = dict(zip_longest(*matched_args, fillvalue=NO_DEFAULT))
-        # Remove context argument
-        context_arg = arg_names.pop(0)
+        # Pop context argument
+        try:
+            context_arg = arg_names.pop(0)
+        except IndexError:
+            # TODO: see TODO under __call__, this should be same type
+            raise TypeError("Tasks must have an initial Context argument!")
         del spec_dict[context_arg]
         return arg_names, spec_dict
 
