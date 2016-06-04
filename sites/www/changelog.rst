@@ -2,7 +2,13 @@
 Changelog
 =========
 
-* :feature:`114` Removed non-contextualized tasks.
+* :feature:`114` Ripped off the band-aid and removed non-contextualized tasks
+  as an option; all tasks must now be contextualized, even if not using the
+  context. This simplifies the implementation as well as users' conceptual
+  models. Thanks to Bay Grabowski for the patch.
+
+  .. warning:: This is a backwards incompatible change.
+
 * :bug:`350` (also :issue:`274`, :issue:`241`, :issue:`262`, :issue:`242`,
   :issue:`321`, :issue:`338`) Clean up and reorganize encoding-related parts of
   the code to avoid some of the more common or egregious encode/decode errors
