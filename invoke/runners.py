@@ -763,6 +763,8 @@ class Runner(object):
         """
         Decode some ``data`` bytes, returning Unicode.
         """
+        # NOTE: yes, this is a 1-liner. The point is to make it much harder to
+        # forget to use 'replace' when decoding :)
         return data.decode(self.encoding, 'replace')
 
     @property
