@@ -25,6 +25,9 @@ _ = "nope"
 class _Dummy(Runner):
     """
     Dummy runner subclass that does minimum work required to execute run().
+
+    It also serves as a convenient basic API checker; failure to update it to
+    match the current Runner API will cause TypeErrors and similar.
     """
     # Neuter the input loop sleep, so tests aren't slow (at the expense of CPU,
     # which isn't a problem for testing).
@@ -49,7 +52,7 @@ class _Dummy(Runner):
     def returncode(self):
         return 0
 
-    def send_interrupt(self):
+    def send_interrupt(self, exception):
         pass
 
 

@@ -311,7 +311,7 @@ class Runner(object):
             # time because otherwise the stdout/err reader threads may block
             # until the subprocess exits.
             if isinstance(exception, KeyboardInterrupt):
-                self.send_interrupt()
+                self.send_interrupt(exception)
         self.program_finished.set()
         for t in self.threads:
             # NOTE: using a join timeout for corner case from #351 (one pipe
@@ -842,9 +842,14 @@ class Runner(object):
                 encoding = default
         return encoding
 
-    def send_interrupt(self):
+    def send_interrupt(self, interrupt):
         """
         Submit an interrupt signal to the running subprocess.
+
+        :param interrupt:
+            The locally-sourced ``KeyboardInterrupt`` causing the method call.
+
+        :returns: ``None``.
         """
         raise NotImplementedError
 
@@ -974,7 +979,9 @@ class Local(Runner):
         else:
             return self.process.poll() is not None
 
-    def send_interrupt(self):
+    def send_interrupt(self, interrupt):
+        # NOTE: No need to reraise the interrupt since we have full control
+        # over the local process and can kill it.
         if self.using_pty:
             os.kill(self.pid, SIGINT)
         else:
