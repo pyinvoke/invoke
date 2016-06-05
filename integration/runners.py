@@ -1,14 +1,17 @@
 import os
+import platform
 import time
 
 from mock import Mock
-from spec import Spec, eq_, ok_
+from spec import Spec, eq_, ok_, skip
 
 from invoke import run, Local, Context, ThreadException
 from invoke.util import ExceptionHandlingThread
 
 from _util import assert_cpu_usage
 
+
+PYPY = platform.python_implementation() == 'PyPy'
 
 class Runner_(Spec):
     def setup(self):
@@ -35,6 +38,9 @@ class Runner_(Spec):
 
         def stdin_mirroring_isnt_cpu_heavy(self):
             "stdin mirroring isn't CPU-heavy"
+            # CPU measurement under PyPy is...rather different. NBD.
+            if PYPY:
+                skip()
             with assert_cpu_usage(lt=5.0):
                 run("python -u busywork.py 10", pty=True, hide=True)
 
@@ -85,7 +91,9 @@ class Runner_(Spec):
             time.sleep(1)
             # Send expected signal (use pty to ensure no intermediate 'sh'
             # processes on Linux; is of no consequence on Darwin.)
-            run("pkill -INT -f \"python.*inv -c signal_tasks\"", pty=True)
+            interpreter = 'pypy' if PYPY else 'python'
+            cmd = "pkill -INT -f \"{0}.*inv -c signal_tasks\""
+            run(cmd.format(interpreter), pty=True)
             # Rejoin subprocess thread & check for exceptions
             bg.join()
             wrapper = bg.exception()
