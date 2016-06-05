@@ -1,4 +1,4 @@
-from spec import Spec, skip, eq_
+from spec import Spec, skip, eq_, ok_
 
 from invoke.context import Context
 from invoke.config import Config
@@ -11,6 +11,12 @@ class Context_(Spec):
             # Meh-tastic doesn't-barf tests. MEH.
             Context()
             Context(config={'foo': 'bar'})
+
+    class methods:
+        def run(self):
+            attr = 'run'
+            c = Context()
+            ok_(hasattr(c, attr) and callable(getattr(c, attr)))
 
     class configuration_proxy:
         "Dict-like proxy for self.config"
