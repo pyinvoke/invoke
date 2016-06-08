@@ -55,6 +55,9 @@ class _Dummy(Runner):
     def send_interrupt(self, exception):
         pass
 
+    def stop(self):
+        pass
+
 
 # Runner that fakes ^C during subprocess exec
 class _KeyboardInterruptingRunner(_Dummy):
@@ -821,6 +824,21 @@ Just to say hi
             except KeyboardInterrupt as e:
                 raised = e
             assert raised is not None
+
+    class stop:
+        def always_runs_no_matter_what(self):
+            class _ExceptingRunner(_Dummy):
+                def wait(self):
+                    raise OhNoz()
+
+            runner = _ExceptingRunner(context=Context(config=Config()))
+            runner.stop = Mock()
+            try:
+                runner.run(_)
+            except OhNoz:
+                runner.stop.assert_called_once_with()
+            else:
+                assert False, "_ExceptingRunner did not except!"
 
 
 class _FastLocal(Local):

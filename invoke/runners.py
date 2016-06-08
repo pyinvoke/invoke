@@ -247,6 +247,12 @@ class Runner(object):
                 instead of printing a traceback and exiting ``1`` (which is
                 what Python normally does).
         """
+        try:
+            return self._run_body(command, **kwargs)
+        finally:
+            self.stop()
+
+    def _run_body(self, command, **kwargs):
         # Normalize kwargs w/ config
         opts, out_stream, err_stream, in_stream = self._run_opts(kwargs)
         shell = opts['shell']
@@ -856,6 +862,16 @@ class Runner(object):
     def returncode(self):
         """
         Return the numeric return/exit code resulting from command execution.
+
+    def stop(self):
+        """
+        Perform final cleanup, if necessary.
+
+        This method is called within a ``finally`` clause inside the main `run`
+        method. Depending on the subclass, it may be a no-op, or it may do
+        things such as close network connections or open files.
+
+        :returns: ``None``
         """
         raise NotImplementedError
 
@@ -1002,6 +1018,10 @@ class Local(Runner):
             return os.WEXITSTATUS(self.status)
         else:
             return self.process.returncode
+
+    def stop(self):
+        # No explicit close-out required (so far).
+        pass
 
 
 class Result(object):
