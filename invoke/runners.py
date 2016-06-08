@@ -863,6 +863,10 @@ class Runner(object):
         """
         Return the numeric return/exit code resulting from command execution.
 
+        :returns: `int`
+        """
+        raise NotImplementedError
+
     def stop(self):
         """
         Perform final cleanup, if necessary.

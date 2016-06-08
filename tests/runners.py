@@ -27,7 +27,8 @@ class _Dummy(Runner):
     Dummy runner subclass that does minimum work required to execute run().
 
     It also serves as a convenient basic API checker; failure to update it to
-    match the current Runner API will cause TypeErrors and similar.
+    match the current Runner API will cause TypeErrors, NotImplementedErrors,
+    and similar.
     """
     # Neuter the input loop sleep, so tests aren't slow (at the expense of CPU,
     # which isn't a problem for testing).
