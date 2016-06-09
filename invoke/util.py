@@ -137,6 +137,18 @@ class ExceptionHandlingThread(threading.Thread):
             return None
         return ExceptionWrapper(self.kwargs, *self.exc_info)
 
+    @property
+    def is_dead(self):
+        """
+        Returns ``True`` if not alive and has a stored exception.
+
+        Used to detect threads that have excepted & shut down.
+        """
+        # NOTE: it seems highly unlikely that a thread could still be
+        # is_alive() but also have encountered an exception. But hey. Why not
+        # be thorough?
+        return (not self.is_alive()) and self.exc_info is not None
+
     def __repr__(self):
         # TODO: beef this up more
         return self.kwargs['target'].__name__
