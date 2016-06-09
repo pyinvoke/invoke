@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :release:`0.13.0 <2016-06-09>`
 * :feature:`114` Ripped off the band-aid and removed non-contextualized tasks
   as an option; all tasks must now be contextualized (defined as ``def
   mytask(context, ...)`` - see :ref:`defining-and-running-task-functions`) even
