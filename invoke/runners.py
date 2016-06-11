@@ -732,10 +732,10 @@ class Runner(object):
         errored/died.
 
         :returns:
-            ``True`` if any threads appear not to be running, ``False``
-            otherwise.
+            ``True`` if any threads appear to have terminated with an
+            exception, ``False`` otherwise.
         """
-        return any(not x.is_alive() for x in self.threads)
+        return any(x.is_dead for x in self.threads)
 
     def wait(self):
         """
@@ -744,7 +744,9 @@ class Runner(object):
         :returns: ``None``.
         """
         while True:
-            if self.process_is_finished or self.has_dead_threads:
+            proc_finished = self.process_is_finished
+            dead_threads = self.has_dead_threads
+            if proc_finished or dead_threads:
                 break
             time.sleep(self.input_sleep)
 

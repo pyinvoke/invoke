@@ -2,23 +2,25 @@
 Changelog
 =========
 
+* :release:`0.13.0 <2016-06-09>`
 * :feature:`114` Ripped off the band-aid and removed non-contextualized tasks
-  as an option; all tasks must now be contextualized, even if not using the
-  context. This simplifies the implementation as well as users' conceptual
-  models. Thanks to Bay Grabowski for the patch.
+  as an option; all tasks must now be contextualized (defined as ``def
+  mytask(context, ...)`` - see :ref:`defining-and-running-task-functions`) even
+  if not using the context. This simplifies the implementation as well as
+  users' conceptual models. Thanks to Bay Grabowski for the patch.
 
-  .. warning:: This is a backwards incompatible change.
+  .. warning:: This is a backwards incompatible change!
 
-* :bug:`350` (also :issue:`274`, :issue:`241`, :issue:`262`, :issue:`242`,
-  :issue:`321`, :issue:`338`) Clean up and reorganize encoding-related parts of
-  the code to avoid some of the more common or egregious encode/decode errors
-  surrounding clearly non-ASCII-compatible text. Bug reports, assistance,
-  feedback and code examples courtesy of Paul Moore, Vlad Frolov, Christian
-  Aichinger, Fotis Gimian, Daniel Nunes, and others.
-* :bug:`351` Protect against ``run`` deadlocks involving exceptions in I/O
-  threads & nontrivial amounts of unread data in the corresponding subprocess
-  pipe(s). This situation should now always result in exceptions instead of
-  hangs.
+* :bug:`350 major` (also :issue:`274`, :issue:`241`, :issue:`262`,
+  :issue:`242`, :issue:`321`, :issue:`338`) Clean up and reorganize
+  encoding-related parts of the code to avoid some of the more common or
+  egregious encode/decode errors surrounding clearly non-ASCII-compatible text.
+  Bug reports, assistance, feedback and code examples courtesy of Paul Moore,
+  Vlad Frolov, Christian Aichinger, Fotis Gimian, Daniel Nunes, and others.
+* :bug:`351 major` Protect against ``run`` deadlocks involving exceptions in
+  I/O threads & nontrivial amounts of unread data in the corresponding
+  subprocess pipe(s). This situation should now always result in exceptions
+  instead of hangs.
 * :feature:`259` (also :issue:`280`) Allow updating (or replacing) subprocess
   shell environments, via the ``env`` and ``replace_env`` kwargs to
   `~invoke.runners.Runner.run`. Thanks to Fotis Gimian for the report,
