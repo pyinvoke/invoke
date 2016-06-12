@@ -16,58 +16,10 @@ from invoke.vendor import six
 from invoke import Runner, Local, Context, Config, Failure, ThreadException
 from invoke.platform import WINDOWS
 
-from _util import mock_subprocess, mock_pty, skip_if_windows
-
-
-# Dummy command that will blow up if it ever truly hits a real shell.
-_ = "nope"
-
-class _Dummy(Runner):
-    """
-    Dummy runner subclass that does minimum work required to execute run().
-
-    It also serves as a convenient basic API checker; failure to update it to
-    match the current Runner API will cause TypeErrors, NotImplementedErrors,
-    and similar.
-    """
-    # Neuter the input loop sleep, so tests aren't slow (at the expense of CPU,
-    # which isn't a problem for testing).
-    input_sleep = 0
-
-    def start(self, command, shell, env):
-        pass
-
-    def read_proc_stdout(self, num_bytes):
-        return ""
-
-    def read_proc_stderr(self, num_bytes):
-        return ""
-
-    def _write_proc_stdin(self, data):
-        pass
-
-    @property
-    def process_is_finished(self):
-        return True
-
-    def returncode(self):
-        return 0
-
-    def send_interrupt(self, exception):
-        pass
-
-    def stop(self):
-        pass
-
-
-# Runner that fakes ^C during subprocess exec
-class _KeyboardInterruptingRunner(_Dummy):
-    def wait(self):
-        raise KeyboardInterrupt
-
-
-class OhNoz(Exception):
-    pass
+from _util import (
+    mock_subprocess, mock_pty, skip_if_windows, _Dummy,
+    _KeyboardInterruptingRunner, OhNoz, _,
+)
 
 
 def _run(*args, **kwargs):
