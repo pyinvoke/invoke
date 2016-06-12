@@ -31,7 +31,9 @@ class Context_(Spec):
         # TODO: where should its code LIVE exactly? It's not a runner subclass;
         # so should it literally live here in Context? Not sure where else it
         # could.
-        # TODO: do we expose a global function like we do with run() too?
+        # TODO: do we expose a global function like we do with run() too? Feels
+        # like "no, it's not nearly as globally useful for the 'better
+        # subprocess wrapper' use case"?
 
     class configuration_proxy:
         "Dict-like proxy for self.config"
