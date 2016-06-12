@@ -12,18 +12,17 @@ class Context_(Spec):
             Context()
             Context(config={'foo': 'bar'})
 
-    class methods:
-        # NOTE: actual behavior of command running is tested in runners.py
-        def run(self):
-            attr = 'run'
+    class methods_exposed:
+        def _expect_attr(self, attr):
             c = Context()
             ok_(hasattr(c, attr) and callable(getattr(c, attr)))
 
+        # NOTE: actual behavior of command running is tested in runners.py
+        def run(self):
+            self._expect_attr('run')
+
         def sudo(self):
-            # TODO: refactor into generator test
-            attr = 'sudo'
-            c = Context()
-            ok_(hasattr(c, attr) and callable(getattr(c, attr)))
+            self._expect_attr('sudo')
 
         # TODO: how exactly to test sudo given it is just going to tie together
         # two other things? Probably just literal "it wraps in a sudo command
