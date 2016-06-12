@@ -21,19 +21,6 @@ class Context_(Spec):
         def run(self):
             self._expect_attr('run')
 
-        def sudo(self):
-            self._expect_attr('sudo')
-
-        # TODO: how exactly to test sudo given it is just going to tie together
-        # two other things? Probably just literal "it wraps in a sudo command
-        # and sets a sudo response" things?
-        # TODO: where should its code LIVE exactly? It's not a runner subclass;
-        # so should it literally live here in Context? Not sure where else it
-        # could.
-        # TODO: do we expose a global function like we do with run() too? Feels
-        # like "no, it's not nearly as globally useful for the 'better
-        # subprocess wrapper' use case"?
-
     class configuration_proxy:
         "Dict-like proxy for self.config"
         def setup(self):
