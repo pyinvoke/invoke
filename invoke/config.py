@@ -10,7 +10,7 @@ if six.PY3:
 else:
     from .vendor import yaml2 as yaml
 
-if sys.version_info[:2] >= (3, 3):
+if six.PY3:
     from importlib.machinery import SourceFileLoader
     def load_source(name, path):
         if not os.path.exists(path):
