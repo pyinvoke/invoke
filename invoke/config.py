@@ -227,7 +227,9 @@ class Config(DataProxy):
                 'responses': {},
                 'echo_stdin': None,
             },
-            'tasks': {'dedupe': True},
+            'tasks': {
+                'dedupe': True,
+            },
         }
 
     def __init__(
