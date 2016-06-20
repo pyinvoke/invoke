@@ -51,3 +51,38 @@ class Context(DataProxy):
         """
         runner_class = self.config.get('runner', Local)
         return runner_class(context=self).run(command, **kwargs)
+
+    def sudo(self, command, **kwargs):
+        """
+        Execute a shell command, via ``sudo``.
+
+        In general, this method is identical to `run`, but adds a handful of
+        convenient behaviors around invoking the ``sudo`` program. It doesn't
+        do anything users could not do themselves by wrapping `run`, but the
+        use case is too common to make users reinvent these wheels themselves.
+
+        Specifically, `sudo`:
+
+        * Updates the value of the ``responses`` dict (see
+          :doc:`/concepts/responding`) so that it includes a key for the
+          ``sudo`` password prompt.
+        * Fills in the value/response for that key from the ``sudo.password``
+          :doc:`configuration </concepts/configuration>` setting.
+
+          If *no* config value is found, the user is prompted interactively via
+          `getpass <getpass.getpass>`, and the value is stored in memory for
+          reuse.
+        * Builds a full ``sudo`` command string using the supplied ``command``
+          argument prefixed by the ``sudo.prefix`` configuration setting.
+        * Executes that command via a call to `run`, returning the result.
+
+        As with `run`, these additional behaviors may be configured both via
+        the ``run`` configuration settings (like ``run.echo``) or via runtime
+        keyword arguments, which will override the configuration system.
+
+        :param str password: Runtime override for ``sudo.password``.
+        :param str prefix: Runtime override for ``sudo.prefix``.
+        """
+        prompt = "[sudo] password:"
+        cmd_str = "sudo -S -p '{0}' {1}".format(prompt, command)
+        return Local(context=self).run(cmd_str)

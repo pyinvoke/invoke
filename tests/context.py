@@ -1,3 +1,4 @@
+from mock import patch
 from spec import Spec, skip, eq_, ok_
 
 from invoke.context import Context
@@ -20,6 +21,9 @@ class Context_(Spec):
         # NOTE: actual behavior of command running is tested in runners.py
         def run(self):
             self._expect_attr('run')
+
+        def sudo(self):
+            self._expect_attr('sudo')
 
     class configuration_proxy:
         "Dict-like proxy for self.config"
@@ -57,3 +61,16 @@ class Context_(Spec):
         def update(self):
             self.c.update({'newkey': 'newval'})
             eq_(self.c['newkey'], 'newval')
+
+    class sudo:
+        @patch('invoke.context.Local')
+        def prefixes_command_with_sudo(self, Local):
+            runner = Local.return_value
+            Context().sudo('whoami')
+            # TODO: refer to config val for prompt
+            # TODO: that config val might want to be something UNLIKELY to be a
+            # real default sudo prompt, so problems where it doesn't take, are
+            # more obvious
+            cmd = "sudo -S -p '[sudo] password:' whoami"
+            ok_(runner.run.called, "sudo() never called run()!")
+            eq_(runner.run.call_args[0][0], cmd)
