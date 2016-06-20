@@ -83,6 +83,6 @@ class Context(DataProxy):
         :param str password: Runtime override for ``sudo.password``.
         :param str prefix: Runtime override for ``sudo.prefix``.
         """
-        prompt = "[sudo] password:"
+        prompt = self.config.sudo.prompt
         cmd_str = "sudo -S -p '{0}' {1}".format(prompt, command)
         return Local(context=self).run(cmd_str)

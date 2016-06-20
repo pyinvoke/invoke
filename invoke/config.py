@@ -227,6 +227,9 @@ class Config(DataProxy):
                 'responses': {},
                 'echo_stdin': None,
             },
+            'sudo': {
+                'prompt': '__autoresponse-sudo-prompt__',
+            },
             'tasks': {
                 'dedupe': True,
             },

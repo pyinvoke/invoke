@@ -67,10 +67,20 @@ class Context_(Spec):
         def prefixes_command_with_sudo(self, Local):
             runner = Local.return_value
             Context().sudo('whoami')
-            # TODO: refer to config val for prompt
-            # TODO: that config val might want to be something UNLIKELY to be a
-            # real default sudo prompt, so problems where it doesn't take, are
-            # more obvious
-            cmd = "sudo -S -p '[sudo] password:' whoami"
+            # NOTE: implicitly tests default sudo.prompt conf value
+            cmd = "sudo -S -p '__autoresponse-sudo-prompt__' whoami"
             ok_(runner.run.called, "sudo() never called run()!")
             eq_(runner.run.call_args[0][0], cmd)
+
+        @patch('invoke.context.Local')
+        def honors_config_for_prompt_value(self, Local):
+            runner = Local.return_value
+            config = Config(overrides={'sudo': {'prompt': 'FEED ME: '}})
+            Context(config=config).sudo('whoami')
+            cmd = "sudo -S -p 'FEED ME: ' whoami"
+            eq_(runner.run.call_args[0][0], cmd)
+
+        def prompt_value_is_properly_escaped(self):
+            # I.e. setting it to "here's johnny!" doesn't explode.
+            # NOTE: possibly best to tie into issue #2
+            skip()
