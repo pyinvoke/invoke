@@ -402,7 +402,7 @@ class Runner(object):
         self.using_pty = self.should_use_pty(opts['pty'], opts['fallback'])
         # Responses
         # TODO: precompile the keys into regex objects
-        self.responses = opts.get('responses', {})
+        self.responses = opts['responses']
         return opts, out_stream, err_stream, in_stream
 
     def generate_result(self, **kwargs):

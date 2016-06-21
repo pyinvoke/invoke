@@ -587,6 +587,32 @@ Just to say hi
                 responses=responses,
             ).assert_has_calls(calls, any_order=True)
 
+        def honors_config_option(self):
+            klass = self._mock_stdin_writer()
+            responses = {"my stdout": "and my axe"}
+            runner = self._runner(
+                out="this is my stdout", # yielded stdout
+                klass=klass, # mocked stdin writer
+                run={'responses': responses}, # ends up as config override
+            )
+            runner.run(_, hide=True)
+            klass.write_proc_stdin.assert_called_once_with("and my axe")
+
+        def kwarg_overrides_config(self):
+            # TODO: how to handle use cases where merging, not overriding, is
+            # the expected/unsurprising default? probably another config-only
+            # (not kwarg) setting, e.g. run.merge_responses?
+            klass = self._mock_stdin_writer()
+            conf_responses = {"my stdout": "and my axe"}
+            kwarg_responses = {"my stdout": "and my body spray"}
+            runner = self._runner(
+                out="this is my stdout", # yielded stdout
+                klass=klass, # mocked stdin writer
+                run={'responses': conf_responses}, # ends up as config override
+            )
+            runner.run(_, hide=True, responses=kwarg_responses)
+            klass.write_proc_stdin.assert_called_once_with("and my body spray")
+
     class io_sleeping:
         # NOTE: there's an explicit CPU-measuring test in the integration suite
         # which ensures the *point* of the sleeping - avoiding CPU hogging - is
