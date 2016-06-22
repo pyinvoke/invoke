@@ -1,4 +1,5 @@
 import getpass
+import re
 
 from .runners import Local
 from .config import Config, DataProxy
@@ -94,7 +95,8 @@ class Context(DataProxy):
             # something?
             password = getpass.getpass(msg)
         cmd_str = "sudo -S -p '{0}' {1}".format(prompt, command)
-        responses = {self.config.sudo.prompt: "{0}\n".format(password)}
+        escaped_prompt = re.escape(prompt)
+        responses = {escaped_prompt: "{0}\n".format(password)}
         # TODO: we always want our auto-added one merged - how to square that
         # with how kwarg always wins currently?
         # * If we add to self.config, and user gives kwarg, ours is lost

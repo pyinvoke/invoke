@@ -228,7 +228,7 @@ class Config(DataProxy):
                 'echo_stdin': None,
             },
             'sudo': {
-                'prompt': '__autoresponse-sudo-prompt__',
+                'prompt': "[sudo] password: ",
                 'password': None,
             },
             'tasks': {

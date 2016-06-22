@@ -1,3 +1,5 @@
+import re
+
 from mock import patch
 from spec import Spec, skip, eq_, ok_
 
@@ -63,13 +65,16 @@ class Context_(Spec):
             eq_(self.c['newkey'], 'newval')
 
     class sudo:
+        def setup(self):
+            self.escaped_prompt = re.escape(Config().sudo.prompt)
+
         @patch('invoke.context.getpass')
         @patch('invoke.context.Local')
         def prefixes_command_with_sudo(self, Local, getpass):
             runner = Local.return_value
             Context().sudo('whoami')
             # NOTE: implicitly tests default sudo.prompt conf value
-            cmd = "sudo -S -p '__autoresponse-sudo-prompt__' whoami"
+            cmd = "sudo -S -p '[sudo] password: ' whoami"
             ok_(runner.run.called, "sudo() never called run()!")
             eq_(runner.run.call_args[0][0], cmd)
 
@@ -82,7 +87,7 @@ class Context_(Spec):
             cmd = "sudo -S -p 'FEED ME: ' whoami"
             eq_(runner.run.call_args[0][0], cmd)
 
-        def prompt_value_is_properly_escaped(self):
+        def prompt_value_is_properly_shell_escaped(self):
             # I.e. setting it to "here's johnny!" doesn't explode.
             # NOTE: possibly best to tie into issue #2
             skip()
@@ -112,18 +117,18 @@ class Context_(Spec):
             eq_(runner.run.call_args[1]['responses'], expected)
 
         def autoresponds_with_password_kwarg(self):
-            expected = {Config().sudo.prompt: 'secret\n'}
+            expected = {self.escaped_prompt: 'secret\n'}
             self._expect_responses(expected, kwargs={'password': 'secret'})
 
         def honors_configured_sudo_password(self):
             config = Config(overrides={'sudo': {'password': 'secret'}})
-            expected = {config.sudo.prompt: 'secret\n'}
+            expected = {self.escaped_prompt: 'secret\n'}
             self._expect_responses(expected, config=config)
 
         def kwarg_wins_over_config(self):
             config = Config(overrides={'sudo': {'password': 'notsecret'}})
             kwargs = {'password': 'secret'}
-            expected = {config.sudo.prompt: 'secret\n'}
+            expected = {self.escaped_prompt: 'secret\n'}
             self._expect_responses(expected, config=config, kwargs=kwargs)
 
         @patch('invoke.context.Local')
@@ -135,7 +140,7 @@ class Context_(Spec):
             expected = {
                 # TODO: will need updating once we force use of getpass when
                 # None
-                context.config.sudo.prompt: None, # Auto-inserted
+                self.escaped_prompt: None, # Auto-inserted
                 'foo': 'bar', # From kwarg
             }
             eq_(runner.run.call_args[1]['responses'], expected)
@@ -149,13 +154,13 @@ class Context_(Spec):
             expected = {
                 # TODO: will need updating once we force use of getpass when
                 # None
-                config.sudo.prompt: None, # Auto-inserted
+                self.escaped_prompt: None, # Auto-inserted
                 'foo': 'bar', # From config
             }
             eq_(runner.run.call_args[1]['responses'], expected)
 
         def prompts_when_no_configured_password_is_found(self):
-            expected = {Config().sudo.prompt: "dynamic\n"}
+            expected = {self.escaped_prompt: "dynamic\n"}
             self._expect_responses(expected, password="dynamic")
 
         @patch('invoke.context.getpass')
