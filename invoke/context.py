@@ -1,3 +1,5 @@
+import getpass
+
 from .runners import Local
 from .config import Config, DataProxy
 
@@ -85,6 +87,12 @@ class Context(DataProxy):
         """
         prompt = self.config.sudo.prompt
         password = kwargs.pop('password', self.config.sudo.password)
+        if password is None:
+            msg = "No stored sudo password found, please enter it now: "
+            # TODO: use something generic/overrideable that uses getpass by
+            # default. May mean we pop this out as its own class-as-a-method or
+            # something?
+            password = getpass.getpass(msg)
         cmd_str = "sudo -S -p '{0}' {1}".format(prompt, command)
         responses = {self.config.sudo.prompt: "{0}\n".format(password)}
         # TODO: we always want our auto-added one merged - how to square that

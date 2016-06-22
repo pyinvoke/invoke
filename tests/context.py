@@ -63,8 +63,9 @@ class Context_(Spec):
             eq_(self.c['newkey'], 'newval')
 
     class sudo:
+        @patch('invoke.context.getpass')
         @patch('invoke.context.Local')
-        def prefixes_command_with_sudo(self, Local):
+        def prefixes_command_with_sudo(self, Local, getpass):
             runner = Local.return_value
             Context().sudo('whoami')
             # NOTE: implicitly tests default sudo.prompt conf value
@@ -72,8 +73,9 @@ class Context_(Spec):
             ok_(runner.run.called, "sudo() never called run()!")
             eq_(runner.run.call_args[0][0], cmd)
 
+        @patch('invoke.context.getpass')
         @patch('invoke.context.Local')
-        def honors_config_for_prompt_value(self, Local):
+        def honors_config_for_prompt_value(self, Local, getpass):
             runner = Local.return_value
             config = Config(overrides={'sudo': {'prompt': 'FEED ME: '}})
             Context(config=config).sudo('whoami')
@@ -85,10 +87,25 @@ class Context_(Spec):
             # NOTE: possibly best to tie into issue #2
             skip()
 
+        @patch('invoke.context.getpass')
         @patch('invoke.context.Local')
-        def _expect_responses(self, expected, Local, config=None, kwargs=None):
+        def _expect_responses(self,
+            expected, Local, getpass,
+            config=None, kwargs=None, password=None,
+        ):
+            """
+            Execute mocked sudo(), expecting responses= kwarg in its run().
+
+            * expected: dict value of expected responses= kwarg
+            * config: Config object, if an overridden one is needed
+            * kwargs: sudo() kwargs, if needed
+            * password: return value of getpass.getpass, if needed
+
+            (Local and getpass are just mock injections.)
+            """
             if kwargs is None:
                 kwargs = {}
+            getpass.getpass.return_value = password
             runner = Local.return_value
             context = Context(config=config) if config else Context()
             context.sudo('whoami', **kwargs)
@@ -136,3 +153,7 @@ class Context_(Spec):
                 'foo': 'bar', # From config
             }
             eq_(runner.run.call_args[1]['responses'], expected)
+
+        def prompts_when_no_configured_password_is_found(self):
+            expected = {Config().sudo.prompt: "dynamic\n"}
+            self._expect_responses(expected, password="dynamic")
