@@ -229,6 +229,7 @@ class Config(DataProxy):
             },
             'sudo': {
                 'prompt': '__autoresponse-sudo-prompt__',
+                'password': None,
             },
             'tasks': {
                 'dedupe': True,

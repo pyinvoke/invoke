@@ -84,3 +84,27 @@ class Context_(Spec):
             # I.e. setting it to "here's johnny!" doesn't explode.
             # NOTE: possibly best to tie into issue #2
             skip()
+
+        @patch('invoke.context.Local')
+        def _expect_responses(self, expected, Local, config=None, kwargs=None):
+            if kwargs is None:
+                kwargs = {}
+            runner = Local.return_value
+            context = Context(config=config) if config else Context()
+            context.sudo('whoami', **kwargs)
+            eq_(runner.run.call_args[1]['responses'], expected)
+
+        def autoresponds_with_password_kwarg(self):
+            expected = {Config().sudo.prompt: 'secret\n'}
+            self._expect_responses(expected, kwargs={'password': 'secret'})
+
+        def honors_configured_sudo_password(self):
+            config = Config(overrides={'sudo': {'password': 'secret'}})
+            expected = {config.sudo.prompt: 'secret\n'}
+            self._expect_responses(expected, config=config)
+
+        def kwarg_wins_over_config(self):
+            config = Config(overrides={'sudo': {'password': 'notsecret'}})
+            kwargs = {'password': 'secret'}
+            expected = {config.sudo.prompt: 'secret\n'}
+            self._expect_responses(expected, config=config, kwargs=kwargs)
