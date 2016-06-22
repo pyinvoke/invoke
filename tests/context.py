@@ -157,3 +157,17 @@ class Context_(Spec):
         def prompts_when_no_configured_password_is_found(self):
             expected = {Config().sudo.prompt: "dynamic\n"}
             self._expect_responses(expected, password="dynamic")
+
+        @patch('invoke.context.getpass')
+        @patch('invoke.context.Local')
+        def passes_through_other_run_kwargs(self, Local, getpass):
+            runner = Local.return_value
+            Context().sudo(
+                'whoami', echo=True, warn=False, hide=True, encoding='ascii'
+            )
+            ok_(runner.run.called, "sudo() never called run()!")
+            kwargs = runner.run.call_args[1]
+            eq_(kwargs['echo'], True)
+            eq_(kwargs['warn'], False)
+            eq_(kwargs['hide'], True)
+            eq_(kwargs['encoding'], 'ascii')
