@@ -67,7 +67,7 @@ class Context(DataProxy):
         Specifically, `sudo`:
 
         * Updates the value of the ``responses`` dict (see
-          :doc:`/concepts/responding`) so that it includes a key for the
+          :doc:`/concepts/responses`) so that it includes a key for the
           ``sudo`` password prompt.
         * Fills in the value/response for that key from the ``sudo.password``
           :doc:`configuration </concepts/configuration>` setting.
