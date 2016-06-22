@@ -96,13 +96,8 @@ For convenience, we refer to nested setting names with a dotted syntax, so e.g.
 
     * ``sudo.prompt`` holds the sudo password prompt text, which is both
       supplied to ``sudo -p``, and searched for when performing
-      :doc:`auto-response </concepts/responding>`. Default:
-      ``__autoresponse-sudo-prompt__``.
-
-      .. note::
-        The default value has been explicitly set to something obviously *not*
-        like a "normal" sudo prompt; this is intended to make bugs re:
-        setting/detecting the prompt, more visible.
+      :doc:`auto-response </concepts/responses>`. Default: ``[sudo] password:
+      ``.
 
 * A top level config setting, ``debug``, controls whether debug-level output is
   logged; it defaults to ``False``.
