@@ -1,7 +1,6 @@
 import copy
 import json
 import os
-import sys
 from os.path import join, splitext, expanduser
 
 from .vendor import six
