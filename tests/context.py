@@ -108,3 +108,31 @@ class Context_(Spec):
             kwargs = {'password': 'secret'}
             expected = {config.sudo.prompt: 'secret\n'}
             self._expect_responses(expected, config=config, kwargs=kwargs)
+
+        @patch('invoke.context.Local')
+        def auto_response_merges_with_kwarg_responses(self, Local):
+            skip() # TODO: harder than it looks, see TODO in sudo() body
+            runner = Local.return_value
+            context = Context()
+            context.sudo('whoami', responses={'foo': 'bar'})
+            expected = {
+                # TODO: will need updating once we force use of getpass when
+                # None
+                context.config.sudo.prompt: None, # Auto-inserted
+                'foo': 'bar', # From kwarg
+            }
+            eq_(runner.run.call_args[1]['responses'], expected)
+
+        @patch('invoke.context.Local')
+        def auto_response_merges_with_config_responses(self, Local):
+            skip() # TODO: harder than it looks, see TODO in sudo() body
+            runner = Local.return_value
+            config = Config(overrides={'run': {'responses': {'foo': 'bar'}}})
+            Context(config=config).sudo('whoami')
+            expected = {
+                # TODO: will need updating once we force use of getpass when
+                # None
+                config.sudo.prompt: None, # Auto-inserted
+                'foo': 'bar', # From config
+            }
+            eq_(runner.run.call_args[1]['responses'], expected)

@@ -87,4 +87,8 @@ class Context(DataProxy):
         password = kwargs.pop('password', self.config.sudo.password)
         cmd_str = "sudo -S -p '{0}' {1}".format(prompt, command)
         responses = {self.config.sudo.prompt: "{0}\n".format(password)}
+        # TODO: we always want our auto-added one merged - how to square that
+        # with how kwarg always wins currently?
+        # * If we add to self.config, and user gives kwarg, ours is lost
+        # * If we add to kwarg, any user config is lost
         return Local(context=self).run(cmd_str, responses=responses)
