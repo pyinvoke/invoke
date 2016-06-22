@@ -118,7 +118,7 @@ class Config_(IntegrationSpec):
                 expected = """
 No attribute or config key found for 'nope'
 
-Valid keys: ['run', 'tasks']
+Valid keys: ['run', 'sudo', 'tasks']
 
 Valid real attributes: ['clone', 'from_data', 'global_defaults', 'load_collection', 'load_files', 'load_shell_env', 'merge', 'paths']
 """.strip() # noqa
@@ -206,7 +206,7 @@ Valid real attributes: ['clone', 'from_data', 'global_defaults', 'load_collectio
             c = Config()
             eq_(c._project_path, None)
             eq_(list(c._project.keys()), [])
-            eq_(set(c.keys()), set(['tasks', 'run'])) # defaults only
+            eq_(set(c.keys()), set(['tasks', 'run', 'sudo'])) # defaults only
 
         def honors_conf_file_flag(self):
             c = Config(runtime_path=join(CONFIGS_PATH, 'yaml', 'invoke.yaml'))
