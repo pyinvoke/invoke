@@ -79,7 +79,7 @@ Describing the meaning of an argument can be done through the task's ``help``
 argument (in addition to optionally giving task-level help via the docstring)::
 
     @task(help={'name': "Name of the person to say hi to."})
-    def hi(name):
+    def hi(ctx, name):
         """Say hi to someone."""
         print("Hi %s!" % name)
 
