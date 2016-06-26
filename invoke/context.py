@@ -101,4 +101,4 @@ class Context(DataProxy):
         # with how kwarg always wins currently?
         # * If we add to self.config, and user gives kwarg, ours is lost
         # * If we add to kwarg, any user config is lost
-        return Local(context=self).run(cmd_str, responses=responses, **kwargs)
+        return self.run(cmd_str, responses=responses, **kwargs)
