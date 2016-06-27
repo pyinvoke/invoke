@@ -1108,7 +1108,7 @@ class Result(object):
             else:
                 handle_problem()
     """
-    # TODO: inherit from namedtuple instead? heh
+    # TODO: inherit from namedtuple instead? heh (or: use attrs from pypi)
     def __init__(self, command, shell, env, stdout, stderr, exited, pty):
         #: The command which was executed.
         self.command = command
