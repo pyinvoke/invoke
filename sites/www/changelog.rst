@@ -2,6 +2,8 @@
 Changelog
 =========
 
+* :bug:`-` Fix a bug in `Config.clone <~invoke.config.Config.clone>` where it
+  was instantiating a new ``Config`` instead of a member of the subclass.
 * :release:`0.13.0 <2016-06-09>`
 * :feature:`114` Ripped off the band-aid and removed non-contextualized tasks
   as an option; all tasks must now be contextualized (defined as ``def

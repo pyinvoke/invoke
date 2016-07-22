@@ -404,7 +404,7 @@ class Config(DataProxy):
         loaded/merged data, but will be a distinct object with no shared
         mutable state.
         """
-        new = Config()
+        new = self.__class__()
         for name in """
             defaults
             collection
