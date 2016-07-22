@@ -563,3 +563,12 @@ Valid real attributes: ['clone', 'from_data', 'global_defaults', 'load_collectio
             c.load_shell_env()
             c2 = c.clone()
             eq_(c2.foo, 'bar')
+
+        def works_correctly_when_subclassed(self):
+            # Because sometimes, implementation #1 is really naive!
+            class MyConfig(Config):
+                pass
+            c = MyConfig()
+            ok_(isinstance(c, MyConfig)) # sanity
+            c2 = c.clone()
+            ok_(isinstance(c2, MyConfig)) # actual test
