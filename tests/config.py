@@ -174,6 +174,18 @@ Valid real attributes: ['clone', 'from_data', 'global_defaults', 'load_collectio
             c.update({'foo': 'bar'})
             eq_(c['foo'], 'bar')
 
+        def supports_mutation_via_attribute_access(self):
+            c = Config({'foo': 'bar'})
+            eq_(c.foo, 'bar')
+            c.foo = 'notbar'
+            eq_(c.foo, 'notbar')
+
+        def supports_nested_mutation_via_attribute_access(self):
+            c = Config({'foo': {'bar': 'biz'}})
+            eq_(c.foo.bar, 'biz')
+            c.foo.bar = 'notbiz'
+            eq_(c.foo.bar, 'notbiz')
+
         def string_display(self):
             "__str__ and friends"
             config = Config({'foo': 'bar'})

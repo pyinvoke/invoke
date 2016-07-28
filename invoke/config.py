@@ -82,6 +82,14 @@ class DataProxy(object):
     def __hasattr__(self, key):
         return key in self.config or key in self._proxies
 
+    def __setattr__(self, key, value):
+        # Have to make sure we test whether we even have .config yet before we
+        # try looking within it...
+        if hasattr(self, 'config') and key in self.config:
+            self.config[key] = value
+        else:
+            super(DataProxy, self).__setattr__(key, value)
+
     def __iter__(self):
         # For some reason Python is ignoring our __hasattr__ when determining
         # whether we support __iter__. BOO
