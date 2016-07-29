@@ -94,6 +94,9 @@ class Context(DataProxy):
             # default. May mean we pop this out as its own class-as-a-method or
             # something?
             password = getpass.getpass(msg)
+        # TODO: echo ourselves and suppress inner run()'s echo, so we can
+        # display just 'sudo command' and not the prompt bits?
+        # TODO: how to handle "full debug" output for that?
         cmd_str = "sudo -S -p '{0}' {1}".format(prompt, command)
         escaped_prompt = re.escape(prompt)
         responses = {escaped_prompt: "{0}\n".format(password)}
