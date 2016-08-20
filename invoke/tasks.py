@@ -132,10 +132,19 @@ class Task(object):
         # TODO: __call__ exhibits the 'self' arg; do we manually nix 1st result
         # in argspec, or is there a way to get the "really callable" spec?
         func = body if isinstance(body, types.FunctionType) else body.__call__
-        spec = inspect.getargspec(func)
-        arg_names = spec.args[:]
-        matched_args = [reversed(x) for x in [spec.args, spec.defaults or []]]
-        spec_dict = dict(zip_longest(*matched_args, fillvalue=NO_DEFAULT))
+        if six.PY3:
+            sig = inspect.signature(func)
+            arg_names = [k for k, v in sig.parameters.items()]
+            spec_dict = {}
+            for k, v in sig.parameters.items():
+                value = v.default if not v.default == sig.empty else NO_DEFAULT
+                spec_dict.update({k: value})
+        else:
+            spec = inspect.getargspec(func)
+            arg_names = spec.args[:]
+            matched_args = [
+                reversed(x) for x in [spec.args, spec.defaults or []]]
+            spec_dict = dict(zip_longest(*matched_args, fillvalue=NO_DEFAULT))
         # Pop context argument
         try:
             context_arg = arg_names.pop(0)

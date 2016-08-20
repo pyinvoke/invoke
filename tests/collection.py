@@ -229,7 +229,7 @@ class Collection_(Spec):
         def raises_ValueError_if_no_name_found(self):
             # Can't use a lambda here as they are technically real functions.
             class Callable(object):
-                def __call__(self):
+                def __call__(self, ctx):
                     pass
             self.c.add_task(Task(Callable()))
 
