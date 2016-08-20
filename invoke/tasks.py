@@ -80,6 +80,11 @@ class Task(object):
         return str(self)
 
     def __eq__(self, other):
+        # Assumes that Tasks and Calls can not be compared,
+        # only Tasks with Tasks
+        # TODO: Review this assumption
+        if not isinstance(other, Task):
+            return False
         if self.name != other.name:
             return False
         # Functions do not define __eq__ but func_code objects apparently do.
@@ -371,6 +376,11 @@ class Call(object):
         # same args/kwargs should be considered same as an unnamed call of the
         # same Task with the same args/kwargs (e.g. pre/post task specified w/o
         # name). Ditto tasks with multiple aliases.
+        # Assumes that Calls and Tasks can not be compared,
+        # only Calls and Calls
+        # TODO: Review this assumption
+        if not isinstance(other, Call):
+            return False
         for attr in "task args kwargs".split():
             if getattr(self, attr) != getattr(other, attr):
                 return False

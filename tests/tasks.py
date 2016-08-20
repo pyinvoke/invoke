@@ -124,6 +124,11 @@ class Task_(Spec):
         t3 = Task(_func, name='bar')
         assert t1 != t3
 
+    def inequality_testing(self):
+        t1 = Task(_func, name='bar')
+        assert t1 is not None
+        assert t1 != _func  # comparison with non-Task type
+
     class attributes:
         def has_default_flag(self):
             eq_(Task(_func).is_default, False)
@@ -348,3 +353,5 @@ class Call_(Spec):
             eq_(clone.kwargs['key'], 'notval')
             eq_(orig.context['setting'], 'value')
             eq_(clone.context['setting'], 'notvalue')
+            assert orig is not None
+            assert orig != _func  # comparison with non-Call type
