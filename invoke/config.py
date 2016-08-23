@@ -496,10 +496,9 @@ class Config(DataProxy):
             except (OSError, IOError) as e:
                 # Typically means `FileNotFound`, so just note & skip past.
                 # @see https://www.python.org/dev/peps/pep-3151/
-                if isinstance(e, FileNotFoundError):
-                    debug("Didn't see any {0}, skipping.".format(filepath))
-                else:
-                    raise e
+                debug("Didn't see any {0}, skipping.".format(filepath))
+            except Exception:
+                raise
 
         # Still None -> no suffixed paths were found, record this fact
         if getattr(self, path) is None:
