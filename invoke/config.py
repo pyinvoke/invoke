@@ -493,14 +493,13 @@ class Config(DataProxy):
                 setattr(self, path, filepath)
                 setattr(self, found, True)
                 break
-            # Typically means 'no such file', so just note & skip past.
-            except IOError as e:
-                # TODO: is there a better / x-platform way to detect this?
-                if "No such file" in e.strerror:
-                    err = "Didn't see any {0}, skipping."
-                    debug(err.format(filepath))
+            except OSError as e:
+                # Typically means `FileNotFound`, so just note & skip past.
+                if isinstance(e, FileNotFoundError):
+                    debug("Didn't see any {0}, skipping.".format(filepath))
                 else:
-                    raise
+                    raise e
+
         # Still None -> no suffixed paths were found, record this fact
         if getattr(self, path) is None:
             setattr(self, found, False)
