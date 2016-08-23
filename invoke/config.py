@@ -496,7 +496,7 @@ class Config(DataProxy):
             except (OSError, IOError) as e:
                 # Typically means `FileNotFound`, so just note & skip past.
                 # @see https://www.python.org/dev/peps/pep-3151/
-                debug("Didn't see any {}, skipping: {}".format(filepath, e))
+                debug("Didn't see any {0}, skipping: {1}".format(filepath, e))
             except Exception:
                 raise
 
