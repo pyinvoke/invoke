@@ -493,7 +493,7 @@ class Config(DataProxy):
                 setattr(self, path, filepath)
                 setattr(self, found, True)
                 break
-            except (OSError, IOError as e):
+            except (OSError, IOError) as e:
                 # Typically means `FileNotFound`, so just note & skip past.
                 # @see https://www.python.org/dev/peps/pep-3151/
                 if isinstance(e, FileNotFoundError):
