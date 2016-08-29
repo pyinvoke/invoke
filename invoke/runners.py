@@ -378,6 +378,12 @@ class Runner(object):
             stdin_stream)``.
         """
         opts = {}
+        # TODO: move to bottom
+        # TODO: pop???
+        # TODO: watchers AND responses? are we sure? Is it really that much
+        # easier to have responses dict instead of just manually putting
+        # `Responder` in watchers list? Feels like not worth complexity
+        self.watchers = kwargs.get('watchers', None)
         for key, value in six.iteritems(self.context.config.run):
             runtime = kwargs.pop(key, None)
             opts[key] = value if runtime is None else runtime
@@ -401,12 +407,14 @@ class Runner(object):
         # Determine pty or no
         self.using_pty = self.should_use_pty(opts['pty'], opts['fallback'])
         # Responses
-        self.responses = opts['responses']
+        self.responses = opts['responses'] or []
         if self.responses:
             callbacks = []
             for k, v in six.iteritems(self.responses):
                 callbacks.append(Responder(k, v))
             self.responses = callbacks
+        if self.watchers:
+            self.responses.extend(self.watchers)
         return opts, out_stream, err_stream, in_stream
 
     def generate_result(self, **kwargs):
@@ -1079,16 +1087,33 @@ class Responder(StreamWatcher):
         self.response = response
         self.index = 0
 
-    def submit(self, stream):
+    def pattern_matches(self, stream, pattern, index_attr):
+        """
+        Generic "search for pattern in stream, using index" behavior.
+
+        Used here and in some subclasses that want to track multiple patterns
+        concurrently.
+
+        :param unicode stream: The same data passed to `submit`.
+        :param unicode pattern: The pattern to search for.
+        :param unicode index_attr: The name of the index attribute to use.
+        :returns: An iterable of string matches.
+        """
+        # NOTE: generifies scanning so it can be used to scan for >1 pattern at
+        # once, e.g. in FailingResponder.
         # Only look at stream contents we haven't seen yet, to avoid dupes.
-        new_ = stream[self.index:]
+        index = getattr(self, index_attr)
+        new_ = stream[index:]
         # Search, across lines if necessary
-        matches = re.findall(self.pattern, new_, re.S)
+        matches = re.findall(pattern, new_, re.S)
         # Update seek index if we've matched
         if matches:
-            self.index += len(new_)
+            setattr(self, index_attr, index + len(new_))
+        return matches
+
+    def submit(self, stream):
         # Iterate over findall() response in case >1 match occurred.
-        for _ in matches:
+        for _ in self.pattern_matches(stream, self.pattern, 'index'):
             yield self.response
 
 

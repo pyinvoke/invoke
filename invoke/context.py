@@ -1,7 +1,7 @@
 import getpass
 import re
 
-from .runners import Local
+from .runners import Local, FailingResponder
 from .config import Config, DataProxy
 
 
@@ -99,9 +99,16 @@ class Context(DataProxy):
         # TODO: how to handle "full debug" output for that?
         cmd_str = "sudo -S -p '{0}' {1}".format(prompt, command)
         escaped_prompt = re.escape(prompt)
-        responses = {escaped_prompt: "{0}\n".format(password)}
+        watcher = FailingResponder(
+            pattern=escaped_prompt,
+            response="{0}\n".format(password),
+            failure_sentinel="Sorry, try again.\n",
+        )
         # TODO: we always want our auto-added one merged - how to square that
         # with how kwarg always wins currently?
         # * If we add to self.config, and user gives kwarg, ours is lost
         # * If we add to kwarg, any user config is lost
-        return self.run(cmd_str, responses=responses, **kwargs)
+        # TODO: handle ResponseFailure (via ThreadException) somehow, pending
+        # new config option or w/e re: except or prompt. TODO: also start
+        # TDDing at this point, jfc
+        return self.run(cmd_str, watchers=[watcher], **kwargs)

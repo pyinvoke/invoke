@@ -3,8 +3,7 @@ import re
 from mock import patch
 from spec import Spec, skip, eq_, ok_
 
-from invoke.context import Context
-from invoke.config import Config
+from invoke import Context, Config, FailingResponder
 
 
 class Context_(Spec):
@@ -96,39 +95,45 @@ class Context_(Spec):
         @patch('invoke.context.Local')
         def _expect_responses(self,
             expected, Local, getpass,
-            config=None, kwargs=None, password=None,
+            config=None, kwargs=None, getpass_reply=None,
         ):
             """
             Execute mocked sudo(), expecting responses= kwarg in its run().
 
-            * expected: dict value of expected responses= kwarg
+            * expected: list of 2-tuples of FailingResponder prompt/response
             * config: Config object, if an overridden one is needed
             * kwargs: sudo() kwargs, if needed
-            * password: return value of getpass.getpass, if needed
+            * getpass_reply: return value of getpass.getpass, if needed
 
             (Local and getpass are just mock injections.)
             """
             if kwargs is None:
                 kwargs = {}
-            getpass.getpass.return_value = password
+            getpass.getpass.return_value = getpass_reply
             runner = Local.return_value
             context = Context(config=config) if config else Context()
             context.sudo('whoami', **kwargs)
-            eq_(runner.run.call_args[1]['responses'], expected)
+            # Tease out the interesting bits - pattern/response - ignoring the
+            # sentinel, etc for now.
+            prompt_responses = [
+                (watcher.pattern, watcher.response)
+                for watcher in runner.run.call_args[1]['watchers']
+            ]
+            eq_(prompt_responses, expected)
 
         def autoresponds_with_password_kwarg(self):
-            expected = {self.escaped_prompt: 'secret\n'}
+            expected = [(self.escaped_prompt, 'secret\n')]
             self._expect_responses(expected, kwargs={'password': 'secret'})
 
         def honors_configured_sudo_password(self):
             config = Config(overrides={'sudo': {'password': 'secret'}})
-            expected = {self.escaped_prompt: 'secret\n'}
+            expected = [(self.escaped_prompt, 'secret\n')]
             self._expect_responses(expected, config=config)
 
         def kwarg_wins_over_config(self):
             config = Config(overrides={'sudo': {'password': 'notsecret'}})
             kwargs = {'password': 'secret'}
-            expected = {self.escaped_prompt: 'secret\n'}
+            expected = [(self.escaped_prompt, 'secret\n')]
             self._expect_responses(expected, config=config, kwargs=kwargs)
 
         @patch('invoke.context.Local')
@@ -137,12 +142,12 @@ class Context_(Spec):
             runner = Local.return_value
             context = Context()
             context.sudo('whoami', responses={'foo': 'bar'})
-            expected = {
+            expected = [
                 # TODO: will need updating once we force use of getpass when
                 # None
-                self.escaped_prompt: None, # Auto-inserted
-                'foo': 'bar', # From kwarg
-            }
+                (self.escaped_prompt, None), # Auto-inserted
+                ('foo', 'bar'), # From kwarg
+            ]
             eq_(runner.run.call_args[1]['responses'], expected)
 
         @patch('invoke.context.Local')
@@ -151,17 +156,17 @@ class Context_(Spec):
             runner = Local.return_value
             config = Config(overrides={'run': {'responses': {'foo': 'bar'}}})
             Context(config=config).sudo('whoami')
-            expected = {
+            expected = [
                 # TODO: will need updating once we force use of getpass when
                 # None
-                self.escaped_prompt: None, # Auto-inserted
-                'foo': 'bar', # From config
-            }
+                (self.escaped_prompt, None), # Auto-inserted
+                ('foo', 'bar'), # From config
+            ]
             eq_(runner.run.call_args[1]['responses'], expected)
 
         def prompts_when_no_configured_password_is_found(self):
-            expected = {self.escaped_prompt: "dynamic\n"}
-            self._expect_responses(expected, password="dynamic")
+            expected = [(self.escaped_prompt, "dynamic\n")]
+            self._expect_responses(expected, getpass_reply="dynamic")
 
         @patch('invoke.context.getpass')
         @patch('invoke.context.Local')
