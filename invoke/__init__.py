@@ -11,7 +11,9 @@ from .loader import FilesystemLoader # noqa
 from .parser import Argument # noqa
 from .platform import pty_size # noqa
 from .program import Program # noqa
-from .runners import Runner, Local, Failure, Result # noqa
+from .runners import ( # noqa
+    Runner, Local, Failure, Result, Responder, FailingResponder, # noqa
+) # noqa
 from .tasks import task, call, Call, Task  # noqa
 
 

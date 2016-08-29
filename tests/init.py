@@ -69,6 +69,10 @@ class Init(Spec):
         def runner_result(self):
             assert invoke.Result is invoke.runners.Result
 
+        def runner_responders(self):
+            assert invoke.Responder is invoke.runners.Responder
+            assert invoke.FailingResponder is invoke.runners.FailingResponder
+
         def program(self):
             assert invoke.Program is invoke.program.Program
 

@@ -1092,6 +1092,54 @@ class Responder(StreamWatcher):
             yield self.response
 
 
+class FailingResponder(Responder):
+    """
+    Variant of `Responder` which is capable of detecting incorrect responses.
+
+    This class adds a ``failure_sentinel`` parameter to `__init__`, and its
+    `submit` will raise `ResponseFailure` if it detects that sentinel value in
+    the stream.
+    """
+    def __init__(self, pattern, response, failure_sentinel):
+        super(FailingResponder, self).__init__(pattern, response)
+        self.failure_sentinel = failure_sentinel
+        self.failure_index = 0
+        self.tried = False
+
+    def submit(self, stream):
+        # Behave like regular Responder initially
+        response = super(FailingResponder, self).submit(stream)
+        # Also check stream for our failure sentinel
+        failed = self.pattern_matches(
+            stream, self.failure_sentinel, 'failure_index'
+        )
+        # Error out if we seem to have failed after a previous response.
+        # TODO: write tests for other cases!!!
+        if self.tried and failed:
+            raise ResponseFailure(self)
+        # Once we see that we had a response, take note
+        # TODO: will super.submit return a generator that always appears true?
+        if response:
+            self.tried = True
+        # Again, behave regularly by default.
+        return response
+
+
+class ResponseFailure(Exception):
+    """
+    Signals that an autoresponse encountered a failure.
+    """
+    def __init__(self, responder):
+        self.responder = responder
+
+    def __str__(self):
+        # TODO: test
+        # NOTE: not repr'ing the pattern as that doubles up backslashes. shrug
+        return "Auto-response to r\"{0}\" failed with {1!r}!".format(
+            self.responder.pattern, self.responder.failure_sentinel
+        )
+
+
 class Result(object):
     """
     A container for information about the result of a command execution.
