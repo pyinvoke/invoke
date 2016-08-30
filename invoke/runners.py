@@ -2,7 +2,6 @@
 
 import locale
 import os
-import re
 from signal import SIGINT, SIGTERM
 import struct
 from subprocess import Popen, PIPE
@@ -30,7 +29,6 @@ from .platform import (
     WINDOWS, pty_size, character_buffered, ready_for_reading, read_byte,
 )
 from .util import has_fileno, isatty, ExceptionHandlingThread
-from .watchers import Responder
 
 from .vendor import six
 

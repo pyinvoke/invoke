@@ -3,7 +3,7 @@ import re
 from mock import patch
 from spec import Spec, skip, eq_, ok_
 
-from invoke import Context, Config, FailingResponder
+from invoke import Context, Config
 
 
 class Context_(Spec):

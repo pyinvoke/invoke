@@ -142,5 +142,3 @@ class ResponseFailure(Exception):
         return "Auto-response to r\"{0}\" failed with {1!r}!".format(
             self.responder.pattern, self.responder.failure_sentinel
         )
-
-
