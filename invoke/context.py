@@ -96,9 +96,15 @@ class Context(DataProxy):
             # default. May mean we pop this out as its own class-as-a-method or
             # something?
             password = getpass.getpass(msg)
-        # TODO: echo ourselves and suppress inner run()'s echo, so we can
-        # display just 'sudo command' and not the prompt bits?
-        # TODO: how to handle "full debug" output for that?
+        # TODO: want to print a "cleaner" echo with just 'sudo <command>'; but
+        # hard to do as-is, obtaining config data from outside a Runner one
+        # holds is currently messy (could fix that), if instead we manually
+        # inspect the config ourselves that duplicates logic. NOTE: once we
+        # figure this out there is an existing, would-fail-if-not-skipped test
+        # for this behavior in test/context.py.
+        # TODO: how to handle "full debug" output exactly (display of actual,
+        # real full sudo command w/ -S and -p), in terms of API/config? Impl is
+        # easy, just go back to passing echo through to 'run'...
         cmd_str = "sudo -S -p '{0}' {1}".format(prompt, command)
         escaped_prompt = re.escape(prompt)
         watcher = FailingResponder(

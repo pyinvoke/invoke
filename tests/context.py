@@ -1,9 +1,12 @@
 import re
+import sys
 
 from mock import patch
-from spec import Spec, skip, eq_, ok_
+from spec import Spec, skip, eq_, ok_, trap
 
 from invoke import Context, Config
+
+from _util import mock_subprocess, _Dummy
 
 
 class Context_(Spec):
@@ -76,6 +79,19 @@ class Context_(Spec):
             cmd = "sudo -S -p '[sudo] password: ' whoami"
             ok_(runner.run.called, "sudo() never called run()!")
             eq_(runner.run.call_args[0][0], cmd)
+
+        @trap
+        @patch('invoke.context.getpass')
+        @mock_subprocess()
+        def echo_hides_extra_sudo_flags(self, getpass):
+            skip() # see TODO in sudo() body.
+            config = Config(overrides={'runner': _Dummy})
+            Context(config=config).sudo('nope', echo=True)
+            output = sys.stdout.getvalue()
+            sys.__stderr__.write(repr(output) + "\n")
+            ok_("-S" not in output)
+            ok_(Context().sudo.prompt not in output)
+            ok_("sudo nope" in output)
 
         @patch('invoke.context.getpass')
         @patch('invoke.context.Local')
