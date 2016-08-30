@@ -105,6 +105,13 @@ class ExceptionHandlingThread(threading.Thread):
     Based in part on Fabric 1's ThreadHandler. See also Fabric GH issue #204.
     """
     def __init__(self, **kwargs):
+        """
+        Create a new exception-handling thread instance.
+
+        Takes all regular `threading.Thread` keyword arguments, via
+        ``**kwargs`` for easier display of thread identity when raising
+        captured exceptions.
+        """
         super(ExceptionHandlingThread, self).__init__(**kwargs)
         # No record of why, but Fabric used daemon threads ever since the
         # switch from select.select, so let's keep doing that.

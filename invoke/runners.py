@@ -82,7 +82,7 @@ class Runner(object):
         self.input_sleep = self.__class__.input_sleep
         #: Whether pty fallback warning has been emitted.
         self.warned_about_pty_fallback = False
-        #: A list of `StreamWatcher` instances for use by `respond`. Is filled
+        #: A list of `.StreamWatcher` instances for use by `respond`. Is filled
         #: in at runtime by `run`.
         self.watchers = []
 

@@ -107,8 +107,8 @@ class UnknownFileType(Exception):
 
 
 #: A namedtuple wrapping a thread-borne exception & that thread's arguments.
-#: Mostly used as an intermediate between `ExceptionHandlingThread` (which
-#: preserves initial exceptions) and `ThreadException` (which holds 1..N such
+#: Mostly used as an intermediate between `.ExceptionHandlingThread` (which
+#: preserves initial exceptions) and `.ThreadException` (which holds 1..N such
 #: exceptions, as typically multiple threads are involved.)
 ExceptionWrapper = namedtuple(
     'ExceptionWrapper',

@@ -9,9 +9,9 @@ class StreamWatcher(threading.local):
     Subclasses must exhibit the following API; see `Responder` for a concrete
     example.
 
-    * `__init__` is simply the parameterization & state initialization vector.
-      Subclasses may do whatever they need here, as long as they remember to
-      call `super`, which does some basic bookkeeping.
+    * ``__init__`` is completely up to each subclass, though as usual,
+      subclasses *of* subclasses should be careful to make use of `super` where
+      appropriate.
     * `submit` must accept the entire current contents of the stream being
       watched, as a Unicode string, and may optionally return an iterable of
       Unicode strings (or act as a generator iterator, i.e. multiple calls to
@@ -73,7 +73,7 @@ class Responder(StreamWatcher):
         Used here and in some subclasses that want to track multiple patterns
         concurrently.
 
-        :param unicode stream: The same data passed to `submit`.
+        :param unicode stream: The same data passed to ``submit``.
         :param unicode pattern: The pattern to search for.
         :param unicode index_attr: The name of the index attribute to use.
         :returns: An iterable of string matches.
@@ -100,9 +100,9 @@ class FailingResponder(Responder):
     """
     Variant of `Responder` which is capable of detecting incorrect responses.
 
-    This class adds a ``failure_sentinel`` parameter to `__init__`, and its
-    `submit` will raise `ResponseFailure` if it detects that sentinel value in
-    the stream.
+    This class adds a ``failure_sentinel`` parameter to ``__init__``, and its
+    ``submit`` will raise `ResponseFailure` if it detects that sentinel value
+    in the stream.
     """
     def __init__(self, pattern, response, failure_sentinel):
         super(FailingResponder, self).__init__(pattern, response)
