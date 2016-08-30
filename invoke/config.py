@@ -31,6 +31,9 @@ from .platform import WINDOWS
 class DataProxy(object):
     """
     Helper class implementing nested dict+attr access for `.Config`.
+
+    Specifically, is used both for `.Config` itself, and to wrap any other
+    dicts assigned as config values (recursively).
     """
 
     # Attributes which get proxied through to inner etc.Config obj.
@@ -84,8 +87,9 @@ class DataProxy(object):
 
     def __setattr__(self, key, value):
         # Have to make sure we test whether we even have .config yet before we
-        # try looking within it...
-        if hasattr(self, 'config') and key in self.config:
+        # try looking within it; also can't __setattr__ .config itself under
+        # Python 3.
+        if key != 'config' and hasattr(self, 'config') and key in self.config:
             self.config[key] = value
         else:
             super(DataProxy, self).__setattr__(key, value)
@@ -297,12 +301,12 @@ class Config(DataProxy):
             be a full file path to an existing file, not a directory path, or a
             prefix.
         """
-        # Config file suffixes to search, in preference order.
-        self._file_suffixes = ('yaml', 'json', 'py')
-
         # Technically an implementation detail - do not expose in public API.
         # Stores merged configs and is accessed via DataProxy.
         self.config = {}
+
+        # Config file suffixes to search, in preference order.
+        self._file_suffixes = ('yaml', 'json', 'py')
 
         #: Default configuration values, typically a copy of
         #: `global_defaults`.
