@@ -115,7 +115,4 @@ class Context(DataProxy):
         # with how kwarg always wins currently?
         # * If we add to self.config, and user gives kwarg, ours is lost
         # * If we add to kwarg, any user config is lost
-        # TODO: handle ResponseFailure (via ThreadException) somehow, pending
-        # new config option or w/e re: except or prompt. TODO: also start
-        # TDDing at this point, jfc
         return self.run(cmd_str, watchers=[watcher], **kwargs)

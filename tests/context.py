@@ -197,3 +197,29 @@ class Context_(Spec):
             eq_(kwargs['warn'], False)
             eq_(kwargs['hide'], True)
             eq_(kwargs['encoding'], 'ascii')
+
+        def raises_response_failure_when_failure_detected(self):
+            skip()
+            # TODO: or do we re-prompt for the "right" password forever like
+            # fabric 1 did? see musings @ end of
+            # https://github.com/pyinvoke/invoke/issues/294
+            # TODO: raise just a ResponseFailure as-is, or make it a true
+            # Failure subclass, including all info we have about the run?
+            # Latter feels best by far.
+            # Probably requires refactoring the bits in Runner which deal with
+            # Failure/Result generation, or allowing injection of logic like
+            # "hey you might see a watcher raise an exception, just tally that
+            # when making a Failure"...? since this isn't exactly the same as a
+            # subprocess exiting normally...
+            # e.g. no matter how/where we generate it, such a Failure/subclass
+            # would be unable to cleanly answer the truthiness (bool/nonzero),
+            # ok, success, fail stuff; as well as the default __str__ which
+            # cares about exit code. We'd need to put semi-dummy stuff in
+            # there (1? -1? None?), unless we allow it to retry infinitely
+            # until the sudo program actually exits w/ failure (feels bad).
+            # TODO: also that needs documentation about how it interacts with
+            # the 'warn' setting/kwarg, because in this case warning does not
+            # feel useful; we were not actually able to run their command, vs
+            # successfully initiating one that then fails on its own.
+            # TODO: then update the test in Program tests so it also throws
+            # this new exception subclass.
