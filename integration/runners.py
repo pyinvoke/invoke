@@ -5,7 +5,7 @@ import time
 from mock import Mock
 from spec import Spec, eq_, ok_, skip
 
-from invoke import run, Local, Context, ThreadException
+from invoke import run, Local, Context, ThreadException, Responder
 from invoke.util import ExceptionHandlingThread
 
 from _util import assert_cpu_usage
@@ -24,17 +24,17 @@ class Runner_(Spec):
         def base_case(self):
             # Basic "doesn't explode" test: respond.py will exit nonzero unless
             # this works, causing a Failure.
-            responses = {r"What's the password\?": "Rosebud\n"}
+            watcher = Responder(r"What's the password\?", "Rosebud\n")
             # Gotta give -u or Python will line-buffer its stdout, so we'll
             # never actually see the prompt.
-            run("python -u respond_base.py", responses=responses, hide=True)
+            run("python -u respond_base.py", watchers=[watcher], hide=True)
 
         def both_streams(self):
-            responses = {
-                "standard out": "with it\n",
-                "standard error": "between chair and keyboard\n",
-            }
-            run("python -u respond_both.py", responses=responses, hide=True)
+            watchers = [
+                Responder("standard out", "with it\n"),
+                Responder("standard error", "between chair and keyboard\n"),
+            ]
+            run("python -u respond_both.py", watchers=watchers, hide=True)
 
         def stdin_mirroring_isnt_cpu_heavy(self):
             "stdin mirroring isn't CPU-heavy"
