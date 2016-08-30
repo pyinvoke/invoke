@@ -13,6 +13,7 @@ from mock import patch, Mock, call
 
 from invoke import (
     Runner, Local, Context, Config, Failure, ThreadException, Responder,
+    StreamWatcher
 )
 from invoke.platform import WINDOWS
 
@@ -484,9 +485,14 @@ class Runner_(Spec):
             else:
                 assert False, "Did not raise ThreadException as expected!"
 
-    class responding:
-        # TODO: most of these could be tweaked & moved to a more unit-testy
-        # watchers test module, if desired.
+    class watchers:
+        # NOTE: it's initially tempting to consider using mocks or stub
+        # Responder instances for many of these, but it really doesn't save
+        # appreciable runtime or code read/write time.
+        # NOTE: these strictly test interactions between
+        # StreamWatcher/Responder and their host Runner; Responder-only tests
+        # are in tests/watchers.py.
+
         def nothing_is_written_to_stdin_by_default(self):
             # NOTE: technically if some goofus ran the tests by hand and mashed
             # keys while doing so...this would fail. LOL?
@@ -520,12 +526,6 @@ class Runner_(Spec):
                 responses={'empty': 'handed'},
             ).assert_called_once_with("handed")
 
-        def regex_patterns_work(self):
-            self._expect_response(
-                out="technically, it's still debt",
-                responses={r'tech.*debt': 'pay it down'},
-            ).assert_called_once_with('pay it down')
-
         def multiple_hits_yields_multiple_responses(self):
             holla = call('how high?')
             self._expect_response(
@@ -544,18 +544,6 @@ class Runner_(Spec):
             klass.write_proc_stdin.assert_has_calls([holla, holla])
             # And there weren't duplicates!
             eq_(len(klass.write_proc_stdin.call_args_list), 2)
-
-        def patterns_span_multiple_lines(self):
-            output = """
-You only call me
-when you have a problem
-You never call me
-Just to say hi
-"""
-            self._expect_response(
-                out=output,
-                responses={r'call.*problem': 'So sorry'},
-            ).assert_called_once_with('So sorry')
 
         def both_out_and_err_are_scanned(self):
             bye = call("goodbye")
@@ -594,7 +582,7 @@ Just to say hi
                 responses=responses,
             ).assert_has_calls(calls, any_order=True)
 
-        def honors_config_option(self):
+        def honors_watchers_config_option(self):
             klass = self._mock_stdin_writer()
             responder = Responder("my stdout", "and my axe")
             runner = self._runner(
@@ -609,6 +597,12 @@ Just to say hi
             # TODO: how to handle use cases where merging, not overriding, is
             # the expected/unsurprising default? probably another config-only
             # (not kwarg) setting, e.g. run.merge_responses?
+            # TODO: now that this stuff is list, not dict, based, it should be
+            # easier...BUT how to handle removal of defaults from config? Maybe
+            # just document to be careful using the config as it won't _be_
+            # overridden? (Users can always explicitly set the config to be
+            # empty-list if they want kwargs to be the entire set of
+            # watchers...right?)
             klass = self._mock_stdin_writer()
             conf = Responder("my stdout", "and my axe")
             kwarg = Responder("my stdout", "and my body spray")
