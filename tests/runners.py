@@ -4,16 +4,16 @@ import types
 from io import BytesIO
 from signal import SIGINT, SIGTERM
 
-from invoke.vendor.six import StringIO, b
+from invoke.vendor.six import StringIO, b, PY2, iteritems
 
 from spec import (
     Spec, trap, eq_, skip, ok_, raises, assert_contains, assert_not_contains
 )
 from mock import patch, Mock, call
 
-from invoke.vendor import six
-
-from invoke import Runner, Local, Context, Config, Failure, ThreadException
+from invoke import (
+    Runner, Local, Context, Config, Failure, ThreadException, Responder,
+)
 from invoke.platform import WINDOWS
 
 from _util import (
@@ -268,11 +268,11 @@ class Runner_(Spec):
             with patch('invoke.runners.locale') as fake_locale:
                 fake_locale.getdefaultlocale.return_value = ('meh', 'UHF-8')
                 fake_locale.getpreferredencoding.return_value = 'FALLBACK'
-                expected = 'UHF-8' if six.PY2 else 'FALLBACK'
+                expected = 'UHF-8' if PY2 else 'FALLBACK'
                 eq_(self._runner().default_encoding(), expected)
 
         def falls_back_to_defaultlocale_when_preferredencoding_is_None(self):
-            if not six.PY3:
+            if PY2:
                 skip()
             with patch('invoke.runners.locale') as fake_locale:
                 fake_locale.getdefaultlocale.return_value = (None, None)
