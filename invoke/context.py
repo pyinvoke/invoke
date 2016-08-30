@@ -106,9 +106,8 @@ class Context(DataProxy):
         # real full sudo command w/ -S and -p), in terms of API/config? Impl is
         # easy, just go back to passing echo through to 'run'...
         cmd_str = "sudo -S -p '{0}' {1}".format(prompt, command)
-        escaped_prompt = re.escape(prompt)
         watcher = FailingResponder(
-            pattern=escaped_prompt,
+            pattern=re.escape(prompt),
             response="{0}\n".format(password),
             failure_sentinel="Sorry, try again.\n",
         )
