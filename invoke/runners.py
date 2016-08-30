@@ -83,9 +83,9 @@ class Runner(object):
         self.input_sleep = self.__class__.input_sleep
         #: Whether pty fallback warning has been emitted.
         self.warned_about_pty_fallback = False
-        #: The trigger/response mapping for use by `respond`. Is filled in at
-        #: runtime by `run`.
-        self.responses = None
+        #: A list of `StreamWatcher` instances for use by `respond`. Is filled
+        #: in at runtime by `run`.
+        self.watchers = []
 
     def run(self, command, **kwargs):
         """
@@ -188,16 +188,15 @@ class Runner(object):
             A file-like stream object to used as the subprocess' standard
             input. If ``None`` (the default), ``sys.stdin`` will be used.
 
-        :param dict responses:
-            A `dict` whose keys are regular expressions to be searched for in
-            the program's ``stdout`` or ``stderr``, and whose values may be any
-            value one desires to write into a stdin text/binary stream
+        :param list watchers:
+            A list of `StreamWatcher` instances which will be used to scan the
+            program's ``stdout`` or ``stderr`` and may write into its ``stdin``
             (typically ``str`` or ``bytes`` objects depending on Python
-            version) in response.
+            version) in response to patterns or other heuristics.
 
-            See :doc:`/concepts/responses` for details on this functionality.
+            See :doc:`/concepts/watchers` for details on this functionality.
 
-            Default: ``{}``.
+            Default: ``[]``.
 
         :param bool echo_stdin:
             Whether to write data from ``in_stream`` back to ``out_stream``.
@@ -378,12 +377,6 @@ class Runner(object):
             stdin_stream)``.
         """
         opts = {}
-        # TODO: move to bottom
-        # TODO: pop???
-        # TODO: watchers AND responses? are we sure? Is it really that much
-        # easier to have responses dict instead of just manually putting
-        # `Responder` in watchers list? Feels like not worth complexity
-        self.watchers = kwargs.get('watchers', None)
         for key, value in six.iteritems(self.context.config.run):
             runtime = kwargs.pop(key, None)
             opts[key] = value if runtime is None else runtime
@@ -406,15 +399,8 @@ class Runner(object):
             in_stream = sys.stdin
         # Determine pty or no
         self.using_pty = self.should_use_pty(opts['pty'], opts['fallback'])
-        # Responses
-        self.responses = opts['responses'] or []
-        if self.responses:
-            callbacks = []
-            for k, v in six.iteritems(self.responses):
-                callbacks.append(Responder(k, v))
-            self.responses = callbacks
-        if self.watchers:
-            self.responses.extend(self.watchers)
+        if opts['watchers']:
+            self.watchers = opts['watchers']
         return opts, out_stream, err_stream, in_stream
 
     def generate_result(self, **kwargs):
@@ -685,7 +671,7 @@ class Runner(object):
         # StringIO or cStringIO (tho the latter doesn't do Unicode well?) which
         # is apparently even more efficient.
         stream = u''.join(buffer_)
-        for watcher in self.responses:
+        for watcher in self.watchers:
             for response in watcher.submit(stream):
                 self.write_proc_stdin(response)
 
@@ -1046,8 +1032,8 @@ class StreamWatcher(threading.local):
         with simple callback functions.
 
     .. note::
-        `StreamWatcher` subclasses `threading.local` so that their instances
-        can be used to 'watch' both subprocess stdout and stderr in separate
+        `StreamWatcher` subclasses `threading.local` so that its instances can
+        be used to 'watch' both subprocess stdout and stderr in separate
         threads.
     """
     def submit(self, stream):

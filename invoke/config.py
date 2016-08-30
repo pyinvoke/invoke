@@ -231,7 +231,7 @@ class Config(DataProxy):
                 'out_stream': None,
                 'err_stream': None,
                 'in_stream': None,
-                'responses': {},
+                'watchers': [],
                 'echo_stdin': None,
             },
             'sudo': {

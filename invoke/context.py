@@ -66,21 +66,22 @@ class Context(DataProxy):
 
         Specifically, `sudo`:
 
-        * Updates the value of the ``responses`` dict (see
-          :doc:`/concepts/responses`) so that it includes a key for the
-          ``sudo`` password prompt.
-        * Fills in the value/response for that key from the ``sudo.password``
-          :doc:`configuration </concepts/configuration>` setting.
+        * Places a `.FailingResponder` into the ``watchers`` kwarg (see
+          :doc:`/concepts/watchers`) which:
 
-          If *no* config value is found, the user is prompted interactively via
-          `getpass <getpass.getpass>`, and the value is stored in memory for
-          reuse.
-        * Builds a full ``sudo`` command string using the supplied ``command``
-          argument prefixed by the ``sudo.prefix`` configuration setting.
+            * searches for the configured ``sudo`` password prompt;
+            * responds with the configured sudo password (``sudo.password``
+              from the :doc:`configuration </concepts/configuration>`, or a
+              runtime `getpass <getpass.getpass>` input);
+            * can tell when that response causes an authentication failure, and
+              raises an exception if so.
+
+        * Builds a ``sudo`` command string using the supplied ``command``
+          argument prefixed by the ``sudo.prefix`` configuration setting;
         * Executes that command via a call to `run`, returning the result.
 
         As with `run`, these additional behaviors may be configured both via
-        the ``run`` configuration settings (like ``run.echo``) or via runtime
+        the ``run`` tree of configuration settings (like ``run.echo``) or via
         keyword arguments, which will override the configuration system.
 
         :param str password: Runtime override for ``sudo.password``.

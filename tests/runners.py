@@ -497,14 +497,19 @@ class Runner_(Spec):
 
         def _expect_response(self, **kwargs):
             """
-            Execute a run() w/ ``responses`` set & _runner() ``kwargs`` given.
+            Execute a run() w/ ``watchers`` set from ``responses``.
+
+            Any other ``**kwargs`` given are passed direct to ``_runner()``.
 
             :returns: The mocked ``write_proc_stdin`` method of the runner.
             """
-            klass = self._mock_stdin_writer()
-            kwargs['klass'] = klass
+            watchers = [
+                Responder(pattern=key, response=value)
+                for key, value in iteritems(kwargs.pop('responses'))
+            ]
+            kwargs['klass'] = klass = self._mock_stdin_writer()
             runner = self._runner(**kwargs)
-            runner.run(_, responses=kwargs['responses'], hide=True)
+            runner.run(_, watchers=watchers, hide=True)
             return klass.write_proc_stdin
 
         def string_keys_in_responses_kwarg_yield_values_as_stdin_writes(self):
@@ -529,9 +534,9 @@ class Runner_(Spec):
         def chunk_sizes_smaller_than_patterns_still_work_ok(self):
             klass = self._mock_stdin_writer()
             klass.read_chunk_size = 1 # < len('jump')
-            responses = {'jump': 'how high?'}
+            responder = Responder('jump', 'how high?')
             runner = self._runner(klass=klass, out="jump, wait, jump, wait")
-            runner.run(_, responses=responses, hide=True)
+            runner.run(_, watchers=[responder], hide=True)
             holla = call('how high?')
             # Responses happened, period.
             klass.write_proc_stdin.assert_has_calls([holla, holla])
@@ -589,11 +594,11 @@ Just to say hi
 
         def honors_config_option(self):
             klass = self._mock_stdin_writer()
-            responses = {"my stdout": "and my axe"}
+            responder = Responder("my stdout", "and my axe")
             runner = self._runner(
                 out="this is my stdout", # yielded stdout
                 klass=klass, # mocked stdin writer
-                run={'responses': responses}, # ends up as config override
+                run={'watchers': [responder]}, # ends up as config override
             )
             runner.run(_, hide=True)
             klass.write_proc_stdin.assert_called_once_with("and my axe")
@@ -603,14 +608,14 @@ Just to say hi
             # the expected/unsurprising default? probably another config-only
             # (not kwarg) setting, e.g. run.merge_responses?
             klass = self._mock_stdin_writer()
-            conf_responses = {"my stdout": "and my axe"}
-            kwarg_responses = {"my stdout": "and my body spray"}
+            conf = Responder("my stdout", "and my axe")
+            kwarg = Responder("my stdout", "and my body spray")
             runner = self._runner(
                 out="this is my stdout", # yielded stdout
                 klass=klass, # mocked stdin writer
-                run={'responses': conf_responses}, # ends up as config override
+                run={'watchers': [conf]}, # ends up as config override
             )
-            runner.run(_, hide=True, responses=kwarg_responses)
+            runner.run(_, hide=True, watchers=[kwarg])
             klass.write_proc_stdin.assert_called_once_with("and my body spray")
 
     class io_sleeping:
