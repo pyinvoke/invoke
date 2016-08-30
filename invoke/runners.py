@@ -475,7 +475,7 @@ class Runner(object):
         stream.write(string)
         stream.flush()
 
-    def _handle_output(self, buffer_, hide, output, reader, indices):
+    def _handle_output(self, buffer_, hide, output, reader):
         # TODO: store un-decoded/raw bytes somewhere as well...
         for data in self.read_proc_output(reader):
             # Echo to local stdout if necessary
@@ -490,8 +490,8 @@ class Runner(object):
             # NOTE: this is threadsafe insofar as no reading occurs until after
             # the thread is join()'d.
             buffer_.append(data)
-            # Run our specific buffer & indices through the autoresponder
-            self.respond(buffer_, indices)
+            # Run our specific buffer through the autoresponder framework
+            self.respond(buffer_)
 
     def handle_stdout(self, buffer_, hide, output):
         """
@@ -513,7 +513,6 @@ class Runner(object):
             hide,
             output,
             reader=self.read_proc_stdout,
-            indices=threading.local(),
         )
 
     def handle_stderr(self, buffer_, hide, output):
@@ -528,7 +527,6 @@ class Runner(object):
             hide,
             output,
             reader=self.read_proc_stderr,
-            indices=threading.local(),
         )
 
     def read_our_stdin(self, input_):
@@ -644,22 +642,16 @@ class Runner(object):
         """
         return (not self.using_pty) and isatty(input_)
 
-    def respond(self, buffer_, indices):
+    def respond(self, buffer_):
         """
         Write to the program's stdin in response to patterns in ``buffer_``.
 
-        The patterns and responses are driven by the key/value pairs in the
-        ``responses`` kwarg of `run` - see its documentation for format
-        details, and :doc:`/concepts/responses` for a conceptual overview.
+        The patterns and responses are driven by the `.StreamWatcher` instances
+        from the ``watchers`` kwarg of `run` - see :doc:`/concepts/watchers`
+        for a conceptual overview.
 
         :param list buffer:
             The capture buffer for this thread's particular IO stream.
-
-        :param indices:
-            A `threading.local` object upon which is (or will be) stored the
-            last-seen index for each key in ``responses``. Allows the responder
-            functionality to be used by multiple threads (typically, one each
-            for stdout and stderr) without conflicting.
 
         :returns: ``None``.
         """
