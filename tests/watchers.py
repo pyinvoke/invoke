@@ -1,3 +1,6 @@
+from threading import Thread, Event
+from Queue import Queue, Empty
+
 from spec import Spec, skip, eq_
 
 from invoke import Responder
@@ -9,15 +12,47 @@ from invoke import Responder
 
 class Responder_(Spec):
     def keeps_track_of_seen_index_per_thread(self):
-        skip()
-        # - instantiate a single responder
-        # - thread body func that takes a responder and queue/s, writes queue
-        #   data to responder and writes responder submissions back to queue
-        # - create two threads from that body func, and queues for each
-        # - start the threads
-        # - write text to 1st thread and expect response from it only
-        # - write text to 2nd thread and expect response from it only
-        # - join the threads in a finally
+        # Instantiate a single object which will be used in >1 thread
+        r = Responder(pattern='foo', response='bar fight') # meh
+        # Thread body func allowing us to mimic actual IO thread behavior, with
+        # Queues used in place of actual pipes/files
+        def body(responder, in_q, out_q, finished):
+            while not finished.is_set():
+                try:
+                    # NOTE: use nowait() so our loop is hot & can shutdown ASAP
+                    # if finished gets set.
+                    stream = in_q.get_nowait()
+                    for response in r.submit(stream):
+                        out_q.put_nowait(response)
+                except Empty:
+                    pass
+        # Create two threads from that body func, and queues/etc for each
+        t1_in, t1_out, t1_finished = Queue(), Queue(), Event()
+        t2_in, t2_out, t2_finished = Queue(), Queue(), Event()
+        t1 = Thread(target=body, args=(r, t1_in, t1_out, t1_finished))
+        t2 = Thread(target=body, args=(r, t2_in, t2_out, t2_finished))
+        # Start the threads
+        t1.start()
+        t2.start()
+        try:
+            stream = 'foo fighters'
+            # First thread will basically always work
+            t1_in.put(stream)
+            eq_(t1_out.get(), 'bar fight')
+            # Second thread get() will block/timeout if threadlocals aren't in
+            # use, because the 2nd thread's copy of the responder will not have
+            # its own index & will thus already be 'past' the `foo` in the
+            # stream.
+            t2_in.put(stream)
+            eq_(t2_out.get(timeout=1), 'bar fight')
+        except Empty:
+            assert False, "Unable to read from thread 2 - implies threadlocal indices are broken!" # noqa
+        # Close up.
+        finally:
+            t1_finished.set()
+            t2_finished.set()
+            t1.join()
+            t2.join()
 
     def yields_response_when_regular_string_pattern_seen(self):
         r = Responder(pattern='empty', response='handed')
