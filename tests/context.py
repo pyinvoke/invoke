@@ -98,7 +98,7 @@ class Context_(Spec):
             config=None, kwargs=None, getpass_reply=None,
         ):
             """
-            Execute mocked sudo(), expecting responses= kwarg in its run().
+            Execute mocked sudo(), expecting watchers= kwarg in its run().
 
             * expected: list of 2-tuples of FailingResponder prompt/response
             * config: Config object, if an overridden one is needed

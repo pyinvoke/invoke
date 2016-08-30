@@ -485,6 +485,8 @@ class Runner_(Spec):
                 assert False, "Did not raise ThreadException as expected!"
 
     class responding:
+        # TODO: most of these could be tweaked & moved to a more unit-testy
+        # watchers test module, if desired.
         def nothing_is_written_to_stdin_by_default(self):
             # NOTE: technically if some goofus ran the tests by hand and mashed
             # keys while doing so...this would fail. LOL?
@@ -512,13 +514,13 @@ class Runner_(Spec):
             runner.run(_, watchers=watchers, hide=True)
             return klass.write_proc_stdin
 
-        def string_keys_in_responses_kwarg_yield_values_as_stdin_writes(self):
+        def watchers_responses_get_written_to_proc_stdin(self):
             self._expect_response(
                 out="the house was empty",
                 responses={'empty': 'handed'},
             ).assert_called_once_with("handed")
 
-        def regex_keys_also_work(self):
+        def regex_patterns_work(self):
             self._expect_response(
                 out="technically, it's still debt",
                 responses={r'tech.*debt': 'pay it down'},

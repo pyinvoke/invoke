@@ -1,8 +1,9 @@
 import getpass
 import re
 
-from .runners import Local, FailingResponder
 from .config import Config, DataProxy
+from .runners import Local
+from .watchers import FailingResponder
 
 
 class Context(DataProxy):
