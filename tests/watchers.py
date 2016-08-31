@@ -7,8 +7,7 @@ from invoke import Responder
 
 
 # NOTE: StreamWatcher is basically just an interface/protocol; no behavior to
-# test of its own. So this file tests Responder primarily. (FailingResponder is
-# mostly tested in Context tests for .sudo().)
+# test of its own. So this file tests Responder primarily, and some subclasses.
 
 class Responder_(Spec):
     def keeps_track_of_seen_index_per_thread(self):
@@ -75,3 +74,14 @@ You never call me
 Just to say hi
 """
         eq_(list(r.submit(output)), ['So sorry'])
+
+
+class FailingResponder_(Spec):
+    def behaves_like_regular_responder_by_default(self):
+        skip()
+
+    def raises_failure_exception_when_sentinel_detected(self):
+        # TODO: see context test similar...this one always wants to raise
+        # ResponseFailure though, what is done WITH that is what needs
+        # consideration in sudo() itself. Yay separation of concerns...
+        skip()

@@ -138,6 +138,7 @@ class Context_(Spec):
             eq_(prompt_responses, expected)
 
         def autoresponds_with_password_kwarg(self):
+            # NOTE: technically duplicates the unitty test(s) in watcher tests.
             expected = [(self.escaped_prompt, 'secret\n')]
             self._expect_responses(expected, kwargs={'password': 'secret'})
 
