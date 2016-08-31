@@ -13,7 +13,6 @@ from mock import patch, Mock, call
 
 from invoke import (
     Runner, Local, Context, Config, Failure, ThreadException, Responder,
-    StreamWatcher
 )
 from invoke.platform import WINDOWS
 
