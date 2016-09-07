@@ -1,5 +1,6 @@
 from threading import Thread, Event
-from Queue import Queue, Empty
+
+from invoke.vendor.six.moves.queue import Queue, Empty
 
 from spec import Spec, eq_, ok_
 
