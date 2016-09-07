@@ -15,7 +15,9 @@ from .runners import ( # noqa
     Runner, Local, Failure, Result, # noqa
 ) # noqa
 from .tasks import task, call, Call, Task # noqa
-from .watchers import StreamWatcher, Responder, FailingResponder # noqa
+from .watchers import ( # noqa
+    StreamWatcher, Responder, FailingResponder, ResponseFailure, # noqa
+) # noqa
 
 
 def run(command, **kwargs):

@@ -73,6 +73,7 @@ class Init(Spec):
             assert invoke.StreamWatcher is invoke.watchers.StreamWatcher
             assert invoke.Responder is invoke.watchers.Responder
             assert invoke.FailingResponder is invoke.watchers.FailingResponder
+            assert invoke.ResponseFailure is invoke.watchers.ResponseFailure
 
         def program(self):
             assert invoke.Program is invoke.program.Program
