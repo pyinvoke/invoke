@@ -3,7 +3,7 @@ from Queue import Queue, Empty
 
 from spec import Spec, skip, eq_
 
-from invoke import Responder
+from invoke import Responder, FailingResponder
 
 
 # NOTE: StreamWatcher is basically just an interface/protocol; no behavior to
@@ -78,7 +78,12 @@ Just to say hi
 
 class FailingResponder_(Spec):
     def behaves_like_regular_responder_by_default(self):
-        skip()
+        r = FailingResponder(
+            pattern='ju[^ ]{2}',
+            response='how high?',
+            failure_sentinel='lolnope',
+        )
+        eq_(list(r.submit('jump, wait, jump, wait')), ['how high?'] * 2)
 
     def raises_failure_exception_when_sentinel_detected(self):
         # TODO: see context test similar...this one always wants to raise

@@ -104,6 +104,7 @@ class FailingResponder(Responder):
     ``submit`` will raise `ResponseFailure` if it detects that sentinel value
     in the stream.
     """
+    # TODO: failure_sentinel is a bit mouthy, how about just 'failure'?
     def __init__(self, pattern, response, failure_sentinel):
         super(FailingResponder, self).__init__(pattern, response)
         self.failure_sentinel = failure_sentinel
