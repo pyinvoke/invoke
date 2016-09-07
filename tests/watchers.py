@@ -1,7 +1,7 @@
 from threading import Thread, Event
 from Queue import Queue, Empty
 
-from spec import Spec, skip, eq_, raises
+from spec import Spec, eq_, ok_
 
 from invoke import Responder, FailingResponder, ResponseFailure
 
@@ -85,7 +85,6 @@ class FailingResponder_(Spec):
         )
         eq_(list(r.submit('jump, wait, jump, wait')), ['how high?'] * 2)
 
-    @raises(ResponseFailure)
     def raises_failure_exception_when_sentinel_detected(self):
         r = FailingResponder(
             pattern='ju[^ ]{2}',
@@ -95,4 +94,14 @@ class FailingResponder_(Spec):
         # Behaves normally initially
         eq_(list(r.submit('jump')), ['how high?'])
         # But then!
-        r.submit('lolnope')
+        try:
+            r.submit('lolnope')
+        except ResponseFailure as e:
+            message = str(e)
+            # Expect useful bits in exception text
+            err = "Didn't see pattern in {0!r}".format(message)
+            ok_("ju[^ ]{2}" in message, err)
+            err = "Didn't see failure sentinel in {0!r}".format(message)
+            ok_("lolnope" in message, err)
+        else:
+            assert False, "Did not raise ResponseFailure!"
