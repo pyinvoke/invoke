@@ -1,9 +1,9 @@
 from threading import Thread, Event
 from Queue import Queue, Empty
 
-from spec import Spec, skip, eq_
+from spec import Spec, skip, eq_, raises
 
-from invoke import Responder, FailingResponder
+from invoke import Responder, FailingResponder, ResponseFailure
 
 
 # NOTE: StreamWatcher is basically just an interface/protocol; no behavior to
@@ -85,8 +85,14 @@ class FailingResponder_(Spec):
         )
         eq_(list(r.submit('jump, wait, jump, wait')), ['how high?'] * 2)
 
+    @raises(ResponseFailure)
     def raises_failure_exception_when_sentinel_detected(self):
-        # TODO: see context test similar...this one always wants to raise
-        # ResponseFailure though, what is done WITH that is what needs
-        # consideration in sudo() itself. Yay separation of concerns...
-        skip()
+        r = FailingResponder(
+            pattern='ju[^ ]{2}',
+            response='how high?',
+            failure_sentinel='lolnope',
+        )
+        # Behaves normally initially
+        eq_(list(r.submit('jump')), ['how high?'])
+        # But then!
+        r.submit('lolnope')
