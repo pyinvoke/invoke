@@ -1,6 +1,8 @@
 import re
 import threading
 
+from .exceptions import ResponseFailure
+
 
 class StreamWatcher(threading.local):
     """
@@ -121,25 +123,12 @@ class FailingResponder(Responder):
         # Error out if we seem to have failed after a previous response.
         # TODO: write tests for other cases!!!
         if self.tried and failed:
-            raise ResponseFailure(self)
+            err = "Auto-response to r\"{0}\" failed with {1!r}!".format(
+                self.pattern, self.failure_sentinel)
+            raise ResponseFailure(err)
         # Once we see that we had a response, take note
         # TODO: will super.submit return a generator that always appears true?
         if response:
             self.tried = True
         # Again, behave regularly by default.
         return response
-
-
-class ResponseFailure(Exception):
-    """
-    Signals that an autoresponse encountered a failure.
-    """
-    def __init__(self, responder):
-        self.responder = responder
-
-    def __str__(self):
-        # TODO: test
-        # NOTE: not repr'ing the pattern as that doubles up backslashes. shrug
-        return "Auto-response to r\"{0}\" failed with {1!r}!".format(
-            self.responder.pattern, self.responder.failure_sentinel
-        )

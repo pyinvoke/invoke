@@ -184,3 +184,13 @@ Saw {0} exceptions within threads ({1}):
 
 {2}
 """.format(*args)
+
+
+class ResponseFailure(Exception):
+    """
+    A responder/watcher class noticed a 'bad' response to its submission.
+
+    Mostly used by `.FailingResponder` and subclasses, e.g. "oh dear I
+    autosubmitted a sudo password and it was incorrect."
+    """
+    pass
