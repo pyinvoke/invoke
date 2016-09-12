@@ -461,6 +461,8 @@ class Runner_(Spec):
                 err = "Sentinel 'ohnoz' not found in {0!r}".format(r)
                 assert 'ohnoz' in r, err
 
+        # TODO: may eventually turn into having Runner raise distinct Failure
+        # subclasses itself, at which point `reason` would probably go away.
         class reason:
             def is_None_for_regular_nonzero_exits(self):
                 skip()
