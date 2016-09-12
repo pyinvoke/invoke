@@ -24,7 +24,7 @@ try:
 except ImportError:
     termios = None
 
-from .exceptions import Failure, ThreadException
+from .exceptions import Failure, ThreadException, WatcherError
 from .platform import (
     WINDOWS, pty_size, character_buffered, ready_for_reading, read_byte,
 )

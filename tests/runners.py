@@ -13,6 +13,7 @@ from mock import patch, Mock, call
 
 from invoke import (
     Runner, Local, Context, Config, Failure, ThreadException, Responder,
+    WatcherError,
 )
 from invoke.platform import WINDOWS
 
@@ -80,6 +81,18 @@ class Runner_(Spec):
             runner = self._runner(run={'warn': False}, exits=1)
             # Doesn't raise Failure -> all good
             runner.run(_, warn=True)
+
+        def does_not_apply_to_watcher_errors(self):
+            class WatcherErroring(_Dummy):
+                def respond(self, buffer_):
+                    raise WatcherError("sup")
+            runner = self._runner(klass=WatcherErroring)
+            try:
+                runner.run(_, warn=True)
+            except Failure as f:
+                ok_(isinstance(f.reason, WatcherError))
+            else:
+                assert False, "Did not raise Failure for WatcherError!"
 
     class hide:
         @trap
