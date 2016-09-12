@@ -1,10 +1,10 @@
 import re
 import sys
 
-from mock import patch
+from mock import patch, Mock
 from spec import Spec, skip, eq_, ok_, trap
 
-from invoke import Context, Config
+from invoke import Context, Config, AuthFailure, ResponseFailure
 
 from _util import mock_subprocess, _Dummy
 
@@ -199,7 +199,21 @@ class Context_(Spec):
             eq_(kwargs['hide'], True)
             eq_(kwargs['encoding'], 'ascii')
 
+        @mock_subprocess(out="something")
         def raises_auth_failure_when_failure_detected(self):
-            # Raises a specific Failure subclass (but one that probably has no
-            # custom behavior - it's only distinct for catching purposes)
-            skip()
+            with patch('invoke.context.FailingResponder') as klass:
+                klass.return_value.submit = Mock(side_effect=ResponseFailure)
+                excepted = False
+                try:
+                    config = Config(overrides={'sudo': {'password': 'nope'}})
+                    Context(config=config).sudo('meh')
+                except AuthFailure as e:
+                    # Basic sanity checks; most of this is really tested in
+                    # Runner tests.
+                    ok_(isinstance(e.reason, ResponseFailure))
+                    eq_(e.result.exited, None)
+                    excepted = True
+                # Can't use except/else as that masks other real exceptions,
+                # such as incorrectly unhandled ThreadErrors
+                if not excepted:
+                    assert False, "Did not raise AuthFailure!"
