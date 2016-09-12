@@ -1015,6 +1015,9 @@ class Result(object):
                 do_something()
             else:
                 handle_problem()
+
+        However, remember `Zen of Python #2
+        <http://zen-of-python.info/explicit-is-better-than-implicit.html#2>`_.
     """
     # TODO: inherit from namedtuple instead? heh (or: use attrs from pypi)
     def __init__(self, command, shell, env, stdout, stderr, exited, pty):
