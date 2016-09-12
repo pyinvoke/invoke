@@ -49,6 +49,16 @@ Exit code: {0}
         return str(self)
 
 
+class AuthFailure(Failure):
+    """
+    Represents authentication failure, e.g. an incorrect `sudo` password.
+
+    Behaviorally identical to `.Failure` - this is only a subclass for more
+    granular exception handling.
+    """
+    pass
+
+
 class ParseError(Exception):
     """
     An error arising from the parsing of command-line flags/arguments.
@@ -186,7 +196,21 @@ Saw {0} exceptions within threads ({1}):
 """.format(*args)
 
 
-class ResponseFailure(Exception):
+class WatcherError(Exception):
+    """
+    Generic parent exception class for `.Watcher`-related errors.
+
+    Typically, one of these exceptions indicates a `.Watcher` noticed something
+    anomalous in an output stream, such as an authentication response failure.
+
+    `.Runner` catches these and attaches them to `.Failure` exceptions so they
+    can be referenced by intermediate code and/or act as extra info for end
+    users.
+    """
+    pass
+
+
+class ResponseFailure(WatcherError):
     """
     A responder/watcher class noticed a 'bad' response to its submission.
 
