@@ -461,6 +461,53 @@ class Runner_(Spec):
                 err = "Sentinel 'ohnoz' not found in {0!r}".format(r)
                 assert 'ohnoz' in r, err
 
+        class reason:
+            def is_None_for_regular_nonzero_exits(self):
+                skip()
+
+            def is_None_for_custom_command_exits(self):
+                # I.e. when we implement 'exitcodes 1 and 2 are actually OK'
+                skip()
+
+            def is_exception_when_WatcherError_raised_internally(self):
+                skip()
+
+        # TODO: should these move elsewhere, eg to Result specific test file?
+        # TODO: *is* there a nice way to split into multiple Response and/or
+        # Failure subclasses? Given the split between "returned as a value when
+        # no problem" and "raised as/attached to an exception when problem",
+        # possibly not - complicates how the APIs need to be adhered to.
+        class wrapped_result:
+            def most_attrs_are_always_present(self):
+                # in both regular and watcher failure scenarios:
+                # command
+                # shell
+                # env
+                # stdout
+                # stderr
+                # pty
+                skip()
+
+            class shell_exit_failure:
+                def exited_is_integer(self):
+                    skip()
+
+                def ok_bool_etc_are_falsey(self):
+                    skip()
+
+                def stringrep_notes_exit_status(self):
+                    skip()
+
+            class watcher_failure:
+                def exited_is_None(self):
+                    skip()
+
+                def ok_and_bool_return_False(self):
+                    skip()
+
+                def stringrep_lacks_exit_status(self):
+                    skip()
+
     class threading:
         def errors_within_io_thread_body_bubble_up(self):
             class Oops(_Dummy):

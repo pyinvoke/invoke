@@ -199,7 +199,7 @@ class Context_(Spec):
             eq_(kwargs['hide'], True)
             eq_(kwargs['encoding'], 'ascii')
 
-        def raises_response_failure_when_failure_detected(self):
+        def raises_auth_failure_when_failure_detected(self):
+            # Raises a specific Failure subclass (but one that probably has no
+            # custom behavior - it's only distinct for catching purposes)
             skip()
-            # TODO: See musings @ end of
-            # https://github.com/pyinvoke/invoke/issues/294
