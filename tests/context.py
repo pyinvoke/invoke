@@ -212,6 +212,8 @@ class Context_(Spec):
                     # Runner tests.
                     ok_(isinstance(e.reason, ResponseFailure))
                     eq_(e.result.exited, None)
+                    expected = "Authentication failure!\n\nResponse to prompt 'sudo password: ' was rejected." # noqa
+                    eq_(str(e), expected)
                     excepted = True
                 # Can't use except/else as that masks other real exceptions,
                 # such as incorrectly unhandled ThreadErrors

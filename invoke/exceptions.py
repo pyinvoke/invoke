@@ -23,12 +23,24 @@ class Failure(Exception):
     """
     Exception subclass representing failure of a command execution.
 
-    It exhibits a ``result`` attribute containing the related `.Result` object,
-    whose attributes may be inspected to determine why the command failed.
+    "Failure" may mean the command executed and the shell indicated an unusual
+    result (usually, a non-zero exit code), or it may mean something else, like
+    a ``sudo`` command which was aborted when the supplied password failed
+    authentication.
+
+    This class is not usually raised by itself; see its subclasses for common
+    variants. Typically, subclass is used to indicate the general type of
+    problem, and the ``.result`` attribute (a `.Result`) may be introspected
+    for additional details about which command raised the error.
     """
     def __init__(self, result):
         self.result = result
 
+
+class ExitFailure(Failure):
+    """
+    A shell command ran to completion but exited with an unexpected exit code.
+    """
     def __str__(self):
         err_label = "Stderr"
         err_text = self.result.stderr
@@ -45,17 +57,17 @@ Exit code: {0}
 
 """.format(self.result.exited, err_label, err_text)
 
-    def __repr__(self):
-        return str(self)
-
 
 class AuthFailure(Failure):
     """
-    Represents authentication failure, e.g. an incorrect `sudo` password.
+    An authentication failure, e.g. due to an incorrect ``sudo`` password.
 
-    Behaviorally identical to `.Failure` - this is only a subclass for more
-    granular exception handling.
+    .. note::
+        `.Result` objects attached to these exceptions will typically lack exit
+        code information, since the command was never fully executed - the
+        exception was raised instead.
     """
+    # TODO: custom  __str__
     pass
 
 
