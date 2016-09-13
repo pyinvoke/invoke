@@ -36,6 +36,9 @@ class Failure(Exception):
     def __init__(self, result):
         self.result = result
 
+    def __repr__(self):
+        return str(self)
+
 
 class ExitFailure(Failure):
     """

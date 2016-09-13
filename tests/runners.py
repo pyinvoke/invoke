@@ -13,7 +13,7 @@ from mock import patch, Mock, call
 
 from invoke import (
     Runner, Local, Context, Config, Failure, ThreadException, Responder,
-    WatcherError,
+    WatcherError, ExitFailure,
 )
 from invoke.platform import WINDOWS
 
@@ -446,33 +446,37 @@ class Runner_(Spec):
             mock_debug.assert_called_with("Encountered exception OhNoz('oh god why',) in thread for 'handle_stdin'") # noqa
 
     class failure_handling:
-        @raises(Failure)
+        @raises(ExitFailure)
         def fast_failures(self):
             self._runner(exits=1).run(_)
 
-        def non_one_return_codes_still_act_as_failure(self):
+        def non_1_return_codes_still_act_as_failure(self):
             r = self._runner(exits=17).run(_, warn=True)
             eq_(r.failed, True)
 
-        def Failure_repr_includes_stderr(self):
-            try:
-                self._runner(exits=1, err="ohnoz").run(_, hide=True)
-                assert false # noqa. Ensure failure to Failure fails
-            except Failure as f:
-                r = repr(f)
-                err = "Sentinel 'ohnoz' not found in {0!r}".format(r)
-                assert 'ohnoz' in r, err
+        class ExitFailure_:
+            def repr_includes_stderr(self):
+                try:
+                    self._runner(exits=1, err="ohnoz").run(_, hide=True)
+                    assert false # noqa. Ensure failure to Failure fails
+                except ExitFailure as f:
+                    r = repr(f)
+                    err = "Sentinel 'ohnoz' not found in {0!r}".format(r)
+                    assert 'ohnoz' in r, err
 
-        def Failure_repr_should_present_stdout_when_pty_was_used(self):
-            try:
-                # NOTE: using mocked stdout because that's what ptys do as
-                # well. when pty=True, nothing's even trying to read stderr.
-                self._runner(exits=1, out="ohnoz").run(_, hide=True, pty=True)
-                assert false # noqa. Ensure failure to Failure fails
-            except Failure as f:
-                r = repr(f)
-                err = "Sentinel 'ohnoz' not found in {0!r}".format(r)
-                assert 'ohnoz' in r, err
+            def repr_should_present_stdout_when_pty_was_used(self):
+                try:
+                    # NOTE: using mocked stdout because that's what ptys do as
+                    # well. when pty=True, nothing's even trying to read
+                    # stderr.
+                    runner = self._runner(exits=1, out="ohnoz")
+                    runner.run(_, hide=True, pty=True)
+                except ExitFailure as f:
+                    r = repr(f)
+                    err = "Sentinel 'ohnoz' not found in {0!r}".format(r)
+                    assert 'ohnoz' in r, err
+                else:
+                    assert False, "Failed to raise ExitFailure!"
 
         # TODO: may eventually turn into having Runner raise distinct Failure
         # subclasses itself, at which point `reason` would probably go away.
