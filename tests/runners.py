@@ -13,7 +13,7 @@ from mock import patch, Mock, call
 
 from invoke import (
     Runner, Local, Context, Config, Failure, ThreadException, Responder,
-    WatcherError, ExitFailure,
+    WatcherError, UnexpectedExitFailure,
 )
 from invoke.platform import WINDOWS
 
@@ -446,7 +446,7 @@ class Runner_(Spec):
             mock_debug.assert_called_with("Encountered exception OhNoz('oh god why',) in thread for 'handle_stdin'") # noqa
 
     class failure_handling:
-        @raises(ExitFailure)
+        @raises(UnexpectedExitFailure)
         def fast_failures(self):
             self._runner(exits=1).run(_)
 
@@ -454,12 +454,12 @@ class Runner_(Spec):
             r = self._runner(exits=17).run(_, warn=True)
             eq_(r.failed, True)
 
-        class ExitFailure_:
+        class UnexpectedExitFailure_:
             def repr_includes_stderr(self):
                 try:
                     self._runner(exits=1, err="ohnoz").run(_, hide=True)
                     assert false # noqa. Ensure failure to Failure fails
-                except ExitFailure as f:
+                except UnexpectedExitFailure as f:
                     r = repr(f)
                     err = "Sentinel 'ohnoz' not found in {0!r}".format(r)
                     assert 'ohnoz' in r, err
@@ -471,12 +471,12 @@ class Runner_(Spec):
                     # stderr.
                     runner = self._runner(exits=1, out="ohnoz")
                     runner.run(_, hide=True, pty=True)
-                except ExitFailure as f:
+                except UnexpectedExitFailure as f:
                     r = repr(f)
                     err = "Sentinel 'ohnoz' not found in {0!r}".format(r)
                     assert 'ohnoz' in r, err
                 else:
-                    assert False, "Failed to raise ExitFailure!"
+                    assert False, "Failed to raise UnexpectedExitFailure!"
 
         # TODO: may eventually turn into having Runner raise distinct Failure
         # subclasses itself, at which point `reason` would probably go away.

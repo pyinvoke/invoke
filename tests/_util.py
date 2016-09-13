@@ -13,7 +13,7 @@ from invoke.vendor.six import StringIO
 from mock import patch, Mock
 from spec import trap, Spec, eq_, skip
 
-from invoke import Program, Failure, Runner
+from invoke import Program, UnexpectedExitFailure, Runner
 from invoke.platform import WINDOWS
 
 
@@ -84,9 +84,9 @@ def expect(invocation, out=None, err=None, program=None, invoke=True,
         (test or eq_)(sys.stderr.getvalue(), err)
 
 
-class SimpleFailure(Failure):
+class SimpleFailure(UnexpectedExitFailure):
     """
-    Failure subclass that can be raised w/o any args given.
+    UnexpectedExitFailure subclass that can be raised w/o any args given.
 
     Useful for testing failure handling w/o having to come up with a fully
     mocked out `.Failure` & `.Result` pair each time.

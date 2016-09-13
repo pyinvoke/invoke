@@ -40,7 +40,7 @@ class Failure(Exception):
         return str(self)
 
 
-class ExitFailure(Failure):
+class UnexpectedExitFailure(Failure):
     """
     A shell command ran to completion but exited with an unexpected exit code.
     """

@@ -24,7 +24,9 @@ try:
 except ImportError:
     termios = None
 
-from .exceptions import Failure, ThreadException, WatcherError
+from .exceptions import (
+    UnexpectedExitFailure, Failure, ThreadException, WatcherError,
+)
 from .platform import (
     WINDOWS, pty_size, character_buffered, ready_for_reading, read_byte,
 )
@@ -102,9 +104,9 @@ class Runner(object):
         :param str shell: Which shell binary to use. Default: ``/bin/bash``.
 
         :param bool warn:
-            Whether to warn and continue, instead of raising `.Failure`, when
-            the executed command exits with a nonzero status. Default:
-            ``False``.
+            Whether to warn and continue, instead of raising
+            `.UnexpectedExitFailure`, when the executed command exits with a
+            nonzero status. Default: ``False``.
 
         :param hide:
             Allows the caller to disable ``run``'s default behavior of copying
@@ -229,7 +231,8 @@ class Runner(object):
         :returns:
             `Result`, or a subclass thereof.
 
-        :raises: `.Failure`, if the command exited nonzero & ``warn=False``.
+        :raises:
+            `.UnexpectedExitFailure`, if the command exited nonzero and ``warn`` was ``False``.
 
         :raises:
             `.ThreadException` (if the background I/O threads encounter
@@ -364,7 +367,7 @@ class Runner(object):
             pty=self.using_pty,
         )
         if not (result or opts['warn']):
-            raise Failure(result)
+            raise UnexpectedExitFailure(result)
         return result
 
     def _run_opts(self, kwargs):

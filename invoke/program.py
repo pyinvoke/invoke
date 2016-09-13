@@ -10,7 +10,9 @@ from .config import Config
 from .loader import FilesystemLoader
 from .parser import Parser, ParserContext, Argument
 from .executor import Executor
-from .exceptions import Failure, CollectionNotFound, ParseError, Exit
+from .exceptions import (
+    UnexpectedExitFailure, CollectionNotFound, ParseError, Exit,
+)
 from .util import debug, enable_logging, sort_names
 from .platform import pty_size
 
@@ -268,14 +270,14 @@ class Program(object):
         try:
             self._parse(argv)
             self.execute()
-        except (Failure, Exit, ParseError) as e:
+        except (UnexpectedExitFailure, Exit, ParseError) as e:
             debug("Received a possibly-skippable exception: {0!r}".format(e))
             # Print error message from parser if necessary.
             if isinstance(e, ParseError):
                 sys.stderr.write("{0}\n".format(e))
             # Terminate execution unless we were told not to.
             if exit:
-                if isinstance(e, Failure):
+                if isinstance(e, UnexpectedExitFailure):
                     code = e.result.exited
                 elif isinstance(e, Exit):
                     code = e.code
