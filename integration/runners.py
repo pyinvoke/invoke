@@ -5,7 +5,10 @@ import time
 from mock import Mock
 from spec import Spec, eq_, ok_, skip
 
-from invoke import run, Local, Context, ThreadException, Responder
+from invoke import (
+    run, Local, Context, ThreadException, Responder, FailingResponder,
+    WatcherError, Failure
+)
 from invoke.util import ExceptionHandlingThread
 
 from _util import assert_cpu_usage
@@ -36,6 +39,22 @@ class Runner_(Spec):
             ]
             run("python -u respond_both.py", watchers=watchers, hide=True)
 
+        def watcher_errors_become_Failures(self):
+            watcher = FailingResponder(
+                pattern=r"What's the password\?",
+                response="Rosebud\n",
+                failure_sentinel="You're not Citizen Kane!",
+            )
+            try:
+                run("python -u respond_fail.py", watchers=[watcher], hide=True)
+            except Failure as e:
+                ok_(isinstance(e.reason, WatcherError))
+                eq_(e.result.exited, None)
+            else:
+                assert False, "Did not raise Failure!"
+
+        # TODO: program-level test: how does 'inv' behave when a
+        # WatcherError-bearing Failure happens? (vs UnexpectedExitFailure)
 
     class stdin_mirroring:
         def piped_stdin_is_not_conflated_with_mocked_stdin(self):
