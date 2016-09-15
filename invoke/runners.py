@@ -232,7 +232,8 @@ class Runner(object):
             `Result`, or a subclass thereof.
 
         :raises:
-            `.UnexpectedExitFailure`, if the command exited nonzero and ``warn`` was ``False``.
+            `.UnexpectedExitFailure`, if the command exited nonzero and
+            ``warn`` was ``False``.
 
         :raises:
             `.Failure`, if the command didn't even exit cleanly, e.g. if a
