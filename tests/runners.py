@@ -461,11 +461,12 @@ class Runner_(Spec):
             def includes_stderr(self):
                 try:
                     self._runner(exits=1, err="ohnoz").run(_, hide=True)
-                    assert false # noqa. Ensure failure to Failure fails
                 except UnexpectedExitFailure as f:
                     r = repr(f)
                     err = "Sentinel 'ohnoz' not found in {0!r}".format(r)
                     assert 'ohnoz' in r, err
+                else:
+                    assert False, "Failed to raise UnexpectedExitFailure!"
 
             def should_present_stdout_when_pty_was_used(self):
                 try:
