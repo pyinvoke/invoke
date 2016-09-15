@@ -57,15 +57,17 @@ class UnexpectedExitFailure(Failure):
         if self.result.pty:
             err_label = "Stdout (pty=True; no stderr possible)"
             err_text = self.result.stdout
-        return """Command execution failure!
+        return """Encountered a bad command exit code!
 
-Exit code: {0}
+Command: {0!r}
 
-{1}:
+Exit code: {1}
 
-{2}
+{2}:
 
-""".format(self.result.exited, err_label, err_text)
+{3}
+
+""".format(self.result.command, self.result.exited, err_label, err_text)
 
 
 class AuthFailure(Failure):

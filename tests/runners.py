@@ -458,6 +458,16 @@ class Runner_(Spec):
             eq_(r.failed, True)
 
         class UnexpectedExitFailure_repr:
+            def is_explicit_about_command_executed(self):
+                try:
+                    self._runner(exits=1).run(_, hide=True)
+                except UnexpectedExitFailure as f:
+                    r = repr(f)
+                    err = "{0!r} not found in {1!r}".format(_, r)
+                    assert _ in r, err
+                else:
+                    assert False, "Failed to raise UnexpectedExitFailure!"
+
             def includes_stderr(self):
                 try:
                     self._runner(exits=1, err="ohnoz").run(_, hide=True)
