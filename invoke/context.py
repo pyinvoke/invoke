@@ -2,6 +2,7 @@ import getpass
 import re
 
 from .config import Config, DataProxy
+from .exceptions import Failure, AuthFailure, ResponseFailure
 from .runners import Local
 from .watchers import FailingResponder
 
@@ -115,4 +116,19 @@ class Context(DataProxy):
         # that with how kwarg always wins currently?
         # * If we add to self.config, and user gives kwarg, ours is lost
         # * If we add to kwarg, any user config is lost
-        return self.run(cmd_str, watchers=[watcher], **kwargs)
+        try:
+            return self.run(cmd_str, watchers=[watcher], **kwargs)
+        except Failure as failure:
+            # Transmute failures driven by our FailingResponder, into auth
+            # failures - the command never even ran.
+            # TODO: wants to be a hook here for users that desire "override a
+            # bad config value for sudo.password" manual input
+            # NOTE: as noted in #294 comments, we MAY in future want to update
+            # this so run() is given ability to raise AuthFailure on its own.
+            # For now that has been judged unnecessary complexity.
+            if isinstance(failure.reason, ResponseFailure):
+                # NOTE: not bothering with 'reason' here, it's pointless.
+                raise AuthFailure(result=failure.result, prompt=prompt)
+            # Reraise for any other error so it bubbles up normally.
+            else:
+                raise

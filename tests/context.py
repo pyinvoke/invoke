@@ -199,20 +199,19 @@ class Context_(Spec):
             eq_(kwargs['hide'], True)
             eq_(kwargs['encoding'], 'ascii')
 
-        @mock_subprocess(out="something")
+        @mock_subprocess(out="something", exit=None)
         def raises_auth_failure_when_failure_detected(self):
             with patch('invoke.context.FailingResponder') as klass:
                 klass.return_value.submit = Mock(side_effect=ResponseFailure)
                 excepted = False
                 try:
                     config = Config(overrides={'sudo': {'password': 'nope'}})
-                    Context(config=config).sudo('meh')
+                    Context(config=config).sudo('meh', hide=True)
                 except AuthFailure as e:
                     # Basic sanity checks; most of this is really tested in
                     # Runner tests.
-                    ok_(isinstance(e.reason, ResponseFailure))
                     eq_(e.result.exited, None)
-                    expected = "Authentication failure!\n\nResponse to prompt 'sudo password: ' was rejected." # noqa
+                    expected = "Authentication failure!\n\nResponse to prompt '[sudo] password: ' was rejected." # noqa
                     eq_(str(e), expected)
                     excepted = True
                 # Can't use except/else as that masks other real exceptions,

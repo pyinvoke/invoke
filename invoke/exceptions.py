@@ -77,8 +77,15 @@ class AuthFailure(Failure):
         code information, since the command was never fully executed - the
         exception was raised instead.
     """
-    # TODO: custom  __str__
-    pass
+    def __init__(self, result, prompt):
+        self.result = result
+        self.prompt = prompt
+
+    def __str__(self):
+        err = """Authentication failure!
+
+Response to prompt {0!r} was rejected.""" # noqa
+        return err.format(self.prompt)
 
 
 class ParseError(Exception):
