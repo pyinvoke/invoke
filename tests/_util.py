@@ -8,7 +8,7 @@ except ImportError:
 from contextlib import contextmanager
 from functools import wraps
 
-from invoke.vendor.six import StringIO
+from invoke.vendor.six import BytesIO, b
 
 from mock import patch, Mock
 from spec import trap, Spec, eq_, skip
@@ -107,7 +107,7 @@ def mock_subprocess(out='', err='', exit=0, isatty=None, insert_Popen=False):
         @wraps(f)
         @patch('invoke.runners.Popen')
         @patch('os.read')
-        @patch('sys.stdin', new_callable=StringIO)
+        @patch('sys.stdin', new_callable=BytesIO)
         def wrapper(*args, **kwargs):
             args = list(args)
             Popen, read, sys_stdin = args.pop(), args.pop(), args.pop()
@@ -118,8 +118,8 @@ def mock_subprocess(out='', err='', exit=0, isatty=None, insert_Popen=False):
             # If requested, mock isatty to fake out pty detection
             if isatty is not None:
                 sys_stdin.isatty = Mock(return_value=isatty)
-            out_file = StringIO(out)
-            err_file = StringIO(err)
+            out_file = BytesIO(b(out))
+            err_file = BytesIO(b(err))
             def fakeread(fileno, count):
                 fd = {1: out_file, 2: err_file}[fileno]
                 return fd.read(count)
@@ -162,8 +162,8 @@ def mock_pty(out='', err='', exit=0, isatty=None, trailing_error=None,
             # If requested, mock isatty to fake out pty detection
             if isatty is not None:
                 os.isatty.return_value = isatty
-            out_file = StringIO(out)
-            err_file = StringIO(err)
+            out_file = BytesIO(b(out))
+            err_file = BytesIO(b(err))
             def fakeread(fileno, count):
                 fd = {1: out_file, 2: err_file}[fileno]
                 ret = fd.read(count)
