@@ -457,8 +457,8 @@ class Runner_(Spec):
             r = self._runner(exits=17).run(_, warn=True)
             eq_(r.failed, True)
 
-        class UnexpectedExitFailure_:
-            def repr_includes_stderr(self):
+        class UnexpectedExitFailure_repr:
+            def includes_stderr(self):
                 try:
                     self._runner(exits=1, err="ohnoz").run(_, hide=True)
                     assert false # noqa. Ensure failure to Failure fails
@@ -467,7 +467,7 @@ class Runner_(Spec):
                     err = "Sentinel 'ohnoz' not found in {0!r}".format(r)
                     assert 'ohnoz' in r, err
 
-            def repr_should_present_stdout_when_pty_was_used(self):
+            def should_present_stdout_when_pty_was_used(self):
                 try:
                     # NOTE: using mocked stdout because that's what ptys do as
                     # well. when pty=True, nothing's even trying to read
