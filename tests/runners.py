@@ -13,7 +13,7 @@ from mock import patch, Mock, call
 
 from invoke import (
     Runner, Local, Context, Config, Failure, ThreadException, Responder,
-    WatcherError, UnexpectedExitFailure,
+    WatcherError, UnexpectedExitFailure, StreamWatcher
 )
 from invoke.platform import WINDOWS
 
@@ -478,18 +478,39 @@ class Runner_(Spec):
                 else:
                     assert False, "Failed to raise UnexpectedExitFailure!"
 
+        def _regular_error(self):
+            self._runner(exits=1).run(_)
+
+        def _watcher_error(self):
+            class RaisingWatcher(StreamWatcher):
+                def submit(self, stream):
+                    raise WatcherError("meh")
+            klass = self._mock_stdin_writer()
+            runner = self._runner(klass=klass, out="stuff")
+            runner.run(_, watchers=[RaisingWatcher()], hide=True)
+
         # TODO: may eventually turn into having Runner raise distinct Failure
         # subclasses itself, at which point `reason` would probably go away.
         class reason:
             def is_None_for_regular_nonzero_exits(self):
-                skip()
+                try:
+                    self._regular_error()
+                except Failure as e:
+                    eq_(e.reason, None)
+                else:
+                    assert False, "Failed to raise Failure!"
 
             def is_None_for_custom_command_exits(self):
                 # I.e. when we implement 'exitcodes 1 and 2 are actually OK'
                 skip()
 
             def is_exception_when_WatcherError_raised_internally(self):
-                skip()
+                try:
+                    self._watcher_error()
+                except Failure as e:
+                    ok_(isinstance(e, WatcherError))
+                else:
+                    assert False, "Failed to raise Failure!"
 
         # TODO: should these move elsewhere, eg to Result specific test file?
         # TODO: *is* there a nice way to split into multiple Response and/or
@@ -498,30 +519,51 @@ class Runner_(Spec):
         # possibly not - complicates how the APIs need to be adhered to.
         class wrapped_result:
             def most_attrs_are_always_present(self):
-                # in both regular and watcher failure scenarios:
-                # command
-                # shell
-                # env
-                # stdout
-                # stderr
-                # pty
-                skip()
+                attrs = (
+                    'command', 'shell', 'env', 'stdout', 'stderr', 'pty',
+                )
+                for method in (self._regular_error, self._watcher_error):
+                    try:
+                        method()
+                    except Failure as e:
+                        for attr in attrs:
+                            ok_(getattr(e.result, attr) is not None)
+                    else:
+                        assert False, "Did not raise Failure!"
 
             class shell_exit_failure:
                 def exited_is_integer(self):
-                    skip()
+                    try:
+                        self._regular_error()
+                    except Failure as e:
+                        ok_(isinstance(e.result.exited, int))
+                    else:
+                        assert False, "Did not raise Failure!"
 
                 def ok_bool_etc_are_falsey(self):
-                    skip()
+                    try:
+                        self._regular_error()
+                    except Failure as e:
+                        eq_(e.result.ok, False)
+                        eq_(e.result.failed, True)
+                        ok_(not bool(e.result))
+                        ok_(not e.result)
+                    else:
+                        assert False, "Did not raise Failure!"
 
                 def stringrep_notes_exit_status(self):
-                    skip()
+                    try:
+                        self._regular_error()
+                    except Failure as e:
+                        ok_("exited with status 1" in str(e.result))
+                    else:
+                        assert False, "Did not raise Failure!"
 
             class watcher_failure:
                 def exited_is_None(self):
                     skip()
 
-                def ok_and_bool_return_False(self):
+                def ok_and_bool_still_return_False(self):
                     skip()
 
                 def stringrep_lacks_exit_status(self):
