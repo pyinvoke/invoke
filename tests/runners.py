@@ -23,6 +23,11 @@ from _util import (
 )
 
 
+class RaisingWatcher(StreamWatcher):
+    def submit(self, stream):
+        raise WatcherError("meh")
+
+
 def _run(*args, **kwargs):
     klass = kwargs.pop('klass', _Dummy)
     settings = kwargs.pop('settings', {})
@@ -83,14 +88,12 @@ class Runner_(Spec):
             runner.run(_, warn=True)
 
         def does_not_apply_to_watcher_errors(self):
-            class WatcherErroring(_Dummy):
-                def respond(self, buffer_):
-                    raise WatcherError("sup")
-            runner = self._runner(klass=WatcherErroring)
+            runner = self._runner(out="stuff")
             try:
-                runner.run(_, warn=True)
-            except Failure as f:
-                ok_(isinstance(f.reason, WatcherError))
+                watcher = RaisingWatcher()
+                runner.run(_, watchers=[watcher], warn=True, hide=True)
+            except Failure as e:
+                ok_(isinstance(e.reason, WatcherError))
             else:
                 assert False, "Did not raise Failure for WatcherError!"
 
@@ -482,11 +485,10 @@ class Runner_(Spec):
             self._runner(exits=1).run(_)
 
         def _watcher_error(self):
-            class RaisingWatcher(StreamWatcher):
-                def submit(self, stream):
-                    raise WatcherError("meh")
             klass = self._mock_stdin_writer()
-            runner = self._runner(klass=klass, out="stuff")
+            # Exited=None because real procs will have no useful .returncode()
+            # result if they're aborted partway via an exception.
+            runner = self._runner(klass=klass, out="stuff", exits=None)
             runner.run(_, watchers=[RaisingWatcher()], hide=True)
 
         # TODO: may eventually turn into having Runner raise distinct Failure
@@ -508,7 +510,7 @@ class Runner_(Spec):
                 try:
                     self._watcher_error()
                 except Failure as e:
-                    ok_(isinstance(e, WatcherError))
+                    ok_(isinstance(e.reason, WatcherError))
                 else:
                     assert False, "Failed to raise Failure!"
 
@@ -564,7 +566,9 @@ class Runner_(Spec):
                     try:
                         self._watcher_error()
                     except Failure as e:
-                        ok_(e.result.exited is None)
+                        exited = e.result.exited
+                        err = "Expected None, got {0!r}".format(exited)
+                        ok_(exited is None, err)
 
                 def ok_and_bool_still_are_falsey(self):
                     try:
@@ -579,7 +583,7 @@ class Runner_(Spec):
 
                 def stringrep_lacks_exit_status(self):
                     try:
-                        self._regular_error()
+                        self._watcher_error()
                     except Failure as e:
                         ok_("exited with status" not in str(e.result))
                         expected = "not fully executed due to watcher error"

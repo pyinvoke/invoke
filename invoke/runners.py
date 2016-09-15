@@ -235,8 +235,12 @@ class Runner(object):
             `.UnexpectedExitFailure`, if the command exited nonzero and ``warn`` was ``False``.
 
         :raises:
-            `.ThreadException` (if the background I/O threads encounter
-            exceptions).
+            `.Failure`, if the command didn't even exit cleanly, e.g. if a
+            `.Watcher` raised `.WatcherError`.
+
+        :raises:
+            `.ThreadException` (if the background I/O threads encountered
+            exceptions other than `.WatcherError`).
 
         :raises:
             ``KeyboardInterrupt``, if the user generates one during command
@@ -340,10 +344,22 @@ class Runner(object):
         # we've closed our worker threads.
         if exception is not None:
             raise exception
+        # Strip out WatcherError from any thread exceptions; they are bundled
+        # into Failure handling at the end.
+        watcher_errors = []
+        thread_exceptions = []
+        for exception in exceptions:
+            real = exception.value
+            if isinstance(real, WatcherError):
+                watcher_errors.append(real)
+            else:
+                thread_exceptions.append(exception)
         # If any exceptions appeared inside the threads, raise them now as an
         # aggregate exception object.
-        if exceptions:
-            raise ThreadException(exceptions)
+        if thread_exceptions:
+            raise ThreadException(thread_exceptions)
+        # At this point, we had enough success that we want to be returning or
+        # raising detailed info about our execution; so we generate a Result.
         stdout = ''.join(stdout)
         stderr = ''.join(stderr)
         if WINDOWS:
@@ -356,7 +372,7 @@ class Runner(object):
             stderr = stderr.replace("\r\n", "\n").replace("\r", "\n")
         # Get return/exit code
         exited = self.returncode()
-        # Return, or raise as failure, our final result
+        # Obtain actual result
         result = self.generate_result(
             command=command,
             shell=shell,
@@ -366,6 +382,13 @@ class Runner(object):
             exited=exited,
             pty=self.using_pty,
         )
+        # Any presence of WatcherError from the threads indicates a watcher was
+        # upset and aborted execution; make a generic Failure out of it and
+        # raise that.
+        if watcher_errors:
+            # TODO: ambiguity exists if we somehow get WatcherError in *both*
+            # threads...as unlikely as that would normally be.
+            raise Failure(result, reason=watcher_errors[0])
         if not (result or opts['warn']):
             raise UnexpectedExitFailure(result)
         return result
@@ -1054,7 +1077,11 @@ class Result(object):
         return self.__nonzero__()
 
     def __str__(self):
-        ret = ["Command exited with status {0}.".format(self.exited)]
+        if self.exited is not None:
+            desc = "Command exited with status {0}.".format(self.exited)
+        else:
+            desc = "Command was not fully executed due to watcher error."
+        ret = [desc]
         for x in ('stdout', 'stderr'):
             val = getattr(self, x)
             ret.append(u"""=== {0} ===
