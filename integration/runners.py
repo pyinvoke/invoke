@@ -36,13 +36,6 @@ class Runner_(Spec):
             ]
             run("python -u respond_both.py", watchers=watchers, hide=True)
 
-        def stdin_mirroring_isnt_cpu_heavy(self):
-            "stdin mirroring isn't CPU-heavy"
-            # CPU measurement under PyPy is...rather different. NBD.
-            if PYPY:
-                skip()
-            with assert_cpu_usage(lt=5.0):
-                run("python -u busywork.py 10", pty=True, hide=True)
 
     class stdin_mirroring:
         def piped_stdin_is_not_conflated_with_mocked_stdin(self):
@@ -53,6 +46,14 @@ class Runner_(Spec):
         def nested_invoke_sessions_not_conflated_with_mocked_stdin(self):
             # Also re: GH issue #308. This one will just hang forever. Woo!
             run("inv -c nested_or_piped calls_foo", hide=True)
+
+        def isnt_cpu_heavy(self):
+            "stdin mirroring isn't CPU-heavy"
+            # CPU measurement under PyPy is...rather different. NBD.
+            if PYPY:
+                skip()
+            with assert_cpu_usage(lt=5.0):
+                run("python -u busywork.py 10", pty=True, hide=True)
 
     class interrupts:
         def _run_and_kill(self, pty):
