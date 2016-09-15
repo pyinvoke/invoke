@@ -22,15 +22,6 @@ dependencies within its source tree.
     <http://bitprophet.org/blog/2012/06/07/on-vendorizing/>`_ for background on
     our decision to vendorize dependencies.
 
-Getting the development version (without source control)
-========================================================
-
-Users who don't intend to actively develop, but who still want to obtain the
-in-development version (to help test new features or to cope with any
-unfortunate lapses in release schedule) can still use ``pip``, but should give
-the ``==dev`` "version" explicitly::
-
-    $ pip install invoke==dev
-
 .. seealso::
-    :doc:`development` for details on full source control checkouts.
+    :doc:`development` for details on source control checkouts / unstable
+    versions.
