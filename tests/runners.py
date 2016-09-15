@@ -501,7 +501,7 @@ class Runner_(Spec):
                     assert False, "Failed to raise Failure!"
 
             def is_None_for_custom_command_exits(self):
-                # I.e. when we implement 'exitcodes 1 and 2 are actually OK'
+                # TODO: when we implement 'exitcodes 1 and 2 are actually OK'
                 skip()
 
             def is_exception_when_WatcherError_raised_internally(self):
@@ -561,13 +561,31 @@ class Runner_(Spec):
 
             class watcher_failure:
                 def exited_is_None(self):
-                    skip()
+                    try:
+                        self._watcher_error()
+                    except Failure as e:
+                        ok_(e.result.exited is None)
 
-                def ok_and_bool_still_return_False(self):
-                    skip()
+                def ok_and_bool_still_are_falsey(self):
+                    try:
+                        self._watcher_error()
+                    except Failure as e:
+                        eq_(e.result.ok, False)
+                        eq_(e.result.failed, True)
+                        ok_(not bool(e.result))
+                        ok_(not e.result)
+                    else:
+                        assert False, "Did not raise Failure!"
 
                 def stringrep_lacks_exit_status(self):
-                    skip()
+                    try:
+                        self._regular_error()
+                    except Failure as e:
+                        ok_("exited with status" not in str(e.result))
+                        expected = "not fully executed due to watcher error"
+                        ok_(expected in str(e.result))
+                    else:
+                        assert False, "Did not raise Failure!"
 
     class threading:
         def errors_within_io_thread_body_bubble_up(self):
