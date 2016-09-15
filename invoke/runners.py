@@ -108,6 +108,16 @@ class Runner(object):
             `.UnexpectedExitFailure`, when the executed command exits with a
             nonzero status. Default: ``False``.
 
+            .. note::
+                This setting has no effect on exceptions, which will still be
+                raised, typically bundled in `.ThreadException` objects if they
+                were raised by the IO worker threads.
+
+                Similarly, `.WatcherError` exceptions raised by
+                `.StreamWatcher` instances will also ignore this setting, and
+                will usually be bundled inside `.Failure` objects (in order to
+                preserve the execution context).
+
         :param hide:
             Allows the caller to disable ``run``'s default behavior of copying
             the subprocess' stdout and stderr to the controlling terminal.
