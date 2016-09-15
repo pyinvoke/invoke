@@ -211,7 +211,7 @@ class Context_(Spec):
                     # Basic sanity checks; most of this is really tested in
                     # Runner tests.
                     eq_(e.result.exited, None)
-                    expected = "Authentication failure!\n\nResponse to prompt '[sudo] password: ' was rejected." # noqa
+                    expected = "The password submitted to prompt '[sudo] password: ' was rejected." # noqa
                     eq_(str(e), expected)
                     excepted = True
                 # Can't use except/else as that masks other real exceptions,

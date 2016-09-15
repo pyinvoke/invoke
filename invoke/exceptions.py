@@ -82,9 +82,7 @@ class AuthFailure(Failure):
         self.prompt = prompt
 
     def __str__(self):
-        err = """Authentication failure!
-
-Response to prompt {0!r} was rejected.""" # noqa
+        err = "The password submitted to prompt {0!r} was rejected."
         return err.format(self.prompt)
 
 
