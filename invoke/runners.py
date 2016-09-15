@@ -237,7 +237,7 @@ class Runner(object):
 
         :raises:
             `.Failure`, if the command didn't even exit cleanly, e.g. if a
-            `.Watcher` raised `.WatcherError`.
+            `.StreamWatcher` raised `.WatcherError`.
 
         :raises:
             `.ThreadException` (if the background I/O threads encountered

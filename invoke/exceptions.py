@@ -33,7 +33,7 @@ class Failure(Exception):
     * ``result``: a `.Result` instance with info about the command being
       executed and, if it ran to completion, how it exited.
     * ``reason``: ``None``, if the command finished; or an exception instance
-      if e.g. a `.Watcher` raised `WatcherError`.
+      if e.g. a `.StreamWatcher` raised `WatcherError`.
 
     This class is only rarely raised by itself; most of the time `.Runner.run`
     (or a wrapper of same, such as `.Context.sudo`) will raise a specific
@@ -227,10 +227,11 @@ Saw {0} exceptions within threads ({1}):
 
 class WatcherError(Exception):
     """
-    Generic parent exception class for `.Watcher`-related errors.
+    Generic parent exception class for `.StreamWatcher`-related errors.
 
-    Typically, one of these exceptions indicates a `.Watcher` noticed something
-    anomalous in an output stream, such as an authentication response failure.
+    Typically, one of these exceptions indicates a `.StreamWatcher` noticed
+    something anomalous in an output stream, such as an authentication response
+    failure.
 
     `.Runner` catches these and attaches them to `.Failure` exceptions so they
     can be referenced by intermediate code and/or act as extra info for end

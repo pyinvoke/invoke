@@ -103,7 +103,7 @@ class FailingResponder(Responder):
     Variant of `Responder` which is capable of detecting incorrect responses.
 
     This class adds a ``failure_sentinel`` parameter to ``__init__``, and its
-    ``submit`` will raise `ResponseFailure` if it detects that sentinel value
+    ``submit`` will raise `.ResponseFailure` if it detects that sentinel value
     in the stream.
     """
     # TODO: failure_sentinel is a bit mouthy, how about just 'failure'?
