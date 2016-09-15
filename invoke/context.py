@@ -111,8 +111,8 @@ class Context(DataProxy):
             response="{0}\n".format(password),
             failure_sentinel="Sorry, try again.\n",
         )
-        # TODO: we always want our auto-added one merged - how to square that
-        # with how kwarg always wins currently?
+        # TODO: we always want our auto-added watcher merged - how to square
+        # that with how kwarg always wins currently?
         # * If we add to self.config, and user gives kwarg, ours is lost
         # * If we add to kwarg, any user config is lost
         return self.run(cmd_str, watchers=[watcher], **kwargs)
