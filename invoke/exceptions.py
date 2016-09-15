@@ -28,13 +28,20 @@ class Failure(Exception):
     a ``sudo`` command which was aborted when the supplied password failed
     authentication.
 
-    This class is not usually raised by itself; see its subclasses for common
-    variants. Typically, subclass is used to indicate the general type of
-    problem, and the ``.result`` attribute (a `.Result`) may be introspected
-    for additional details about which command raised the error.
+    Two attributes allow introspection to determine the nature of the problem:
+
+    * ``result``: a `.Result` instance with info about the command being
+      executed and, if it ran to completion, how it exited.
+    * ``reason``: ``None``, if the command finished; or an exception instance
+      if e.g. a `.Watcher` raised `WatcherError`.
+
+    This class is only rarely raised by itself; most of the time `.Runner.run`
+    (or a wrapper of same, such as `.Context.sudo`) will raise a specific
+    subclass like `UnexpectedExitFailure` or `AuthFailure`.
     """
-    def __init__(self, result):
+    def __init__(self, result, reason=None):
         self.result = result
+        self.reason = reason
 
     def __repr__(self):
         return str(self)
