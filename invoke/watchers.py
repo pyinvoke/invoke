@@ -121,7 +121,6 @@ class FailingResponder(Responder):
             stream, self.failure_sentinel, 'failure_index'
         )
         # Error out if we seem to have failed after a previous response.
-        # TODO: write tests for other cases!!!
         if self.tried and failed:
             err = "Auto-response to r\"{0}\" failed with {1!r}!".format(
                 self.pattern, self.failure_sentinel)

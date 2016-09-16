@@ -103,11 +103,12 @@ class Context(DataProxy):
         # hard to do as-is, obtaining config data from outside a Runner one
         # holds is currently messy (could fix that), if instead we manually
         # inspect the config ourselves that duplicates logic. NOTE: once we
-        # figure this out there is an existing, would-fail-if-not-skipped test
+        # figure that out, there is an existing, would-fail-if-not-skipped test
         # for this behavior in test/context.py.
-        # TODO: how to handle "full debug" output exactly (display of actual,
-        # real full sudo command w/ -S and -p), in terms of API/config? Impl is
-        # easy, just go back to passing echo through to 'run'...
+        # TODO: once that is done, though: how to handle "full debug" output
+        # exactly (display of actual, real full sudo command w/ -S and -p), in
+        # terms of API/config? Impl is easy, just go back to passing echo
+        # through to 'run'...
         cmd_str = "sudo -S -p '{0}' {1}".format(prompt, command)
         watcher = FailingResponder(
             pattern=re.escape(prompt),
@@ -118,6 +119,7 @@ class Context(DataProxy):
         # that with how kwarg always wins currently?
         # * If we add to self.config, and user gives kwarg, ours is lost
         # * If we add to kwarg, any user config is lost
+        # TODO: NOTE: there are skipped tests regarding some of those concerns
         try:
             return self.run(cmd_str, watchers=[watcher], **kwargs)
         except Failure as failure:
