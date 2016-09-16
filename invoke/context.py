@@ -1,6 +1,8 @@
 import getpass
 import re
 
+from invoke.vendor.six import raise_from
+
 from .config import Config, DataProxy
 from .exceptions import Failure, AuthFailure, ResponseFailure
 from .runners import Local
@@ -128,7 +130,10 @@ class Context(DataProxy):
             # For now that has been judged unnecessary complexity.
             if isinstance(failure.reason, ResponseFailure):
                 # NOTE: not bothering with 'reason' here, it's pointless.
-                raise AuthFailure(result=failure.result, prompt=prompt)
+                # NOTE: using raise_from(..., None) to suppress Python 3's
+                # "helpful" multi-exception output. It's confusing here.
+                error = AuthFailure(result=failure.result, prompt=prompt)
+                raise_from(error, None)
             # Reraise for any other error so it bubbles up normally.
             else:
                 raise
