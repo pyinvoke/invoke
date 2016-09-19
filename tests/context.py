@@ -5,7 +5,7 @@ from mock import patch, Mock
 from spec import Spec, skip, eq_, ok_, trap
 
 from invoke import (
-    AuthFailure, Context, Config, FailingResponder, ResponseFailure,
+    AuthFailure, Context, Config, FailingResponder, ResponseNotAccepted,
     StreamWatcher,
 )
 
@@ -266,7 +266,8 @@ class Context_(Spec):
         @mock_subprocess(out="something", exit=None)
         def raises_auth_failure_when_failure_detected(self):
             with patch('invoke.context.FailingResponder') as klass:
-                klass.return_value.submit = Mock(side_effect=ResponseFailure)
+                unacceptable = Mock(side_effect=ResponseNotAccepted)
+                klass.return_value.submit = unacceptable
                 excepted = False
                 try:
                     config = Config(overrides={'sudo': {'password': 'nope'}})

@@ -4,7 +4,7 @@ import re
 from invoke.vendor.six import raise_from
 
 from .config import Config, DataProxy
-from .exceptions import Failure, AuthFailure, ResponseFailure
+from .exceptions import Failure, AuthFailure, ResponseNotAccepted
 from .runners import Local
 from .watchers import FailingResponder
 
@@ -134,7 +134,7 @@ class Context(DataProxy):
             # NOTE: as noted in #294 comments, we MAY in future want to update
             # this so run() is given ability to raise AuthFailure on its own.
             # For now that has been judged unnecessary complexity.
-            if isinstance(failure.reason, ResponseFailure):
+            if isinstance(failure.reason, ResponseNotAccepted):
                 # NOTE: not bothering with 'reason' here, it's pointless.
                 # NOTE: using raise_from(..., None) to suppress Python 3's
                 # "helpful" multi-exception output. It's confusing here.

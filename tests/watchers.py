@@ -4,7 +4,7 @@ from invoke.vendor.six.moves.queue import Queue, Empty
 
 from spec import Spec, eq_, ok_
 
-from invoke import Responder, FailingResponder, ResponseFailure
+from invoke import Responder, FailingResponder, ResponseNotAccepted
 
 
 # NOTE: StreamWatcher is basically just an interface/protocol; no behavior to
@@ -97,7 +97,7 @@ class FailingResponder_(Spec):
         # But then!
         try:
             r.submit('lolnope')
-        except ResponseFailure as e:
+        except ResponseNotAccepted as e:
             message = str(e)
             # Expect useful bits in exception text
             err = "Didn't see pattern in {0!r}".format(message)
@@ -105,4 +105,4 @@ class FailingResponder_(Spec):
             err = "Didn't see failure sentinel in {0!r}".format(message)
             ok_("lolnope" in message, err)
         else:
-            assert False, "Did not raise ResponseFailure!"
+            assert False, "Did not raise ResponseNotAccepted!"

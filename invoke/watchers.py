@@ -1,7 +1,7 @@
 import re
 import threading
 
-from .exceptions import ResponseFailure
+from .exceptions import ResponseNotAccepted
 
 
 class StreamWatcher(threading.local):
@@ -103,8 +103,8 @@ class FailingResponder(Responder):
     Variant of `Responder` which is capable of detecting incorrect responses.
 
     This class adds a ``sentinel`` parameter to ``__init__``, and its
-    ``submit`` will raise `.ResponseFailure` if it detects that sentinel value
-    in the stream.
+    ``submit`` will raise `.ResponseNotAccepted` if it detects that sentinel
+    value in the stream.
     """
     def __init__(self, pattern, response, sentinel):
         super(FailingResponder, self).__init__(pattern, response)
@@ -123,7 +123,7 @@ class FailingResponder(Responder):
         if self.tried and failed:
             err = "Auto-response to r\"{0}\" failed with {1!r}!".format(
                 self.pattern, self.sentinel)
-            raise ResponseFailure(err)
+            raise ResponseNotAccepted(err)
         # Once we see that we had a response, take note
         if response:
             self.tried = True

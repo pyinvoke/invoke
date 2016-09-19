@@ -240,7 +240,7 @@ class WatcherError(Exception):
     pass
 
 
-class ResponseFailure(WatcherError):
+class ResponseNotAccepted(WatcherError):
     """
     A responder/watcher class noticed a 'bad' response to its submission.
 

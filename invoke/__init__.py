@@ -5,7 +5,7 @@ from .context import Context  # noqa
 from .exceptions import ( # noqa
     AmbiguousEnvVar, ThreadException, ParseError, CollectionNotFound, # noqa
     UnknownFileType, Exit, UncastableEnvVar, PlatformError, # noqa
-    ResponseFailure, UnexpectedExitFailure, AuthFailure, WatcherError, # noqa
+    ResponseNotAccepted, UnexpectedExitFailure, AuthFailure, WatcherError, # noqa
 ) # noqa
 from .executor import Executor # noqa
 from .loader import FilesystemLoader # noqa
