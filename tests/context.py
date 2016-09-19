@@ -181,22 +181,47 @@ class Context_(Spec):
                 eq_(watchers[0].pattern, self.escaped_prompt)
 
             @patch('invoke.context.Local')
-            def config_only(self, Local):
-                skip() # TODO: harder than it looks, see TODO in sudo() body
+            @patch('invoke.context.getpass')
+            def config_only(self, getpass, Local):
                 runner = Local.return_value
-                config = Config(overrides={'run': {'responses': {'foo': 'bar'}}})
+                # Set a config-driven list of watchers
+                watcher = self.watcher_klass()
+                overrides = {'run': {'watchers': [watcher]}}
+                config = Config(overrides=overrides)
                 Context(config=config).sudo('whoami')
-                expected = [
-                    # TODO: will need updating once we force use of getpass when
-                    # None
-                    (self.escaped_prompt, None), # Auto-inserted
-                    ('foo', 'bar'), # From config
-                ]
-                eq_(runner.run.call_args[1]['responses'], expected)
+                # Expect that sudo() extracted that config value & put it into
+                # the kwarg level. (See comment in sudo() about why...)
+                watchers = runner.run.call_args[1]['watchers']
+                # Will raise ValueError if not in the list
+                watchers.remove(watcher)
+                # Only remaining item in list should be our sudo responder
+                eq_(len(watchers), 1)
+                ok_(isinstance(watchers[0], FailingResponder))
+                eq_(watchers[0].pattern, self.escaped_prompt)
 
             @patch('invoke.context.Local')
-            def both_kwarg_and_config(self, Local):
-                skip()
+            @patch('invoke.context.getpass')
+            def both_kwarg_and_config(self, getpass, Local):
+                runner = Local.return_value
+                # Set a config-driven list of watchers
+                conf_watcher = self.watcher_klass()
+                overrides = {'run': {'watchers': [conf_watcher]}}
+                config = Config(overrides=overrides)
+                # AND supply a DIFFERENT kwarg-driven list of watchers
+                kwarg_watcher = self.watcher_klass()
+                Context(config=config).sudo('whoami', watchers=[kwarg_watcher])
+                # Expect that the kwarg watcher and our internal one were the
+                # final result.
+                watchers = runner.run.call_args[1]['watchers']
+                # Will raise ValueError if not in the list. .remove() uses
+                # identity testing, so two instances of self.watcher_klass will
+                # be different values here.
+                watchers.remove(kwarg_watcher)
+                # Only remaining item in list should be our sudo responder
+                eq_(len(watchers), 1)
+                ok_(conf_watcher not in watchers) # Extra sanity
+                ok_(isinstance(watchers[0], FailingResponder))
+                eq_(watchers[0].pattern, self.escaped_prompt)
 
         def prompts_when_no_configured_password_is_found(self):
             expected = [(self.escaped_prompt, "dynamic\n")]

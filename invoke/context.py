@@ -115,11 +115,13 @@ class Context(DataProxy):
             response="{0}\n".format(password),
             failure_sentinel="Sorry, try again.\n",
         )
-        # TODO: we always want our auto-added watcher merged - how to square
-        # that with how kwarg always wins currently?
-        # * If we add to self.config, and user gives kwarg, ours is lost
-        # * If we add to kwarg, any user config is lost
-        watchers = kwargs.pop('watchers', [])
+        # Ensure we merge any user-specified watchers with our own.
+        # NOTE: If there are config-driven watchers, we pull those up to the
+        # kwarg level; that lets us merge cleanly without needing complex
+        # config-driven "override vs merge" semantics.
+        # TODO: if/when those semantics are implemented, use them instead.
+        # NOTE: config value for watchers defaults to an empty list.
+        watchers = kwargs.pop('watchers', self.config.run.watchers)
         watchers.append(watcher)
         try:
             return self.run(cmd_str, watchers=watchers, **kwargs)
