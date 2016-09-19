@@ -113,7 +113,7 @@ class Context(DataProxy):
         watcher = FailingResponder(
             pattern=re.escape(prompt),
             response="{0}\n".format(password),
-            failure_sentinel="Sorry, try again.\n",
+            sentinel="Sorry, try again.\n",
         )
         # Ensure we merge any user-specified watchers with our own.
         # NOTE: If there are config-driven watchers, we pull those up to the

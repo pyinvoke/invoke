@@ -102,14 +102,13 @@ class FailingResponder(Responder):
     """
     Variant of `Responder` which is capable of detecting incorrect responses.
 
-    This class adds a ``failure_sentinel`` parameter to ``__init__``, and its
+    This class adds a ``sentinel`` parameter to ``__init__``, and its
     ``submit`` will raise `.ResponseFailure` if it detects that sentinel value
     in the stream.
     """
-    # TODO: failure_sentinel is a bit mouthy, how about just 'failure'?
-    def __init__(self, pattern, response, failure_sentinel):
+    def __init__(self, pattern, response, sentinel):
         super(FailingResponder, self).__init__(pattern, response)
-        self.failure_sentinel = failure_sentinel
+        self.sentinel = sentinel
         self.failure_index = 0
         self.tried = False
 
@@ -118,12 +117,12 @@ class FailingResponder(Responder):
         response = super(FailingResponder, self).submit(stream)
         # Also check stream for our failure sentinel
         failed = self.pattern_matches(
-            stream, self.failure_sentinel, 'failure_index'
+            stream, self.sentinel, 'failure_index'
         )
         # Error out if we seem to have failed after a previous response.
         if self.tried and failed:
             err = "Auto-response to r\"{0}\" failed with {1!r}!".format(
-                self.pattern, self.failure_sentinel)
+                self.pattern, self.sentinel)
             raise ResponseFailure(err)
         # Once we see that we had a response, take note
         if response:

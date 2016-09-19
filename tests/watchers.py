@@ -82,7 +82,7 @@ class FailingResponder_(Spec):
         r = FailingResponder(
             pattern='ju[^ ]{2}',
             response='how high?',
-            failure_sentinel='lolnope',
+            sentinel='lolnope',
         )
         eq_(list(r.submit('jump, wait, jump, wait')), ['how high?'] * 2)
 
@@ -90,7 +90,7 @@ class FailingResponder_(Spec):
         r = FailingResponder(
             pattern='ju[^ ]{2}',
             response='how high?',
-            failure_sentinel='lolnope',
+            sentinel='lolnope',
         )
         # Behaves normally initially
         eq_(list(r.submit('jump')), ['how high?'])

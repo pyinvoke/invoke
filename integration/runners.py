@@ -43,7 +43,7 @@ class Runner_(Spec):
             watcher = FailingResponder(
                 pattern=r"What's the password\?",
                 response="Rosebud\n",
-                failure_sentinel="You're not Citizen Kane!",
+                sentinel="You're not Citizen Kane!",
             )
             try:
                 run("python -u respond_fail.py", watchers=[watcher], hide=True)
