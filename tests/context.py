@@ -201,7 +201,7 @@ class Context_(Spec):
 
             @patch('invoke.context.Local')
             @patch('invoke.context.getpass')
-            def config_watcher_use_does_not_modify_config(self, getpass, Local):
+            def config_use_does_not_modify_config(self, getpass, Local):
                 runner = Local.return_value
                 watcher = self.watcher_klass()
                 overrides = {'run': {'watchers': [watcher]}}
