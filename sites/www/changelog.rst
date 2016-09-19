@@ -2,6 +2,11 @@
 Changelog
 =========
 
+* :feature:`294` Implement `Context.sudo <invoke.context.Context.sudo>`, which
+  wraps `~invoke.context.Context.run` inside a ``sudo`` command. It is capable
+  of auto-responding to ``sudo``'s password prompt with a configured password,
+  and raises a specific exception (`~invoke.exceptions.AuthFailure`) if that
+  password is rejected).
 * :feature:`369` Overhaul the autoresponse functionality for `~invoke.run` so
   it's significantly more extensible, both for its own sake and as part of
   implementing :issue:`294` (see its own changelog entry for details).
