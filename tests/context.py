@@ -4,7 +4,10 @@ import sys
 from mock import patch, Mock
 from spec import Spec, skip, eq_, ok_, trap
 
-from invoke import Context, Config, AuthFailure, ResponseFailure
+from invoke import (
+    AuthFailure, Context, Config, FailingResponder, ResponseFailure,
+    StreamWatcher,
+)
 
 from _util import mock_subprocess, _Dummy
 
@@ -154,20 +157,27 @@ class Context_(Spec):
             self._expect_responses(expected, config=config, kwargs=kwargs)
 
         class auto_response_merges_with_other_responses:
+            def setup(self):
+                class DummyWatcher(StreamWatcher):
+                    def submit(self, stream):
+                        pass
+                self.watcher = DummyWatcher()
 
             @patch('invoke.context.Local')
-            def kwarg_only(self, Local):
-                skip() # TODO: harder than it looks, see TODO in sudo() body
+            @patch('invoke.context.getpass')
+            def kwarg_only_adds_to_kwarg(self, getpass, Local):
                 runner = Local.return_value
                 context = Context()
-                context.sudo('whoami', responses={'foo': 'bar'})
-                expected = [
-                    # TODO: will need updating once we force use of getpass when
-                    # None
-                    (self.escaped_prompt, None), # Auto-inserted
-                    ('foo', 'bar'), # From kwarg
-                ]
-                eq_(runner.run.call_args[1]['responses'], expected)
+                context.sudo('whoami', watchers=[self.watcher])
+                # When sudo() called w/ user-specified watchers, we add ours to
+                # that list
+                watchers = runner.run.call_args[1]['watchers']
+                # Will raise ValueError if not in the list
+                watchers.remove(self.watcher)
+                # Only remaining item in list should be our sudo responder
+                eq_(len(watchers), 1)
+                ok_(isinstance(watchers[0], FailingResponder))
+                eq_(watchers[0].pattern, self.escaped_prompt)
 
             @patch('invoke.context.Local')
             def config_only(self, Local):

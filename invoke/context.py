@@ -119,9 +119,10 @@ class Context(DataProxy):
         # that with how kwarg always wins currently?
         # * If we add to self.config, and user gives kwarg, ours is lost
         # * If we add to kwarg, any user config is lost
-        # TODO: NOTE: there are skipped tests regarding some of those concerns
+        watchers = kwargs.pop('watchers', [])
+        watchers.append(watcher)
         try:
-            return self.run(cmd_str, watchers=[watcher], **kwargs)
+            return self.run(cmd_str, watchers=watchers, **kwargs)
         except Failure as failure:
             # Transmute failures driven by our FailingResponder, into auth
             # failures - the command never even ran.
