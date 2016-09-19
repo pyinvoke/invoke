@@ -147,7 +147,7 @@ class Context_(Spec):
             expected = [(self.escaped_prompt, 'secret\n')]
             self._expect_responses(expected, config=config)
 
-        def kwarg_wins_over_config(self):
+        def sudo_password_kwarg_wins_over_config(self):
             config = Config(overrides={'sudo': {'password': 'notsecret'}})
             kwargs = {'password': 'secret'}
             expected = [(self.escaped_prompt, 'secret\n')]
