@@ -120,8 +120,9 @@ class Context(DataProxy):
         # kwarg level; that lets us merge cleanly without needing complex
         # config-driven "override vs merge" semantics.
         # TODO: if/when those semantics are implemented, use them instead.
-        # NOTE: config value for watchers defaults to an empty list.
-        watchers = kwargs.pop('watchers', self.config.run.watchers)
+        # NOTE: config value for watchers defaults to an empty list; and we
+        # want to clone it to avoid actually mutating the config.
+        watchers = kwargs.pop('watchers', list(self.config.run.watchers))
         watchers.append(watcher)
         try:
             return self.run(cmd_str, watchers=watchers, **kwargs)

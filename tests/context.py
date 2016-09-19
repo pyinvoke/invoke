@@ -201,6 +201,28 @@ class Context_(Spec):
 
             @patch('invoke.context.Local')
             @patch('invoke.context.getpass')
+            def config_watcher_use_does_not_modify_config(self, getpass, Local):
+                runner = Local.return_value
+                watcher = self.watcher_klass()
+                overrides = {'run': {'watchers': [watcher]}}
+                config = Config(overrides=overrides)
+                Context(config=config).sudo('whoami')
+                # Here, 'watchers' is _the same object_ as was passed into
+                # run(watchers=...).
+                watchers = runner.run.call_args[1]['watchers']
+                # We want to make sure that what's in the config we just
+                # generated, is untouched by the manipulation done inside
+                # sudo().
+                # First, that they aren't the same obj
+                err = "Found sudo() reusing config watchers list directly!"
+                ok_(watchers is not config.run.watchers, err)
+                # And that the list is as it was before (i.e. it is not both
+                # our watcher and the sudo()-added one)
+                err = "Our config watchers list was modified!"
+                eq_(config.run.watchers, [watcher], err)
+
+            @patch('invoke.context.Local')
+            @patch('invoke.context.getpass')
             def both_kwarg_and_config(self, getpass, Local):
                 runner = Local.return_value
                 # Set a config-driven list of watchers
