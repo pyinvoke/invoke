@@ -25,7 +25,7 @@ except ImportError:
     termios = None
 
 from .exceptions import (
-    UnexpectedExitFailure, Failure, ThreadException, WatcherError,
+    UnexpectedExit, Failure, ThreadException, WatcherError,
 )
 from .platform import (
     WINDOWS, pty_size, character_buffered, ready_for_reading, read_byte,
@@ -105,7 +105,7 @@ class Runner(object):
 
         :param bool warn:
             Whether to warn and continue, instead of raising
-            `.UnexpectedExitFailure`, when the executed command exits with a
+            `.UnexpectedExit`, when the executed command exits with a
             nonzero status. Default: ``False``.
 
             .. note::
@@ -242,7 +242,7 @@ class Runner(object):
             `Result`, or a subclass thereof.
 
         :raises:
-            `.UnexpectedExitFailure`, if the command exited nonzero and
+            `.UnexpectedExit`, if the command exited nonzero and
             ``warn`` was ``False``.
 
         :raises:
@@ -401,7 +401,7 @@ class Runner(object):
             # threads...as unlikely as that would normally be.
             raise Failure(result, reason=watcher_errors[0])
         if not (result or opts['warn']):
-            raise UnexpectedExitFailure(result)
+            raise UnexpectedExit(result)
         return result
 
     def _run_opts(self, kwargs):

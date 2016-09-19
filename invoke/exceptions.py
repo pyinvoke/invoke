@@ -37,7 +37,7 @@ class Failure(Exception):
 
     This class is only rarely raised by itself; most of the time `.Runner.run`
     (or a wrapper of same, such as `.Context.sudo`) will raise a specific
-    subclass like `UnexpectedExitFailure` or `AuthFailure`.
+    subclass like `UnexpectedExit` or `AuthFailure`.
     """
     def __init__(self, result, reason=None):
         self.result = result
@@ -47,7 +47,7 @@ class Failure(Exception):
         return str(self)
 
 
-class UnexpectedExitFailure(Failure):
+class UnexpectedExit(Failure):
     """
     A shell command ran to completion but exited with an unexpected exit code.
     """

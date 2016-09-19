@@ -13,7 +13,7 @@ from mock import patch, Mock, call
 
 from invoke import (
     Runner, Local, Context, Config, Failure, ThreadException, Responder,
-    WatcherError, UnexpectedExitFailure, StreamWatcher
+    WatcherError, UnexpectedExit, StreamWatcher
 )
 from invoke.platform import WINDOWS
 
@@ -449,7 +449,7 @@ class Runner_(Spec):
             mock_debug.assert_called_with("Encountered exception OhNoz('oh god why',) in thread for 'handle_stdin'") # noqa
 
     class failure_handling:
-        @raises(UnexpectedExitFailure)
+        @raises(UnexpectedExit)
         def fast_failures(self):
             self._runner(exits=1).run(_)
 
@@ -457,26 +457,26 @@ class Runner_(Spec):
             r = self._runner(exits=17).run(_, warn=True)
             eq_(r.failed, True)
 
-        class UnexpectedExitFailure_repr:
+        class UnexpectedExit_repr:
             def is_explicit_about_command_executed(self):
                 try:
                     self._runner(exits=1).run(_, hide=True)
-                except UnexpectedExitFailure as f:
+                except UnexpectedExit as f:
                     r = repr(f)
                     err = "{0!r} not found in {1!r}".format(_, r)
                     assert _ in r, err
                 else:
-                    assert False, "Failed to raise UnexpectedExitFailure!"
+                    assert False, "Failed to raise UnexpectedExit!"
 
             def includes_stderr(self):
                 try:
                     self._runner(exits=1, err="ohnoz").run(_, hide=True)
-                except UnexpectedExitFailure as f:
+                except UnexpectedExit as f:
                     r = repr(f)
                     err = "Sentinel 'ohnoz' not found in {0!r}".format(r)
                     assert 'ohnoz' in r, err
                 else:
-                    assert False, "Failed to raise UnexpectedExitFailure!"
+                    assert False, "Failed to raise UnexpectedExit!"
 
             def should_present_stdout_when_pty_was_used(self):
                 try:
@@ -485,12 +485,12 @@ class Runner_(Spec):
                     # stderr.
                     runner = self._runner(exits=1, out="ohnoz")
                     runner.run(_, hide=True, pty=True)
-                except UnexpectedExitFailure as f:
+                except UnexpectedExit as f:
                     r = repr(f)
                     err = "Sentinel 'ohnoz' not found in {0!r}".format(r)
                     assert 'ohnoz' in r, err
                 else:
-                    assert False, "Failed to raise UnexpectedExitFailure!"
+                    assert False, "Failed to raise UnexpectedExit!"
 
         def _regular_error(self):
             self._runner(exits=1).run(_)
