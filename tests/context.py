@@ -161,19 +161,20 @@ class Context_(Spec):
                 class DummyWatcher(StreamWatcher):
                     def submit(self, stream):
                         pass
-                self.watcher = DummyWatcher()
+                self.watcher_klass = DummyWatcher
 
             @patch('invoke.context.Local')
             @patch('invoke.context.getpass')
             def kwarg_only_adds_to_kwarg(self, getpass, Local):
                 runner = Local.return_value
                 context = Context()
-                context.sudo('whoami', watchers=[self.watcher])
+                watcher = self.watcher_klass()
+                context.sudo('whoami', watchers=[watcher])
                 # When sudo() called w/ user-specified watchers, we add ours to
                 # that list
                 watchers = runner.run.call_args[1]['watchers']
                 # Will raise ValueError if not in the list
-                watchers.remove(self.watcher)
+                watchers.remove(watcher)
                 # Only remaining item in list should be our sudo responder
                 eq_(len(watchers), 1)
                 ok_(isinstance(watchers[0], FailingResponder))
