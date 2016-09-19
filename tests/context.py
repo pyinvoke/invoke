@@ -87,7 +87,7 @@ class Context_(Spec):
         @patch('invoke.context.getpass')
         @mock_subprocess()
         def echo_hides_extra_sudo_flags(self, getpass):
-            skip() # see TODO in sudo() body.
+            skip() # see TODO in sudo() re: clean output display
             config = Config(overrides={'runner': _Dummy})
             Context(config=config).sudo('nope', echo=True)
             output = sys.stdout.getvalue()

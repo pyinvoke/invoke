@@ -53,9 +53,6 @@ class Runner_(Spec):
             else:
                 assert False, "Did not raise Failure!"
 
-        # TODO: program-level test: how does 'inv' behave when a
-        # WatcherError-bearing Failure happens? (vs UnexpectedExitFailure)
-
     class stdin_mirroring:
         def piped_stdin_is_not_conflated_with_mocked_stdin(self):
             # Re: GH issue #308

@@ -281,8 +281,6 @@ class Program(object):
                     code = e.result.exited
                 elif isinstance(e, Exit):
                     code = e.code
-                # TODO: handle AuthFailure; just exit 1; make sure it displays
-                # its message
                 elif isinstance(e, ParseError):
                     code = 1
                 sys.exit(code)

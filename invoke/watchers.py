@@ -126,7 +126,6 @@ class FailingResponder(Responder):
                 self.pattern, self.failure_sentinel)
             raise ResponseFailure(err)
         # Once we see that we had a response, take note
-        # TODO: will super.submit return a generator that always appears true?
         if response:
             self.tried = True
         # Again, behave regularly by default.
