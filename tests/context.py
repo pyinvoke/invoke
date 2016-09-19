@@ -153,33 +153,39 @@ class Context_(Spec):
             expected = [(self.escaped_prompt, 'secret\n')]
             self._expect_responses(expected, config=config, kwargs=kwargs)
 
-        @patch('invoke.context.Local')
-        def auto_response_merges_with_kwarg_responses(self, Local):
-            skip() # TODO: harder than it looks, see TODO in sudo() body
-            runner = Local.return_value
-            context = Context()
-            context.sudo('whoami', responses={'foo': 'bar'})
-            expected = [
-                # TODO: will need updating once we force use of getpass when
-                # None
-                (self.escaped_prompt, None), # Auto-inserted
-                ('foo', 'bar'), # From kwarg
-            ]
-            eq_(runner.run.call_args[1]['responses'], expected)
+        class auto_response_merges_with_other_responses:
 
-        @patch('invoke.context.Local')
-        def auto_response_merges_with_config_responses(self, Local):
-            skip() # TODO: harder than it looks, see TODO in sudo() body
-            runner = Local.return_value
-            config = Config(overrides={'run': {'responses': {'foo': 'bar'}}})
-            Context(config=config).sudo('whoami')
-            expected = [
-                # TODO: will need updating once we force use of getpass when
-                # None
-                (self.escaped_prompt, None), # Auto-inserted
-                ('foo', 'bar'), # From config
-            ]
-            eq_(runner.run.call_args[1]['responses'], expected)
+            @patch('invoke.context.Local')
+            def kwarg_only(self, Local):
+                skip() # TODO: harder than it looks, see TODO in sudo() body
+                runner = Local.return_value
+                context = Context()
+                context.sudo('whoami', responses={'foo': 'bar'})
+                expected = [
+                    # TODO: will need updating once we force use of getpass when
+                    # None
+                    (self.escaped_prompt, None), # Auto-inserted
+                    ('foo', 'bar'), # From kwarg
+                ]
+                eq_(runner.run.call_args[1]['responses'], expected)
+
+            @patch('invoke.context.Local')
+            def config_only(self, Local):
+                skip() # TODO: harder than it looks, see TODO in sudo() body
+                runner = Local.return_value
+                config = Config(overrides={'run': {'responses': {'foo': 'bar'}}})
+                Context(config=config).sudo('whoami')
+                expected = [
+                    # TODO: will need updating once we force use of getpass when
+                    # None
+                    (self.escaped_prompt, None), # Auto-inserted
+                    ('foo', 'bar'), # From config
+                ]
+                eq_(runner.run.call_args[1]['responses'], expected)
+
+            @patch('invoke.context.Local')
+            def both_kwarg_and_config(self, Local):
+                skip()
 
         def prompts_when_no_configured_password_is_found(self):
             expected = [(self.escaped_prompt, "dynamic\n")]
