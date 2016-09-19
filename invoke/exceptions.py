@@ -75,9 +75,9 @@ class AuthFailure(Failure):
     An authentication failure, e.g. due to an incorrect ``sudo`` password.
 
     .. note::
-        `.Result` objects attached to these exceptions will typically lack exit
-        code information, since the command was never fully executed - the
-        exception was raised instead.
+        `.Result` objects attached to these exceptions typically lack exit code
+        information, since the command was never fully executed - the exception
+        was raised instead.
     """
     def __init__(self, result, prompt):
         self.result = result
