@@ -118,7 +118,7 @@ class Config_(IntegrationSpec):
                 expected = """
 No attribute or config key found for 'nope'
 
-Valid keys: ['run', 'tasks']
+Valid keys: ['run', 'sudo', 'tasks']
 
 Valid real attributes: ['clone', 'from_data', 'global_defaults', 'load_collection', 'load_files', 'load_shell_env', 'merge', 'paths']
 """.strip() # noqa
@@ -174,6 +174,18 @@ Valid real attributes: ['clone', 'from_data', 'global_defaults', 'load_collectio
             c.update({'foo': 'bar'})
             eq_(c['foo'], 'bar')
 
+        def supports_mutation_via_attribute_access(self):
+            c = Config({'foo': 'bar'})
+            eq_(c.foo, 'bar')
+            c.foo = 'notbar'
+            eq_(c.foo, 'notbar')
+
+        def supports_nested_mutation_via_attribute_access(self):
+            c = Config({'foo': {'bar': 'biz'}})
+            eq_(c.foo.bar, 'biz')
+            c.foo.bar = 'notbiz'
+            eq_(c.foo.bar, 'notbiz')
+
         def string_display(self):
             "__str__ and friends"
             config = Config({'foo': 'bar'})
@@ -206,7 +218,7 @@ Valid real attributes: ['clone', 'from_data', 'global_defaults', 'load_collectio
             c = Config()
             eq_(c._project_path, None)
             eq_(list(c._project.keys()), [])
-            eq_(set(c.keys()), set(['tasks', 'run'])) # defaults only
+            eq_(set(c.keys()), set(['tasks', 'run', 'sudo'])) # defaults only
 
         def honors_conf_file_flag(self):
             c = Config(runtime_path=join(CONFIGS_PATH, 'yaml', 'invoke.yaml'))

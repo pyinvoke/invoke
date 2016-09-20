@@ -8,12 +8,12 @@ except ImportError:
 from contextlib import contextmanager
 from functools import wraps
 
-from invoke.vendor.six import StringIO
+from invoke.vendor.six import BytesIO, b
 
 from mock import patch, Mock
 from spec import trap, Spec, eq_, skip
 
-from invoke import Program, Failure
+from invoke import Program, UnexpectedExit, Runner
 from invoke.platform import WINDOWS
 
 
@@ -84,9 +84,9 @@ def expect(invocation, out=None, err=None, program=None, invoke=True,
         (test or eq_)(sys.stderr.getvalue(), err)
 
 
-class SimpleFailure(Failure):
+class SimpleFailure(UnexpectedExit):
     """
-    Failure subclass that can be raised w/o any args given.
+    UnexpectedExit subclass that can be raised w/o any args given.
 
     Useful for testing failure handling w/o having to come up with a fully
     mocked out `.Failure` & `.Result` pair each time.
@@ -107,7 +107,7 @@ def mock_subprocess(out='', err='', exit=0, isatty=None, insert_Popen=False):
         @wraps(f)
         @patch('invoke.runners.Popen')
         @patch('os.read')
-        @patch('sys.stdin', new_callable=StringIO)
+        @patch('sys.stdin', new_callable=BytesIO)
         def wrapper(*args, **kwargs):
             args = list(args)
             Popen, read, sys_stdin = args.pop(), args.pop(), args.pop()
@@ -118,8 +118,8 @@ def mock_subprocess(out='', err='', exit=0, isatty=None, insert_Popen=False):
             # If requested, mock isatty to fake out pty detection
             if isatty is not None:
                 sys_stdin.isatty = Mock(return_value=isatty)
-            out_file = StringIO(out)
-            err_file = StringIO(err)
+            out_file = BytesIO(b(out))
+            err_file = BytesIO(b(err))
             def fakeread(fileno, count):
                 fd = {1: out_file, 2: err_file}[fileno]
                 return fd.read(count)
@@ -162,8 +162,8 @@ def mock_pty(out='', err='', exit=0, isatty=None, trailing_error=None,
             # If requested, mock isatty to fake out pty detection
             if isatty is not None:
                 os.isatty.return_value = isatty
-            out_file = StringIO(out)
-            err_file = StringIO(err)
+            out_file = BytesIO(b(out))
+            err_file = BytesIO(b(err))
             def fakeread(fileno, count):
                 fd = {1: out_file, 2: err_file}[fileno]
                 ret = fd.read(count)
@@ -189,3 +189,55 @@ def mock_pty(out='', err='', exit=0, isatty=None, trailing_error=None,
                     assert getattr(os, name).called
         return wrapper
     return decorator
+
+
+class _Dummy(Runner):
+    """
+    Dummy runner subclass that does minimum work required to execute run().
+
+    It also serves as a convenient basic API checker; failure to update it to
+    match the current Runner API will cause TypeErrors, NotImplementedErrors,
+    and similar.
+    """
+    # Neuter the input loop sleep, so tests aren't slow (at the expense of CPU,
+    # which isn't a problem for testing).
+    input_sleep = 0
+
+    def start(self, command, shell, env):
+        pass
+
+    def read_proc_stdout(self, num_bytes):
+        return ""
+
+    def read_proc_stderr(self, num_bytes):
+        return ""
+
+    def _write_proc_stdin(self, data):
+        pass
+
+    @property
+    def process_is_finished(self):
+        return True
+
+    def returncode(self):
+        return 0
+
+    def send_interrupt(self, exception):
+        pass
+
+    def stop(self):
+        pass
+
+
+# Dummy command that will blow up if it ever truly hits a real shell.
+_ = "nope"
+
+
+# Runner that fakes ^C during subprocess exec
+class _KeyboardInterruptingRunner(_Dummy):
+    def wait(self):
+        raise KeyboardInterrupt
+
+
+class OhNoz(Exception):
+    pass

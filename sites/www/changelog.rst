@@ -2,6 +2,25 @@
 Changelog
 =========
 
+* :feature:`294` Implement `Context.sudo <invoke.context.Context.sudo>`, which
+  wraps `~invoke.context.Context.run` inside a ``sudo`` command. It is capable
+  of auto-responding to ``sudo``'s password prompt with a configured password,
+  and raises a specific exception (`~invoke.exceptions.AuthFailure`) if that
+  password is rejected).
+* :feature:`369` Overhaul the autoresponse functionality for `~invoke.run` so
+  it's significantly more extensible, both for its own sake and as part of
+  implementing :issue:`294` (see its own changelog entry for details).
+
+  .. warning::
+      This is a backwards incompatible change: the ``responses`` kwarg to
+      ``run()`` is now ``watchers``, and accepts a list of
+      `~invoke.watchers.StreamWatcher` objects (such as
+      `~invoke.watchers.Responder`) instead of a dict.
+
+      If you were using ``run(..., responses={'pattern': 'response'}``
+      previously, just update to instead use ``run(...,
+      watchers=[Responder('pattern', 'response')])``.
+
 * :bug:`-` Fix a bug in `Config.clone <invoke.config.Config.clone>` where it
   was instantiating a new ``Config`` instead of a member of the subclass.
 * :release:`0.13.0 <2016-06-09>`

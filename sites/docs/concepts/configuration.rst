@@ -83,6 +83,21 @@ For convenience, we refer to nested setting names with a dotted syntax, so e.g.
   tree (such as ``run.echo`` or ``run.pty``) maps directly to a `.Runner.run`
   keyword argument of the same name; see that method's docstring for details on
   what these settings do & what their default values are.
+* The ``sudo`` tree controls the behavior of `.Context.sudo`:
+
+    * ``sudo.password`` controls the autoresponse password submitted to sudo's
+      password prompt. Default: ``None``.
+
+      .. warning::
+        While it's possible to store this setting, like any other, in
+        :doc:`configuration files </concepts/configuration>` -- doing so is
+        inherently insecure. We highly recommend filling this config value in
+        at runtime from a secrets management system of some kind.
+
+    * ``sudo.prompt`` holds the sudo password prompt text, which is both
+      supplied to ``sudo -p``, and searched for when performing
+      :doc:`auto-response </concepts/watchers>`. Default: ``[sudo] password:``.
+
 * A top level config setting, ``debug``, controls whether debug-level output is
   logged; it defaults to ``False``.
   

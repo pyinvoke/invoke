@@ -5,7 +5,10 @@ import time
 from mock import Mock
 from spec import Spec, eq_, ok_, skip
 
-from invoke import run, Local, Context, ThreadException
+from invoke import (
+    run, Local, Context, ThreadException, Responder, FailingResponder,
+    WatcherError, Failure
+)
 from invoke.util import ExceptionHandlingThread
 
 from _util import assert_cpu_usage
@@ -24,25 +27,31 @@ class Runner_(Spec):
         def base_case(self):
             # Basic "doesn't explode" test: respond.py will exit nonzero unless
             # this works, causing a Failure.
-            responses = {r"What's the password\?": "Rosebud\n"}
+            watcher = Responder(r"What's the password\?", "Rosebud\n")
             # Gotta give -u or Python will line-buffer its stdout, so we'll
             # never actually see the prompt.
-            run("python -u respond_base.py", responses=responses, hide=True)
+            run("python -u respond_base.py", watchers=[watcher], hide=True)
 
         def both_streams(self):
-            responses = {
-                "standard out": "with it\n",
-                "standard error": "between chair and keyboard\n",
-            }
-            run("python -u respond_both.py", responses=responses, hide=True)
+            watchers = [
+                Responder("standard out", "with it\n"),
+                Responder("standard error", "between chair and keyboard\n"),
+            ]
+            run("python -u respond_both.py", watchers=watchers, hide=True)
 
-        def stdin_mirroring_isnt_cpu_heavy(self):
-            "stdin mirroring isn't CPU-heavy"
-            # CPU measurement under PyPy is...rather different. NBD.
-            if PYPY:
-                skip()
-            with assert_cpu_usage(lt=5.0):
-                run("python -u busywork.py 10", pty=True, hide=True)
+        def watcher_errors_become_Failures(self):
+            watcher = FailingResponder(
+                pattern=r"What's the password\?",
+                response="Rosebud\n",
+                sentinel="You're not Citizen Kane!",
+            )
+            try:
+                run("python -u respond_fail.py", watchers=[watcher], hide=True)
+            except Failure as e:
+                ok_(isinstance(e.reason, WatcherError))
+                eq_(e.result.exited, None)
+            else:
+                assert False, "Did not raise Failure!"
 
     class stdin_mirroring:
         def piped_stdin_is_not_conflated_with_mocked_stdin(self):
@@ -53,6 +62,14 @@ class Runner_(Spec):
         def nested_invoke_sessions_not_conflated_with_mocked_stdin(self):
             # Also re: GH issue #308. This one will just hang forever. Woo!
             run("inv -c nested_or_piped calls_foo", hide=True)
+
+        def isnt_cpu_heavy(self):
+            "stdin mirroring isn't CPU-heavy"
+            # CPU measurement under PyPy is...rather different. NBD.
+            if PYPY:
+                skip()
+            with assert_cpu_usage(lt=5.0):
+                run("python -u busywork.py 10", pty=True, hide=True)
 
     class interrupts:
         def _run_and_kill(self, pty):

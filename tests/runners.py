@@ -4,66 +4,28 @@ import types
 from io import BytesIO
 from signal import SIGINT, SIGTERM
 
-from invoke.vendor.six import StringIO, b
+from invoke.vendor.six import StringIO, b, PY2, iteritems
 
 from spec import (
     Spec, trap, eq_, skip, ok_, raises, assert_contains, assert_not_contains
 )
 from mock import patch, Mock, call
 
-from invoke.vendor import six
-
-from invoke import Runner, Local, Context, Config, Failure, ThreadException
+from invoke import (
+    Runner, Local, Context, Config, Failure, ThreadException, Responder,
+    WatcherError, UnexpectedExit, StreamWatcher
+)
 from invoke.platform import WINDOWS
 
-from _util import mock_subprocess, mock_pty, skip_if_windows
+from _util import (
+    mock_subprocess, mock_pty, skip_if_windows, _Dummy,
+    _KeyboardInterruptingRunner, OhNoz, _,
+)
 
 
-# Dummy command that will blow up if it ever truly hits a real shell.
-_ = "nope"
-
-class _Dummy(Runner):
-    """
-    Dummy runner subclass that does minimum work required to execute run().
-
-    It also serves as a convenient basic API checker; failure to update it to
-    match the current Runner API will cause TypeErrors and similar.
-    """
-    # Neuter the input loop sleep, so tests aren't slow (at the expense of CPU,
-    # which isn't a problem for testing).
-    input_sleep = 0
-
-    def start(self, command, shell, env):
-        pass
-
-    def read_proc_stdout(self, num_bytes):
-        return ""
-
-    def read_proc_stderr(self, num_bytes):
-        return ""
-
-    def _write_proc_stdin(self, data):
-        pass
-
-    @property
-    def process_is_finished(self):
-        return True
-
-    def returncode(self):
-        return 0
-
-    def send_interrupt(self, exception):
-        pass
-
-
-# Runner that fakes ^C during subprocess exec
-class _KeyboardInterruptingRunner(_Dummy):
-    def wait(self):
-        raise KeyboardInterrupt
-
-
-class OhNoz(Exception):
-    pass
+class RaisingWatcher(StreamWatcher):
+    def submit(self, stream):
+        raise WatcherError("meh")
 
 
 def _run(*args, **kwargs):
@@ -124,6 +86,16 @@ class Runner_(Spec):
             runner = self._runner(run={'warn': False}, exits=1)
             # Doesn't raise Failure -> all good
             runner.run(_, warn=True)
+
+        def does_not_apply_to_watcher_errors(self):
+            runner = self._runner(out="stuff")
+            try:
+                watcher = RaisingWatcher()
+                runner.run(_, watchers=[watcher], warn=True, hide=True)
+            except Failure as e:
+                ok_(isinstance(e.reason, WatcherError))
+            else:
+                assert False, "Did not raise Failure for WatcherError!"
 
     class hide:
         @trap
@@ -312,11 +284,11 @@ class Runner_(Spec):
             with patch('invoke.runners.locale') as fake_locale:
                 fake_locale.getdefaultlocale.return_value = ('meh', 'UHF-8')
                 fake_locale.getpreferredencoding.return_value = 'FALLBACK'
-                expected = 'UHF-8' if six.PY2 else 'FALLBACK'
+                expected = 'UHF-8' if PY2 else 'FALLBACK'
                 eq_(self._runner().default_encoding(), expected)
 
         def falls_back_to_defaultlocale_when_preferredencoding_is_None(self):
-            if not six.PY3:
+            if PY2:
                 skip()
             with patch('invoke.runners.locale') as fake_locale:
                 fake_locale.getdefaultlocale.return_value = (None, None)
@@ -477,33 +449,158 @@ class Runner_(Spec):
             mock_debug.assert_called_with("Encountered exception OhNoz('oh god why',) in thread for 'handle_stdin'") # noqa
 
     class failure_handling:
-        @raises(Failure)
+        @raises(UnexpectedExit)
         def fast_failures(self):
             self._runner(exits=1).run(_)
 
-        def non_one_return_codes_still_act_as_failure(self):
+        def non_1_return_codes_still_act_as_failure(self):
             r = self._runner(exits=17).run(_, warn=True)
             eq_(r.failed, True)
 
-        def Failure_repr_includes_stderr(self):
-            try:
-                self._runner(exits=1, err="ohnoz").run(_, hide=True)
-                assert false # noqa. Ensure failure to Failure fails
-            except Failure as f:
-                r = repr(f)
-                err = "Sentinel 'ohnoz' not found in {0!r}".format(r)
-                assert 'ohnoz' in r, err
+        class UnexpectedExit_repr:
+            def is_explicit_about_command_executed(self):
+                try:
+                    self._runner(exits=1).run(_, hide=True)
+                except UnexpectedExit as f:
+                    r = repr(f)
+                    err = "{0!r} not found in {1!r}".format(_, r)
+                    assert _ in r, err
+                else:
+                    assert False, "Failed to raise UnexpectedExit!"
 
-        def Failure_repr_should_present_stdout_when_pty_was_used(self):
-            try:
-                # NOTE: using mocked stdout because that's what ptys do as
-                # well. when pty=True, nothing's even trying to read stderr.
-                self._runner(exits=1, out="ohnoz").run(_, hide=True, pty=True)
-                assert false # noqa. Ensure failure to Failure fails
-            except Failure as f:
-                r = repr(f)
-                err = "Sentinel 'ohnoz' not found in {0!r}".format(r)
-                assert 'ohnoz' in r, err
+            def includes_stderr(self):
+                try:
+                    self._runner(exits=1, err="ohnoz").run(_, hide=True)
+                except UnexpectedExit as f:
+                    r = repr(f)
+                    err = "Sentinel 'ohnoz' not found in {0!r}".format(r)
+                    assert 'ohnoz' in r, err
+                else:
+                    assert False, "Failed to raise UnexpectedExit!"
+
+            def should_present_stdout_when_pty_was_used(self):
+                try:
+                    # NOTE: using mocked stdout because that's what ptys do as
+                    # well. when pty=True, nothing's even trying to read
+                    # stderr.
+                    runner = self._runner(exits=1, out="ohnoz")
+                    runner.run(_, hide=True, pty=True)
+                except UnexpectedExit as f:
+                    r = repr(f)
+                    err = "Sentinel 'ohnoz' not found in {0!r}".format(r)
+                    assert 'ohnoz' in r, err
+                else:
+                    assert False, "Failed to raise UnexpectedExit!"
+
+        def _regular_error(self):
+            self._runner(exits=1).run(_)
+
+        def _watcher_error(self):
+            klass = self._mock_stdin_writer()
+            # Exited=None because real procs will have no useful .returncode()
+            # result if they're aborted partway via an exception.
+            runner = self._runner(klass=klass, out="stuff", exits=None)
+            runner.run(_, watchers=[RaisingWatcher()], hide=True)
+
+        # TODO: may eventually turn into having Runner raise distinct Failure
+        # subclasses itself, at which point `reason` would probably go away.
+        class reason:
+            def is_None_for_regular_nonzero_exits(self):
+                try:
+                    self._regular_error()
+                except Failure as e:
+                    eq_(e.reason, None)
+                else:
+                    assert False, "Failed to raise Failure!"
+
+            def is_None_for_custom_command_exits(self):
+                # TODO: when we implement 'exitcodes 1 and 2 are actually OK'
+                skip()
+
+            def is_exception_when_WatcherError_raised_internally(self):
+                try:
+                    self._watcher_error()
+                except Failure as e:
+                    ok_(isinstance(e.reason, WatcherError))
+                else:
+                    assert False, "Failed to raise Failure!"
+
+        # TODO: should these move elsewhere, eg to Result specific test file?
+        # TODO: *is* there a nice way to split into multiple Response and/or
+        # Failure subclasses? Given the split between "returned as a value when
+        # no problem" and "raised as/attached to an exception when problem",
+        # possibly not - complicates how the APIs need to be adhered to.
+        class wrapped_result:
+            def most_attrs_are_always_present(self):
+                attrs = (
+                    'command', 'shell', 'env', 'stdout', 'stderr', 'pty',
+                )
+                for method in (self._regular_error, self._watcher_error):
+                    try:
+                        method()
+                    except Failure as e:
+                        for attr in attrs:
+                            ok_(getattr(e.result, attr) is not None)
+                    else:
+                        assert False, "Did not raise Failure!"
+
+            class shell_exit_failure:
+                def exited_is_integer(self):
+                    try:
+                        self._regular_error()
+                    except Failure as e:
+                        ok_(isinstance(e.result.exited, int))
+                    else:
+                        assert False, "Did not raise Failure!"
+
+                def ok_bool_etc_are_falsey(self):
+                    try:
+                        self._regular_error()
+                    except Failure as e:
+                        eq_(e.result.ok, False)
+                        eq_(e.result.failed, True)
+                        ok_(not bool(e.result))
+                        ok_(not e.result)
+                    else:
+                        assert False, "Did not raise Failure!"
+
+                def stringrep_notes_exit_status(self):
+                    try:
+                        self._regular_error()
+                    except Failure as e:
+                        ok_("exited with status 1" in str(e.result))
+                    else:
+                        assert False, "Did not raise Failure!"
+
+            class watcher_failure:
+                def exited_is_None(self):
+                    try:
+                        self._watcher_error()
+                    except Failure as e:
+                        exited = e.result.exited
+                        err = "Expected None, got {0!r}".format(exited)
+                        ok_(exited is None, err)
+
+                def ok_and_bool_still_are_falsey(self):
+                    try:
+                        self._watcher_error()
+                    except Failure as e:
+                        eq_(e.result.ok, False)
+                        eq_(e.result.failed, True)
+                        ok_(not bool(e.result))
+                        ok_(not e.result)
+                    else:
+                        assert False, "Did not raise Failure!"
+
+                def stringrep_lacks_exit_status(self):
+                    try:
+                        self._watcher_error()
+                    except Failure as e:
+                        ok_("exited with status" not in str(e.result))
+                        expected = "not fully executed due to watcher error"
+                        ok_(expected in str(e.result))
+                    else:
+                        assert False, "Did not raise Failure!"
 
     class threading:
         def errors_within_io_thread_body_bubble_up(self):
@@ -528,7 +625,14 @@ class Runner_(Spec):
             else:
                 assert False, "Did not raise ThreadException as expected!"
 
-    class responding:
+    class watchers:
+        # NOTE: it's initially tempting to consider using mocks or stub
+        # Responder instances for many of these, but it really doesn't save
+        # appreciable runtime or code read/write time.
+        # NOTE: these strictly test interactions between
+        # StreamWatcher/Responder and their host Runner; Responder-only tests
+        # are in tests/watchers.py.
+
         def nothing_is_written_to_stdin_by_default(self):
             # NOTE: technically if some goofus ran the tests by hand and mashed
             # keys while doing so...this would fail. LOL?
@@ -541,27 +645,26 @@ class Runner_(Spec):
 
         def _expect_response(self, **kwargs):
             """
-            Execute a run() w/ ``responses`` set & _runner() ``kwargs`` given.
+            Execute a run() w/ ``watchers`` set from ``responses``.
+
+            Any other ``**kwargs`` given are passed direct to ``_runner()``.
 
             :returns: The mocked ``write_proc_stdin`` method of the runner.
             """
-            klass = self._mock_stdin_writer()
-            kwargs['klass'] = klass
+            watchers = [
+                Responder(pattern=key, response=value)
+                for key, value in iteritems(kwargs.pop('responses'))
+            ]
+            kwargs['klass'] = klass = self._mock_stdin_writer()
             runner = self._runner(**kwargs)
-            runner.run(_, responses=kwargs['responses'], hide=True)
+            runner.run(_, watchers=watchers, hide=True)
             return klass.write_proc_stdin
 
-        def string_keys_in_responses_kwarg_yield_values_as_stdin_writes(self):
+        def watchers_responses_get_written_to_proc_stdin(self):
             self._expect_response(
                 out="the house was empty",
                 responses={'empty': 'handed'},
             ).assert_called_once_with("handed")
-
-        def regex_keys_also_work(self):
-            self._expect_response(
-                out="technically, it's still debt",
-                responses={r'tech.*debt': 'pay it down'},
-            ).assert_called_once_with('pay it down')
 
         def multiple_hits_yields_multiple_responses(self):
             holla = call('how high?')
@@ -573,26 +676,14 @@ class Runner_(Spec):
         def chunk_sizes_smaller_than_patterns_still_work_ok(self):
             klass = self._mock_stdin_writer()
             klass.read_chunk_size = 1 # < len('jump')
-            responses = {'jump': 'how high?'}
+            responder = Responder('jump', 'how high?')
             runner = self._runner(klass=klass, out="jump, wait, jump, wait")
-            runner.run(_, responses=responses, hide=True)
+            runner.run(_, watchers=[responder], hide=True)
             holla = call('how high?')
             # Responses happened, period.
             klass.write_proc_stdin.assert_has_calls([holla, holla])
             # And there weren't duplicates!
             eq_(len(klass.write_proc_stdin.call_args_list), 2)
-
-        def patterns_span_multiple_lines(self):
-            output = """
-You only call me
-when you have a problem
-You never call me
-Just to say hi
-"""
-            self._expect_response(
-                out=output,
-                responses={r'call.*problem': 'So sorry'},
-            ).assert_called_once_with('So sorry')
 
         def both_out_and_err_are_scanned(self):
             bye = call("goodbye")
@@ -630,6 +721,38 @@ Just to say hi
                 err="Destroy all humans!",
                 responses=responses,
             ).assert_has_calls(calls, any_order=True)
+
+        def honors_watchers_config_option(self):
+            klass = self._mock_stdin_writer()
+            responder = Responder("my stdout", "and my axe")
+            runner = self._runner(
+                out="this is my stdout", # yielded stdout
+                klass=klass, # mocked stdin writer
+                run={'watchers': [responder]}, # ends up as config override
+            )
+            runner.run(_, hide=True)
+            klass.write_proc_stdin.assert_called_once_with("and my axe")
+
+        def kwarg_overrides_config(self):
+            # TODO: how to handle use cases where merging, not overriding, is
+            # the expected/unsurprising default? probably another config-only
+            # (not kwarg) setting, e.g. run.merge_responses?
+            # TODO: now that this stuff is list, not dict, based, it should be
+            # easier...BUT how to handle removal of defaults from config? Maybe
+            # just document to be careful using the config as it won't _be_
+            # overridden? (Users can always explicitly set the config to be
+            # empty-list if they want kwargs to be the entire set of
+            # watchers...right?)
+            klass = self._mock_stdin_writer()
+            conf = Responder("my stdout", "and my axe")
+            kwarg = Responder("my stdout", "and my body spray")
+            runner = self._runner(
+                out="this is my stdout", # yielded stdout
+                klass=klass, # mocked stdin writer
+                run={'watchers': [conf]}, # ends up as config override
+            )
+            runner.run(_, hide=True, watchers=[kwarg])
+            klass.write_proc_stdin.assert_called_once_with("and my body spray")
 
     class io_sleeping:
         # NOTE: there's an explicit CPU-measuring test in the integration suite
@@ -821,6 +944,21 @@ Just to say hi
             except KeyboardInterrupt as e:
                 raised = e
             assert raised is not None
+
+    class stop:
+        def always_runs_no_matter_what(self):
+            class _ExceptingRunner(_Dummy):
+                def wait(self):
+                    raise OhNoz()
+
+            runner = _ExceptingRunner(context=Context(config=Config()))
+            runner.stop = Mock()
+            try:
+                runner.run(_)
+            except OhNoz:
+                runner.stop.assert_called_once_with()
+            else:
+                assert False, "_ExceptingRunner did not except!"
 
 
 class _FastLocal(Local):

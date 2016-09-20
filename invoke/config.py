@@ -1,7 +1,6 @@
 import copy
 import json
 import os
-import sys
 from os.path import join, splitext, expanduser
 
 from .vendor import six
@@ -10,7 +9,7 @@ if six.PY3:
 else:
     from .vendor import yaml2 as yaml
 
-if sys.version_info[:2] >= (3, 3):
+if six.PY3:
     from importlib.machinery import SourceFileLoader
     def load_source(name, path):
         if not os.path.exists(path):
@@ -32,6 +31,9 @@ from .platform import WINDOWS
 class DataProxy(object):
     """
     Helper class implementing nested dict+attr access for `.Config`.
+
+    Specifically, is used both for `.Config` itself, and to wrap any other
+    dicts assigned as config values (recursively).
     """
 
     # Attributes which get proxied through to inner etc.Config obj.
@@ -82,6 +84,15 @@ class DataProxy(object):
 
     def __hasattr__(self, key):
         return key in self.config or key in self._proxies
+
+    def __setattr__(self, key, value):
+        # Have to make sure we test whether we even have .config yet before we
+        # try looking within it; also can't __setattr__ .config itself under
+        # Python 3.
+        if key != 'config' and hasattr(self, 'config') and key in self.config:
+            self.config[key] = value
+        else:
+            super(DataProxy, self).__setattr__(key, value)
 
     def __iter__(self):
         # For some reason Python is ignoring our __hasattr__ when determining
@@ -224,10 +235,16 @@ class Config(DataProxy):
                 'out_stream': None,
                 'err_stream': None,
                 'in_stream': None,
-                'responses': {},
+                'watchers': [],
                 'echo_stdin': None,
             },
-            'tasks': {'dedupe': True},
+            'sudo': {
+                'prompt': "[sudo] password: ",
+                'password': None,
+            },
+            'tasks': {
+                'dedupe': True,
+            },
         }
 
     def __init__(
@@ -284,12 +301,12 @@ class Config(DataProxy):
             be a full file path to an existing file, not a directory path, or a
             prefix.
         """
-        # Config file suffixes to search, in preference order.
-        self._file_suffixes = ('yaml', 'json', 'py')
-
         # Technically an implementation detail - do not expose in public API.
         # Stores merged configs and is accessed via DataProxy.
         self.config = {}
+
+        # Config file suffixes to search, in preference order.
+        self._file_suffixes = ('yaml', 'json', 'py')
 
         #: Default configuration values, typically a copy of
         #: `global_defaults`.

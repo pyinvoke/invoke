@@ -2,7 +2,6 @@
 
 import locale
 import os
-import re
 from signal import SIGINT, SIGTERM
 import struct
 from subprocess import Popen, PIPE
@@ -25,7 +24,9 @@ try:
 except ImportError:
     termios = None
 
-from .exceptions import Failure, ThreadException
+from .exceptions import (
+    UnexpectedExit, Failure, ThreadException, WatcherError,
+)
 from .platform import (
     WINDOWS, pty_size, character_buffered, ready_for_reading, read_byte,
 )
@@ -83,9 +84,9 @@ class Runner(object):
         self.input_sleep = self.__class__.input_sleep
         #: Whether pty fallback warning has been emitted.
         self.warned_about_pty_fallback = False
-        #: The trigger/response mapping for use by `respond`. Is filled in at
-        #: runtime by `run`.
-        self.responses = None
+        #: A list of `.StreamWatcher` instances for use by `respond`. Is filled
+        #: in at runtime by `run`.
+        self.watchers = []
 
     def run(self, command, **kwargs):
         """
@@ -103,9 +104,19 @@ class Runner(object):
         :param str shell: Which shell binary to use. Default: ``/bin/bash``.
 
         :param bool warn:
-            Whether to warn and continue, instead of raising `.Failure`, when
-            the executed command exits with a nonzero status. Default:
-            ``False``.
+            Whether to warn and continue, instead of raising
+            `.UnexpectedExit`, when the executed command exits with a
+            nonzero status. Default: ``False``.
+
+            .. note::
+                This setting has no effect on exceptions, which will still be
+                raised, typically bundled in `.ThreadException` objects if they
+                were raised by the IO worker threads.
+
+                Similarly, `.WatcherError` exceptions raised by
+                `.StreamWatcher` instances will also ignore this setting, and
+                will usually be bundled inside `.Failure` objects (in order to
+                preserve the execution context).
 
         :param hide:
             Allows the caller to disable ``run``'s default behavior of copying
@@ -188,16 +199,15 @@ class Runner(object):
             A file-like stream object to used as the subprocess' standard
             input. If ``None`` (the default), ``sys.stdin`` will be used.
 
-        :param dict responses:
-            A `dict` whose keys are regular expressions to be searched for in
-            the program's ``stdout`` or ``stderr``, and whose values may be any
-            value one desires to write into a stdin text/binary stream
+        :param list watchers:
+            A list of `.StreamWatcher` instances which will be used to scan the
+            program's ``stdout`` or ``stderr`` and may write into its ``stdin``
             (typically ``str`` or ``bytes`` objects depending on Python
-            version) in response.
+            version) in response to patterns or other heuristics.
 
-            See :doc:`/concepts/responses` for details on this functionality.
+            See :doc:`/concepts/watchers` for details on this functionality.
 
-            Default: ``{}``.
+            Default: ``[]``.
 
         :param bool echo_stdin:
             Whether to write data from ``in_stream`` back to ``out_stream``.
@@ -231,11 +241,17 @@ class Runner(object):
         :returns:
             `Result`, or a subclass thereof.
 
-        :raises: `.Failure`, if the command exited nonzero & ``warn=False``.
+        :raises:
+            `.UnexpectedExit`, if the command exited nonzero and
+            ``warn`` was ``False``.
 
         :raises:
-            `.ThreadException` (if the background I/O threads encounter
-            exceptions).
+            `.Failure`, if the command didn't even exit cleanly, e.g. if a
+            `.StreamWatcher` raised `.WatcherError`.
+
+        :raises:
+            `.ThreadException` (if the background I/O threads encountered
+            exceptions other than `.WatcherError`).
 
         :raises:
             ``KeyboardInterrupt``, if the user generates one during command
@@ -247,6 +263,12 @@ class Runner(object):
                 instead of printing a traceback and exiting ``1`` (which is
                 what Python normally does).
         """
+        try:
+            return self._run_body(command, **kwargs)
+        finally:
+            self.stop()
+
+    def _run_body(self, command, **kwargs):
         # Normalize kwargs w/ config
         opts, out_stream, err_stream, in_stream = self._run_opts(kwargs)
         shell = opts['shell']
@@ -333,10 +355,22 @@ class Runner(object):
         # we've closed our worker threads.
         if exception is not None:
             raise exception
+        # Strip out WatcherError from any thread exceptions; they are bundled
+        # into Failure handling at the end.
+        watcher_errors = []
+        thread_exceptions = []
+        for exception in exceptions:
+            real = exception.value
+            if isinstance(real, WatcherError):
+                watcher_errors.append(real)
+            else:
+                thread_exceptions.append(exception)
         # If any exceptions appeared inside the threads, raise them now as an
         # aggregate exception object.
-        if exceptions:
-            raise ThreadException(exceptions)
+        if thread_exceptions:
+            raise ThreadException(thread_exceptions)
+        # At this point, we had enough success that we want to be returning or
+        # raising detailed info about our execution; so we generate a Result.
         stdout = ''.join(stdout)
         stderr = ''.join(stderr)
         if WINDOWS:
@@ -349,7 +383,7 @@ class Runner(object):
             stderr = stderr.replace("\r\n", "\n").replace("\r", "\n")
         # Get return/exit code
         exited = self.returncode()
-        # Return, or raise as failure, our final result
+        # Obtain actual result
         result = self.generate_result(
             command=command,
             shell=shell,
@@ -359,8 +393,15 @@ class Runner(object):
             exited=exited,
             pty=self.using_pty,
         )
+        # Any presence of WatcherError from the threads indicates a watcher was
+        # upset and aborted execution; make a generic Failure out of it and
+        # raise that.
+        if watcher_errors:
+            # TODO: ambiguity exists if we somehow get WatcherError in *both*
+            # threads...as unlikely as that would normally be.
+            raise Failure(result, reason=watcher_errors[0])
         if not (result or opts['warn']):
-            raise Failure(result)
+            raise UnexpectedExit(result)
         return result
 
     def _run_opts(self, kwargs):
@@ -394,9 +435,8 @@ class Runner(object):
             in_stream = sys.stdin
         # Determine pty or no
         self.using_pty = self.should_use_pty(opts['pty'], opts['fallback'])
-        # Responses
-        # TODO: precompile the keys into regex objects
-        self.responses = opts.get('responses', {})
+        if opts['watchers']:
+            self.watchers = opts['watchers']
         return opts, out_stream, err_stream, in_stream
 
     def generate_result(self, **kwargs):
@@ -471,7 +511,7 @@ class Runner(object):
         stream.write(string)
         stream.flush()
 
-    def _handle_output(self, buffer_, hide, output, reader, indices):
+    def _handle_output(self, buffer_, hide, output, reader):
         # TODO: store un-decoded/raw bytes somewhere as well...
         for data in self.read_proc_output(reader):
             # Echo to local stdout if necessary
@@ -486,8 +526,8 @@ class Runner(object):
             # NOTE: this is threadsafe insofar as no reading occurs until after
             # the thread is join()'d.
             buffer_.append(data)
-            # Run our specific buffer & indices through the autoresponder
-            self.respond(buffer_, indices)
+            # Run our specific buffer through the autoresponder framework
+            self.respond(buffer_)
 
     def handle_stdout(self, buffer_, hide, output):
         """
@@ -509,7 +549,6 @@ class Runner(object):
             hide,
             output,
             reader=self.read_proc_stdout,
-            indices=threading.local(),
         )
 
     def handle_stderr(self, buffer_, hide, output):
@@ -524,7 +563,6 @@ class Runner(object):
             hide,
             output,
             reader=self.read_proc_stderr,
-            indices=threading.local(),
         )
 
     def read_our_stdin(self, input_):
@@ -640,54 +678,29 @@ class Runner(object):
         """
         return (not self.using_pty) and isatty(input_)
 
-    def respond(self, buffer_, indices):
+    def respond(self, buffer_):
         """
         Write to the program's stdin in response to patterns in ``buffer_``.
 
-        The patterns and responses are driven by the key/value pairs in the
-        ``responses`` kwarg of `run` - see its documentation for format
-        details, and :doc:`/concepts/responses` for a conceptual overview.
+        The patterns and responses are driven by the `.StreamWatcher` instances
+        from the ``watchers`` kwarg of `run` - see :doc:`/concepts/watchers`
+        for a conceptual overview.
 
         :param list buffer:
             The capture buffer for this thread's particular IO stream.
 
-        :param indices:
-            A `threading.local` object upon which is (or will be) stored the
-            last-seen index for each key in ``responses``. Allows the responder
-            functionality to be used by multiple threads (typically, one each
-            for stdout and stderr) without conflicting.
-
         :returns: ``None``.
         """
-        # Short-circuit if there are no responses to respond to. This saves us
-        # the effort of joining the buffer and so forth.
-        if not self.responses:
-            return
-        # Join buffer contents into a single string; without this, we can't be
-        # sure that the pattern we seek isn't split up across chunks in the
-        # buffer.
+        # Join buffer contents into a single string; without this,
+        # StreamWatcher subclasses can't do things like iteratively scan for
+        # pattern matches.
         # NOTE: using string.join should be "efficient enough" for now, re:
-        # speed and memory use. Should that turn up false, consider using
-        # StringIO or cStringIO (tho the latter doesn't do Unicode well?)
-        # which is apparently even more efficient.
+        # speed and memory use. Should that become false, consider using
+        # StringIO or cStringIO (tho the latter doesn't do Unicode well?) which
+        # is apparently even more efficient.
         stream = u''.join(buffer_)
-        # Initialize seek indices
-        if not hasattr(indices, 'seek'):
-            indices.seek = {}
-            for pattern in self.responses:
-                indices.seek[pattern] = 0
-        for pattern, response in six.iteritems(self.responses):
-            # Only look at stream contents we haven't seen yet, to avoid dupes.
-            new_ = stream[indices.seek[pattern]:]
-            # Search, across lines if necessary
-            matches = re.findall(pattern, new_, re.S)
-            # Update seek index if we've matched
-            if matches:
-                indices.seek[pattern] += len(new_)
-            # Iterate over findall() response in case >1 match occurred.
-            for _ in matches:
-                # TODO: automatically append system-appropriate newline if
-                # response doesn't end with it, w/ option to disable?
+        for watcher in self.watchers:
+            for response in watcher.submit(stream):
                 self.write_proc_stdin(response)
 
     def generate_env(self, env, replace_env):
@@ -858,6 +871,20 @@ class Runner(object):
     def returncode(self):
         """
         Return the numeric return/exit code resulting from command execution.
+
+        :returns: `int`
+        """
+        raise NotImplementedError
+
+    def stop(self):
+        """
+        Perform final cleanup, if necessary.
+
+        This method is called within a ``finally`` clause inside the main `run`
+        method. Depending on the subclass, it may be a no-op, or it may do
+        things such as close network connections or open files.
+
+        :returns: ``None``
         """
         raise NotImplementedError
 
@@ -1005,6 +1032,10 @@ class Local(Runner):
         else:
             return self.process.returncode
 
+    def stop(self):
+        # No explicit close-out required (so far).
+        pass
+
 
 class Result(object):
     """
@@ -1021,8 +1052,11 @@ class Result(object):
                 do_something()
             else:
                 handle_problem()
+
+        However, remember `Zen of Python #2
+        <http://zen-of-python.info/explicit-is-better-than-implicit.html#2>`_.
     """
-    # TODO: inherit from namedtuple instead? heh
+    # TODO: inherit from namedtuple instead? heh (or: use attrs from pypi)
     def __init__(self, command, shell, env, stdout, stderr, exited, pty):
         #: The command which was executed.
         self.command = command
@@ -1054,7 +1088,11 @@ class Result(object):
         return self.__nonzero__()
 
     def __str__(self):
-        ret = ["Command exited with status {0}.".format(self.exited)]
+        if self.exited is not None:
+            desc = "Command exited with status {0}.".format(self.exited)
+        else:
+            desc = "Command was not fully executed due to watcher error."
+        ret = [desc]
         for x in ('stdout', 'stderr'):
             val = getattr(self, x)
             ret.append(u"""=== {0} ===
