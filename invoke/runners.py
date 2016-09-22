@@ -381,8 +381,12 @@ class Runner(object):
             # it is likely to matter for these days.
             stdout = stdout.replace("\r\n", "\n").replace("\r", "\n")
             stderr = stderr.replace("\r\n", "\n").replace("\r", "\n")
-        # Get return/exit code
-        exited = self.returncode()
+        # Get return/exit code, unless there were WatcherErrors to handle.
+        # NOTE: In that case, returncode() may block waiting on the process
+        # (which may be waiting for user input). Since most WatcherError
+        # situations lack a useful exit code anyways, skipping this doesn't
+        # really hurt any.
+        exited = None if watcher_errors else self.returncode()
         # Obtain actual result
         result = self.generate_result(
             command=command,
