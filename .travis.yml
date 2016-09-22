@@ -1,5 +1,6 @@
 language: python
-sudo: false
+sudo: required
+dist: trusty
 cache:
   directories:
     - $HOME/.cache/pip
