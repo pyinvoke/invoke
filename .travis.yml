@@ -34,11 +34,9 @@ install:
   - alt_env/bin/pip install wheel
 before_script:
   # Create passworded sudoable user for sudo autoresponse testing
-  - sudo useradd sudouser -G sudo
+  - sudo useradd sudouser
   - "echo sudouser:mypass | sudo chpasswd"
-  - id sudouser
-  - whoami
-  - for file in `sudo ls -1 /etc/sudoers.d`; do sudo cat /etc/sudoers.d/$file; done
+  - "sudo sh -c \"echo 'sudouser   ALL=(ALL:ALL) ALL' > /etc/sudoers.d/passworded\""
   - sudo -u sudouser sudo whoami
 script:
   # Run unit and integration tests, generating coverage report (skipping html)
