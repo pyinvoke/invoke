@@ -39,11 +39,13 @@ before_script:
   - "sudo sh -c \"echo 'sudouser   ALL=(ALL:ALL) PASSWD:ALL' > /etc/sudoers.d/passworded\""
 script:
   # Run unit and integration tests, generating coverage report (skipping html).
-  # Use the above-created passworded sudo-capable user so that sudo-related
-  # integration tests work as expected. (Otherwise, sudo prompt response will
-  # not be properly tested!)
-  # NOTE: This will fail if the tests fail.
-  - "sudo -u sudouser inv coverage --no-html"
+  # NOTE: Using the above-created passworded sudo-capable user so that
+  # sudo-related integration tests work as expected. (Otherwise, sudo prompt
+  # response will not be properly tested!)
+  # NOTE: explicitly referencing the virtualenv bin stub since $PATH seems to
+  # get reset even when sudoers says '!env_reset'.
+  # NOTE: This comamnd will fail if the tests fail.
+  - "sudo -u sudouser $VIRTUAL_ENV/bin/inv coverage --no-html"
   # Websites build OK? (Not on PyPy3, Sphinx is all "who the hell are you?" =/
   - "[[ $TRAVIS_PYTHON_VERSION != 'pypy3' ]] && inv sites"
   # Did we break setup.py?
