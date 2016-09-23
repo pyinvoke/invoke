@@ -42,11 +42,11 @@ script:
   # NOTE: Using the above-created passworded sudo-capable user so that
   # sudo-related integration tests work as expected. (Otherwise, sudo prompt
   # response will not be properly tested!)
-  # NOTE: explicitly referencing the virtualenv bin stub since $PATH seems to
-  # get reset even when sudoers says '!env_reset'.
+  # NOTE: explicitly sourcing the venv since $PATH seems to get reset even when
+  # sudoers says '!env_reset' & referencing the bin/inv directly gets a
+  # perplexing 'permission denied'.
   # NOTE: This comamnd will fail if the tests fail.
-  - "sudo ls -al $VIRTUAL_ENV/ $VIRTUAL_ENV/bin/"
-  - "sudo -u sudouser $VIRTUAL_ENV/bin/inv coverage --no-html"
+  - "sudo -u sudouser sh -c \"source $VIRTUAL_ENV/bin/activate && inv coverage --no-html\""
   # Websites build OK? (Not on PyPy3, Sphinx is all "who the hell are you?" =/
   - "[[ $TRAVIS_PYTHON_VERSION != 'pypy3' ]] && inv sites"
   # Did we break setup.py?
