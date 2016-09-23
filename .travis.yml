@@ -36,7 +36,7 @@ before_script:
   # Create passworded sudoable user for sudo autoresponse testing
   - sudo useradd sudouser
   - "echo sudouser:mypass | sudo chpasswd"
-  - "sudo sh -c \"echo 'sudouser   ALL=(ALL:ALL) ALL' > /etc/sudoers.d/passworded\""
+  - "sudo sh -c \"echo 'sudouser   ALL=(ALL:ALL) PASSWD:ALL' > /etc/sudoers.d/passworded\""
   - sudo -u sudouser sudo whoami
 script:
   # Run unit and integration tests, generating coverage report (skipping html)
