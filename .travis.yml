@@ -44,6 +44,7 @@ script:
   # sudo-related integration tests work as expected. (Otherwise, sudo prompt
   # response will not be properly tested!)
   # NOTE: This comamnd will fail if the tests fail.
+  - "sudo -u sudouser $VIRTUAL_ENV/bin/pip freeze"
   - "sudo -u sudouser $VIRTUAL_ENV/bin/inv coverage --no-html"
   # Websites build OK? (Not on PyPy3, Sphinx is all "who the hell are you?" =/
   - "[[ $TRAVIS_PYTHON_VERSION != 'pypy3' ]] && inv sites"
