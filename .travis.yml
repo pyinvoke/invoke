@@ -37,6 +37,8 @@ before_script:
   - sudo useradd sudouser -G sudo
   - "echo sudouser:mypass | sudo chpasswd"
   - id sudouser
+  - sudo cat /etc/sudoers
+  - for file in `sudo ls -1 /etc/sudoers.d`; sudo cat /etc/sudoers.d/$file; done
   - sudo -u sudouser sudo whoami
 script:
   # Run unit and integration tests, generating coverage report (skipping html)
