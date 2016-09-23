@@ -8,5 +8,5 @@ class Context_(Spec):
         def base_case(self):
             # TODO: create passworded sudo user
             config = Config(overrides={'sudo': {'password': ''}})
-            result = Context(config=config).sudo('whoami')
+            result = Context(config=config).sudo('whoami', hide=True)
             eq_(result.stdout.strip(), 'root')
