@@ -33,8 +33,9 @@ install:
   - "virtualenv alt_env --python=$([[ $TRAVIS_PYTHON_VERSION == 2* ]] && echo python3 || echo /usr/bin/python)"
   - alt_env/bin/pip install wheel
 before_script:
-  # Create passworded sudoable user for sudo autoresponse testing
-  - sudo useradd sudouser
+  # Create passworded sudoable user for sudo autoresponse testing. Put it in
+  # the Travis user's group so it can read /home/travis for virtualenv etc.
+  - sudo useradd sudouser -G travis
   - "echo sudouser:mypass | sudo chpasswd"
   - "sudo sh -c \"echo 'sudouser   ALL=(ALL:ALL) PASSWD:ALL' > /etc/sudoers.d/passworded\""
 script:
@@ -42,11 +43,8 @@ script:
   # NOTE: Using the above-created passworded sudo-capable user so that
   # sudo-related integration tests work as expected. (Otherwise, sudo prompt
   # response will not be properly tested!)
-  # NOTE: explicitly sourcing the venv since $PATH seems to get reset even when
-  # sudoers says '!env_reset' & referencing the bin/inv directly gets a
-  # perplexing 'permission denied'.
   # NOTE: This comamnd will fail if the tests fail.
-  - "sudo -u sudouser bash -c \"source $VIRTUAL_ENV/bin/activate && inv coverage --no-html\""
+  - "sudo -u sudouser $VIRTUAL_ENV/bin/inv coverage --no-html"
   # Websites build OK? (Not on PyPy3, Sphinx is all "who the hell are you?" =/
   - "[[ $TRAVIS_PYTHON_VERSION != 'pypy3' ]] && inv sites"
   # Did we break setup.py?
