@@ -32,6 +32,10 @@ install:
   # default venv, so we gotta hardcode it.
   - "virtualenv alt_env --python=$([[ $TRAVIS_PYTHON_VERSION == 2* ]] && echo python3 || echo /usr/bin/python)"
   - alt_env/bin/pip install wheel
+before_script:
+  # Create passworded sudoable user for sudo autoresponse testing
+  - sudo useradd sudouser -G sudo
+  - "echo sudouser:mypass | sudo chpasswd"
 script:
   # Run unit and integration tests, generating coverage report (skipping html)
   # This will fail if the tests fail.
