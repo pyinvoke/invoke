@@ -139,8 +139,4 @@ class Main(Spec):
         size = run('stty size', hide=True, pty=True).stdout.strip()
         assert size != ""
         assert size != "0 0"
-        # Apparently true-headless execution like Travis does that!
-        if os.environ.get('TRAVIS', False):
-            assert size == "24 80"
-        else:
-            assert size != "24 80"
+        assert size != "24 80"
