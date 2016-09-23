@@ -46,7 +46,7 @@ script:
   # sudoers says '!env_reset' & referencing the bin/inv directly gets a
   # perplexing 'permission denied'.
   # NOTE: This comamnd will fail if the tests fail.
-  - "sudo -u sudouser sh -c \"source $VIRTUAL_ENV/bin/activate && inv coverage --no-html\""
+  - "sudo -u sudouser bash -c \"source $VIRTUAL_ENV/bin/activate && inv coverage --no-html\""
   # Websites build OK? (Not on PyPy3, Sphinx is all "who the hell are you?" =/
   - "[[ $TRAVIS_PYTHON_VERSION != 'pypy3' ]] && inv sites"
   # Did we break setup.py?
