@@ -15,6 +15,6 @@ class Context_(Spec):
             # that the user RUNNING the tests DOES have passwordless sudo.
             # I.e., travis-ci.
             config = Config(overrides={'sudo': {'password': 'mypass'}})
-            cmd = 'sudo -u testuser sudo whoami'
+            cmd = 'sudo -u sudouser sudo whoami'
             result = Context(config=config).sudo(cmd, hide=True)
             eq_(result.stdout.strip(), 'root')
