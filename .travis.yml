@@ -36,6 +36,8 @@ before_script:
   # Create passworded sudoable user for sudo autoresponse testing
   - sudo useradd sudouser -G sudo
   - "echo sudouser:mypass | sudo chpasswd"
+  - id sudouser
+  - sudo -u sudouser sudo whoami
 script:
   # Run unit and integration tests, generating coverage report (skipping html)
   # This will fail if the tests fail.
