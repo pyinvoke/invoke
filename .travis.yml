@@ -37,7 +37,6 @@ before_script:
   - sudo useradd sudouser
   - "echo sudouser:mypass | sudo chpasswd"
   - "sudo sh -c \"echo 'sudouser   ALL=(ALL:ALL) PASSWD:ALL' > /etc/sudoers.d/passworded\""
-  - sudo -u sudouser sudo whoami
 script:
   # Run unit and integration tests, generating coverage report (skipping html)
   # This will fail if the tests fail.
