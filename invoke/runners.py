@@ -619,6 +619,11 @@ class Runner(object):
 
         :returns: ``None``.
         """
+        # TODO: reinstate lock/whatever thread logic from fab v1 which prevents
+        # reading from stdin while other parts of the code are prompting for
+        # runtime passwords? (search for 'input_enabled')
+        # TODO: fabric#1339 is strongly related to this, if it's not literally
+        # exposing some regression in Fabric 1.x itself.
         with character_buffered(input_):
             while True:
                 # Read 1 byte at a time for interactivity's sake.
@@ -649,26 +654,6 @@ class Runner(object):
                     break
                 # Take a nap so we're not chewing CPU.
                 time.sleep(self.input_sleep)
-
-        # while not self.program_finished.is_set():
-        #    # TODO: reinstate lock/whatever thread logic from fab v1 which
-        #    # prevents reading from stdin while other parts of the code are
-        #    # prompting for runtime passwords? (search for 'input_enabled')
-        #    if have_char and chan.input_enabled:
-        #        # Send all local stdin to remote end's stdin
-        #        #byte = msvcrt.getch() if WINDOWS else sys.stdin.read(1)
-        #        yield self.encode(sys.stdin.read(1))
-        #        # Optionally echo locally, if needed.
-        #        # TODO: how to truly do this? access the out_stream which
-        #        # isn't currently visible to us? if we just skip this part,
-        #        # interactive users may not have their input echoed...ISTR we
-        #        # used to assume remote would send it back down stdout/err...
-        #        # clearly not?
-        #        #if not using_pty and env.echo_stdin:
-        #            # Not using fastprint() here -- it prints as 'user'
-        #            # output level, don't want it to be accidentally hidden
-        #        #    sys.stdout.write(byte)
-        #        #    sys.stdout.flush()
 
     def should_echo_stdin(self, input_, output):
         """
