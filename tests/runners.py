@@ -18,7 +18,7 @@ from invoke import (
 from invoke.platform import WINDOWS
 
 from _util import (
-    mock_subprocess, mock_pty, skip_if_windows, _Dummy,
+    mock_subprocess, mock_pty, skip_if_windows, Dummy,
     _KeyboardInterruptingRunner, OhNoz, _,
 )
 
@@ -29,13 +29,13 @@ class RaisingWatcher(StreamWatcher):
 
 
 def _run(*args, **kwargs):
-    klass = kwargs.pop('klass', _Dummy)
+    klass = kwargs.pop('klass', Dummy)
     settings = kwargs.pop('settings', {})
     context = Context(config=Config(overrides=settings))
     return klass(context).run(*args, **kwargs)
 
 def _runner(out='', err='', **kwargs):
-    klass = kwargs.pop('klass', _Dummy)
+    klass = kwargs.pop('klass', Dummy)
     runner = klass(Context(config=Config(overrides=kwargs)))
     if 'exits' in kwargs:
         runner.returncode = Mock(return_value=kwargs.pop('exits'))
@@ -58,9 +58,9 @@ class Runner_(Spec):
 
     def _mock_stdin_writer(self):
         """
-        Return new _Dummy subclass whose write_proc_stdin() method is a mock.
+        Return new Dummy subclass whose write_proc_stdin() method is a mock.
         """
-        class MockedStdin(_Dummy):
+        class MockedStdin(Dummy):
             pass
         MockedStdin.write_proc_stdin = Mock()
         return MockedStdin
@@ -269,7 +269,7 @@ class Runner_(Spec):
 
         def honors_config(self):
             c = Context(Config(overrides={'run': {'encoding': 'UTF-7'}}))
-            runner = _Dummy(c)
+            runner = Dummy(c)
             runner.default_encoding = Mock(return_value='UTF-not-7')
             runner.run(_)
             eq_(runner.encoding, 'UTF-7')
@@ -604,7 +604,7 @@ class Runner_(Spec):
 
     class threading:
         def errors_within_io_thread_body_bubble_up(self):
-            class Oops(_Dummy):
+            class Oops(Dummy):
                 def handle_stdout(self, **kwargs):
                     raise OhNoz()
                 def handle_stderr(self, **kwargs):
@@ -765,7 +765,7 @@ class Runner_(Spec):
 
         @mock_subprocess()
         def subclasses_can_override_input_sleep(self):
-            class MyRunner(_Dummy):
+            class MyRunner(Dummy):
                 input_sleep = 0.007
             with patch('invoke.runners.time') as mock_time:
                 MyRunner(Context()).run(
@@ -787,7 +787,7 @@ class Runner_(Spec):
             input_ = StringIO(fake_in)
             input_is_pty = kwargs.pop('in_pty', None)
 
-            class MyRunner(_Dummy):
+            class MyRunner(Dummy):
                 def should_echo_stdin(self, input_, output):
                     # Fake result of isatty() test here and only here; if we do
                     # this farther up, it will affect stuff trying to run
@@ -931,7 +931,7 @@ class Runner_(Spec):
             assert runner.send_interrupt.called
 
         def send_interrupt_not_called_for_other_exceptions(self):
-            class _GenericExceptingRunner(_Dummy):
+            class _GenericExceptingRunner(Dummy):
                 def wait(self):
                     raise Exception
             runner = self._run_with_mocked_interrupt(_GenericExceptingRunner)
@@ -947,7 +947,7 @@ class Runner_(Spec):
 
     class stop:
         def always_runs_no_matter_what(self):
-            class _ExceptingRunner(_Dummy):
+            class _ExceptingRunner(Dummy):
                 def wait(self):
                     raise OhNoz()
 
@@ -962,7 +962,7 @@ class Runner_(Spec):
 
 
 class _FastLocal(Local):
-    # Neuter this for same reason as in _Dummy above
+    # Neuter this for same reason as in Dummy above
     input_sleep = 0
 
 class _KeyboardInterruptingFastLocal(_FastLocal):

@@ -9,7 +9,7 @@ from invoke import (
     StreamWatcher,
 )
 
-from _util import mock_subprocess, _Dummy
+from _util import mock_subprocess, Dummy
 
 
 class Context_(Spec):
@@ -88,7 +88,7 @@ class Context_(Spec):
         @mock_subprocess()
         def echo_hides_extra_sudo_flags(self, getpass):
             skip() # see TODO in sudo() re: clean output display
-            config = Config(overrides={'runner': _Dummy})
+            config = Config(overrides={'runner': Dummy})
             Context(config=config).sudo('nope', echo=True)
             output = sys.stdout.getvalue()
             sys.__stderr__.write(repr(output) + "\n")
