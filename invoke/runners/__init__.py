@@ -24,15 +24,15 @@ try:
 except ImportError:
     termios = None
 
-from .exceptions import (
+from ..exceptions import (
     UnexpectedExit, Failure, ThreadException, WatcherError,
 )
-from .platform import (
+from ..platform import (
     WINDOWS, pty_size, character_buffered, ready_for_reading, read_byte,
 )
-from .util import has_fileno, isatty, ExceptionHandlingThread
+from ..util import has_fileno, isatty, ExceptionHandlingThread
 
-from .vendor import six
+from ..vendor import six
 
 
 class Runner(object):
