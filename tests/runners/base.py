@@ -2,7 +2,6 @@ import os
 import sys
 import types
 from io import BytesIO
-from signal import SIGINT, SIGTERM
 
 from invoke.vendor.six import StringIO, b, PY2, iteritems
 
@@ -12,14 +11,13 @@ from spec import (
 from mock import patch, Mock, call
 
 from invoke import (
-    Runner, Local, Context, Config, Failure, ThreadException, Responder,
+    Runner, Context, Config, Failure, ThreadException, Responder,
     WatcherError, UnexpectedExit, StreamWatcher
 )
-from invoke.platform import WINDOWS
 
 from _util import (
-    mock_subprocess, mock_pty, skip_if_windows, Dummy,
-    _KeyboardInterruptingRunner, OhNoz, _,
+    mock_subprocess, skip_if_windows, Dummy, _KeyboardInterruptingRunner,
+    OhNoz, _,
 )
 
 
