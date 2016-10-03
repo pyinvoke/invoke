@@ -48,9 +48,11 @@ class Loader(object):
             # being imported is trying to load local-to-it names.
             parent = os.path.dirname(path)
             if parent not in sys.path:
+                debug("Parent dir of found module {0} ({1}) not in sys.path; injecting it at front of path".format(path, parent)) # noqa
                 sys.path.insert(0, parent)
             # Actual import
             module = imp.load_module(name, fd, path, desc)
+            debug("Imported {0} with contents {1}".format(module, dir(module)))
             # Make a collection from it, and done
             return Collection.from_module(module, loaded_from=parent)
         finally:
