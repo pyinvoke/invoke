@@ -281,7 +281,7 @@ class Runner_(Spec):
             # Actually testing this highly OS/env specific stuff is very
             # error-prone; so we degrade to just testing expected function
             # calls for now :(
-            with patch('invoke.runners.locale') as fake_locale:
+            with patch('invoke.runners.base.locale') as fake_locale:
                 fake_locale.getdefaultlocale.return_value = ('meh', 'UHF-8')
                 fake_locale.getpreferredencoding.return_value = 'FALLBACK'
                 expected = 'UHF-8' if PY2 else 'FALLBACK'
@@ -290,7 +290,7 @@ class Runner_(Spec):
         def falls_back_to_defaultlocale_when_preferredencoding_is_None(self):
             if PY2:
                 skip()
-            with patch('invoke.runners.locale') as fake_locale:
+            with patch('invoke.runners.base.locale') as fake_locale:
                 fake_locale.getdefaultlocale.return_value = (None, None)
                 fake_locale.getpreferredencoding.return_value = 'FALLBACK'
                 eq_(self._runner().default_encoding(), 'FALLBACK')
@@ -407,7 +407,7 @@ class Runner_(Spec):
     class input_stream_handling:
         # NOTE: actual autoresponder tests are elsewhere. These just test that
         # stdin works normally & can be overridden.
-        @patch('invoke.runners.sys.stdin', StringIO("Text!"))
+        @patch('invoke.runners.base.sys.stdin', StringIO("Text!"))
         def defaults_to_sys_stdin(self):
             # Execute w/ runner class that has a mocked stdin_writer
             klass = self._mock_stdin_writer()
@@ -767,7 +767,7 @@ class Runner_(Spec):
         def subclasses_can_override_input_sleep(self):
             class MyRunner(Dummy):
                 input_sleep = 0.007
-            with patch('invoke.runners.time') as mock_time:
+            with patch('invoke.runners.base.time') as mock_time:
                 MyRunner(Context()).run(
                     _,
                     in_stream=StringIO("foo"),
@@ -959,147 +959,3 @@ class Runner_(Spec):
                 runner.stop.assert_called_once_with()
             else:
                 assert False, "_ExceptingRunner did not except!"
-
-
-class _FastLocal(Local):
-    # Neuter this for same reason as in Dummy above
-    input_sleep = 0
-
-class _KeyboardInterruptingFastLocal(_FastLocal):
-    def wait(self):
-        raise KeyboardInterrupt
-
-
-class Local_(Spec):
-    def _run(self, *args, **kwargs):
-        return _run(*args, **dict(kwargs, klass=_FastLocal))
-
-    def _runner(self, *args, **kwargs):
-        return _runner(*args, **dict(kwargs, klass=_FastLocal))
-
-    class pty_and_pty_fallback:
-        @mock_pty()
-        def when_pty_True_we_use_pty_fork_and_os_exec(self):
-            "when pty=True, we use pty.fork and os.exec*"
-            self._run(_, pty=True)
-            # @mock_pty's asserts check os/pty calls for us.
-
-        @mock_pty()
-        def pty_is_set_to_controlling_terminal_size(self):
-            self._run(_, pty=True)
-            # @mock_pty's asserts check fcntl calls for us
-
-        def warning_only_fires_once(self):
-            # I.e. if implementation checks pty-ness >1 time, only one warning
-            # is emitted. This is kinda implementation-specific, but...
-            skip()
-
-        @mock_pty(isatty=False)
-        def can_be_overridden_by_kwarg(self):
-            self._run(_, pty=True, fallback=False)
-            # @mock_pty's asserts will be mad if pty-related os/pty calls
-            # didn't fire, so we're done.
-
-        @mock_pty(isatty=False)
-        def can_be_overridden_by_config(self):
-            self._runner(run={'fallback': False}).run(_, pty=True)
-            # @mock_pty's asserts will be mad if pty-related os/pty calls
-            # didn't fire, so we're done.
-
-        @trap
-        @mock_subprocess(isatty=False)
-        def fallback_affects_result_pty_value(self, *mocks):
-            eq_(self._run(_, pty=True).pty, False)
-
-        @mock_pty(isatty=False)
-        def overridden_fallback_affects_result_pty_value(self):
-            eq_(self._run(_, pty=True, fallback=False).pty, True)
-
-        @patch('invoke.runners.sys')
-        def replaced_stdin_objects_dont_explode(self, mock_sys):
-            # Replace sys.stdin with an object lacking .isatty(), which
-            # normally causes an AttributeError unless we are being careful.
-            mock_sys.stdin = object()
-            # Test. If bug is present, this will error.
-            runner = Local(Context())
-            eq_(runner.should_use_pty(pty=True, fallback=True), False)
-
-        @mock_pty(trailing_error=OSError("Input/output error"))
-        def spurious_OSErrors_handled_gracefully(self):
-            # Doesn't-blow-up test.
-            self._run(_, pty=True)
-
-        @mock_pty(trailing_error=OSError("wat"))
-        def non_spurious_OSErrors_bubble_up(self):
-            try:
-                self._run(_, pty=True)
-            except ThreadException as e:
-                e = e.exceptions[0]
-                eq_(e.type, OSError)
-                eq_(str(e.value), "wat")
-
-    class send_interrupt:
-        def _run(self, pty):
-            runner = _KeyboardInterruptingFastLocal(Context(config=Config()))
-            try:
-                runner.run(_, pty=pty)
-            except KeyboardInterrupt:
-                pass
-            return runner
-
-        @mock_pty(skip_asserts=True)
-        def uses_os_kill_when_pty_True(self):
-            with patch('invoke.runners.os.kill') as kill:
-                runner = self._run(pty=True)
-                kill.assert_called_once_with(runner.pid, SIGINT)
-
-        @mock_subprocess()
-        def uses_subprocess_send_signal_when_pty_False(self):
-            runner = self._run(pty=False)
-            # Don't see a great way to test this w/o replicating the logic.
-            expected = SIGTERM if WINDOWS else SIGINT
-            runner.process.send_signal.assert_called_once_with(expected)
-
-    class shell:
-        @mock_pty(insert_os=True)
-        def defaults_to_bash_when_pty_True(self, mock_os):
-            self._run(_, pty=True)
-            eq_(mock_os.execve.call_args_list[0][0][0], '/bin/bash')
-
-        @mock_subprocess(insert_Popen=True)
-        def defaults_to_bash_when_pty_False(self, mock_Popen):
-            self._run(_, pty=False)
-            eq_(mock_Popen.call_args_list[0][1]['executable'], '/bin/bash')
-
-        @mock_pty(insert_os=True)
-        def may_be_overridden_when_pty_True(self, mock_os):
-            self._run(_, pty=True, shell='/bin/zsh')
-            eq_(mock_os.execve.call_args_list[0][0][0], '/bin/zsh')
-
-        @mock_subprocess(insert_Popen=True)
-        def may_be_overridden_when_pty_False(self, mock_Popen):
-            self._run(_, pty=False, shell='/bin/zsh')
-            eq_(mock_Popen.call_args_list[0][1]['executable'], '/bin/zsh')
-
-    class env:
-        # NOTE: update-vs-replace semantics are tested 'purely' up above in
-        # regular Runner tests.
-
-        @mock_subprocess(insert_Popen=True)
-        def uses_Popen_kwarg_for_pty_False(self, mock_Popen):
-            self._run(_, pty=False, env={'FOO': 'BAR'})
-            expected = dict(os.environ, FOO='BAR')
-            eq_(
-                mock_Popen.call_args_list[0][1]['env'],
-                expected
-            )
-
-        @mock_pty(insert_os=True)
-        def uses_execve_for_pty_True(self, mock_os):
-            type(mock_os).environ = {'OTHERVAR': 'OTHERVAL'}
-            self._run(_, pty=True, env={'FOO': 'BAR'})
-            expected = {'OTHERVAR': 'OTHERVAL', 'FOO': 'BAR'}
-            eq_(
-                mock_os.execve.call_args_list[0][0][2],
-                expected
-            )

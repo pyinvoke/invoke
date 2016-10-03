@@ -50,13 +50,13 @@ class Init(Spec):
             assert invoke.pty_size is invoke.platform.pty_size
 
         def local_class(self):
-            assert invoke.Local is invoke.runners.Local
+            assert invoke.Local is invoke.runners.local.Local
 
         def runner_class(self):
-            assert invoke.Runner is invoke.runners.Runner
+            assert invoke.Runner is invoke.runners.base.Runner
 
         def failure_class(self):
-            assert invoke.Failure is invoke.runners.Failure
+            assert invoke.Failure is invoke.exceptions.Failure
 
         def exceptions(self):
             # Meh
@@ -67,7 +67,7 @@ class Init(Spec):
                     assert top_level is real
 
         def runner_result(self):
-            assert invoke.Result is invoke.runners.Result
+            assert invoke.Result is invoke.runners.base.Result
 
         def watchers(self):
             assert invoke.StreamWatcher is invoke.watchers.StreamWatcher

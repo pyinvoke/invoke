@@ -3,12 +3,13 @@ from . import Runner
 
 class Dummy(Runner):
     """
-    Dummy runner subclass that does minimum work required to execute run().
-
-    It also serves as a convenient basic API checker; failure to update it to
-    match the current Runner API will cause TypeErrors, NotImplementedErrors,
-    and similar.
+    Lazy/no-op runner designed for testing purposes.
     """
+    # TODO: how to make it easier to actually use for tests? move some common
+    # subroutines from test modules in here?
+    # TODO: at minimum, document the techniques used in those subroutines (or
+    # what I want/need to use for invocations testing) in here or in a
+    # specific conceptual doc.
     # Neuter the input loop sleep, so tests aren't slow (at the expense of CPU,
     # which isn't a problem for testing).
     input_sleep = 0

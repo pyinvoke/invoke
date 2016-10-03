@@ -146,7 +146,7 @@ def mock_pty(out='', err='', exit=0, isatty=None, trailing_error=None,
 
         @wraps(f)
         @patch('invoke.runners.local.pty')
-        @patch('invoke.runners.base.os')
+        @patch('invoke.runners.local.os')
         @ioctl_patch
         def wrapper(*args, **kwargs):
             args = list(args)
