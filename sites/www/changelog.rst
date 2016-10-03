@@ -44,20 +44,20 @@ Changelog
   instead of hangs.
 * :feature:`259` (also :issue:`280`) Allow updating (or replacing) subprocess
   shell environments, via the ``env`` and ``replace_env`` kwargs to
-  `~invoke.runners.Runner.run`. Thanks to Fotis Gimian for the report,
+  `~invoke.runners.base.Runner.run`. Thanks to Fotis Gimian for the report,
   ``@philtay`` for an early version of the final patch, and Erich Heine & Vlad
   Frolov for feedback.
-* :feature:`67` Added ``shell`` option to `~invoke.runners.Runner.run`,
+* :feature:`67` Added ``shell`` option to `~invoke.runners.base.Runner.run`,
   allowing control of the shell used when invoking commands. Previously,
   ``pty=True`` used ``/bin/bash`` and ``pty=False`` (the default) used
   ``/bin/sh``; the new unified default value is ``/bin/bash``.
 
   Thanks to Jochen Breuer for the report.
 * :bug:`152 major` (also :issue:`251`, :issue:`331`) Correctly handle
-  ``KeyboardInterrupt`` during `~invoke.runners.Runner.run`, re: both mirroring
-  the interrupt signal to the subprocess *and* capturing the local exception
-  within Invoke's CLI handler (so there's no messy traceback, just exiting with
-  code ``130``).
+  ``KeyboardInterrupt`` during `~invoke.runners.base.Runner.run`, re: both
+  mirroring the interrupt signal to the subprocess *and* capturing the local
+  exception within Invoke's CLI handler (so there's no messy traceback, just
+  exiting with code ``130``).
 
   Thanks to Peter Darrow for the report, and to Mika Eloranta & Máté Farkas for
   early versions of the patchset.
@@ -102,10 +102,11 @@ Changelog
     * Windows support for the new stdin replication functionality (this was
       totally blocking Windows users, as reported in :issue:`302` - sorry!);
     * Stdin is now mirrored to stdout when no PTY is present, so you can see
-      what you're typing (plus a new `~invoke.runners.Runner.run` option and
-      config param, ``echo_stdin``, allowing user override of this behavior);
+      what you're typing (plus a new `~invoke.runners.base.Runner.run` option
+      and config param, ``echo_stdin``, allowing user override of this
+      behavior);
     * Exposed the stdin read loop's sleep time as `Runner.input_sleep
-      <invoke.runners.Runner.input_sleep>`;
+      <invoke.runners.base.Runner.input_sleep>`;
     * Sped up some tests a bit.
 
 * :release:`0.12.0 <2016-01-12>`
@@ -167,8 +168,8 @@ Changelog
 * :release:`0.11.1 <2015-09-07>`
 * :support:`- backported` Fix incorrect changelog URL in package metadata.
 * :release:`0.11.0 <2015-09-07>`
-* :feature:`-` Create `invoke.runners.Result.command` to preserve the command
-  executed for post-execution introspection.
+* :feature:`-` Create `invoke.runners.base.Result.command` to preserve the
+  command executed for post-execution introspection.
 * :feature:`-` Detect local controlling terminal size
   (`~invoke.platform.pty_size`) and apply that information when creating
   pseudoterminals in `~invoke.run` when ``pty=True``.
@@ -188,8 +189,8 @@ Changelog
   .. warning::
     This change required a major cleanup/rearchitecture of the command
     execution implementation. The vendored ``pexpect`` module has been
-    completely removed and the API of the `~invoke.runners.Runner` class has
-    changed dramatically (though **the API for run() itself has not**).
+    completely removed and the API of the `~invoke.runners.base.Runner` class
+    has changed dramatically (though **the API for run() itself has not**).
 
     Be aware there may be edge-case terminal behaviors which have changed or
     broken as a result of removing ``pexpect``. Please report these as bugs! We
@@ -218,7 +219,7 @@ Changelog
     * Moved the top level ``run`` function from its original home in
       ``invoke.runner`` to `invoke.__init__ <invoke>`, to reflect the fact that
       it's now simply a convenience wrapper around ``Runner``.
-    * Tweaked the implementation of `~invoke.runners.Runner` so it can
+    * Tweaked the implementation of `~invoke.runners.base.Runner` so it can
       reference `~invoke.context.Context` objects (useful for anticipated
       subclasses).
 
@@ -239,9 +240,9 @@ Changelog
   completion scripts, and add some 'blessed' such scripts for bash (3 and 4)
   and zsh. Thanks to Ivan Malison and Andrew Roberts for providing discussion &
   early patchsets.
-* :support:`-` Reorganize `~invoke.runners.Runner`, `~invoke.runners.Local` and
-  ``invoke.runner.run`` for improved distribution of responsibilities &
-  downstream subclassing.
+* :support:`-` Reorganize `~invoke.runners.base.Runner`,
+  `~invoke.runners.local.Local` and ``invoke.runner.run`` for improved
+  distribution of responsibilities & downstream subclassing.
 
   .. warning::
     This includes backwards incompatible changes to the API signature of most
@@ -250,8 +251,8 @@ Changelog
     the later, optional keyword arguments.)
 
 * :feature:`219` Fall back to non-PTY command execution in situations where
-  ``pty=True`` but no PTY appears present. See `~invoke.runners.Local` for
-  details.
+  ``pty=True`` but no PTY appears present. See `~invoke.runners.local.Local`
+  for details.
 * :support:`212` Implement basic linting support using ``flake8``, and apply
   formatting changes to satisfy said linting. As part of this shakeup, also
   changed all old-style (``%s``) string formatting to new-style (``{0}``).
@@ -380,9 +381,9 @@ Changelog
       module to ``sys.path`` and then calling Invoke elsewhere on the
       filesystem.
 
-* :support:`-` Refactor the `invoke.runners.Runner` module to differentiate
-  what it means to run a command in the abstract, from execution specifics. Top
-  level API is unaffected.
+* :support:`-` Refactor the `invoke.runners.base.Runner` module to
+  differentiate what it means to run a command in the abstract, from execution
+  specifics. Top level API is unaffected.
 * :bug:`131 major` Make sure one's local tasks module is always first in
   ``sys.path``, even if its parent directory was already somewhere else in
   ``sys.path``. This ensures that local tasks modules never become hidden by
