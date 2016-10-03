@@ -150,7 +150,7 @@ def mock_pty(out='', err='', exit=0, isatty=None, trailing_error=None,
         @ioctl_patch
         def wrapper(*args, **kwargs):
             args = list(args)
-            pty, os, ioctl = args.pop(), args.pop(), args.pop()
+            pty, mock_os, ioctl = args.pop(), args.pop(), args.pop()
             # Don't actually fork, but pretend we did & that main thread is
             # also the child (pid 0) to trigger execve call; & give 'parent fd'
             # of 1 (stdout).
@@ -158,11 +158,11 @@ def mock_pty(out='', err='', exit=0, isatty=None, trailing_error=None,
             # We don't really need to care about waiting since not truly
             # forking/etc, so here we just return a nonzero "pid" + dummy value
             # (normally sent to WEXITSTATUS but we mock that anyway, so.)
-            os.waitpid.return_value = None, None
-            os.WEXITSTATUS.return_value = exit
+            mock_os.waitpid.return_value = None, None
+            mock_os.WEXITSTATUS.return_value = exit
             # If requested, mock isatty to fake out pty detection
             if isatty is not None:
-                os.isatty.return_value = isatty
+                mock_os.isatty.return_value = isatty
             out_file = BytesIO(b(out))
             err_file = BytesIO(b(err))
             def fakeread(fileno, count):
@@ -172,9 +172,9 @@ def mock_pty(out='', err='', exit=0, isatty=None, trailing_error=None,
                 if not ret and trailing_error:
                     raise trailing_error
                 return ret
-            os.read.side_effect = fakeread
+            mock_os.read.side_effect = fakeread
             if insert_os:
-                args.append(os)
+                args.append(mock_os)
             f(*args, **kwargs)
             # Short-circuit if we raised an error in fakeread()
             if trailing_error:
@@ -187,7 +187,7 @@ def mock_pty(out='', err='', exit=0, isatty=None, trailing_error=None,
             eq_(ioctl.call_args_list[1][0][1], termios.TIOCSWINSZ)
             if not skip_asserts:
                 for name in ('execve', 'waitpid', 'WEXITSTATUS'):
-                    assert getattr(os, name).called
+                    assert getattr(mock_os, name).called
         return wrapper
     return decorator
 
