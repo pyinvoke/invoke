@@ -13,13 +13,13 @@ from mock import patch, Mock, call
 
 from invoke import (
     Runner, Local, Context, Config, Failure, ThreadException, Responder,
-    WatcherError, UnexpectedExit, StreamWatcher
+    WatcherError, UnexpectedExit, StreamWatcher, Dummy,
 )
 from invoke.platform import WINDOWS
 
 from _util import (
-    mock_subprocess, mock_pty, skip_if_windows, Dummy,
-    _KeyboardInterruptingRunner, OhNoz, _,
+    mock_subprocess, mock_pty, skip_if_windows, _KeyboardInterruptingRunner,
+    OhNoz, _,
 )
 
 
