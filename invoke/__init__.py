@@ -13,7 +13,7 @@ from .loader import FilesystemLoader # noqa
 from .parser import Argument # noqa
 from .platform import pty_size # noqa
 from .program import Program # noqa
-from .runners import Dummy, Local, Result, Runner
+from .runners import Dummy, Local, Result, Runner # noqa
 from .tasks import task, call, Call, Task # noqa
 from .watchers import ( # noqa
     StreamWatcher, Responder, FailingResponder, # noqa

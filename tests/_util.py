@@ -13,7 +13,7 @@ from invoke.vendor.six import BytesIO, b
 from mock import patch, Mock
 from spec import trap, Spec, eq_, skip
 
-from invoke import Program, UnexpectedExit, Runner
+from invoke import Program, UnexpectedExit
 from invoke.platform import WINDOWS
 from invoke.runners import Dummy
 
@@ -204,5 +204,3 @@ class _KeyboardInterruptingRunner(Dummy):
 
 class OhNoz(Exception):
     pass
-
-
