@@ -10,7 +10,7 @@ from mock import patch, Mock
 from invoke import Local, Context, Config, ThreadException, Dummy
 from invoke.platform import WINDOWS
 
-from ._util import mock_subprocess, mock_pty, _
+from .._util import mock_subprocess, mock_pty, _
 
 
 def _run(*args, **kwargs):

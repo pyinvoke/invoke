@@ -15,7 +15,7 @@ from invoke import (
     WatcherError, UnexpectedExit, StreamWatcher
 )
 
-from ._util import (
+from .._util import (
     mock_subprocess, skip_if_windows, Dummy, _KeyboardInterruptingRunner,
     OhNoz, _,
 )
