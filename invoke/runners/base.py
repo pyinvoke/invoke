@@ -700,7 +700,6 @@ class Runner(object):
 
         :returns: A dictionary of shell environment vars.
         """
-        print("in generate_env, os: {0}".format(os))
         return env if replace_env else dict(os.environ, **env)
 
     def should_use_pty(self, pty, fallback):

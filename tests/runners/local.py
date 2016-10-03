@@ -176,11 +176,16 @@ class Local_(Spec):
 
         @mock_pty(insert_os=True)
         def uses_execve_for_pty_True(self, mock_os):
-            print(mock_os)
-            type(mock_os).environ = {'OTHERVAR': 'OTHERVAL'}
-            self._run(_, pty=True, env={'FOO': 'BAR'})
-            expected = {'OTHERVAR': 'OTHERVAL', 'FOO': 'BAR'}
-            eq_(
-                mock_os.execve.call_args_list[0][0][2],
-                expected
-            )
+            # Need to mock both base and local's copy of 'os:
+            # - base's, as that is where the default os.environ comes from
+            # - local's, as that is what execve is called on
+            # TODO: is there a nice mock-compatible way to only deal with one
+            # of them? sigh
+            with patch('invoke.runners.base.os') as base_os:
+                type(base_os).environ = {'OTHERVAR': 'OTHERVAL'}
+                self._run(_, pty=True, env={'FOO': 'BAR'})
+                expected = {'OTHERVAR': 'OTHERVAL', 'FOO': 'BAR'}
+                eq_(
+                    mock_os.execve.call_args_list[0][0][2],
+                    expected
+                )
