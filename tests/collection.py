@@ -1,11 +1,24 @@
 import operator
 
+from invoke.vendor.six import PY3
+
 from spec import Spec, eq_, ok_, raises, assert_raises
 
 from invoke.collection import Collection
 from invoke.tasks import task, Task
 from invoke.vendor import six
 from invoke.vendor.six.moves import reduce
+
+# Deal with bizarro Python 3 import issue that cropped up during the work from
+# af1f3cbd2cf3a70def32d8b8352ce16d5cc389a9 to
+# e7f3f294476fefa4da7f0682907c0bd2c9ec08e0 (i.e. making runners source & tests
+# subpackages instead of one large module).
+# Sadly, just making the _util import explicitly relative wasn't sufficient,
+# _and_ also broke Python 2; I've already spent too much time debugging it.
+if PY3:
+    import os
+    import sys
+    sys.path.insert(0, os.path.dirname(__file__))
 
 from _util import load, support_path
 
