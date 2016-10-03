@@ -2,6 +2,18 @@
 Changelog
 =========
 
+* :feature:`-` Expose the command-execution parts of Invoke's test helpers so
+  they can be used outside our own test suite. See XXX link.
+
+  .. TODO: actual link to docs
+
+  .. note::
+    As part of this change, ``invoke.runners`` was split up into a subpackage.
+    The subpackage's ``__init__`` continues to expose the public API (as well
+    as Invoke's own root ``__init__``, which is where we always recommend
+    importing from) but we're noting this in case users were directly
+    importing.
+
 * :feature:`294` Implement `Context.sudo <invoke.context.Context.sudo>`, which
   wraps `~invoke.context.Context.run` inside a ``sudo`` command. It is capable
   of auto-responding to ``sudo``'s password prompt with a configured password,
