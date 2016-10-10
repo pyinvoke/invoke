@@ -2,6 +2,16 @@
 Changelog
 =========
 
+* :feature:`-` Update implementation of `~invoke.runners.Result` so it has
+  default values for all parameters/attributes besides ``exited``. This allows
+  it to be more easily used when mocking ``run`` calls in client libraries'
+  tests.
+
+  .. warning::
+    This is a backwards incompatible change if you were instantiating
+    `~invoke.runners.Result` objects with positional arguments; the ``exited``
+    argument moved from 6th place to 1st place.
+
 * :feature:`294` Implement `Context.sudo <invoke.context.Context.sudo>`, which
   wraps `~invoke.context.Context.run` inside a ``sudo`` command. It is capable
   of auto-responding to ``sudo``'s password prompt with a configured password,
