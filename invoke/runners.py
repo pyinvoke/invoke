@@ -1030,7 +1030,31 @@ class Result(object):
     """
     A container for information about the result of a command execution.
 
-    See individual attribute/method documentation below for details.
+    All params are exposed as attributes of the same name and type.
+
+    :param int exited:
+        An integer representing the subprocess' exit/return code. Required.
+
+    :param str command:
+        The command which was executed.
+
+    :param str shell:
+        The shell binary used for execution.
+
+    :param dict env:
+        The shell environment used for execution. (Default is the empty dict,
+        ``{}``, not ``None`` as displayed in the signature.)
+
+    :param str stdout:
+        The subprocess' standard output.
+
+    :param str stderr:
+        Same as `.stdout` but containing standard error (unless the process was
+        invoked via a pty, in which case it will be empty; see `.Runner.run`.)
+
+    :param bool pty:
+        A boolean describing whether the subprocess was invoked with a pty or
+        not; see `.Runner.run`.
 
     .. note::
         `Result` objects' truth evaluation is equivalent to their `.ok`
@@ -1046,25 +1070,30 @@ class Result(object):
         <http://zen-of-python.info/explicit-is-better-than-implicit.html#2>`_.
     """
     # TODO: inherit from namedtuple instead? heh (or: use attrs from pypi)
-    def __init__(self, command, shell, env, stdout, stderr, exited, pty):
-        #: The command which was executed.
-        self.command = command
-        #: The shell binary used for execution.
-        self.shell = shell
-        #: The shell environment used for execution.
-        self.env = env
-        #: An integer representing the subprocess' exit/return code.
+    def __init__(
+        self,
+        exited,
+        command="",
+        shell="",
+        env=None,
+        stdout="",
+        stderr="",
+        pty=False,
+    ):
         self.exited = exited
-        #: An alias for `.exited`.
-        self.return_code = exited
-        #: The subprocess' standard output, as a multiline string.
+        self.command = command
+        self.shell = shell
+        self.env = {} if env is None else env
         self.stdout = stdout
-        #: Same as `.stdout` but containing standard error (unless the process
-        #: was invoked via a pty; see `.Runner.run`.)
         self.stderr = stderr
-        #: A boolean describing whether the subprocess was invoked with a pty
-        #: or not; see `.Runner.run`.
         self.pty = pty
+
+    @property
+    def return_code(self):
+        """
+        An alias for `.exited`.
+        """
+        return self.exited
 
     def __nonzero__(self):
         # NOTE: This is the method that (under Python 2) determines Boolean
