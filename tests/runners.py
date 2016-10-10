@@ -1106,27 +1106,26 @@ class Local_(Spec):
 
 
 class Result_(Spec):
-    def setup(self):
-        self.result = Result(0)
-
-    @raises(TypeError)
-    def exited_required(self):
+    def nothing_is_required(self):
         Result()
 
     def command_defaults_to_empty_string(self):
-        eq_(self.result.command, "")
+        eq_(Result().command, "")
 
     def shell_defaults_to_empty_string(self):
-        eq_(self.result.shell, "")
+        eq_(Result().shell, "")
 
     def env_defaults_to_empty_dict(self):
-        eq_(self.result.env, {})
+        eq_(Result().env, {})
 
     def stdout_defaults_to_empty_string(self):
-        eq_(self.result.stdout, u"")
+        eq_(Result().stdout, u"")
 
     def stderr_defaults_to_empty_string(self):
-        eq_(self.result.stderr, u"")
+        eq_(Result().stderr, u"")
+
+    def exited_defaults_to_zero(self):
+        eq_(Result().exited, 0)
 
     def pty_defaults_to_False(self):
-        eq_(self.result.pty, False)
+        eq_(Result().pty, False)

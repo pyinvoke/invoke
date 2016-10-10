@@ -1032,9 +1032,6 @@ class Result(object):
 
     All params are exposed as attributes of the same name and type.
 
-    :param int exited:
-        An integer representing the subprocess' exit/return code. Required.
-
     :param str command:
         The command which was executed.
 
@@ -1051,6 +1048,9 @@ class Result(object):
     :param str stderr:
         Same as `.stdout` but containing standard error (unless the process was
         invoked via a pty, in which case it will be empty; see `.Runner.run`.)
+
+    :param int exited:
+        An integer representing the subprocess' exit/return code.
 
     :param bool pty:
         A boolean describing whether the subprocess was invoked with a pty or
@@ -1072,20 +1072,20 @@ class Result(object):
     # TODO: inherit from namedtuple instead? heh (or: use attrs from pypi)
     def __init__(
         self,
-        exited,
         command="",
         shell="",
         env=None,
         stdout="",
         stderr="",
+        exited=0,
         pty=False,
     ):
-        self.exited = exited
         self.command = command
         self.shell = shell
         self.env = {} if env is None else env
         self.stdout = stdout
         self.stderr = stderr
+        self.exited = exited
         self.pty = pty
 
     @property
