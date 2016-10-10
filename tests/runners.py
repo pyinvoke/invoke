@@ -1109,15 +1109,15 @@ class Result_(Spec):
     def setup(self):
         self.result = Result(0)
 
-    @raises(ValueError)
+    @raises(TypeError)
     def exited_required(self):
         Result()
 
-    def command_defaults_to_None(self):
-        eq_(self.result.command, None)
+    def command_defaults_to_empty_string(self):
+        eq_(self.result.command, "")
 
-    def shell_defaults_to_None(self):
-        eq_(self.result.shell, None)
+    def shell_defaults_to_empty_string(self):
+        eq_(self.result.shell, "")
 
     def env_defaults_to_empty_dict(self):
         eq_(self.result.env, {})
