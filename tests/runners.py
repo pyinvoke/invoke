@@ -13,7 +13,7 @@ from mock import patch, Mock, call
 
 from invoke import (
     Runner, Local, Context, Config, Failure, ThreadException, Responder,
-    WatcherError, UnexpectedExit, StreamWatcher
+    WatcherError, UnexpectedExit, StreamWatcher, Result,
 )
 from invoke.platform import WINDOWS
 
@@ -1103,3 +1103,30 @@ class Local_(Spec):
                 mock_os.execve.call_args_list[0][0][2],
                 expected
             )
+
+
+class Result_(Spec):
+    def setup(self):
+        self.result = Result(0)
+
+    @raises(ValueError)
+    def exited_required(self):
+        Result()
+
+    def command_defaults_to_None(self):
+        eq_(self.result.command, None)
+
+    def shell_defaults_to_None(self):
+        eq_(self.result.shell, None)
+
+    def env_defaults_to_empty_dict(self):
+        eq_(self.result.env, {})
+
+    def stdout_defaults_to_empty_string(self):
+        eq_(self.result.stdout, u"")
+
+    def stderr_defaults_to_empty_string(self):
+        eq_(self.result.stderr, u"")
+
+    def pty_defaults_to_False(self):
+        eq_(self.result.pty, False)
