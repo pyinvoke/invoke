@@ -160,4 +160,8 @@ class MockContext(Context):
             setattr(self, "_{0}".format(method), results)
 
     def run(self, *args, **kwargs):
+        # TODO: perform more convenience stuff associating args/kwargs with the
+        # result? E.g. filling in .command, etc? Possibly useful for debugging
+        # if one hits unexpected-order problems with what they passed in to
+        # __init__.
         return self._run.pop(0)
