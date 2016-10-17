@@ -1109,6 +1109,9 @@ class Result_(Spec):
     def nothing_is_required(self):
         Result()
 
+    def first_posarg_is_stdout(self):
+        eq_(Result("foo").stdout, "foo")
+
     def command_defaults_to_empty_string(self):
         eq_(Result().command, "")
 
