@@ -12,8 +12,9 @@ Changelog
 
   .. warning::
     This is a backwards incompatible change if you are manually instantiating
-    `.Result` objects with positional arguments: positional argument order has
-    changed. (Compare the API docs between versions to see exactly how.)
+    `~invoke.runners.Result` objects with positional arguments: positional
+    argument order has changed. (Compare the API docs between versions to see
+    exactly how.)
 
 * :feature:`294` Implement `Context.sudo <invoke.context.Context.sudo>`, which
   wraps `~invoke.context.Context.run` inside a ``sudo`` command. It is capable
@@ -180,8 +181,8 @@ Changelog
 * :release:`0.11.1 <2015-09-07>`
 * :support:`- backported` Fix incorrect changelog URL in package metadata.
 * :release:`0.11.0 <2015-09-07>`
-* :feature:`-` Create `invoke.runners.Result.command` to preserve the command
-  executed for post-execution introspection.
+* :feature:`-` Add a ``.command`` attribute to `~invoke.runners.Result` to
+  preserve the command executed for post-execution introspection.
 * :feature:`-` Detect local controlling terminal size
   (`~invoke.platform.pty_size`) and apply that information when creating
   pseudoterminals in `~invoke.run` when ``pty=True``.

@@ -1036,8 +1036,9 @@ class Result(object):
         The subprocess' standard output.
 
     :param str stderr:
-        Same as `.stdout` but containing standard error (unless the process was
-        invoked via a pty, in which case it will be empty; see `.Runner.run`.)
+        Same as ``stdout`` but containing standard error (unless the process
+        was invoked via a pty, in which case it will be empty; see
+        `.Runner.run`.)
 
     :param str command:
         The command which was executed.
@@ -1091,7 +1092,7 @@ class Result(object):
     @property
     def return_code(self):
         """
-        An alias for `.exited`.
+        An alias for ``.exited``.
         """
         return self.exited
 
