@@ -300,7 +300,9 @@ class MockContext_(Spec):
         eq_(c.run("doesn't mattress").stdout, "some output")
 
     def return_value_kwargs_can_take_iterables_too(self):
-        skip()
+        c = MockContext(run=[Result("some output"), Result("more!")])
+        eq_(c.run("doesn't mattress").stdout, "some output")
+        eq_(c.run("still doesn't mattress").stdout, "more!")
 
     def methods_with_no_kwarg_values_raise_NotImplementedError(self):
         # TODO: or should they be quiet no-ops?
