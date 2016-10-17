@@ -39,6 +39,8 @@ completion options.
 .. toctree::
     cli
 
+.. _api:
+
 API
 ---
 
