@@ -6,7 +6,7 @@ from spec import Spec, skip, eq_, ok_, trap
 
 from invoke import (
     AuthFailure, Context, Config, FailingResponder, ResponseNotAccepted,
-    StreamWatcher,
+    StreamWatcher, MockContext,
 )
 
 from _util import mock_subprocess, _Dummy
@@ -283,3 +283,24 @@ class Context_(Spec):
                 # such as incorrectly unhandled ThreadErrors
                 if not excepted:
                     assert False, "Did not raise AuthFailure!"
+
+
+class MockContext_(Spec):
+    def init_still_acts_like_superclass_init(self):
+        # No required args
+        ok_(isinstance(MockContext().config, Config))
+        config = Config(overrides={'foo': 'bar'})
+        # Posarg
+        ok_(MockContext(config).config is config)
+        # Kwarg
+        ok_(MockContext(config=config).config is config)
+
+    def non_config_init_kwargs_used_as_return_values_for_methods(self):
+        skip()
+
+    def return_value_kwargs_can_take_iterables_too(self):
+        skip()
+
+    def methods_with_no_kwarg_values_raise_NotImplementedError(self):
+        # TODO: or should they be quiet no-ops?
+        skip()

@@ -143,3 +143,12 @@ class Context(DataProxy):
             # Reraise for any other error so it bubbles up normally.
             else:
                 raise
+
+
+class MockContext(Context):
+    """
+    A `.Context` whose methods' return values can be predetermined.
+
+    Primarily useful for testing Invoke-using codebases.
+    """
+    pass
