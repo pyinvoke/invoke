@@ -2,9 +2,19 @@
 Changelog
 =========
 
+* :feature:`-` Add a `~invoke.context.MockContext` class for easier testing of
+  user-written tasks and related client code. Includes adding a
+  :ref:`conceptual document on how to test Invoke-using code
+  <testing-user-code>`.
 * :feature:`-` Update implementation of `~invoke.runners.Result` so it has
   default values for all parameters/attributes. This allows it to be more
   easily used when mocking ``run`` calls in client libraries' tests.
+
+  .. warning::
+    This is a backwards incompatible change if you are manually instantiating
+    `.Result` objects with positional arguments: positional argument order has
+    changed. (Compare the API docs between versions to see exactly how.)
+
 * :feature:`294` Implement `Context.sudo <invoke.context.Context.sudo>`, which
   wraps `~invoke.context.Context.run` inside a ``sudo`` command. It is capable
   of auto-responding to ``sudo``'s password prompt with a configured password,

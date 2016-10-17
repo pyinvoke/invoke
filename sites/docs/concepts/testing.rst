@@ -1,3 +1,5 @@
+.. _testing-user-code:
+
 ==============================
 Testing Invoke-using codebases
 ==============================
