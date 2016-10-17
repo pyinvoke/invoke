@@ -152,6 +152,24 @@ class MockContext(Context):
     Primarily useful for testing Invoke-using codebases.
     """
     def __init__(self, config=None, **kwargs):
+        """
+        Create a ``Context``-like object whose methods yield `.Result` objects.
+
+        :param config:
+            A Configuration object to use. Identical in behavior to `.Context`.
+
+        :param run:
+            A list of `Results <.Result>`, to yield on each subsequent call to
+            the instantiated object's `~.Context.run` method (instead of
+            actually calling the requested shell command).
+
+            May supply a `.Result` object in place of list, which acts as
+            shorthand for supplying the object inside a one-item list.
+
+        :param sudo:
+            Identical to ``run``, but whose values are yielded from calls to
+            `~.Context.sudo`.
+        """
         super(MockContext, self).__init__(config)
         for method, results in iteritems(kwargs):
             # Special convenience case: individual Result -> one-item list
