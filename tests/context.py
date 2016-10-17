@@ -2,7 +2,7 @@ import re
 import sys
 
 from mock import patch, Mock
-from spec import Spec, skip, eq_, ok_, trap
+from spec import Spec, skip, eq_, ok_, trap, raises
 
 from invoke import (
     AuthFailure, Context, Config, FailingResponder, ResponseNotAccepted,
@@ -304,6 +304,16 @@ class MockContext_(Spec):
         eq_(c.run("doesn't mattress").stdout, "some output")
         eq_(c.run("still doesn't mattress").stdout, "more!")
 
+    @raises(NotImplementedError)
     def methods_with_no_kwarg_values_raise_NotImplementedError(self):
-        # TODO: or should they be quiet no-ops?
-        skip()
+        MockContext().run("onoz I did not anticipate this would happen")
+
+    def sudo_also_covered(self):
+        c = MockContext(sudo=Result(stderr="super duper"))
+        eq_(c.sudo("doesn't mattress").stderr, "super duper")
+        try:
+            MockContext().sudo("meh")
+        except NotImplementedError:
+            pass
+        else:
+            assert False, "Did not get a NotImplementedError for sudo!"

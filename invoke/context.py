@@ -159,9 +159,25 @@ class MockContext(Context):
                 results = [results]
             setattr(self, "_{0}".format(method), results)
 
+    # TODO: _maybe_ make this more metaprogrammy/flexible (using __call__ etc)?
+    # Pretty worried it'd cause more hard-to-debug issues than it's presently
+    # worth. Maybe in situations where Context grows a _lot_ of methods (e.g.
+    # in Fabric 2; though Fabric could do its own sub-subclass in that case...)
+
     def run(self, *args, **kwargs):
+        if not hasattr(self, '_run'):
+            raise NotImplementedError # We weren't given anything to mock
         # TODO: perform more convenience stuff associating args/kwargs with the
         # result? E.g. filling in .command, etc? Possibly useful for debugging
         # if one hits unexpected-order problems with what they passed in to
         # __init__.
         return self._run.pop(0)
+
+    def sudo(self, *args, **kwargs):
+        # TODO: this completely nukes the top-level behavior of sudo(), which
+        # could be good or bad, depending. Most of the time I think it's good.
+        # No need to supply dummy password config, etc.
+        if not hasattr(self, '_sudo'):
+            raise NotImplementedError # We weren't given anything to mock
+        # TODO: see the TODO from run() re: injecting arg/kwarg values
+        return self._sudo.pop(0)
