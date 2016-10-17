@@ -1,11 +1,11 @@
 import getpass
 import re
 
-from invoke.vendor.six import raise_from
+from invoke.vendor.six import raise_from, iteritems
 
 from .config import Config, DataProxy
 from .exceptions import Failure, AuthFailure, ResponseNotAccepted
-from .runners import Local
+from .runners import Local, Result
 from .watchers import FailingResponder
 
 
@@ -151,4 +151,13 @@ class MockContext(Context):
 
     Primarily useful for testing Invoke-using codebases.
     """
-    pass
+    def __init__(self, config=None, **kwargs):
+        super(MockContext, self).__init__(config)
+        for method, results in iteritems(kwargs):
+            # Special convenience case: individual Result -> one-item list
+            if isinstance(results, Result):
+                results = [results]
+            setattr(self, "_{0}".format(method), results)
+
+    def run(self, *args, **kwargs):
+        return self._run.pop(0)

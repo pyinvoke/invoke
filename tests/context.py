@@ -6,7 +6,7 @@ from spec import Spec, skip, eq_, ok_, trap
 
 from invoke import (
     AuthFailure, Context, Config, FailingResponder, ResponseNotAccepted,
-    StreamWatcher, MockContext,
+    StreamWatcher, MockContext, Result,
 )
 
 from _util import mock_subprocess, _Dummy
@@ -296,7 +296,8 @@ class MockContext_(Spec):
         ok_(MockContext(config=config).config is config)
 
     def non_config_init_kwargs_used_as_return_values_for_methods(self):
-        skip()
+        c = MockContext(run=Result("some output"))
+        eq_(c.run("doesn't mattress").stdout, "some output")
 
     def return_value_kwargs_can_take_iterables_too(self):
         skip()
