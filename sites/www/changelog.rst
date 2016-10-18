@@ -2,6 +2,8 @@
 Changelog
 =========
 
+* :bug:`-` Correctly raise `TypeError` when unexpected keyword arguments are
+  given to `~invoke.runners.Runner.run`.
 * :feature:`-` Add a `~invoke.context.MockContext` class for easier testing of
   user-written tasks and related client code. Includes adding a
   :ref:`conceptual document on how to test Invoke-using code

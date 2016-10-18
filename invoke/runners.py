@@ -420,7 +420,11 @@ class Runner(object):
         for key, value in six.iteritems(self.context.config.run):
             runtime = kwargs.pop(key, None)
             opts[key] = value if runtime is None else runtime
-        # TODO: handle invalid kwarg keys (anything left in kwargs)
+        # Handle invalid kwarg keys (anything left in kwargs).
+        # Act like a normal function would, i.e. TypeError
+        if kwargs:
+            err = "run() got an unexpected keyword argument '{0}'"
+            raise TypeError(err.format(kwargs.keys()[0]))
         # If hide was True, turn off echoing
         if opts['hide'] is True:
             opts['echo'] = False

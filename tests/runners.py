@@ -76,6 +76,15 @@ class Runner_(Spec):
         def context_instance_is_required(self):
             Runner()
 
+    class run:
+        def handles_invalid_kwargs_like_any_other_function(self):
+            try:
+                self._run(_, nope_noway_nohow='as if')
+            except TypeError as e:
+                ok_('got an unexpected keyword argument' in str(e))
+            else:
+                assert False, "Invalid run() kwarg didn't raise TypeError"
+
     class warn:
         def honors_config(self):
             runner = self._runner(run={'warn': True}, exits=1)
