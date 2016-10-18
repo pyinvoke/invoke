@@ -10,7 +10,10 @@ else:
     from .vendor import yaml2 as yaml
 
 if six.PY3:
-    from importlib.machinery import SourceFileLoader
+    try:
+        from importlib.machinery import SourceFileLoader
+    except ImportError: # PyPy3
+        from importlib._bootstrap import _SourceFileLoader as SourceFileLoader
     def load_source(name, path):
         if not os.path.exists(path):
             return {}
