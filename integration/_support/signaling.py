@@ -42,9 +42,9 @@ def _succeed(signum, frame):
 def wait():
     # Set timeout handler
     signal.signal(signal.SIGALRM, _timeout)
-    # NOTE: in most cases, 1s shoul be plenty of time, but if race conditions
-    # appear, this is the first thing to try changing.
-    # NOTE: may want to sleep longer than 1s in order to accomodate an
+    # NOTE: in most cases, 1-2s should be plenty of time, but if race
+    # conditions appear, this is the first thing to try changing.
+    # NOTE: want to sleep slightly longer than that in order to accomodate an
     # outer-layer sleep which is ensuring we actually get to this point (vs
     # signaling during interpreter setup or the top of expect())
     signal.alarm(2)
