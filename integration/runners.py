@@ -105,7 +105,7 @@ class Runner_(Spec):
             # Otherwise both tests will always fail as the ALARM fires
             # (resulting in "Never got any signals!" in debug log) before this
             # here sleep finishes.
-            time.sleep(1)
+            time.sleep(2 if PYPY else 1)
             # Send expected signal (use pty to ensure no intermediate 'sh'
             # processes on Linux; is of no consequence on Darwin.)
             interpreter = 'pypy' if PYPY else 'python'

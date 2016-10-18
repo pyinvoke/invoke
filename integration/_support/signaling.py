@@ -4,10 +4,13 @@ Used to make assertions about signals received when called as a subprocess.
 Omits use of Invoke helpers for cleaner testing (less nesting).
 """
 
+import platform
 import signal
 import sys
 
 from invoke.vendor import six
+
+PYPY = platform.python_implementation() == 'PyPy'
 
 
 #
@@ -47,7 +50,7 @@ def wait():
     # NOTE: want to sleep slightly longer than that in order to accomodate an
     # outer-layer sleep which is ensuring we actually get to this point (vs
     # signaling during interpreter setup or the top of expect())
-    signal.alarm(2)
+    signal.alarm(3 if PYPY else 2)
     # Wait for a sign~
     signal.pause()
 
