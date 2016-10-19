@@ -174,6 +174,10 @@ class MockContext(Context):
         :param sudo:
             Identical to ``run``, but whose values are yielded from calls to
             `~.Context.sudo`.
+
+        :raises:
+            `TypeError`, if the values given to ``run`` or other kwargs aren't
+            individual `.Result` objects or iterables.
         """
         # TODO: consider tweaking semantics re: whether a single Result means
         # "yield once" or "yield always". Tradeoff of masking unexpected calls
@@ -187,6 +191,12 @@ class MockContext(Context):
             # Special convenience case: individual Result -> one-item list
             if isinstance(results, Result):
                 results = [results]
+            if (
+                not hasattr(results, '__iter__')
+                and not isinstance(results, Result)
+            ):
+                err = "Not sure how to yield results from a {0!r}"
+                raise TypeError(err.format(type(results)))
             setattr(self, "_{0}".format(method), results)
 
     # TODO: _maybe_ make this more metaprogrammy/flexible (using __call__ etc)?

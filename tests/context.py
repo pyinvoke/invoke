@@ -333,3 +333,7 @@ class MockContext_(Spec):
 
         def iterable(self):
             self._expect_NotImplementedError(MockContext(run=[Result("meh")]))
+
+    @raises(TypeError)
+    def unexpected_kwarg_type_yields_TypeError(self):
+        MockContext(run=123)
