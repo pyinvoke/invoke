@@ -317,3 +317,19 @@ class MockContext_(Spec):
             pass
         else:
             assert False, "Did not get a NotImplementedError for sudo!"
+
+    class exhausted_return_values_also_raise_NotImplementedError:
+        def _expect_NotImplementedError(self, context):
+            context.run("something")
+            try:
+                context.run("something")
+            except NotImplementedError:
+                pass
+            else:
+                assert False, "Didn't raise NotImplementedError"
+
+        def single_value(self):
+            self._expect_NotImplementedError(MockContext(run=Result("meh")))
+
+        def iterable(self):
+            self._expect_NotImplementedError(MockContext(run=[Result("meh")]))
