@@ -185,19 +185,10 @@ class MockContext(Context):
             `TypeError`, if the values given to ``run`` or other kwargs aren't
             individual `.Result` objects or iterables.
         """
-        # TODO: consider tweaking semantics re: whether a single Result means
-        # "yield once" or "yield always". Tradeoff of masking unexpected calls
-        # to the method (where 'yield single object/iterable' would make it
-        # obvious that the method was called more times than you expected),
-        # versus convenience and consistency re: e.g. the 'mock' library.
-        # (Counterpoint: users desiring 'yield always' can simply supply
-        # itertools.repeat(Result(...))...)
         # TODO: would be nice to allow regexen instead of exact string matches
         super(MockContext, self).__init__(config)
         for method, results in iteritems(kwargs):
             # Special convenience case: individual Result -> one-item list
-            if isinstance(results, Result):
-                results = [results]
             if (
                 not hasattr(results, '__iter__')
                 and not isinstance(results, Result)
