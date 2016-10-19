@@ -175,6 +175,13 @@ class MockContext(Context):
             Identical to ``run``, but whose values are yielded from calls to
             `~.Context.sudo`.
         """
+        # TODO: consider tweaking semantics re: whether a single Result means
+        # "yield once" or "yield always". Tradeoff of masking unexpected calls
+        # to the method (where 'yield single object/iterable' would make it
+        # obvious that the method was called more times than you expected),
+        # versus convenience and consistency re: e.g. the 'mock' library.
+        # (Counterpoint: users desiring 'yield always' can simply supply
+        # itertools.repeat(Result(...))...)
         super(MockContext, self).__init__(config)
         for method, results in iteritems(kwargs):
             # Special convenience case: individual Result -> one-item list
