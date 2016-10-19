@@ -304,6 +304,15 @@ class MockContext_(Spec):
         eq_(c.run("doesn't mattress").stdout, "some output")
         eq_(c.run("still doesn't mattress").stdout, "more!")
 
+    def return_value_kwargs_may_be_command_string_maps(self):
+        c = MockContext(run={'foo': Result("bar")})
+        eq_(c.run("foo").stdout, "bar")
+
+    def return_value_map_kwargs_may_take_iterables_too(self):
+        c = MockContext(run={'foo': [Result("bar"), Result("biz")]})
+        eq_(c.run("foo").stdout, "bar")
+        eq_(c.run("foo").stdout, "biz")
+
     @raises(NotImplementedError)
     def methods_with_no_kwarg_values_raise_NotImplementedError(self):
         MockContext().run("onoz I did not anticipate this would happen")
@@ -333,6 +342,16 @@ class MockContext_(Spec):
 
         def iterable(self):
             self._expect_NotImplementedError(MockContext(run=[Result("meh")]))
+
+        def mapping_to_single_value(self):
+            self._expect_NotImplementedError(MockContext(run={
+                "something": Result("meh")
+            }))
+
+        def mapping_to_iterable(self):
+            self._expect_NotImplementedError(MockContext(run={
+                "something": [Result("meh")]
+            }))
 
     @raises(TypeError)
     def unexpected_kwarg_type_yields_TypeError(self):

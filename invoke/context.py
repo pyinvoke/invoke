@@ -164,12 +164,18 @@ class MockContext(Context):
             A Configuration object to use. Identical in behavior to `.Context`.
 
         :param run:
-            A list of `Results <.Result>`, to yield on each subsequent call to
+            A data structure of `Results <.Result>`, to return from calls to
             the instantiated object's `~.Context.run` method (instead of
-            actually calling the requested shell command).
+            actually executing the requested shell command).
 
-            May supply a `.Result` object in place of list, which acts as
-            shorthand for supplying the object inside a one-item list.
+            Specifically, this method accepts:
+
+            - A single `.Result` object, which will be returned once.
+            - An iterable of `Results <.Result>`, which will be returned on
+              each subsequent call to ``.run``.
+            - A map of command strings to either of the above, allowing
+              specific call-and-response semantics instead of assuming a call
+              order.
 
         :param sudo:
             Identical to ``run``, but whose values are yielded from calls to
@@ -186,6 +192,7 @@ class MockContext(Context):
         # versus convenience and consistency re: e.g. the 'mock' library.
         # (Counterpoint: users desiring 'yield always' can simply supply
         # itertools.repeat(Result(...))...)
+        # TODO: would be nice to allow regexen instead of exact string matches
         super(MockContext, self).__init__(config)
         for method, results in iteritems(kwargs):
             # Special convenience case: individual Result -> one-item list
