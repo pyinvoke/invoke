@@ -192,6 +192,7 @@ class MockContext(Context):
             if (
                 not hasattr(results, '__iter__')
                 and not isinstance(results, Result)
+                # No need for explicit dict test; they have __iter__
             ):
                 err = "Not sure how to yield results from a {0!r}"
                 raise TypeError(err.format(type(results)))
@@ -203,21 +204,26 @@ class MockContext(Context):
     # in Fabric 2; though Fabric could do its own sub-subclass in that case...)
 
     def _yield_result(self, attname, command):
-        if not hasattr(self, attname):
-            raise NotImplementedError
-        value = getattr(self, attname)
-        # TODO: thought there's a 'better' 2x3 DictType or w/e, but can't find
-        if isinstance(value, dict):
-            if hasattr(value[command], '__iter__'):
-                result = value[command].pop(0)
-            elif isinstance(value[command], Result):
-                result = value.pop(command)
-        elif hasattr(value, '__iter__'):
-            result = value.pop(0)
-        elif isinstance(value, Result):
-            result = value
-            delattr(self, attname)
-        return result
+        # NOTE: originally had this with a bunch of explicit
+        # NotImplementedErrors, but it doubled method size, and chance of
+        # unexpected index/etc errors seems low here.
+        try:
+            value = getattr(self, attname)
+            # TODO: thought there's a 'better' 2x3 DictType or w/e, but can't
+            # find one offhand
+            if isinstance(value, dict):
+                if hasattr(value[command], '__iter__'):
+                    result = value[command].pop(0)
+                elif isinstance(value[command], Result):
+                    result = value.pop(command)
+            elif hasattr(value, '__iter__'):
+                result = value.pop(0)
+            elif isinstance(value, Result):
+                result = value
+                delattr(self, attname)
+            return result
+        except (AttributeError, IndexError, KeyError):
+            raise_from(NotImplementedError, None)
 
     def run(self, command, *args, **kwargs):
         # TODO: perform more convenience stuff associating args/kwargs with the
