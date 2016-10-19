@@ -150,6 +150,11 @@ class MockContext(Context):
     A `.Context` whose methods' return values can be predetermined.
 
     Primarily useful for testing Invoke-using codebases.
+
+    .. note::
+        Methods not given `Results <.Result>` to yield will raise
+        `NotImplementedError` if called (since the alternative is to call the
+        real underlying method - typically undesirable when mocking.)
     """
     def __init__(self, config=None, **kwargs):
         """
