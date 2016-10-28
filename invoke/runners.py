@@ -955,22 +955,36 @@ class Local(Runner):
             # shell, just as subprocess does; this replaces our process - whose
             # pipes are all hooked up to the PTY - with the "real" one.
             if self.pid == 0:
-                # TODO: both pty.spawn() and pexpect.spawn() do a lot of
-                # setup/teardown involving tty.setraw, getrlimit, signal.
-                # Ostensibly we'll want some of that eventually, but if
-                # possible write tests - integration-level if necessary -
-                # before adding it!
-                #
-                # Set pty window size based on what our own controlling
-                # terminal's window size appears to be.
-                # TODO: make subroutine?
-                winsize = struct.pack('HHHH', rows, cols, 0, 0)
-                fcntl.ioctl(sys.stdout.fileno(), termios.TIOCSWINSZ, winsize)
-                # Use execve for bare-minimum "exec w/ variable # args + env"
-                # behavior. No need for the 'p' (use PATH to find executable)
-                # for now.
-                # TODO: see if subprocess is using equivalent of execvp...
-                os.execve(shell, [shell, '-c', command], env)
+                try:
+                    # TODO: both pty.spawn() and pexpect.spawn() do a lot of
+                    # setup/teardown involving tty.setraw, getrlimit, signal.
+                    # Ostensibly we'll want some of that eventually, but if
+                    # possible write tests - integration-level if necessary -
+                    # before adding it!
+                    #
+                    # Set pty window size based on what our own controlling
+                    # terminal's window size appears to be.
+                    # TODO: make subroutine?
+                    winsize = struct.pack('HHHH', rows, cols, 0, 0)
+                    fcntl.ioctl(
+                        sys.stdout.fileno(),
+                        termios.TIOCSWINSZ,
+                        winsize
+                    )
+                    # Use execve for bare-minimum "exec w/ variable # args +
+                    # env" behavior. No need for the 'p' (use PATH to find
+                    # executable) for now.
+                    # TODO: see if subprocess is using equivalent of execvp...
+                    os.execve(shell, [shell, '-c', command], env)
+                except Exception:
+                    # Prevent process from hanging when something wrong
+                    # happened during execution in a fork, for example,
+                    # encoding error in `execv`.
+                    import traceback
+                    traceback.print_exc()
+                    # Forcefully terminate this fork to prevent duplicated
+                    # execution: https://github.com/pyinvoke/invoke/pull/275
+                    os._exit(1)
         else:
             self.process = Popen(
                 command,
