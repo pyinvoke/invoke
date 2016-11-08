@@ -182,7 +182,8 @@ def mock_pty(out='', err='', exit=0, isatty=None, trailing_error=None,
             # TODO: inject our mocks back into the tests so they can make their
             # own assertions if desired
             pty.fork.assert_called_with()
-            # Test the 2nd call to ioctl; the 1st call is doing TIOGSWINSZ
+            # Expect a get, and then later set, of terminal window size
+            eq_(ioctl.call_args_list[0][0][1], termios.TIOCGWINSZ)
             eq_(ioctl.call_args_list[1][0][1], termios.TIOCSWINSZ)
             if not skip_asserts:
                 for name in ('execve', 'waitpid', 'WEXITSTATUS'):
