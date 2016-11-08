@@ -461,6 +461,7 @@ class Runner_(Spec):
             # method?
             mock_debug.assert_called_with("Encountered exception OhNoz('oh god why',) in thread for 'handle_stdin'") # noqa
 
+        @skip_if_windows
         @patch('invoke.runners.sys.stdin')
         @patch('invoke.platform.fcntl.ioctl')
         @patch('invoke.platform.termios')
