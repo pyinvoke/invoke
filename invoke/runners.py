@@ -28,7 +28,7 @@ from .exceptions import (
     UnexpectedExit, Failure, ThreadException, WatcherError,
 )
 from .platform import (
-    WINDOWS, pty_size, character_buffered, ready_for_reading, read_byte,
+    WINDOWS, pty_size, character_buffered, ready_for_reading, bytes_to_read,
 )
 from .util import has_fileno, isatty, ExceptionHandlingThread
 
@@ -575,7 +575,7 @@ class Runner(object):
 
     def read_our_stdin(self, input_):
         """
-        Read & decode one byte from a local stdin stream.
+        Read & decode bytes from a local stdin stream.
 
         :param input_:
             Actual stream object to read from. Maps to ``in_stream`` in `run`,
@@ -583,23 +583,23 @@ class Runner(object):
             object.
 
         :returns:
-            A Unicode string, the result of decoding the read byte (this might
+            A Unicode string, the result of decoding the read bytes (this might
             be the empty string if the pipe has closed/reached EOF); or
             ``None`` if stdin wasn't ready for reading yet.
         """
         # TODO: consider moving the character_buffered contextmanager call in
         # here? Downside is it would be flipping those switches for every byte
         # read instead of once per session, which could be costly (?).
-        byte = None
+        bytes_ = None
         if ready_for_reading(input_):
-            byte = read_byte(input_)
+            bytes_ = input_.read(bytes_to_read(input_))
             # Decode if it appears to be binary-type. (From real terminal
             # streams, usually yes; from file-like objects, often no.)
-            if byte and isinstance(byte, six.binary_type):
+            if bytes_ and isinstance(bytes_, six.binary_type):
                 # TODO: will decoding 1 byte at a time break multibyte
                 # character encodings? How to square interactivity with that?
-                byte = self.decode(byte)
-        return byte
+                bytes_ = self.decode(bytes_)
+        return bytes_
 
     def handle_stdin(self, input_, output, echo):
         """
@@ -630,23 +630,22 @@ class Runner(object):
         # exposing some regression in Fabric 1.x itself.
         with character_buffered(input_):
             while True:
-                # Read 1 byte at a time for interactivity's sake.
-                char = self.read_our_stdin(input_)
-                if char:
+                data = self.read_our_stdin(input_)
+                if data:
                     # Mirror what we just read to process' stdin.
                     # We perform an encode so Python 3 gets bytes (streams +
                     # str's in Python 3 == no bueno) but skip the decode step,
                     # since there's presumably no need (nobody's interacting
                     # with this data programmatically).
-                    self.write_proc_stdin(char)
+                    self.write_proc_stdin(data)
                     # Also echo it back to local stdout (or whatever
                     # out_stream is set to) when necessary.
                     if echo is None:
                         echo = self.should_echo_stdin(input_, output)
                     if echo:
-                        self.write_our_output(stream=output, string=char)
+                        self.write_our_output(stream=output, string=data)
                 # Empty string/char/byte != None. Can't just use 'else' here.
-                elif char is not None:
+                elif data is not None:
                     # When reading from file-like objects that aren't "real"
                     # terminal streams, an empty byte signals EOF.
                     break
@@ -654,7 +653,7 @@ class Runner(object):
                 # running, *and* we don't seem to be reading anything out of
                 # stdin. (NOTE: If we only test the former, we may encounter
                 # race conditions re: unread stdin.)
-                if self.program_finished.is_set() and not char:
+                if self.program_finished.is_set() and not data:
                     break
                 # Take a nap so we're not chewing CPU.
                 time.sleep(self.input_sleep)

@@ -144,23 +144,19 @@ def ready_for_reading(input_):
         return bool(reads and reads[0] is input_)
 
 
-def read_byte(input_):
+def bytes_to_read(input_):
     """
-    Read 1 byte from stdin stream ``input_``.
+    Query stream ``input_`` to see how many bytes may be readable.
 
-    :param input_: Input stream object (file-like).
+    .. note::
+        If we are unable to tell (e.g. if ``input_`` isn't a true file
+        descriptor) we fall back to suggesting reading 1 byte only.
 
-    :returns:
-        The read byte (a ``str`` or ``bytes`` depending on Python version.)
+    :param input: Input stream object (file-like).
+
+    :returns: `int` number of bytes to read.
     """
-    # NOTE: there may be dragons here re: what exactly input_ is and what mode
-    # it has been opened in.
-    # NOTE: used to use msvcrt.getch() on Win which is why it's in platform.py.
-    # NOTE: msvcrt.getch was unequivocally wrong - it ignores the argument
-    # input_, and its behaviour isn't even what we want if input_ is
-    # the console. It returns a byte, which is not what input_.read() does
-    # (in spite of the function name!) when input_is opened in text mode
-    # like sys.stdin. And when the user presses a special key like F1 (or even
-    # just a non-ASCII international character) it returns the first byte of
-    # a control sequence that isn't even valid encoded Unicode.
-    return input_.read(1)
+    # TODO: probably also 'or WINDOWS'
+    if not has_fileno(input_):
+        return 1
+    return struct.unpack('h', fcntl.ioctl(input_, termios.FIONREAD, "  "))[0]
