@@ -327,8 +327,6 @@ class Runner(object):
             # TODO: generally, but especially if we do ignore
             # KeyboardInterrupt, honor other signals sent to our own process
             # and transmit them to the subprocess before handling 'normally'.
-            # TODO: we should probably re-raise anything that's not
-            # KeyboardInterrupt? This is quite possibly swallowing things.
             # NOTE: we handle this now instead of at actual-exception-handling
             # time because otherwise the stdout/err reader threads may block
             # until the subprocess exits.
