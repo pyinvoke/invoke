@@ -140,8 +140,7 @@ def mock_pty(out='', err='', exit=0, isatty=None, trailing_error=None,
 
     def decorator(f):
         import fcntl
-        ioctl_patch = patch('invoke.runners.fcntl.ioctl',
-            wraps=fcntl.ioctl)
+        ioctl_patch = patch('invoke.runners.fcntl.ioctl', wraps=fcntl.ioctl)
 
         @wraps(f)
         @patch('invoke.runners.pty')
