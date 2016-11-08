@@ -295,7 +295,7 @@ class Runner_(Spec):
             with patch('invoke.runners.locale') as fake_locale:
                 fake_locale.getdefaultlocale.return_value = ('meh', 'UHF-8')
                 fake_locale.getpreferredencoding.return_value = 'FALLBACK'
-                expected = 'UHF-8' if PY2 else 'FALLBACK'
+                expected = 'UHF-8' if (PY2 and not WINDOWS) else 'FALLBACK'
                 eq_(self._runner().default_encoding(), expected)
 
         def falls_back_to_defaultlocale_when_preferredencoding_is_None(self):
