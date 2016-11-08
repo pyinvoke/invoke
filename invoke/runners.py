@@ -424,7 +424,7 @@ class Runner(object):
         # Act like a normal function would, i.e. TypeError
         if kwargs:
             err = "run() got an unexpected keyword argument '{0}'"
-            raise TypeError(err.format(kwargs.keys()[0]))
+            raise TypeError(err.format(list(kwargs.keys())[0]))
         # If hide was True, turn off echoing
         if opts['hide'] is True:
             opts['echo'] = False
