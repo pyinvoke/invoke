@@ -11,7 +11,7 @@ from functools import wraps
 from invoke.vendor.six import BytesIO, b
 
 from mock import patch, Mock
-from spec import trap, Spec, eq_, skip
+from spec import trap, Spec, eq_, ok_, skip
 
 from invoke import Program, UnexpectedExit, Runner
 from invoke.platform import WINDOWS
@@ -157,7 +157,9 @@ def mock_pty(out='', err='', exit=0, isatty=None, trailing_error=None,
             # forking/etc, so here we just return a nonzero "pid" + sentinel
             # wait-status value (used in some tests about WIFEXITED etc)
             os.waitpid.return_value = None, Mock(name='exitstatus')
+            # Either or both of these may get called, depending...
             os.WEXITSTATUS.return_value = exit
+            os.WTERMSIG.return_value = exit
             # If requested, mock isatty to fake out pty detection
             if isatty is not None:
                 os.isatty.return_value = isatty
@@ -185,8 +187,10 @@ def mock_pty(out='', err='', exit=0, isatty=None, trailing_error=None,
             eq_(ioctl.call_args_list[0][0][1], termios.TIOCGWINSZ)
             eq_(ioctl.call_args_list[1][0][1], termios.TIOCSWINSZ)
             if not skip_asserts:
-                for name in ('execve', 'waitpid', 'WEXITSTATUS'):
-                    assert getattr(os, name).called
+                for name in ('execve', 'waitpid'):
+                    ok_(getattr(os, name).called)
+                # Ensure at least one of the exit status getters was called
+                ok_(os.WEXITSTATUS.called or os.WTERMSIG.called)
         return wrapper
     return decorator
 

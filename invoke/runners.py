@@ -996,7 +996,16 @@ class Local(Runner):
 
     def returncode(self):
         if self.using_pty:
-            return os.WEXITSTATUS(self.status)
+            # No subprocess.returncode available; use WIFEXITED/WIFSIGNALED to
+            # determine whch of WEXITSTATUS / WTERMSIG to use.
+            # TODO: is it safe to just say "call all WEXITSTATUS/WTERMSIG and
+            # return whichever one of them is nondefault"? Probably not?
+            # NOTE: doing this in an arbitrary order should be safe since only
+            # one of the WIF* methods ought to ever return True.
+            if os.WIFEXITED(self.status):
+                return os.WEXITSTATUS(self.status)
+            # TODO: do we care about WIFSTOPPED? Maybe someday?
+            return os.WTERMSIG(self.status)
         else:
             return self.process.returncode
 
