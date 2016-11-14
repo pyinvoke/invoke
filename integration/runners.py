@@ -1,6 +1,5 @@
 import os
 import platform
-import time
 
 from mock import Mock
 from spec import Spec, eq_, ok_, skip
@@ -9,7 +8,6 @@ from invoke import (
     run, Local, Context, ThreadException, Responder, FailingResponder,
     WatcherError, Failure
 )
-from invoke.util import ExceptionHandlingThread
 
 from _util import assert_cpu_usage
 

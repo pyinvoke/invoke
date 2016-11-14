@@ -4,7 +4,6 @@ import sys
 import types
 from io import BytesIO
 from itertools import chain, repeat
-from signal import SIGINT, SIGTERM
 
 from invoke.vendor.six import StringIO, b, PY2, iteritems
 

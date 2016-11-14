@@ -2,7 +2,6 @@
 
 import locale
 import os
-from signal import SIGINT, SIGTERM
 import struct
 from subprocess import Popen, PIPE
 import sys

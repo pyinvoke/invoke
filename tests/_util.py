@@ -13,7 +13,7 @@ from invoke.vendor.six import BytesIO, b
 from mock import patch, Mock
 from spec import trap, Spec, eq_, ok_, skip
 
-from invoke import Program, UnexpectedExit, Runner
+from invoke import Program, Runner
 from invoke.platform import WINDOWS
 
 
