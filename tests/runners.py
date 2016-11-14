@@ -1027,7 +1027,7 @@ class Local_(Spec):
     def _runner(self, *args, **kwargs):
         return _runner(*args, **dict(kwargs, klass=_FastLocal))
 
-    class pty_and_pty_fallback:
+    class pty:
         @mock_pty()
         def when_pty_True_we_use_pty_fork_and_os_exec(self):
             "when pty=True, we use pty.fork and os.exec*"
@@ -1049,27 +1049,6 @@ class Local_(Spec):
             # I.e. if implementation checks pty-ness >1 time, only one warning
             # is emitted. This is kinda implementation-specific, but...
             skip()
-
-        @mock_pty(isatty=False)
-        def can_be_overridden_by_kwarg(self):
-            self._run(_, pty=True, fallback=False)
-            # @mock_pty's asserts will be mad if pty-related os/pty calls
-            # didn't fire, so we're done.
-
-        @mock_pty(isatty=False)
-        def can_be_overridden_by_config(self):
-            self._runner(run={'fallback': False}).run(_, pty=True)
-            # @mock_pty's asserts will be mad if pty-related os/pty calls
-            # didn't fire, so we're done.
-
-        @trap
-        @mock_subprocess(isatty=False)
-        def fallback_affects_result_pty_value(self, *mocks):
-            eq_(self._run(_, pty=True).pty, False)
-
-        @mock_pty(isatty=False)
-        def overridden_fallback_affects_result_pty_value(self):
-            eq_(self._run(_, pty=True, fallback=False).pty, True)
 
         @patch('invoke.runners.sys')
         def replaced_stdin_objects_dont_explode(self, mock_sys):
@@ -1093,6 +1072,28 @@ class Local_(Spec):
                 e = e.exceptions[0]
                 eq_(e.type, OSError)
                 eq_(str(e.value), "wat")
+
+        class fallback:
+            @mock_pty(isatty=False)
+            def can_be_overridden_by_kwarg(self):
+                self._run(_, pty=True, fallback=False)
+                # @mock_pty's asserts will be mad if pty-related os/pty calls
+                # didn't fire, so we're done.
+
+            @mock_pty(isatty=False)
+            def can_be_overridden_by_config(self):
+                self._runner(run={'fallback': False}).run(_, pty=True)
+                # @mock_pty's asserts will be mad if pty-related os/pty calls
+                # didn't fire, so we're done.
+
+            @trap
+            @mock_subprocess(isatty=False)
+            def affects_result_pty_value(self, *mocks):
+                eq_(self._run(_, pty=True).pty, False)
+
+            @mock_pty(isatty=False)
+            def overridden_fallback_affects_result_pty_value(self):
+                eq_(self._run(_, pty=True, fallback=False).pty, True)
 
     class shell:
         @mock_pty(insert_os=True)
