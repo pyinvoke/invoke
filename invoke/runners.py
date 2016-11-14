@@ -1002,10 +1002,16 @@ class Local(Runner):
             # return whichever one of them is nondefault"? Probably not?
             # NOTE: doing this in an arbitrary order should be safe since only
             # one of the WIF* methods ought to ever return True.
+            code = None
             if os.WIFEXITED(self.status):
-                return os.WEXITSTATUS(self.status)
+                code = os.WEXITSTATUS(self.status)
+            elif os.WIFSIGNALED(self.status):
+                code = os.WTERMSIG(self.status)
+                # Match subprocess.returncode by turning signals into negative
+                # 'exit code' integers.
+                code = -1 * code
+            return code
             # TODO: do we care about WIFSTOPPED? Maybe someday?
-            return os.WTERMSIG(self.status)
         else:
             return self.process.returncode
 

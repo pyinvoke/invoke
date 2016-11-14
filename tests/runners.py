@@ -1060,6 +1060,13 @@ class Local_(Spec):
         def pty_uses_WTERMSIG_if_WIFSIGNALED(self):
             self._expect_exit_check(False)
 
+        @mock_pty(insert_os=True)
+        def WTERMSIG_result_turned_negative_to_match_subprocess(self, mock_os):
+            mock_os.WIFEXITED.return_value = False
+            mock_os.WIFSIGNALED.return_value = True
+            mock_os.WTERMSIG.return_value = 2
+            eq_(self._run(_, pty=True, warn=True).exited, -2)
+
         @mock_pty()
         def pty_is_set_to_controlling_terminal_size(self):
             self._run(_, pty=True)
