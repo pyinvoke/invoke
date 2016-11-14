@@ -40,7 +40,7 @@ Changelog
     "exits ``130``" behavior added in version 0.13, or on the (incorrect)
     ``SIGINT`` method of killing pty-driven subprocesses on Ctrl-C.
 
-* :bug:`-` Correctly raise `TypeError` when unexpected keyword arguments are
+* :bug:`-` Correctly raise ``TypeError`` when unexpected keyword arguments are
   given to `~invoke.runners.Runner.run`.
 * :feature:`-` Add a `~invoke.context.MockContext` class for easier testing of
   user-written tasks and related client code. Includes adding a

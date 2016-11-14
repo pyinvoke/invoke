@@ -153,7 +153,7 @@ class MockContext(Context):
 
     .. note::
         Methods not given `Results <.Result>` to yield will raise
-        `NotImplementedError` if called (since the alternative is to call the
+        ``NotImplementedError`` if called (since the alternative is to call the
         real underlying method - typically undesirable when mocking.)
     """
     def __init__(self, config=None, **kwargs):
@@ -182,8 +182,8 @@ class MockContext(Context):
             `~.Context.sudo`.
 
         :raises:
-            `TypeError`, if the values given to ``run`` or other kwargs aren't
-            individual `.Result` objects or iterables.
+            ``TypeError``, if the values given to ``run`` or other kwargs
+            aren't individual `.Result` objects or iterables.
         """
         # TODO: would be nice to allow regexen instead of exact string matches
         super(MockContext, self).__init__(config)
