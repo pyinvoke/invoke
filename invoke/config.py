@@ -29,6 +29,8 @@ from .env import Environment
 from .exceptions import UnknownFileType
 from .util import debug
 from .platform import WINDOWS
+if WINDOWS:
+    from os import environ
 
 
 class DataProxy(object):
@@ -224,11 +226,14 @@ class Config(DataProxy):
         ``Config.global_defaults`` and applying `.merge_dicts` to the result,
         to add to or modify these values.
         """
+        shell = '/bin/bash'
+        if WINDOWS:
+            shell = environ['COMSPEC']  # This will read path to cmd.exe
         return {
             'run': {
                 'warn': False,
                 'hide': None,
-                'shell': '/bin/bash',
+                'shell': shell,
                 'pty': False,
                 'fallback': True,
                 'env': {},
