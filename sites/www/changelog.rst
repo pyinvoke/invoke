@@ -2,6 +2,11 @@
 Changelog
 =========
 
+* :bug:`58 major` Work around bugs in ``select()`` when handling subprocess
+  stream reads, which was causing poor behavior in many nontrivial interactive
+  programs (such as ``vim`` and other fullscreen editors, ``python`` and other
+  REPLs/shells, etc). Such programs should now be largely indistinguishable
+  from their behavior when run directly from a user's shell.
 * :feature:`406` Update handling of Ctrl-C/``KeyboardInterrupt``, and
   subprocess exit status pass-through, to be more correct than before:
 
