@@ -970,7 +970,7 @@ class Runner_(Spec):
 
     class keyboard_interrupts_act_transparently:
         def _run_with_mocked_interrupt(self, klass):
-            runner = klass(Context(config=Config()))
+            runner = klass(Context())
             runner.send_interrupt = Mock()
             try:
                 runner.run(_)
@@ -1005,7 +1005,7 @@ class Runner_(Spec):
                 def wait(self):
                     raise OhNoz()
 
-            runner = _ExceptingRunner(context=Context(config=Config()))
+            runner = _ExceptingRunner(context=Context())
             runner.stop = Mock()
             try:
                 runner.run(_)
