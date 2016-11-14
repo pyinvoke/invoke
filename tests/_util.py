@@ -154,9 +154,9 @@ def mock_pty(out='', err='', exit=0, isatty=None, trailing_error=None,
             # of 1 (stdout).
             pty.fork.return_value = 0, 1
             # We don't really need to care about waiting since not truly
-            # forking/etc, so here we just return a nonzero "pid" + dummy value
-            # (normally sent to WEXITSTATUS but we mock that anyway, so.)
-            os.waitpid.return_value = None, None
+            # forking/etc, so here we just return a nonzero "pid" + sentinel
+            # wait-status value (used in some tests about WIFEXITED etc)
+            os.waitpid.return_value = None, Mock(name='exitstatus')
             os.WEXITSTATUS.return_value = exit
             # If requested, mock isatty to fake out pty detection
             if isatty is not None:

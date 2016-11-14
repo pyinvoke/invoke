@@ -1035,11 +1035,23 @@ class Local_(Spec):
             self._run(_, pty=True)
             # @mock_pty's asserts check os/pty calls for us.
 
-        def pty_uses_WEXITSTATUS_if_WIFEXITED(self):
-            skip()
+        @mock_pty(insert_os=True)
+        def pty_uses_WEXITSTATUS_if_WIFEXITED(self, mock_os):
+            mock_os.WIFEXITED.return_value = True
+            mock_os.WIFSIGNALED.return_value = False
+            self._run(_, pty=True)
+            exitstatus = mock_os.waitpid.return_value[1]
+            mock_os.WEXITSTATUS.assert_called_once_with(exitstatus)
+            ok_(not mock_os.WTERMSIG.called)
 
-        def pty_uses_WTERMSIG_if_WIFSIGNALED(self):
-            skip()
+        @mock_pty(insert_os=True)
+        def pty_uses_WTERMSIG_if_WIFSIGNALED(self, mock_os):
+            mock_os.WIFEXITED.return_value = False
+            mock_os.WIFSIGNALED.return_value = True
+            self._run(_, pty=True)
+            exitstatus = mock_os.waitpid.return_value[1]
+            mock_os.WTERMSIG.assert_called_once_with(exitstatus)
+            ok_(not mock_os.WEXITSTATUS.called)
 
         @mock_pty()
         def pty_is_set_to_controlling_terminal_size(self):
