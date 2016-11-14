@@ -1036,22 +1036,29 @@ class Local_(Spec):
             # @mock_pty's asserts check os/pty calls for us.
 
         @mock_pty(insert_os=True)
-        def pty_uses_WEXITSTATUS_if_WIFEXITED(self, mock_os):
-            mock_os.WIFEXITED.return_value = True
-            mock_os.WIFSIGNALED.return_value = False
+        def _expect_exit_check(self, exited, mock_os):
+            if exited:
+                expected_check = mock_os.WIFEXITED
+                expected_get = mock_os.WEXITSTATUS
+                unexpected_check = mock_os.WIFSIGNALED
+                unexpected_get = mock_os.WTERMSIG
+            else:
+                expected_check = mock_os.WIFSIGNALED
+                expected_get = mock_os.WTERMSIG
+                unexpected_check = mock_os.WIFEXITED
+                unexpected_get = mock_os.WEXITSTATUS
+            expected_check.return_value = True
+            unexpected_check.return_value = False
             self._run(_, pty=True)
             exitstatus = mock_os.waitpid.return_value[1]
-            mock_os.WEXITSTATUS.assert_called_once_with(exitstatus)
-            ok_(not mock_os.WTERMSIG.called)
+            expected_get.assert_called_once_with(exitstatus)
+            ok_(not unexpected_get.called)
 
-        @mock_pty(insert_os=True)
-        def pty_uses_WTERMSIG_if_WIFSIGNALED(self, mock_os):
-            mock_os.WIFEXITED.return_value = False
-            mock_os.WIFSIGNALED.return_value = True
-            self._run(_, pty=True)
-            exitstatus = mock_os.waitpid.return_value[1]
-            mock_os.WTERMSIG.assert_called_once_with(exitstatus)
-            ok_(not mock_os.WEXITSTATUS.called)
+        def pty_uses_WEXITSTATUS_if_WIFEXITED(self):
+            self._expect_exit_check(True)
+
+        def pty_uses_WTERMSIG_if_WIFSIGNALED(self):
+            self._expect_exit_check(False)
 
         @mock_pty()
         def pty_is_set_to_controlling_terminal_size(self):
