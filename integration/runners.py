@@ -66,7 +66,8 @@ class Runner_(Spec):
             # CPU measurement under PyPy is...rather different. NBD.
             if PYPY:
                 skip()
-            with assert_cpu_usage(lt=5.0):
+            # Python 3.5 has been seen using up to ~6.0s CPU time under Travis
+            with assert_cpu_usage(lt=7.0):
                 run("python -u busywork.py 10", pty=True, hide=True)
 
     class IO_hangs:
