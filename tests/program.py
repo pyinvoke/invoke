@@ -7,13 +7,13 @@ from spec import eq_, ok_, trap, skip, assert_contains, assert_not_contains
 
 from invoke import (
     Program, Collection, ParseError, Task, FilesystemLoader, Executor, Context,
-    Config,
+    Config, UnexpectedExit, Result,
 )
 from invoke import main
 from invoke.util import cd
 
 from _util import (
-    load, IntegrationSpec, expect, skip_if_windows, SimpleFailure
+    load, IntegrationSpec, expect, skip_if_windows,
 )
 
 
@@ -269,7 +269,7 @@ class Program_(IntegrationSpec):
         def expected_failure_types_dont_raise_exceptions(self, mock_exit):
             "expected failure types don't raise exceptions"
             for side_effect in (
-                SimpleFailure,
+                UnexpectedExit(Result('meh', exited=1)),
                 ParseError("boo!"),
             ):
                 p = Program()

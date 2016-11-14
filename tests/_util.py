@@ -84,24 +84,6 @@ def expect(invocation, out=None, err=None, program=None, invoke=True,
         (test or eq_)(sys.stderr.getvalue(), err)
 
 
-class SimpleFailure(UnexpectedExit):
-    """
-    UnexpectedExit subclass that can be raised w/o any args given.
-
-    Useful for testing failure handling w/o having to come up with a fully
-    mocked out `.Failure` & `.Result` pair each time.
-    """
-    def __init__(self):
-        pass
-
-    def __str__(self):
-        return "SimpleFailure"
-
-    @property
-    def result(self):
-        return Mock(exited=1)
-
-
 def mock_subprocess(out='', err='', exit=0, isatty=None, insert_Popen=False):
     def decorator(f):
         @wraps(f)
