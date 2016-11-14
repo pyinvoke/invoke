@@ -284,16 +284,13 @@ class Program_(IntegrationSpec):
         def should_show_context_usage_on_context_parse_failures(self):
             skip()
 
-        # TODO: change below to exit 1 instead
-        # TODO: document this clearly somewhere, rn is only in changelog
-
         @trap
         @patch('invoke.program.sys.exit')
-        def turns_KeyboardInterrupt_into_exit_code_130(self, mock_exit):
+        def turns_KeyboardInterrupt_into_exit_code_1(self, mock_exit):
             p = Program()
             p.execute = Mock(side_effect=KeyboardInterrupt)
             p.run("myapp -c foo mytask")
-            mock_exit.assert_called_with(130)
+            mock_exit.assert_called_with(1)
 
 
     class help_:

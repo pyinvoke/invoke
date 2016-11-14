@@ -287,7 +287,7 @@ class Program(object):
             else:
                 debug("Invoked as run(..., exit=False), ignoring exception")
         except KeyboardInterrupt:
-            sys.exit(130) # Standard POSIX exit code for SIGINT
+            sys.exit(1) # Same behavior as Python itself outside of REPL
 
     def _parse(self, argv):
         debug("argv given to Program.run: {0!r}".format(argv))
