@@ -2,6 +2,39 @@
 Changelog
 =========
 
+* :feature:`406` Update handling of Ctrl-C/``KeyboardInterrupt``, and
+  subprocess exit status pass-through, to be more correct than before:
+
+  - Submit the interrupt byte sequence ``\x03`` to stdin of all subprocesses,
+    instead of sending ``SIGINT``.
+
+      - This results in behavior closer to that of truly pressing Ctrl-C when
+        running subprocesses directly; for example, interactive programs like
+        ``vim`` or ``python`` now behave normally instead of prematurely
+        exiting.
+      - Of course, programs that would normally exit on Ctrl-C will still do
+        so!
+
+  - The exit statuses of subprocesses run with ``pty=True`` are more rigorously
+    checked (using `os.WIFEXITED` and friends), allowing us to surface the real
+    exit values of interrupted programs instead of manually assuming exit code
+    ``130``.
+
+      - Typically, this will be exit code ``-2``, but it is system dependent.
+      - Other, non-Ctrl-C-driven signal-related exits under PTYs should behave
+        better now as well - previously they could appear to exit ``0``!
+
+  - Non-subprocess-related ``KeyboardInterrupt`` (i.e. those generated when
+    running top level Python code outside of any ``run`` function calls)
+    will now trigger exit code ``1``, as that is how the Python interpreter
+    typically behaves if you ``KeyboardInterrupt`` it outside of a live
+    REPL.
+
+  .. warning::
+    These changes are **backwards incompatible** if you were relying on the
+    "exits ``130``" behavior added in version 0.13, or on the (incorrect)
+    ``SIGINT`` method of killing pty-driven subprocesses on Ctrl-C.
+
 * :bug:`-` Correctly raise `TypeError` when unexpected keyword arguments are
   given to `~invoke.runners.Runner.run`.
 * :feature:`-` Add a `~invoke.context.MockContext` class for easier testing of
