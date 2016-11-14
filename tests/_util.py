@@ -222,9 +222,6 @@ class _Dummy(Runner):
     def returncode(self):
         return 0
 
-    def send_interrupt(self, exception):
-        pass
-
     def stop(self):
         pass
 
@@ -235,8 +232,20 @@ _ = "nope"
 
 # Runner that fakes ^C during subprocess exec
 class _KeyboardInterruptingRunner(_Dummy):
+    def __init__(self, *args, **kwargs):
+        super(_KeyboardInterruptingRunner, self).__init__(*args, **kwargs)
+        self._interrupted = False
+
+    # Trigger KeyboardInterrupt during wait()
     def wait(self):
-        raise KeyboardInterrupt
+        if not self._interrupted:
+            self._interrupted = True
+            raise KeyboardInterrupt
+
+    # But also, after that has been done, pretend subprocess shutdown happened
+    # (or we will loop forever).
+    def process_is_finished(self):
+        return self._interrupted
 
 
 class OhNoz(Exception):

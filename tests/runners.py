@@ -968,7 +968,7 @@ class Runner_(Spec):
                 sys.stdin, mock_termios.TCSADRAIN, sentinel
             )
 
-    class keyboard_interrupts_act_transparently:
+    class send_interrupt:
         def _run_with_mocked_interrupt(self, klass):
             runner = klass(Context())
             runner.send_interrupt = Mock()
@@ -978,26 +978,26 @@ class Runner_(Spec):
                 pass
             return runner
 
-        def send_interrupt_called_on_KeyboardInterrupt(self):
+        def called_on_KeyboardInterrupt(self):
             runner = self._run_with_mocked_interrupt(
                 _KeyboardInterruptingRunner
             )
             assert runner.send_interrupt.called
 
-        def send_interrupt_not_called_for_other_exceptions(self):
+        def not_called_for_other_exceptions(self):
             class _GenericExceptingRunner(_Dummy):
                 def wait(self):
                     raise Exception
             runner = self._run_with_mocked_interrupt(_GenericExceptingRunner)
             assert not runner.send_interrupt.called
 
-        def KeyboardInterrupt_is_still_raised(self):
-            raised = None
-            try:
-                self._run(_, klass=_KeyboardInterruptingRunner)
-            except KeyboardInterrupt as e:
-                raised = e
-            assert raised is not None
+        def sends_escape_byte_sequence(self):
+            for pty in (True, False):
+                runner = _KeyboardInterruptingRunner(Context())
+                mock_stdin = Mock()
+                runner.write_proc_stdin = mock_stdin
+                runner.run(_, pty=pty)
+                mock_stdin.assert_called_once_with(u'\x03')
 
     class stop:
         def always_runs_no_matter_what(self):
@@ -1019,10 +1019,6 @@ class _FastLocal(Local):
     # Neuter this for same reason as in _Dummy above
     input_sleep = 0
 
-class _KeyboardInterruptingFastLocal(_FastLocal):
-    def wait(self):
-        raise KeyboardInterrupt
-
 
 class Local_(Spec):
     def _run(self, *args, **kwargs):
@@ -1037,6 +1033,12 @@ class Local_(Spec):
             "when pty=True, we use pty.fork and os.exec*"
             self._run(_, pty=True)
             # @mock_pty's asserts check os/pty calls for us.
+
+        def pty_uses_WEXITSTATUS_if_WIFEXITED(self):
+            skip()
+
+        def pty_uses_WTERMSIG_if_WIFSIGNALED(self):
+            skip()
 
         @mock_pty()
         def pty_is_set_to_controlling_terminal_size(self):
@@ -1091,28 +1093,6 @@ class Local_(Spec):
                 e = e.exceptions[0]
                 eq_(e.type, OSError)
                 eq_(str(e.value), "wat")
-
-    class send_interrupt:
-        def _run(self, pty):
-            runner = _KeyboardInterruptingFastLocal(Context(config=Config()))
-            try:
-                runner.run(_, pty=pty)
-            except KeyboardInterrupt:
-                pass
-            return runner
-
-        @mock_pty(skip_asserts=True)
-        def uses_os_kill_when_pty_True(self):
-            with patch('invoke.runners.os.kill') as kill:
-                runner = self._run(pty=True)
-                kill.assert_called_once_with(runner.pid, SIGINT)
-
-        @mock_subprocess()
-        def uses_subprocess_send_signal_when_pty_False(self):
-            runner = self._run(pty=False)
-            # Don't see a great way to test this w/o replicating the logic.
-            expected = SIGTERM if WINDOWS else SIGINT
-            runner.process.send_signal.assert_called_once_with(expected)
 
     class shell:
         @mock_pty(insert_os=True)

@@ -252,16 +252,6 @@ class Runner(object):
         :raises:
             `.ThreadException` (if the background I/O threads encountered
             exceptions other than `.WatcherError`).
-
-        :raises:
-            ``KeyboardInterrupt``, if the user generates one during command
-            execution by pressing Ctrl-C.
-
-            .. note::
-                In normal usage, Invoke's top-level CLI tooling will catch
-                these & exit with return code ``130`` (typical POSIX behavior)
-                instead of printing a traceback and exiting ``1`` (which is
-                what Python normally does).
         """
         try:
             return self._run_body(command, **kwargs)
@@ -315,23 +305,24 @@ class Runner(object):
         # Wait for completion, then tie things off & obtain result
         # And make sure we perform that tying off even if things asplode.
         exception = None
-        try:
-            self.wait()
-        except BaseException as e: # Make sure we nab ^C etc
-            exception = e
-            # TODO: consider consuming the KeyboardInterrupt instead of storing
-            # it for later raise; this would allow for subprocesses which don't
-            # actually exit on Ctrl-C (e.g. vim). NOTE: but this would make it
-            # harder to correctly detect it and exit 130 once everything wraps
-            # up...
-            # TODO: generally, but especially if we do ignore
-            # KeyboardInterrupt, honor other signals sent to our own process
-            # and transmit them to the subprocess before handling 'normally'.
-            # NOTE: we handle this now instead of at actual-exception-handling
-            # time because otherwise the stdout/err reader threads may block
-            # until the subprocess exits.
-            if isinstance(exception, KeyboardInterrupt):
-                self.send_interrupt(exception)
+        while True:
+            try:
+                self.wait()
+                break # done waiting!
+            # NOTE: we handle all this now instead of at
+            # actual-exception-handling time because otherwise the stdout/err
+            # reader threads may block until the subprocess exits.
+            # TODO: honor other signals sent to our own process and transmit
+            # them to the subprocess before handling 'normally'.
+            except KeyboardInterrupt as e:
+                debug("Handling KeyboardInterrupt")
+                self.send_interrupt(e)
+                # NOTE: no break; we want to return to self.wait()
+            except BaseException as e: # Want to handle SystemExit etc still
+                # Store exception for post-shutdown reraise
+                exception = e
+                # Break out of return-to-wait() loop - we want to shut down
+                break
         self.program_finished.set()
         for t in self.threads:
             # NOTE: using a join timeout for corner case from #351 (one pipe
@@ -851,12 +842,17 @@ class Runner(object):
         """
         Submit an interrupt signal to the running subprocess.
 
+        In almost all implementations, the default behavior is what will be
+        desired: submit ``\x03`` to the subprocess' stdin pipe. However, we
+        leave this as a public method in case this default needs to be
+        augmented or replaced.
+
         :param interrupt:
             The locally-sourced ``KeyboardInterrupt`` causing the method call.
 
         :returns: ``None``.
         """
-        raise NotImplementedError
+        self.write_proc_stdin(u'\x03')
 
     def returncode(self):
         """
@@ -997,24 +993,6 @@ class Local(Runner):
             return pid_val != 0
         else:
             return self.process.poll() is not None
-
-    def send_interrupt(self, interrupt):
-        # NOTE: No need to reraise the interrupt since we have full control
-        # over the local process and can kill it.
-        if self.using_pty:
-            os.kill(self.pid, SIGINT)
-        else:
-            # Use send_signal with platform-appropriate signal (Windows doesn't
-            # support SIGINT unfortunately, only SIGTERM).
-            # NOTE: could use subprocess.terminate() (which is cross-platform)
-            # but feels best to use SIGINT as much as we possibly can as it's
-            # most appropriate. terminate() always sends SIGTERM.
-            # NOTE: in interactive POSIX terminals, this is technically
-            # unnecessary as Ctrl-C submits the INT to the entire foreground
-            # process group (which will be both Invoke and its spawned
-            # subprocess). However, it doesn't seem to hurt, & ensures that a
-            # *non-interactive* SIGINT is forwarded correctly.
-            self.process.send_signal(SIGINT if not WINDOWS else SIGTERM)
 
     def returncode(self):
         if self.using_pty:
