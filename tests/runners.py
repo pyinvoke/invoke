@@ -1063,7 +1063,7 @@ class Local_(Spec):
         @mock_pty()
         def pty_is_set_to_controlling_terminal_size(self):
             self._run(_, pty=True)
-            # @mock_pty's asserts check fcntl calls for us
+            # @mock_pty's asserts check the TIOC[GS]WINSZ calls for us
 
         def warning_only_fires_once(self):
             # I.e. if implementation checks pty-ness >1 time, only one warning
