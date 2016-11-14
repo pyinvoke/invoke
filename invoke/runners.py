@@ -315,7 +315,6 @@ class Runner(object):
             # TODO: honor other signals sent to our own process and transmit
             # them to the subprocess before handling 'normally'.
             except KeyboardInterrupt as e:
-                debug("Handling KeyboardInterrupt")
                 self.send_interrupt(e)
                 # NOTE: no break; we want to return to self.wait()
             except BaseException as e: # Want to handle SystemExit etc still
