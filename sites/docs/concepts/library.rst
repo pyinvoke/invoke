@@ -115,10 +115,10 @@ sake.
 Now the useful part: telling our custom `.Program` that this namespace of tasks
 should be used as the subcommands for ``tester``, via the ``namespace`` kwarg::
 
-    from invoke import Program
+    from invoke import Program, Collection
     from tester import tasks
 
-    program = Program(namespace=tasks, version='0.1.0')
+    program = Program(namespace=Collection.from_module(tasks), version='0.1.0')
 
 The result?
 
