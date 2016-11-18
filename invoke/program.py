@@ -13,7 +13,7 @@ from .executor import Executor
 from .exceptions import (
     UnexpectedExit, CollectionNotFound, ParseError, Exit,
 )
-from .util import debug, enable_logging, sort_names
+from .util import debug, enable_logging, sort_names, sort_aliases
 from .platform import pty_size
 
 
@@ -538,7 +538,7 @@ class Program(object):
         pairs = []
         for primary in sort_names(task_names):
             # Add aliases
-            aliases = sort_names(task_names[primary])
+            aliases = sort_aliases(task_names[primary])
             name = primary
             if aliases:
                 name += " ({0})".format(', '.join(aliases))

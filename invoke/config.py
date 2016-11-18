@@ -27,7 +27,7 @@ else:
 
 from .env import Environment
 from .exceptions import UnknownFileType
-from .util import debug
+from .util import debug, merge_dicts, AmbiguousMergeError
 from .platform import WINDOWS
 
 
@@ -596,41 +596,3 @@ class Config(DataProxy):
         return data
 
 
-class AmbiguousMergeError(ValueError):
-    pass
-
-
-def merge_dicts(base, updates):
-    """
-    Recursively merge dict ``updates`` into dict ``base`` (mutating ``base``.)
-
-    * Values which are themselves dicts will be recursed into.
-    * Values which are a dict in one input and *not* a dict in the other input
-      (e.g. if our inputs were ``{'foo': 5}`` and ``{'foo': {'bar': 5}}``) are
-      irreconciliable and will generate an exception.
-    """
-    for key, value in updates.items():
-        # Dict values whose keys also exist in 'base' -> recurse
-        # (But only if both types are dicts.)
-        if key in base:
-            if isinstance(value, dict):
-                if isinstance(base[key], dict):
-                    merge_dicts(base[key], value)
-                else:
-                    raise _merge_error(base[key], value)
-            else:
-                if isinstance(base[key], dict):
-                    raise _merge_error(base[key], value)
-                else:
-                    base[key] = value
-        # New values just get set straight
-        else:
-            base[key] = value
-
-def _merge_error(orig, new_):
-    return AmbiguousMergeError("Can't cleanly merge {0} with {1}".format(
-        _format_mismatch(orig), _format_mismatch(new_)
-    ))
-
-def _format_mismatch(x):
-    return "{0} ({1!r})".format(type(x), x)

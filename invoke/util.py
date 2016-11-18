@@ -10,6 +10,45 @@ from .exceptions import ExceptionWrapper
 
 LOG_FORMAT = "%(name)s.%(module)s.%(funcName)s: %(message)s"
 
+class AmbiguousMergeError(ValueError):
+    pass
+
+
+def merge_dicts(base, updates):
+    """
+    Recursively merge dict ``updates`` into dict ``base`` (mutating ``base``.)
+
+    * Values which are themselves dicts will be recursed into.
+    * Values which are a dict in one input and *not* a dict in the other input
+      (e.g. if our inputs were ``{'foo': 5}`` and ``{'foo': {'bar': 5}}``) are
+      irreconciliable and will generate an exception.
+    """
+    for key, value in updates.items():
+        # Dict values whose keys also exist in 'base' -> recurse
+        # (But only if both types are dicts.)
+        if key in base:
+            if isinstance(value, dict):
+                if isinstance(base[key], dict):
+                    merge_dicts(base[key], value)
+                else:
+                    raise _merge_error(base[key], value)
+            else:
+                if isinstance(base[key], dict):
+                    raise _merge_error(base[key], value)
+                else:
+                    base[key] = value
+        # New values just get set straight
+        else:
+            base[key] = value
+
+def _merge_error(orig, new_):
+    return AmbiguousMergeError("Can't cleanly merge {0} with {1}".format(
+        _format_mismatch(orig), _format_mismatch(new_)
+    ))
+
+def _format_mismatch(x):
+    return "{0} ({1!r})".format(type(x), x)
+
 def enable_logging():
     logging.basicConfig(
         level=logging.DEBUG,
@@ -27,11 +66,55 @@ for x in ('debug',):
     globals()[x] = getattr(log, x)
 
 
+def _task_name_tree(path):
+    root = {}
+    node = root
+    for component in path:
+        node[component] = {}
+        node = node[component]
+
+    return root
+
+def _max_name_depth(subtree):
+    if len(subtree.keys()) == 0:
+        return 0
+    else:
+        return max([1 + _max_name_depth(subtree[k]) for k in subtree.keys()])
+
+def _sort_tree(subtree):
+    current_hierarchy_keys_sorted = sorted(subtree.keys(), key=lambda x: (_max_name_depth(subtree[x]), x))
+
+    sorted_levels = []
+    for key in current_hierarchy_keys_sorted:
+        if len(subtree[key]) == 0:
+            sorted_levels += [key]
+        else:
+            sorted_children = _sort_tree(subtree[key])
+            sorted_levels += [key + "." + child for child in sorted_children]
+
+    return sorted_levels
+
 def sort_names(names):
     """
-    Sort task ``names`` by nesting depth & then as regular strings.
+    Sort task ``names`` first by hierarchy depth, then grouped by hierarchy,
+    then lexically.
     """
-    return sorted(names, key=lambda x: (x.count('.'), x))
+
+    task_tree = {}
+
+    for path in names:
+        components = path.split(".")
+        subtree = _task_name_tree(components)
+        merge_dicts(task_tree, subtree)
+
+    return _sort_tree(task_tree)
+
+def sort_aliases(aliases):
+    """
+    Sort task ``aliases`` by nesting depth & then as regular strings.
+    """
+
+    return sorted(aliases, key=lambda x: (x.count('.'), x))
 
 
 # TODO: Make part of public API sometime
