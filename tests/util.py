@@ -1,4 +1,4 @@
-from spec import Spec, eq_, ok_
+from spec import Spec, eq_
 
 from invoke.util import sort_names
 

@@ -27,7 +27,7 @@ else:
 
 from .env import Environment
 from .exceptions import UnknownFileType
-from .util import debug, merge_dicts, AmbiguousMergeError
+from .util import debug, merge_dicts
 from .platform import WINDOWS
 
 
@@ -594,5 +594,3 @@ class Config(DataProxy):
                 continue
             data[key] = value
         return data
-
-

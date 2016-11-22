@@ -82,7 +82,10 @@ def _max_name_depth(subtree):
         return max([1 + _max_name_depth(subtree[k]) for k in subtree.keys()])
 
 def _sort_tree(subtree):
-    current_hierarchy_keys_sorted = sorted(subtree.keys(), key=lambda x: (_max_name_depth(subtree[x]), x))
+    current_hierarchy_keys_sorted = sorted(
+        subtree.keys(),
+        key=lambda x: (_max_name_depth(subtree[x]), x)
+    )
 
     sorted_levels = []
     for key in current_hierarchy_keys_sorted:
