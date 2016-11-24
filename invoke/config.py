@@ -85,9 +85,6 @@ class DataProxy(object):
             err += "\n\nValid real attributes: {0!r}".format(attrs)
             raise AttributeError(err)
 
-    def __hasattr__(self, key):
-        return key in self.config or key in self._proxies
-
     def __setattr__(self, key, value):
         # Have to make sure we test whether we even have .config yet before we
         # try looking within it; also can't __setattr__ .config itself under
