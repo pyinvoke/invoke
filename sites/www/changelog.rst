@@ -2,6 +2,12 @@
 Changelog
 =========
 
+* :bug:`-` Fix ``DataProxy`` (used within `~invoke.context.Context` and
+  `~invoke.config.Config`) so that real attributes and methods which are
+  shadowed by configuration keys, aren't proxied to the config during regular
+  attribute get/set. (Such config keys are thus required to be accessed via
+  dict-style only, or (on `~invoke.context.Context`) via the explicit
+  ``.config`` attribute.)
 * :bug:`58 major` Work around bugs in ``select()`` when handling subprocess
   stream reads, which was causing poor behavior in many nontrivial interactive
   programs (such as ``vim`` and other fullscreen editors, ``python`` and other

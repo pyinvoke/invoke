@@ -70,6 +70,10 @@ class DataProxy(object):
         return obj
 
     def __getattr__(self, key):
+        # NOTE: due to default Python attribute-lookup semantics, "real"
+        # attributes will always be yielded on attribute access and this method
+        # is skipped. This behavior is good for us (it's more intuitive than
+        # having a config key accidentally shadow a real attribute or method).
         try:
             return self._get(key)
         except KeyError:
@@ -86,10 +90,20 @@ class DataProxy(object):
             raise AttributeError(err)
 
     def __setattr__(self, key, value):
-        # Have to make sure we test whether we even have .config yet before we
+        # NOTE: we explicitly try to check for 'key' being a "real" attribute
+        # or method up front, to avoid shadowing. (This isn't necessary up in
+        # __getattr__; see its own NOTE comment.)
+        has_real_attr = key in self.__dict__ or key in type(self).__dict__
+        # No obvious real attribute: look in our config.
+        # Need to make sure we test whether we even have .config yet before we
         # try looking within it; also can't __setattr__ .config itself under
         # Python 3.
-        if key != 'config' and hasattr(self, 'config') and key in self.config:
+        if (
+            not has_real_attr
+            and key != 'config'
+            and hasattr(self, 'config')
+            and key in self.config
+        ):
             self.config[key] = value
         else:
             super(DataProxy, self).__setattr__(key, value)

@@ -186,6 +186,31 @@ Valid real attributes: ['clone', 'from_data', 'global_defaults', 'load_collectio
             c.foo.bar = 'notbiz'
             eq_(c.foo.bar, 'notbiz')
 
+        def real_attrs_and_methods_win_over_attr_proxying(self):
+            # Setup
+            class MyConfig(Config):
+                myattr = None
+                def mymethod(self):
+                    return 7
+            c = MyConfig({'myattr': 'foo', 'mymethod': 'bar'})
+            # By default, attr and config value separate
+            eq_(c.myattr, None)
+            eq_(c['myattr'], 'foo')
+            # After a setattr, same holds true
+            c.myattr = 'notfoo'
+            eq_(c.myattr, 'notfoo')
+            eq_(c['myattr'], 'foo')
+            # Method and config value separate
+            ok_(callable(c.mymethod))
+            eq_(c.mymethod(), 7)
+            eq_(c['mymethod'], 'bar')
+            # And same after setattr
+            def monkeys():
+                return 13
+            c.mymethod = monkeys
+            eq_(c.mymethod(), 13)
+            eq_(c['mymethod'], 'bar')
+
         def string_display(self):
             "__str__ and friends"
             config = Config({'foo': 'bar'})
