@@ -1,4 +1,5 @@
 import sys
+import operator
 
 from invoke import Program
 
@@ -27,6 +28,23 @@ class ShellCompletion:
 
     def no_input_means_just_task_names(self):
         expect("-c simple_ns_list --complete", out="z-toplevel\na.b.subtask\n")
+
+    def custom_binary_name_completes(self):
+        expect(
+            'myapp -c integration --complete -- ba',
+            program=Program(binary='myapp'),
+            invoke=False,
+            out="bar", test=operator.contains
+        )
+
+    def aliased_custom_binary_name_completes(self):
+        for used_binary in ('my', 'myapp'):
+            expect(
+                '{} -c integration --complete -- ba'.format(used_binary),
+                program=Program(binary='my[app]'),
+                invoke=False,
+                out="bar", test=operator.contains
+            )
 
     def no_input_with_no_tasks_yields_empty_response(self):
         expect("-c empty --complete", out="")
