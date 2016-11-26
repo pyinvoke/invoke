@@ -168,15 +168,17 @@ class Program(object):
             binstub installed as ``foobar``, it will default to ``Foobar``.
 
         :param str binary:
-            The binary name as displayed in ``--help`` output.
+            The binary name as displayed in ``--help`` output and used for tab
+            completion.
 
             If ``None`` (default), uses the first word in ``argv`` verbatim (as
             with ``name`` above, except not capitalized).
 
             Giving this explicitly may be useful when you install your program
-            under multiple names, such as Invoke itself does - it installs as
-            both ``inv`` and ``invoke``, and sets ``name="inv[oke]"`` so its
-            ``--help`` output implies both names.
+            under a full name but also a short version of that name, such as
+            Invoke itself does - it installs as both ``inv`` and ``invoke``,
+            and sets ``binary="inv[oke]"``. In effect, its ``--help`` output
+            implies both names and tab completion will work for both versions.
 
         :param loader_class:
             The `.Loader` subclass to use when loading task collections.
@@ -357,7 +359,7 @@ class Program(object):
 
         # Print completion helpers if necessary
         if self.args.complete.value:
-            complete(self.core, self.initial_context, self.collection)
+            complete(self.binary, self.core, self.initial_context, self.collection)
 
         # Fallback behavior if no tasks were given & no default specified
         # (mostly a subroutine for overriding purposes)

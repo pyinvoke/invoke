@@ -10,9 +10,9 @@ from .parser import Parser
 from .util import debug, sort_names
 
 
-def complete(core, initial_context, collection):
+def complete(binary, core, initial_context, collection):
     # Strip out program name (scripts give us full command line)
-    invocation = re.sub(r'^(inv|invoke) ', '', core.remainder)
+    invocation = re.sub(r'^(%s) ' % binary_selector(binary), '', core.remainder)
     debug("Completing for invocation: {0!r}".format(invocation))
     # Tokenize (shlex will have to do)
     tokens = shlex.split(invocation)
@@ -91,3 +91,21 @@ def print_task_names(collection):
         # so important that it's worth bending over backwards here.
         for alias in collection.task_names[name]:
             print(alias)
+
+
+def binary_selector(binary):
+    """
+    Return a selector which can be used in regular expressions
+    to match binary name in strings.
+    E.g. if you use binary=inv[oke], this gives you 'inv|invoke'.
+         if you use binary=fabric, this simply returns 'fabric'.
+    """
+    m = re.match("(\w+)\[?(\w+)?\]?", binary)
+    if not m:
+        debug("Binary {} could not be matched against our RE."\
+                .format(binary))
+        return binary
+    if m.group(2):
+        return "{0}|{0}{1}".format(m.group(1), m.group(2))
+    else:
+        return m.group(1)
