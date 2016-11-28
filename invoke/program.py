@@ -193,17 +193,17 @@ class Program(object):
             binstub installed as ``foobar``, it will default to ``Foobar``.
 
         :param str binary:
-            The binary name as displayed in ``--help`` output and used for tab
-            completion.
-
+            The binary name(s) you intend to address this program with. Useful
+            if you install it under a full name as well as a short name and want
+            both of them to appear in ``--help`` output and be recognized in
+            tab completion. An example is Invoke itself - it installs as both
+            ``inv`` and ``invoke``, and sets ``binary="inv[oke]"``.
+ 
             If ``None`` (default), uses the first word in ``argv`` verbatim (as
             with ``name`` above, except not capitalized).
 
-            Giving this explicitly may be useful when you install your program
-            under a full name but also a short version of that name, such as
-            Invoke itself does - it installs as both ``inv`` and ``invoke``,
-            and sets ``binary="inv[oke]"``. In effect, its ``--help`` output
-            implies both names and tab completion will work for both versions.
+            Note that the actual names to which the program responds are usually
+            configured via setup.py->entry_points->console_scripts. 
 
         :param loader_class:
             The `.Loader` subclass to use when loading task collections.
