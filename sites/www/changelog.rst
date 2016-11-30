@@ -2,6 +2,9 @@
 Changelog
 =========
 
+* :bug:`283` Fix the concepts/library docs so the example of an explicit
+  ``namespace=`` argument correctly shows wrapping an imported task module in a
+  `~invoke.collection.Collection`. Thanks to ``@zaiste`` for the report.
 * :bug:`-` Fix ``DataProxy`` (used within `~invoke.context.Context` and
   `~invoke.config.Config`) so that real attributes and methods which are
   shadowed by configuration keys, aren't proxied to the config during regular
