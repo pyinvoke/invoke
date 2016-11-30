@@ -162,7 +162,7 @@ class Program_(IntegrationSpec):
             # Spot check. See integration-style --help tests for full argument
             # checkup.
             for program in (Program(), Program(namespace=Collection())):
-                for arg in ('--complete', '--debug', '--warn-only'):
+                for arg in ('--complete', '--debug', '--warn-only', '--list'):
                     expect(
                         "--help",
                         program=program,
@@ -257,6 +257,15 @@ class Program_(IntegrationSpec):
                     err="No idea what 'foo' is!\n",
                     program=Program(namespace=Collection('blank'))
                 )
+
+        def explicit_namespace_works_correctly(self):
+            # Regression-ish test re #288
+            ns = Collection.from_module(load('integration'))
+            expect(
+                'print_foo',
+                out='foo\n',
+                program=Program(namespace=ns),
+            )
 
         def allows_explicit_task_module_specification(self):
             expect("-c integration print_foo", out="foo\n")

@@ -2,6 +2,9 @@
 Changelog
 =========
 
+* :bug:`288` Address a bug preventing reuse of Invoke as a custom binstub, by
+  moving ``--list`` into the "core args" set of flags present on all
+  Invoke-derived binstubs. Thanks to Jordon Mears for catch & patch.
 * :bug:`-` Fix ``DataProxy`` (used within `~invoke.context.Context` and
   `~invoke.config.Config`) so that real attributes and methods which are
   shadowed by configuration keys, aren't proxied to the config during regular
