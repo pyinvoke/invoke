@@ -2,6 +2,9 @@
 Changelog
 =========
 
+* :bug:`288` Address a bug preventing reuse of Invoke as a custom binstub, by
+  moving ``--list`` into the "core args" set of flags present on all
+  Invoke-derived binstubs. Thanks to Jordon Mears for catch & patch.
 * :bug:`283` Fix the concepts/library docs so the example of an explicit
   ``namespace=`` argument correctly shows wrapping an imported task module in a
   `~invoke.collection.Collection`. Thanks to ``@zaiste`` for the report.
