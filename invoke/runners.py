@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 
-import codecs
 import locale
 import os
 import struct
+from subprocess import Popen, PIPE
 import sys
 import threading
-from functools import partial
-from subprocess import Popen, PIPE
+import time
 
 # Import some platform-specific things at top level so they can be mocked for
 # tests.
@@ -24,69 +23,15 @@ try:
 except ImportError:
     termios = None
 
-from .exceptions import Failure, ThreadException, ExceptionWrapper
-from .platform import WINDOWS, pty_size
+from .exceptions import (
+    UnexpectedExit, Failure, ThreadException, WatcherError,
+)
+from .platform import (
+    WINDOWS, pty_size, character_buffered, ready_for_reading, bytes_to_read,
+)
+from .util import has_fileno, isatty, ExceptionHandlingThread
 
 from .vendor import six
-
-
-def normalize_hide(val):
-    hide_vals = (None, False, 'out', 'stdout', 'err', 'stderr', 'both', True)
-    if val not in hide_vals:
-        err = "'hide' got {0!r} which is not in {1!r}"
-        raise ValueError(err.format(val, hide_vals))
-    if val in (None, False):
-        hide = ()
-    elif val in ('both', True):
-        hide = ('out', 'err')
-    elif val == 'stdout':
-        hide = ('out',)
-    elif val == 'stderr':
-        hide = ('err',)
-    else:
-        hide = (val,)
-    return hide
-
-
-def isatty(stream):
-    """
-    Check if a stream is a tty.
-
-    Not all file-like objects implement the `isatty` method.
-    """
-    # TODO: fallback to checking os.isatty(stream)? is that ever true when a
-    # stream lacks .isatty? (alt platforms? etc?)
-    fn = getattr(stream, 'isatty', None)
-    if fn is None:
-        return False
-    return fn()
-
-
-class _IOThread(threading.Thread):
-    """
-    IO thread handler making it easier for parent to handle thread exceptions.
-
-    Based in part Fabric 1's ThreadHandler. See also Fabric GH issue #204.
-    """
-    def __init__(self, **kwargs):
-        super(_IOThread, self).__init__(**kwargs)
-        # No record of why, but Fabric used daemon threads ever since the
-        # switch from select.select, so let's keep doing that.
-        self.daemon = True
-        # Track exceptions raised in run()
-        self.kwargs = kwargs
-        self.exc_info = None
-
-    def run(self):
-        try:
-            super(_IOThread, self).run()
-        except BaseException:
-            self.exc_info = sys.exc_info()
-
-    def exception(self):
-        if self.exc_info is None:
-            return None
-        return ExceptionWrapper(self.kwargs, *self.exc_info)
 
 
 class Runner(object):
@@ -97,6 +42,9 @@ class Runner(object):
     number of methods such as `start`, `wait` and `returncode`. For a subclass
     implementation example, see the source code for `.Local`.
     """
+    read_chunk_size = 1000
+    input_sleep = 0.01
+
     def __init__(self, context):
         """
         Create a new runner with a handle on some `.Context`.
@@ -118,8 +66,26 @@ class Runner(object):
         """
         #: The `.Context` given to the same-named argument of `__init__`.
         self.context = context
-        # Bookkeeping re: whether pty fallback warning has been emitted.
+        #: A `threading.Event` signaling program completion.
+        #:
+        #: Typically set after `wait` returns. Some IO mechanisms rely on this
+        #: to know when to exit an infinite read loop.
+        self.program_finished = threading.Event()
+        # I wish Sphinx would organize all class/instance attrs in the same
+        # place. If I don't do this here, it goes 'class vars -> __init__
+        # docstring -> instance vars' :( TODO: consider just merging class and
+        # __init__ docstrings, though that's annoying too.
+        #: How many bytes (at maximum) to read per iteration of stream reads.
+        self.read_chunk_size = self.__class__.read_chunk_size
+        # Ditto re: declaring this in 2 places for doc reasons.
+        #: How many seconds to sleep on each iteration of the stdin read loop
+        #: and other otherwise-fast loops.
+        self.input_sleep = self.__class__.input_sleep
+        #: Whether pty fallback warning has been emitted.
         self.warned_about_pty_fallback = False
+        #: A list of `.StreamWatcher` instances for use by `respond`. Is filled
+        #: in at runtime by `run`.
+        self.watchers = []
 
     def run(self, command, **kwargs):
         """
@@ -134,10 +100,22 @@ class Runner(object):
 
         :param str command: The shell command to execute.
 
+        :param str shell: Which shell binary to use. Default: ``/bin/bash``.
+
         :param bool warn:
-            Whether to warn and continue, instead of raising `.Failure`, when
-            the executed command exits with a nonzero status. Default:
-            ``False``.
+            Whether to warn and continue, instead of raising
+            `.UnexpectedExit`, when the executed command exits with a
+            nonzero status. Default: ``False``.
+
+            .. note::
+                This setting has no effect on exceptions, which will still be
+                raised, typically bundled in `.ThreadException` objects if they
+                were raised by the IO worker threads.
+
+                Similarly, `.WatcherError` exceptions raised by
+                `.StreamWatcher` instances will also ignore this setting, and
+                will usually be bundled inside `.Failure` objects (in order to
+                preserve the execution context).
 
         :param hide:
             Allows the caller to disable ``run``'s default behavior of copying
@@ -153,11 +131,16 @@ class Runner(object):
                 Stdout and stderr are always captured and stored in the
                 ``Result`` object, regardless of ``hide``'s value.
 
+            .. note::
+                ``hide=True`` will also override ``echo=True`` if both are
+                given (either as kwargs or via config/CLI).
+
         :param bool pty:
             By default, ``run`` connects directly to the invoked process and
             reads its stdout/stderr streams. Some programs will buffer (or even
             behave) differently in this situation compared to using an actual
-            terminal or pty. To use a pty, specify ``pty=True``.
+            terminal or pseudoterminal (pty). To use a pty instead of the
+            default behavior, specify ``pty=True``.
 
             .. warning::
                 Due to their nature, ptys have a single output stream, so the
@@ -176,6 +159,27 @@ class Runner(object):
             Controls whether `.run` prints the command string to local stdout
             prior to executing it. Default: ``False``.
 
+            .. note::
+                ``hide=True`` will override ``echo=True`` if both are given.
+
+        :param dict env:
+            By default, subprocesses recieve a copy of Invoke's own environment
+            (i.e. ``os.environ``). Supply a dict here to update that child
+            environment.
+
+            For example, ``run('command', env={'PYTHONPATH':
+            '/some/virtual/env/maybe'})`` would modify the ``PYTHONPATH`` env
+            var, with the rest of the child's env looking identical to the
+            parent.
+
+            .. seealso:: ``replace_env`` for changing 'update' to 'replace'.
+
+        :param bool replace_env:
+            When ``True``, causes the subprocess to receive the dictionary
+            given to ``env`` as its entire shell environment, instead of
+            updating a copy of ``os.environ`` (which is the default behavior).
+            Default: ``False``.
+
         :param str encoding:
             Override auto-detection of which encoding the subprocess is using
             for its stdout/stderr streams (which defaults to the return value
@@ -190,76 +194,170 @@ class Runner(object):
             Same as ``out_stream``, except for standard error, and defaulting
             to ``sys.stderr``.
 
+        :param in_stream:
+            A file-like stream object to used as the subprocess' standard
+            input. If ``None`` (the default), ``sys.stdin`` will be used.
+
+        :param list watchers:
+            A list of `.StreamWatcher` instances which will be used to scan the
+            program's ``stdout`` or ``stderr`` and may write into its ``stdin``
+            (typically ``str`` or ``bytes`` objects depending on Python
+            version) in response to patterns or other heuristics.
+
+            See :doc:`/concepts/watchers` for details on this functionality.
+
+            Default: ``[]``.
+
+        :param bool echo_stdin:
+            Whether to write data from ``in_stream`` back to ``out_stream``.
+
+            In other words, in normal interactive usage, this parameter
+            controls whether Invoke mirrors what you type back to your
+            terminal.
+
+            By default (when ``None``), this behavior is triggered by the
+            following:
+
+                * Not using a pty to run the subcommand (i.e. ``pty=False``),
+                  as ptys natively echo stdin to stdout on their own;
+                * And when the controlling terminal of Invoke itself (as per
+                  ``in_stream``) appears to be a valid terminal device or TTY.
+                  (Specifically, when `~invoke.util.isatty` yields a ``True``
+                  result when given ``in_stream``.)
+
+                  .. note::
+                      This property tends to be ``False`` when piping another
+                      program's output into an Invoke session, or when running
+                      Invoke within another program (e.g. running Invoke from
+                      itself).
+
+            If both of those properties are true, echoing will occur; if either
+            is false, no echoing will be performed.
+
+            When not ``None``, this parameter will override that auto-detection
+            and force, or disable, echoing.
+
         :returns:
             `Result`, or a subclass thereof.
 
-        :raises: `.Failure` (if the command exited nonzero & ``warn=False``)
+        :raises:
+            `.UnexpectedExit`, if the command exited nonzero and
+            ``warn`` was ``False``.
 
         :raises:
-            `.ThreadException` (if the background I/O threads encounter
-            exceptions)
+            `.Failure`, if the command didn't even exit cleanly, e.g. if a
+            `.StreamWatcher` raised `.WatcherError`.
+
+        :raises:
+            `.ThreadException` (if the background I/O threads encountered
+            exceptions other than `.WatcherError`).
         """
+        try:
+            return self._run_body(command, **kwargs)
+        finally:
+            self.stop()
+
+    def _run_body(self, command, **kwargs):
         # Normalize kwargs w/ config
-        opts = {}
-        for key, value in six.iteritems(self.context.config.run):
-            runtime = kwargs.pop(key, None)
-            opts[key] = value if runtime is None else runtime
-        # TODO: handle invalid kwarg keys (anything left in kwargs)
-        # Normalize 'hide' from one of the various valid input values
-        opts['hide'] = normalize_hide(opts['hide'])
-        # Derive stream objects
-        out_stream = opts['out_stream']
-        if out_stream is None:
-            out_stream = sys.stdout
-        err_stream = opts['err_stream']
-        if err_stream is None:
-            err_stream = sys.stderr
-        # Echo
+        opts, out_stream, err_stream, in_stream = self._run_opts(kwargs)
+        shell = opts['shell']
+        # Environment setup
+        env = self.generate_env(opts['env'], opts['replace_env'])
+        # Echo running command
         if opts['echo']:
             print("\033[1;37m{0}\033[0m".format(command))
-        # Determine pty or no
-        self.using_pty = self.should_use_pty(opts['pty'], opts['fallback'])
-        # Initiate command & kick off IO threads
-        self.start(command)
-        encoding = opts['encoding']
-        if encoding is None:
-            encoding = self.default_encoding()
-        self.encoding = encoding
+        # Start executing the actual command (runs in background)
+        self.start(command, shell, env)
+        # Arrive at final encoding if neither config nor kwargs had one
+        self.encoding = opts['encoding'] or self.default_encoding()
+        # Set up IO thread parameters (format - body_func: {kwargs})
         stdout, stderr = [], []
-        threads = []
-        argses = [
-            (
-                self.stdout_reader(),
-                out_stream,
-                stdout,
-                'out' in opts['hide'],
-            ),
-        ]
+        thread_args = {
+            self.handle_stdout: {
+                'buffer_': stdout,
+                'hide': 'out' in opts['hide'],
+                'output': out_stream,
+            },
+            # TODO: make this & related functionality optional, for users who
+            # don't care about autoresponding & are encountering issues with
+            # the stdin mirroring? Downside is it fragments expected behavior &
+            # puts folks with true interactive use cases in a different support
+            # class.
+            self.handle_stdin: {
+                'input_': in_stream,
+                'output': out_stream,
+                'echo': opts['echo_stdin'],
+            }
+        }
         if not self.using_pty:
-            argses.append(
-                (
-                    self.stderr_reader(),
-                    err_stream,
-                    stderr,
-                    'err' in opts['hide'],
-                ),
-            )
-        for args in argses:
-            t = _IOThread(target=self.io, args=args)
-            threads.append(t)
+            thread_args[self.handle_stderr] = {
+                'buffer_': stderr,
+                'hide': 'err' in opts['hide'],
+                'output': err_stream,
+            }
+        # Kick off IO threads
+        self.threads, exceptions = [], []
+        for target, kwargs in six.iteritems(thread_args):
+            t = ExceptionHandlingThread(target=target, kwargs=kwargs)
+            self.threads.append(t)
             t.start()
         # Wait for completion, then tie things off & obtain result
-        self.wait()
-        exceptions = []
-        for t in threads:
-            t.join()
+        # And make sure we perform that tying off even if things asplode.
+        exception = None
+        while True:
+            try:
+                self.wait()
+                break # done waiting!
+            # NOTE: we handle all this now instead of at
+            # actual-exception-handling time because otherwise the stdout/err
+            # reader threads may block until the subprocess exits.
+            # TODO: honor other signals sent to our own process and transmit
+            # them to the subprocess before handling 'normally'.
+            except KeyboardInterrupt as e:
+                self.send_interrupt(e)
+                # NOTE: no break; we want to return to self.wait()
+            except BaseException as e: # Want to handle SystemExit etc still
+                # Store exception for post-shutdown reraise
+                exception = e
+                # Break out of return-to-wait() loop - we want to shut down
+                break
+        self.program_finished.set()
+        for t in self.threads:
+            # NOTE: using a join timeout for corner case from #351 (one pipe
+            # excepts, fills up, prevents subproc from exiting, and other pipe
+            # then has a blocking read() call, causing its thread to block on
+            # join). In normal, non-#351 situations this should function
+            # similarly to a non-timeout'd join.
+            # NOTE: but we avoid a timeout for the stdin handler as it has its
+            # own termination conditions & isn't subject to this corner case.
+            timeout = None
+            if t.kwargs['target'] != self.handle_stdin:
+                # TODO: make the timeout configurable
+                timeout = 1
+            t.join(timeout)
             e = t.exception()
             if e is not None:
                 exceptions.append(e)
+        # If we got a main-thread exception while wait()ing, raise it now that
+        # we've closed our worker threads.
+        if exception is not None:
+            raise exception
+        # Strip out WatcherError from any thread exceptions; they are bundled
+        # into Failure handling at the end.
+        watcher_errors = []
+        thread_exceptions = []
+        for exception in exceptions:
+            real = exception.value
+            if isinstance(real, WatcherError):
+                watcher_errors.append(real)
+            else:
+                thread_exceptions.append(exception)
         # If any exceptions appeared inside the threads, raise them now as an
         # aggregate exception object.
-        if exceptions:
-            raise ThreadException(exceptions)
+        if thread_exceptions:
+            raise ThreadException(thread_exceptions)
+        # At this point, we had enough success that we want to be returning or
+        # raising detailed info about our execution; so we generate a Result.
         stdout = ''.join(stdout)
         stderr = ''.join(stderr)
         if WINDOWS:
@@ -270,19 +368,71 @@ class Runner(object):
             # it is likely to matter for these days.
             stdout = stdout.replace("\r\n", "\n").replace("\r", "\n")
             stderr = stderr.replace("\r\n", "\n").replace("\r", "\n")
-        # Get return/exit code
-        exited = self.returncode()
-        # Return, or raise as failure, our final result
+        # Get return/exit code, unless there were WatcherErrors to handle.
+        # NOTE: In that case, returncode() may block waiting on the process
+        # (which may be waiting for user input). Since most WatcherError
+        # situations lack a useful exit code anyways, skipping this doesn't
+        # really hurt any.
+        exited = None if watcher_errors else self.returncode()
+        # Obtain actual result
         result = self.generate_result(
             command=command,
+            shell=shell,
+            env=env,
             stdout=stdout,
             stderr=stderr,
             exited=exited,
             pty=self.using_pty,
         )
+        # Any presence of WatcherError from the threads indicates a watcher was
+        # upset and aborted execution; make a generic Failure out of it and
+        # raise that.
+        if watcher_errors:
+            # TODO: ambiguity exists if we somehow get WatcherError in *both*
+            # threads...as unlikely as that would normally be.
+            raise Failure(result, reason=watcher_errors[0])
         if not (result or opts['warn']):
-            raise Failure(result)
+            raise UnexpectedExit(result)
         return result
+
+    def _run_opts(self, kwargs):
+        """
+        Unify `run` kwargs with config options to arrive at local options.
+
+        :returns:
+            Four-tuple of ``(opts_dict, stdout_stream, stderr_stream,
+            stdin_stream)``.
+        """
+        opts = {}
+        for key, value in six.iteritems(self.context.config.run):
+            runtime = kwargs.pop(key, None)
+            opts[key] = value if runtime is None else runtime
+        # Handle invalid kwarg keys (anything left in kwargs).
+        # Act like a normal function would, i.e. TypeError
+        if kwargs:
+            err = "run() got an unexpected keyword argument '{0}'"
+            raise TypeError(err.format(list(kwargs.keys())[0]))
+        # If hide was True, turn off echoing
+        if opts['hide'] is True:
+            opts['echo'] = False
+        # Then normalize 'hide' from one of the various valid input values,
+        # into a stream-names tuple.
+        opts['hide'] = normalize_hide(opts['hide'])
+        # Derive stream objects
+        out_stream = opts['out_stream']
+        if out_stream is None:
+            out_stream = sys.stdout
+        err_stream = opts['err_stream']
+        if err_stream is None:
+            err_stream = sys.stderr
+        in_stream = opts['in_stream']
+        if in_stream is None:
+            in_stream = sys.stdin
+        # Determine pty or no
+        self.using_pty = self.should_use_pty(opts['pty'], opts['fallback'])
+        if opts['watchers']:
+            self.watchers = opts['watchers']
+        return opts, out_stream, err_stream, in_stream
 
     def generate_result(self, **kwargs):
         """
@@ -294,40 +444,256 @@ class Runner(object):
         """
         return Result(**kwargs)
 
-    def io(self, reader, output, buffer_, hide):
+    def read_proc_output(self, reader):
         """
-        Perform I/O (reading, capturing & writing).
+        Iteratively read & decode bytes from a subprocess' out/err stream.
 
-        Specifically:
+        :param reader:
+            A literal reader function/partial, wrapping the actual stream
+            object in question, which takes a number of bytes to read, and
+            returns that many bytes (or ``None``).
 
-        * Read bytes from ``reader``, giving it some number of bytes to read at
-          a time. (Typically this function is the result of `stdout_reader` or
-          `stderr_reader`.)
-        * Decode the bytes into a string according to ``self.encoding``
-          (typically derived from `default_encoding` or runtime keyword args).
-        * Save a copy of the bytes in ``buffer_``, typically a `list`, which
-          the caller will expect to be mutated.
-        * If ``hide`` is ``False``, write bytes to ``output``, a stream such as
-          `sys.stdout`.
+            ``reader`` should be a reference to either `read_proc_stdout` or
+            `read_proc_stderr`, which perform the actual, platform/library
+            specific read calls.
+
+        :returns:
+            A generator yielding Unicode strings (`unicode` on Python 2; `str`
+            on Python 3).
+
+            Specifically, each resulting string is the result of decoding
+            `read_chunk_size` bytes read from the subprocess' out/err stream.
         """
-        # Inner generator yielding read data
-        def get():
-            while True:
-                data = reader(1000)
-                if not data:
-                    break
-                # Sometimes os.read gives us bytes under Python 3...and
-                # sometimes it doesn't. ¯\_(ツ)_/¯
-                if not isinstance(data, six.binary_type):
-                    # Can't use six.b because that just assumes latin-1 :(
-                    data = data.encode(self.encoding)
-                yield data
-        # Decode stream using our generator & requested encoding
-        for data in codecs.iterdecode(get(), self.encoding, errors='replace'):
+        # NOTE: Typically, reading from any stdout/err (local, remote or
+        # otherwise) can be thought of as "read until you get nothing back".
+        # This is preferable over "wait until an out-of-band signal claims the
+        # process is done running" because sometimes that signal will appear
+        # before we've actually read all the data in the stream (i.e.: a race
+        # condition).
+        while True:
+            data = reader(self.read_chunk_size)
+            if not data:
+                break
+            yield self.decode(data)
+
+    def write_our_output(self, stream, string):
+        """
+        Write ``string`` to ``stream``.
+
+        Also calls ``.flush()`` on ``stream`` to ensure that real terminal
+        streams don't buffer.
+
+        :param stream:
+            A file-like stream object, mapping to the ``out_stream`` or
+            ``err_stream`` parameters of `run`.
+
+        :param string: A Unicode string object.
+
+        :returns: ``None``.
+        """
+        # Encode under Python 2 only, because of the common problem where
+        # sys.stdout/err on Python 2 end up using sys.getdefaultencoding(),
+        # which is frequently NOT the same thing as the real local terminal
+        # encoding (reflected as sys.stdout.encoding). I.e. even when
+        # sys.stdout.encoding is UTF-8, ascii is still actually used, and
+        # explodes.
+        # Python 3 doesn't have this problem, so we delegate encoding to the
+        # io.*Writer classes involved.
+        if six.PY2:
+            # TODO: split up self.encoding, only use the one for 'local
+            # encoding' here.
+            string = string.encode(self.encoding)
+        stream.write(string)
+        stream.flush()
+
+    def _handle_output(self, buffer_, hide, output, reader):
+        # TODO: store un-decoded/raw bytes somewhere as well...
+        for data in self.read_proc_output(reader):
+            # Echo to local stdout if necessary
+            # TODO: should we rephrase this as "if you want to hide, give me a
+            # dummy output stream, e.g. something like /dev/null"? Otherwise, a
+            # combo of 'hide=stdout' + 'here is an explicit out_stream' means
+            # out_stream is never written to, and that seems...odd.
             if not hide:
-                output.write(data)
-                output.flush()
+                self.write_our_output(stream=output, string=data)
+            # Store in shared buffer so main thread can do things with the
+            # result after execution completes.
+            # NOTE: this is threadsafe insofar as no reading occurs until after
+            # the thread is join()'d.
             buffer_.append(data)
+            # Run our specific buffer through the autoresponder framework
+            self.respond(buffer_)
+
+    def handle_stdout(self, buffer_, hide, output):
+        """
+        Read process' stdout, storing into a buffer & printing/parsing.
+
+        Intended for use as a thread target. Only terminates when all stdout
+        from the subprocess has been read.
+
+        :param list buffer_: The capture buffer shared with the main thread.
+        :param bool hide: Whether or not to replay data into ``output``.
+        :param output:
+            Output stream (file-like object) to write data into when not
+            hiding.
+
+        :returns: ``None``.
+        """
+        self._handle_output(
+            buffer_,
+            hide,
+            output,
+            reader=self.read_proc_stdout,
+        )
+
+    def handle_stderr(self, buffer_, hide, output):
+        """
+        Read process' stderr, storing into a buffer & printing/parsing.
+
+        Identical to `handle_stdout` except for the stream read from; see its
+        docstring for API details.
+        """
+        self._handle_output(
+            buffer_,
+            hide,
+            output,
+            reader=self.read_proc_stderr,
+        )
+
+    def read_our_stdin(self, input_):
+        """
+        Read & decode bytes from a local stdin stream.
+
+        :param input_:
+            Actual stream object to read from. Maps to ``in_stream`` in `run`,
+            so will often be ``sys.stdin``, but might be any stream-like
+            object.
+
+        :returns:
+            A Unicode string, the result of decoding the read bytes (this might
+            be the empty string if the pipe has closed/reached EOF); or
+            ``None`` if stdin wasn't ready for reading yet.
+        """
+        # TODO: consider moving the character_buffered contextmanager call in
+        # here? Downside is it would be flipping those switches for every byte
+        # read instead of once per session, which could be costly (?).
+        bytes_ = None
+        if ready_for_reading(input_):
+            bytes_ = input_.read(bytes_to_read(input_))
+            # Decode if it appears to be binary-type. (From real terminal
+            # streams, usually yes; from file-like objects, often no.)
+            if bytes_ and isinstance(bytes_, six.binary_type):
+                # TODO: will decoding 1 byte at a time break multibyte
+                # character encodings? How to square interactivity with that?
+                bytes_ = self.decode(bytes_)
+        return bytes_
+
+    def handle_stdin(self, input_, output, echo):
+        """
+        Read local stdin, copying into process' stdin as necessary.
+
+        Intended for use as a thread target.
+
+        .. note::
+            Because real terminal stdin streams have no well-defined "end", if
+            such a stream is detected (based on existence of a callable
+            ``.fileno()``) this method will wait until `program_finished` is
+            set, before terminating.
+
+            When the stream doesn't appear to be from a terminal, the same
+            semantics as `handle_stdout` are used - the stream is simply
+            ``read()`` from until it returns an empty value.
+
+        :param input_: Stream (file-like object) from which to read.
+        :param output: Stream (file-like object) to which echoing may occur.
+        :param bool echo: User override option for stdin-stdout echoing.
+
+        :returns: ``None``.
+        """
+        # TODO: reinstate lock/whatever thread logic from fab v1 which prevents
+        # reading from stdin while other parts of the code are prompting for
+        # runtime passwords? (search for 'input_enabled')
+        # TODO: fabric#1339 is strongly related to this, if it's not literally
+        # exposing some regression in Fabric 1.x itself.
+        with character_buffered(input_):
+            while True:
+                data = self.read_our_stdin(input_)
+                if data:
+                    # Mirror what we just read to process' stdin.
+                    # We perform an encode so Python 3 gets bytes (streams +
+                    # str's in Python 3 == no bueno) but skip the decode step,
+                    # since there's presumably no need (nobody's interacting
+                    # with this data programmatically).
+                    self.write_proc_stdin(data)
+                    # Also echo it back to local stdout (or whatever
+                    # out_stream is set to) when necessary.
+                    if echo is None:
+                        echo = self.should_echo_stdin(input_, output)
+                    if echo:
+                        self.write_our_output(stream=output, string=data)
+                # Empty string/char/byte != None. Can't just use 'else' here.
+                elif data is not None:
+                    # When reading from file-like objects that aren't "real"
+                    # terminal streams, an empty byte signals EOF.
+                    break
+                # Dual all-done signals: program being executed is done
+                # running, *and* we don't seem to be reading anything out of
+                # stdin. (NOTE: If we only test the former, we may encounter
+                # race conditions re: unread stdin.)
+                if self.program_finished.is_set() and not data:
+                    break
+                # Take a nap so we're not chewing CPU.
+                time.sleep(self.input_sleep)
+
+    def should_echo_stdin(self, input_, output):
+        """
+        Determine whether data read from ``input_`` should echo to ``output``.
+
+        Used by `handle_stdin`; tests attributes of ``input_`` and ``output``.
+
+        :param input_: Input stream (file-like object).
+        :param output: Output stream (file-like object).
+        :returns: A ``bool``.
+        """
+        return (not self.using_pty) and isatty(input_)
+
+    def respond(self, buffer_):
+        """
+        Write to the program's stdin in response to patterns in ``buffer_``.
+
+        The patterns and responses are driven by the `.StreamWatcher` instances
+        from the ``watchers`` kwarg of `run` - see :doc:`/concepts/watchers`
+        for a conceptual overview.
+
+        :param list buffer:
+            The capture buffer for this thread's particular IO stream.
+
+        :returns: ``None``.
+        """
+        # Join buffer contents into a single string; without this,
+        # StreamWatcher subclasses can't do things like iteratively scan for
+        # pattern matches.
+        # NOTE: using string.join should be "efficient enough" for now, re:
+        # speed and memory use. Should that become false, consider using
+        # StringIO or cStringIO (tho the latter doesn't do Unicode well?) which
+        # is apparently even more efficient.
+        stream = u''.join(buffer_)
+        for watcher in self.watchers:
+            for response in watcher.submit(stream):
+                self.write_proc_stdin(response)
+
+    def generate_env(self, env, replace_env):
+        """
+        Return a suitable environment dict based on user input & behavior.
+
+        :param dict env: Dict supplying overrides or full env, depending.
+        :param bool replace_env:
+            Whether ``env`` updates, or is used in place of, the value of
+            `os.environ`.
+
+        :returns: A dictionary of shell environment vars.
+        """
+        return env if replace_env else dict(os.environ, **env)
 
     def should_use_pty(self, pty, fallback):
         """
@@ -342,24 +708,111 @@ class Runner(object):
         # NOTE: fallback not used: no falling back implemented by default.
         return pty
 
-    def start(self, command):
+    @property
+    def has_dead_threads(self):
         """
-        Initiate execution of ``command``, e.g. in a subprocess.
+        Detect whether any IO threads appear to have terminated unexpectedly.
 
-        Typically, this will also set subclass-specific member variables used
-        in other methods such as `wait` and/or `returncode`.
+        Used during process-completion waiting (in `wait`) to ensure we don't
+        deadlock our child process if our IO processing threads have
+        errored/died.
+
+        :returns:
+            ``True`` if any threads appear to have terminated with an
+            exception, ``False`` otherwise.
+        """
+        return any(x.is_dead for x in self.threads)
+
+    def wait(self):
+        """
+        Block until the running command appears to have exited.
+
+        :returns: ``None``.
+        """
+        while True:
+            proc_finished = self.process_is_finished
+            dead_threads = self.has_dead_threads
+            if proc_finished or dead_threads:
+                break
+            time.sleep(self.input_sleep)
+
+    def write_proc_stdin(self, data):
+        """
+        Write encoded ``data`` to the running process' stdin.
+
+        :param data: A Unicode string.
+
+        :returns: ``None``.
+        """
+        # Encode always, then request implementing subclass to perform the
+        # actual write to subprocess' stdin.
+        self._write_proc_stdin(data.encode(self.encoding))
+
+    def decode(self, data):
+        """
+        Decode some ``data`` bytes, returning Unicode.
+        """
+        # NOTE: yes, this is a 1-liner. The point is to make it much harder to
+        # forget to use 'replace' when decoding :)
+        return data.decode(self.encoding, 'replace')
+
+    @property
+    def process_is_finished(self):
+        """
+        Determine whether our subprocess has terminated.
+
+        .. note::
+            The implementation of this method should be nonblocking, as it is
+            used within a query/poll loop.
+
+        :returns:
+            ``True`` if the subprocess has finished running, ``False``
+            otherwise.
         """
         raise NotImplementedError
 
-    def stdout_reader(self):
+    def start(self, command, shell, env):
         """
-        Return a function suitable for reading from a running command's stdout.
+        Initiate execution of ``command`` (via ``shell``, with ``env``).
+
+        Typically this means use of a forked subprocess or requesting start of
+        execution on a remote system.
+
+        In most cases, this method will also set subclass-specific member
+        variables used in other methods such as `wait` and/or `returncode`.
         """
         raise NotImplementedError
 
-    def stderr_reader(self):
+    def read_proc_stdout(self, num_bytes):
         """
-        Return a function suitable for reading from a running command's stderr.
+        Read ``num_bytes`` from the running process' stdout stream.
+
+        :param int num_bytes: Number of bytes to read at maximum.
+
+        :returns: A string/bytes object.
+        """
+        raise NotImplementedError
+
+    def read_proc_stderr(self, num_bytes):
+        """
+        Read ``num_bytes`` from the running process' stderr stream.
+
+        :param int num_bytes: Number of bytes to read at maximum.
+
+        :returns: A string/bytes object.
+        """
+        raise NotImplementedError
+
+    def _write_proc_stdin(self, data):
+        """
+        Write ``data`` to running process' stdin.
+
+        This should never be called directly; it's for subclasses to implement.
+        See `write_proc_stdin` for the public API call.
+
+        :param data: Already-encoded byte data suitable for writing.
+
+        :returns: ``None``.
         """
         raise NotImplementedError
 
@@ -367,20 +820,55 @@ class Runner(object):
         """
         Return a string naming the expected encoding of subprocess streams.
 
-        This return value should be suitable for use by methods such as
-        `codecs.iterdecode`.
+        This return value should be suitable for use by encode/decode methods.
         """
-        raise NotImplementedError
+        # TODO: probably wants to be 2 methods, one for local and one for
+        # subprocess. For now, good enough to assume both are the same.
+        #
+        # Based on some experiments there is an issue with
+        # `locale.getpreferredencoding(do_setlocale=False)` in Python 2.x on
+        # Linux and OS X, and `locale.getpreferredencoding(do_setlocale=True)`
+        # triggers some global state changes. (See #274 for discussion.)
+        encoding = locale.getpreferredencoding(False)
+        if six.PY2 and not WINDOWS:
+            default = locale.getdefaultlocale()[1]
+            if default is not None:
+                encoding = default
+        return encoding
 
-    def wait(self):
+    def send_interrupt(self, interrupt):
         """
-        Block until the running command appears to have exited.
+        Submit an interrupt signal to the running subprocess.
+
+        In almost all implementations, the default behavior is what will be
+        desired: submit ``\x03`` to the subprocess' stdin pipe. However, we
+        leave this as a public method in case this default needs to be
+        augmented or replaced.
+
+        :param interrupt:
+            The locally-sourced ``KeyboardInterrupt`` causing the method call.
+
+        :returns: ``None``.
         """
-        raise NotImplementedError
+        self.write_proc_stdin(u'\x03')
 
     def returncode(self):
         """
         Return the numeric return/exit code resulting from command execution.
+
+        :returns: `int`
+        """
+        raise NotImplementedError
+
+    def stop(self):
+        """
+        Perform final cleanup, if necessary.
+
+        This method is called within a ``finally`` clause inside the main `run`
+        method. Depending on the subclass, it may be a no-op, or it may do
+        things such as close network connections or open files.
+
+        :returns: ``None``
         """
         raise NotImplementedError
 
@@ -390,54 +878,69 @@ class Local(Runner):
     Execute a command on the local system in a subprocess.
 
     .. note::
-        When Invoke itself is executed without a valid PTY (i.e.
-        ``os.isatty(sys.stdin)`` is ``False``), it's not possible to present a
-        handle on our PTY to local subprocesses. In such situations, `Local`
-        will fallback to behaving as if ``pty=False``, on the theory that
-        degraded execution is better than none at all, as well as printing a
-        warning to stderr.
+        When Invoke itself is executed without a controlling terminal (e.g.
+        when ``sys.stdin`` lacks a useful ``fileno``), it's not possible to
+        present a handle on our PTY to local subprocesses. In such situations,
+        `Local` will fallback to behaving as if ``pty=False`` (on the theory
+        that degraded execution is better than none at all) as well as printing
+        a warning to stderr.
 
-        To disable this behavior (i.e. if `os.isatty` is causing false
-        negatives in your environment), say ``fallback=False``.
+        To disable this behavior, say ``fallback=False``.
     """
+    def __init__(self, context):
+        super(Local, self).__init__(context)
+        # Bookkeeping var for pty use case
+        self.status = None
+
     def should_use_pty(self, pty=False, fallback=True):
         use_pty = False
         if pty:
             use_pty = True
-            seems_pty = (
-                hasattr(sys.stdin, 'fileno')
-                and callable(sys.stdin.fileno)
-                and os.isatty(sys.stdin.fileno())
-            )
-            if not seems_pty and fallback:
+            # TODO: pass in & test in_stream, not sys.stdin
+            if not has_fileno(sys.stdin) and fallback:
                 if not self.warned_about_pty_fallback:
-                    sys.stderr.write("WARNING: stdin is not a pty; falling back to non-pty execution!\n") # noqa
+                    sys.stderr.write("WARNING: stdin has no fileno; falling back to non-pty execution!\n") # noqa
                     self.warned_about_pty_fallback = True
                 use_pty = False
         return use_pty
 
-    def stdout_reader(self):
+    def read_proc_stdout(self, num_bytes):
+        # Obtain useful read-some-bytes function
         if self.using_pty:
             # Need to handle spurious OSErrors on some Linux platforms.
-            def reader(num_bytes):
-                try:
-                    return os.read(self.parent_fd, num_bytes)
-                except OSError as e:
-                    # Only eat this specific OSError so we don't hide others
-                    if "Input/output error" not in str(e):
-                        raise
-                    # The bad OSErrors happen after all expected output has
-                    # appeared, so we return a falsey value, which triggers the
-                    # "end of output" logic in code using reader functions.
-                    return None
-            return reader
+            try:
+                data = os.read(self.parent_fd, num_bytes)
+            except OSError as e:
+                # Only eat this specific OSError so we don't hide others
+                if "Input/output error" not in str(e):
+                    raise
+                # The bad OSErrors happen after all expected output has
+                # appeared, so we return a falsey value, which triggers the
+                # "end of output" logic in code using reader functions.
+                data = None
         else:
-            return partial(os.read, self.process.stdout.fileno())
+            data = os.read(self.process.stdout.fileno(), num_bytes)
+        return data
 
-    def stderr_reader(self):
-        return partial(os.read, self.process.stderr.fileno())
+    def read_proc_stderr(self, num_bytes):
+        # NOTE: when using a pty, this will never be called.
+        # TODO: do we ever get those OSErrors on stderr? Feels like we could?
+        return os.read(self.process.stderr.fileno(), num_bytes)
 
-    def start(self, command):
+    def _write_proc_stdin(self, data):
+        # NOTE: parent_fd from os.fork() is a read/write pipe attached to our
+        # forked process' stdout/stdin, respectively.
+        fd = self.parent_fd if self.using_pty else self.process.stdin.fileno()
+        # Try to write, ignoring broken pipes if encountered (implies child
+        # process exited before the process piping stdin to us finished;
+        # there's nothing we can do about that!)
+        try:
+            return os.write(fd, data)
+        except OSError as e:
+            if 'Broken pipe' not in str(e):
+                raise
+
+    def start(self, command, shell, env):
         if self.using_pty:
             if pty is None: # Encountered ImportError
                 sys.exit("You indicated pty=True, but your platform doesn't support the 'pty' module!") # noqa
@@ -458,53 +961,93 @@ class Local(Runner):
                 # TODO: make subroutine?
                 winsize = struct.pack('HHHH', rows, cols, 0, 0)
                 fcntl.ioctl(sys.stdout.fileno(), termios.TIOCSWINSZ, winsize)
-                # Use execv for bare-minimum "exec w/ variable # args"
+                # Use execve for bare-minimum "exec w/ variable # args + env"
                 # behavior. No need for the 'p' (use PATH to find executable)
-                # or 'e' (define a custom/overridden shell env) variants, for
-                # now.
-                # TODO: use /bin/sh or whatever subprocess does. Only using
-                # bash for now because that's what we have been testing
-                # against.
-                # TODO: also see if subprocess is using equivalent of execvp...
-                os.execv('/bin/bash', ['/bin/bash', '-c', command])
+                # for now.
+                # TODO: see if subprocess is using equivalent of execvp...
+                os.execve(shell, [shell, '-c', command], env)
         else:
             self.process = Popen(
                 command,
                 shell=True,
+                executable=shell,
+                env=env,
                 stdout=PIPE,
                 stderr=PIPE,
+                stdin=PIPE,
             )
 
-    def default_encoding(self):
-        return locale.getpreferredencoding(False)
-
-    def wait(self):
+    @property
+    def process_is_finished(self):
         if self.using_pty:
-            while True:
-                # TODO: possibly reinstate conditional WNOHANG as per
-                # https://github.com/pexpect/ptyprocess/blob/4058faa05e2940662ab6da1330aa0586c6f9cd9c/ptyprocess/ptyprocess.py#L680-L687
-                pid_val, self.status = os.waitpid(self.pid, 0)
-                # waitpid() sets the 'pid' return val to 0 when no children
-                # have exited yet; when it is NOT zero, we know the child's
-                # stopped.
-                if pid_val != 0:
-                    break
-                # TODO: io sleep?
+            # NOTE:
+            # https://github.com/pexpect/ptyprocess/blob/4058faa05e2940662ab6da1330aa0586c6f9cd9c/ptyprocess/ptyprocess.py#L680-L687
+            # implies that Linux "requires" use of the blocking, non-WNOHANG
+            # version of this call. Our testing doesn't verify this, however,
+            # so...
+            # NOTE: It does appear to be totally blocking on Windows, so our
+            # issue #351 may be totally unsolvable there. Unclear.
+            pid_val, self.status = os.waitpid(self.pid, os.WNOHANG)
+            return pid_val != 0
         else:
-            self.process.wait()
+            return self.process.poll() is not None
 
     def returncode(self):
         if self.using_pty:
-            return os.WEXITSTATUS(self.status)
+            # No subprocess.returncode available; use WIFEXITED/WIFSIGNALED to
+            # determine whch of WEXITSTATUS / WTERMSIG to use.
+            # TODO: is it safe to just say "call all WEXITSTATUS/WTERMSIG and
+            # return whichever one of them is nondefault"? Probably not?
+            # NOTE: doing this in an arbitrary order should be safe since only
+            # one of the WIF* methods ought to ever return True.
+            code = None
+            if os.WIFEXITED(self.status):
+                code = os.WEXITSTATUS(self.status)
+            elif os.WIFSIGNALED(self.status):
+                code = os.WTERMSIG(self.status)
+                # Match subprocess.returncode by turning signals into negative
+                # 'exit code' integers.
+                code = -1 * code
+            return code
+            # TODO: do we care about WIFSTOPPED? Maybe someday?
         else:
             return self.process.returncode
+
+    def stop(self):
+        # No explicit close-out required (so far).
+        pass
 
 
 class Result(object):
     """
     A container for information about the result of a command execution.
 
-    See individual attribute/method documentation below for details.
+    All params are exposed as attributes of the same name and type.
+
+    :param str stdout:
+        The subprocess' standard output.
+
+    :param str stderr:
+        Same as ``stdout`` but containing standard error (unless the process
+        was invoked via a pty, in which case it will be empty; see
+        `.Runner.run`.)
+
+    :param str command:
+        The command which was executed.
+
+    :param str shell:
+        The shell binary used for execution.
+
+    :param dict env:
+        The shell environment used for execution. (Default is the empty dict,
+        ``{}``, not ``None`` as displayed in the signature.)
+
+    :param int exited:
+        An integer representing the subprocess' exit/return code.
+
+    :param bool pty:
+        A boolean describing whether the subprocess was invoked with a pty or
+        not; see `.Runner.run`.
 
     .. note::
         `Result` objects' truth evaluation is equivalent to their `.ok`
@@ -515,40 +1058,58 @@ class Result(object):
                 do_something()
             else:
                 handle_problem()
+
+        However, remember `Zen of Python #2
+        <http://zen-of-python.info/explicit-is-better-than-implicit.html#2>`_.
     """
-    # TODO: inherit from namedtuple instead? heh
-    def __init__(self, command, stdout, stderr, exited, pty):
-        #: The command which was executed.
-        self.command = command
-        #: An integer representing the subprocess' exit/return code.
-        self.exited = exited
-        #: An alias for `.exited`.
-        self.return_code = exited
-        #: The subprocess' standard output, as a multiline string.
+    # TODO: inherit from namedtuple instead? heh (or: use attrs from pypi)
+    def __init__(
+        self,
+        stdout="",
+        stderr="",
+        command="",
+        shell="",
+        env=None,
+        exited=0,
+        pty=False,
+    ):
         self.stdout = stdout
-        #: Same as `.stdout` but containing standard error (unless the process
-        #: was invoked via a pty; see `.Runner.run`.)
         self.stderr = stderr
-        #: A boolean describing whether the subprocess was invoked with a pty
-        #: or not; see `.Runner.run`.
+        self.command = command
+        self.shell = shell
+        self.env = {} if env is None else env
+        self.exited = exited
         self.pty = pty
 
-    def __nonzero__(self):
-        # Holy mismatch between name and implementation, Batman!
-        return self.exited == 0
+    @property
+    def return_code(self):
+        """
+        An alias for ``.exited``.
+        """
+        return self.exited
 
-    # Python 3 ahoy
+    def __nonzero__(self):
+        # NOTE: This is the method that (under Python 2) determines Boolean
+        # behavior for objects.
+        return self.ok
+
     def __bool__(self):
+        # NOTE: And this is the Python 3 equivalent of __nonzero__. Much better
+        # name...
         return self.__nonzero__()
 
     def __str__(self):
-        ret = ["Command exited with status {0}.".format(self.exited)]
+        if self.exited is not None:
+            desc = "Command exited with status {0}.".format(self.exited)
+        else:
+            desc = "Command was not fully executed due to watcher error."
+        ret = [desc]
         for x in ('stdout', 'stderr'):
             val = getattr(self, x)
-            ret.append("""=== {0} ===
+            ret.append(u"""=== {0} ===
 {1}
-""".format(x, val.rstrip()) if val else "(no {0})".format(x))
-        return "\n".join(ret)
+""".format(x, val.rstrip()) if val else u"(no {0})".format(x))
+        return u"\n".join(ret)
 
     @property
     def ok(self):
@@ -566,3 +1127,21 @@ class Result(object):
         ``False`` otherwise.
         """
         return not self.ok
+
+
+def normalize_hide(val):
+    hide_vals = (None, False, 'out', 'stdout', 'err', 'stderr', 'both', True)
+    if val not in hide_vals:
+        err = "'hide' got {0!r} which is not in {1!r}"
+        raise ValueError(err.format(val, hide_vals))
+    if val in (None, False):
+        hide = ()
+    elif val in ('both', True):
+        hide = ('out', 'err')
+    elif val == 'stdout':
+        hide = ('out',)
+    elif val == 'stderr':
+        hide = ('err',)
+    else:
+        hide = (val,)
+    return hide

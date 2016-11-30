@@ -1,3 +1,5 @@
+.. _inv:
+
 ======================
 Command-line interface
 ======================
@@ -69,8 +71,7 @@ The core options (which must be given before any task names) are as follows:
 
 .. option:: -e, --echo
 
-    Echo executed commands before running. Requires :doc:`contextualized tasks
-    </concepts/context>`.
+    Echo executed commands before running.
 
 .. option:: -f, --config
 
@@ -86,8 +87,7 @@ The core options (which must be given before any task names) are as follows:
 
 .. option:: -p, --pty
 
-    Use a pty when executing shell commands. Requires :doc:`contextualized
-    tasks </concepts/context>`.
+    Use a pty when executing shell commands.
 
 .. option:: -r STRING, --root=STRING
 
@@ -99,8 +99,7 @@ The core options (which must be given before any task names) are as follows:
 
 .. option:: -w, --warn-only
 
-    Warn, instead of failing, when shell commands fail. Requires
-    :doc:`contextualized tasks </concepts/context>`.
+    Warn, instead of failing, when shell commands fail.
 
 
 Shell tab completion

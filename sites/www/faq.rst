@@ -43,16 +43,14 @@ Defining/executing tasks
 My task's first argument isn't showing up in ``--help``!
 --------------------------------------------------------
 
-Make sure your task isn't :ref:`contextualized <concepts-context>`
-unexpectedly! Put another way, this problem pops up if you're using `@ctask
-<invoke.tasks.ctask>` and forget to define an initial context argument for
+This problem pops up if you forget to define an initial context argument for
 your task.
 
 For example, can you spot the problem in this sample task file?
 
 ::
 
-    from invoke import ctask as task
+    from invoke import task
 
     @task
     def build(ctx, where, clean=False):
@@ -140,3 +138,18 @@ status, which can be confusing.
 
 The solution here is simple: add ``warn=True`` to your `~invoke.run` call,
 which disables the automatic exit behavior.
+
+
+The auto-responder functionality isn't working for my password prompts!
+-----------------------------------------------------------------------
+
+Some programs write password prompts or other output *directly* to the local
+terminal, bypassing the usual stdout/stderr streams. For example, this is
+exactly what `the stdlib's getpass module <getpass.getpass>` does, if you're
+calling a program that happens to be written in Python.
+
+When this happens, we're powerless, because all we get to see is the
+subprocess' regular output streams. Thankfully, the solution is usually easy:
+just add ``pty=True`` to your `~invoke.run` call. Forcing use of an explicit
+pseudo-terminal usually tricks these kinds of programs into behaving and
+writing prompts to stderr.

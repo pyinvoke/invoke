@@ -7,13 +7,13 @@ from spec import eq_, ok_, trap, skip, assert_contains, assert_not_contains
 
 from invoke import (
     Program, Collection, ParseError, Task, FilesystemLoader, Executor, Context,
-    Config,
+    Config, UnexpectedExit, Result,
 )
 from invoke import main
 from invoke.util import cd
 
 from _util import (
-    load, IntegrationSpec, expect, skip_if_windows, SimpleFailure
+    load, IntegrationSpec, expect, skip_if_windows,
 )
 
 
@@ -75,6 +75,14 @@ class Program_(IntegrationSpec):
             with patch('invoke.util.debug') as debug:
                 expect('-d -c debugging foo')
                 debug.assert_called_with('my-sentinel')
+
+        def bytecode_skipped_by_default(self):
+            expect('-c foo mytask')
+            eq_(sys.dont_write_bytecode, True)
+
+        def write_pyc_explicitly_enables_bytecode_writing(self):
+            expect('--write-pyc -c foo mytask')
+            eq_(sys.dont_write_bytecode, False)
 
 
     class normalize_argv:
@@ -261,7 +269,7 @@ class Program_(IntegrationSpec):
         def expected_failure_types_dont_raise_exceptions(self, mock_exit):
             "expected failure types don't raise exceptions"
             for side_effect in (
-                SimpleFailure,
+                UnexpectedExit(Result('meh', exited=1)),
                 ParseError("boo!"),
             ):
                 p = Program()
@@ -275,6 +283,14 @@ class Program_(IntegrationSpec):
 
         def should_show_context_usage_on_context_parse_failures(self):
             skip()
+
+        @trap
+        @patch('invoke.program.sys.exit')
+        def turns_KeyboardInterrupt_into_exit_code_1(self, mock_exit):
+            p = Program()
+            p.execute = Mock(side_effect=KeyboardInterrupt)
+            p.run("myapp -c foo mytask")
+            mock_exit.assert_called_with(1)
 
 
     class help_:
@@ -308,6 +324,7 @@ Core options:
                                    parse remainder.
   --hide=STRING                    Set default value of run()'s 'hide' kwarg.
   --no-dedupe                      Disable task deduplication.
+  --write-pyc                      Enable creation of .pyc files.
   -c STRING, --collection=STRING   Specify collection name to load.
   -d, --debug                      Enable debug output.
   -e, --echo                       Echo executed commands before running.

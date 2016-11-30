@@ -2,6 +2,203 @@
 Changelog
 =========
 
+* :bug:`-` Fix ``DataProxy`` (used within `~invoke.context.Context` and
+  `~invoke.config.Config`) so that real attributes and methods which are
+  shadowed by configuration keys, aren't proxied to the config during regular
+  attribute get/set. (Such config keys are thus required to be accessed via
+  dict-style only, or (on `~invoke.context.Context`) via the explicit
+  ``.config`` attribute.)
+* :bug:`58 major` Work around bugs in ``select()`` when handling subprocess
+  stream reads, which was causing poor behavior in many nontrivial interactive
+  programs (such as ``vim`` and other fullscreen editors, ``python`` and other
+  REPLs/shells, etc). Such programs should now be largely indistinguishable
+  from their behavior when run directly from a user's shell.
+* :feature:`406` Update handling of Ctrl-C/``KeyboardInterrupt``, and
+  subprocess exit status pass-through, to be more correct than before:
+
+  - Submit the interrupt byte sequence ``\x03`` to stdin of all subprocesses,
+    instead of sending ``SIGINT``.
+
+      - This results in behavior closer to that of truly pressing Ctrl-C when
+        running subprocesses directly; for example, interactive programs like
+        ``vim`` or ``python`` now behave normally instead of prematurely
+        exiting.
+      - Of course, programs that would normally exit on Ctrl-C will still do
+        so!
+
+  - The exit statuses of subprocesses run with ``pty=True`` are more rigorously
+    checked (using `os.WIFEXITED` and friends), allowing us to surface the real
+    exit values of interrupted programs instead of manually assuming exit code
+    ``130``.
+
+      - Typically, this will be exit code ``-2``, but it is system dependent.
+      - Other, non-Ctrl-C-driven signal-related exits under PTYs should behave
+        better now as well - previously they could appear to exit ``0``!
+
+  - Non-subprocess-related ``KeyboardInterrupt`` (i.e. those generated when
+    running top level Python code outside of any ``run`` function calls)
+    will now trigger exit code ``1``, as that is how the Python interpreter
+    typically behaves if you ``KeyboardInterrupt`` it outside of a live
+    REPL.
+
+  .. warning::
+    These changes are **backwards incompatible** if you were relying on the
+    "exits ``130``" behavior added in version 0.13, or on the (incorrect)
+    ``SIGINT`` method of killing pty-driven subprocesses on Ctrl-C.
+
+* :bug:`-` Correctly raise ``TypeError`` when unexpected keyword arguments are
+  given to `~invoke.runners.Runner.run`.
+* :feature:`-` Add a `~invoke.context.MockContext` class for easier testing of
+  user-written tasks and related client code. Includes adding a
+  :ref:`conceptual document on how to test Invoke-using code
+  <testing-user-code>`.
+* :feature:`-` Update implementation of `~invoke.runners.Result` so it has
+  default values for all parameters/attributes. This allows it to be more
+  easily used when mocking ``run`` calls in client libraries' tests.
+
+  .. warning::
+    This is a backwards incompatible change if you are manually instantiating
+    `~invoke.runners.Result` objects with positional arguments: positional
+    argument order has changed. (Compare the API docs between versions to see
+    exactly how.)
+
+* :feature:`294` Implement `Context.sudo <invoke.context.Context.sudo>`, which
+  wraps `~invoke.context.Context.run` inside a ``sudo`` command. It is capable
+  of auto-responding to ``sudo``'s password prompt with a configured password,
+  and raises a specific exception (`~invoke.exceptions.AuthFailure`) if that
+  password is rejected.
+* :feature:`369` Overhaul the autoresponse functionality for `~invoke.run` so
+  it's significantly more extensible, both for its own sake and as part of
+  implementing :issue:`294` (see its own changelog entry for details).
+
+  .. warning::
+      This is a backwards incompatible change: the ``responses`` kwarg to
+      ``run()`` is now ``watchers``, and accepts a list of
+      `~invoke.watchers.StreamWatcher` objects (such as
+      `~invoke.watchers.Responder`) instead of a dict.
+
+      If you were using ``run(..., responses={'pattern': 'response'}``
+      previously, just update to instead use ``run(...,
+      watchers=[Responder('pattern', 'response')])``.
+
+* :bug:`-` Fix a bug in `Config.clone <invoke.config.Config.clone>` where it
+  was instantiating a new ``Config`` instead of a member of the subclass.
+* :release:`0.13.0 <2016-06-09>`
+* :feature:`114` Ripped off the band-aid and removed non-contextualized tasks
+  as an option; all tasks must now be contextualized (defined as ``def
+  mytask(context, ...)`` - see :ref:`defining-and-running-task-functions`) even
+  if not using the context. This simplifies the implementation as well as
+  users' conceptual models. Thanks to Bay Grabowski for the patch.
+
+  .. warning:: This is a backwards incompatible change!
+
+* :bug:`350 major` (also :issue:`274`, :issue:`241`, :issue:`262`,
+  :issue:`242`, :issue:`321`, :issue:`338`) Clean up and reorganize
+  encoding-related parts of the code to avoid some of the more common or
+  egregious encode/decode errors surrounding clearly non-ASCII-compatible text.
+  Bug reports, assistance, feedback and code examples courtesy of Paul Moore,
+  Vlad Frolov, Christian Aichinger, Fotis Gimian, Daniel Nunes, and others.
+* :bug:`351 major` Protect against ``run`` deadlocks involving exceptions in
+  I/O threads & nontrivial amounts of unread data in the corresponding
+  subprocess pipe(s). This situation should now always result in exceptions
+  instead of hangs.
+* :feature:`259` (also :issue:`280`) Allow updating (or replacing) subprocess
+  shell environments, via the ``env`` and ``replace_env`` kwargs to
+  `~invoke.runners.Runner.run`. Thanks to Fotis Gimian for the report,
+  ``@philtay`` for an early version of the final patch, and Erich Heine & Vlad
+  Frolov for feedback.
+* :feature:`67` Added ``shell`` option to `~invoke.runners.Runner.run`,
+  allowing control of the shell used when invoking commands. Previously,
+  ``pty=True`` used ``/bin/bash`` and ``pty=False`` (the default) used
+  ``/bin/sh``; the new unified default value is ``/bin/bash``.
+
+  Thanks to Jochen Breuer for the report.
+* :bug:`152 major` (also :issue:`251`, :issue:`331`) Correctly handle
+  ``KeyboardInterrupt`` during `~invoke.runners.Runner.run`, re: both mirroring
+  the interrupt signal to the subprocess *and* capturing the local exception
+  within Invoke's CLI handler (so there's no messy traceback, just exiting with
+  code ``130``).
+
+  Thanks to Peter Darrow for the report, and to Mika Eloranta & Máté Farkas for
+  early versions of the patchset.
+* :support:`319` Fixed an issue resulting from :issue:`255` which
+  caused problems with how we generate release wheels (notably, some releases
+  such as 0.12.1 fail when installing from wheels on Python 2).
+
+  .. note::
+    As part of this fix, the next release will distribute individual Python 2
+    and Python 3 wheels instead of one 'universal' wheel. This change should be
+    transparent to users.
+
+  Thanks to ``@ojos`` for the initial report and Frazer McLean for some
+  particularly useful feedback.
+* :release:`0.12.2 <2016-02-07>`
+* :support:`314 backported` (Partial fix.) Update ``MANIFEST.in`` so source
+  distributions include some missing project-management files (e.g. our
+  internal ``tasks.py``). This makes unpacked sdists more useful for things
+  like running the doc or build tasks.
+* :bug:`303` Make sure `~invoke.run` waits for its IO worker threads to cleanly
+  exit (such as allowing a ``finally`` block to revert TTY settings) when
+  ``KeyboardInterrupt`` (or similar) aborts execution in the main thread.
+  Thanks to Tony S Yu and Máté Farkas for the report.
+* :release:`0.12.1 <2016-02-03>`
+* :bug:`308` Earlier changes to TTY detection & its use in determining features
+  such as stdin pass-through, were insufficient to handle edge cases such as
+  nested Invoke sessions or piped stdin to Invoke processes. This manifested as
+  hangs and ``OSError`` messages about broken pipes.
+
+  The issue has been fixed by overhauling all related code to use more specific
+  and accurate checks (e.g. examining just ``fileno`` and/or just ``isatty``).
+
+  Thanks to Tuukka Mustonen and Máté Farkas for the report (and for enduring
+  the subsequent flood of the project maintainer's stream-of-consciousness
+  ticket updates).
+* :bug:`305` (also :issue:`306`) Fix up some test-suite issues causing failures
+  on Windows/Appveyor. Thanks to Paul Moore.
+* :bug:`289` Handful of issues, all fallout from :issue:`289`, which failed to
+  make it out the door for 0.12.0. More are on the way but these should address
+  blockers for some users:
+
+    * Windows support for the new stdin replication functionality (this was
+      totally blocking Windows users, as reported in :issue:`302` - sorry!);
+    * Stdin is now mirrored to stdout when no PTY is present, so you can see
+      what you're typing (plus a new `~invoke.runners.Runner.run` option and
+      config param, ``echo_stdin``, allowing user override of this behavior);
+    * Exposed the stdin read loop's sleep time as `Runner.input_sleep
+      <invoke.runners.Runner.input_sleep>`;
+    * Sped up some tests a bit.
+
+* :release:`0.12.0 <2016-01-12>`
+* :bug:`257 major` Fix a RecursionError under Python 3 due to lack of
+  ``__deepcopy__`` on `~invoke.tasks.Call` objects. Thanks to Markus
+  Zapke-Gründemann for initial report and Máté Farkas for the patch.
+* :support:`265` Update our Travis config to select its newer build
+  infrastructure and also run on PyPy3. Thanks to Omer Katz.
+* :support:`254` Add an ``exclude`` option in our ``setup.py`` so setuptools
+  doesn't try loading our vendored PyYAML's Python 2 sub-package under Python 3
+  (or vice versa - though all reports were from Python 3 users). Thanks to
+  ``@yoshiya0503`` for catch & initial patch.
+* :feature:`68` Disable Python's bytecode caching by default, as it complicates
+  our typical use case (frequently-changing .py files) and offers little
+  benefit for human-facing startup times. Bytecode caching can be explicitly
+  re-enabled by specifying ``--write-pyc`` at runtime. Thanks to Jochen Breuer
+  for feature request and ``@brutus`` for initial patchset.
+* :support:`144` Add code-coverage reporting to our CI builds (albeit `CodeCov
+  <https://codecov.io>`_ instead of `coveralls.io <https://coveralls.io>`_).
+  Includes rejiggering our project-specific coverage-generating tasks. Thanks
+  to David Baumgold for the original request/PR and to Justin Abrahms for the
+  tipoff re: CodeCov.
+* :bug:`297 major` Ignore leading and trailing underscores when turning task
+  arguments into CLI flag names.
+* :bug:`296 major` Don't mutate ``sys.path`` on collection load if task's
+  parent directory is already on ``sys.path``.
+* :bug:`295 major` Make sure that `~invoke.run`'s ``hide=True`` also disables
+  echoing. Otherwise, "hidden" helper ``run`` calls will still pollute output
+  when run as e.g. ``invoke --echo ...``.
+* :feature:`289` (also :issue:`263`) Implement :ref:`autoresponding
+  <autoresponding>` for `~invoke.run`.
+* :support:`-` Removed official Python 3.2 support; sibling projects also did
+  this recently, it's simply not worth the annoyance given the userbase size.
 * :feature:`228` (partial) Modified and expanded implementation of
   `~invoke.executor.Executor`, `~invoke.tasks.Task` and `~invoke.tasks.Call` to
   make implementing task parameterization easier.
@@ -30,8 +227,8 @@ Changelog
 * :release:`0.11.1 <2015-09-07>`
 * :support:`- backported` Fix incorrect changelog URL in package metadata.
 * :release:`0.11.0 <2015-09-07>`
-* :feature:`-` Create `invoke.runners.Result.command` to preserve the command
-  executed for post-execution introspection.
+* :feature:`-` Add a ``.command`` attribute to `~invoke.runners.Result` to
+  preserve the command executed for post-execution introspection.
 * :feature:`-` Detect local controlling terminal size
   (`~invoke.platform.pty_size`) and apply that information when creating
   pseudoterminals in `~invoke.run` when ``pty=True``.

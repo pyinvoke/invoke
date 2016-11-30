@@ -45,7 +45,7 @@ First, as with any distinct Python package providing CLI
 .. note::
     This is not a fully valid ``setup.py``; if you don't know how Python
     packaging works, a good starting place is `the Python Packaging User's
-    Guide <https://python-packaging-user-guide.readthedocs.org/en/latest/>`_.
+    Guide <https://python-packaging-user-guide.readthedocs.io/en/latest/>`_.
 
 Nothing here is specific to Invoke - it's a standard way of telling Python to
 install a ``tester`` script that executes the ``run`` method of a ``program``
@@ -96,11 +96,11 @@ like)::
     from invoke import task
 
     @task
-    def unit():
+    def unit(ctx):
         print("Running unit tests!")
 
     @task
-    def integration():
+    def integration(ctx):
         print("Running integration tests!")
 
 As described in :doc:`/concepts/namespaces`, you can arrange this module

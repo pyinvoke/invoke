@@ -10,7 +10,9 @@ from .config import Config
 from .loader import FilesystemLoader
 from .parser import Parser, ParserContext, Argument
 from .executor import Executor
-from .exceptions import Failure, CollectionNotFound, ParseError, Exit
+from .exceptions import (
+    UnexpectedExit, CollectionNotFound, ParseError, Exit,
+)
 from .util import debug, enable_logging, sort_names
 from .platform import pty_size
 
@@ -43,6 +45,12 @@ class Program(object):
                 kind=bool,
                 default=False,
                 help="Enable debug output.",
+            ),
+            Argument(
+                names=('write-pyc',),
+                kind=bool,
+                default=False,
+                help="Enable creation of .pyc files.",
             ),
             Argument(
                 names=('echo', 'e'),
@@ -262,14 +270,14 @@ class Program(object):
         try:
             self._parse(argv)
             self.execute()
-        except (Failure, Exit, ParseError) as e:
+        except (UnexpectedExit, Exit, ParseError) as e:
             debug("Received a possibly-skippable exception: {0!r}".format(e))
             # Print error message from parser if necessary.
             if isinstance(e, ParseError):
                 sys.stderr.write("{0}\n".format(e))
             # Terminate execution unless we were told not to.
             if exit:
-                if isinstance(e, Failure):
+                if isinstance(e, UnexpectedExit):
                     code = e.result.exited
                 elif isinstance(e, Exit):
                     code = e.code
@@ -278,6 +286,8 @@ class Program(object):
                 sys.exit(code)
             else:
                 debug("Invoked as run(..., exit=False), ignoring exception")
+        except KeyboardInterrupt:
+            sys.exit(1) # Same behavior as Python itself outside of REPL
 
     def _parse(self, argv):
         debug("argv given to Program.run: {0!r}".format(argv))
@@ -286,6 +296,9 @@ class Program(object):
         # Obtain core args (sets self.core)
         self.parse_core_args()
         debug("Finished parsing core args")
+
+        # Set interpreter bytecode-writing flag
+        sys.dont_write_bytecode = not self.args['write-pyc'].value
 
         # Enable debugging from here on out, if debug flag was given.
         # (Prior to this point, debugging requires setting INVOKE_DEBUG).

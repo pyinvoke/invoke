@@ -47,7 +47,8 @@ class Loader(object):
             # Ensure containing directory is on sys.path in case the module
             # being imported is trying to load local-to-it names.
             parent = os.path.dirname(path)
-            sys.path.insert(0, parent)
+            if parent not in sys.path:
+                sys.path.insert(0, parent)
             # Actual import
             module = imp.load_module(name, fd, path, desc)
             # Make a collection from it, and done

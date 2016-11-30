@@ -7,3 +7,4 @@ dist/
 *.py[cod]
 src/
 htmlcov
+coverage.xml

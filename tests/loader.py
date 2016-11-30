@@ -1,5 +1,6 @@
 import imp
 import os
+import sys
 
 from spec import Spec, eq_, raises
 
@@ -26,6 +27,13 @@ class Loader_(Spec):
     def adds_module_parent_dir_to_sys_path(self):
         # Crummy doesn't-explode test.
         _BasicLoader().load('namespacing')
+
+    def doesnt_dupliate_parent_dir_addition(self):
+        _BasicLoader().load('namespacing')
+        _BasicLoader().load('namespacing')
+        # If the bug is present, this will be 2 at least (and often more, since
+        # other tests will pollute it (!).
+        eq_(sys.path.count(support), 1)
 
     def closes_opened_file_object(self):
         loader = _BasicLoader()

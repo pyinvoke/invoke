@@ -1,7 +1,6 @@
 import copy
 import json
 import os
-import sys
 from os.path import join, splitext, expanduser
 
 from .vendor import six
@@ -10,8 +9,11 @@ if six.PY3:
 else:
     from .vendor import yaml2 as yaml
 
-if sys.version_info[:2] >= (3, 3):
-    from importlib.machinery import SourceFileLoader
+if six.PY3:
+    try:
+        from importlib.machinery import SourceFileLoader
+    except ImportError: # PyPy3
+        from importlib._bootstrap import _SourceFileLoader as SourceFileLoader
     def load_source(name, path):
         if not os.path.exists(path):
             return {}
@@ -32,6 +34,9 @@ from .platform import WINDOWS
 class DataProxy(object):
     """
     Helper class implementing nested dict+attr access for `.Config`.
+
+    Specifically, is used both for `.Config` itself, and to wrap any other
+    dicts assigned as config values (recursively).
     """
 
     # Attributes which get proxied through to inner etc.Config obj.
@@ -65,6 +70,10 @@ class DataProxy(object):
         return obj
 
     def __getattr__(self, key):
+        # NOTE: due to default Python attribute-lookup semantics, "real"
+        # attributes will always be yielded on attribute access and this method
+        # is skipped. This behavior is good for us (it's more intuitive than
+        # having a config key accidentally shadow a real attribute or method).
         try:
             return self._get(key)
         except KeyError:
@@ -80,8 +89,24 @@ class DataProxy(object):
             err += "\n\nValid real attributes: {0!r}".format(attrs)
             raise AttributeError(err)
 
-    def __hasattr__(self, key):
-        return key in self.config or key in self._proxies
+    def __setattr__(self, key, value):
+        # NOTE: we explicitly try to check for 'key' being a "real" attribute
+        # or method up front, to avoid shadowing. (This isn't necessary up in
+        # __getattr__; see its own NOTE comment.)
+        has_real_attr = key in self.__dict__ or key in type(self).__dict__
+        # No obvious real attribute: look in our config.
+        # Need to make sure we test whether we even have .config yet before we
+        # try looking within it; also can't __setattr__ .config itself under
+        # Python 3.
+        if (
+            not has_real_attr
+            and key != 'config'
+            and hasattr(self, 'config')
+            and key in self.config
+        ):
+            self.config[key] = value
+        else:
+            super(DataProxy, self).__setattr__(key, value)
 
     def __iter__(self):
         # For some reason Python is ignoring our __hasattr__ when determining
@@ -214,14 +239,26 @@ class Config(DataProxy):
             'run': {
                 'warn': False,
                 'hide': None,
+                'shell': '/bin/bash',
                 'pty': False,
                 'fallback': True,
+                'env': {},
+                'replace_env': False,
                 'echo': False,
                 'encoding': None,
                 'out_stream': None,
                 'err_stream': None,
+                'in_stream': None,
+                'watchers': [],
+                'echo_stdin': None,
             },
-            'tasks': {'dedupe': True},
+            'sudo': {
+                'prompt': "[sudo] password: ",
+                'password': None,
+            },
+            'tasks': {
+                'dedupe': True,
+            },
         }
 
     def __init__(
@@ -278,12 +315,12 @@ class Config(DataProxy):
             be a full file path to an existing file, not a directory path, or a
             prefix.
         """
-        # Config file suffixes to search, in preference order.
-        self._file_suffixes = ('yaml', 'json', 'py')
-
         # Technically an implementation detail - do not expose in public API.
         # Stores merged configs and is accessed via DataProxy.
         self.config = {}
+
+        # Config file suffixes to search, in preference order.
+        self._file_suffixes = ('yaml', 'json', 'py')
 
         #: Default configuration values, typically a copy of
         #: `global_defaults`.
@@ -398,7 +435,7 @@ class Config(DataProxy):
         loaded/merged data, but will be a distinct object with no shared
         mutable state.
         """
-        new = Config()
+        new = self.__class__()
         for name in """
             defaults
             collection

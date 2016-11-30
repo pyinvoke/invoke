@@ -2,7 +2,7 @@ from spec import Spec, skip, eq_, raises, ok_
 from mock import Mock
 
 from invoke.context import Context
-from invoke.tasks import task, ctask, Task, Call
+from invoke.tasks import task, Task, Call
 from invoke.loader import FilesystemLoader as Loader
 
 from _util import support
@@ -14,7 +14,7 @@ from _util import support
 # both Task and @task. Meh :)
 #
 
-def _func():
+def _func(ctx):
     pass
 
 class task_(Spec):
@@ -25,7 +25,7 @@ class task_(Spec):
         self.vanilla = self.loader.load('decorator')
 
     def allows_access_to_wrapped_object(self):
-        def lolcats():
+        def lolcats(ctx):
             pass
         eq_(task(lolcats).body, lolcats)
 
@@ -64,67 +64,49 @@ class task_(Spec):
         eq_(self.vanilla['implicit_positionals'].positional, ['pos1', 'pos2'])
 
     def context_arguments_should_not_appear_in_implicit_positional_list(self):
-        @ctask
+        @task
         def mytask(ctx):
             pass
         eq_(len(mytask.positional), 0)
 
     def pre_tasks_stored_directly(self):
         @task
-        def whatever():
+        def whatever(ctx):
             pass
         @task(pre=[whatever])
-        def func():
+        def func(ctx):
             pass
         eq_(func.pre, [whatever])
 
     def allows_star_args_as_shortcut_for_pre(self):
         @task
-        def pre1():
+        def pre1(ctx):
             pass
         @task
-        def pre2():
+        def pre2(ctx):
             pass
         @task(pre1, pre2)
-        def func():
+        def func(ctx):
             pass
         eq_(func.pre, (pre1, pre2))
 
     @raises(TypeError)
     def disallows_ambiguity_between_star_args_and_pre_kwarg(self):
         @task
-        def pre1():
+        def pre1(ctx):
             pass
         @task
-        def pre2():
+        def pre2(ctx):
             pass
         @task(pre1, pre=[pre2])
-        def func():
+        def func(ctx):
             pass
-
-    def passes_in_contextualized_kwarg(self):
-        @task
-        def task1():
-            pass
-        @task(contextualized=True)
-        def task2(ctx):
-            pass
-        assert not task1.contextualized
-        assert task2.contextualized
 
     def sets_name(self):
         @task(name='foo')
-        def bar():
+        def bar(ctx):
             pass
         eq_(bar.name, 'foo')
-
-
-class ctask_(Spec):
-    def behaves_like_task_with_contextualized_True(self):
-        @ctask
-        def mytask(ctx):
-            pass
-        assert mytask.contextualized
 
 
 class Task_(Spec):
@@ -146,9 +128,6 @@ class Task_(Spec):
         def has_default_flag(self):
             eq_(Task(_func).is_default, False)
 
-        def has_contextualized_flag(self):
-            eq_(Task(_func).contextualized, False)
-
         def name_defaults_to_body_name(self):
             eq_(Task(_func).name, '_func')
 
@@ -158,27 +137,35 @@ class Task_(Spec):
     class callability:
         def setup(self):
             @task
-            def foo():
+            def foo(ctx):
                 "My docstring"
                 return 5
             self.task = foo
 
         def dunder_call_wraps_body_call(self):
-            eq_(self.task(), 5)
+            context = Context()
+            eq_(self.task(context), 5)
 
         @raises(TypeError)
-        def errors_if_contextualized_and_first_arg_not_Context(self):
-            @ctask
+        def errors_if_first_arg_not_Context(self):
+            @task
             def mytask(ctx):
                 pass
             mytask(5)
 
+        @raises(TypeError)
+        def errors_if_no_first_arg_at_all(self):
+            @task
+            def mytask():
+                pass
+
         def tracks_times_called(self):
+            context = Context()
             eq_(self.task.called, False)
-            self.task()
+            self.task(context)
             eq_(self.task.called, True)
             eq_(self.task.times_called, 1)
-            self.task()
+            self.task(context)
             eq_(self.task.times_called, 2)
 
         def wraps_body_docstring(self):
@@ -190,7 +177,7 @@ class Task_(Spec):
     class get_arguments:
         def setup(self):
             @task(positional=['arg_3', 'arg1'], optional=['arg1'])
-            def mytask(arg1, arg2=False, arg_3=5):
+            def mytask(ctx, arg1, arg2=False, arg_3=5):
                 pass
             self.task = mytask
             self.args = self.task.get_arguments()
@@ -250,7 +237,7 @@ class Task_(Spec):
 
         def autocreated_short_flags_can_be_disabled(self):
             @task(auto_shortflags=False)
-            def mytask(arg):
+            def mytask(ctx, arg):
                 pass
             args = self._task_to_dict(mytask)
             assert 'a' not in args
@@ -259,7 +246,7 @@ class Task_(Spec):
         def autocreated_shortflags_dont_collide(self):
             "auto-created short flags don't collide"
             @task
-            def mytask(arg1, arg2, barg):
+            def mytask(ctx, arg1, arg2, barg):
                 pass
             args = self._task_to_dict(mytask)
             assert 'a' in args
@@ -273,7 +260,7 @@ class Task_(Spec):
             # I.e. "task --foo -f" => --foo should NOT get to pick '-f' for its
             # shortflag or '-f' is totally fucked.
             @task
-            def mytask(longarg, l):
+            def mytask(ctx, longarg, l):
                 pass
             args = self._task_to_dict(mytask)
             assert 'longarg' in args
@@ -282,14 +269,14 @@ class Task_(Spec):
             assert 'l' in args
 
         def context_arguments_are_not_returned(self):
-            @ctask
+            @task
             def mytask(ctx):
                 pass
             eq_(len(mytask.get_arguments()), 0)
 
         def underscores_become_dashes(self):
             @task
-            def mytask(longer_arg):
+            def mytask(ctx, longer_arg):
                 pass
             arg = mytask.get_arguments()[0]
             eq_(arg.names, ('longer-arg', 'l'))

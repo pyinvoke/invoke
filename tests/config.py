@@ -118,7 +118,7 @@ class Config_(IntegrationSpec):
                 expected = """
 No attribute or config key found for 'nope'
 
-Valid keys: ['run', 'tasks']
+Valid keys: ['run', 'sudo', 'tasks']
 
 Valid real attributes: ['clone', 'from_data', 'global_defaults', 'load_collection', 'load_files', 'load_shell_env', 'merge', 'paths']
 """.strip() # noqa
@@ -174,6 +174,43 @@ Valid real attributes: ['clone', 'from_data', 'global_defaults', 'load_collectio
             c.update({'foo': 'bar'})
             eq_(c['foo'], 'bar')
 
+        def supports_mutation_via_attribute_access(self):
+            c = Config({'foo': 'bar'})
+            eq_(c.foo, 'bar')
+            c.foo = 'notbar'
+            eq_(c.foo, 'notbar')
+
+        def supports_nested_mutation_via_attribute_access(self):
+            c = Config({'foo': {'bar': 'biz'}})
+            eq_(c.foo.bar, 'biz')
+            c.foo.bar = 'notbiz'
+            eq_(c.foo.bar, 'notbiz')
+
+        def real_attrs_and_methods_win_over_attr_proxying(self):
+            # Setup
+            class MyConfig(Config):
+                myattr = None
+                def mymethod(self):
+                    return 7
+            c = MyConfig({'myattr': 'foo', 'mymethod': 'bar'})
+            # By default, attr and config value separate
+            eq_(c.myattr, None)
+            eq_(c['myattr'], 'foo')
+            # After a setattr, same holds true
+            c.myattr = 'notfoo'
+            eq_(c.myattr, 'notfoo')
+            eq_(c['myattr'], 'foo')
+            # Method and config value separate
+            ok_(callable(c.mymethod))
+            eq_(c.mymethod(), 7)
+            eq_(c['mymethod'], 'bar')
+            # And same after setattr
+            def monkeys():
+                return 13
+            c.mymethod = monkeys
+            eq_(c.mymethod(), 13)
+            eq_(c['mymethod'], 'bar')
+
         def string_display(self):
             "__str__ and friends"
             config = Config({'foo': 'bar'})
@@ -206,7 +243,7 @@ Valid real attributes: ['clone', 'from_data', 'global_defaults', 'load_collectio
             c = Config()
             eq_(c._project_path, None)
             eq_(list(c._project.keys()), [])
-            eq_(set(c.keys()), set(['tasks', 'run'])) # defaults only
+            eq_(set(c.keys()), set(['tasks', 'run', 'sudo'])) # defaults only
 
         def honors_conf_file_flag(self):
             c = Config(runtime_path=join(CONFIGS_PATH, 'yaml', 'invoke.yaml'))
@@ -563,3 +600,12 @@ Valid real attributes: ['clone', 'from_data', 'global_defaults', 'load_collectio
             c.load_shell_env()
             c2 = c.clone()
             eq_(c2.foo, 'bar')
+
+        def works_correctly_when_subclassed(self):
+            # Because sometimes, implementation #1 is really naive!
+            class MyConfig(Config):
+                pass
+            c = MyConfig()
+            ok_(isinstance(c, MyConfig)) # sanity
+            c2 = c.clone()
+            ok_(isinstance(c2, MyConfig)) # actual test

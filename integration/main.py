@@ -1,11 +1,16 @@
+import io
 import os
 import sys
 
 from spec import Spec, trap, eq_, skip, ok_
 
+from invoke.vendor import six
+
 from invoke import run
 from invoke._version import __version__
 from invoke.platform import WINDOWS
+
+from _util import only_utf8
 
 
 def _output_eq(cmd, expected):
@@ -77,25 +82,33 @@ class Main(Spec):
         skip()
 
     class funky_characters_in_stdout:
+        def setup(self):
+            class BadlyBehavedStdout(io.TextIOBase):
+                def write(self, data):
+                    if six.PY2 and not isinstance(data, six.binary_type):
+                        data.encode('ascii')
+            self.bad_stdout = BadlyBehavedStdout()
+
+        @only_utf8
         def basic_nonstandard_characters(self):
             os.chdir('_support')
             # Crummy "doesn't explode with decode errors" test
-            if WINDOWS:
-                cmd = "type tree.out"
-            else:
-                cmd = "cat tree.out"
-            run(cmd, hide='both')
+            cmd = ("type" if WINDOWS else "cat") + " tree.out"
+            run(cmd, hide='stderr', out_stream=self.bad_stdout)
 
+        @only_utf8
         def nonprinting_bytes(self):
             # Seriously non-printing characters (i.e. non UTF8) also don't
-            # asplode
-            run("echo '\xff'", hide='both')
+            # asplode (they would print as escapes normally, but still)
+            run("echo '\xff'", hide='stderr', out_stream=self.bad_stdout)
 
+        @only_utf8
         def nonprinting_bytes_pty(self):
             if WINDOWS:
                 return
             # PTY use adds another utf-8 decode spot which can also fail.
-            run("echo '\xff'", pty=True, hide='both')
+            run("echo '\xff'", pty=True, hide='stderr',
+                out_stream=self.bad_stdout)
 
     def pty_puts_both_streams_in_stdout(self):
         if WINDOWS:
@@ -126,8 +139,4 @@ class Main(Spec):
         size = run('stty size', hide=True, pty=True).stdout.strip()
         assert size != ""
         assert size != "0 0"
-        # Apparently true-headless execution like Travis does that!
-        if os.environ.get('TRAVIS', False):
-            assert size == "24 80"
-        else:
-            assert size != "24 80"
+        assert size != "24 80"

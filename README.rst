@@ -1,4 +1,4 @@
-Invoke is a Python (2.6+ and 3.2+) task execution tool & library, drawing
+Invoke is a Python (2.6+ and 3.3+) task execution tool & library, drawing
 inspiration from various sources to arrive at a powerful & clean feature set.
 
 * Like Ruby's Rake tool and Invoke's own predecessor Fabric 1.x, it provides a
@@ -7,10 +7,10 @@ inspiration from various sources to arrive at a powerful & clean feature set.
 
   .. code-block:: python
 
-    from invoke import run, task
+    from invoke import task
 
     @task
-    def clean(docs=False, bytecode=False, extra=''):
+    def clean(ctx, docs=False, bytecode=False, extra=''):
         patterns = ['build']
         if docs:
             patterns.append('docs/_build')
@@ -19,13 +19,13 @@ inspiration from various sources to arrive at a powerful & clean feature set.
         if extra:
             patterns.append(extra)
         for pattern in patterns:
-            run("rm -rf %s" % pattern)
+            ctx.run("rm -rf %s" % pattern)
 
     @task
-    def build(docs=False):
-        run("python setup.py build")
+    def build(ctx, docs=False):
+        ctx.run("python setup.py build")
         if docs:
-            run("sphinx-build docs docs/_build")
+            ctx.run("sphinx-build docs docs/_build")
 
 * From GNU Make, it inherits an emphasis on minimal boilerplate for common
   patterns and the ability to run multiple tasks in a single invocation::
@@ -47,6 +47,5 @@ For documentation, including detailed installation information, please see
 http://pyinvoke.org. Post-install usage information may be found in ``invoke
 --help``.
 
-You can install the `development version
-<https://github.com/pyinvoke/invoke/tarball/master#egg=invoke-dev>`_ via ``pip
-install invoke==dev --allow-unverified invoke``.
+You can install the development version via ``pip install -e
+git+https://github.com/pyinvoke/invoke#egg=invoke``.

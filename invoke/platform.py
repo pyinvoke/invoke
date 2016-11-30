@@ -5,7 +5,14 @@ This is its own module to abstract away what would otherwise be distracting
 logic-flow interruptions.
 """
 
+from contextlib import contextmanager
+import select
 import sys
+
+# TODO: move in here? They're currently platform-agnostic...
+from .util import has_fileno, isatty
+
+
 WINDOWS = (sys.platform == 'win32')
 """
 Whether or not the current platform appears to be Windows in nature.
@@ -14,6 +21,16 @@ Note that Cygwin's Python is actually close enough to "real" UNIXes that it
 doesn't need (or want!) to use PyWin32 -- so we only test for literal Win32
 setups (vanilla Python, ActiveState etc) here.
 """
+
+if WINDOWS:
+    import msvcrt
+    from ctypes import Structure, c_ushort, windll, POINTER, byref
+    from ctypes.wintypes import HANDLE, _COORD, _SMALL_RECT
+else:
+    import fcntl
+    import struct
+    import termios
+    import tty
 
 
 def pty_size():
@@ -33,38 +50,33 @@ def _pty_size():
     """
     Suitable for most POSIX platforms.
     """
-    import fcntl
-    import struct
-    import termios
-
     # Sentinel values to be replaced w/ defaults by caller
     size = (None, None)
-    # Can only get useful values from real TTYs
-    if sys.stdout.isatty():
-        # We want two short unsigned integers (rows, cols)
-        fmt = 'HH'
-        # Create an empty (zeroed) buffer for ioctl to map onto. Yay for C!
-        buf = struct.pack(fmt, 0, 0)
-        # Call TIOCGWINSZ to get window size of stdout, returns our filled
-        # buffer
-        try:
-            result = fcntl.ioctl(sys.stdout.fileno(), termios.TIOCGWINSZ, buf)
-            # Unpack buffer back into Python data types
-            # NOTE: this unpack gives us rows x cols, but we return the
-            # inverse.
-            rows, cols = struct.unpack(fmt, result)
-            return (cols, rows)
-        # Deal with e.g. sys.stdout being monkeypatched, such as in testing.
-        # Or termios not having a TIOCGWINSZ.
-        except AttributeError:
-            pass
+    # We want two short unsigned integers (rows, cols)
+    fmt = 'HH'
+    # Create an empty (zeroed) buffer for ioctl to map onto. Yay for C!
+    buf = struct.pack(fmt, 0, 0)
+    # Call TIOCGWINSZ to get window size of stdout, returns our filled
+    # buffer
+    try:
+        result = fcntl.ioctl(sys.stdout, termios.TIOCGWINSZ, buf)
+        # Unpack buffer back into Python data types
+        # NOTE: this unpack gives us rows x cols, but we return the
+        # inverse.
+        rows, cols = struct.unpack(fmt, result)
+        return (cols, rows)
+    # Fallback to emptyish return value in various failure cases:
+    # * sys.stdout being monkeypatched, such as in testing, and lacking .fileno
+    # * sys.stdout having a .fileno but not actually being attached to a TTY
+    # * termios not having a TIOCGWINSZ attribute (happens sometimes...)
+    # * other situations where ioctl doesn't explode but the result isn't
+    #   something unpack can deal with
+    except (struct.error, TypeError, IOError, AttributeError):
+        pass
     return size
 
 
 def _win_pty_size():
-    from ctypes import Structure, c_ushort, windll, POINTER, byref
-    from ctypes.wintypes import HANDLE, _COORD, _SMALL_RECT
-
     class CONSOLE_SCREEN_BUFFER_INFO(Structure):
         _fields_ = [
             ('dwSize', _COORD),
@@ -91,3 +103,60 @@ def _win_pty_size():
         return sizex, sizey
     else:
         return (None, None)
+
+
+@contextmanager
+def character_buffered(stream):
+    """
+    Force local terminal ``stream`` be character, not line, buffered.
+
+    Only applies to Unix-based systems; on Windows this is a no-op.
+    """
+    if WINDOWS or not isatty(stream):
+        yield
+    else:
+        old_settings = termios.tcgetattr(stream)
+        tty.setcbreak(stream)
+        try:
+            yield
+        finally:
+            termios.tcsetattr(stream, termios.TCSADRAIN, old_settings)
+
+
+def ready_for_reading(input_):
+    """
+    Test ``input_`` to determine whether a read action will succeed.
+
+    :param input_: Input stream object (file-like).
+
+    :returns: ``True`` if a read should succeed, ``False`` otherwise.
+    """
+    # A "real" terminal stdin needs select/kbhit to tell us when it's ready for
+    # a nonblocking read().
+    # Otherwise, assume a "safer" file-like object that can be read from in a
+    # nonblocking fashion (e.g. a StringIO or regular file).
+    if not has_fileno(input_):
+        return True
+    if WINDOWS:
+        return msvcrt.kbhit()
+    else:
+        reads, _, _ = select.select([input_], [], [], 0.0)
+        return bool(reads and reads[0] is input_)
+
+
+def bytes_to_read(input_):
+    """
+    Query stream ``input_`` to see how many bytes may be readable.
+
+    .. note::
+        If we are unable to tell (e.g. if ``input_`` isn't a true file
+        descriptor) we fall back to suggesting reading 1 byte only.
+
+    :param input: Input stream object (file-like).
+
+    :returns: `int` number of bytes to read.
+    """
+    # TODO: probably also 'or WINDOWS'
+    if not has_fileno(input_):
+        return 1
+    return struct.unpack('h', fcntl.ioctl(input_, termios.FIONREAD, "  "))[0]

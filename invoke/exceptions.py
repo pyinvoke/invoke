@@ -23,30 +23,69 @@ class Failure(Exception):
     """
     Exception subclass representing failure of a command execution.
 
-    It exhibits a ``result`` attribute containing the related `.Result` object,
-    whose attributes may be inspected to determine why the command failed.
-    """
-    def __init__(self, result):
-        self.result = result
+    "Failure" may mean the command executed and the shell indicated an unusual
+    result (usually, a non-zero exit code), or it may mean something else, like
+    a ``sudo`` command which was aborted when the supplied password failed
+    authentication.
 
+    Two attributes allow introspection to determine the nature of the problem:
+
+    * ``result``: a `.Result` instance with info about the command being
+      executed and, if it ran to completion, how it exited.
+    * ``reason``: ``None``, if the command finished; or an exception instance
+      if e.g. a `.StreamWatcher` raised `WatcherError`.
+
+    This class is only rarely raised by itself; most of the time `.Runner.run`
+    (or a wrapper of same, such as `.Context.sudo`) will raise a specific
+    subclass like `UnexpectedExit` or `AuthFailure`.
+    """
+    def __init__(self, result, reason=None):
+        self.result = result
+        self.reason = reason
+
+    def __repr__(self):
+        return str(self)
+
+
+class UnexpectedExit(Failure):
+    """
+    A shell command ran to completion but exited with an unexpected exit code.
+    """
     def __str__(self):
         err_label = "Stderr"
         err_text = self.result.stderr
         if self.result.pty:
             err_label = "Stdout (pty=True; no stderr possible)"
             err_text = self.result.stdout
-        return """Command execution failure!
+        return """Encountered a bad command exit code!
 
-Exit code: {0}
+Command: {0!r}
 
-{1}:
+Exit code: {1}
 
-{2}
+{2}:
 
-""".format(self.result.exited, err_label, err_text)
+{3}
 
-    def __repr__(self):
-        return str(self)
+""".format(self.result.command, self.result.exited, err_label, err_text)
+
+
+class AuthFailure(Failure):
+    """
+    An authentication failure, e.g. due to an incorrect ``sudo`` password.
+
+    .. note::
+        `.Result` objects attached to these exceptions typically lack exit code
+        information, since the command was never fully executed - the exception
+        was raised instead.
+    """
+    def __init__(self, result, prompt):
+        self.result = result
+        self.prompt = prompt
+
+    def __str__(self):
+        err = "The password submitted to prompt {0!r} was rejected."
+        return err.format(self.prompt)
 
 
 class ParseError(Exception):
@@ -107,6 +146,9 @@ class UnknownFileType(Exception):
 
 
 #: A namedtuple wrapping a thread-borne exception & that thread's arguments.
+#: Mostly used as an intermediate between `.ExceptionHandlingThread` (which
+#: preserves initial exceptions) and `.ThreadException` (which holds 1..N such
+#: exceptions, as typically multiple threads are involved.)
 ExceptionWrapper = namedtuple(
     'ExceptionWrapper',
     'kwargs type value traceback'
@@ -181,3 +223,28 @@ Saw {0} exceptions within threads ({1}):
 
 {2}
 """.format(*args)
+
+
+class WatcherError(Exception):
+    """
+    Generic parent exception class for `.StreamWatcher`-related errors.
+
+    Typically, one of these exceptions indicates a `.StreamWatcher` noticed
+    something anomalous in an output stream, such as an authentication response
+    failure.
+
+    `.Runner` catches these and attaches them to `.Failure` exceptions so they
+    can be referenced by intermediate code and/or act as extra info for end
+    users.
+    """
+    pass
+
+
+class ResponseNotAccepted(WatcherError):
+    """
+    A responder/watcher class noticed a 'bad' response to its submission.
+
+    Mostly used by `.FailingResponder` and subclasses, e.g. "oh dear I
+    autosubmitted a sudo password and it was incorrect."
+    """
+    pass

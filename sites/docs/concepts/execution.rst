@@ -18,7 +18,7 @@ Base case
 In the simplest case, a task with no pre- or post-tasks runs one time. Example::
 
     @task
-    def hello():
+    def hello(ctx):
         print("Hello, world!")
 
 Execution::
@@ -35,15 +35,15 @@ Tasks that should always have another task executed before or after them, may
 use the ``@task`` deocator's ``pre`` and/or ``post`` kwargs, like so::
 
     @task
-    def clean():
+    def clean(ctx):
         print("Cleaning")
 
     @task
-    def publish():
+    def publish(ctx):
         print("Publishing")
 
     @task(pre=[clean], post=[publish])
-    def build():
+    def build(ctx):
         print("Building")
 
 Execution::
@@ -59,11 +59,11 @@ build systems like ``make``. E.g. we could present part of the above example
 as::
 
     @task
-    def clean():
+    def clean(ctx):
         print("Cleaning")
 
     @task(clean)
-    def build():
+    def build(ctx):
         print("Building")
 
 As before, ``invoke build`` would cause ``clean`` to run, then ``build``.
@@ -76,27 +76,27 @@ pre-tasks of post-tasks, etc) in a depth-first manner, recursively. Here's a
 more complex (if slightly contrived) tasks file::
 
     @task
-    def clean_html():
+    def clean_html(ctx):
         print("Cleaning HTML")
 
     @task
-    def clean_tgz():
+    def clean_tgz(ctx):
         print("Cleaning .tar.gz files")
 
     @task(clean_html, clean_tgz)
-    def clean():
+    def clean(ctx):
         print("Cleaned everything")
 
     @task
-    def makedirs():
+    def makedirs(ctx):
         print("Making directories")
 
     @task(clean, makedirs)
-    def build():
+    def build(ctx):
         print("Building")
 
     @task(build)
-    def deploy():
+    def deploy(ctx):
         print("Deploying")
 
 With a depth-first behavior, the below is hopefully intuitive to most users::
@@ -121,12 +121,12 @@ can wrap the task objects with `~.tasks.call` objects which allow you to
 specify a call signature::
 
     @task
-    def clean(which=None):
+    def clean(ctx, which=None):
         which = which or 'pyc'
         print("Cleaning {0}".format(which))
 
     @task(pre=[call(clean, which='all')]) # or call(clean, 'all')
-    def build():
+    def build(ctx):
         print("Building")
 
 Example output::
@@ -145,19 +145,19 @@ By default, any task that would run more than once during a session (due e.g.
 to inclusion in pre/post tasks), will only be run once. Example task file::
 
     @task
-    def clean():
+    def clean(ctx):
         print("Cleaning")
 
     @task(clean)
-    def build():
+    def build(ctx):
         print("Building")
 
     @task(build)
-    def package():
+    def package(ctx):
         print("Packaging")
 
 With deduplication turned off (see below), the above would execute ``clean`` ->
-``build`` -> ``build`` again -> ``package``. With duplication, the double
+``build`` -> ``build`` again -> ``package``. With deduplication, the double
 ``build`` does not occur::
 
     $ invoke build package
