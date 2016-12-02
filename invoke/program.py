@@ -272,7 +272,8 @@ class Program(object):
             self.execute()
         except (UnexpectedExit, Exit, ParseError) as e:
             debug("Received a possibly-skippable exception: {0!r}".format(e))
-            # Print error message from parser if necessary.
+            # Print error message from parser if necessary; prevents messy
+            # traceback but still clues interactive user into problems.
             if isinstance(e, ParseError):
                 sys.stderr.write("{0}\n".format(e))
             # Terminate execution unless we were told not to.
