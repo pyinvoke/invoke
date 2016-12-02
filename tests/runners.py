@@ -181,7 +181,7 @@ class Runner_(Spec):
             )
 
     class return_value:
-        def return_code_in_result(self):
+        def return_code(self):
             """
             Result has .return_code (and .exited) containing exit code int
             """
@@ -227,6 +227,11 @@ class Runner_(Spec):
 
         def shell_used(self):
             eq_(self._run(_).shell, '/bin/bash')
+
+        def hide_param_exposed_and_normalized(self):
+            eq_(self._run(_, hide=True).hide, ('out', 'err'))
+            eq_(self._run(_, hide=False).hide, tuple())
+            eq_(self._run(_, hide='stderr').hide, ('err',))
 
     class command_echoing:
         @trap

@@ -383,6 +383,7 @@ class Runner(object):
             stderr=stderr,
             exited=exited,
             pty=self.using_pty,
+            hide=opts['hide'],
         )
         # Any presence of WatcherError from the threads indicates a watcher was
         # upset and aborted execution; make a generic Failure out of it and
@@ -1049,6 +1050,17 @@ class Result(object):
         A boolean describing whether the subprocess was invoked with a pty or
         not; see `.Runner.run`.
 
+    :param tuple hide:
+        A tuple of stream names (none, one or both of ``('out', 'err')``) which
+        were hidden from the user when the generating command executed; this is
+        a normalized value derived from the ``hide`` parameter of
+        `.Runner.run`.
+
+        For example, ``run('command', hide='stdout')`` will yield a `Result`
+        where ``result.hide == ('out',)``; ``hide=True`` or ``hide='both'``
+        results in ``result.hide == ('out', 'err')``; and ``hide=False``
+        (the default) generates ``result.hide == ()`` (the empty tuple.)
+
     .. note::
         `Result` objects' truth evaluation is equivalent to their `.ok`
         attribute's value. Therefore, quick-and-dirty expressions like the
@@ -1072,6 +1084,7 @@ class Result(object):
         env=None,
         exited=0,
         pty=False,
+        hide=tuple(),
     ):
         self.stdout = stdout
         self.stderr = stderr
@@ -1080,6 +1093,7 @@ class Result(object):
         self.env = {} if env is None else env
         self.exited = exited
         self.pty = pty
+        self.hide = hide
 
     @property
     def return_code(self):

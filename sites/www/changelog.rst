@@ -2,6 +2,8 @@
 Changelog
 =========
 
+* :feature:`-` Expose the (normalized) value of `~invoke.runners.Runner.run`'s
+  ``hide`` parameter in its return-value `~invoke.runners.Result` objects.
 * :bug:`288` Address a bug preventing reuse of Invoke as a custom binstub, by
   moving ``--list`` into the "core args" set of flags present on all
   Invoke-derived binstubs. Thanks to Jordon Mears for catch & patch.
