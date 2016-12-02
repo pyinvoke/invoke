@@ -275,17 +275,34 @@ class Program_(IntegrationSpec):
 
         @trap
         @patch('invoke.program.sys.exit')
-        def expected_failure_types_dont_raise_exceptions(self, mock_exit):
-            "expected failure types don't raise exceptions"
-            for side_effect in (
-                UnexpectedExit(Result('meh', exited=1)),
-                ParseError("boo!"),
-            ):
-                p = Program()
-                p.execute = Mock(side_effect=side_effect)
-                p.run("myapp -c foo mytask") # valid task name for parse step
-                # Make sure we still exited fail-wise
-                mock_exit.assert_called_with(1)
+        def ParseErrors_display_message_and_exit_1(self, mock_exit):
+            p = Program()
+            # Run with a definitely-parser-angering incorrect input; the fact
+            # that this line doesn't raise an exception and thus fail the
+            # test, is what we're testing...
+            nah = 'nopenotvalidsorry'
+            p.run("myapp {0}".format(nah))
+            # Expect that we did print the core body of the ParseError (e.g.
+            # "no idea what foo is!") and exit 1. (Intent is to display that
+            # info w/o a full traceback, basically.)
+            eq_(sys.stderr.getvalue(), "No idea what '{0}' is!\n".format(nah))
+            mock_exit.assert_called_with(1)
+
+        @trap
+        @patch('invoke.program.sys.exit')
+        def UnexpectedExits_quietly_exit_with_result_exitcode(self, mock_exit):
+            p = Program()
+            oops = UnexpectedExit(Result('meh', exited=17))
+            p.execute = Mock(side_effect=oops)
+            # No exception here - the UnexpectedExit is not bubbling up
+            p.run("myapp -c foo mytask") # valid task name for parse step
+            # But we're exiting, and with the exit code of the subproc
+            mock_exit.assert_called_with(17)
+            p = Program()
+            oops = UnexpectedExit(Result('meh', exited=17))
+            p.execute = Mock(side_effect=oops)
+            p.run("myapp -c foo mytask") # valid task name for parse step
+            mock_exit.assert_called_with(17)
 
         def should_show_core_usage_on_core_parse_failures(self):
             skip()
