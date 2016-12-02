@@ -46,6 +46,7 @@ def load(name):
 class IntegrationSpec(Spec):
     def setup(self):
         self.old_environ = os.environ.copy()
+        self.old_modules = sys.modules.copy()
         os.chdir(support)
 
     def teardown(self):
@@ -54,6 +55,9 @@ class IntegrationSpec(Spec):
         # Nuke changes to environ
         os.environ.clear()
         os.environ.update(self.old_environ)
+        # Nuke changes to sys.modules; it's sticky and gets polluted as we
+        # load/import task modules, causing state bleed :(
+        sys.modules = self.old_modules
 
 
 @trap
