@@ -587,7 +587,8 @@ Available tasks:
         def _test_flag(self, flag, key, value=True):
             p = Program()
             p.execute = Mock() # neuter
-            p.run('inv {0} foo'.format(flag))
+            with cd('implicit'):
+                p.run('inv {0} foo'.format(flag))
             eq_(p.config.run[key], value)
 
         def warn_only(self):
@@ -609,7 +610,8 @@ Available tasks:
         @trap
         def config_class_init_kwarg_is_honored(self):
             klass = Mock()
-            Program(config_class=klass).run("myapp foo", exit=False)
+            with cd('implicit'):
+                Program(config_class=klass).run("myapp foo", exit=False)
             eq_(len(klass.call_args_list), 1) # don't care about actual args
 
         # NOTE: these tests all rely on the invoked tasks to perform the
