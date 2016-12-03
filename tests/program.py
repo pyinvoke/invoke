@@ -212,16 +212,14 @@ class Program_(IntegrationSpec):
     class execute:
         def uses_executor_class_given(self):
             klass = Mock()
-            with cd('implicit'):
-                Program(executor_class=klass).run("myapp foo", exit=False)
+            Program(executor_class=klass).run("myapp foo", exit=False)
             klass.assert_called_with(ANY, ANY, ANY)
             klass.return_value.execute.assert_called_with(ANY)
 
         def executor_is_given_access_to_core_args_and_remainder(self):
             klass = Mock()
-            with cd('implicit'):
-                cmd = "myapp -e foo -- myremainder"
-                Program(executor_class=klass).run(cmd, exit=False)
+            cmd = "myapp -e foo -- myremainder"
+            Program(executor_class=klass).run(cmd, exit=False)
             core = klass.call_args[0][2]
             eq_(core[0].args['echo'].value, True)
             eq_(core.remainder, "myremainder")
@@ -247,16 +245,14 @@ class Program_(IntegrationSpec):
         # for the parser's own unit tests).
 
         def seeks_and_loads_tasks_module_by_default(self):
-            with cd('implicit'):
-                expect('foo', out="Hm\n")
+            expect('foo', out="Hm\n")
 
         def does_not_seek_tasks_module_if_namespace_was_given(self):
-            with cd('implicit'):
-                expect(
-                    'foo',
-                    err="No idea what 'foo' is!\n",
-                    program=Program(namespace=Collection('blank'))
-                )
+            expect(
+                'foo',
+                err="No idea what 'foo' is!\n",
+                program=Program(namespace=Collection('blank'))
+            )
 
         def explicit_namespace_works_correctly(self):
             # Regression-ish test re #288
@@ -587,8 +583,7 @@ Available tasks:
         def _test_flag(self, flag, key, value=True):
             p = Program()
             p.execute = Mock() # neuter
-            with cd('implicit'):
-                p.run('inv {0} foo'.format(flag))
+            p.run('inv {0} foo'.format(flag))
             eq_(p.config.run[key], value)
 
         def warn_only(self):
@@ -610,8 +605,7 @@ Available tasks:
         @trap
         def config_class_init_kwarg_is_honored(self):
             klass = Mock()
-            with cd('implicit'):
-                Program(config_class=klass).run("myapp foo", exit=False)
+            Program(config_class=klass).run("myapp foo", exit=False)
             eq_(len(klass.call_args_list), 1) # don't care about actual args
 
         # NOTE: these tests all rely on the invoked tasks to perform the
