@@ -6,8 +6,8 @@ from mock import patch, Mock, ANY
 from spec import eq_, ok_, trap, skip, assert_contains, assert_not_contains
 
 from invoke import (
-    Program, Collection, ParseError, Task, FilesystemLoader, Executor, Context,
-    Config, UnexpectedExit, Result,
+    Program, Collection, Task, FilesystemLoader, Executor, Context, Config,
+    UnexpectedExit, Result,
 )
 from invoke import main
 from invoke.util import cd
