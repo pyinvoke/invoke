@@ -8,7 +8,7 @@ except ImportError:
 from contextlib import contextmanager
 from functools import wraps
 
-from invoke.vendor.six import BytesIO, b
+from invoke.vendor.six import BytesIO, b, iteritems
 
 from mock import patch, Mock
 from spec import trap, Spec, eq_, ok_, skip
@@ -45,8 +45,9 @@ def load(name):
 
 class IntegrationSpec(Spec):
     def setup(self):
+        # Preserve environment for later restore
         self.old_environ = os.environ.copy()
-        self.old_modules = sys.modules.copy()
+        # Always do things relative to tests/_support
         os.chdir(support)
 
     def teardown(self):
@@ -55,9 +56,13 @@ class IntegrationSpec(Spec):
         # Nuke changes to environ
         os.environ.clear()
         os.environ.update(self.old_environ)
-        # Nuke changes to sys.modules; it's sticky and gets polluted as we
-        # load/import task modules, causing state bleed :(
-        sys.modules = self.old_modules
+        # Strip any test-support task collections from sys.modules to prevent
+        # state bleed between tests; otherwise tests can incorrectly pass
+        # despite not explicitly loading/cd'ing to get the tasks they call
+        # loaded.
+        for name, module in iteritems(sys.modules.copy()):
+            if module and support in getattr(module, '__file__', ''):
+                del sys.modules[name]
 
 
 @trap
