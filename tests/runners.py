@@ -527,27 +527,32 @@ class Runner_(Spec):
                 else:
                     assert False, "Failed to raise UnexpectedExit!"
 
-            def includes_stderr(self):
+            def only_displays_stderr_by_default(self):
                 try:
-                    self._runner(exits=1, err="ohnoz").run(_, hide=True)
+                    runner = self._runner(exits=1, out="wut", err="ohnoz")
+                    runner.run(_, hide=True)
                 except UnexpectedExit as f:
                     r = repr(f)
                     err = "Sentinel 'ohnoz' not found in {0!r}".format(r)
                     assert 'ohnoz' in r, err
+                    err = "Inverse sentinel 'wut' found in {0!r}".format(r)
+                    assert 'wut' not in r, err
                 else:
                     assert False, "Failed to raise UnexpectedExit!"
 
-            def should_present_stdout_when_pty_was_used(self):
+            def only_displays_stdout_when_pty_True(self):
                 try:
                     # NOTE: using mocked stdout because that's what ptys do as
                     # well. when pty=True, nothing's even trying to read
                     # stderr.
-                    runner = self._runner(exits=1, out="ohnoz")
+                    runner = self._runner(exits=1, out="ohnoz", err="huh?")
                     runner.run(_, hide=True, pty=True)
                 except UnexpectedExit as f:
                     r = repr(f)
                     err = "Sentinel 'ohnoz' not found in {0!r}".format(r)
                     assert 'ohnoz' in r, err
+                    err = "Inverse sentinel 'huh?' found in {0!r}".format(r)
+                    assert 'huh?' not in r, err
                 else:
                     assert False, "Failed to raise UnexpectedExit!"
 
