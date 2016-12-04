@@ -517,54 +517,154 @@ class Runner_(Spec):
             eq_(r.failed, True)
 
         class UnexpectedExit_repr:
-            def is_explicit_about_command_executed(self):
+            def setup(self):
+                def lines(prefix):
+                    return "\n".join(
+                        "{0} {1}".format(prefix, x) for x in range(1, 26)
+                    ) + "\n"
+                self._stdout = lines('stdout')
+                self._stderr = lines('stderr')
+
+            @trap
+            def displays_command_and_exit_code_by_default(self):
                 try:
-                    self._runner(exits=1).run(_, hide=True)
-                except UnexpectedExit as f:
-                    r = repr(f)
-                    err = "{0!r} not found in {1!r}".format(_, r)
-                    assert _ in r, err
+                    self._runner(
+                        exits=23,
+                        out=self._stdout,
+                        err=self._stderr,
+                    ).run(_)
+                except UnexpectedExit as e:
+                    eq_(repr(e), """Encountered a bad command exit code!
+
+Command: '{0}'
+
+Exit code: 23
+
+Stdout: already printed
+
+Stderr: already printed
+
+""".format(_))
                 else:
                     assert False, "Failed to raise UnexpectedExit!"
 
-            def is_explicit_about_exit_code(self):
+            @trap
+            def does_not_display_stderr_when_pty_True(self):
                 try:
-                    self._runner(exits=17).run(_, hide=True)
-                except UnexpectedExit as f:
-                    r = repr(f)
-                    err = "Exit code 17 not found in {0!r}".format(r)
-                    assert "Exit code: 17" in r, err
-                else:
-                    assert False, "Failed to raise UnexpectedExit!"
+                    self._runner(
+                        exits=13, out=self._stdout, err=self._stderr
+                    ).run(_, pty=True)
+                except UnexpectedExit as e:
+                    eq_(repr(e), """Encountered a bad command exit code!
 
-            def only_displays_stderr_by_default(self):
-                try:
-                    runner = self._runner(exits=1, out="wut", err="ohnoz")
-                    runner.run(_, hide=True)
-                except UnexpectedExit as f:
-                    r = repr(f)
-                    err = "Sentinel 'ohnoz' not found in {0!r}".format(r)
-                    assert 'ohnoz' in r, err
-                    err = "Inverse sentinel 'wut' found in {0!r}".format(r)
-                    assert 'wut' not in r, err
-                else:
-                    assert False, "Failed to raise UnexpectedExit!"
+Command: '{0}'
 
-            def only_displays_stdout_when_pty_True(self):
+Exit code: 13
+
+Stdout: already printed
+
+Stderr: n/a (PTYs have no stderr)
+
+""".format(_))
+
+            @trap
+            def pty_stderr_message_wins_over_hidden_stderr(self):
                 try:
-                    # NOTE: using mocked stdout because that's what ptys do as
-                    # well. when pty=True, nothing's even trying to read
-                    # stderr.
-                    runner = self._runner(exits=1, out="ohnoz", err="huh?")
-                    runner.run(_, hide=True, pty=True)
-                except UnexpectedExit as f:
-                    r = repr(f)
-                    err = "Sentinel 'ohnoz' not found in {0!r}".format(r)
-                    assert 'ohnoz' in r, err
-                    err = "Inverse sentinel 'huh?' found in {0!r}".format(r)
-                    assert 'huh?' not in r, err
-                else:
-                    assert False, "Failed to raise UnexpectedExit!"
+                    self._runner(
+                        exits=1, out=self._stdout, err=self._stderr
+                    ).run(_, pty=True, hide=True)
+                except UnexpectedExit as e:
+                    r = repr(e)
+                    ok_("Stderr: n/a (PTYs have no stderr)" in r)
+                    ok_("Stderr: already printed" not in r)
+
+            @trap
+            def explicit_hidden_stream_tail_display(self):
+                # All the permutations of what's displayed when, are in
+                # subsequent test, which does 'x in y' assertions; this one
+                # here ensures the actual format of the display (newlines, etc)
+                # is as desired.
+                try:
+                    self._runner(
+                        exits=77, out=self._stdout, err=self._stderr
+                    ).run(_, hide=True)
+                except UnexpectedExit as e:
+                    eq_(repr(e), """Encountered a bad command exit code!
+
+Command: '{0}'
+
+Exit code: 77
+
+Stdout:
+
+stdout 16
+stdout 17
+stdout 18
+stdout 19
+stdout 20
+stdout 21
+stdout 22
+stdout 23
+stdout 24
+stdout 25
+
+Stderr:
+
+stderr 16
+stderr 17
+stderr 18
+stderr 19
+stderr 20
+stderr 21
+stderr 22
+stderr 23
+stderr 24
+stderr 25
+
+""".format(_))
+
+            @trap
+            def displays_tails_of_streams_only_when_hidden(self):
+                def oops(msg, r, hide):
+                    return "{0}! hide={1}; repr output:\n\n{2}".format(
+                        msg, hide, r
+                    )
+                for hide, expect_out, expect_err in (
+                    (False, False, False),
+                    (True, True, True),
+                    ('stdout', True, False),
+                    ('stderr', False, True),
+                    ('both', True, True),
+                ):
+                    try:
+                        self._runner(
+                            exits=1, out=self._stdout, err=self._stderr
+                        ).run(_, hide=hide)
+                    except UnexpectedExit as e:
+                        r = repr(e)
+                        # Expect that the top of output is never displayed
+                        ok_(
+                            "stdout 15" not in r,
+                            oops("Too much stdout found", r, hide)
+                        )
+                        ok_(
+                            "stderr 15" not in r,
+                            oops("Too much stderr found", r, hide)
+                        )
+                        # Expect to see tail of stdout if we expected it
+                        if expect_out:
+                            ok_(
+                                "stdout 16" in r,
+                                oops("Didn't see stdout", r, hide)
+                            )
+                        # Expect to see tail of stderr if we expected it
+                        if expect_err:
+                            ok_(
+                                "stderr 16" in r,
+                                oops("Didn't see stderr", r, hide)
+                            )
+                    else:
+                        assert False, "Failed to raise UnexpectedExit!"
 
         def _regular_error(self):
             self._runner(exits=1).run(_)
