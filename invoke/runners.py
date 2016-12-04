@@ -275,7 +275,7 @@ class Runner(object):
         thread_args = {
             self.handle_stdout: {
                 'buffer_': stdout,
-                'hide': 'out' in opts['hide'],
+                'hide': 'stdout' in opts['hide'],
                 'output': out_stream,
             },
             # TODO: make this & related functionality optional, for users who
@@ -292,7 +292,7 @@ class Runner(object):
         if not self.using_pty:
             thread_args[self.handle_stderr] = {
                 'buffer_': stderr,
-                'hide': 'err' in opts['hide'],
+                'hide': 'stderr' in opts['hide'],
                 'output': err_stream,
             }
         # Kick off IO threads
@@ -1051,14 +1051,14 @@ class Result(object):
         not; see `.Runner.run`.
 
     :param tuple hide:
-        A tuple of stream names (none, one or both of ``('out', 'err')``) which
-        were hidden from the user when the generating command executed; this is
-        a normalized value derived from the ``hide`` parameter of
+        A tuple of stream names (none, one or both of ``('stdout', 'stderr')``)
+        which were hidden from the user when the generating command executed;
+        this is a normalized value derived from the ``hide`` parameter of
         `.Runner.run`.
 
         For example, ``run('command', hide='stdout')`` will yield a `Result`
-        where ``result.hide == ('out',)``; ``hide=True`` or ``hide='both'``
-        results in ``result.hide == ('out', 'err')``; and ``hide=False``
+        where ``result.hide == ('stdout',)``; ``hide=True`` or ``hide='both'``
+        results in ``result.hide == ('stdout', 'stderr')``; and ``hide=False``
         (the default) generates ``result.hide == ()`` (the empty tuple.)
 
     .. note::
@@ -1151,11 +1151,11 @@ def normalize_hide(val):
     if val in (None, False):
         hide = ()
     elif val in ('both', True):
-        hide = ('out', 'err')
-    elif val == 'stdout':
-        hide = ('out',)
-    elif val == 'stderr':
-        hide = ('err',)
+        hide = ('stdout', 'stderr')
+    elif val == 'out':
+        hide = ('stdout',)
+    elif val == 'err':
+        hide = ('stderr',)
     else:
         hide = (val,)
     return hide

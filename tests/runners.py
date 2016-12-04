@@ -229,9 +229,9 @@ class Runner_(Spec):
             eq_(self._run(_).shell, '/bin/bash')
 
         def hide_param_exposed_and_normalized(self):
-            eq_(self._run(_, hide=True).hide, ('out', 'err'))
+            eq_(self._run(_, hide=True).hide, ('stdout', 'stderr'))
             eq_(self._run(_, hide=False).hide, tuple())
-            eq_(self._run(_, hide='stderr').hide, ('err',))
+            eq_(self._run(_, hide='stderr').hide, ('stderr',))
 
     class command_echoing:
         @trap
