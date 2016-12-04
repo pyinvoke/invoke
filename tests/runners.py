@@ -527,6 +527,16 @@ class Runner_(Spec):
                 else:
                     assert False, "Failed to raise UnexpectedExit!"
 
+            def is_explicit_about_exit_code(self):
+                try:
+                    self._runner(exits=17).run(_, hide=True)
+                except UnexpectedExit as f:
+                    r = repr(f)
+                    err = "Exit code 17 not found in {0!r}".format(r)
+                    assert "Exit code: 17" in r, err
+                else:
+                    assert False, "Failed to raise UnexpectedExit!"
+
             def only_displays_stderr_by_default(self):
                 try:
                     runner = self._runner(exits=1, out="wut", err="ohnoz")
