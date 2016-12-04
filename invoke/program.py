@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 import inspect
 import os
 import sys
@@ -272,10 +274,17 @@ class Program(object):
             self.execute()
         except (UnexpectedExit, Exit, ParseError) as e:
             debug("Received a possibly-skippable exception: {0!r}".format(e))
-            # Print error message from parser if necessary; prevents messy
-            # traceback but still clues interactive user into problems.
-            if isinstance(e, ParseError):
-                sys.stderr.write("{0}\n".format(e))
+            # Print error messages from parser, runner, etc if necessary;
+            # prevents messy traceback but still clues interactive user into
+            # problems.
+            if isinstance(e, (ParseError, UnexpectedExit)):
+                msg = six.text_type(e)
+                # Slap on an extra \n for ParseError which is usually a
+                # one-liner; UnexpectedExit's is already multiline & has
+                # trailing whitespace. Meh.
+                if isinstance(e, ParseError):
+                    msg += "\n"
+                sys.stderr.write(msg)
             # Terminate execution unless we were told not to.
             if exit:
                 if isinstance(e, UnexpectedExit):

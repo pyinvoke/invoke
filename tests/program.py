@@ -286,18 +286,30 @@ class Program_(IntegrationSpec):
 
         @trap
         @patch('invoke.program.sys.exit')
-        def UnexpectedExits_quietly_exit_with_result_exitcode(self, mock_exit):
+        def UnexpectedExits_show_repr_and_exit_with_exit_code(self, mock_exit):
             p = Program()
-            oops = UnexpectedExit(Result('meh', exited=17))
+            oops = UnexpectedExit(Result(
+                command='meh',
+                exited=17,
+                stdout='things!',
+                stderr='ohnoz!',
+            ))
             p.execute = Mock(side_effect=oops)
-            # No exception here - the UnexpectedExit is not bubbling up
-            p.run("myapp -c foo mytask") # valid task name for parse step
-            # But we're exiting, and with the exit code of the subproc
-            mock_exit.assert_called_with(17)
-            p = Program()
-            oops = UnexpectedExit(Result('meh', exited=17))
-            p.execute = Mock(side_effect=oops)
-            p.run("myapp -c foo mytask") # valid task name for parse step
+            p.run("myapp -c foo mytask")
+            # Expect repr() of exception prints to stderr
+            # NOTE: this partially duplicates a test in runners.py; whatever.
+            eq_(sys.stderr.getvalue(), """Encountered a bad command exit code!
+
+Command: 'meh'
+
+Exit code: 17
+
+Stdout: already printed
+
+Stderr: already printed
+
+""")
+            # And exit with expected code (vs e.g. 1 or 0)
             mock_exit.assert_called_with(17)
 
         def should_show_core_usage_on_core_parse_failures(self):
