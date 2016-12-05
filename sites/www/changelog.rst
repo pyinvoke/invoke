@@ -4,10 +4,13 @@ Changelog
 
 * :bug:`349 major` Display the string representation of
   `~invoke.exceptions.UnexpectedExit` when handling it inside of
-  `~invoke.program.Program` (including regular ``inv``). Previously, we only
-  exited with the exception's stored exit code, meaning failures of ``run(...,
-  hide=True)`` commands were unexpectedly silent. (Library-style use of the
-  codebase didn't have this problem, since tracebacks aren't muted.)
+  `~invoke.program.Program` (including regular ``inv``), if any output was
+  hidden during the ``run`` that generated it.
+
+  Previously, we only exited with the exception's stored exit code, meaning
+  failures of ``run(..., hide=True)`` commands were unexpectedly silent.
+  (Library-style use of the codebase didn't have this problem, since tracebacks
+  aren't muted.)
 
   While implementing this change, we also tweaked the overall display of
   ``UnexpectedExit`` so it's a bit more consistent & useful:
@@ -16,7 +19,7 @@ Changelog
   - showing only the last 10 lines of captured output in the error message
     (users can, of course, always manually handle the error & access the full
     thing if desired);
-  - only showing captured output when it was not already printed to the user's
+  - only showing a given stream when it was not already printed to the user's
     terminal (i.e. if ``hide=False``, no captured output is shown in the error
     text; if ``hide='stdout'``, only stdout is shown in the error text; etc.)
 
