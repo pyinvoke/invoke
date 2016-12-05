@@ -55,9 +55,9 @@ inspiration from various sources to arrive at a powerful & clean feature set.
 * Like many of its predecessors, it offers advanced features as well --
   namespacing, task aliasing, before/after hooks, parallel execution and more.
 
-For documentation, including detailed installation information, please see
-http://pyinvoke.org. Post-install usage information may be found in ``invoke
---help``.
+For a full feature list and documentation, including detailed installation
+information, please see http://pyinvoke.org. Post-install usage information may
+be found in ``invoke --help``.
 
 You can install the development version via ``pip install -e
 git+https://github.com/pyinvoke/invoke#egg=invoke``.

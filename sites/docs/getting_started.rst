@@ -2,9 +2,12 @@
 Getting started
 ===============
 
-This document presents a whirlwind tour of Invoke's feature set. Please see the
-links throughout for detailed conceptual & API docs. For installation help, see
-the project's `installation page <http://www.pyinvoke.org/installing.html>`_.
+This document presents a whirlwind tour of Invoke's feature set (a longer &
+more concise listing can be found on the `feature page
+<http://www.pyinvoke.org/features.html>`.) Please see the links throughout for
+detailed conceptual & API docs. For installation help, see the project's
+`installation page <http://www.pyinvoke.org/installing.html>`_.
+
 
 .. _defining-and-running-task-functions:
 

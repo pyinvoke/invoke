@@ -21,6 +21,7 @@ the site content.
 
     changelog
     FAQs <faq>
+    features
     installing
     development
     prior_art
