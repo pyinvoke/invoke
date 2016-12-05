@@ -286,31 +286,54 @@ class Program_(IntegrationSpec):
 
         @trap
         @patch('invoke.program.sys.exit')
-        def UnexpectedExits_show_repr_and_exit_with_exit_code(self, mock_exit):
+        def UnexpectedExit_exits_with_code_when_no_hiding(self, mock_exit):
             p = Program()
             oops = UnexpectedExit(Result(
                 command='meh',
                 exited=17,
-                stdout='things!',
-                stderr='ohnoz!',
+                hide=tuple(),
             ))
             p.execute = Mock(side_effect=oops)
-            p.run("myapp -c foo mytask")
+            p.run("myapp foo")
+            # Expect NO repr printed, because stdout/err were not hidden, so we
+            # don't want to add extra annoying verbosity - we want to be more
+            # Make-like here.
+            eq_(sys.stderr.getvalue(), "")
+            # But we still exit with expected code (vs e.g. 1 or 0)
+            mock_exit.assert_called_with(17)
+
+        @trap
+        @patch('invoke.program.sys.exit')
+        def shows_UnexpectedExit_repr_when_streams_hidden(self, mock_exit):
+            p = Program()
+            oops = UnexpectedExit(Result(
+                command='meh',
+                exited=54,
+                stdout='things!',
+                stderr='ohnoz!',
+                hide=('stdout', 'stderr'),
+            ))
+            p.execute = Mock(side_effect=oops)
+            p.run("myapp foo")
             # Expect repr() of exception prints to stderr
             # NOTE: this partially duplicates a test in runners.py; whatever.
             eq_(sys.stderr.getvalue(), """Encountered a bad command exit code!
 
 Command: 'meh'
 
-Exit code: 17
+Exit code: 54
 
-Stdout: already printed
+Stdout:
 
-Stderr: already printed
+things!
+
+Stderr:
+
+ohnoz!
 
 """)
             # And exit with expected code (vs e.g. 1 or 0)
-            mock_exit.assert_called_with(17)
+            mock_exit.assert_called_with(54)
 
         def should_show_core_usage_on_core_parse_failures(self):
             skip()

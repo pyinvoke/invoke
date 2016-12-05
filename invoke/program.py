@@ -1,4 +1,4 @@
-from __future__ import unicode_literals
+from __future__ import unicode_literals, print_function
 
 import inspect
 import os
@@ -277,14 +277,10 @@ class Program(object):
             # Print error messages from parser, runner, etc if necessary;
             # prevents messy traceback but still clues interactive user into
             # problems.
-            if isinstance(e, (ParseError, UnexpectedExit)):
-                msg = six.text_type(e)
-                # Slap on an extra \n for ParseError which is usually a
-                # one-liner; UnexpectedExit's is already multiline & has
-                # trailing whitespace. Meh.
-                if isinstance(e, ParseError):
-                    msg += "\n"
-                sys.stderr.write(msg)
+            if isinstance(e, ParseError):
+                print(e, file=sys.stderr)
+            if isinstance(e, UnexpectedExit) and e.result.hide:
+                print(e, file=sys.stderr, end='')
             # Terminate execution unless we were told not to.
             if exit:
                 if isinstance(e, UnexpectedExit):
