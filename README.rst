@@ -32,6 +32,18 @@ inspiration from various sources to arrive at a powerful & clean feature set.
 
     $ invoke clean build
 
+* Where Fabric 1.x considered the command-line approach the default mode of
+  use, Invoke (and tools built on it) are equally at home embedded in your own
+  Python code or a REPL::
+
+    >>> from invoke import run
+    >>> result = run("pip install -r requirements.txt", hide=True, warn=True)
+    >>> print(result.ok)
+    True
+    >>> print(result.stdout[-1])
+    Successfully installed invocations-0.13.0 pep8-1.5.7 spec-1.3.1
+    >>>
+
 * Following the lead of most Unix CLI applications, it offers a traditional
   flag-based style of command-line parsing, deriving flag names and value types
   from task signatures (optionally, of course!)::
