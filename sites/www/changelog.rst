@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :release:`0.14.0 <2016-12-05>`
 * :bug:`349 major` Display the string representation of
   `~invoke.exceptions.UnexpectedExit` when handling it inside of
   `~invoke.program.Program` (including regular ``inv``), if any output was
