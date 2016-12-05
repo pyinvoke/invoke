@@ -27,13 +27,13 @@ Changelog
 
 * :feature:`-` Expose the (normalized) value of `~invoke.runners.Runner.run`'s
   ``hide`` parameter in its return-value `~invoke.runners.Result` objects.
-* :bug:`288` Address a bug preventing reuse of Invoke as a custom binstub, by
-  moving ``--list`` into the "core args" set of flags present on all
-  Invoke-derived binstubs. Thanks to Jordon Mears for catch & patch.
-* :bug:`283` Fix the concepts/library docs so the example of an explicit
+* :bug:`288 major` Address a bug preventing reuse of Invoke as a custom
+  binstub, by moving ``--list`` into the "core args" set of flags present on
+  all Invoke-derived binstubs. Thanks to Jordon Mears for catch & patch.
+* :bug:`283 major` Fix the concepts/library docs so the example of an explicit
   ``namespace=`` argument correctly shows wrapping an imported task module in a
   `~invoke.collection.Collection`. Thanks to ``@zaiste`` for the report.
-* :bug:`-` Fix ``DataProxy`` (used within `~invoke.context.Context` and
+* :bug:`- major` Fix ``DataProxy`` (used within `~invoke.context.Context` and
   `~invoke.config.Config`) so that real attributes and methods which are
   shadowed by configuration keys, aren't proxied to the config during regular
   attribute get/set. (Such config keys are thus required to be accessed via
@@ -77,8 +77,8 @@ Changelog
     "exits ``130``" behavior added in version 0.13, or on the (incorrect)
     ``SIGINT`` method of killing pty-driven subprocesses on Ctrl-C.
 
-* :bug:`-` Correctly raise ``TypeError`` when unexpected keyword arguments are
-  given to `~invoke.runners.Runner.run`.
+* :bug:`- major` Correctly raise ``TypeError`` when unexpected keyword
+  arguments are given to `~invoke.runners.Runner.run`.
 * :feature:`-` Add a `~invoke.context.MockContext` class for easier testing of
   user-written tasks and related client code. Includes adding a
   :ref:`conceptual document on how to test Invoke-using code
@@ -112,8 +112,8 @@ Changelog
       previously, just update to instead use ``run(...,
       watchers=[Responder('pattern', 'response')])``.
 
-* :bug:`-` Fix a bug in `Config.clone <invoke.config.Config.clone>` where it
-  was instantiating a new ``Config`` instead of a member of the subclass.
+* :bug:`- major` Fix a bug in `Config.clone <invoke.config.Config.clone>` where
+  it was instantiating a new ``Config`` instead of a member of the subclass.
 * :release:`0.13.0 <2016-06-09>`
 * :feature:`114` Ripped off the band-aid and removed non-contextualized tasks
   as an option; all tasks must now be contextualized (defined as ``def
