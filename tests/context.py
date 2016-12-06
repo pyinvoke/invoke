@@ -263,6 +263,14 @@ class Context_(Spec):
             eq_(kwargs['hide'], True)
             eq_(kwargs['encoding'], 'ascii')
 
+        @patch('invoke.context.getpass')
+        @patch('invoke.context.Local')
+        def returns_run_result(self, Local, getpass):
+            runner = Local.return_value
+            expected = runner.run.return_value
+            result = Context().sudo('whoami')
+            ok_(result is expected, "sudo() did not return run()'s return value!")
+
         @mock_subprocess(out="something", exit=None)
         def raises_auth_failure_when_failure_detected(self):
             with patch('invoke.context.FailingResponder') as klass:
