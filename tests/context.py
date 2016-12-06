@@ -269,7 +269,10 @@ class Context_(Spec):
             runner = Local.return_value
             expected = runner.run.return_value
             result = Context().sudo('whoami')
-            ok_(result is expected, "sudo() did not return run()'s return value!")
+            ok_(
+                result is expected,
+                "sudo() did not return run()'s return value!",
+            )
 
         @mock_subprocess(out="something", exit=None)
         def raises_auth_failure_when_failure_detected(self):
