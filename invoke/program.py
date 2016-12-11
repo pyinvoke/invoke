@@ -5,7 +5,10 @@ import os
 import sys
 import textwrap
 
-from .vendor import six
+try:
+    from .vendor import six
+except ImportError:
+    import six
 
 from .complete import complete
 from .config import Config

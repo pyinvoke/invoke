@@ -4,7 +4,10 @@ from .parser import ParserContext
 from .util import debug
 from .tasks import Call, Task
 
-from .vendor import six
+try:
+    from .vendor import six
+except ImportError:
+    import six
 
 
 class Executor(object):

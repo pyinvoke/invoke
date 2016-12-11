@@ -31,7 +31,10 @@ from .platform import (
 )
 from .util import has_fileno, isatty, ExceptionHandlingThread
 
-from .vendor import six
+try:
+    from .vendor import six
+except ImportError:
+    import six
 
 
 class Runner(object):
