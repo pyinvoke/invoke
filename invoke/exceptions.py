@@ -10,7 +10,10 @@ from collections import namedtuple
 from traceback import format_exception
 from pprint import pformat
 
-from .vendor import six
+try:
+    from .vendor import six
+except ImportError:
+    import six
 
 
 class CollectionNotFound(Exception):
