@@ -213,6 +213,21 @@ Valid real attributes: ['clone', 'from_data', 'global_defaults', 'load_collectio
             eq_(c.mymethod(), 13)
             eq_(c['mymethod'], 'bar')
 
+        def inherited_real_attrs_also_win_over_config_keys(self):
+            class MyConfigParent(Config):
+                parent_attr = 17
+            class MyConfig(MyConfigParent):
+                pass
+            c = MyConfig()
+            eq_(c.parent_attr, 17)
+            c.parent_attr = 33
+            oops = "Oops! Looks like config won over real attr!"
+            ok_('parent_attr' not in c, oops)
+            eq_(c.parent_attr, 33)
+            c['parent_attr'] = 'fifteen'
+            eq_(c.parent_attr, 33)
+            eq_(c['parent_attr'], 'fifteen')
+
         def nonexistent_attrs_can_be_set_to_create_new_top_level_configs(self):
             # I.e. some_config.foo = 'bar' is like some_config['foo'] = 'bar'.
             # When this test breaks it usually means some_config.foo = 'bar'
