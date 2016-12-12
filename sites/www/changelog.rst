@@ -2,6 +2,9 @@
 Changelog
 =========
 
+* :bug:`-` Fix configuration framework such that nested or dict-like config
+  values may be compared with regular dicts. Previously, doing so caused an
+  ``AttributeError`` (as regular dicts lack a ``.config``).
 * :release:`0.14.0 <2016-12-05>`
 * :bug:`349 major` Display the string representation of
   `~invoke.exceptions.UnexpectedExit` when handling it inside of

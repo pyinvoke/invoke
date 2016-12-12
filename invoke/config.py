@@ -110,10 +110,16 @@ class DataProxy(object):
         return iter(self.config)
 
     def __eq__(self, other):
-        # Can't proxy __eq__ because the RHS will always be an obj of the
+        # NOTE: Can't proxy __eq__ because the RHS will always be an obj of the
         # current class, not the proxied-to class, and that causes
         # NotImplemented.
-        return self.config == other.config
+        # Try comparing to other objects like ourselves, falling back to a not
+        # very comparable value.
+        other_val = getattr(other, 'config', None)
+        # But we can compare to vanilla dicts just fine
+        if isinstance(other, dict):
+            other_val = other
+        return self.config == other_val
 
     def __len__(self):
         # Can't proxy __len__ either apparently? ugh
