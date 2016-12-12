@@ -5,6 +5,16 @@ Changelog
 * :bug:`-` Fix configuration framework such that nested or dict-like config
   values may be compared with regular dicts. Previously, doing so caused an
   ``AttributeError`` (as regular dicts lack a ``.config``).
+* :bug:`413` Update behavior of ``DataProxy`` (used within
+  `~invoke.context.Context` and `~invoke.config.Config`) again, fixing two related issues:
+
+  - Creating new configuration keys via attribute access wasn't possible: one
+    had to do ``config['foo'] = 'bar'`` because ``config.foo = 'bar'`` would
+    set a real attribute instead of touching configuration.
+  - Supertypes' attributes weren't being considered during the "is this a real
+    attribute on ``self``?" test, leading to different behavior between a
+    nested config-value-as-attribute and a top-level Context/Config one.
+
 * :release:`0.14.0 <2016-12-05>`
 * :bug:`349 major` Display the string representation of
   `~invoke.exceptions.UnexpectedExit` when handling it inside of
