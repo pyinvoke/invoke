@@ -211,6 +211,22 @@ Valid real attributes: ['clone', 'from_data', 'global_defaults', 'load_collectio
             eq_(c.mymethod(), 13)
             eq_(c['mymethod'], 'bar')
 
+        def nonexistent_attrs_can_be_set_to_create_new_top_level_configs(self):
+            # I.e. some_config.foo = 'bar' is like some_config['foo'] = 'bar'.
+            # When this test breaks it usually means some_config.foo = 'bar'
+            # sets a regular attribute - and the configuration itself is never
+            # touched!
+            c = Config()
+            c.some_setting = 'some_value'
+            eq_(c['some_setting'], 'some_value')
+
+        def nonexistent_attr_setting_works_nested_too(self):
+            c = Config()
+            c.a_nest = {}
+            eq_(c['a_nest'], {})
+            c.a_nest.an_egg = True
+            ok_(c['a_nest']['an_egg'] is True)
+
         def string_display(self):
             "__str__ and friends"
             config = Config({'foo': 'bar'})
