@@ -179,12 +179,14 @@ Valid real attributes: ['clone', 'from_data', 'global_defaults', 'load_collectio
             eq_(c.foo, 'bar')
             c.foo = 'notbar'
             eq_(c.foo, 'notbar')
+            eq_(c['foo'], 'notbar')
 
         def supports_nested_mutation_via_attribute_access(self):
             c = Config({'foo': {'bar': 'biz'}})
             eq_(c.foo.bar, 'biz')
             c.foo.bar = 'notbiz'
             eq_(c.foo.bar, 'notbiz')
+            eq_(c['foo']['bar'], 'notbiz')
 
         def real_attrs_and_methods_win_over_attr_proxying(self):
             # Setup
