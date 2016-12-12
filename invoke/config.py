@@ -1,4 +1,5 @@
 import copy
+import inspect
 import json
 import os
 from os.path import join, splitext, expanduser
@@ -96,9 +97,8 @@ class DataProxy(object):
     def __setattr__(self, key, value):
         # Turn attribute-sets into config updates anytime we don't have a real
         # attribute with the given name/key.
-        # TODO: needs to crawl entire hierarchy. any 3rd party we can reuse?
-        has_real_attr = key in self.__dict__ or key in type(self).__dict__
-        if not has_real_attr:# and self._attrs_become_config:
+        has_real_attr = key in (x[0] for x in inspect.getmembers(self))
+        if not has_real_attr:
             self.config[key] = value
         else:
             super(DataProxy, self).__setattr__(key, value)
