@@ -43,7 +43,6 @@ class DataProxy(object):
         initialize new attributes via ``object.__setattr__``, or they'll run
         into recursion errors!
     """
-
     # Attributes which get proxied through to inner merged-dict config obj.
     _proxies = tuple("""
         clear
@@ -224,7 +223,6 @@ class Config(DataProxy):
         dict with data from per-source attributes like ``._defaults`` or
         ``_.user``.
     """
-
     @staticmethod
     def global_defaults():
         """
