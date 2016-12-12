@@ -334,10 +334,9 @@ class Config(DataProxy):
 
         #: Path prefix searched for the system config file.
         #: There is no default system prefix on Windows
-        if system_prefix is None:
-            object.__setattr__(self, '_system_prefix', (None if WINDOWS else '/etc/invoke'))
-        else:
-            object.__setattr__(self, '_system_prefix', system_prefix)
+        if system_prefix is None and not WINDOWS:
+            system_prefix = '/etc/invoke'
+        object.__setattr__(self, '_system_prefix', system_prefix)
         #: Path to loaded system config file, if any.
         object.__setattr__(self, '_system_path', None)
         #: Whether the system config file has been loaded or not (or ``None``
@@ -347,7 +346,9 @@ class Config(DataProxy):
         object.__setattr__(self, '_system', {})
 
         #: Path prefix searched for per-user config files.
-        object.__setattr__(self, '_user_prefix', '~/.invoke' if user_prefix is None else user_prefix)
+        if user_prefix is None:
+            user_prefix = '~/.invoke'
+        object.__setattr__(self, '_user_prefix', user_prefix)
         #: Path to loaded user config file, if any.
         object.__setattr__(self, '_user_path', None)
         #: Whether the user config file has been loaded or not (or ``None``
@@ -359,9 +360,10 @@ class Config(DataProxy):
         #: Parent directory of the current root tasks file, if applicable.
         object.__setattr__(self, '_project_home', project_home)
         # And a normalized prefix version not really publicly exposed
-        object.__setattr__(self, '_project_prefix', None)
+        project_prefix = None
         if self._project_home is not None:
-            object.__setattr__(self, '_project_prefix', join(project_home, 'invoke'))
+            project_prefix = join(project_home, 'invoke')
+        object.__setattr__(self, '_project_prefix', project_prefix)
         #: Path to loaded per-project config file, if any.
         object.__setattr__(self, '_project_path', None)
         #: Whether the project config file has been loaded or not (or ``None``
@@ -371,7 +373,9 @@ class Config(DataProxy):
         object.__setattr__(self, '_project', {})
 
         #: Environment variable name prefix
-        object.__setattr__(self, '_env_prefix', '' if env_prefix is None else env_prefix)
+        if env_prefix is None:
+            env_prefix = ''
+        object.__setattr__(self, '_env_prefix', env_prefix)
         #: Config data loaded from the shell environment.
         object.__setattr__(self, '_env', {})
 
@@ -385,7 +389,9 @@ class Config(DataProxy):
 
         #: Overrides - highest possible config level. Typically filled in from
         #: command-line flags.
-        object.__setattr__(self, '_overrides', {} if overrides is None else overrides)
+        if overrides is None:
+            overrides = {}
+        object.__setattr__(self, '_overrides', overrides)
 
         # Perform initial load & merge.
         self.load_files()
