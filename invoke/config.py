@@ -39,7 +39,7 @@ class DataProxy(object):
     dicts assigned as config values (recursively).
     """
 
-    # Attributes which get proxied through to inner etc.Config obj.
+    # Attributes which get proxied through to inner merged-dict config obj.
     _proxies = tuple("""
         clear
         get
