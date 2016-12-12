@@ -72,7 +72,7 @@ class DataProxy(object):
     def __getattr__(self, key):
         # NOTE: due to default Python attribute-lookup semantics, "real"
         # attributes will always be yielded on attribute access and this method
-        # is skipped. This behavior is good for us (it's more intuitive than
+        # is skipped. That behavior is good for us (it's more intuitive than
         # having a config key accidentally shadow a real attribute or method).
         try:
             return self._get(key)
