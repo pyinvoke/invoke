@@ -176,6 +176,9 @@ class Executor(object):
             if isinstance(call, Task):
                 call = Call(task=call)
             debug("Expanding task-call {0!r}".format(call))
+            # TODO: this is where we'll have to handle _allowing_ pre/post
+            # tasks and/or tasks that were simply invoked in the same CLI
+            # command, to affect the state of the tasks after them. Somehow.
             call.context = Context(config=self.config_for(call, config))
             # NOTE: handing in original config, not the mutated one handed to
             # the Context above. Pre/post tasks may well come from a different
