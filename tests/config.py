@@ -174,6 +174,10 @@ Valid real attributes: ['clone', 'from_data', 'global_defaults', 'load_collectio
             c.update({'foo': 'bar'})
             eq_(c['foo'], 'bar')
 
+        def allows_comparison_with_real_dicts(self):
+            c = Config({'foo': {'bar': 'biz'}})
+            eq_(c['foo'], {'bar': 'biz'})
+
         def supports_mutation_via_attribute_access(self):
             c = Config({'foo': 'bar'})
             eq_(c.foo, 'bar')
