@@ -2,6 +2,12 @@
 Changelog
 =========
 
+* :support:`204` (via :issue:`412`) Fall back to globally-installed copies of
+  our vendored dependencies, if the import from the ``vendor`` tree fails. In
+  normal situations this won't happen, but it allows advanced users or
+  downstream maintainers to nuke ``vendor/`` and prefer explicitly installed
+  packages of e.g. ``six``, ``pyyaml`` or ``fluidity``. Thanks to Athmane
+  Madjoudj for the patch.
 * :bug:`-` Fix configuration framework such that nested or dict-like config
   values may be compared with regular dicts. Previously, doing so caused an
   ``AttributeError`` (as regular dicts lack a ``.config``).
