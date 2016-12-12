@@ -37,6 +37,11 @@ class DataProxy(object):
 
     Specifically, is used both for `.Config` itself, and to wrap any other
     dicts assigned as config values (recursively).
+
+    .. warning::
+        All methods (of this object or in subclasses) must take care to
+        initialize new attributes via ``object.__setattr__``, or they'll run
+        into recursion errors!
     """
 
     # Attributes which get proxied through to inner merged-dict config obj.
@@ -66,7 +71,7 @@ class DataProxy(object):
     @classmethod
     def from_data(cls, data):
         obj = cls()
-        obj.config = data
+        object.__setattr__(obj, 'config', data)
         return obj
 
     def __getattr__(self, key):
@@ -90,20 +95,11 @@ class DataProxy(object):
             raise AttributeError(err)
 
     def __setattr__(self, key, value):
-        # NOTE: we explicitly try to check for 'key' being a "real" attribute
-        # or method up front, to avoid shadowing. (This isn't necessary up in
-        # __getattr__; see its own NOTE comment.)
+        # Turn attribute-sets into config updates anytime we don't have a real
+        # attribute with the given name/key.
+        # TODO: needs to crawl entire hierarchy. any 3rd party we can reuse?
         has_real_attr = key in self.__dict__ or key in type(self).__dict__
-        # No obvious real attribute: look in our config.
-        # Need to make sure we test whether we even have .config yet before we
-        # try looking within it; also can't __setattr__ .config itself under
-        # Python 3.
-        if (
-            not has_real_attr
-            and key != 'config'
-            and hasattr(self, 'config')
-            and key in self.config
-        ):
+        if not has_real_attr:# and self._attrs_become_config:
             self.config[key] = value
         else:
             super(DataProxy, self).__setattr__(key, value)
@@ -168,7 +164,7 @@ class Config(DataProxy):
 
     **Access**
 
-    Configuration values may be accessed using dict syntax::
+    Configuration values may be accessed and/or updated using dict syntax::
 
         config['foo']
 
@@ -317,75 +313,75 @@ class Config(DataProxy):
         """
         # Technically an implementation detail - do not expose in public API.
         # Stores merged configs and is accessed via DataProxy.
-        self.config = {}
+        object.__setattr__(self, 'config', {})
 
         # Config file suffixes to search, in preference order.
-        self._file_suffixes = ('yaml', 'json', 'py')
+        object.__setattr__(self, '_file_suffixes', ('yaml', 'json', 'py'))
 
         #: Default configuration values, typically a copy of
         #: `global_defaults`.
         if defaults is None:
             defaults = copy.deepcopy(self.global_defaults())
-        self._defaults = defaults
+        object.__setattr__(self, '_defaults', defaults)
 
         #: Collection-driven config data, gathered from the collection tree
         #: containing the currently executing task.
-        self._collection = {}
+        object.__setattr__(self, '_collection', {})
 
         #: Path prefix searched for the system config file.
         #: There is no default system prefix on Windows
         if system_prefix is None:
-            self._system_prefix = (None if WINDOWS else '/etc/invoke')
+            object.__setattr__(self, '_system_prefix', (None if WINDOWS else '/etc/invoke'))
         else:
-            self._system_prefix = system_prefix
+            object.__setattr__(self, '_system_prefix', system_prefix)
         #: Path to loaded system config file, if any.
-        self._system_path = None
+        object.__setattr__(self, '_system_path', None)
         #: Whether the system config file has been loaded or not (or ``None``
         #: if no loading has been attempted yet.)
-        self._system_found = None
+        object.__setattr__(self, '_system_found', None)
         #: Data loaded from the system config file.
-        self._system = {}
+        object.__setattr__(self, '_system', {})
 
         #: Path prefix searched for per-user config files.
-        self._user_prefix = '~/.invoke' if user_prefix is None else user_prefix
+        object.__setattr__(self, '_user_prefix', '~/.invoke' if user_prefix is None else user_prefix)
         #: Path to loaded user config file, if any.
-        self._user_path = None
+        object.__setattr__(self, '_user_path', None)
         #: Whether the user config file has been loaded or not (or ``None``
         #: if no loading has been attempted yet.)
-        self._user_found = None
+        object.__setattr__(self, '_user_found', None)
         #: Data loaded from the per-user config file.
-        self._user = {}
+        object.__setattr__(self, '_user', {})
 
         #: Parent directory of the current root tasks file, if applicable.
-        self._project_home = project_home
+        object.__setattr__(self, '_project_home', project_home)
         # And a normalized prefix version not really publicly exposed
-        self._project_prefix = None
+        object.__setattr__(self, '_project_prefix', None)
         if self._project_home is not None:
-            self._project_prefix = join(project_home, 'invoke')
+            object.__setattr__(self, '_project_prefix', join(project_home, 'invoke'))
         #: Path to loaded per-project config file, if any.
-        self._project_path = None
+        object.__setattr__(self, '_project_path', None)
         #: Whether the project config file has been loaded or not (or ``None``
         #: if no loading has been attempted yet.)
-        self._project_found = None
+        object.__setattr__(self, '_project_found', None)
         #: Data loaded from the per-project config file.
-        self._project = {}
+        object.__setattr__(self, '_project', {})
 
         #: Environment variable name prefix
-        self._env_prefix = '' if env_prefix is None else env_prefix
+        object.__setattr__(self, '_env_prefix', '' if env_prefix is None else env_prefix)
         #: Config data loaded from the shell environment.
-        self._env = {}
+        object.__setattr__(self, '_env', {})
 
         #: Path to the user-specified runtime config file.
-        self._runtime_path = runtime_path
+        object.__setattr__(self, '_runtime_path', runtime_path)
         #: Data loaded from the runtime config file.
-        self._runtime = {}
+        object.__setattr__(self, '_runtime', {})
         #: Whether the runtime config file has been loaded or not (or ``None``
         #: if no loading has been attempted yet.)
-        self._runtime_found = None
+        object.__setattr__(self, '_runtime_found', None)
 
         #: Overrides - highest possible config level. Typically filled in from
         #: command-line flags.
-        self._overrides = {} if overrides is None else overrides
+        object.__setattr__(self, '_overrides', {} if overrides is None else overrides)
 
         # Perform initial load & merge.
         self.load_files()
@@ -409,7 +405,7 @@ class Config(DataProxy):
         self.merge()
         debug("Done with pre-merge.")
         loader = Environment(config=self.config, prefix=self._env_prefix)
-        self._env = loader.load()
+        object.__setattr__(self, '_env', loader.load())
         debug("Loaded shell environment, triggering final merge")
         self.merge()
 
@@ -424,7 +420,7 @@ class Config(DataProxy):
         .. note:: This method triggers `.merge` after it runs.
         """
         debug("Loading collection configuration")
-        self._collection = data
+        object.__setattr__(self, '_collection', data)
         self.merge()
 
     def clone(self):
@@ -460,7 +456,9 @@ class Config(DataProxy):
             overrides
         """.split():
             name = "_{0}".format(name)
-            setattr(new, name, copy.deepcopy(getattr(self, name)))
+            # TODO: may not need to use object here now that attr access has
+            # been made "real attrs win" style?
+            object.__setattr__(new, name, copy.deepcopy(getattr(self, name)))
         new.config = copy.deepcopy(self.config)
         return new
 

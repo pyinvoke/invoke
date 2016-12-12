@@ -43,7 +43,8 @@ class Context(DataProxy):
         #: As a convenience shorthand, the `.Context` object proxies to its
         #: ``config`` attribute in the same way - e.g. ``ctx['foo']`` or
         #: ``ctx.foo`` returns the same value as ``ctx.config['foo']``.
-        self.config = config if config is not None else Config()
+        config = config if config is not None else Config()
+        object.__setattr__(self, 'config', config)
 
     def run(self, command, **kwargs):
         """
@@ -196,7 +197,7 @@ class MockContext(Context):
             ):
                 err = "Not sure how to yield results from a {0!r}"
                 raise TypeError(err.format(type(results)))
-            setattr(self, "_{0}".format(method), results)
+            object.__setattr__(self, "_{0}".format(method), results)
 
     # TODO: _maybe_ make this more metaprogrammy/flexible (using __call__ etc)?
     # Pretty worried it'd cause more hard-to-debug issues than it's presently
