@@ -10,7 +10,10 @@ from collections import namedtuple
 from traceback import format_exception
 from pprint import pformat
 
-from .vendor import six
+try:
+    from .vendor import six
+except ImportError:
+    import six
 
 
 class CollectionNotFound(Exception):
@@ -47,27 +50,50 @@ class Failure(Exception):
         return str(self)
 
 
+def _tail(stream):
+    # TODO: make configurable
+    # TODO: preserve alternate line endings? Mehhhh
+    tail = "\n\n" + "\n".join(stream.splitlines()[-10:])
+    # NOTE: no trailing \n preservation; easier for below display if normalized
+    return tail
+
+
 class UnexpectedExit(Failure):
     """
     A shell command ran to completion but exited with an unexpected exit code.
+
+    Its string representation displays the following:
+
+    - Command executed;
+    - Exit code;
+    - The last 10 lines of stdout, if it was hidden;
+    - The last 10 lines of stderr, if it was hidden and non-empty (e.g.
+      pty=False; when pty=True, stderr never happens.)
     """
     def __str__(self):
-        err_label = "Stderr"
-        err_text = self.result.stderr
+        already_printed = ' already printed'
+        if 'stdout' not in self.result.hide:
+            stdout = already_printed
+        else:
+            stdout = _tail(self.result.stdout)
         if self.result.pty:
-            err_label = "Stdout (pty=True; no stderr possible)"
-            err_text = self.result.stdout
+            stderr = " n/a (PTYs have no stderr)"
+        else:
+            if 'stderr' not in self.result.hide:
+                stderr = already_printed
+            else:
+                stderr = _tail(self.result.stderr)
         return """Encountered a bad command exit code!
 
 Command: {0!r}
 
 Exit code: {1}
 
-{2}:
+Stdout:{2}
 
-{3}
+Stderr:{3}
 
-""".format(self.result.command, self.result.exited, err_label, err_text)
+""".format(self.result.command, self.result.exited, stdout, stderr)
 
 
 class AuthFailure(Failure):

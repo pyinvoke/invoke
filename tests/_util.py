@@ -8,12 +8,12 @@ except ImportError:
 from contextlib import contextmanager
 from functools import wraps
 
-from invoke.vendor.six import BytesIO, b
+from invoke.vendor.six import BytesIO, b, iteritems
 
 from mock import patch, Mock
-from spec import trap, Spec, eq_, skip
+from spec import trap, Spec, eq_, ok_, skip
 
-from invoke import Program, UnexpectedExit, Runner
+from invoke import Program, Runner
 from invoke.platform import WINDOWS
 
 
@@ -45,7 +45,9 @@ def load(name):
 
 class IntegrationSpec(Spec):
     def setup(self):
+        # Preserve environment for later restore
         self.old_environ = os.environ.copy()
+        # Always do things relative to tests/_support
         os.chdir(support)
 
     def teardown(self):
@@ -54,6 +56,13 @@ class IntegrationSpec(Spec):
         # Nuke changes to environ
         os.environ.clear()
         os.environ.update(self.old_environ)
+        # Strip any test-support task collections from sys.modules to prevent
+        # state bleed between tests; otherwise tests can incorrectly pass
+        # despite not explicitly loading/cd'ing to get the tasks they call
+        # loaded.
+        for name, module in iteritems(sys.modules.copy()):
+            if module and support in getattr(module, '__file__', ''):
+                del sys.modules[name]
 
 
 @trap
@@ -82,24 +91,6 @@ def expect(invocation, out=None, err=None, program=None, invoke=True,
         (test or eq_)(sys.stdout.getvalue(), out)
     if err is not None:
         (test or eq_)(sys.stderr.getvalue(), err)
-
-
-class SimpleFailure(UnexpectedExit):
-    """
-    UnexpectedExit subclass that can be raised w/o any args given.
-
-    Useful for testing failure handling w/o having to come up with a fully
-    mocked out `.Failure` & `.Result` pair each time.
-    """
-    def __init__(self):
-        pass
-
-    def __str__(self):
-        return "SimpleFailure"
-
-    @property
-    def result(self):
-        return Mock(exited=1)
 
 
 def mock_subprocess(out='', err='', exit=0, isatty=None, insert_Popen=False):
@@ -140,8 +131,7 @@ def mock_pty(out='', err='', exit=0, isatty=None, trailing_error=None,
 
     def decorator(f):
         import fcntl
-        ioctl_patch = patch('invoke.runners.fcntl.ioctl',
-            wraps=fcntl.ioctl)
+        ioctl_patch = patch('invoke.runners.fcntl.ioctl', wraps=fcntl.ioctl)
 
         @wraps(f)
         @patch('invoke.runners.pty')
@@ -155,10 +145,12 @@ def mock_pty(out='', err='', exit=0, isatty=None, trailing_error=None,
             # of 1 (stdout).
             pty.fork.return_value = 0, 1
             # We don't really need to care about waiting since not truly
-            # forking/etc, so here we just return a nonzero "pid" + dummy value
-            # (normally sent to WEXITSTATUS but we mock that anyway, so.)
-            os.waitpid.return_value = None, None
+            # forking/etc, so here we just return a nonzero "pid" + sentinel
+            # wait-status value (used in some tests about WIFEXITED etc)
+            os.waitpid.return_value = None, Mock(name='exitstatus')
+            # Either or both of these may get called, depending...
             os.WEXITSTATUS.return_value = exit
+            os.WTERMSIG.return_value = exit
             # If requested, mock isatty to fake out pty detection
             if isatty is not None:
                 os.isatty.return_value = isatty
@@ -182,11 +174,14 @@ def mock_pty(out='', err='', exit=0, isatty=None, trailing_error=None,
             # TODO: inject our mocks back into the tests so they can make their
             # own assertions if desired
             pty.fork.assert_called_with()
-            # Test the 2nd call to ioctl; the 1st call is doing TIOGSWINSZ
+            # Expect a get, and then later set, of terminal window size
+            eq_(ioctl.call_args_list[0][0][1], termios.TIOCGWINSZ)
             eq_(ioctl.call_args_list[1][0][1], termios.TIOCSWINSZ)
             if not skip_asserts:
-                for name in ('execve', 'waitpid', 'WEXITSTATUS'):
-                    assert getattr(os, name).called
+                for name in ('execve', 'waitpid'):
+                    ok_(getattr(os, name).called)
+                # Ensure at least one of the exit status getters was called
+                ok_(os.WEXITSTATUS.called or os.WTERMSIG.called)
         return wrapper
     return decorator
 
@@ -222,9 +217,6 @@ class _Dummy(Runner):
     def returncode(self):
         return 0
 
-    def send_interrupt(self, exception):
-        pass
-
     def stop(self):
         pass
 
@@ -235,8 +227,20 @@ _ = "nope"
 
 # Runner that fakes ^C during subprocess exec
 class _KeyboardInterruptingRunner(_Dummy):
+    def __init__(self, *args, **kwargs):
+        super(_KeyboardInterruptingRunner, self).__init__(*args, **kwargs)
+        self._interrupted = False
+
+    # Trigger KeyboardInterrupt during wait()
     def wait(self):
-        raise KeyboardInterrupt
+        if not self._interrupted:
+            self._interrupted = True
+            raise KeyboardInterrupt
+
+    # But also, after that has been done, pretend subprocess shutdown happened
+    # (or we will loop forever).
+    def process_is_finished(self):
+        return self._interrupted
 
 
 class OhNoz(Exception):

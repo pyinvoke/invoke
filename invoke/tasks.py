@@ -7,7 +7,10 @@ from copy import deepcopy
 import inspect
 import types
 
-from .vendor import six
+try:
+    from .vendor import six
+except ImportError:
+    import six
 
 from .context import Context
 from .parser import Argument, translate_underscores

@@ -2,7 +2,6 @@
 
 import locale
 import os
-from signal import SIGINT, SIGTERM
 import struct
 from subprocess import Popen, PIPE
 import sys
@@ -28,11 +27,14 @@ from .exceptions import (
     UnexpectedExit, Failure, ThreadException, WatcherError,
 )
 from .platform import (
-    WINDOWS, pty_size, character_buffered, ready_for_reading, read_byte,
+    WINDOWS, pty_size, character_buffered, ready_for_reading, bytes_to_read,
 )
 from .util import has_fileno, isatty, ExceptionHandlingThread
 
-from .vendor import six
+try:
+    from .vendor import six
+except ImportError:
+    import six
 
 
 class Runner(object):
@@ -252,16 +254,6 @@ class Runner(object):
         :raises:
             `.ThreadException` (if the background I/O threads encountered
             exceptions other than `.WatcherError`).
-
-        :raises:
-            ``KeyboardInterrupt``, if the user generates one during command
-            execution by pressing Ctrl-C.
-
-            .. note::
-                In normal usage, Invoke's top-level CLI tooling will catch
-                these & exit with return code ``130`` (typical POSIX behavior)
-                instead of printing a traceback and exiting ``1`` (which is
-                what Python normally does).
         """
         try:
             return self._run_body(command, **kwargs)
@@ -286,7 +278,7 @@ class Runner(object):
         thread_args = {
             self.handle_stdout: {
                 'buffer_': stdout,
-                'hide': 'out' in opts['hide'],
+                'hide': 'stdout' in opts['hide'],
                 'output': out_stream,
             },
             # TODO: make this & related functionality optional, for users who
@@ -303,7 +295,7 @@ class Runner(object):
         if not self.using_pty:
             thread_args[self.handle_stderr] = {
                 'buffer_': stderr,
-                'hide': 'err' in opts['hide'],
+                'hide': 'stderr' in opts['hide'],
                 'output': err_stream,
             }
         # Kick off IO threads
@@ -315,25 +307,23 @@ class Runner(object):
         # Wait for completion, then tie things off & obtain result
         # And make sure we perform that tying off even if things asplode.
         exception = None
-        try:
-            self.wait()
-        except BaseException as e: # Make sure we nab ^C etc
-            exception = e
-            # TODO: consider consuming the KeyboardInterrupt instead of storing
-            # it for later raise; this would allow for subprocesses which don't
-            # actually exit on Ctrl-C (e.g. vim). NOTE: but this would make it
-            # harder to correctly detect it and exit 130 once everything wraps
-            # up...
-            # TODO: generally, but especially if we do ignore
-            # KeyboardInterrupt, honor other signals sent to our own process
-            # and transmit them to the subprocess before handling 'normally'.
-            # TODO: we should probably re-raise anything that's not
-            # KeyboardInterrupt? This is quite possibly swallowing things.
-            # NOTE: we handle this now instead of at actual-exception-handling
-            # time because otherwise the stdout/err reader threads may block
-            # until the subprocess exits.
-            if isinstance(exception, KeyboardInterrupt):
-                self.send_interrupt(exception)
+        while True:
+            try:
+                self.wait()
+                break # done waiting!
+            # NOTE: we handle all this now instead of at
+            # actual-exception-handling time because otherwise the stdout/err
+            # reader threads may block until the subprocess exits.
+            # TODO: honor other signals sent to our own process and transmit
+            # them to the subprocess before handling 'normally'.
+            except KeyboardInterrupt as e:
+                self.send_interrupt(e)
+                # NOTE: no break; we want to return to self.wait()
+            except BaseException as e: # Want to handle SystemExit etc still
+                # Store exception for post-shutdown reraise
+                exception = e
+                # Break out of return-to-wait() loop - we want to shut down
+                break
         self.program_finished.set()
         for t in self.threads:
             # NOTE: using a join timeout for corner case from #351 (one pipe
@@ -396,6 +386,7 @@ class Runner(object):
             stderr=stderr,
             exited=exited,
             pty=self.using_pty,
+            hide=opts['hide'],
         )
         # Any presence of WatcherError from the threads indicates a watcher was
         # upset and aborted execution; make a generic Failure out of it and
@@ -420,7 +411,11 @@ class Runner(object):
         for key, value in six.iteritems(self.context.config.run):
             runtime = kwargs.pop(key, None)
             opts[key] = value if runtime is None else runtime
-        # TODO: handle invalid kwarg keys (anything left in kwargs)
+        # Handle invalid kwarg keys (anything left in kwargs).
+        # Act like a normal function would, i.e. TypeError
+        if kwargs:
+            err = "run() got an unexpected keyword argument '{0}'"
+            raise TypeError(err.format(list(kwargs.keys())[0]))
         # If hide was True, turn off echoing
         if opts['hide'] is True:
             opts['echo'] = False
@@ -571,7 +566,7 @@ class Runner(object):
 
     def read_our_stdin(self, input_):
         """
-        Read & decode one byte from a local stdin stream.
+        Read & decode bytes from a local stdin stream.
 
         :param input_:
             Actual stream object to read from. Maps to ``in_stream`` in `run`,
@@ -579,23 +574,23 @@ class Runner(object):
             object.
 
         :returns:
-            A Unicode string, the result of decoding the read byte (this might
+            A Unicode string, the result of decoding the read bytes (this might
             be the empty string if the pipe has closed/reached EOF); or
             ``None`` if stdin wasn't ready for reading yet.
         """
         # TODO: consider moving the character_buffered contextmanager call in
         # here? Downside is it would be flipping those switches for every byte
         # read instead of once per session, which could be costly (?).
-        byte = None
+        bytes_ = None
         if ready_for_reading(input_):
-            byte = read_byte(input_)
+            bytes_ = input_.read(bytes_to_read(input_))
             # Decode if it appears to be binary-type. (From real terminal
             # streams, usually yes; from file-like objects, often no.)
-            if byte and isinstance(byte, six.binary_type):
+            if bytes_ and isinstance(bytes_, six.binary_type):
                 # TODO: will decoding 1 byte at a time break multibyte
                 # character encodings? How to square interactivity with that?
-                byte = self.decode(byte)
-        return byte
+                bytes_ = self.decode(bytes_)
+        return bytes_
 
     def handle_stdin(self, input_, output, echo):
         """
@@ -626,23 +621,22 @@ class Runner(object):
         # exposing some regression in Fabric 1.x itself.
         with character_buffered(input_):
             while True:
-                # Read 1 byte at a time for interactivity's sake.
-                char = self.read_our_stdin(input_)
-                if char:
+                data = self.read_our_stdin(input_)
+                if data:
                     # Mirror what we just read to process' stdin.
                     # We perform an encode so Python 3 gets bytes (streams +
                     # str's in Python 3 == no bueno) but skip the decode step,
                     # since there's presumably no need (nobody's interacting
                     # with this data programmatically).
-                    self.write_proc_stdin(char)
+                    self.write_proc_stdin(data)
                     # Also echo it back to local stdout (or whatever
                     # out_stream is set to) when necessary.
                     if echo is None:
                         echo = self.should_echo_stdin(input_, output)
                     if echo:
-                        self.write_our_output(stream=output, string=char)
+                        self.write_our_output(stream=output, string=data)
                 # Empty string/char/byte != None. Can't just use 'else' here.
-                elif char is not None:
+                elif data is not None:
                     # When reading from file-like objects that aren't "real"
                     # terminal streams, an empty byte signals EOF.
                     break
@@ -650,7 +644,7 @@ class Runner(object):
                 # running, *and* we don't seem to be reading anything out of
                 # stdin. (NOTE: If we only test the former, we may encounter
                 # race conditions re: unread stdin.)
-                if self.program_finished.is_set() and not char:
+                if self.program_finished.is_set() and not data:
                     break
                 # Take a nap so we're not chewing CPU.
                 time.sleep(self.input_sleep)
@@ -850,12 +844,17 @@ class Runner(object):
         """
         Submit an interrupt signal to the running subprocess.
 
+        In almost all implementations, the default behavior is what will be
+        desired: submit ``\x03`` to the subprocess' stdin pipe. However, we
+        leave this as a public method in case this default needs to be
+        augmented or replaced.
+
         :param interrupt:
             The locally-sourced ``KeyboardInterrupt`` causing the method call.
 
         :returns: ``None``.
         """
-        raise NotImplementedError
+        self.write_proc_stdin(u'\x03')
 
     def returncode(self):
         """
@@ -997,27 +996,24 @@ class Local(Runner):
         else:
             return self.process.poll() is not None
 
-    def send_interrupt(self, interrupt):
-        # NOTE: No need to reraise the interrupt since we have full control
-        # over the local process and can kill it.
-        if self.using_pty:
-            os.kill(self.pid, SIGINT)
-        else:
-            # Use send_signal with platform-appropriate signal (Windows doesn't
-            # support SIGINT unfortunately, only SIGTERM).
-            # NOTE: could use subprocess.terminate() (which is cross-platform)
-            # but feels best to use SIGINT as much as we possibly can as it's
-            # most appropriate. terminate() always sends SIGTERM.
-            # NOTE: in interactive POSIX terminals, this is technically
-            # unnecessary as Ctrl-C submits the INT to the entire foreground
-            # process group (which will be both Invoke and its spawned
-            # subprocess). However, it doesn't seem to hurt, & ensures that a
-            # *non-interactive* SIGINT is forwarded correctly.
-            self.process.send_signal(SIGINT if not WINDOWS else SIGTERM)
-
     def returncode(self):
         if self.using_pty:
-            return os.WEXITSTATUS(self.status)
+            # No subprocess.returncode available; use WIFEXITED/WIFSIGNALED to
+            # determine whch of WEXITSTATUS / WTERMSIG to use.
+            # TODO: is it safe to just say "call all WEXITSTATUS/WTERMSIG and
+            # return whichever one of them is nondefault"? Probably not?
+            # NOTE: doing this in an arbitrary order should be safe since only
+            # one of the WIF* methods ought to ever return True.
+            code = None
+            if os.WIFEXITED(self.status):
+                code = os.WEXITSTATUS(self.status)
+            elif os.WIFSIGNALED(self.status):
+                code = os.WTERMSIG(self.status)
+                # Match subprocess.returncode by turning signals into negative
+                # 'exit code' integers.
+                code = -1 * code
+            return code
+            # TODO: do we care about WIFSTOPPED? Maybe someday?
         else:
             return self.process.returncode
 
@@ -1030,7 +1026,43 @@ class Result(object):
     """
     A container for information about the result of a command execution.
 
-    See individual attribute/method documentation below for details.
+    All params are exposed as attributes of the same name and type.
+
+    :param str stdout:
+        The subprocess' standard output.
+
+    :param str stderr:
+        Same as ``stdout`` but containing standard error (unless the process
+        was invoked via a pty, in which case it will be empty; see
+        `.Runner.run`.)
+
+    :param str command:
+        The command which was executed.
+
+    :param str shell:
+        The shell binary used for execution.
+
+    :param dict env:
+        The shell environment used for execution. (Default is the empty dict,
+        ``{}``, not ``None`` as displayed in the signature.)
+
+    :param int exited:
+        An integer representing the subprocess' exit/return code.
+
+    :param bool pty:
+        A boolean describing whether the subprocess was invoked with a pty or
+        not; see `.Runner.run`.
+
+    :param tuple hide:
+        A tuple of stream names (none, one or both of ``('stdout', 'stderr')``)
+        which were hidden from the user when the generating command executed;
+        this is a normalized value derived from the ``hide`` parameter of
+        `.Runner.run`.
+
+        For example, ``run('command', hide='stdout')`` will yield a `Result`
+        where ``result.hide == ('stdout',)``; ``hide=True`` or ``hide='both'``
+        results in ``result.hide == ('stdout', 'stderr')``; and ``hide=False``
+        (the default) generates ``result.hide == ()`` (the empty tuple.)
 
     .. note::
         `Result` objects' truth evaluation is equivalent to their `.ok`
@@ -1046,25 +1078,32 @@ class Result(object):
         <http://zen-of-python.info/explicit-is-better-than-implicit.html#2>`_.
     """
     # TODO: inherit from namedtuple instead? heh (or: use attrs from pypi)
-    def __init__(self, command, shell, env, stdout, stderr, exited, pty):
-        #: The command which was executed.
-        self.command = command
-        #: The shell binary used for execution.
-        self.shell = shell
-        #: The shell environment used for execution.
-        self.env = env
-        #: An integer representing the subprocess' exit/return code.
-        self.exited = exited
-        #: An alias for `.exited`.
-        self.return_code = exited
-        #: The subprocess' standard output, as a multiline string.
+    def __init__(
+        self,
+        stdout="",
+        stderr="",
+        command="",
+        shell="",
+        env=None,
+        exited=0,
+        pty=False,
+        hide=tuple(),
+    ):
         self.stdout = stdout
-        #: Same as `.stdout` but containing standard error (unless the process
-        #: was invoked via a pty; see `.Runner.run`.)
         self.stderr = stderr
-        #: A boolean describing whether the subprocess was invoked with a pty
-        #: or not; see `.Runner.run`.
+        self.command = command
+        self.shell = shell
+        self.env = {} if env is None else env
+        self.exited = exited
         self.pty = pty
+        self.hide = hide
+
+    @property
+    def return_code(self):
+        """
+        An alias for ``.exited``.
+        """
+        return self.exited
 
     def __nonzero__(self):
         # NOTE: This is the method that (under Python 2) determines Boolean
@@ -1115,11 +1154,11 @@ def normalize_hide(val):
     if val in (None, False):
         hide = ()
     elif val in ('both', True):
-        hide = ('out', 'err')
-    elif val == 'stdout':
-        hide = ('out',)
-    elif val == 'stderr':
-        hide = ('err',)
+        hide = ('stdout', 'stderr')
+    elif val == 'out':
+        hide = ('stdout',)
+    elif val == 'err':
+        hide = ('stderr',)
     else:
         hide = (val,)
     return hide

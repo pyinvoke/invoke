@@ -13,10 +13,9 @@ python:
   - "pypy"
   - "pypy3"
 matrix:
-  # pypy is frequentlyish unstable on Travis, don't let it mark entire status
-  # as 'bad' =/ (Still worth running it though.)
+  # pypy3 (as of 2.4.0) has a wacky arity issue in its source loader. Allow it
+  # to fail until we can test on, and require, PyPy3.3+. See #358.
   allow_failures:
-    - python: pypy
     - python: pypy3
   fast_finish: true
 install:

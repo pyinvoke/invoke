@@ -2,11 +2,11 @@ import re
 import sys
 
 from mock import patch, Mock
-from spec import Spec, skip, eq_, ok_, trap
+from spec import Spec, skip, eq_, ok_, trap, raises
 
 from invoke import (
     AuthFailure, Context, Config, FailingResponder, ResponseNotAccepted,
-    StreamWatcher,
+    StreamWatcher, MockContext, Result,
 )
 
 from _util import mock_subprocess, _Dummy
@@ -263,6 +263,17 @@ class Context_(Spec):
             eq_(kwargs['hide'], True)
             eq_(kwargs['encoding'], 'ascii')
 
+        @patch('invoke.context.getpass')
+        @patch('invoke.context.Local')
+        def returns_run_result(self, Local, getpass):
+            runner = Local.return_value
+            expected = runner.run.return_value
+            result = Context().sudo('whoami')
+            ok_(
+                result is expected,
+                "sudo() did not return run()'s return value!",
+            )
+
         @mock_subprocess(out="something", exit=None)
         def raises_auth_failure_when_failure_detected(self):
             with patch('invoke.context.FailingResponder') as klass:
@@ -283,3 +294,76 @@ class Context_(Spec):
                 # such as incorrectly unhandled ThreadErrors
                 if not excepted:
                     assert False, "Did not raise AuthFailure!"
+
+
+class MockContext_(Spec):
+    def init_still_acts_like_superclass_init(self):
+        # No required args
+        ok_(isinstance(MockContext().config, Config))
+        config = Config(overrides={'foo': 'bar'})
+        # Posarg
+        ok_(MockContext(config).config is config)
+        # Kwarg
+        ok_(MockContext(config=config).config is config)
+
+    def non_config_init_kwargs_used_as_return_values_for_methods(self):
+        c = MockContext(run=Result("some output"))
+        eq_(c.run("doesn't mattress").stdout, "some output")
+
+    def return_value_kwargs_can_take_iterables_too(self):
+        c = MockContext(run=[Result("some output"), Result("more!")])
+        eq_(c.run("doesn't mattress").stdout, "some output")
+        eq_(c.run("still doesn't mattress").stdout, "more!")
+
+    def return_value_kwargs_may_be_command_string_maps(self):
+        c = MockContext(run={'foo': Result("bar")})
+        eq_(c.run("foo").stdout, "bar")
+
+    def return_value_map_kwargs_may_take_iterables_too(self):
+        c = MockContext(run={'foo': [Result("bar"), Result("biz")]})
+        eq_(c.run("foo").stdout, "bar")
+        eq_(c.run("foo").stdout, "biz")
+
+    @raises(NotImplementedError)
+    def methods_with_no_kwarg_values_raise_NotImplementedError(self):
+        MockContext().run("onoz I did not anticipate this would happen")
+
+    def sudo_also_covered(self):
+        c = MockContext(sudo=Result(stderr="super duper"))
+        eq_(c.sudo("doesn't mattress").stderr, "super duper")
+        try:
+            MockContext().sudo("meh")
+        except NotImplementedError:
+            pass
+        else:
+            assert False, "Did not get a NotImplementedError for sudo!"
+
+    class exhausted_return_values_also_raise_NotImplementedError:
+        def _expect_NotImplementedError(self, context):
+            context.run("something")
+            try:
+                context.run("something")
+            except NotImplementedError:
+                pass
+            else:
+                assert False, "Didn't raise NotImplementedError"
+
+        def single_value(self):
+            self._expect_NotImplementedError(MockContext(run=Result("meh")))
+
+        def iterable(self):
+            self._expect_NotImplementedError(MockContext(run=[Result("meh")]))
+
+        def mapping_to_single_value(self):
+            self._expect_NotImplementedError(MockContext(run={
+                "something": Result("meh")
+            }))
+
+        def mapping_to_iterable(self):
+            self._expect_NotImplementedError(MockContext(run={
+                "something": [Result("meh")]
+            }))
+
+    @raises(TypeError)
+    def unexpected_kwarg_type_yields_TypeError(self):
+        MockContext(run=123)

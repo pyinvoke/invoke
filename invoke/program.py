@@ -1,9 +1,14 @@
+from __future__ import unicode_literals, print_function
+
 import inspect
 import os
 import sys
 import textwrap
 
-from .vendor import six
+try:
+    from .vendor import six
+except ImportError:
+    import six
 
 from .completion.complete import complete, print_completion_script
 from .config import Config
@@ -78,6 +83,12 @@ class Program(object):
                 help="Set default value of run()'s 'hide' kwarg.",
             ),
             Argument(
+                names=('list', 'l'),
+                kind=bool,
+                default=False,
+                help="List available tasks."
+            ),
+            Argument(
                 names=('pty', 'p'),
                 kind=bool,
                 default=False,
@@ -111,12 +122,6 @@ class Program(object):
             Argument(
                 names=('collection', 'c'),
                 help="Specify collection name to load."
-            ),
-            Argument(
-                names=('list', 'l'),
-                kind=bool,
-                default=False,
-                help="List available tasks."
             ),
             Argument(
                 names=('no-dedupe',),
@@ -245,7 +250,7 @@ class Program(object):
         if self.args.echo.value:
             run['echo'] = True
         tasks = {}
-        if self.args['no-dedupe'].value:
+        if 'no-dedupe' in self.args and self.args['no-dedupe'].value:
             tasks['dedupe'] = False
         overrides = {'run': run, 'tasks': tasks}
         # Stand up config object
@@ -280,9 +285,13 @@ class Program(object):
             self.execute()
         except (UnexpectedExit, Exit, ParseError) as e:
             debug("Received a possibly-skippable exception: {0!r}".format(e))
-            # Print error message from parser if necessary.
+            # Print error messages from parser, runner, etc if necessary;
+            # prevents messy traceback but still clues interactive user into
+            # problems.
             if isinstance(e, ParseError):
-                sys.stderr.write("{0}\n".format(e))
+                print(e, file=sys.stderr)
+            if isinstance(e, UnexpectedExit) and e.result.hide:
+                print(e, file=sys.stderr, end='')
             # Terminate execution unless we were told not to.
             if exit:
                 if isinstance(e, UnexpectedExit):
@@ -295,7 +304,7 @@ class Program(object):
             else:
                 debug("Invoked as run(..., exit=False), ignoring exception")
         except KeyboardInterrupt:
-            sys.exit(130) # Standard POSIX exit code for SIGINT
+            sys.exit(1) # Same behavior as Python itself outside of REPL
 
     def _parse(self, argv):
         debug("argv given to Program.run: {0!r}".format(argv))

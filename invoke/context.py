@@ -1,11 +1,14 @@
 import getpass
 import re
 
-from invoke.vendor.six import raise_from
+try:
+    from invoke.vendor.six import raise_from, iteritems
+except ImportError:
+    from six import raise_from, iteritems
 
 from .config import Config, DataProxy
 from .exceptions import Failure, AuthFailure, ResponseNotAccepted
-from .runners import Local
+from .runners import Local, Result
 from .watchers import FailingResponder
 
 
@@ -43,7 +46,8 @@ class Context(DataProxy):
         #: As a convenience shorthand, the `.Context` object proxies to its
         #: ``config`` attribute in the same way - e.g. ``ctx['foo']`` or
         #: ``ctx.foo`` returns the same value as ``ctx.config['foo']``.
-        self.config = config if config is not None else Config()
+        config = config if config is not None else Config()
+        object.__setattr__(self, 'config', config)
 
     def run(self, command, **kwargs):
         """
@@ -143,3 +147,98 @@ class Context(DataProxy):
             # Reraise for any other error so it bubbles up normally.
             else:
                 raise
+
+
+class MockContext(Context):
+    """
+    A `.Context` whose methods' return values can be predetermined.
+
+    Primarily useful for testing Invoke-using codebases.
+
+    .. note::
+        Methods not given `Results <.Result>` to yield will raise
+        ``NotImplementedError`` if called (since the alternative is to call the
+        real underlying method - typically undesirable when mocking.)
+    """
+    def __init__(self, config=None, **kwargs):
+        """
+        Create a ``Context``-like object whose methods yield `.Result` objects.
+
+        :param config:
+            A Configuration object to use. Identical in behavior to `.Context`.
+
+        :param run:
+            A data structure of `Results <.Result>`, to return from calls to
+            the instantiated object's `~.Context.run` method (instead of
+            actually executing the requested shell command).
+
+            Specifically, this method accepts:
+
+            - A single `.Result` object, which will be returned once.
+            - An iterable of `Results <.Result>`, which will be returned on
+              each subsequent call to ``.run``.
+            - A map of command strings to either of the above, allowing
+              specific call-and-response semantics instead of assuming a call
+              order.
+
+        :param sudo:
+            Identical to ``run``, but whose values are yielded from calls to
+            `~.Context.sudo`.
+
+        :raises:
+            ``TypeError``, if the values given to ``run`` or other kwargs
+            aren't individual `.Result` objects or iterables.
+        """
+        # TODO: would be nice to allow regexen instead of exact string matches
+        super(MockContext, self).__init__(config)
+        for method, results in iteritems(kwargs):
+            # Special convenience case: individual Result -> one-item list
+            if (
+                not hasattr(results, '__iter__')
+                and not isinstance(results, Result)
+                # No need for explicit dict test; they have __iter__
+            ):
+                err = "Not sure how to yield results from a {0!r}"
+                raise TypeError(err.format(type(results)))
+            object.__setattr__(self, "_{0}".format(method), results)
+
+    # TODO: _maybe_ make this more metaprogrammy/flexible (using __call__ etc)?
+    # Pretty worried it'd cause more hard-to-debug issues than it's presently
+    # worth. Maybe in situations where Context grows a _lot_ of methods (e.g.
+    # in Fabric 2; though Fabric could do its own sub-subclass in that case...)
+
+    def _yield_result(self, attname, command):
+        # NOTE: originally had this with a bunch of explicit
+        # NotImplementedErrors, but it doubled method size, and chance of
+        # unexpected index/etc errors seems low here.
+        try:
+            value = getattr(self, attname)
+            # TODO: thought there's a 'better' 2x3 DictType or w/e, but can't
+            # find one offhand
+            if isinstance(value, dict):
+                if hasattr(value[command], '__iter__'):
+                    result = value[command].pop(0)
+                elif isinstance(value[command], Result):
+                    result = value.pop(command)
+            elif hasattr(value, '__iter__'):
+                result = value.pop(0)
+            elif isinstance(value, Result):
+                result = value
+                delattr(self, attname)
+            return result
+        except (AttributeError, IndexError, KeyError):
+            raise_from(NotImplementedError, None)
+
+    def run(self, command, *args, **kwargs):
+        # TODO: perform more convenience stuff associating args/kwargs with the
+        # result? E.g. filling in .command, etc? Possibly useful for debugging
+        # if one hits unexpected-order problems with what they passed in to
+        # __init__.
+        return self._yield_result('_run', command)
+
+    def sudo(self, command, *args, **kwargs):
+        # TODO: this completely nukes the top-level behavior of sudo(), which
+        # could be good or bad, depending. Most of the time I think it's good.
+        # No need to supply dummy password config, etc.
+        # TODO: see the TODO from run() re: injecting arg/kwarg values
+        return self._yield_result('_sudo', command)

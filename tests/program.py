@@ -6,14 +6,14 @@ from mock import patch, Mock, ANY
 from spec import eq_, ok_, trap, skip, assert_contains, assert_not_contains
 
 from invoke import (
-    Program, Collection, ParseError, Task, FilesystemLoader, Executor, Context,
-    Config,
+    Program, Collection, Task, FilesystemLoader, Executor, Context, Config,
+    UnexpectedExit, Result,
 )
 from invoke import main
 from invoke.util import cd
 
 from _util import (
-    load, IntegrationSpec, expect, skip_if_windows, SimpleFailure
+    load, IntegrationSpec, expect, skip_if_windows,
 )
 
 
@@ -162,7 +162,7 @@ class Program_(IntegrationSpec):
             # Spot check. See integration-style --help tests for full argument
             # checkup.
             for program in (Program(), Program(namespace=Collection())):
-                for arg in ('--complete', '--debug', '--warn-only'):
+                for arg in ('--complete', '--debug', '--warn-only', '--list'):
                     expect(
                         "--help",
                         program=program,
@@ -212,16 +212,14 @@ class Program_(IntegrationSpec):
     class execute:
         def uses_executor_class_given(self):
             klass = Mock()
-            with cd('implicit'):
-                Program(executor_class=klass).run("myapp foo", exit=False)
+            Program(executor_class=klass).run("myapp foo", exit=False)
             klass.assert_called_with(ANY, ANY, ANY)
             klass.return_value.execute.assert_called_with(ANY)
 
         def executor_is_given_access_to_core_args_and_remainder(self):
             klass = Mock()
-            with cd('implicit'):
-                cmd = "myapp -e foo -- myremainder"
-                Program(executor_class=klass).run(cmd, exit=False)
+            cmd = "myapp -e foo -- myremainder"
+            Program(executor_class=klass).run(cmd, exit=False)
             core = klass.call_args[0][2]
             eq_(core[0].args['echo'].value, True)
             eq_(core.remainder, "myremainder")
@@ -247,16 +245,23 @@ class Program_(IntegrationSpec):
         # for the parser's own unit tests).
 
         def seeks_and_loads_tasks_module_by_default(self):
-            with cd('implicit'):
-                expect('foo', out="Hm\n")
+            expect('foo', out="Hm\n")
 
         def does_not_seek_tasks_module_if_namespace_was_given(self):
-            with cd('implicit'):
-                expect(
-                    'foo',
-                    err="No idea what 'foo' is!\n",
-                    program=Program(namespace=Collection('blank'))
-                )
+            expect(
+                'foo',
+                err="No idea what 'foo' is!\n",
+                program=Program(namespace=Collection('blank'))
+            )
+
+        def explicit_namespace_works_correctly(self):
+            # Regression-ish test re #288
+            ns = Collection.from_module(load('integration'))
+            expect(
+                'print_foo',
+                out='foo\n',
+                program=Program(namespace=ns),
+            )
 
         def allows_explicit_task_module_specification(self):
             expect("-c integration print_foo", out="foo\n")
@@ -266,17 +271,69 @@ class Program_(IntegrationSpec):
 
         @trap
         @patch('invoke.program.sys.exit')
-        def expected_failure_types_dont_raise_exceptions(self, mock_exit):
-            "expected failure types don't raise exceptions"
-            for side_effect in (
-                SimpleFailure,
-                ParseError("boo!"),
-            ):
-                p = Program()
-                p.execute = Mock(side_effect=side_effect)
-                p.run("myapp -c foo mytask") # valid task name for parse step
-                # Make sure we still exited fail-wise
-                mock_exit.assert_called_with(1)
+        def ParseErrors_display_message_and_exit_1(self, mock_exit):
+            p = Program()
+            # Run with a definitely-parser-angering incorrect input; the fact
+            # that this line doesn't raise an exception and thus fail the
+            # test, is what we're testing...
+            nah = 'nopenotvalidsorry'
+            p.run("myapp {0}".format(nah))
+            # Expect that we did print the core body of the ParseError (e.g.
+            # "no idea what foo is!") and exit 1. (Intent is to display that
+            # info w/o a full traceback, basically.)
+            eq_(sys.stderr.getvalue(), "No idea what '{0}' is!\n".format(nah))
+            mock_exit.assert_called_with(1)
+
+        @trap
+        @patch('invoke.program.sys.exit')
+        def UnexpectedExit_exits_with_code_when_no_hiding(self, mock_exit):
+            p = Program()
+            oops = UnexpectedExit(Result(
+                command='meh',
+                exited=17,
+                hide=tuple(),
+            ))
+            p.execute = Mock(side_effect=oops)
+            p.run("myapp foo")
+            # Expect NO repr printed, because stdout/err were not hidden, so we
+            # don't want to add extra annoying verbosity - we want to be more
+            # Make-like here.
+            eq_(sys.stderr.getvalue(), "")
+            # But we still exit with expected code (vs e.g. 1 or 0)
+            mock_exit.assert_called_with(17)
+
+        @trap
+        @patch('invoke.program.sys.exit')
+        def shows_UnexpectedExit_repr_when_streams_hidden(self, mock_exit):
+            p = Program()
+            oops = UnexpectedExit(Result(
+                command='meh',
+                exited=54,
+                stdout='things!',
+                stderr='ohnoz!',
+                hide=('stdout', 'stderr'),
+            ))
+            p.execute = Mock(side_effect=oops)
+            p.run("myapp foo")
+            # Expect repr() of exception prints to stderr
+            # NOTE: this partially duplicates a test in runners.py; whatever.
+            eq_(sys.stderr.getvalue(), """Encountered a bad command exit code!
+
+Command: 'meh'
+
+Exit code: 54
+
+Stdout:
+
+things!
+
+Stderr:
+
+ohnoz!
+
+""")
+            # And exit with expected code (vs e.g. 1 or 0)
+            mock_exit.assert_called_with(54)
 
         def should_show_core_usage_on_core_parse_failures(self):
             skip()
@@ -286,11 +343,11 @@ class Program_(IntegrationSpec):
 
         @trap
         @patch('invoke.program.sys.exit')
-        def turns_KeyboardInterrupt_into_exit_code_130(self, mock_exit):
+        def turns_KeyboardInterrupt_into_exit_code_1(self, mock_exit):
             p = Program()
             p.execute = Mock(side_effect=KeyboardInterrupt)
             p.run("myapp -c foo mytask")
-            mock_exit.assert_called_with(130)
+            mock_exit.assert_called_with(1)
 
 
     class help_:

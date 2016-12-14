@@ -1,6 +1,9 @@
 import itertools
 
-from ..vendor.lexicon import Lexicon
+try:
+    from ..vendor.lexicon import Lexicon
+except ImportError:
+    from lexicon import Lexicon
 
 from .argument import Argument
 

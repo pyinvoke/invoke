@@ -2,6 +2,117 @@
 Changelog
 =========
 
+* :support:`204` (via :issue:`412`) Fall back to globally-installed copies of
+  our vendored dependencies, if the import from the ``vendor`` tree fails. In
+  normal situations this won't happen, but it allows advanced users or
+  downstream maintainers to nuke ``vendor/`` and prefer explicitly installed
+  packages of e.g. ``six``, ``pyyaml`` or ``fluidity``. Thanks to Athmane
+  Madjoudj for the patch.
+* :bug:`-` Fix configuration framework such that nested or dict-like config
+  values may be compared with regular dicts. Previously, doing so caused an
+  ``AttributeError`` (as regular dicts lack a ``.config``).
+* :bug:`413` Update behavior of ``DataProxy`` (used within
+  `~invoke.context.Context` and `~invoke.config.Config`) again, fixing two related issues:
+
+  - Creating new configuration keys via attribute access wasn't possible: one
+    had to do ``config['foo'] = 'bar'`` because ``config.foo = 'bar'`` would
+    set a real attribute instead of touching configuration.
+  - Supertypes' attributes weren't being considered during the "is this a real
+    attribute on ``self``?" test, leading to different behavior between a
+    nested config-value-as-attribute and a top-level Context/Config one.
+
+* :release:`0.14.0 <2016-12-05>`
+* :bug:`349 major` Display the string representation of
+  `~invoke.exceptions.UnexpectedExit` when handling it inside of
+  `~invoke.program.Program` (including regular ``inv``), if any output was
+  hidden during the ``run`` that generated it.
+
+  Previously, we only exited with the exception's stored exit code, meaning
+  failures of ``run(..., hide=True)`` commands were unexpectedly silent.
+  (Library-style use of the codebase didn't have this problem, since tracebacks
+  aren't muted.)
+
+  While implementing this change, we also tweaked the overall display of
+  ``UnexpectedExit`` so it's a bit more consistent & useful:
+
+  - noting "hey, you ran with ``pty=True``, so there's no stderr";
+  - showing only the last 10 lines of captured output in the error message
+    (users can, of course, always manually handle the error & access the full
+    thing if desired);
+  - only showing a given stream when it was not already printed to the user's
+    terminal (i.e. if ``hide=False``, no captured output is shown in the error
+    text; if ``hide='stdout'``, only stdout is shown in the error text; etc.)
+
+  Thanks to Patrick Massot for the original bug report.
+
+* :feature:`-` Expose the (normalized) value of `~invoke.runners.Runner.run`'s
+  ``hide`` parameter in its return-value `~invoke.runners.Result` objects.
+* :bug:`288 major` Address a bug preventing reuse of Invoke as a custom
+  binstub, by moving ``--list`` into the "core args" set of flags present on
+  all Invoke-derived binstubs. Thanks to Jordon Mears for catch & patch.
+* :bug:`283 major` Fix the concepts/library docs so the example of an explicit
+  ``namespace=`` argument correctly shows wrapping an imported task module in a
+  `~invoke.collection.Collection`. Thanks to ``@zaiste`` for the report.
+* :bug:`- major` Fix ``DataProxy`` (used within `~invoke.context.Context` and
+  `~invoke.config.Config`) so that real attributes and methods which are
+  shadowed by configuration keys, aren't proxied to the config during regular
+  attribute get/set. (Such config keys are thus required to be accessed via
+  dict-style only, or (on `~invoke.context.Context`) via the explicit
+  ``.config`` attribute.)
+* :bug:`58 major` Work around bugs in ``select()`` when handling subprocess
+  stream reads, which was causing poor behavior in many nontrivial interactive
+  programs (such as ``vim`` and other fullscreen editors, ``python`` and other
+  REPLs/shells, etc). Such programs should now be largely indistinguishable
+  from their behavior when run directly from a user's shell.
+* :feature:`406` Update handling of Ctrl-C/``KeyboardInterrupt``, and
+  subprocess exit status pass-through, to be more correct than before:
+
+  - Submit the interrupt byte sequence ``\x03`` to stdin of all subprocesses,
+    instead of sending ``SIGINT``.
+
+      - This results in behavior closer to that of truly pressing Ctrl-C when
+        running subprocesses directly; for example, interactive programs like
+        ``vim`` or ``python`` now behave normally instead of prematurely
+        exiting.
+      - Of course, programs that would normally exit on Ctrl-C will still do
+        so!
+
+  - The exit statuses of subprocesses run with ``pty=True`` are more rigorously
+    checked (using `os.WIFEXITED` and friends), allowing us to surface the real
+    exit values of interrupted programs instead of manually assuming exit code
+    ``130``.
+
+      - Typically, this will be exit code ``-2``, but it is system dependent.
+      - Other, non-Ctrl-C-driven signal-related exits under PTYs should behave
+        better now as well - previously they could appear to exit ``0``!
+
+  - Non-subprocess-related ``KeyboardInterrupt`` (i.e. those generated when
+    running top level Python code outside of any ``run`` function calls)
+    will now trigger exit code ``1``, as that is how the Python interpreter
+    typically behaves if you ``KeyboardInterrupt`` it outside of a live
+    REPL.
+
+  .. warning::
+    These changes are **backwards incompatible** if you were relying on the
+    "exits ``130``" behavior added in version 0.13, or on the (incorrect)
+    ``SIGINT`` method of killing pty-driven subprocesses on Ctrl-C.
+
+* :bug:`- major` Correctly raise ``TypeError`` when unexpected keyword
+  arguments are given to `~invoke.runners.Runner.run`.
+* :feature:`-` Add a `~invoke.context.MockContext` class for easier testing of
+  user-written tasks and related client code. Includes adding a
+  :ref:`conceptual document on how to test Invoke-using code
+  <testing-user-code>`.
+* :feature:`-` Update implementation of `~invoke.runners.Result` so it has
+  default values for all parameters/attributes. This allows it to be more
+  easily used when mocking ``run`` calls in client libraries' tests.
+
+  .. warning::
+    This is a backwards incompatible change if you are manually instantiating
+    `~invoke.runners.Result` objects with positional arguments: positional
+    argument order has changed. (Compare the API docs between versions to see
+    exactly how.)
+
 * :feature:`294` Implement `Context.sudo <invoke.context.Context.sudo>`, which
   wraps `~invoke.context.Context.run` inside a ``sudo`` command. It is capable
   of auto-responding to ``sudo``'s password prompt with a configured password,
@@ -21,8 +132,8 @@ Changelog
       previously, just update to instead use ``run(...,
       watchers=[Responder('pattern', 'response')])``.
 
-* :bug:`-` Fix a bug in `Config.clone <invoke.config.Config.clone>` where it
-  was instantiating a new ``Config`` instead of a member of the subclass.
+* :bug:`- major` Fix a bug in `Config.clone <invoke.config.Config.clone>` where
+  it was instantiating a new ``Config`` instead of a member of the subclass.
 * :release:`0.13.0 <2016-06-09>`
 * :feature:`114` Ripped off the band-aid and removed non-contextualized tasks
   as an option; all tasks must now be contextualized (defined as ``def
@@ -167,8 +278,8 @@ Changelog
 * :release:`0.11.1 <2015-09-07>`
 * :support:`- backported` Fix incorrect changelog URL in package metadata.
 * :release:`0.11.0 <2015-09-07>`
-* :feature:`-` Create `invoke.runners.Result.command` to preserve the command
-  executed for post-execution introspection.
+* :feature:`-` Add a ``.command`` attribute to `~invoke.runners.Result` to
+  preserve the command executed for post-execution introspection.
 * :feature:`-` Detect local controlling terminal size
   (`~invoke.platform.pty_size`) and apply that information when creating
   pseudoterminals in `~invoke.run` when ``pty=True``.

@@ -80,5 +80,6 @@ class FilesystemLoader_(Spec):
 
     def defaults_to_tasks_collection(self):
         "defaults to 'tasks' collection"
-        result = FSLoader(start=support + '/implicit/').load()
+        # There's a basic tasks.py in tests/_support
+        result = self.l.load()
         eq_(type(result), Collection)

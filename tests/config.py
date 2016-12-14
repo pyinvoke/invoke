@@ -174,17 +174,79 @@ Valid real attributes: ['clone', 'from_data', 'global_defaults', 'load_collectio
             c.update({'foo': 'bar'})
             eq_(c['foo'], 'bar')
 
+        def allows_comparison_with_real_dicts(self):
+            c = Config({'foo': {'bar': 'biz'}})
+            eq_(c['foo'], {'bar': 'biz'})
+
         def supports_mutation_via_attribute_access(self):
             c = Config({'foo': 'bar'})
             eq_(c.foo, 'bar')
             c.foo = 'notbar'
             eq_(c.foo, 'notbar')
+            eq_(c['foo'], 'notbar')
 
         def supports_nested_mutation_via_attribute_access(self):
             c = Config({'foo': {'bar': 'biz'}})
             eq_(c.foo.bar, 'biz')
             c.foo.bar = 'notbiz'
             eq_(c.foo.bar, 'notbiz')
+            eq_(c['foo']['bar'], 'notbiz')
+
+        def real_attrs_and_methods_win_over_attr_proxying(self):
+            # Setup
+            class MyConfig(Config):
+                myattr = None
+                def mymethod(self):
+                    return 7
+            c = MyConfig({'myattr': 'foo', 'mymethod': 'bar'})
+            # By default, attr and config value separate
+            eq_(c.myattr, None)
+            eq_(c['myattr'], 'foo')
+            # After a setattr, same holds true
+            c.myattr = 'notfoo'
+            eq_(c.myattr, 'notfoo')
+            eq_(c['myattr'], 'foo')
+            # Method and config value separate
+            ok_(callable(c.mymethod))
+            eq_(c.mymethod(), 7)
+            eq_(c['mymethod'], 'bar')
+            # And same after setattr
+            def monkeys():
+                return 13
+            c.mymethod = monkeys
+            eq_(c.mymethod(), 13)
+            eq_(c['mymethod'], 'bar')
+
+        def inherited_real_attrs_also_win_over_config_keys(self):
+            class MyConfigParent(Config):
+                parent_attr = 17
+            class MyConfig(MyConfigParent):
+                pass
+            c = MyConfig()
+            eq_(c.parent_attr, 17)
+            c.parent_attr = 33
+            oops = "Oops! Looks like config won over real attr!"
+            ok_('parent_attr' not in c, oops)
+            eq_(c.parent_attr, 33)
+            c['parent_attr'] = 'fifteen'
+            eq_(c.parent_attr, 33)
+            eq_(c['parent_attr'], 'fifteen')
+
+        def nonexistent_attrs_can_be_set_to_create_new_top_level_configs(self):
+            # I.e. some_config.foo = 'bar' is like some_config['foo'] = 'bar'.
+            # When this test breaks it usually means some_config.foo = 'bar'
+            # sets a regular attribute - and the configuration itself is never
+            # touched!
+            c = Config()
+            c.some_setting = 'some_value'
+            eq_(c['some_setting'], 'some_value')
+
+        def nonexistent_attr_setting_works_nested_too(self):
+            c = Config()
+            c.a_nest = {}
+            eq_(c['a_nest'], {})
+            c.a_nest.an_egg = True
+            ok_(c['a_nest']['an_egg'] is True)
 
         def string_display(self):
             "__str__ and friends"

@@ -43,6 +43,9 @@ class Init(Spec):
         def context_class(self):
             assert invoke.Context is invoke.context.Context
 
+        def mock_context_class(self):
+            assert invoke.MockContext is invoke.context.MockContext
+
         def config_class(self):
             assert invoke.Config is invoke.config.Config
 
