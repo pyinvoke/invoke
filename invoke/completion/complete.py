@@ -2,12 +2,13 @@
 Command-line completion mechanisms, executed by the core ``--complete`` flag.
 """
 
+import os
 import re
 import shlex
 
-from .exceptions import Exit, ParseError
-from .parser import Parser
-from .util import debug, task_name_sort_key
+from ..exceptions import Exit, ParseError
+from ..parser import Parser
+from ..util import debug, task_name_sort_key
 
 
 def complete(binary, core, initial_context, collection):
@@ -90,6 +91,21 @@ def print_task_names(collection):
         # so important that it's worth bending over backwards here.
         for alias in collection.task_names[name]:
             print(alias)
+
+
+def print_completion_script(console_type, binary):
+    if console_type not in ('bash', 'zsh', 'fish'):
+        raise Exit('Console type "%s" not supported. Choose either '
+                   'bash, zsh or fish.')
+    path2script = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                               console_type)
+    debug("Printing completion script from %s" % path2script)
+    binary_names = binary_selector(binary).split("|")
+    with open(path2script, 'r') as script:
+        for line in script.readlines():
+            print(line.strip("\n")
+                      .replace('invoke inv', ' '.join(binary_names))
+                      .replace('invoke', binary_names[-1]))
 
 
 def binary_selector(binary):

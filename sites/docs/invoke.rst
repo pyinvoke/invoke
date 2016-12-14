@@ -46,8 +46,14 @@ for anywhere in the command line.
         --foo-arg
         --foo-arg-2
 
-    For detailed examples of how to use this option, see the bundled completion
-    scripts stored in ``completion/`` in the source distribution.
+    For more details on how to make best use of this option, see the
+    print-completion-script option below.
+
+.. option:: --print-completion-script=STRING
+
+    Print a completion script for the console type you prefer (bash, zsh or
+    fish). This can be sourced into the current session in order to enjoy
+    :ref:`tab-completion for tasks and options <tab-completion>`.
 
 .. option:: --hide=STRING
 
