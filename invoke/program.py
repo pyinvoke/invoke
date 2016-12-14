@@ -5,7 +5,7 @@ import textwrap
 
 from .vendor import six
 
-from .complete import complete
+from .completion.complete import complete, print_completion_script
 from .config import Config
 from .loader import FilesystemLoader
 from .parser import Parser, ParserContext, Argument
@@ -39,6 +39,12 @@ class Program(object):
                 kind=bool,
                 default=False,
                 help="Print tab-completion candidates for given parse remainder.", # noqa
+            ),
+            Argument(
+                names=('print-completion-script',),
+                kind=str,
+                default='',
+                help="Write a completion script for your preferred console (bash|zsh|fish).", # noqa
             ),
             Argument(
                 names=('debug', 'd'),
@@ -361,6 +367,11 @@ class Program(object):
         if self.args.complete.value:
             complete(self.binary, self.core, self.initial_context, self.collection)
 
+        # Print completion script if necessary
+        if self.args['print-completion-script'].value:
+            print_completion_script(self.args['print-completion-script'].value, self.binary)
+            raise Exit
+ 
         # Fallback behavior if no tasks were given & no default specified
         # (mostly a subroutine for overriding purposes)
         # NOTE: when there is a default task, Executor will select it when no

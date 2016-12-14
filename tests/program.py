@@ -320,23 +320,25 @@ Usage: inv[oke] [--core-opts] task1 [--task1-opts] ... taskN [--taskN-opts]
 
 Core options:
 
-  --complete                       Print tab-completion candidates for given
-                                   parse remainder.
-  --hide=STRING                    Set default value of run()'s 'hide' kwarg.
-  --no-dedupe                      Disable task deduplication.
-  --write-pyc                      Enable creation of .pyc files.
-  -c STRING, --collection=STRING   Specify collection name to load.
-  -d, --debug                      Enable debug output.
-  -e, --echo                       Echo executed commands before running.
-  -f STRING, --config=STRING       Runtime configuration file to use.
-  -h [STRING], --help[=STRING]     Show core or per-task help and exit.
-  -l, --list                       List available tasks.
-  -p, --pty                        Use a pty when executing shell commands.
-  -r STRING, --root=STRING         Change root directory used for finding task
-                                   modules.
-  -V, --version                    Show version and exit.
-  -w, --warn-only                  Warn, instead of failing, when shell
-                                   commands fail.
+  --complete                         Print tab-completion candidates for given
+                                     parse remainder.
+  --hide=STRING                      Set default value of run()'s 'hide' kwarg.
+  --no-dedupe                        Disable task deduplication.
+  --print-completion-script=STRING   Write a completion script for your
+                                     preferred console (bash|zsh|fish).
+  --write-pyc                        Enable creation of .pyc files.
+  -c STRING, --collection=STRING     Specify collection name to load.
+  -d, --debug                        Enable debug output.
+  -e, --echo                         Echo executed commands before running.
+  -f STRING, --config=STRING         Runtime configuration file to use.
+  -h [STRING], --help[=STRING]       Show core or per-task help and exit.
+  -l, --list                         List available tasks.
+  -p, --pty                          Use a pty when executing shell commands.
+  -r STRING, --root=STRING           Change root directory used for finding
+                                     task modules.
+  -V, --version                      Show version and exit.
+  -w, --warn-only                    Warn, instead of failing, when shell
+                                     commands fail.
 
 """.lstrip()
                 for flag in ['-h', '--help']:
