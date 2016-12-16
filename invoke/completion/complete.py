@@ -13,7 +13,8 @@ from ..util import debug, sort_names
 
 def complete(binary, core, initial_context, collection):
     # Strip out program name (scripts give us full command line)
-    invocation = re.sub(r'^(%s) ' % binary_selector(binary), '', core.remainder)
+    invocation = re.sub(r'^(%s) ' % binary_selector(binary), '',
+                        core.remainder)
     debug("Completing for invocation: {0!r}".format(invocation))
     # Tokenize (shlex will have to do)
     tokens = shlex.split(invocation)
@@ -120,8 +121,7 @@ def binary_selector(binary):
     """
     m = re.match(r"(\w+)\[?(\w+)?\]?", binary)
     if not m:
-        debug("Binary {} could not be matched against our RE."\
-                .format(binary))
+        debug("Binary {} could not be matched against our RE.".format(binary))
         return binary
     if m.group(2):
         return "{0}|{0}{1}".format(m.group(1), m.group(2))

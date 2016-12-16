@@ -180,16 +180,16 @@ class Program(object):
 
         :param str binary:
             The binary name(s) you intend to address this program with. Useful
-            if you install it under a full name as well as a short name and want
-            both of them to appear in ``--help`` output and be recognized in
-            tab completion. An example is Invoke itself - it installs as both
-            ``inv`` and ``invoke``, and sets ``binary="inv[oke]"``.
+            if you install it under a full name as well as a short name and
+            want both of them to appear in ``--help`` output and be recognized
+            in tab completion. An example is Invoke itself - it installs as
+            both ``inv`` and ``invoke``, and sets ``binary="inv[oke]"``.
 
             If ``None`` (default), uses the first word in ``argv`` verbatim (as
             with ``name`` above, except not capitalized).
 
-            Note that the actual names to which the program responds are usually
-            configured via setup.py->entry_points->console_scripts.
+            Note that the actual names to which the program responds are
+            usually configured via setup.py->entry_points->console_scripts.
 
         :param loader_class:
             The `.Loader` subclass to use when loading task collections.
