@@ -40,7 +40,7 @@ class ShellCompletion:
     def aliased_custom_binary_name_completes(self):
         for used_binary in ('my', 'myapp'):
             expect(
-                '{} -c integration --complete -- ba'.format(used_binary),
+                '%s -c integration --complete -- ba' % used_binary,
                 program=Program(binary='my[app]'),
                 invoke=False,
                 out="bar", test=operator.contains
