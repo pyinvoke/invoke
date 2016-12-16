@@ -204,12 +204,12 @@ class Program(object):
             both of them to appear in ``--help`` output and be recognized in
             tab completion. An example is Invoke itself - it installs as both
             ``inv`` and ``invoke``, and sets ``binary="inv[oke]"``.
- 
+
             If ``None`` (default), uses the first word in ``argv`` verbatim (as
             with ``name`` above, except not capitalized).
 
             Note that the actual names to which the program responds are usually
-            configured via setup.py->entry_points->console_scripts. 
+            configured via setup.py->entry_points->console_scripts.
 
         :param loader_class:
             The `.Loader` subclass to use when loading task collections.
@@ -469,13 +469,15 @@ class Program(object):
 
         # Print completion helpers if necessary
         if self.args.complete.value:
-            complete(self.binary, self.core, self.initial_context, self.collection)
+            complete(self.binary, self.core, self.initial_context,
+                     self.collection)
 
         # Print completion script if necessary
         if self.args['print-completion-script'].value:
-            print_completion_script(self.args['print-completion-script'].value, self.binary)
+            print_completion_script(self.args['print-completion-script'].value,
+                                    self.binary)
             raise Exit
- 
+
         # Fallback behavior if no tasks were given & no default specified
         # (mostly a subroutine for overriding purposes)
         # NOTE: when there is a default task, Executor will select it when no
