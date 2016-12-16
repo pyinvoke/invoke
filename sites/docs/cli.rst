@@ -115,23 +115,29 @@ The core options (which must be given before any task names) are as follows:
 Shell tab completion
 ====================
 
-Invoke ships with some shell completion scripts, which leverage a core CLI
-mechanism suitable for use in custom completion scripts as well. If you're
+Invoke ships with some shell completion scripts. If you're 
 using Bash or Zsh, simply do the following:
 
-* ``source`` the shell completion helper script provided by ``invoke`` into
+* ``source`` the shell completion helper script provided by Invoke into
   your current session::
 
         $ source <(invoke --print-completion-script bash)
+        
+  or::
+
+        $ source <(invoke --print-completion-script zsh)
  
   ..
 
-    * Replace ``bash`` in this example with ``zsh`` or ``fish`` if you're using
-      those console types.  
     * The line above is probably most useful if you place it in your shell 
-      login file (e.g. ``.bash_profile``, ``.zshrc``).
+      login file (i.e. ``~/.bash_profile`` or ``~/.zshrc``).    
     * If your program uses :ref:`a distinct binary name <reusing-as-a-binary>`,
-      substitute that for ``invoke`` in the command above and in the guide below.
+      substitute that for ``invoke`` in the command above and in the guide
+      below.
+    * Specifying ``fish`` as console type (instead of ``bash`` or
+      ``zsh``) is supported, but is currently not suitable to be sourced.
+      Copy the output of ``invoke --print-completion-script fish``
+      into a file in your ``~/.config/fish/completions`` directory.
 
 * By default, tabbing after typing ``inv`` or ``invoke`` will display task
   names from your current directory/project's tasks file.

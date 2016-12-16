@@ -105,8 +105,10 @@ def print_completion_script(console_type, binary):
     with open(path2script, 'r') as script:
         for line in script.readlines():
             print(line.strip("\n")
-                      .replace('invoke inv', ' '.join(binary_names))
-                      .replace('invoke', binary_names[-1]))
+                      .replace('inv invoke', ' '.join(binary_names)) #noqa
+                      .replace("inv'/'invoke", "'/'".join(binary_names)) #noqa
+                      .replace('invoke', binary_names[-1]) #noqa
+                      .replace('py%s' % binary_names[-1], 'pyinvoke')) #noqa
 
 
 def binary_selector(binary):
@@ -116,7 +118,7 @@ def binary_selector(binary):
     E.g. if you use binary=inv[oke], this gives you 'inv|invoke'.
          if you use binary=fabric, this simply returns 'fabric'.
     """
-    m = re.match("(\w+)\[?(\w+)?\]?", binary)
+    m = re.match(r"(\w+)\[?(\w+)?\]?", binary)
     if not m:
         debug("Binary {} could not be matched against our RE."\
                 .format(binary))
