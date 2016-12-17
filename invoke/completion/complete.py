@@ -97,8 +97,8 @@ def print_task_names(collection):
 
 def print_completion_script(console_type, binary):
     if console_type not in ('bash', 'zsh', 'fish'):
-        raise Exit('Console type "%s" not supported. Choose either '
-                   'bash, zsh or fish.')
+        raise ParseError('Console type "%s" not supported. Choose either '
+                         'bash, zsh or fish.')
     path2script = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                                console_type)
     debug("Printing completion script from %s" % path2script)
