@@ -120,9 +120,6 @@ def binary_selector(binary):
          if you use binary=fabric, this simply returns 'fabric'.
     """
     m = re.match(r"(\w+)\[?(\w+)?\]?", binary)
-    if not m:
-        debug("Binary {} could not be matched against our RE.".format(binary))
-        return binary
     if m.group(2):
         return "{0}|{0}{1}".format(m.group(1), m.group(2))
     else:
