@@ -153,3 +153,25 @@ subprocess' regular output streams. Thankfully, the solution is usually easy:
 just add ``pty=True`` to your `~invoke.run` call. Forcing use of an explicit
 pseudo-terminal usually tricks these kinds of programs into behaving and
 writing prompts to stderr.
+
+
+I'm getting ``IOError: Inappropriate ioctl for device`` when I run commands!
+----------------------------------------------------------------------------
+
+This error typically means some code in your project or its dependencies has
+replaced one of the process streams (``sys.stdin``, ``sys.stdout`` or
+``sys.stderr``) with an object that isn't actually hooked up to a terminal, but
+which pretends that it is. For example, test runners or build systems often do
+this.
+
+Technically, what's happened is that the object handed to Invoke's command
+executor as e.g. ``run('command', in_stream=xxx)`` (or ``out_stream`` or etc;
+and these all default to the ``sys`` members listed above) implements a
+``fileno`` method that is not returning the ID of a real terminal file
+descriptor. Breaking the contract in this way is what's leading Invoke to do
+things the OS doesn't like.
+
+We're always trying to make this detection smarter; if upgrading to the latest
+version of Invoke doesn't fix the problem for you, please submit a bug report
+including details about the values and types of ``sys.stdin/stdout/stderr``.
+Hopefully we'll find another heuristic we can use!
