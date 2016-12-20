@@ -45,7 +45,7 @@ script:
   # NOTE: Using the above-created passworded sudo-capable user so that
   # sudo-related integration tests work as expected. (Otherwise, sudo prompt
   # response will not be properly tested!)
-  # NOTE: This comamnd will fail if the tests fail.
+  # NOTE: This command will fail if the tests fail.
   - "sudo -u sudouser bash -c \"source $VIRTUAL_ENV/bin/activate && inv coverage --no-html\""
   # Websites build OK? (Not on PyPy3, Sphinx is all "who the hell are you?" =/
   - "[[ $TRAVIS_PYTHON_VERSION != 'pypy3' ]] && inv sites"
