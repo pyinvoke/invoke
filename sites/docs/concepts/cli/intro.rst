@@ -164,7 +164,7 @@ In Python, it's common to use ``underscored_names`` for keyword arguments,
 e.g.::
 
     @task
-    def mytask(my_option=False):
+    def mytask(ctx, my_option=False):
         pass
 
 However, the typical convention for command-line flags is dashes, which aren't
