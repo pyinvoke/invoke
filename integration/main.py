@@ -16,11 +16,19 @@ from _util import only_utf8
 def _output_eq(cmd, expected):
     return eq_(run(cmd, hide=True).stdout, expected)
 
+def _setup(self):
+    self.cwd = os.getcwd()
+    # Enter integration/ so Invoke loads its local tasks.py
+    os.chdir(os.path.dirname(__file__))
+
 
 class Main(Spec):
     def setup(self):
-        # Enter integration/ so Invoke loads its local tasks.py
-        os.chdir(os.path.dirname(__file__))
+        # MEH
+        _setup(self)
+
+    def teardown(self):
+        os.chdir(self.cwd)
 
     class basics:
         @trap
@@ -76,6 +84,8 @@ class Main(Spec):
                     if six.PY2 and not isinstance(data, six.binary_type):
                         data.encode('ascii')
             self.bad_stdout = BadlyBehavedStdout()
+            # Mehhh at 'subclassing' via inner classes =/
+            _setup(self)
 
         @only_utf8
         def basic_nonstandard_characters(self):
