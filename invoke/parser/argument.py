@@ -47,11 +47,18 @@ class Argument(object):
         nicks = ""
         if self.nicknames:
             nicks = " ({0})".format(", ".join(self.nicknames))
+        flags = ""
+        if self.positional or self.optional:
+            flags = " "
+        if self.positional:
+            flags += "*"
+        if self.optional:
+            flags += "?"
         return "<{0}: {1}{2}{3}>".format(
             self.__class__.__name__,
             self.name,
             nicks,
-            " *" if self.positional else ""
+            flags,
         )
 
     def __repr__(self):

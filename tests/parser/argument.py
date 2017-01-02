@@ -54,6 +54,20 @@ class Argument_(Spec):
                 "<Argument: name *>"
             )
 
+        def shows_optionalness(self):
+            eq_(
+                str(Argument('name', optional=True)),
+                "<Argument: name ?>",
+            )
+
+        def positionalness_and_optionalness_stick_together(self):
+            # TODO: but do these even make sense on the same argument? For now,
+            # best to have a nonsensical test than a missing one...
+            eq_(
+                str(Argument('name', optional=True, positional=True)),
+                "<Argument: name *?>",
+            )
+
     class repr:
         "__repr__"
 
