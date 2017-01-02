@@ -148,3 +148,17 @@ class Main(Spec):
             assert size != ""
             assert size != "0 0"
             assert size != "24 80"
+
+    class parsing:
+        def false_as_optional_arg_default_value_works_okay(self):
+            # (Dis)proves #416
+            os.chdir('_support')
+            for argstr, expected in (
+                ('', 'False'),
+                ('--meh', 'True'),
+                ('--meh=whee', 'whee'),
+            ):
+                _output_eq(
+                    "inv -c parsing foo {}".format(argstr),
+                    expected + "\n",
+                )
