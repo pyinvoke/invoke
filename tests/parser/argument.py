@@ -51,7 +51,7 @@ class Argument_(Spec):
         def shows_positionalness(self):
             eq_(
                 str(Argument('name', positional=True)),
-                "<Argument: name*>"
+                "<Argument: name *>"
             )
 
     class repr:

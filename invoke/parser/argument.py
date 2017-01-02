@@ -51,7 +51,7 @@ class Argument(object):
             self.__class__.__name__,
             self.name,
             nicks,
-            "*" if self.positional else ""
+            " *" if self.positional else ""
         )
 
     def __repr__(self):
