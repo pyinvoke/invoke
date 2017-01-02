@@ -69,10 +69,6 @@ class Main(Spec):
                 except OSError:
                     pass
 
-    def KeyboardInterrupt_on_stdin_doesnt_flake(self):
-        # E.g. inv test => Ctrl-C halfway => shouldn't get buffer API errors
-        skip()
-
     class funky_characters_in_stdout:
         def setup(self):
             class BadlyBehavedStdout(io.TextIOBase):
