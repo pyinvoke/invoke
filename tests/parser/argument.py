@@ -68,6 +68,21 @@ class Argument_(Spec):
                 "<Argument: name *?>",
             )
 
+        def shows_kind_if_not_str(self):
+            eq_(
+                str(Argument('age', kind=int)),
+                "<Argument: age [int]>",
+            )
+
+        def all_the_things_together(self):
+            arg = Argument(
+                names=('meh', 'm'),
+                kind=int,
+                optional=True,
+                positional=True,
+            )
+            eq_(str(arg), "<Argument: meh (m) [int] *?>")
+
     class repr:
         "__repr__"
 

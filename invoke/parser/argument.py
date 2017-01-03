@@ -54,10 +54,16 @@ class Argument(object):
             flags += "*"
         if self.optional:
             flags += "?"
-        return "<{0}: {1}{2}{3}>".format(
+        # TODO: store this default value somewhere other than signature of
+        # Argument.__init__?
+        kind = ""
+        if self.kind != str:
+            kind = " [{0}]".format(self.kind.__name__)
+        return "<{0}: {1}{2}{3}{4}>".format(
             self.__class__.__name__,
             self.name,
             nicks,
+            kind,
             flags,
         )
 
