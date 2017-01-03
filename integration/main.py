@@ -2,7 +2,7 @@ import io
 import os
 import sys
 
-from spec import Spec, trap, eq_, skip, ok_
+from spec import Spec, trap, eq_, ok_
 
 from invoke.vendor import six
 
@@ -132,18 +132,19 @@ class Main(Spec):
             """
             Run command under PTY
             """
-            # Most Unix systems should have stty, which asplodes when not run under
-            # a pty, and prints useful info otherwise
+            # Most Unix systems should have stty, which asplodes when not run
+            # under a pty, and prints useful info otherwise
             result = run('stty -a', hide=True, pty=True)
             # PTYs use \r\n, not \n, line separation
             ok_("\r\n" in result.stdout)
             eq_(result.pty, True)
 
         def pty_size_is_realistic(self):
-            # When we don't explicitly set pty size, 'stty size' sees it as 0x0.
-            # When we do set it, it should be some non 0x0, non 80x24 (the default)
-            # value. (yes, this means it fails if you really do have an 80x24
-            # terminal. but who does that?)
+            # When we don't explicitly set pty size, 'stty size' sees it as
+            # 0x0.
+            # When we do set it, it should be some non 0x0, non 80x24 (the
+            # default) value. (yes, this means it fails if you really do have
+            # an 80x24 terminal. but who does that?)
             size = run('stty size', hide=True, pty=True).stdout.strip()
             assert size != ""
             assert size != "0 0"
