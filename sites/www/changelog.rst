@@ -2,6 +2,18 @@
 Changelog
 =========
 
+* :bug:`419` Optional parser arguments had a few issues:
+
+  - The :ref:`conceptual docs about CLI parsing <optional-values>` mentioned
+    them, but didn't actually show via example how to enable the feature,
+    implying (incorrectly) that they were active always by default. An example
+    has been added.
+  - Even when enabled, they did not function correctly when their default
+    values were of type ``bool``; in this situation, trying to give a value (vs
+    just giving the flag name by itself) caused a parser error.  This has been
+    fixed.
+
+  Thanks to ``@ouroboroscoding`` for the report.
 * :support:`204` (via :issue:`412`) Fall back to globally-installed copies of
   our vendored dependencies, if the import from the ``vendor`` tree fails. In
   normal situations this won't happen, but it allows advanced users or
