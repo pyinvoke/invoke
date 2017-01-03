@@ -182,7 +182,12 @@ class Task(object):
         # Handle default value & kind if possible
         if default not in (None, NO_DEFAULT):
             # TODO: allow setting 'kind' explicitly.
-            opts['kind'] = type(default)
+            # NOTE: skip setting 'kind' if optional is True + type(default) is
+            # bool; that results in a nonsensical Argument which gives the
+            # parser grief in a few ways.
+            kind = type(default)
+            if not (opts['optional'] and kind is bool):
+                opts['kind'] = kind
             opts['default'] = default
         # Help
         if name in self.help:

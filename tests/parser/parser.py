@@ -292,20 +292,6 @@ class Parser_(Spec):
         def not_given_at_all_uses_default_value(self):
             self._expect('', 'mydefault')
 
-        def bool_kind_should_not_override_optional_with_value(self):
-            # Re #416
-            # NOTE: this is the exact type of Argument one gets from defining a
-            # task as:
-            # @task(optional=['foo'])
-            # def mytask(c, foo=False): ...
-            # See also the integration test for this same case.
-            arg = Argument(name='foo', kind=bool, default=False, optional=True)
-            self._expect(
-                argstr='--foo=whatever',
-                expected='whatever',
-                parser=self._parser(arguments=[arg]),
-            )
-
         class ambiguity_sanity_checks:
             def _test_for_ambiguity(self, invoke, parser=None):
                 msg = "is ambiguous"

@@ -151,7 +151,9 @@ class Main(Spec):
 
     class parsing:
         def false_as_optional_arg_default_value_works_okay(self):
-            # (Dis)proves #416
+            # (Dis)proves #416. When bug present, parser gets very confused,
+            # asks "what the hell is 'whee'?". See also a unit test for
+            # Task.get_arguments.
             os.chdir('_support')
             for argstr, expected in (
                 ('', 'False'),

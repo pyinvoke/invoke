@@ -218,6 +218,21 @@ class Task_(Spec):
                 [False, True, False]
             )
 
+        def optional_prevents_bool_defaults_from_affecting_kind(self):
+            # Re #416. See notes in the function under test for rationale.
+            @task(optional=['myarg'])
+            def mytask(c, myarg=False):
+                pass
+            arg = mytask.get_arguments()[0]
+            ok_(arg.kind is str) # not bool!
+
+        def optional_plus_nonbool_default_does_not_override_kind(self):
+            @task(optional=['myarg'])
+            def mytask(c, myarg=17):
+                pass
+            arg = mytask.get_arguments()[0]
+            ok_(arg.kind is int) # not str!
+
         def turns_function_signature_into_Arguments(self):
             eq_(len(self.args), 3, str(self.args))
             assert 'arg2' in self.argdict
