@@ -103,6 +103,16 @@ class ExceptionHandlingThread(threading.Thread):
     Thread handler making it easier for parent to handle thread exceptions.
 
     Based in part on Fabric 1's ThreadHandler. See also Fabric GH issue #204.
+
+    When used directly, can be used in place of a regular ``threading.Thread``.
+    If subclassed, the subclass must do one of:
+
+    - supply ``target`` to ``__init__``
+    - define ``_run()`` instead of ``run()``
+
+    This is because this thread's entire point is to wrap behavior around the
+    thread's execution; subclasses could not redefine ``run()`` without
+    breaking that functionality.
     """
     def __init__(self, **kwargs):
         """
@@ -122,14 +132,26 @@ class ExceptionHandlingThread(threading.Thread):
 
     def run(self):
         try:
-            super(ExceptionHandlingThread, self).run()
+            # Allow subclasses implemented using the "override run()'s body"
+            # approach to work, by using _run() instead of run(). If that
+            # doesn't appear to be the case, then assume we're being used
+            # directly and just use super() ourselves.
+            if hasattr(self, '_run') and callable(self._run):
+                self._run()
+            else:
+                super(ExceptionHandlingThread, self).run()
         except BaseException:
             # Store for actual reraising later
             self.exc_info = sys.exc_info()
             # And log now, in case we never get to later (e.g. if executing
             # program is hung waiting for us to do something)
             msg = "Encountered exception {0!r} in thread for {1!r}"
-            debug(msg.format(self.exc_info[1], self.kwargs['target'].__name__)) # noqa
+            # Name is either target function's dunder-name, or just "_run" if
+            # we were run subclass-wise.
+            name = '_run'
+            if 'target' in self.kwargs:
+                name = self.kwargs['target'].__name__
+            debug(msg.format(self.exc_info[1], name))
 
     def exception(self):
         """
