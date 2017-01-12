@@ -441,13 +441,30 @@ class Config(DataProxy):
         object.__setattr__(self, '_collection', data)
         self.merge()
 
-    def clone(self):
+    def clone(self, into=None):
         """
         Return a copy of this configuration object.
 
         The new object will be identical in terms of configured sources and any
         loaded/merged data, but will be a distinct object with no shared
         mutable state.
+
+        :param class into:
+            A `.Config` subclass that the new clone should be "upgraded" to.
+
+            Used by client libraries which have their own `.Config` subclasses
+            that e.g. define additional defaults; cloning "into" one of these
+            subclasses ensures that any new keys/subtrees are added gracefully,
+            without overwriting anything that may have been pre-defined.
+
+            Default: ``None`` (just clone into another regular `.Config`).
+
+        :returns:
+            A `.Config`, or an instance of the class given to ``into``.
+
+        :raises TypeError:
+            if ``into`` is given a value and that value is not a `.Config`
+            subclass.
         """
         new = self.__class__()
         for name in """

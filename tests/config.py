@@ -646,3 +646,66 @@ Valid real attributes: ['clone', 'from_data', 'global_defaults', 'load_collectio
             ok_(isinstance(c, MyConfig)) # sanity
             c2 = c.clone()
             ok_(isinstance(c2, MyConfig)) # actual test
+
+        class into_kwarg:
+            "'into' kwarg"
+            def is_not_required(self):
+                c = Config(defaults={'meh': 'okay'})
+                c2 = c.clone()
+                eq_(c2.meh, 'okay')
+
+            def raises_TypeError_if_value_is_not_Config_subclass(self):
+                try:
+                    Config().clone(into=17)
+                except TypeError:
+                    pass
+                else:
+                    assert False, "Non-class obj did not raise TypeError!"
+
+                class Foo(object):
+                    pass
+
+                try:
+                    Config().clone(into=Foo)
+                except TypeError:
+                    pass
+                else:
+                    assert False, "Non-subclass did not raise TypeError!"
+
+            def resulting_clones_are_typed_as_new_class(self):
+                class MyConfig(Config):
+                    pass
+                c = Config()
+                c2 = c.clone(into=MyConfig)
+                ok_(type(c2) is MyConfig)
+
+            def non_conflicting_values_are_merged(self):
+                # NOTE: this is really just basic clone behavior.
+                class MyConfig(Config):
+                    @staticmethod
+                    def global_defaults(self):
+                        orig = Config.global_defaults()
+                        orig['new']['data'] = 'ohai'
+                        return orig
+                c = Config(defaults={'other': {'data': 'hello'}})
+                c2 = c.clone(into=MyConfig)
+                # New data from MyConfig present
+                eq_(c2.new.data, 'ohai')
+                # As well as old data from the cloned instance
+                eq_(c2.other.data, 'hello')
+
+            def new_class_base_data_does_not_overwrite_if_present(self):
+                # I.e. if the to-be-cloned config was anticipating the new
+                # settings and already filled them out
+                # TODO: there's an argument to be made that this shouldn't be a
+                # thing and we should instead abort, saying "hey, we're losing
+                # data!!"
+                class MyConfig(Config):
+                    @staticmethod
+                    def global_defaults(self):
+                        orig = Config.global_defaults()
+                        orig['already']['present'] = 'new data here'
+                        return orig
+                c = Config(defaults={'already': {'present': 'I live!'}})
+                c2 = c.clone(into=MyConfig)
+                eq_(c2.already.present, 'I live!') # not 'new data here'
