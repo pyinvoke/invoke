@@ -162,6 +162,6 @@ class Main(Spec):
                 ('--meh=whee', 'whee'),
             ):
                 _output_eq(
-                    "inv -c parsing foo {}".format(argstr),
+                    "inv -c parsing foo {0}".format(argstr),
                     expected + "\n",
                 )
