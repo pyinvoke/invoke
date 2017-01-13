@@ -683,9 +683,9 @@ Valid real attributes: ['clone', 'from_data', 'global_defaults', 'load_collectio
                 # NOTE: this is really just basic clone behavior.
                 class MyConfig(Config):
                     @staticmethod
-                    def global_defaults(self):
+                    def global_defaults():
                         orig = Config.global_defaults()
-                        orig['new']['data'] = 'ohai'
+                        orig['new'] = {'data': 'ohai'}
                         return orig
                 c = Config(defaults={'other': {'data': 'hello'}})
                 c2 = c.clone(into=MyConfig)
@@ -702,9 +702,9 @@ Valid real attributes: ['clone', 'from_data', 'global_defaults', 'load_collectio
                 # data!!"
                 class MyConfig(Config):
                     @staticmethod
-                    def global_defaults(self):
+                    def global_defaults():
                         orig = Config.global_defaults()
-                        orig['already']['present'] = 'new data here'
+                        orig['already'] = {'present': 'new data here'}
                         return orig
                 c = Config(defaults={'already': {'present': 'I live!'}})
                 c2 = c.clone(into=MyConfig)

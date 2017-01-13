@@ -449,7 +449,7 @@ class Config(DataProxy):
         loaded/merged data, but will be a distinct object with no shared
         mutable state.
 
-        :param class into:
+        :param into:
             A `.Config` subclass that the new clone should be "upgraded" to.
 
             Used by client libraries which have their own `.Config` subclasses
@@ -466,7 +466,13 @@ class Config(DataProxy):
             if ``into`` is given a value and that value is not a `.Config`
             subclass.
         """
-        new = self.__class__()
+        # Sanity check for 'into'
+        if into is not None and not issubclass(into, self.__class__):
+            err = "'into' must be a subclass of {}!"
+            raise TypeError(err.format(self.__class__.__name__))
+        # Construct new object
+        constructor = self.__class__ if into is None else into
+        new = constructor()
         for name in """
             defaults
             collection
@@ -491,10 +497,30 @@ class Config(DataProxy):
             overrides
         """.split():
             name = "_{0}".format(name)
-            # TODO: may not need to use object here now that attr access has
-            # been made "real attrs win" style?
-            object.__setattr__(new, name, copy.deepcopy(getattr(self, name)))
-        new.config = copy.deepcopy(self.config)
+            my_data = copy.deepcopy(getattr(self, name))
+            new_data = getattr(new, name)
+            # Non-dict data gets carried over straight
+            # NOTE: presumably someone could really screw up and change these
+            # values' types, but at that point it's on them...
+            if not isinstance(my_data, dict):
+                setattr(new, name, my_data)
+            # Dict data needs merging if 'into' is in play
+            else:
+                if into is None:
+                    setattr(new, name, my_data)
+                else:
+                    # NOTE: merging our data 'onto' the fresh new data, so that
+                    # if we did declare values for keys specified in the new
+                    # class, they aren't overwritten by that class' defaults.
+                    merge_dicts(new_data, my_data)
+                    setattr(new, name, new_data)
+        # As with the individual components, we want to perform a merge if
+        # 'into' is being used.
+        my_config = copy.deepcopy(self.config)
+        if into is None:
+            new.config = my_config
+        else:
+            merge_dicts(new.config, my_config)
         return new
 
     def load_files(self):

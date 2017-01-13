@@ -2,6 +2,10 @@
 Changelog
 =========
 
+* :feature:`-` `Config.clone <invoke.config.Config.clone>` grew a new ``into``
+  kwarg allowing client libraries with their own `~invoke.config.Config`
+  subclasses to easily "upgrade" vanilla Invoke config objects into their local
+  variety.
 * :bug:`419` Optional parser arguments had a few issues:
 
   - The :ref:`conceptual docs about CLI parsing <optional-values>` mentioned
