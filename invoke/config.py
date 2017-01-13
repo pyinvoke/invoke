@@ -462,9 +462,9 @@ class Config(DataProxy):
         :returns:
             A `.Config`, or an instance of the class given to ``into``.
 
-        :raises TypeError:
-            if ``into`` is given a value and that value is not a `.Config`
-            subclass.
+        :raises:
+            ``TypeError``, if ``into`` is given a value and that value is not a
+            `.Config` subclass.
         """
         # Sanity check for 'into'
         if into is not None and not issubclass(into, self.__class__):
