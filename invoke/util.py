@@ -151,7 +151,7 @@ class ExceptionHandlingThread(threading.Thread):
             name = '_run'
             if 'target' in self.kwargs:
                 name = self.kwargs['target'].__name__
-            debug(msg.format(self.exc_info[1], name))
+            debug(msg.format(self.exc_info[1], name)) # noqa
 
     def exception(self):
         """
