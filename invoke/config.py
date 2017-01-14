@@ -468,7 +468,7 @@ class Config(DataProxy):
         """
         # Sanity check for 'into'
         if into is not None and not issubclass(into, self.__class__):
-            err = "'into' must be a subclass of {}!"
+            err = "'into' must be a subclass of {0}!"
             raise TypeError(err.format(self.__class__.__name__))
         # Construct new object
         constructor = self.__class__ if into is None else into
