@@ -7,6 +7,17 @@ Changelog
   created a new config object on each access). This didn't cause any actual
   bugs that we're aware of, but it's unclean and would impact advanced users
   manipulating their own ``Program`` objects, so it's been fixed.
+* :feature:`-` `Config.__init__ <invoke.config.Config.__init__>` no longer
+  automatically calls `.load_files <invoke.config.Config.load_files>`.
+  End-users should not notice a difference, as the CLI machinery does so in its
+  place.
+
+  Rationale: ``Config``-handling code must already perform post-instantiation
+  operations (e.g. loading shell env vars, per-task-collection config merging)
+  to be useful in real-world situations, so it wasn't a useful convenience; and
+  this makes the object lifecycle cleaner and more explicit, allowing advanced
+  users control over exactly when (or whether) their code performs IO
+  operations.
 * :feature:`-` `Config.clone <invoke.config.Config.clone>` grew a new ``into``
   kwarg allowing client libraries with their own `~invoke.config.Config`
   subclasses to easily "upgrade" vanilla Invoke config objects into their local

@@ -209,26 +209,37 @@ class Config(DataProxy):
 
     **Lifecycle**
 
-    On initialization, `.Config` will seek out and load various configuration
-    files from disk, then `.merge` the results with other in-memory sources
-    such as defaults and CLI overrides.
+    On initialization, `.Config` only loads in-memory, task-agnostic config
+    values, e.g.:
 
-    Typically, the `.load_collection` and `.load_shell_env` methods are called
-    after initialization - `.load_collection` prior to each task invocation
-    (because collection-level config data may change depending on the task) and
-    `.load_shell_env` as the final step (as it needs the rest of the config to
-    know which env vars are valid to load).
+    - Base-level defaults, usually from ``.global_defaults``;
+    - Top-level overrides, usually from the CLI parsing step, if it ran.
 
-    Once users are given a copy of the configuration (usually via their task's
-    `.Context` argument) all the above loading (& a final `.merge`) has been
-    performed and they are free to modify it as they would any other regular
-    dictionary.
+    Subsequently, the following methods are typically called, each folding in
+    new levels of the hierarchy and often reaching outside the process:
+
+    - `.load_files`, to load config files and their matching hierarchy levels
+      (global, user, project);
+    - `.load_collection`, to grab per-`.Collection` config depending on the
+      current task being invoked;
+    - `.load_shell_env`, loaded last because it needs the rest of the config
+      present to better understand which env var names are valid.
+
+    .. note::
+        Code using Invoke as a library, without any of the CLI machinery, may
+        opt to skip any or all of these, depending on the desired behavior
+        (usually, going by the 'principle of least surprise' and maximum
+        compatibility with the CLI use case, you'll want to only skip
+        `.load_collection` so conf files and env vars are honored.)
+
+    Once all desired hierarchy sources have been loaded and merged, the config
+    is "done" and handed to the end-user (e.g. as part of a task's `.Context`).
+    At this point it can be read or written to like any other dict.
 
     .. warning::
-        Calling `.merge` after manually modifying `.Config` objects may
-        overwrite those manual changes, since it overwrites the core config
-        dict with data from per-source attributes like ``._defaults`` or
-        ``_.user``.
+        End-users must *not* call the source-loading methods after they've
+        started using the config object; those methods will overwrite any
+        manual changes!
     """
     @staticmethod
     def global_defaults():
