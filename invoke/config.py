@@ -195,8 +195,8 @@ class Config(DataProxy):
 
     This class implements the entire dictionary protocol: methods such as
     ``keys``, ``values``, ``items``, ``pop`` and so forth should all function
-    as they do on regular dicts. It also implements its own methods such as
-    `.load_collection` and `.clone`.
+    as they do on regular dicts. It also implements new config-specific methods
+    such as `.merge`, `.load_files`, `.load_collection` and `.clone`.
 
     .. warning::
         Accordingly, this means that if you have configuration options sharing
@@ -205,8 +205,7 @@ class Config(DataProxy):
 
     Individual configuration 'levels' and their source locations are stored as
     'private' attributes (e.g. ``_defaults``, ``_system_prefix``) so fewer
-    names are "taken" from the perspective of attribute access to user config
-    values.
+    names are "taken" from the perspective of attribute access.
 
     **Lifecycle**
 
@@ -598,9 +597,6 @@ class Config(DataProxy):
     def merge(self):
         """
         Merge all config sources, in order.
-
-        Does not imply loading of config files or environment variables; use
-        `.load_files` and/or `.load_shell_env` beforehand instead.
         """
         debug("Merging config sources in order...")
         debug("Defaults: {0!r}".format(self._defaults))

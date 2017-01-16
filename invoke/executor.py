@@ -26,7 +26,7 @@ class Executor(object):
             config data, if any) by name during execution.
 
         :param config:
-            An optional `.Config` holding configuration state Defaults to an
+            An optional `.Config` holding configuration state. Defaults to an
             empty `.Config` if not given.
 
         :param core:
