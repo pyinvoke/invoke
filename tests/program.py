@@ -643,6 +643,17 @@ Available tasks:
             Program(config_class=klass).run("myapp foo", exit=False)
             eq_(len(klass.call_args_list), 1) # don't care about actual args
 
+        @trap
+        def config_attribute_is_memoized(self):
+            klass = Mock()
+            # Can't .config without .run (meh); .run calls .config once.
+            p = Program(config_class=klass)
+            p.run("myapp foo", exit=False)
+            eq_(klass.call_count, 1)
+            # Second access should use cached value
+            p.config
+            eq_(klass.call_count, 1)
+
         # NOTE: these tests all rely on the invoked tasks to perform the
         # necessary asserts.
         # TODO: can probably tighten these up to assert things about

@@ -2,6 +2,11 @@
 Changelog
 =========
 
+* :bug:`-` `.Program.config` was implemented as a property (attribute) but did
+  not memoize its generated contents (so it created a new config object on each
+  access). This didn't cause any actual bugs that we're aware of, but it's
+  unclean and would impact advanced users manipulating their own `.Program`
+  objects, so it's been fixed.
 * :feature:`-` `Config.clone <invoke.config.Config.clone>` grew a new ``into``
   kwarg allowing client libraries with their own `~invoke.config.Config`
   subclasses to easily "upgrade" vanilla Invoke config objects into their local

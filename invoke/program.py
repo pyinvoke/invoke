@@ -229,6 +229,9 @@ class Program(object):
         The specific `.Config` subclass used may be overridden in `.__init__`
         via ``config_class``.
         """
+        # Memoize, in case client code refers to self.config multiple times.
+        if hasattr(self, '_config'):
+            return self._config
         # Set up runtime overrides from flags.
         # NOTE: only fill in values that would alter behavior, otherwise we
         # want the defaults to come through.
@@ -246,13 +249,13 @@ class Program(object):
             tasks['dedupe'] = False
         overrides = {'run': run, 'tasks': tasks}
         # Stand up config object
-        c = self.config_class(
+        self._config = self.config_class(
             overrides=overrides,
             project_home=self.collection.loaded_from,
             runtime_path=self.args.config.value,
             env_prefix=self.env_prefix,
         )
-        return c
+        return self._config
 
     def run(self, argv=None, exit=True):
         """
