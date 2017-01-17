@@ -20,12 +20,6 @@ def _load(kwarg, type_):
     path = join(CONFIGS_PATH, type_, 'invoke')
     return Config(**{kwarg: path})
 
-def _expect(where, type_, **kwargs):
-    config = _load(where, type_)
-    for key, value in six.iteritems(kwargs):
-        eq_(config[key], value)
-
-
 class Config_(IntegrationSpec):
     class init:
         "__init__"
@@ -263,12 +257,14 @@ Valid real attributes: ['clone', 'from_data', 'global_defaults', 'load_collectio
         def system_global(self):
             "Systemwide conf files"
             for type_ in TYPES:
-                _expect('system_prefix', type_, hooray=type_)
+                config = _load('system_prefix', type_)
+                eq_(config['outer']['inner']['hooray'], type_)
 
         def user_specific(self):
             "User-specific conf files"
             for type_ in TYPES:
-                _expect('user_prefix', type_, hooray=type_)
+                config = _load('user_prefix', type_)
+                eq_(config['outer']['inner']['hooray'], type_)
 
         def project_specific(self):
             "Local-to-project conf files"
@@ -489,7 +485,7 @@ Valid real attributes: ['clone', 'from_data', 'global_defaults', 'load_collectio
             eq_(c.outer.inner.hooray, 'yaml')
 
         def env_vars_override_project(self):
-            os.environ['HOORAY'] = 'env'
+            os.environ['OUTER_INNER_HOORAY'] = 'env'
             c = Config(
                 project_home=join(CONFIGS_PATH, 'yaml'),
             )
@@ -497,7 +493,7 @@ Valid real attributes: ['clone', 'from_data', 'global_defaults', 'load_collectio
             eq_(c.outer.inner.hooray, 'env')
 
         def env_vars_override_user(self):
-            os.environ['HOORAY'] = 'env'
+            os.environ['OUTER_INNER_HOORAY'] = 'env'
             c = Config(
                 user_prefix=join(CONFIGS_PATH, 'yaml', 'invoke'),
             )
@@ -505,7 +501,7 @@ Valid real attributes: ['clone', 'from_data', 'global_defaults', 'load_collectio
             eq_(c.outer.inner.hooray, 'env')
 
         def env_vars_override_systemwide(self):
-            os.environ['HOORAY'] = 'env'
+            os.environ['OUTER_INNER_HOORAY'] = 'env'
             c = Config(
                 system_prefix=join(CONFIGS_PATH, 'yaml', 'invoke'),
             )
@@ -513,14 +509,14 @@ Valid real attributes: ['clone', 'from_data', 'global_defaults', 'load_collectio
             eq_(c.outer.inner.hooray, 'env')
 
         def env_vars_override_collection(self):
-            os.environ['HOORAY'] = 'env'
+            os.environ['OUTER_INNER_HOORAY'] = 'env'
             c = Config()
             c.load_collection({'outer': {'inner': {'hooray': 'defaults'}}})
             c.load_shell_env()
             eq_(c.outer.inner.hooray, 'env')
 
         def runtime_overrides_env_vars(self):
-            os.environ['HOORAY'] = 'env'
+            os.environ['OUTER_INNER_HOORAY'] = 'env'
             c = Config(runtime_path=join(CONFIGS_PATH, 'json', 'invoke.json'))
             c.load_shell_env()
             eq_(c.outer.inner.hooray, 'json')
@@ -631,7 +627,9 @@ Valid real attributes: ['clone', 'from_data', 'global_defaults', 'load_collectio
             eq_(c2.outer.inner.hooray, 'yaml')
             eq_(c2._system, {'outer': {'inner': {'hooray': 'yaml'}}})
 
-        @patch.object(Config, '_load_yaml', return_value={'hooray': 'yaml'})
+        @patch.object(Config, '_load_yaml', return_value={
+            'outer': {'inner': {'hooray': 'yaml'}}
+        })
         def does_not_reload_file_data(self, load_yaml):
             path = join(CONFIGS_PATH, 'yaml', 'invoke')
             c = Config(system_prefix=path)
