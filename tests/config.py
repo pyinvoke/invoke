@@ -274,7 +274,7 @@ Valid real attributes: ['clone', 'from_data', 'global_defaults', 'load_collectio
             "Local-to-project conf files"
             for type_ in TYPES:
                 c = Config(project_home=join(CONFIGS_PATH, type_))
-                eq_(c.hooray, type_)
+                eq_(c.outer.inner.hooray, type_)
 
         def loads_no_project_specific_file_if_no_project_home_given(self):
             c = Config()
@@ -284,7 +284,7 @@ Valid real attributes: ['clone', 'from_data', 'global_defaults', 'load_collectio
 
         def honors_conf_file_flag(self):
             c = Config(runtime_path=join(CONFIGS_PATH, 'yaml', 'invoke.yaml'))
-            eq_(c.hooray, 'yaml')
+            eq_(c.outer.inner.hooray, 'yaml')
 
         @raises(UnknownFileType)
         def unknown_suffix_in_runtime_path_raises_useful_error(self):
@@ -296,7 +296,7 @@ Valid real attributes: ['clone', 'from_data', 'global_defaults', 'load_collectio
             # Borrow another test's Python module.
             c = _load('system_prefix', 'python')
             # Sanity test that lowercase works
-            eq_(c.hooray, 'python')
+            eq_(c.outer.inner.hooray, 'python')
             # Real test that builtins, etc are stripped out
             for special in ('builtins', 'file', 'package', 'name', 'doc'):
                 ok_('__{0}__'.format(special) not in c)
@@ -446,47 +446,47 @@ Valid real attributes: ['clone', 'from_data', 'global_defaults', 'load_collectio
         #
 
         def collection_overrides_defaults(self):
-            c = Config(defaults={'setting': 'default'})
-            c.load_collection({'setting': 'collection'})
-            eq_(c.setting, 'collection')
+            c = Config(defaults={'nested': {'setting': 'default'}})
+            c.load_collection({'nested': {'setting': 'collection'}})
+            eq_(c.nested.setting, 'collection')
 
         def systemwide_overrides_collection(self):
             c = Config(system_prefix=join(CONFIGS_PATH, 'yaml', 'invoke'))
-            c.load_collection({'hooray': 'defaults'})
-            eq_(c.hooray, 'yaml')
+            c.load_collection({'outer': {'inner': {'hooray': 'defaults'}}})
+            eq_(c.outer.inner.hooray, 'yaml')
 
         def user_overrides_systemwide(self):
             c = Config(
                 system_prefix=join(CONFIGS_PATH, 'yaml', 'invoke'),
                 user_prefix=join(CONFIGS_PATH, 'json', 'invoke'),
             )
-            eq_(c.hooray, 'json')
+            eq_(c.outer.inner.hooray, 'json')
 
         def user_overrides_collection(self):
             c = Config(user_prefix=join(CONFIGS_PATH, 'json', 'invoke'))
-            c.load_collection({'hooray': 'defaults'})
-            eq_(c.hooray, 'json')
+            c.load_collection({'outer': {'inner': {'hooray': 'defaults'}}})
+            eq_(c.outer.inner.hooray, 'json')
 
         def project_overrides_user(self):
             c = Config(
                 user_prefix=join(CONFIGS_PATH, 'json', 'invoke'),
                 project_home=join(CONFIGS_PATH, 'yaml'),
             )
-            eq_(c.hooray, 'yaml')
+            eq_(c.outer.inner.hooray, 'yaml')
 
         def project_overrides_systemwide(self):
             c = Config(
                 system_prefix=join(CONFIGS_PATH, 'json', 'invoke'),
                 project_home=join(CONFIGS_PATH, 'yaml'),
             )
-            eq_(c.hooray, 'yaml')
+            eq_(c.outer.inner.hooray, 'yaml')
 
         def project_overrides_collection(self):
             c = Config(
                 project_home=join(CONFIGS_PATH, 'yaml'),
             )
-            c.load_collection({'hooray': 'defaults'})
-            eq_(c.hooray, 'yaml')
+            c.load_collection({'outer': {'inner': {'hooray': 'defaults'}}})
+            eq_(c.outer.inner.hooray, 'yaml')
 
         def env_vars_override_project(self):
             os.environ['HOORAY'] = 'env'
@@ -494,7 +494,7 @@ Valid real attributes: ['clone', 'from_data', 'global_defaults', 'load_collectio
                 project_home=join(CONFIGS_PATH, 'yaml'),
             )
             c.load_shell_env()
-            eq_(c.hooray, 'env')
+            eq_(c.outer.inner.hooray, 'env')
 
         def env_vars_override_user(self):
             os.environ['HOORAY'] = 'env'
@@ -502,7 +502,7 @@ Valid real attributes: ['clone', 'from_data', 'global_defaults', 'load_collectio
                 user_prefix=join(CONFIGS_PATH, 'yaml', 'invoke'),
             )
             c.load_shell_env()
-            eq_(c.hooray, 'env')
+            eq_(c.outer.inner.hooray, 'env')
 
         def env_vars_override_systemwide(self):
             os.environ['HOORAY'] = 'env'
@@ -510,55 +510,55 @@ Valid real attributes: ['clone', 'from_data', 'global_defaults', 'load_collectio
                 system_prefix=join(CONFIGS_PATH, 'yaml', 'invoke'),
             )
             c.load_shell_env()
-            eq_(c.hooray, 'env')
+            eq_(c.outer.inner.hooray, 'env')
 
         def env_vars_override_collection(self):
             os.environ['HOORAY'] = 'env'
             c = Config()
-            c.load_collection({'hooray': 'defaults'})
+            c.load_collection({'outer': {'inner': {'hooray': 'defaults'}}})
             c.load_shell_env()
-            eq_(c.hooray, 'env')
+            eq_(c.outer.inner.hooray, 'env')
 
         def runtime_overrides_env_vars(self):
             os.environ['HOORAY'] = 'env'
             c = Config(runtime_path=join(CONFIGS_PATH, 'json', 'invoke.json'))
             c.load_shell_env()
-            eq_(c.hooray, 'json')
+            eq_(c.outer.inner.hooray, 'json')
 
         def runtime_overrides_project(self):
             c = Config(
                 runtime_path=join(CONFIGS_PATH, 'json', 'invoke.json'),
                 project_home=join(CONFIGS_PATH, 'yaml'),
             )
-            eq_(c.hooray, 'json')
+            eq_(c.outer.inner.hooray, 'json')
 
         def runtime_overrides_user(self):
             c = Config(
                 runtime_path=join(CONFIGS_PATH, 'json', 'invoke.json'),
                 user_prefix=join(CONFIGS_PATH, 'yaml', 'invoke'),
             )
-            eq_(c.hooray, 'json')
+            eq_(c.outer.inner.hooray, 'json')
 
         def runtime_overrides_systemwide(self):
             c = Config(
                 runtime_path=join(CONFIGS_PATH, 'json', 'invoke.json'),
                 system_prefix=join(CONFIGS_PATH, 'yaml', 'invoke'),
             )
-            eq_(c.hooray, 'json')
+            eq_(c.outer.inner.hooray, 'json')
 
         def runtime_overrides_collection(self):
             c = Config(runtime_path=join(CONFIGS_PATH, 'json', 'invoke.json'))
-            c.load_collection({'hooray': 'defaults'})
-            eq_(c.hooray, 'json')
+            c.load_collection({'outer': {'inner': {'hooray': 'defaults'}}})
+            eq_(c.outer.inner.hooray, 'json')
 
         def cli_overrides_override_all(self):
             "CLI-driven overrides win vs all other layers"
             # TODO: expand into more explicit tests like the above? meh
             c = Config(
-                overrides={'hooray': 'overrides'},
+                overrides={'outer': {'inner': {'hooray': 'overrides'}}},
                 runtime_path=join(CONFIGS_PATH, 'json', 'invoke.json')
             )
-            eq_(c.hooray, 'overrides')
+            eq_(c.outer.inner.hooray, 'overrides')
 
         def yaml_prevents_json_or_python(self):
             c = Config(
@@ -574,6 +574,17 @@ Valid real attributes: ['clone', 'from_data', 'global_defaults', 'load_collectio
             ok_('python_only' not in c)
             ok_('json-only' in c)
             eq_(c.shared, 'json-value')
+
+        def nested_values_are_properly_deepcopied(self):
+            # When bug present, nested dicts can get overwritten by other
+            # sources' values for same, on merge() (!!!!!)
+            # NOTE: above tests now do this too but this is here in case those
+            # change again to be simpler or whatnot. Explicit == good.
+            c = Config(
+                project_home=join(CONFIGS_PATH, 'nested'),
+            )
+            c.load_collection({'outer': {'inner': {'hooray': 'defaults'}}})
+            eq_(c.outer.inner.hooray, 'yaml')
 
 
     class clone:
@@ -612,17 +623,17 @@ Valid real attributes: ['clone', 'from_data', 'global_defaults', 'load_collectio
 
         def preserves_file_data(self):
             c = Config(system_prefix=join(CONFIGS_PATH, 'yaml', 'invoke'))
-            eq_(c.hooray, 'yaml')
+            eq_(c.outer.inner.hooray, 'yaml')
             c2 = c.clone()
-            eq_(c2.hooray, 'yaml')
-            eq_(c2._system, {'hooray': 'yaml'})
+            eq_(c2.outer.inner.hooray, 'yaml')
+            eq_(c2._system, {'outer': {'inner': {'hooray': 'yaml'}}})
 
         @patch.object(Config, '_load_yaml', return_value={'hooray': 'yaml'})
         def does_not_reload_file_data(self, load_yaml):
             path = join(CONFIGS_PATH, 'yaml', 'invoke')
             c = Config(system_prefix=path)
             c2 = c.clone()
-            eq_(c2.hooray, 'yaml')
+            eq_(c2.outer.inner.hooray, 'yaml')
             # Crummy way to say "only got called with this specific invocation
             # one time" (since assert_calls_with gets mad about other
             # invocations w/ different args)
