@@ -411,8 +411,8 @@ class Config(DataProxy):
             overrides = {}
         object.__setattr__(self, '_overrides', overrides)
 
-        # Perform initial load & merge.
-        self.load_files()
+        # Perform an initial merge for cleanliness / in case somebody wants to
+        # use the config with only the defaults/overrides loaded.
         self.merge()
 
     def load_shell_env(self):
@@ -429,6 +429,11 @@ class Config(DataProxy):
         re: how environment variables are scanned and loaded.
         """
         # Force merge of existing data to ensure we have an up to date picture
+        # TODO: this seems specious; don't we want every public method to end
+        # up with a cleanly merged config? Meaning no matter when this is
+        # called, it should be able to assume things are meged? Presently this
+        # is only ever called in Executor after a .clone() (which should itself
+        # result in a merged config even if it's not using merge() directly).
         debug("Running pre-merge for shell env loading...")
         self.merge()
         debug("Done with pre-merge.")
@@ -542,13 +547,13 @@ class Config(DataProxy):
         ``None`` (e.g. ``True`` or ``False``) they will be skipped. Typically
         this means this method is idempotent and becomes a no-op after the
         first run.
-
-        Execution of this method does not imply merging; use `.merge` for that.
         """
         self._load_file(prefix='system')
         self._load_file(prefix='user')
         self._load_file(prefix='project')
         self._load_file(prefix='runtime', absolute=True)
+        # Make the loaded data visible in core config
+        self.merge()
 
     def _load_file(self, prefix, absolute=False):
         # Setup

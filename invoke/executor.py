@@ -206,8 +206,19 @@ class Executor(object):
             load process.)
         """
         task_config = config.clone()
+
+        # TODO: since we do most of the config level-loading here, _might_ be
+        # nice to have a way of deferring merge() so debug output isn't so
+        # crazy verbose.
+        # TODO: ditto all the cloning; we probably do need all of the cloning,
+        # but we could try to make sure clone() doesn't log anything but a
+        # single "I am being cloned" and not all the inner junk
+
+        # Load config files. (We could arguably do this earlier in the process,
+        # but why bother? This is as good a spot as any.)
+        task_config.load_files()
+        # Load collection-local config, if needed
         if not anonymous:
-            # Load collection-local config
             task_config.load_collection(
                 self.collection.configuration(call.called_as)
             )

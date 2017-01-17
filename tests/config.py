@@ -4,7 +4,7 @@ from os.path import join, expanduser
 from spec import eq_, ok_, raises
 from mock import patch, call
 
-from invoke.config import Config
+from invoke.config import Config as BaseConfig
 from invoke.exceptions import (
     AmbiguousEnvVar, UncastableEnvVar, UnknownFileType
 )
@@ -16,6 +16,15 @@ from _util import IntegrationSpec
 CONFIGS_PATH = 'configs'
 TYPES = ('yaml', 'json', 'python')
 
+# Subclass+rebind to get old load-files-on-init behavior back.
+# TODO: limit to just the config file related tests, but for now that's a large
+# number of 'em, so whatever. I got shit to do.
+class Config(BaseConfig):
+    def __init__(self, *args, **kwargs):
+        super(Config, self).__init__(*args, **kwargs)
+        self.load_files()
+
+# Other helpers
 def _load(kwarg, type_):
     path = join(CONFIGS_PATH, type_, 'invoke')
     return Config(**{kwarg: path})
