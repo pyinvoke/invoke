@@ -5,4 +5,4 @@ from invoke import task
 
 @task
 def mytask(c):
-    eq_(c.hooray, 'yaml')
+    eq_(c.outer.inner.hooray, 'yaml')

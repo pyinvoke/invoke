@@ -705,9 +705,16 @@ def merge_dicts(base, updates):
                     raise _merge_error(base[key], value)
                 else:
                     base[key] = value
-        # New values just get set straight
+        # New values get set anew
         else:
-            base[key] = value
+            # Dict values get reconstructed to avoid being references to the
+            # updates dict, which can lead to nasty state-bleed bugs otherwise
+            if isinstance(value, dict):
+                base[key] = {}
+                merge_dicts(base[key], value)
+            # Non-dict values just get set straight
+            else:
+                base[key] = value
 
 def _merge_error(orig, new_):
     return AmbiguousMergeError("Can't cleanly merge {0} with {1}".format(
