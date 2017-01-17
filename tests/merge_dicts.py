@@ -1,4 +1,4 @@
-from spec import Spec, eq_, raises
+from spec import Spec, eq_, raises, ok_
 from invoke.config import merge_dicts, AmbiguousMergeError
 
 
@@ -54,3 +54,30 @@ class merge_dicts_(Spec):
         d2 = {'foo': {'bar': {'biz': 'notbaz'}}, 'meh': 25}
         merge_dicts(d1, d2)
         eq_(d1, {'foo': {'bar': {'biz': 'notbaz'}}, 'meh': 25, 'myown': 'ok'})
+
+    def dict_value_merges_are_not_references(self):
+        core = {}
+        coll = {'foo': {'bar': {'biz': 'coll value'}}}
+        proj = {'foo': {'bar': {'biz': 'proj value'}}}
+        # Initial merge - when bug present, this sets core['foo'] to the entire
+        # 'foo' dict in 'proj' as a reference - meaning it 'links' back to the
+        # 'proj' dict whenever other things are merged into it
+        merge_dicts(core, proj)
+        eq_(core, {'foo': {'bar': {'biz': 'proj value'}}})
+        eq_(proj['foo']['bar']['biz'], 'proj value')
+        # Identity tests can also prove the bug early
+        ok_(core['foo'] is not proj['foo'], "Core foo is literally proj foo!")
+        # Subsequent merge - just overwrites leaf values this time (thus no
+        # real change, but this is what real config merge code does, so why
+        # not)
+        merge_dicts(core, proj)
+        eq_(core, {'foo': {'bar': {'biz': 'proj value'}}})
+        eq_(proj['foo']['bar']['biz'], 'proj value')
+        # The problem merge - when bug present, core['foo'] references 'foo'
+        # inside 'proj', so this ends up tweaking "core" but it actually
+        # affects "proj" as well!
+        merge_dicts(core, coll)
+        # Expect that the core dict got the update from 'coll'...
+        eq_(core, {'foo': {'bar': {'biz': 'coll value'}}})
+        # BUT that 'proj' remains UNTOUCHED
+        eq_(proj['foo']['bar']['biz'], 'proj value')
