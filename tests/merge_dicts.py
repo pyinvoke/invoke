@@ -1,0 +1,56 @@
+from spec import Spec, eq_, raises
+from invoke.config import merge_dicts, AmbiguousMergeError
+
+
+class merge_dicts_(Spec):
+    # NOTE: don't usually like doing true unit tests of low level plumbing -
+    # prefer to infer it's all working by examining higher level behavior - but
+    # sometimes it's necessary to more easily stamp out certain bugs.
+
+    def merging_data_onto_empty_dict(self):
+        d1 = {}
+        d2 = {'foo': 'bar'}
+        merge_dicts(d1, d2)
+        eq_(d1, d2)
+
+    def orthogonal_data_merges(self):
+        d1 = {'foo': 'bar'}
+        d2 = {'biz': 'baz'}
+        merge_dicts(d1, d2)
+        eq_(d1, {'foo': 'bar', 'biz': 'baz'})
+
+    def updates_arg_values_win(self):
+        d1 = {'foo': 'bar'}
+        d2 = {'foo': 'notbar'}
+        merge_dicts(d1, d2)
+        eq_(d1, {'foo': 'notbar'})
+
+    def non_dict_type_mismatch_overwrites_ok(self):
+        d1 = {'foo': 'bar'}
+        d2 = {'foo': [1, 2, 3]}
+        merge_dicts(d1, d2)
+        eq_(d1, {'foo': [1, 2, 3]})
+
+    @raises(AmbiguousMergeError)
+    def merging_dict_into_nondict_raises_error(self):
+        d1 = {'foo': 'bar'}
+        d2 = {'foo': {'uh': 'oh'}}
+        merge_dicts(d1, d2)
+
+    @raises(AmbiguousMergeError)
+    def merging_nondict_into_dict_raises_error(self):
+        d1 = {'foo': {'uh': 'oh'}}
+        d2 = {'foo': 'bar'}
+        merge_dicts(d1, d2)
+
+    def nested_leaf_values_merge_ok(self):
+        d1 = {'foo': {'bar': {'biz': 'baz'}}}
+        d2 = {'foo': {'bar': {'biz': 'notbaz'}}}
+        merge_dicts(d1, d2)
+        eq_(d1, {'foo': {'bar': {'biz': 'notbaz'}}})
+
+    def mixed_branch_levels_merges_ok(self):
+        d1 = {'foo': {'bar': {'biz': 'baz'}}, 'meh': 17, 'myown': 'ok'}
+        d2 = {'foo': {'bar': {'biz': 'notbaz'}}, 'meh': 25}
+        merge_dicts(d1, d2)
+        eq_(d1, {'foo': {'bar': {'biz': 'notbaz'}}, 'meh': 25, 'myown': 'ok'})

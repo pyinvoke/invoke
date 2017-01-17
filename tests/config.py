@@ -720,3 +720,6 @@ Valid real attributes: ['clone', 'from_data', 'global_defaults', 'load_collectio
                 c = Config(defaults={'already': {'present': 'I live!'}})
                 c2 = c.clone(into=MyConfig)
                 eq_(c2.already.present, 'I live!') # not 'new data here'
+
+
+# NOTE: merge_dicts has its own very low level unit tests in its own file
