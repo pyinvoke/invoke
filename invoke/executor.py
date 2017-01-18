@@ -184,8 +184,9 @@ class Executor(object):
             # command, to affect the state of the tasks after them. Somehow.
             call.context = Context(config=self.config_for(call, config))
             # NOTE: handing in original config, not the mutated one handed to
-            # the Context above. Pre/post tasks may well come from a different
-            # collection, etc. Also just cleaner.
+            # the Context above; pre/post tasks may well come from a different
+            # collection, etc. Also just cleaner; and still safe, as they will
+            # be cloned in the inner `expand_calls`  call.
             ret.extend(self.expand_calls(call.pre, config))
             ret.append(call)
             ret.extend(self.expand_calls(call.post, config))
