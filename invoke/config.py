@@ -258,7 +258,7 @@ class Config(DataProxy):
             # where this happens may be subject to change soon
             # - doing it at env var load time seems a bit silly given the
             # existing support for at-startup testing for INVOKE_DEBUG
-            #'debug': False,
+            # 'debug': False,
             'run': {
                 'warn': False,
                 'hide': None,
