@@ -95,13 +95,11 @@ class Executor(object):
         # behave differently
         direct = list(calls)
         # Expand pre/post tasks & then dedupe the entire run.
-        # Load config at this point to get latest value of dedupe option
-        config = self.config.clone()
-        expanded = self.expand_calls(calls, config)
+        expanded = self.expand_calls(calls, self.config)
         # Get some good value for dedupe option, even if config doesn't have
         # the tree we expect. (This is a concession to testing.)
         try:
-            dedupe = config.tasks.dedupe
+            dedupe = self.config.tasks.dedupe
         except AttributeError:
             dedupe = True
         # Actual deduping here
