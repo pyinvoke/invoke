@@ -343,7 +343,7 @@ class Call_(Spec):
                 kwargs={'key': 'val'}
             )
             context = Context()
-            context['setting'] = 'value'
+            context['setting'] = {'subsetting': 'value'}
             orig.context = context
             # Clone & tweak
             clone = orig.clone()
@@ -352,7 +352,7 @@ class Call_(Spec):
             clone.called_as = 'notfoo'
             clone.args[0] = 7
             clone.kwargs['key'] = 'notval'
-            clone.context['setting'] = 'notvalue'
+            clone.context['setting'] = {'subsetting': 'notvalue'}
             # Compare
             ok_(clone.task is not orig.task)
             eq_(orig.called_as, 'foo')
@@ -361,5 +361,5 @@ class Call_(Spec):
             eq_(clone.args, [7, 2, 3])
             eq_(orig.kwargs['key'], 'val')
             eq_(clone.kwargs['key'], 'notval')
-            eq_(orig.context['setting'], 'value')
-            eq_(clone.context['setting'], 'notvalue')
+            eq_(orig.context['setting']['subsetting'], 'value')
+            eq_(clone.context['setting']['subsetting'], 'notvalue')
