@@ -247,6 +247,18 @@ class Config(DataProxy):
         to add to or modify these values.
         """
         return {
+            # TODO: we document 'debug' but it's not truly implemented outside
+            # of env var and CLI flag. If we honor it, we have to go around and
+            # figure out at what points we might want to call
+            # `util.enable_logging`:
+            # - just using it as a fallback default for arg parsing isn't much
+            # use, as at that point the config holds nothing but defaults & CLI
+            # flag values
+            # - doing it at file load time might be somewhat useful, though
+            # where this happens may be subject to change soon
+            # - doing it at env var load time seems a bit silly given the
+            # existing support for at-startup testing for INVOKE_DEBUG
+            #'debug': False,
             'run': {
                 'warn': False,
                 'hide': None,
