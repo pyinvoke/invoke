@@ -348,8 +348,7 @@ class Config(DataProxy):
         #: Default configuration values, typically a copy of
         #: `global_defaults`.
         if defaults is None:
-            defaults = {}
-            merge_dicts(defaults, self.global_defaults())
+            defaults = copy_dict(self.global_defaults())
         object.__setattr__(self, '_defaults', defaults)
 
         #: Collection-driven config data, gathered from the collection tree
@@ -503,8 +502,7 @@ class Config(DataProxy):
         # NOTE: must pass in defaults fresh or otherwise global_defaults() gets
         # used instead. Except when 'into' is in play, in which case we truly
         # want the union of the two.
-        new_defaults = {}
-        merge_dicts(new_defaults, self._defaults)
+        new_defaults = copy_dict(self._defaults)
         if into is not None:
             merge_dicts(new_defaults, into.global_defaults())
         new = constructor(defaults=new_defaults)
@@ -707,6 +705,10 @@ def merge_dicts(base, updates):
         protection from mismatched types (dict vs non-dict) and avoids some
         core deepcopy problems (such as how it explodes on certain object
         types).
+
+    :returns:
+        The value of ``base``, which is mostly useful for wrapper functions
+        like `copy_dict`.
     """
     # TODO: for chrissakes just make it return instead of mutating?
     for key, value in updates.items():
@@ -728,11 +730,11 @@ def merge_dicts(base, updates):
             # Dict values get reconstructed to avoid being references to the
             # updates dict, which can lead to nasty state-bleed bugs otherwise
             if isinstance(value, dict):
-                base[key] = {}
-                merge_dicts(base[key], value)
+                base[key] = copy_dict(value)
             # Non-dict values just get set straight
             else:
                 base[key] = copy.copy(value)
+    return base
 
 def _merge_error(orig, new_):
     return AmbiguousMergeError("Can't cleanly merge {0} with {1}".format(
@@ -741,3 +743,13 @@ def _merge_error(orig, new_):
 
 def _format_mismatch(x):
     return "{0} ({1!r})".format(type(x), x)
+
+
+def copy_dict(source):
+    """
+    Return a fresh copy of ``source`` with as little shared state as possible.
+
+    Uses `merge_dicts` under the hood, with an empty ``base`` dict; see its
+    documentation for details on behavior.
+    """
+    return merge_dicts({}, source)

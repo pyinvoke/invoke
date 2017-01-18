@@ -1,5 +1,5 @@
 from spec import Spec, eq_, raises, ok_
-from invoke.config import merge_dicts, AmbiguousMergeError
+from invoke.config import merge_dicts, copy_dict, AmbiguousMergeError
 
 
 class merge_dicts_(Spec):
@@ -81,3 +81,14 @@ class merge_dicts_(Spec):
         eq_(core, {'foo': {'bar': {'biz': 'coll value'}}})
         # BUT that 'proj' remains UNTOUCHED
         eq_(proj['foo']['bar']['biz'], 'proj value')
+
+
+class copy_dict_(Spec):
+    def returns_deep_copy_of_given_dict(self):
+        # NOTE: not actual deepcopy...
+        source = {'foo': {'bar': {'biz': 'baz'}}}
+        copy = copy_dict(source)
+        eq_(copy['foo']['bar'], source['foo']['bar'])
+        ok_(copy['foo']['bar'] is not source['foo']['bar'])
+        copy['foo']['bar']['biz'] = 'notbaz'
+        eq_(source['foo']['bar']['biz'], 'baz')

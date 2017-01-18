@@ -10,7 +10,7 @@ except ImportError:
     from lexicon import Lexicon
 
 
-from .config import merge_dicts
+from .config import merge_dicts, copy_dict
 from .parser import Context as ParserContext
 from .tasks import Task
 
