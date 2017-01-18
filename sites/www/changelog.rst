@@ -2,6 +2,11 @@
 Changelog
 =========
 
+* :feature:`421` Updated `Config.clone <invoke.config.Config.clone>` (and a few
+  other related areas) to replace use of `copy.deepcopy` with a less-rigorous
+  but also less-likely-to-explode recursive dict copier. This prevents
+  frustrating ``TypeErrors`` while still preserving barriers between different
+  tasks' configuration values.
 * :bug:`-` `Program.config <invoke.program.Program.config>` was implemented as
   a property (attribute) but did not memoize its generated contents (so it
   created a new config object on each access). This didn't cause any actual
