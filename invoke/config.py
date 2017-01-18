@@ -219,6 +219,10 @@ class Config(DataProxy):
     `.load_shell_env` as the final step (as it needs the rest of the config to
     know which env vars are valid to load).
 
+    In CLI task invocation scenarios, `.clone` is often called (sometimes more
+    than once) as a method of preventing unwanted state bleed between tasks
+    and/or subroutines.
+
     Once users are given a copy of the configuration (usually via their task's
     `.Context` argument) all the above loading (& a final `.merge`) has been
     performed and they are free to modify it as they would any other regular
