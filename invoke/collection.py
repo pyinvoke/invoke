@@ -175,7 +175,7 @@ class Collection(object):
                 ret.collections = copy.deepcopy(obj.collections)
                 ret.default = copy.deepcopy(obj.default)
                 # Explicitly given config wins over root ns config
-                obj_config = copy.deepcopy(obj._configuration)
+                obj_config = copy_dict(obj._configuration)
                 if config:
                     merge_dicts(obj_config, config)
                 ret._configuration = obj_config
@@ -367,9 +367,6 @@ class Collection(object):
         """
         Obtain merged configuration values from collection & children.
 
-        .. note::
-            Merging uses ``copy.deepcopy`` to prevent state bleed.
-
         :param taskpath:
             (Optional) Task name/path, identical to that used for
             `~.Collection.__getitem__` (e.g. may be dotted for nested tasks,
@@ -379,7 +376,7 @@ class Collection(object):
         :returns: A `dict` containing configuration values.
         """
         if taskpath is None:
-            return copy.deepcopy(self._configuration)
+            return copy_dict(self._configuration)
         return self.task_with_config(taskpath)[1]
 
     def configure(self, options):
