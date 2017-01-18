@@ -598,6 +598,10 @@ Valid real attributes: ['clone', 'from_data', 'global_defaults', 'load_collectio
                 runtime_path='runtime.yaml',
             )
             c2 = c1.clone()
+            # NOTE: expecting identical defaults also implicitly tests that
+            # clone() passes in defaults= instead of doing an empty init +
+            # copy. (When that is not the case, we end up with
+            # global_defaults() being rerun and re-added to _defaults...)
             eq_(c2._defaults, c1._defaults)
             ok_(c2._defaults is not c1._defaults)
             eq_(c2._overrides, c1._overrides)
@@ -721,6 +725,43 @@ Valid real attributes: ['clone', 'from_data', 'global_defaults', 'load_collectio
                 c = Config(defaults={'already': {'present': 'I live!'}})
                 c2 = c.clone(into=MyConfig)
                 eq_(c2.already.present, 'I live!') # not 'new data here'
+
+        def does_not_deepcopy(self):
+            c = Config(defaults={
+                # Will merge_dicts happily
+                'oh': {'dear': {'god': object()}},
+                # And shallow-copy compound values
+                'shallow': {'objects': ['copy', 'okay']},
+                # Will preserve refrences to the innermost dict, sadly. Not
+                # much we can do without incurring deepcopy problems (or
+                # reimplementing it entirely)
+                'welp': {'cannot': ['have', {'everything': 'we want'}]},
+            })
+            c2 = c.clone()
+            # Basic identity
+            ok_(c is not c2, "Clone had same identity as original!")
+            # Dicts get recreated
+            ok_(c.oh is not c2.oh, "Top level key had same identity!")
+            ok_(c.oh.dear is not c2.oh.dear, "Midlevel key had same identity!")
+            # Basic values get copied
+            ok_(
+                c.oh.dear.god is not c2.oh.dear.god,
+                "Leaf object() had same identity!"
+            )
+            eq_(c.shallow.objects, c2.shallow.objects)
+            ok_(
+                c.shallow.objects is not c2.shallow.objects,
+                "Shallow list had same identity!"
+            )
+            # Deeply nested non-dict objects are stil problematic, oh well
+            ok_(
+                c.welp.cannot[1] is c2.welp.cannot[1],
+                "Huh, a deeply nested dict-in-a-list had different identity?"
+            )
+            ok_(
+                c.welp.cannot[1]['everything'] is c2.welp.cannot[1]['everything'], # noqa
+                "Huh, a deeply nested dict-in-a-list value had different identity?" # noqa
+            )
 
 
 # NOTE: merge_dicts has its own very low level unit tests in its own file

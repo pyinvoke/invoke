@@ -348,7 +348,8 @@ class Config(DataProxy):
         #: Default configuration values, typically a copy of
         #: `global_defaults`.
         if defaults is None:
-            defaults = copy.deepcopy(self.global_defaults())
+            defaults = {}
+            merge_dicts(defaults, self.global_defaults())
         object.__setattr__(self, '_defaults', defaults)
 
         #: Collection-driven config data, gathered from the collection tree
@@ -461,8 +462,20 @@ class Config(DataProxy):
         Return a copy of this configuration object.
 
         The new object will be identical in terms of configured sources and any
-        loaded/merged data, but will be a distinct object with no shared
-        mutable state.
+        loaded/merged data, but will be a distinct object with as little shared
+        mutable state as possible.
+
+        Specifically, all `dict` objects within the config (which are
+        considered part of the configuration structure) are recursively
+        recreated, with non-dict leaf values subjected to `copy.copy` (note:
+        *not* `copy.deepcopy`, as this can cause issues with various objects
+        such as compiled regexen or threading locks, often found buried deep
+        within rich objects like API or DB clients).
+
+        The only remaining config values that may end up shared between a
+        config and its clone are thus 'rich' objects that do not `copy.copy`
+        cleanly, or compound non-dict objects (such as lists of lists, tuples
+        of tuples, lists of dicts, etc).
 
         :param into:
             A `.Config` subclass that the new clone should be "upgraded" to.
@@ -487,9 +500,16 @@ class Config(DataProxy):
             raise TypeError(err.format(self.__class__.__name__))
         # Construct new object
         constructor = self.__class__ if into is None else into
-        new = constructor()
+        # NOTE: must pass in defaults fresh or otherwise global_defaults() gets
+        # used instead. Except when 'into' is in play, in which case we truly
+        # want the union of the two.
+        new_defaults = {}
+        merge_dicts(new_defaults, self._defaults)
+        if into is not None:
+            merge_dicts(new_defaults, into.global_defaults())
+        new = constructor(defaults=new_defaults)
+        # Copy/merge/etc all 'private' data sources and attributes
         for name in """
-            defaults
             collection
             system_prefix
             system_path
@@ -512,30 +532,20 @@ class Config(DataProxy):
             overrides
         """.split():
             name = "_{0}".format(name)
-            my_data = copy.deepcopy(getattr(self, name))
-            new_data = getattr(new, name)
-            # Non-dict data gets carried over straight
+            my_data = getattr(self, name)
+            # Non-dict data gets carried over straight (via a copy())
             # NOTE: presumably someone could really screw up and change these
             # values' types, but at that point it's on them...
             if not isinstance(my_data, dict):
-                setattr(new, name, my_data)
-            # Dict data needs merging if 'into' is in play
+                setattr(new, name, copy.copy(my_data))
+            # Dict data gets merged (which also involves a copy.copy
+            # eventually)
             else:
-                if into is None:
-                    setattr(new, name, my_data)
-                else:
-                    # NOTE: merging our data 'onto' the fresh new data, so that
-                    # if we did declare values for keys specified in the new
-                    # class, they aren't overwritten by that class' defaults.
-                    merge_dicts(new_data, my_data)
-                    setattr(new, name, new_data)
-        # As with the individual components, we want to perform a merge if
-        # 'into' is being used.
-        my_config = copy.deepcopy(self.config)
-        if into is None:
-            new.config = my_config
-        else:
-            merge_dicts(new.config, my_config)
+                merge_dicts(getattr(new, name), my_data)
+        # And merge the central config too (cannot just call .merge() on the
+        # new clone, since the source config may have received custom
+        # alterations by user code.)
+        merge_dicts(new.config, self.config)
         return new
 
     def load_files(self):
@@ -690,7 +700,15 @@ def merge_dicts(base, updates):
     * Values which are a dict in one input and *not* a dict in the other input
       (e.g. if our inputs were ``{'foo': 5}`` and ``{'foo': {'bar': 5}}``) are
       irreconciliable and will generate an exception.
+    * Non-dict leaf values are run through `copy.copy` to avoid state bleed.
+
+    .. note::
+        This is effectively a lightweight `copy.deepcopy` which offers
+        protection from mismatched types (dict vs non-dict) and avoids some
+        core deepcopy problems (such as how it explodes on certain object
+        types).
     """
+    # TODO: for chrissakes just make it return instead of mutating?
     for key, value in updates.items():
         # Dict values whose keys also exist in 'base' -> recurse
         # (But only if both types are dicts.)
@@ -704,7 +722,7 @@ def merge_dicts(base, updates):
                 if isinstance(base[key], dict):
                     raise _merge_error(base[key], value)
                 else:
-                    base[key] = value
+                    base[key] = copy.copy(value)
         # New values get set anew
         else:
             # Dict values get reconstructed to avoid being references to the
@@ -714,7 +732,7 @@ def merge_dicts(base, updates):
                 merge_dicts(base[key], value)
             # Non-dict values just get set straight
             else:
-                base[key] = value
+                base[key] = copy.copy(value)
 
 def _merge_error(orig, new_):
     return AmbiguousMergeError("Can't cleanly merge {0} with {1}".format(
