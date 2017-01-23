@@ -211,6 +211,16 @@ Valid real attributes: ['clone', 'from_data', 'global_defaults', 'load_collectio
             eq_(c.mymethod(), 13)
             eq_(c['mymethod'], 'bar')
 
+        def config_itself_stored_as_private_name(self):
+            # I.e. one can refer to a key called 'config', which is relatively
+            # commonplace (e.g. <Config>.myservice.config -> a config file
+            # contents or path or etc)
+            c = Config()
+            c['foo'] = {'bar': 'baz'}
+            c['whatever'] = {'config': 'myconfig'}
+            eq_(c.foo.bar, 'baz')
+            eq_(c.whatever.config, 'myconfig')
+
         def inherited_real_attrs_also_win_over_config_keys(self):
             class MyConfigParent(Config):
                 parent_attr = 17

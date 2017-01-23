@@ -79,7 +79,7 @@ class DataProxy(object):
     @classmethod
     def from_data(cls, data):
         obj = cls()
-        object.__setattr__(obj, 'config', data)
+        object.__setattr__(obj, '_config', data)
         return obj
 
     def __getattr__(self, key):
@@ -92,12 +92,12 @@ class DataProxy(object):
         except KeyError:
             # Proxy most special vars to config for dict procotol.
             if key in self._proxies:
-                return getattr(self.config, key)
+                return getattr(self._config, key)
             # Otherwise, raise useful AttributeError to follow getattr proto.
             err = "No attribute or config key found for {0!r}".format(key)
             attrs = [x for x in dir(self.__class__) if not x.startswith('_')]
             err += "\n\nValid keys: {0!r}".format(
-                sorted(list(self.config.keys()))
+                sorted(list(self._config.keys()))
             )
             err += "\n\nValid real attributes: {0!r}".format(attrs)
             raise AttributeError(err)
@@ -107,14 +107,14 @@ class DataProxy(object):
         # attribute with the given name/key.
         has_real_attr = key in (x[0] for x in inspect.getmembers(self))
         if not has_real_attr:
-            self.config[key] = value
+            self._config[key] = value
         else:
             super(DataProxy, self).__setattr__(key, value)
 
     def __iter__(self):
         # For some reason Python is ignoring our __hasattr__ when determining
         # whether we support __iter__. BOO
-        return iter(self.config)
+        return iter(self._config)
 
     def __eq__(self, other):
         # NOTE: Can't proxy __eq__ because the RHS will always be an obj of the
@@ -122,35 +122,35 @@ class DataProxy(object):
         # NotImplemented.
         # Try comparing to other objects like ourselves, falling back to a not
         # very comparable value.
-        other_val = getattr(other, 'config', None)
+        other_val = getattr(other, '_config', None)
         # But we can compare to vanilla dicts just fine
         if isinstance(other, dict):
             other_val = other
-        return self.config == other_val
+        return self._config == other_val
 
     def __len__(self):
         # Can't proxy __len__ either apparently? ugh
-        return len(self.config)
+        return len(self._config)
 
     def __setitem__(self, key, value):
         # ... or __setitem__? thanks for nothing Python >:(
-        self.config[key] = value
+        self._config[key] = value
 
     def __delitem__(self, key):
         # OK this is really getting annoying
-        del self.config[key]
+        del self._config[key]
 
     def __getitem__(self, key):
         return self._get(key)
 
     def _get(self, key):
-        value = self.config[key]
+        value = self._config[key]
         if isinstance(value, dict):
             value = DataProxy.from_data(value)
         return value
 
     def __str__(self):
-        return "<{0}: {1}>".format(self.__class__.__name__, self.config)
+        return "<{0}: {1}>".format(self.__class__.__name__, self._config)
 
     def __unicode__(self):
         return unicode(self.__str__())  # noqa
@@ -161,7 +161,7 @@ class DataProxy(object):
         return self.__str__()
 
     def __contains__(self, key):
-        return key in self.config
+        return key in self._config
 
     # TODO: copy()?
 
@@ -340,7 +340,7 @@ class Config(DataProxy):
         """
         # Technically an implementation detail - do not expose in public API.
         # Stores merged configs and is accessed via DataProxy.
-        object.__setattr__(self, 'config', {})
+        object.__setattr__(self, '_config', {})
 
         # Config file suffixes to search, in preference order.
         object.__setattr__(self, '_file_suffixes', ('yaml', 'json', 'py'))
@@ -437,7 +437,7 @@ class Config(DataProxy):
         debug("Running pre-merge for shell env loading...")
         self.merge()
         debug("Done with pre-merge.")
-        loader = Environment(config=self.config, prefix=self._env_prefix)
+        loader = Environment(config=self._config, prefix=self._env_prefix)
         object.__setattr__(self, '_env', loader.load())
         debug("Loaded shell environment, triggering final merge")
         self.merge()
@@ -543,7 +543,7 @@ class Config(DataProxy):
         # And merge the central config too (cannot just call .merge() on the
         # new clone, since the source config may have received custom
         # alterations by user code.)
-        merge_dicts(new.config, self.config)
+        merge_dicts(new._config, self._config)
         return new
 
     def load_files(self):
@@ -624,17 +624,17 @@ class Config(DataProxy):
         """
         debug("Merging config sources in order...")
         debug("Defaults: {0!r}".format(self._defaults))
-        merge_dicts(self.config, self._defaults)
+        merge_dicts(self._config, self._defaults)
         debug("Collection-driven: {0!r}".format(self._collection))
-        merge_dicts(self.config, self._collection)
+        merge_dicts(self._config, self._collection)
         self._merge_file('system', "System-wide")
         self._merge_file('user', "Per-user")
         self._merge_file('project', "Per-project")
         debug("Environment variable config: {0!r}".format(self._env))
-        merge_dicts(self.config, self._env)
+        merge_dicts(self._config, self._env)
         self._merge_file('runtime', "Runtime")
         debug("Overrides: {0!r}".format(self._overrides))
-        merge_dicts(self.config, self._overrides)
+        merge_dicts(self._config, self._overrides)
 
     def _merge_file(self, name, desc):
         # Setup
@@ -648,7 +648,7 @@ class Config(DataProxy):
         # True -> hooray
         elif found:
             debug("{0} ({1}): {2!r}".format(desc, path, data))
-            merge_dicts(self.config, data)
+            merge_dicts(self._config, data)
         # False -> did try, did not succeed
         else:
             # TODO: how to preserve what was tried for each case but only for

@@ -2,6 +2,11 @@
 Changelog
 =========
 
+* :bug:`-` Configuration keys named ``config`` were inadvertently exposing the
+  internal dict representation of the containing config object, instead of
+  displaying the actual value stored in that key. (Thus, a set config of
+  ``mycontext.foo.bar.config`` would act as if it was the key/value contents of
+  the ``mycontext.foo.bar`` subtree.) This has been fixed.
 * :feature:`421` Updated `Config.clone <invoke.config.Config.clone>` (and a few
   other related areas) to replace use of `copy.deepcopy` with a less-rigorous
   but also less-likely-to-explode recursive dict copier. This prevents

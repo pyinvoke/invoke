@@ -47,7 +47,13 @@ class Context(DataProxy):
         #: ``config`` attribute in the same way - e.g. ``ctx['foo']`` or
         #: ``ctx.foo`` returns the same value as ``ctx.config['foo']``.
         config = config if config is not None else Config()
-        object.__setattr__(self, 'config', config)
+        object.__setattr__(self, '_config', config)
+
+    @property
+    def config(self):
+        # Allows Context to expose a .config attribute even though DataProxy
+        # otherwise considers it a config key.
+        return self._config
 
     def run(self, command, **kwargs):
         """
