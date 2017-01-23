@@ -305,6 +305,14 @@ Valid real attributes: ['clone', 'from_data', 'global_defaults', 'load_collectio
 
 
     class comparison_and_hashing:
+        def comparison_looks_at_merged_config(self):
+            c1 = Config(defaults={'foo': {'bar': 'biz'}})
+            # Empty defaults to suppress global_defaults
+            c2 = Config(defaults={}, overrides={'foo': {'bar': 'biz'}})
+            ok_(c1 is not c2)
+            ok_(c1._defaults != c2._defaults)
+            eq_(c1, c2)
+
         def allows_comparison_with_real_dicts(self):
             c = Config({'foo': {'bar': 'biz'}})
             eq_(c['foo'], {'bar': 'biz'})
