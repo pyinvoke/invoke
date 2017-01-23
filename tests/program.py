@@ -399,7 +399,7 @@ Core options:
                 for flag in ['-h', '--help']:
                     expect(flag, out=expected, program=main.program)
 
-            def bundled_namspace_help_includes_subcommand_listing(self):
+            def bundled_namespace_help_includes_subcommand_listing(self):
                 t1, t2 = Task(Mock()), Task(Mock())
                 coll = Collection(task1=t1, task2=t2)
                 p = Program(namespace=coll)
