@@ -609,8 +609,8 @@ Available tasks:
         def docstrings_are_wrapped_to_terminal_width(self):
             self._list_eq('nontrivial_docstrings', (
                 'no_docstring',
-		'task_one       Lorem ipsum dolor sit amet, consectetur adipiscing elit.\n                 Nullam id dictum',
-		'task_two       Nulla eget ultrices ante. Curabitur sagittis commodo posuere.\n                 Duis dapibus',
+                'task_one       Lorem ipsum dolor sit amet, consectetur adipiscing elit.\n                 Nullam id dictum', # noqa
+                'task_two       Nulla eget ultrices ante. Curabitur sagittis commodo posuere.\n                 Duis dapibus', # noqa
             ))
 
         def empty_collections_say_no_tasks(self):
