@@ -317,6 +317,10 @@ Valid real attributes: ['clone', 'from_data', 'global_defaults', 'load_collectio
             c = Config({'foo': {'bar': 'biz'}})
             eq_(c['foo'], {'bar': 'biz'})
 
+        @raises(TypeError)
+        def is_explicitly_not_hashable(self):
+            hash(Config())
+
 
     class env_vars:
         "Environment variables"

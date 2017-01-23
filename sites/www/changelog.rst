@@ -2,6 +2,19 @@
 Changelog
 =========
 
+* :bug:`-` Python 3's hashing rules differ from Python 2, specifically:
+
+    A class that overrides ``__eq__()`` and does not define ``__hash__()`` will
+    have its ``__hash__()`` implicitly set to None.
+
+  `Config <invoke.config.Config>` (specifically, its foundational class
+  `DataProxy <invoke.config.DataProxy>`) only defined ``__eq__``, which
+  combined with the above behavior, meant that ``Config`` objects appeared to
+  hash successfully on Python 2 but yielded ``TypeErrors`` on Python 3.
+
+  This has been fixed by explicitly setting ``__hash__ = None`` so that the
+  objects do not hash on either interpreter (there are no good immutable
+  attributes by which to define hashability).
 * :bug:`-` Configuration keys named ``config`` were inadvertently exposing the
   internal dict representation of the containing config object, instead of
   displaying the actual value stored in that key. (Thus, a set config of
