@@ -168,10 +168,6 @@ Valid real attributes: ['clone', 'from_data', 'global_defaults', 'load_collectio
             c.update({'foo': 'bar'})
             eq_(c['foo'], 'bar')
 
-        def allows_comparison_with_real_dicts(self):
-            c = Config({'foo': {'bar': 'biz'}})
-            eq_(c['foo'], {'bar': 'biz'})
-
         def supports_mutation_via_attribute_access(self):
             c = Config({'foo': 'bar'})
             eq_(c.foo, 'bar')
@@ -306,6 +302,12 @@ Valid real attributes: ['clone', 'from_data', 'global_defaults', 'load_collectio
             # Real test that builtins, etc are stripped out
             for special in ('builtins', 'file', 'package', 'name', 'doc'):
                 ok_('__{0}__'.format(special) not in c)
+
+
+    class comparison_and_hashing:
+        def allows_comparison_with_real_dicts(self):
+            c = Config({'foo': {'bar': 'biz'}})
+            eq_(c['foo'], {'bar': 'biz'})
 
 
     class env_vars:
