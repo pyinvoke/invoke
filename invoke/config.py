@@ -121,9 +121,10 @@ class DataProxy(object):
         # current class, not the proxied-to class, and that causes
         # NotImplemented.
         # Try comparing to other objects like ourselves, falling back to a not
-        # very comparable value.
+        # very comparable value (None) so comparison fails.
         other_val = getattr(other, '_config', None)
-        # But we can compare to vanilla dicts just fine
+        # But we can compare to vanilla dicts just fine, since our _config is
+        # itself just a dict.
         if isinstance(other, dict):
             other_val = other
         return self._config == other_val
