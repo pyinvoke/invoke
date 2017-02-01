@@ -213,25 +213,14 @@ class Program(object):
         self.config_class = config_class or Config
         self.env_prefix = env_prefix if env_prefix is not None else 'INVOKE_'
 
-    @property
-    def config(self):
+    def config_kwargs(self):
         """
-        A `.Config` object initialized with parser & collection data.
+        Return keyword arguments suitable for instantiating a `.Config`.
 
-        Specifically, parser-level flags are consulted (typically as a
-        top-level "runtime overrides" dict) and the `.Collection` object is
-        used to determine where to seek a per-project config file.
+        Expects parser data (``self.args``, etc) to be available.
 
-        This object is further updated within `.Executor` with per-task
-        configuration values and then told to load the full hierarchy (which
-        includes config files.)
-
-        The specific `.Config` subclass used may be overridden in `.__init__`
-        via ``config_class``.
+        :returns: A `dict`.
         """
-        # Memoize, in case client code refers to self.config multiple times.
-        if hasattr(self, '_config'):
-            return self._config
         # Set up runtime overrides from flags.
         # NOTE: only fill in values that would alter behavior, otherwise we
         # want the defaults to come through.
@@ -248,14 +237,27 @@ class Program(object):
         if 'no-dedupe' in self.args and self.args['no-dedupe'].value:
             tasks['dedupe'] = False
         overrides = {'run': run, 'tasks': tasks}
-        # Stand up config object
-        self._config = self.config_class(
+        return dict(
             overrides=overrides,
             project_home=self.collection.loaded_from,
             runtime_path=self.args.config.value,
             env_prefix=self.env_prefix,
         )
-        return self._config
+
+    def create_config(self):
+        """
+        Instantiate a `.Config` (or subclass, depending) for use in task exec.
+
+        This config object is passed data from the CLI parsing step (which must
+        be run beforehand) and is later cloned and tweaked on a per-task basis
+        by the `.Executor` it's given to.
+
+        :returns: ``None``; sets ``self.config`` instead.
+        """
+        # TODO: this is a bit silly but having it on its own keeps run() super
+        # tidy I guess? (and more importantly, lets subclasses extend the data
+        # generated from config_kwargs.)
+        self.config = self.config_class(**self.config_kwargs())
 
     def run(self, argv=None, exit=True):
         """
@@ -282,8 +284,12 @@ class Program(object):
             # self.tasks (the tasks requested for exec and their own
             # args/flags)
             self._parse(argv)
-            # Create an Executor and give it the results of the parse step,
-            # then tell it to execute the tasks.
+            # Create a base Config object (stored as self.config) now that we
+            # have CLI flags available (such as the collection, runtime config
+            # paths, overrides to core options like echo/warn, etc)
+            self.create_config()
+            # Create an Executor, passing in the data resulting from the prior
+            # steps, then tell it to execute the tasks.
             self.execute()
         except (UnexpectedExit, Exit, ParseError) as e:
             debug("Received a possibly-skippable exception: {0!r}".format(e))
