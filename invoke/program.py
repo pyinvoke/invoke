@@ -276,7 +276,14 @@ class Program(object):
                 using `.Executor` and friends directly instead!
         """
         try:
+            # Parse the given ARGV with our CLI parsing machinery, resulting in
+            # things like self.args (core args/flags), self.collection (the
+            # loaded namespace, which may be affected by the core flags) and
+            # self.tasks (the tasks requested for exec and their own
+            # args/flags)
             self._parse(argv)
+            # Create an Executor and give it the results of the parse step,
+            # then tell it to execute the tasks.
             self.execute()
         except (UnexpectedExit, Exit, ParseError) as e:
             debug("Received a possibly-skippable exception: {0!r}".format(e))
