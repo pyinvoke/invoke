@@ -504,14 +504,16 @@ class Config(DataProxy):
             err = "'into' must be a subclass of {0}!"
             raise TypeError(err.format(self.__class__.__name__))
         # Construct new object
-        constructor = self.__class__ if into is None else into
-        # NOTE: must pass in defaults fresh or otherwise global_defaults() gets
-        # used instead. Except when 'into' is in play, in which case we truly
-        # want the union of the two.
-        new_defaults = copy_dict(self._defaults)
-        if into is not None:
-            merge_dicts(new_defaults, into.global_defaults())
-        new = constructor(defaults=new_defaults)
+        klass = self.__class__ if into is None else into
+        # Also allow arbitrary constructor kwargs, for subclasses where passing
+        # (some) data in at init time is desired (vs post-init copying)
+        # TODO: probably want to pivot the whole class this way eventually...?
+        # No longer recall exactly why we went with the 'fresh init + attribute
+        # setting' approach originally...tho there's clearly some impedance
+        # mismatch going on between "I want stuff to happen in my config's
+        # instantiation" and "I want cloning to not trigger certain things like
+        # external data source loading".
+        new = klass(**self._init_kwargs(into=into))
         # Copy/merge/etc all 'private' data sources and attributes
         for name in """
             collection
@@ -551,6 +553,29 @@ class Config(DataProxy):
         # alterations by user code.)
         merge_dicts(new._config, self._config)
         return new
+
+    def _init_kwargs(self, into=None):
+        """
+        Supply kwargs suitable for initializing a new clone of this object.
+
+        Note that most of the `.clone` process involves copying data between
+        two instances instead of passing init kwargs; however, sometimes you
+        really do want init kwargs, which is why this method exists.
+
+        :param into: The value of ``into`` as passed to the calling `.clone`.
+
+        :returns: A `dict`.
+        """
+        # NOTE: must pass in defaults fresh or otherwise global_defaults() gets
+        # used instead. Except when 'into' is in play, in which case we truly
+        # want the union of the two.
+        new_defaults = copy_dict(self._defaults)
+        if into is not None:
+            merge_dicts(new_defaults, into.global_defaults())
+        # The kwargs.
+        return dict(
+            defaults=new_defaults,
+        )
 
     def load_files(self):
         """
