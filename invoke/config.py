@@ -217,7 +217,8 @@ class Config(DataProxy):
 
     On initialization, `.Config` will seek out and load various configuration
     files from disk, then `.merge` the results with other in-memory sources
-    such as defaults and CLI overrides.
+    such as defaults and CLI overrides. (This behavior can be altered via the
+    ``defer_post_init`` kwarg; see `.Config.__init__` for details.)
 
     Typically, the `.load_collection` and `.load_shell_env` methods are called
     after initialization - `.load_collection` prior to each task invocation
@@ -298,7 +299,8 @@ class Config(DataProxy):
         user_prefix=None,
         project_home=None,
         env_prefix=None,
-        runtime_path=None
+        runtime_path=None,
+        defer_post_init=False,
     ):
         """
         Creates a new config object.
@@ -343,6 +345,17 @@ class Config(DataProxy):
             Used to fill the penultimate slot in the config hierarchy. Should
             be a full file path to an existing file, not a directory path, or a
             prefix.
+
+        :param bool defer_post_init:
+            Whether to defer certain steps at the end of `__init__`.
+
+            Specifically, the `post_init` method is normally called
+            automatically, and performs initial actions like loading config
+            files. Advanced users may wish to call that method manually after
+            manipulating the object; to do so, specify
+            ``defer_post_init=True``.
+
+            Default: ``False``.
         """
         # Technically an implementation detail - do not expose in public API.
         # Stores merged configs and is accessed via DataProxy.
@@ -422,6 +435,18 @@ class Config(DataProxy):
             overrides = {}
         object.__setattr__(self, '_overrides', overrides)
 
+        if not defer_post_init:
+            self.post_init()
+
+    def post_init(self):
+        """
+        Call setup steps that can occur immediately after `__init__`.
+
+        May need to be manually called if `__init__` was told
+        ``defer_post_init=True``.
+
+        :returns: ``None``.
+        """
         # Perform initial load & merge.
         self.load_files()
         self.merge()
