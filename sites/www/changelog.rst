@@ -11,10 +11,10 @@ Changelog
     structure; previously such modifications simply mutated the central,
     'merged' config cache. This makes it much easier to determine where a final
     observed value came from, and prevents accidental data loss.
-  - There is no more ``Config.merge()``; reconciliation of the various config
-    levels into a single observed value now happens dynamically. This greatly
-    simplifies the object's lifecycle and removes a lot of opportunities for
-    bugs or (as above) inadvertent data loss, especially in subclasses.
+  - Merging/reconciliation of the config levels now happens automatically when
+    data is loaded or modified, which not only simplifies the object's
+    lifecycle a bit but allows the previous change to function without
+    requiring users to call ``.merge()`` after every modification.
 
 * :bug:`-` Python 3's hashing rules differ from Python 2, specifically:
 

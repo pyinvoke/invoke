@@ -256,6 +256,16 @@ Valid real attributes: ['clone', 'from_data', 'global_defaults', 'load_collectio
                 eq_(unicode(config), six.u("<Config: {'foo': 'bar'}>"))  # noqa
             eq_(repr(config), "<Config: {'foo': 'bar'}>")
 
+        def merging_does_not_wipe_user_modifications(self):
+            c = Config({'foo': {'bar': 'biz'}})
+            c.foo.bar = 'notbiz'
+            eq_(c['foo']['bar'], 'notbiz')
+            c.merge()
+            # Will be back to 'biz' if user changes don't get saved on their
+            # own (previously they are just mutations on the cached central
+            # config)
+            eq_(c['foo']['bar'], 'notbiz')
+
 
     class config_file_loading:
         "Configuration file loading"
