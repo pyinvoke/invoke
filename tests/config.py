@@ -595,21 +595,6 @@ Valid real attributes: ['clone', 'from_data', 'global_defaults', 'load_collectio
             ok_('json-only' in c)
             eq_(c.shared, 'json-value')
 
-        def nested_values_are_properly_deepcopied(self):
-            # When bug present, nested dicts can get overwritten by other
-            # sources' values for same, on merge() (!!!!!)
-            # NOTE: above tests now do this too but this is here in case those
-            # change again to be simpler or whatnot. Explicit == good.
-            # NOTE: even when #420 is present/unfixed, this test (and the
-            # others) will pass if one clone()s between __init__/load_files,
-            # and load_collection, since that also deepcopies.
-            c = Config(
-                project_home=join(CONFIGS_PATH, 'nested'),
-            )
-            c.load_collection({'outer': {'inner': {'hooray': 'defaults'}}})
-            eq_(c.outer.inner.hooray, 'yaml')
-
-
     class clone:
         def preserves_basic_members(self):
             c1 = Config(
