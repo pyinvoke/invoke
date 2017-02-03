@@ -346,73 +346,72 @@ class Config(DataProxy):
         # Config file suffixes to search, in preference order.
         object.__setattr__(self, '_file_suffixes', ('yaml', 'json', 'py'))
 
-        #: Default configuration values, typically a copy of
-        #: `global_defaults`.
+        # Default configuration values, typically a copy of `global_defaults`.
         if defaults is None:
             defaults = copy_dict(self.global_defaults())
         object.__setattr__(self, '_defaults', defaults)
 
-        #: Collection-driven config data, gathered from the collection tree
-        #: containing the currently executing task.
+        # Collection-driven config data, gathered from the collection tree
+        # containing the currently executing task.
         object.__setattr__(self, '_collection', {})
 
-        #: Path prefix searched for the system config file.
-        #: There is no default system prefix on Windows
+        # Path prefix searched for the system config file.
+        # NOTE: There is no default system prefix on Windows.
         if system_prefix is None and not WINDOWS:
             system_prefix = '/etc/invoke'
         object.__setattr__(self, '_system_prefix', system_prefix)
-        #: Path to loaded system config file, if any.
+        # Path to loaded system config file, if any.
         object.__setattr__(self, '_system_path', None)
-        #: Whether the system config file has been loaded or not (or ``None``
-        #: if no loading has been attempted yet.)
+        # Whether the system config file has been loaded or not (or ``None`` if
+        # no loading has been attempted yet.)
         object.__setattr__(self, '_system_found', None)
-        #: Data loaded from the system config file.
+        # Data loaded from the system config file.
         object.__setattr__(self, '_system', {})
 
-        #: Path prefix searched for per-user config files.
+        # Path prefix searched for per-user config files.
         if user_prefix is None:
             user_prefix = '~/.invoke'
         object.__setattr__(self, '_user_prefix', user_prefix)
-        #: Path to loaded user config file, if any.
+        # Path to loaded user config file, if any.
         object.__setattr__(self, '_user_path', None)
-        #: Whether the user config file has been loaded or not (or ``None``
-        #: if no loading has been attempted yet.)
+        # Whether the user config file has been loaded or not (or ``None`` if
+        # no loading has been attempted yet.)
         object.__setattr__(self, '_user_found', None)
-        #: Data loaded from the per-user config file.
+        # Data loaded from the per-user config file.
         object.__setattr__(self, '_user', {})
 
-        #: Parent directory of the current root tasks file, if applicable.
+        # Parent directory of the current root tasks file, if applicable.
         object.__setattr__(self, '_project_home', project_home)
         # And a normalized prefix version not really publicly exposed
         project_prefix = None
         if self._project_home is not None:
             project_prefix = join(project_home, 'invoke')
         object.__setattr__(self, '_project_prefix', project_prefix)
-        #: Path to loaded per-project config file, if any.
+        # Path to loaded per-project config file, if any.
         object.__setattr__(self, '_project_path', None)
-        #: Whether the project config file has been loaded or not (or ``None``
-        #: if no loading has been attempted yet.)
+        # Whether the project config file has been loaded or not (or ``None``
+        # if no loading has been attempted yet.)
         object.__setattr__(self, '_project_found', None)
-        #: Data loaded from the per-project config file.
+        # Data loaded from the per-project config file.
         object.__setattr__(self, '_project', {})
 
-        #: Environment variable name prefix
+        # Environment variable name prefix
         if env_prefix is None:
             env_prefix = ''
         object.__setattr__(self, '_env_prefix', env_prefix)
-        #: Config data loaded from the shell environment.
+        # Config data loaded from the shell environment.
         object.__setattr__(self, '_env', {})
 
-        #: Path to the user-specified runtime config file.
+        # Path to the user-specified runtime config file.
         object.__setattr__(self, '_runtime_path', runtime_path)
-        #: Data loaded from the runtime config file.
+        # Data loaded from the runtime config file.
         object.__setattr__(self, '_runtime', {})
-        #: Whether the runtime config file has been loaded or not (or ``None``
-        #: if no loading has been attempted yet.)
+        # Whether the runtime config file has been loaded or not (or ``None``
+        # if no loading has been attempted yet.)
         object.__setattr__(self, '_runtime_found', None)
 
-        #: Overrides - highest possible config level. Typically filled in from
-        #: command-line flags.
+        # Overrides - highest normal config level. Typically filled in from
+        # command-line flags.
         if overrides is None:
             overrides = {}
         object.__setattr__(self, '_overrides', overrides)
