@@ -202,7 +202,7 @@ class Config(DataProxy):
     This class implements the entire dictionary protocol: methods such as
     ``keys``, ``values``, ``items``, ``pop`` and so forth should all function
     as they do on regular dicts. It also implements new config-specific methods
-    such as `.merge`, `.load_files`, `.load_collection` and `.clone`.
+    such as `.load_files`, `.load_collection` and `.clone`.
 
     .. warning::
         Accordingly, this means that if you have configuration options sharing
@@ -211,9 +211,11 @@ class Config(DataProxy):
 
     **Lifecycle**
 
-    On initialization, `.Config` will seek out and load various configuration
-    files from disk, then `.merge` the results with other in-memory sources
-    such as defaults and CLI overrides.
+    On initialization, `.Config` creates 'buckets' for each configuration level
+    and populates them with data supplied via global defaults, keyword
+    arguments and/or files loaded from disk. Post-initialiation, other levels
+    may be loaded at the appropriate time (see below) and users may make
+    modifications themselves (which are stored in yet another 'bucket').
 
     Typically, the `.load_collection` and `.load_shell_env` methods are called
     after initialization - `.load_collection` prior to each task invocation
@@ -223,18 +225,9 @@ class Config(DataProxy):
 
     In CLI task invocation scenarios, `.clone` is often called (sometimes more
     than once) as a method of preventing unwanted state bleed between tasks
-    and/or subroutines.
-
-    Once users are given a copy of the configuration (usually via their task's
-    `.Context` argument) all the above loading (& a final `.merge`) has been
-    performed and they are free to modify it as they would any other regular
-    dictionary.
-
-    .. warning::
-        Calling `.merge` after manually modifying `.Config` objects may
-        overwrite those manual changes, since it overwrites the core config
-        dict with data from per-source attributes like ``._defaults`` or
-        ``_.user``.
+    and/or subroutines. This does not automatically re-load config files from
+    disk; extra IO is avoided, and the clone resembles its original in every
+    way, even if those files changed on-disk in the interim.
     """
     @staticmethod
     def global_defaults():
@@ -427,10 +420,11 @@ class Config(DataProxy):
         Load values from the shell environment.
 
         `.load_shell_env` is intended for execution late in a `.Config`
-        object's lifecycle, once all other sources have been merged. Loading
-        from the shell is not terrifically expensive, but must be done at a
-        specific point in time to ensure the "only known config keys are loaded
-        from the env" behavior works correctly.
+        object's lifecycle, once all other sources (such as a runtime config
+        file or per-collection configurations) have been loaded. Loading from
+        the shell is not terrifically expensive, but must be done at a specific
+        point in time to ensure the "only known config keys are loaded from the
+        env" behavior works correctly.
 
         See :ref:`env-vars` for details on this design decision and other info
         re: how environment variables are scanned and loaded.
@@ -451,8 +445,6 @@ class Config(DataProxy):
         `.load_collection` is intended for use by the core task execution
         machinery, which is responsible for obtaining collection-driven data.
         See :ref:`collection-configuration` for details.
-
-        .. note:: This method triggers `.merge` after it runs.
         """
         debug("Loading collection configuration")
         object.__setattr__(self, '_collection', data)
@@ -463,20 +455,19 @@ class Config(DataProxy):
         Return a copy of this configuration object.
 
         The new object will be identical in terms of configured sources and any
-        loaded/merged data, but will be a distinct object with as little shared
-        mutable state as possible.
+        loaded (or user-manipulated) data, but will be a distinct object with
+        as little shared mutable state as possible.
 
-        Specifically, all `dict` objects within the config (which are
-        considered part of the configuration structure) are recursively
+        Specifically, all `dict` values within the config are recursively
         recreated, with non-dict leaf values subjected to `copy.copy` (note:
         *not* `copy.deepcopy`, as this can cause issues with various objects
         such as compiled regexen or threading locks, often found buried deep
-        within rich objects like API or DB clients).
+        within rich aggregates like API or DB clients).
 
         The only remaining config values that may end up shared between a
-        config and its clone are thus 'rich' objects that do not `copy.copy`
-        cleanly, or compound non-dict objects (such as lists of lists, tuples
-        of tuples, lists of dicts, etc).
+        config and its clone are thus those 'rich' objects that do not
+        `copy.copy` cleanly, or compound non-dict objects (such as lists or
+        tuples).
 
         :param into:
             A `.Config` subclass that the new clone should be "upgraded" to.
@@ -582,8 +573,6 @@ class Config(DataProxy):
         ``None`` (e.g. ``True`` or ``False``) they will be skipped. Typically
         this means this method is idempotent and becomes a no-op after the
         first run.
-
-        Execution of this method does not imply merging; use `.merge` for that.
         """
         self._load_file(prefix='system')
         self._load_file(prefix='user')
