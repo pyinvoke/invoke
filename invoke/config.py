@@ -449,6 +449,20 @@ class Config(DataProxy):
         """
         # Perform initial load & merge.
         self.load_files()
+        # TODO: fuckfuckfuckfuck this is still bad
+        # ANY call of merge() on a cloned modified object will lose
+        # modifications
+        # Think we need to do something like corral all mutations to its own
+        # additional attribute, so there's never any actual overriding, and
+        # get() always just does an at-runtime mergedown? Would be cleaner
+        # anyways...and then cloning would copy that over just like everything
+        # else, and since no more merge(), no problems? (And...with that we
+        # could definitely switch to a all-via-constructor clone? because now
+        # the state is entirely "a set of dicts"? double check)
+        # Alternately, split shit up more such that the load_files+merge() does
+        # still happen prior to most of clone() (as before) but subclasses can
+        # still use something like post_init() (that is sure to be called after
+        # cloning is all done)?
         self.merge()
 
     def load_shell_env(self):
@@ -538,6 +552,7 @@ class Config(DataProxy):
         # mismatch going on between "I want stuff to happen in my config's
         # instantiation" and "I want cloning to not trigger certain things like
         # external data source loading".
+        # NOTE: this will include defer_post_init, see end of method
         new = klass(**self._init_kwargs(into=into))
         # Copy/merge/etc all 'private' data sources and attributes
         for name in """
@@ -577,6 +592,10 @@ class Config(DataProxy):
         # new clone, since the source config may have received custom
         # alterations by user code.)
         merge_dicts(new._config, self._config)
+        # Finally, call new.post_init() since it's fully merged up. This way,
+        # stuff called in post_init() will have access to the final version of
+        # the data.
+        new.post_init()
         return new
 
     def _init_kwargs(self, into=None):
@@ -600,6 +619,10 @@ class Config(DataProxy):
         # The kwargs.
         return dict(
             defaults=new_defaults,
+            # TODO: consider making this 'hardcoded' on the calling end (ie
+            # inside clone()) to make sure nobody accidentally nukes it via
+            # subclassing?
+            defer_post_init=True,
         )
 
     def load_files(self):

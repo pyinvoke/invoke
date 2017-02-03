@@ -707,21 +707,27 @@ Valid real attributes: ['clone', 'from_data', 'global_defaults', 'load_collectio
                 def global_defaults():
                     return dict(
                         Config.global_defaults(),
-                        internal_setting=False,
+                        internal_setting='default!',
                     )
 
                 def post_init(self):
+                    print("before super().post_init(), {!r}".format(self._config))
                     super(MyConfig, self).post_init()
+                    print("after super().post_init(), {!r}".format(self._config))
+                    import traceback; traceback.print_stack()
                     # Have to just record the visible value at time we're
                     # called, no other great way to notice something that ends
                     # up "correct" by end of clone()...!
-                    self.recorded_internal_setting = self.internal_setting
+                    object.__setattr__(self, 'recorded_internal_setting', self.internal_setting)
+                    #self.recorded_internal_setting = self.internal_setting
 
             original = MyConfig()
-            eq_(original.internal_setting, False)
-            original.internal_setting = True
+            eq_(original.internal_setting, 'default!')
+            original.internal_setting = 'custom!'
+            print(original._config)
             clone = original.clone()
-            eq_(clone.recorded_internal_setting, True)
+            print(clone._config)
+            eq_(clone.recorded_internal_setting, 'custom!')
 
         class into_kwarg:
             "'into' kwarg"
