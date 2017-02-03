@@ -595,6 +595,7 @@ Valid real attributes: ['clone', 'from_data', 'global_defaults', 'load_collectio
             ok_('json-only' in c)
             eq_(c.shared, 'json-value')
 
+
     class clone:
         def preserves_basic_members(self):
             c1 = Config(
