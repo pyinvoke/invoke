@@ -24,8 +24,8 @@ methods like `.Context.run`) and exposes it to users' tasks as
 The configuration hierarchy
 ===========================
 
-In brief, the order in which configuration values are loaded (and overridden -
-each new level overrides the one above it) is as follows:
+In brief, the order in which configuration values override one another is as
+follows:
 
 #. **Internal default values** for behaviors which are controllable via
    configuration. See :ref:`default-values` for details.
@@ -57,6 +57,7 @@ each new level overrides the one above it) is as follows:
 #. **Runtime configuration file** whose path is given to :option:`-f`, e.g.
    ``inv -f /random/path/to/config_file.yaml``.
 #. **Command-line flags** for certain core settings, such as :option:`-e`.
+#. **Modifications made by user code** at runtime.
 
 
 .. _default-values:

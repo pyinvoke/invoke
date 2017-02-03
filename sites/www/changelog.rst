@@ -2,6 +2,20 @@
 Changelog
 =========
 
+* :feature:`-` `Config <invoke.config.Config>`'s internals got cleaned up
+  somewhat; end users should not see much of a difference, but advanced
+  users or authors of extension code may notice the following:
+
+  - Direct modification of config data (e.g. ``myconfig.section.subsection.key
+    = 'value'`` in user/task code) is now stored in its own config 'level'/data
+    structure; previously such modifications simply mutated the central,
+    'merged' config cache. This makes it much easier to determine where a final
+    observed value came from, and prevents accidental data loss.
+  - There is no more ``Config.merge()``; reconciliation of the various config
+    levels into a single observed value now happens dynamically. This greatly
+    simplifies the object's lifecycle and removes a lot of opportunities for
+    bugs or (as above) inadvertent data loss, especially in subclasses.
+
 * :bug:`-` Python 3's hashing rules differ from Python 2, specifically:
 
     A class that overrides ``__eq__()`` and does not define ``__hash__()`` will

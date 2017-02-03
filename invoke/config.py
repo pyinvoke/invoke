@@ -211,23 +211,29 @@ class Config(DataProxy):
 
     **Lifecycle**
 
-    On initialization, `.Config` creates 'buckets' for each configuration level
-    and populates them with data supplied via global defaults, keyword
-    arguments and/or files loaded from disk. Post-initialiation, other levels
-    may be loaded at the appropriate time (see below) and users may make
-    modifications themselves (which are stored in yet another 'bucket').
+    At initialization time, `.Config`:
 
-    Typically, the `.load_collection` and `.load_shell_env` methods are called
-    after initialization - `.load_collection` prior to each task invocation
-    (because collection-level config data may change depending on the task) and
-    `.load_shell_env` as the final step (as it needs the rest of the config to
-    know which env vars are valid to load).
+    - creates per-level data structures
+    - stores levels supplied to `__init__`, such as defaults or overrides, as
+      well as the various config file paths/prefixes
+    - loads system, user and project level config files, if found
 
-    In CLI task invocation scenarios, `.clone` is often called (sometimes more
-    than once) as a method of preventing unwanted state bleed between tasks
-    and/or subroutines. This does not automatically re-load config files from
-    disk; extra IO is avoided, and the clone resembles its original in every
-    way, even if those files changed on-disk in the interim.
+    At this point, `.Config` is fully usable, but in most real-world use cases,
+    the CLI machinery (or library users) do additional work on a per-task
+    basis:
+
+    - the result of CLI argument parsing is applied to the overrides level
+    - a runtime config file is loaded, if its flag was supplied
+    - the base config is cloned (so tasks don't inadvertently affect one
+      another)
+    - per-collection data is loaded (only possible now that we have a task in
+      hand)
+    - shell environment data is loaded (must be done at end of process due to
+      using the rest of the config as a guide for interpreting env var names)
+
+    Any modifications made directly to the `.Config` itself (usually, after it
+    has been handed to the task or other end-user code) end up stored in their
+    own (topmost) config level, making it easy to debug final values.
     """
     @staticmethod
     def global_defaults():
