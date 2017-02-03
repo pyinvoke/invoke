@@ -207,11 +207,7 @@ class Config(DataProxy):
     .. warning::
         Accordingly, this means that if you have configuration options sharing
         names with these methods, you **must** use dictionary syntax (e.g.
-        ``myconfig['keys']``) to access them.
-
-    Individual configuration 'levels' and their source locations are stored as
-    'private' attributes (e.g. ``_defaults``, ``_system_prefix``) so fewer
-    names are "taken" from the perspective of attribute access.
+        ``myconfig['keys']``) to access the configuration data.
 
     **Lifecycle**
 
