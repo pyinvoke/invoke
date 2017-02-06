@@ -74,12 +74,34 @@ class DataProxy(object):
         sizeof
     """.split())
 
-    # Alt constructor used so we aren't getting in the way of Config's real
-    # __init__().
     @classmethod
-    def from_data(cls, data):
+    def from_data(cls, data, root=None, keypath=None):
+        """
+        Alternate constructor for 'baby' DataProxies used as sub-dict values.
+
+        Allows creating standalone DataProxy objects while also letting
+        subclasses like `.Config` define their own ``__init__``s without
+        muddling the two.
+
+        :param dict data:
+            This particular DataProxy's personal data. Required, it's the Data
+            being Proxied.
+
+        :param root:
+            Optional handle on a root DataProxy/Config which needs notification
+            on data updates.
+
+        :param tuple keypath:
+            Optional tuple describing the path of keys leading to this
+            DataProxy's location inside the ``root`` structure. Required if
+            ``root`` was given (and vice versa.)
+        """
         obj = cls()
         object.__setattr__(obj, '_config', data)
+        object.__setattr__(obj, '_root', root)
+        if keypath is None:
+            keypath = tuple()
+        object.__setattr__(obj, '_keypath', keypath)
         return obj
 
     def __getattr__(self, key):
@@ -107,7 +129,9 @@ class DataProxy(object):
         # attribute with the given name/key.
         has_real_attr = key in (x[0] for x in inspect.getmembers(self))
         if not has_real_attr:
-            self._config[key] = value
+            # Make sure to trigger our own __setitem__ instead of going direct
+            # to our internal dict/cache
+            self[key] = value
         else:
             super(DataProxy, self).__setattr__(key, value)
 
@@ -138,7 +162,27 @@ class DataProxy(object):
         return len(self._config)
 
     def __setitem__(self, key, value):
-        self._config[key] = value
+        # If we appear to be a non-root DataProxy, modify our _config so that
+        # anybody keeping a reference to us sees the update, and also tell our
+        # root object so it can track our modifications centrally (& trigger
+        # cache updating, etc)
+        if getattr(self, '_root', None):
+            self._config[key] = value
+            self._root._modify(self._keypath, key, value)
+        else:
+            # If we've got no _root, but we have a 'modify', we're probably a
+            # root/Config ourselves; so just  call modify with an empty
+            # keypath. (We do _not_ want to touch _config here as it would be
+            # the config cache.)
+            if hasattr(self, '_modify') and callable(self._modify):
+                self._modify(tuple(), key, value)
+            # If we've got no _root and no _modify(), we're some other rooty
+            # proxying object that isn't a Config, such as a Context. So we
+            # just update _config and assume it'll do the needful.
+            # TODO: this is getting very hairy which is a sign the object
+            # responsibilities need changing...sigh
+            else:
+                self._config[key] = value
 
     def __delitem__(self, key):
         del self._config[key]
@@ -149,7 +193,19 @@ class DataProxy(object):
     def _get(self, key):
         value = self._config[key]
         if isinstance(value, dict):
-            value = DataProxy.from_data(value)
+            # New object's keypath is simply the key, prepended with our own
+            # keypath if we've got one.
+            keypath = (key,)
+            if hasattr(self, '_keypath'):
+                keypath = self._keypath + keypath
+            # If we have no _root, we must be the root, so it's us. Otherwise,
+            # pass along our handle on the root.
+            root = getattr(self, '_root', self)
+            value = DataProxy.from_data(
+                data=value,
+                root=root,
+                keypath=keypath,
+            )
         return value
 
     def __str__(self):
@@ -413,8 +469,37 @@ class Config(DataProxy):
             overrides = {}
         object.__setattr__(self, '_overrides', overrides)
 
-        # Perform initial load & merge.
+        # Absolute highest level: user modifications.
+        object.__setattr__(self, '_modifications', {})
+
+        # Load non-runtime config files now, because why make all client code
+        # do it instead? (NOTE: we may change our mind eventually...)
         self.load_files()
+        self.merge()
+
+    def _modify(self, keypath, key, value):
+        """
+        Update our user-modifications config level with new data.
+
+        :param tuple keypath:
+            The key path identifying the sub-dict being updated. May be an
+            empty tuple if the update is occurring at the topmost level.
+
+        :param str key:
+            The actual key receiving an update.
+
+        :param value:
+            The value being written.
+        """
+        data = self._modifications
+        keypath = list(keypath)
+        while keypath:
+            subkey = keypath.pop(0)
+            # TODO: could use defaultdict here, but...meh?
+            if subkey not in data:
+                data[subkey] = {}
+            data = data[subkey]
+        data[key] = value
         self.merge()
 
     def load_shell_env(self):
@@ -525,6 +610,7 @@ class Config(DataProxy):
             runtime_found
             runtime
             overrides
+            modifications
         """.split():
             name = "_{0}".format(name)
             my_data = getattr(self, name)
@@ -653,6 +739,8 @@ class Config(DataProxy):
         self._merge_file('runtime', "Runtime")
         debug("Overrides: {0!r}".format(self._overrides))
         merge_dicts(self._config, self._overrides)
+        debug("Modifications: {0!r}".format(self._modifications))
+        merge_dicts(self._config, self._modifications)
 
     def _merge_file(self, name, desc):
         # Setup
