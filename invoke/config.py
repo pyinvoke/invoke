@@ -351,7 +351,8 @@ class Config(DataProxy):
         user_prefix=None,
         project_home=None,
         env_prefix=None,
-        runtime_path=None
+        runtime_path=None,
+        defer_post_init=False,
     ):
         """
         Creates a new config object.
@@ -396,6 +397,17 @@ class Config(DataProxy):
             Used to fill the penultimate slot in the config hierarchy. Should
             be a full file path to an existing file, not a directory path, or a
             prefix.
+
+        :param bool defer_post_init:
+            Whether to defer certain steps at the end of `__init__`.
+
+            Specifically, the `post_init` method is normally called
+            automatically, and performs initial actions like loading config
+            files. Advanced users may wish to call that method manually after
+            manipulating the object; to do so, specify
+            ``defer_post_init=True``.
+
+            Default: ``False``.
         """
         # Technically an implementation detail - do not expose in public API.
         # Stores merged configs and is accessed via DataProxy.
@@ -477,9 +489,20 @@ class Config(DataProxy):
         # Absolute highest level: user modifications.
         object.__setattr__(self, '_modifications', {})
 
-        # Load non-runtime config files now, because why make all client code
-        # do it instead? (NOTE: we may change our mind eventually...)
+        if not defer_post_init:
+            self.post_init()
+
+    def post_init(self):
+        """
+        Call setup steps that can occur immediately after `__init__`.
+
+        May need to be manually called if `__init__` was told
+        ``defer_post_init=True``.
+
+        :returns: ``None``.
+        """
         self.load_files()
+        # TODO: just use a decorator for merging probably? shrug
         self.merge()
 
     def _modify(self, keypath, key, value):
@@ -592,6 +615,7 @@ class Config(DataProxy):
         # mismatch going on between "I want stuff to happen in my config's
         # instantiation" and "I want cloning to not trigger certain things like
         # external data source loading".
+        # NOTE: this will include defer_post_init, see end of method
         new = klass(**self._init_kwargs(into=into))
         # Copy/merge/etc all 'private' data sources and attributes
         for name in """
@@ -632,6 +656,10 @@ class Config(DataProxy):
         # new clone, since the source config may have received custom
         # alterations by user code.)
         merge_dicts(new._config, self._config)
+        # Finally, call new.post_init() since it's fully merged up. This way,
+        # stuff called in post_init() will have access to the final version of
+        # the data.
+        new.post_init()
         return new
 
     def _init_kwargs(self, into=None):
@@ -655,6 +683,10 @@ class Config(DataProxy):
         # The kwargs.
         return dict(
             defaults=new_defaults,
+            # TODO: consider making this 'hardcoded' on the calling end (ie
+            # inside clone()) to make sure nobody accidentally nukes it via
+            # subclassing?
+            defer_post_init=True,
         )
 
     def load_files(self):

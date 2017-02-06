@@ -77,6 +77,13 @@ class Config_(IntegrationSpec):
             c = Config(env_prefix='INVOKE_')
             eq_(c._env_prefix, 'INVOKE_')
 
+        @patch.object(Config, 'post_init')
+        def can_defer_post_init_step(self, post_init):
+            Config()
+            post_init.assert_called_once_with()
+            post_init.reset_mock()
+            Config(defer_post_init=True)
+            ok_(not post_init.called)
 
     class basic_API:
         "Basic API components"
@@ -114,7 +121,7 @@ No attribute or config key found for 'nope'
 
 Valid keys: ['run', 'sudo', 'tasks']
 
-Valid real attributes: ['clone', 'from_data', 'global_defaults', 'load_collection', 'load_files', 'load_shell_env', 'merge', 'paths']
+Valid real attributes: ['clone', 'from_data', 'global_defaults', 'load_collection', 'load_files', 'load_shell_env', 'merge', 'paths', 'post_init']
 """.strip() # noqa
                 eq_(str(e), expected)
             else:
@@ -702,6 +709,41 @@ Valid real attributes: ['clone', 'from_data', 'global_defaults', 'load_collectio
             ok_(isinstance(c, MyConfig)) # sanity
             c2 = c.clone()
             ok_(isinstance(c2, MyConfig)) # actual test
+
+        def modified_config_data_is_present_during_post_init(self):
+            # Scenario: subclass wants to honor config settings when doing
+            # post-init stuff like loading additional config files (see eg
+            # Fabric 2 + loading SSH config files).
+            # This is enabled by splitting out the post-init step into its own
+            # method & ensuring clone() only calls it at the very end.
+            # Without that, a clone will exhibit default-level values (instead
+            # of the source's final values) until the very end of clone().
+            class MyConfig(Config):
+                @staticmethod
+                def global_defaults():
+                    return dict(
+                        Config.global_defaults(),
+                        internal_setting='default!',
+                    )
+
+                def post_init(self):
+                    print("before super().post_init(), {!r}".format(self._config))
+                    super(MyConfig, self).post_init()
+                    print("after super().post_init(), {!r}".format(self._config))
+                    import traceback; traceback.print_stack()
+                    # Have to just record the visible value at time we're
+                    # called, no other great way to notice something that ends
+                    # up "correct" by end of clone()...!
+                    object.__setattr__(self, 'recorded_internal_setting', self.internal_setting)
+                    #self.recorded_internal_setting = self.internal_setting
+
+            original = MyConfig()
+            eq_(original.internal_setting, 'default!')
+            original.internal_setting = 'custom!'
+            print(original._config)
+            clone = original.clone()
+            print(clone._config)
+            eq_(clone.recorded_internal_setting, 'custom!')
 
         class into_kwarg:
             "'into' kwarg"
