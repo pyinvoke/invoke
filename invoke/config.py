@@ -287,6 +287,11 @@ class Config(DataProxy):
     Any modifications made directly to the `.Config` itself (usually, after it
     has been handed to the task or other end-user code) end up stored in their
     own (topmost) config level, making it easy to debug final values.
+
+    Finally, any *deletions* made to the `.Config` (e.g. applications of
+    dict-style mutators like ``pop``, ``clear`` etc) are tracked in their own
+    structure, allowing the overall object to honor such method calls despite
+    the source data itself not changing.
     """
     @staticmethod
     def global_defaults():
