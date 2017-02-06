@@ -171,6 +171,20 @@ Valid real attributes: ['clone', 'from_data', 'global_defaults', 'load_collectio
             eq_(len(c), 0)
             ok_('foo' not in c)
 
+        def reinstatement_of_deleted_values_works_ok(self):
+            # Sounds like a stupid thing to test, but when we have to track
+            # deletions and mutations manually...it's an easy thing to overlook
+            c = Config({'foo': 'bar'})
+            eq_(c.foo, 'bar')
+            del c['foo']
+            # Sanity checks
+            ok_('foo' not in c)
+            eq_(len(c), 0)
+            # Put it back again...as a different value, for funsies
+            c.foo = 'formerly bar'
+            # And make sure it stuck
+            eq_(c.foo, 'formerly bar')
+
         def supports_mutation_via_attribute_access(self):
             c = Config({'foo': 'bar'})
             eq_(c.foo, 'bar')
@@ -259,16 +273,19 @@ Valid real attributes: ['clone', 'from_data', 'global_defaults', 'load_collectio
                 eq_(unicode(config), six.u("<Config: {'foo': 'bar'}>"))  # noqa
             eq_(repr(config), "<Config: {'foo': 'bar'}>")
 
-        def merging_does_not_wipe_user_modifications(self):
-            c = Config({'foo': {'bar': 'biz'}})
+        def merging_does_not_wipe_user_modifications_or_deletions(self):
+            c = Config({'foo': {'bar': 'biz'}, 'error': True})
             c.foo.bar = 'notbiz'
+            del c['error']
             eq_(c['foo']['bar'], 'notbiz')
+            ok_('error' not in c)
             c.merge()
             # Will be back to 'biz' if user changes don't get saved on their
             # own (previously they are just mutations on the cached central
             # config)
             eq_(c['foo']['bar'], 'notbiz')
-
+            # And this would still be here, too
+            ok_('error' not in c)
 
     class config_file_loading:
         "Configuration file loading"
