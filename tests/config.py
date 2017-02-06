@@ -781,27 +781,14 @@ Valid real attributes: ['clone', 'from_data', 'global_defaults', 'load_collectio
                         orig['new'] = {'data': 'ohai'}
                         return orig
                 c = Config(defaults={'other': {'data': 'hello'}})
+                c['runtime'] = {'modification': 'sup'}
                 c2 = c.clone(into=MyConfig)
-                # New data from MyConfig present
+                # New default data from MyConfig present
                 eq_(c2.new.data, 'ohai')
-                # As well as old data from the cloned instance
+                # As well as old default data from the cloned instance
                 eq_(c2.other.data, 'hello')
-
-            def new_class_base_data_does_not_overwrite_if_present(self):
-                # I.e. if the to-be-cloned config was anticipating the new
-                # settings and already filled them out
-                # TODO: there's an argument to be made that this shouldn't be a
-                # thing and we should instead abort, saying "hey, we're losing
-                # data!!"
-                class MyConfig(Config):
-                    @staticmethod
-                    def global_defaults():
-                        orig = Config.global_defaults()
-                        orig['already'] = {'present': 'new data here'}
-                        return orig
-                c = Config(defaults={'already': {'present': 'I live!'}})
-                c2 = c.clone(into=MyConfig)
-                eq_(c2.already.present, 'I live!') # not 'new data here'
+                # And runtime user mods from the cloned instance
+                eq_(c2.runtime.modification, 'sup')
 
         def does_not_deepcopy(self):
             c = Config(defaults={
