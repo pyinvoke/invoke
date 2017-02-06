@@ -167,6 +167,9 @@ Valid real attributes: ['clone', 'from_data', 'global_defaults', 'load_collectio
             eq_(len(c), 0)
             c.update({'foo': 'bar'})
             eq_(c['foo'], 'bar')
+            c.clear()
+            eq_(len(c), 0)
+            ok_('foo' not in c)
 
         def supports_mutation_via_attribute_access(self):
             c = Config({'foo': 'bar'})
