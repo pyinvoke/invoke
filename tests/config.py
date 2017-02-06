@@ -727,10 +727,7 @@ Valid real attributes: ['clone', 'from_data', 'global_defaults', 'load_collectio
                     )
 
                 def post_init(self):
-                    print("before super().post_init(), {!r}".format(self._config))
                     super(MyConfig, self).post_init()
-                    print("after super().post_init(), {!r}".format(self._config))
-                    import traceback; traceback.print_stack()
                     # Have to just record the visible value at time we're
                     # called, no other great way to notice something that ends
                     # up "correct" by end of clone()...!
@@ -740,9 +737,7 @@ Valid real attributes: ['clone', 'from_data', 'global_defaults', 'load_collectio
             original = MyConfig()
             eq_(original.internal_setting, 'default!')
             original.internal_setting = 'custom!'
-            print(original._config)
             clone = original.clone()
-            print(clone._config)
             eq_(clone.recorded_internal_setting, 'custom!')
 
         class into_kwarg:
