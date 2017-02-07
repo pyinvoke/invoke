@@ -616,7 +616,7 @@ class Config(DataProxy):
         # instantiation" and "I want cloning to not trigger certain things like
         # external data source loading".
         # NOTE: this will include defer_post_init, see end of method
-        new = klass(**self._init_kwargs(into=into))
+        new = klass(**self._clone_init_kwargs(into=into))
         # Copy/merge/etc all 'private' data sources and attributes
         for name in """
             collection
@@ -662,7 +662,7 @@ class Config(DataProxy):
         new.post_init()
         return new
 
-    def _init_kwargs(self, into=None):
+    def _clone_init_kwargs(self, into=None):
         """
         Supply kwargs suitable for initializing a new clone of this object.
 
