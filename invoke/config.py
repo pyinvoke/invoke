@@ -208,6 +208,16 @@ class DataProxy(object):
             )
         return value
 
+    def _set(self, **kwargs):
+        """
+        Convenience workaround of default 'attrs are config keys' behavior.
+
+        Good for initializing new attributes; is a bit less verbose than
+        slapping ``object.__setattr__()`` everywhere.
+        """
+        for key, value in six.iteritems(kwargs):
+            object.__setattr__(self, key, value)
+
     def __str__(self):
         return "<{0}: {1}>".format(self.__class__.__name__, self._config)
 
@@ -411,83 +421,83 @@ class Config(DataProxy):
         """
         # Technically an implementation detail - do not expose in public API.
         # Stores merged configs and is accessed via DataProxy.
-        object.__setattr__(self, '_config', {})
+        self._set(_config={})
 
         # Config file suffixes to search, in preference order.
-        object.__setattr__(self, '_file_suffixes', ('yaml', 'json', 'py'))
+        self._set(_file_suffixes=('yaml', 'json', 'py'))
 
         # Default configuration values, typically a copy of `global_defaults`.
         if defaults is None:
             defaults = copy_dict(self.global_defaults())
-        object.__setattr__(self, '_defaults', defaults)
+        self._set(_defaults=defaults)
 
         # Collection-driven config data, gathered from the collection tree
         # containing the currently executing task.
-        object.__setattr__(self, '_collection', {})
+        self._set(_collection={})
 
         # Path prefix searched for the system config file.
         # NOTE: There is no default system prefix on Windows.
         if system_prefix is None and not WINDOWS:
             system_prefix = '/etc/invoke'
-        object.__setattr__(self, '_system_prefix', system_prefix)
+        self._set(_system_prefix=system_prefix)
         # Path to loaded system config file, if any.
-        object.__setattr__(self, '_system_path', None)
+        self._set(_system_path=None)
         # Whether the system config file has been loaded or not (or ``None`` if
         # no loading has been attempted yet.)
-        object.__setattr__(self, '_system_found', None)
+        self._set(_system_found=None)
         # Data loaded from the system config file.
-        object.__setattr__(self, '_system', {})
+        self._set(_system={})
 
         # Path prefix searched for per-user config files.
         if user_prefix is None:
             user_prefix = '~/.invoke'
-        object.__setattr__(self, '_user_prefix', user_prefix)
+        self._set(_user_prefix=user_prefix)
         # Path to loaded user config file, if any.
-        object.__setattr__(self, '_user_path', None)
+        self._set(_user_path=None)
         # Whether the user config file has been loaded or not (or ``None`` if
         # no loading has been attempted yet.)
-        object.__setattr__(self, '_user_found', None)
+        self._set(_user_found=None)
         # Data loaded from the per-user config file.
-        object.__setattr__(self, '_user', {})
+        self._set(_user={})
 
         # Parent directory of the current root tasks file, if applicable.
-        object.__setattr__(self, '_project_home', project_home)
+        self._set(_project_home=project_home)
         # And a normalized prefix version not really publicly exposed
         project_prefix = None
         if self._project_home is not None:
             project_prefix = join(project_home, 'invoke')
-        object.__setattr__(self, '_project_prefix', project_prefix)
+        self._set(_project_prefix=project_prefix)
         # Path to loaded per-project config file, if any.
-        object.__setattr__(self, '_project_path', None)
+        self._set(_project_path=None)
         # Whether the project config file has been loaded or not (or ``None``
         # if no loading has been attempted yet.)
-        object.__setattr__(self, '_project_found', None)
+        self._set(_project_found=None)
         # Data loaded from the per-project config file.
-        object.__setattr__(self, '_project', {})
+        self._set(_project={})
 
         # Environment variable name prefix
         if env_prefix is None:
             env_prefix = ''
-        object.__setattr__(self, '_env_prefix', env_prefix)
+        self._set(_env_prefix=env_prefix)
         # Config data loaded from the shell environment.
-        object.__setattr__(self, '_env', {})
+        self._set(_env={})
 
         # Path to the user-specified runtime config file.
-        object.__setattr__(self, '_runtime_path', runtime_path)
+        self._set(_runtime_path=runtime_path)
         # Data loaded from the runtime config file.
-        object.__setattr__(self, '_runtime', {})
+        self._set(_runtime={})
         # Whether the runtime config file has been loaded or not (or ``None``
         # if no loading has been attempted yet.)
-        object.__setattr__(self, '_runtime_found', None)
+        self._set(_runtime_found=None)
 
         # Overrides - highest normal config level. Typically filled in from
         # command-line flags.
         if overrides is None:
             overrides = {}
-        object.__setattr__(self, '_overrides', overrides)
+        self._set(_overrides=overrides)
 
         # Absolute highest level: user modifications.
-        object.__setattr__(self, '_modifications', {})
+        self._set(_modifications={})
 
         if not defer_post_init:
             self.post_init()
@@ -549,7 +559,7 @@ class Config(DataProxy):
         self.merge()
         debug("Done with pre-merge.")
         loader = Environment(config=self._config, prefix=self._env_prefix)
-        object.__setattr__(self, '_env', loader.load())
+        self._set(_env=loader.load())
         debug("Loaded shell environment, triggering final merge")
         self.merge()
 
@@ -562,7 +572,7 @@ class Config(DataProxy):
         See :ref:`collection-configuration` for details.
         """
         debug("Loading collection configuration")
-        object.__setattr__(self, '_collection', data)
+        self._set(_collection=data)
         self.merge()
 
     def clone(self, into=None):
