@@ -1,3 +1,4 @@
+import pickle
 import re
 import sys
 
@@ -294,6 +295,14 @@ class Context_(Spec):
                 # such as incorrectly unhandled ThreadErrors
                 if not excepted:
                     assert False, "Did not raise AuthFailure!"
+
+    def can_be_pickled(self):
+        c = Context()
+        c.foo = {'bar': {'biz': ['baz', 'buzz']}}
+        c2 = pickle.loads(pickle.dumps(c))
+        eq_(c, c2)
+        ok_(c is not c2)
+        ok_(c.foo.bar.biz is not c2.foo.bar.biz)
 
 
 class MockContext_(Spec):

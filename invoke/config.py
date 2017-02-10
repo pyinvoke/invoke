@@ -232,8 +232,6 @@ class DataProxy(object):
     def __contains__(self, key):
         return key in self._config
 
-    # TODO: copy()?
-
 
 class Config(DataProxy):
     """

@@ -1,3 +1,4 @@
+import pickle
 import os
 from os.path import join, expanduser
 
@@ -826,6 +827,14 @@ Valid real attributes: ['clone', 'from_data', 'global_defaults', 'load_collectio
                 c.welp.cannot[1]['everything'] is c2.welp.cannot[1]['everything'], # noqa
                 "Huh, a deeply nested dict-in-a-list value had different identity?" # noqa
             )
+
+
+    def can_be_pickled(self):
+        c = Config(overrides={'foo': {'bar': {'biz': ['baz', 'buzz']}}})
+        c2 = pickle.loads(pickle.dumps(c))
+        eq_(c, c2)
+        ok_(c is not c2)
+        ok_(c.foo.bar.biz is not c2.foo.bar.biz)
 
 
 # NOTE: merge_dicts has its own very low level unit tests in its own file
