@@ -2,6 +2,10 @@
 Changelog
 =========
 
+* :bug:`426` `DataProxy <invoke.config.DataProxy>` based classes like `Config
+  <invoke.config.Config>` and `Context <invoke.context.Context>` didn't like
+  being `pickled <pickle>` or `copied <copy.copy>` and threw
+  ``RecursionError``. This has been fixed.
 * :feature:`-` `Config <invoke.config.Config>`'s internals got cleaned up
   somewhat; end users should not see much of a difference, but advanced
   users or authors of extension code may notice the following:
