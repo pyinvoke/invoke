@@ -732,8 +732,7 @@ Valid real attributes: ['clone', 'from_data', 'global_defaults', 'load_collectio
                     # Have to just record the visible value at time we're
                     # called, no other great way to notice something that ends
                     # up "correct" by end of clone()...!
-                    object.__setattr__(self, 'recorded_internal_setting', self.internal_setting)
-                    #self.recorded_internal_setting = self.internal_setting
+                    self.recorded_internal_setting = self.internal_setting
 
             original = MyConfig()
             eq_(original.internal_setting, 'default!')
