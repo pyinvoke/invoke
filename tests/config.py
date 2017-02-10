@@ -160,22 +160,31 @@ Valid real attributes: ['clone', 'from_data', 'global_defaults', 'load_collectio
             eq_(list(c.values()), ['bar'])
 
         def supports_mutation_dict_protocols(self):
+            # NOTE: merge() explicitly called in between actions and tests to
+            # ensure no regression related to merged config caching.
             c = Config({'foo': 'bar'})
             eq_(len(c), 1)
             eq_(c.pop('foo'), 'bar')
+            c.merge()
             eq_(len(c), 0)
             c.setdefault('biz', 'baz')
+            c.merge()
             eq_(c['biz'], 'baz')
             c['boz'] = 'buzz'
+            c.merge()
             eq_(len(c), 2)
             del c['boz']
+            c.merge()
             eq_(len(c), 1)
             ok_('boz' not in c)
             eq_(c.popitem(), ('biz', 'baz'))
+            c.merge()
             eq_(len(c), 0)
             c.update({'foo': 'bar'})
+            c.merge()
             eq_(c['foo'], 'bar')
             c.clear()
+            c.merge()
             eq_(len(c), 0)
             ok_('foo' not in c)
 
