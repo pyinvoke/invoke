@@ -191,6 +191,14 @@ class DataProxy(object):
         return self._get(key)
 
     def _get(self, key):
+        # Short-circuit if pickling/copying mechanisms are asking if we've got
+        # __setstate__ etc; they'll ask this w/o calling our __init__ first, so
+        # we'd be in a RecursionError-causing catch-22 otherwise.
+        if key in (
+            '__setstate__',
+        ):
+            raise AttributeError(key)
+        # At this point we should be able to assume a self._config...
         value = self._config[key]
         if isinstance(value, dict):
             # New object's keypath is simply the key, prepended with our own
