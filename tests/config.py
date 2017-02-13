@@ -159,7 +159,7 @@ Valid real attributes: ['clone', 'from_data', 'global_defaults', 'load_collectio
             eq_(list(c.keys()), ['foo'])
             eq_(list(c.values()), ['bar'])
 
-        class supports_mutation_dict_protocols:
+        class deletion_methods:
             def pop(self):
                 # Root
                 c = Config({'foo': 'bar'})
@@ -196,6 +196,15 @@ Valid real attributes: ['clone', 'from_data', 'global_defaults', 'load_collectio
                 c.nested = {'leafkey': 'leafval'}
                 eq_(c.nested.popitem(), ('leafkey', 'leafval'))
                 eq_(c, {'nested': {}})
+
+        class modification_methods:
+            def setitem(self):
+                c = Config({'foo': 'bar'})
+                c['foo'] = 'notbar'
+                eq_(c.foo, 'notbar')
+                del c['foo']
+                c['nested'] = {'leafkey': 'leafval'}
+                eq_(c, {'nested': {'leafkey': 'leafval'}})
 
         def reinstatement_of_deleted_values_works_ok(self):
             # Sounds like a stupid thing to test, but when we have to track
