@@ -571,6 +571,10 @@ class Config(DataProxy):
         :param value:
             The value being written.
         """
+        # First, ensure we wipe the keypath from _deletions, in case it was
+        # previously deleted-at-runtime....
+        self._deletions.pop(keypath + (key,), None)
+        # Now we can add it to the modifications structure.
         data = self._modifications
         keypath = list(keypath)
         while keypath:
