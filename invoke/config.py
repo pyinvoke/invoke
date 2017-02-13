@@ -258,7 +258,7 @@ class DataProxy(object):
             self._remove(tuple(), key)
 
     def clear(self):
-        keys = self.keys()
+        keys = list(self.keys())
         for key in keys:
             del self[key]
 
