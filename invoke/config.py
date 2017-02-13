@@ -157,31 +157,11 @@ class DataProxy(object):
         return len(self._config)
 
     def __setitem__(self, key, value):
-        # If we appear to be a non-root DataProxy, modify our _config so that
-        # anybody keeping a reference to us sees the update, and also tell our
-        # root object so it can track our modifications centrally (& trigger
-        # cache updating, etc)
-        if getattr(self, '_root', None):
-            self._config[key] = value
+        self._config[key] = value
+        if self._is_leaf():
             self._root._modify(self._keypath, key, value)
-        else:
-            # If we've got no _root, but we have a 'modify', we're probably a
-            # root/Config ourselves; so just  call modify with an empty
-            # keypath. (We do _not_ want to touch _config here as it would be
-            # the config cache.)
-            if hasattr(self, '_modify') and callable(self._modify):
-                self._modify(tuple(), key, value)
-            # If we've got no _root and no _modify(), we're some other rooty
-            # proxying object that isn't a Config, such as a Context. So we
-            # just update _config and assume it'll do the needful.
-            # TODO: this is getting very hairy which is a sign the object
-            # responsibilities need changing...sigh.
-            # Specifically, the "I proxy direct to a normal-ass nested dict"
-            # and "I proxy to an ephemeral/cachey dict that needs changes
-            # tracked on the side" paths feel like they ought to separate out
-            # if possible...?
-            else:
-                self._config[key] = value
+        elif self._is_root():
+            self._modify(tuple(), key, value)
 
     def __getitem__(self, key):
         return self._get(key)
