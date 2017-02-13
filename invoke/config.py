@@ -825,7 +825,8 @@ class Config(DataProxy):
         """
         Merge all config sources, in order.
         """
-        debug("Merging config sources in order...")
+        debug("Merging config sources in order onto new empty _config...")
+        self._config = {}
         debug("Defaults: {0!r}".format(self._defaults))
         merge_dicts(self._config, self._defaults)
         debug("Collection-driven: {0!r}".format(self._collection))
