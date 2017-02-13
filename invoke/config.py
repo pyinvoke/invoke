@@ -62,7 +62,6 @@ class DataProxy(object):
         iterkeys
         itervalues
         keys
-        pop
         popitem
         setdefault
         update
@@ -160,6 +159,37 @@ class DataProxy(object):
 
     def __len__(self):
         return len(self._config)
+
+    def is_leaf(self):
+        return hasattr(self, '_root')
+
+    def is_root(self):
+        # TODO: also callable()? meh
+        return hasattr(self, '_modify')
+
+    def pop(self, *args):
+        # Must test this up front before (possibly) mutating self._config
+        key_existed = args and args[0] in self._config
+        # We always have a _config (whether it's a real dict or a cache of
+        # merged levels) so we can fall back to it for all the corner case
+        # handling re: args (arity, handling a default, raising KeyError, etc)
+        ret = self._config.pop(*args)
+        # If it looks like no popping occurred (key wasn't there), presumably
+        # user gave default, so we can short-circuit return here - no need to
+        # track a deletion that did not happen.
+        if not key_existed:
+            return ret
+        # Here, we can assume at least the 1st posarg (key) existed.
+        key = args[0]
+        if self.is_leaf():
+            # Bookkeeping, via our root
+            self._root._remove(self._keypath, key)
+        elif self.is_root():
+            # Bookkeeping, via ourselves
+            self._remove(tuple(), key)
+        # In all cases, return the popped value.
+        return ret
+    
 
     def __setitem__(self, key, value):
         # If we appear to be a non-root DataProxy, modify our _config so that
@@ -504,6 +534,12 @@ class Config(DataProxy):
 
         # Absolute highest level: user modifications.
         self._set(_modifications={})
+        # And its sibling: user deletions. (stored as a flat dict of keypath
+        # keys and dummy values, for constant-time membership testing/removal
+        # w/ no messy recursion. TODO: maybe redo _everything_ that way? in
+        # _modifications and other levels, the values would of course be
+        # valuable and not just None)
+        self._set(_deletions={})
 
         if not defer_post_init:
             self.post_init()
@@ -541,9 +577,19 @@ class Config(DataProxy):
             subkey = keypath.pop(0)
             # TODO: could use defaultdict here, but...meh?
             if subkey not in data:
+                # TODO: generify this and the subsequent 3 lines...
                 data[subkey] = {}
             data = data[subkey]
         data[key] = value
+        self.merge()
+
+    def _remove(self, keypath, key):
+        """
+        Like `._modify`, but for removal.
+        """
+        # TODO: may be sane to push this step up to callers?
+        full_path = keypath + (key,)
+        self._deletions[full_path] = None
         self.merge()
 
     def load_shell_env(self):
@@ -794,6 +840,9 @@ class Config(DataProxy):
         merge_dicts(self._config, self._overrides)
         debug("Modifications: {0!r}".format(self._modifications))
         merge_dicts(self._config, self._modifications)
+        debug("Deletions: {0!r}".format(self._deletions))
+        for keypath in self._deletions.keys():
+            excise(self._config, keypath)
 
     def _merge_file(self, name, desc):
         # Setup
@@ -912,3 +961,16 @@ def copy_dict(source):
     documentation for details on behavior.
     """
     return merge_dicts({}, source)
+
+
+def excise(dict_, keypath):
+    """
+    Remove key pointed at by ``keypath`` from nested dict ``dict_``.
+    """
+    data = dict_
+    keypath = list(keypath)
+    leaf_key = keypath.pop()
+    while keypath:
+        key = keypath.pop(0)
+        data = data[key]
+    del data[leaf_key]

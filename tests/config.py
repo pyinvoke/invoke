@@ -159,34 +159,50 @@ Valid real attributes: ['clone', 'from_data', 'global_defaults', 'load_collectio
             eq_(list(c.keys()), ['foo'])
             eq_(list(c.values()), ['bar'])
 
-        def supports_mutation_dict_protocols(self):
+        class supports_mutation_dict_protocols:
             # NOTE: merge() explicitly called in between actions and tests to
             # ensure no regression related to merged config caching.
-            c = Config({'foo': 'bar'})
-            eq_(len(c), 1)
-            eq_(c.pop('foo'), 'bar')
-            c.merge()
-            eq_(len(c), 0)
-            c.setdefault('biz', 'baz')
-            c.merge()
-            eq_(c['biz'], 'baz')
-            c['boz'] = 'buzz'
-            c.merge()
-            eq_(len(c), 2)
-            del c['boz']
-            c.merge()
-            eq_(len(c), 1)
-            ok_('boz' not in c)
-            eq_(c.popitem(), ('biz', 'baz'))
-            c.merge()
-            eq_(len(c), 0)
-            c.update({'foo': 'bar'})
-            c.merge()
-            eq_(c['foo'], 'bar')
-            c.clear()
-            c.merge()
-            eq_(len(c), 0)
-            ok_('foo' not in c)
+
+            def pop(self):
+                # Root
+                c = Config({'foo': 'bar'})
+                eq_(len(c), 1)
+                eq_(c.pop('foo'), 'bar')
+                c.merge()
+                eq_(c, {})
+                # With the default arg
+                eq_(c.pop('wut', 'fine then'), 'fine then')
+                # Leaf (different key to avoid AmbiguousMergeError)
+                c.nested = {'leafkey': 'leafval'}
+                c.merge()
+                eq_(len(c), 1)
+                eq_(len(c.nested), 1)
+                eq_(c.nested.pop('leafkey'), 'leafval')
+                c.merge()
+                eq_(c, {'nested': {}})
+
+            def rest(self):
+                # setdefault()
+                c.setdefault('biz', 'baz')
+                c.merge()
+                eq_(c['biz'], 'baz')
+                c['boz'] = 'buzz'
+                c.merge()
+                eq_(len(c), 2)
+                del c['boz']
+                c.merge()
+                eq_(len(c), 1)
+                ok_('boz' not in c)
+                eq_(c.popitem(), ('biz', 'baz'))
+                c.merge()
+                eq_(len(c), 0)
+                c.update({'foo': 'bar'})
+                c.merge()
+                eq_(c['foo'], 'bar')
+                c.clear()
+                c.merge()
+                eq_(len(c), 0)
+                ok_('foo' not in c)
 
         def reinstatement_of_deleted_values_works_ok(self):
             # Sounds like a stupid thing to test, but when we have to track
