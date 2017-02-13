@@ -206,6 +206,16 @@ Valid real attributes: ['clone', 'from_data', 'global_defaults', 'load_collectio
                 c['nested'] = {'leafkey': 'leafval'}
                 eq_(c, {'nested': {'leafkey': 'leafval'}})
 
+            def setdefault(self):
+                c = Config({'foo': 'bar', 'nested': {'leafkey': 'leafval'}})
+                eq_(c.setdefault('foo'), 'bar')
+                eq_(c.nested.setdefault('leafkey'), 'leafval')
+                eq_(c.setdefault('notfoo', 'notbar'), 'notbar')
+                eq_(c.notfoo, 'notbar')
+                eq_(c.nested.setdefault('otherleaf', 'otherval'), 'otherval')
+                eq_(c.nested.otherleaf, 'otherval')
+
+
         def reinstatement_of_deleted_values_works_ok(self):
             # Sounds like a stupid thing to test, but when we have to track
             # deletions and mutations manually...it's an easy thing to overlook

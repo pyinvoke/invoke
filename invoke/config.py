@@ -61,7 +61,6 @@ class DataProxy(object):
         iterkeys
         itervalues
         keys
-        setdefault
         update
         values
     """.split()) + tuple("__{0}__".format(x) for x in """
@@ -294,6 +293,24 @@ class DataProxy(object):
             self._root._remove(self._keypath, key)
         elif self.is_root():
             self._remove(tuple(), key)
+        return ret
+
+    def setdefault(self, *args):
+        # Must test up front whether the key existed beforehand
+        key_existed = args and args[0] in self._config
+        # Run locally
+        ret = self._config.setdefault(*args)
+        # Key already existed -> nothing was mutated, short-circuit
+        if key_existed:
+            return ret
+        # Here, we can assume the key did not exist and thus user must have
+        # supplied a 'default' (if they did not, the real setdefault() above
+        # would have excepted.)
+        key, default = args
+        if self.is_leaf():
+            self._root._modify(self._keypath, key, default)
+        elif self.is_root():
+            self._modify(tuple(), key, default)
         return ret
 
 
