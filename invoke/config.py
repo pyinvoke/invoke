@@ -75,7 +75,7 @@ class DataProxy(object):
         Alternate constructor for 'baby' DataProxies used as sub-dict values.
 
         Allows creating standalone DataProxy objects while also letting
-        subclasses like `.Config` define their own ``__init__``s without
+        subclasses like `.Config` define their own ``__init__`` without
         muddling the two.
 
         :param dict data:
