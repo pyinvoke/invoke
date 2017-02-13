@@ -181,6 +181,14 @@ Valid real attributes: ['clone', 'from_data', 'global_defaults', 'load_collectio
                 del c.nested['leafkey']
                 eq_(c, {'nested': {}})
 
+            def clear(self):
+                c = Config({'foo': 'bar'})
+                c.clear()
+                eq_(c, {})
+                c.nested = {'leafkey': 'leafval'}
+                c.nested.clear()
+                eq_(c, {'nested': {}})
+
             def rest(self):
                 # setdefault()
                 c.setdefault('biz', 'baz')

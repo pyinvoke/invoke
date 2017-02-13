@@ -54,7 +54,6 @@ class DataProxy(object):
     """
     # Attributes which get proxied through to inner merged-dict config obj.
     _proxies = tuple("""
-        clear
         get
         has_key
         items
@@ -260,6 +259,11 @@ class DataProxy(object):
             self._root._remove(self._keypath, key)
         elif self.is_root():
             self._remove(tuple(), key)
+
+    def clear(self):
+        keys = self.keys()
+        for key in keys:
+            del self[key]
 
     def pop(self, *args):
         # Must test this up front before (possibly) mutating self._config
