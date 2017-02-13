@@ -15,6 +15,7 @@ Changelog
     structure; previously such modifications simply mutated the central,
     'merged' config cache. This makes it much easier to determine where a final
     observed value came from, and prevents accidental data loss.
+  - Ditto for deleted values.
   - Merging/reconciliation of the config levels now happens automatically when
     data is loaded or modified, which not only simplifies the object's
     lifecycle a bit but allows the previous change to function without
@@ -26,7 +27,7 @@ Changelog
     have its ``__hash__()`` implicitly set to None.
 
   `Config <invoke.config.Config>` (specifically, its foundational class
-  `DataProxy <invoke.config.DataProxy>`) only defined ``__eq__``, which
+  `DataProxy <invoke.config.DataProxy>`) only defined ``__eq__`` which,
   combined with the above behavior, meant that ``Config`` objects appeared to
   hash successfully on Python 2 but yielded ``TypeErrors`` on Python 3.
 
