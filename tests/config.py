@@ -189,6 +189,14 @@ Valid real attributes: ['clone', 'from_data', 'global_defaults', 'load_collectio
                 c.nested.clear()
                 eq_(c, {'nested': {}})
 
+            def popitem(self):
+                c = Config({'foo': 'bar'})
+                eq_(c.popitem(), ('foo', 'bar'))
+                eq_(c, {})
+                c.nested = {'leafkey': 'leafval'}
+                eq_(c.nested.popitem(), ('leafkey', 'leafval'))
+                eq_(c, {'nested': {}})
+
         def reinstatement_of_deleted_values_works_ok(self):
             # Sounds like a stupid thing to test, but when we have to track
             # deletions and mutations manually...it's an easy thing to overlook

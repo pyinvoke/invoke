@@ -61,7 +61,6 @@ class DataProxy(object):
         iterkeys
         itervalues
         keys
-        popitem
         setdefault
         update
         values
@@ -288,6 +287,14 @@ class DataProxy(object):
         # In all cases, return the popped value.
         return ret
 
+    def popitem(self):
+        ret = self._config.popitem()
+        key = ret[0]
+        if self.is_leaf():
+            self._root._remove(self._keypath, key)
+        elif self.is_root():
+            self._remove(tuple(), key)
+        return ret
 
 
 class Config(DataProxy):
