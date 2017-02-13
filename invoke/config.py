@@ -158,9 +158,9 @@ class DataProxy(object):
 
     def __setitem__(self, key, value):
         self._config[key] = value
-        if self._is_leaf():
+        if self._is_leaf:
             self._root._modify(self._keypath, key, value)
-        elif self._is_root():
+        elif self._is_root:
             self._modify(tuple(), key, value)
 
     def __getitem__(self, key):
@@ -216,9 +216,11 @@ class DataProxy(object):
     def __contains__(self, key):
         return key in self._config
 
+    @property
     def _is_leaf(self):
         return hasattr(self, '_root')
 
+    @property
     def _is_root(self):
         # TODO: also callable()? meh
         return hasattr(self, '_modify')
@@ -227,14 +229,14 @@ class DataProxy(object):
         del self._config[key]
         # TODO: bet this can be tightened further by just ensuring
         # self._keypath defaults to empty tuple; then can simply do (self._root
-        # if self._is_leaf() else self)._remove(self._keypath, key)
+        # if self._is_leaf else self)._remove(self._keypath, key)
         # TODO: and then further, can just define ._get_root()
         # TODO: and in fact we could presumably just define _remove()...? which
         # is presently just on Config? that gets us back to "This needs more
         # class reorg" territory tbh
-        if self._is_leaf():
+        if self._is_leaf:
             self._root._remove(self._keypath, key)
-        elif self._is_root():
+        elif self._is_root:
             self._remove(tuple(), key)
 
     def clear(self):
@@ -256,10 +258,10 @@ class DataProxy(object):
             return ret
         # Here, we can assume at least the 1st posarg (key) existed.
         key = args[0]
-        if self._is_leaf():
+        if self._is_leaf:
             # Bookkeeping, via our root
             self._root._remove(self._keypath, key)
-        elif self._is_root():
+        elif self._is_root:
             # Bookkeeping, via ourselves
             self._remove(tuple(), key)
         # In all cases, return the popped value.
@@ -268,9 +270,9 @@ class DataProxy(object):
     def popitem(self):
         ret = self._config.popitem()
         key = ret[0]
-        if self._is_leaf():
+        if self._is_leaf:
             self._root._remove(self._keypath, key)
-        elif self._is_root():
+        elif self._is_root:
             self._remove(tuple(), key)
         return ret
 
@@ -286,9 +288,9 @@ class DataProxy(object):
         # supplied a 'default' (if they did not, the real setdefault() above
         # would have excepted.)
         key, default = args
-        if self._is_leaf():
+        if self._is_leaf:
             self._root._modify(self._keypath, key, default)
-        elif self._is_root():
+        elif self._is_root:
             self._modify(tuple(), key, default)
         return ret
 
