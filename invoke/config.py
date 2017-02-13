@@ -222,7 +222,6 @@ class DataProxy(object):
 
     @property
     def _is_root(self):
-        # TODO: also callable()? meh
         return hasattr(self, '_modify')
 
     def __delitem__(self, key):
