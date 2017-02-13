@@ -189,7 +189,21 @@ class DataProxy(object):
             self._remove(tuple(), key)
         # In all cases, return the popped value.
         return ret
-    
+
+    def __delitem__(self, key):
+        key_existed = key in self
+        del self._config[key]
+        # TODO: bet this can be tightened further by just ensuring
+        # self._keypath defaults to empty tuple; then can simply do (self._root
+        # if self.is_leaf() else self)._remove(self._keypath, key)
+        # TODO: and then further, can just define ._get_root()
+        # TODO: and in fact we could presumably just define _remove()...? which
+        # is presently just on Config? that gets us back to "This needs more
+        # class reorg" territory tbh
+        if self.is_leaf():
+            self._root._remove(self._keypath, key)
+        elif self.is_root():
+            self._remove(tuple(), key)
 
     def __setitem__(self, key, value):
         # If we appear to be a non-root DataProxy, modify our _config so that
@@ -213,9 +227,6 @@ class DataProxy(object):
             # responsibilities need changing...sigh
             else:
                 self._config[key] = value
-
-    def __delitem__(self, key):
-        del self._config[key]
 
     def __getitem__(self, key):
         return self._get(key)
