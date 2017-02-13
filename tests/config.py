@@ -160,25 +160,16 @@ Valid real attributes: ['clone', 'from_data', 'global_defaults', 'load_collectio
             eq_(list(c.values()), ['bar'])
 
         class supports_mutation_dict_protocols:
-            # NOTE: merge() explicitly called in between actions and tests to
-            # ensure no regression related to merged config caching.
-
             def pop(self):
                 # Root
                 c = Config({'foo': 'bar'})
-                eq_(len(c), 1)
                 eq_(c.pop('foo'), 'bar')
-                c.merge()
                 eq_(c, {})
                 # With the default arg
                 eq_(c.pop('wut', 'fine then'), 'fine then')
                 # Leaf (different key to avoid AmbiguousMergeError)
                 c.nested = {'leafkey': 'leafval'}
-                c.merge()
-                eq_(len(c), 1)
-                eq_(len(c.nested), 1)
                 eq_(c.nested.pop('leafkey'), 'leafval')
-                c.merge()
                 eq_(c, {'nested': {}})
 
             def rest(self):
