@@ -122,7 +122,7 @@ No attribute or config key found for 'nope'
 
 Valid keys: ['run', 'sudo', 'tasks']
 
-Valid real attributes: ['clone', 'from_data', 'global_defaults', 'load_collection', 'load_files', 'load_shell_env', 'merge', 'paths', 'post_init']
+Valid real attributes: ['clear', 'clone', 'from_data', 'global_defaults', 'load_collection', 'load_files', 'load_shell_env', 'merge', 'paths', 'pop', 'popitem', 'post_init', 'setdefault', 'update']
 """.strip() # noqa
                 eq_(str(e), expected)
             else:
