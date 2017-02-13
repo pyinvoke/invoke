@@ -160,51 +160,6 @@ class DataProxy(object):
     def __len__(self):
         return len(self._config)
 
-    def is_leaf(self):
-        return hasattr(self, '_root')
-
-    def is_root(self):
-        # TODO: also callable()? meh
-        return hasattr(self, '_modify')
-
-    def pop(self, *args):
-        # Must test this up front before (possibly) mutating self._config
-        key_existed = args and args[0] in self._config
-        # We always have a _config (whether it's a real dict or a cache of
-        # merged levels) so we can fall back to it for all the corner case
-        # handling re: args (arity, handling a default, raising KeyError, etc)
-        ret = self._config.pop(*args)
-        # If it looks like no popping occurred (key wasn't there), presumably
-        # user gave default, so we can short-circuit return here - no need to
-        # track a deletion that did not happen.
-        if not key_existed:
-            return ret
-        # Here, we can assume at least the 1st posarg (key) existed.
-        key = args[0]
-        if self.is_leaf():
-            # Bookkeeping, via our root
-            self._root._remove(self._keypath, key)
-        elif self.is_root():
-            # Bookkeeping, via ourselves
-            self._remove(tuple(), key)
-        # In all cases, return the popped value.
-        return ret
-
-    def __delitem__(self, key):
-        key_existed = key in self
-        del self._config[key]
-        # TODO: bet this can be tightened further by just ensuring
-        # self._keypath defaults to empty tuple; then can simply do (self._root
-        # if self.is_leaf() else self)._remove(self._keypath, key)
-        # TODO: and then further, can just define ._get_root()
-        # TODO: and in fact we could presumably just define _remove()...? which
-        # is presently just on Config? that gets us back to "This needs more
-        # class reorg" territory tbh
-        if self.is_leaf():
-            self._root._remove(self._keypath, key)
-        elif self.is_root():
-            self._remove(tuple(), key)
-
     def __setitem__(self, key, value):
         # If we appear to be a non-root DataProxy, modify our _config so that
         # anybody keeping a reference to us sees the update, and also tell our
@@ -280,6 +235,52 @@ class DataProxy(object):
 
     def __contains__(self, key):
         return key in self._config
+
+    def is_leaf(self):
+        return hasattr(self, '_root')
+
+    def is_root(self):
+        # TODO: also callable()? meh
+        return hasattr(self, '_modify')
+
+    def __delitem__(self, key):
+        key_existed = key in self
+        del self._config[key]
+        # TODO: bet this can be tightened further by just ensuring
+        # self._keypath defaults to empty tuple; then can simply do (self._root
+        # if self.is_leaf() else self)._remove(self._keypath, key)
+        # TODO: and then further, can just define ._get_root()
+        # TODO: and in fact we could presumably just define _remove()...? which
+        # is presently just on Config? that gets us back to "This needs more
+        # class reorg" territory tbh
+        if self.is_leaf():
+            self._root._remove(self._keypath, key)
+        elif self.is_root():
+            self._remove(tuple(), key)
+
+    def pop(self, *args):
+        # Must test this up front before (possibly) mutating self._config
+        key_existed = args and args[0] in self._config
+        # We always have a _config (whether it's a real dict or a cache of
+        # merged levels) so we can fall back to it for all the corner case
+        # handling re: args (arity, handling a default, raising KeyError, etc)
+        ret = self._config.pop(*args)
+        # If it looks like no popping occurred (key wasn't there), presumably
+        # user gave default, so we can short-circuit return here - no need to
+        # track a deletion that did not happen.
+        if not key_existed:
+            return ret
+        # Here, we can assume at least the 1st posarg (key) existed.
+        key = args[0]
+        if self.is_leaf():
+            # Bookkeeping, via our root
+            self._root._remove(self._keypath, key)
+        elif self.is_root():
+            # Bookkeeping, via ourselves
+            self._remove(tuple(), key)
+        # In all cases, return the popped value.
+        return ret
+
 
 
 class Config(DataProxy):
@@ -568,48 +569,6 @@ class Config(DataProxy):
         # TODO: just use a decorator for merging probably? shrug
         self.merge()
 
-    def _modify(self, keypath, key, value):
-        """
-        Update our user-modifications config level with new data.
-
-        :param tuple keypath:
-            The key path identifying the sub-dict being updated. May be an
-            empty tuple if the update is occurring at the topmost level.
-
-        :param str key:
-            The actual key receiving an update.
-
-        :param value:
-            The value being written.
-        """
-        # First, ensure we wipe the keypath from _deletions, in case it was
-        # previously deleted-at-runtime....
-        self._deletions.pop(keypath + (key,), None)
-        # Now we can add it to the modifications structure.
-        data = self._modifications
-        keypath = list(keypath)
-        while keypath:
-            subkey = keypath.pop(0)
-            # TODO: could use defaultdict here, but...meh?
-            if subkey not in data:
-                # TODO: generify this and the subsequent 3 lines...
-                data[subkey] = {}
-            data = data[subkey]
-        data[key] = value
-        self.merge()
-
-    def _remove(self, keypath, key):
-        """
-        Like `._modify`, but for removal.
-        """
-        # NOTE: because deletions are processed in merge() last, we do not need
-        # to remove things from _modifications on removal; but we *do* do the
-        # inverse - remove from _deletions on modification.
-        # TODO: may be sane to push this step up to callers?
-        full_path = keypath + (key,)
-        self._deletions[full_path] = None
-        self.merge()
-
     def load_shell_env(self):
         """
         Load values from the shell environment.
@@ -644,6 +603,149 @@ class Config(DataProxy):
         debug("Loading collection configuration")
         self._set(_collection=data)
         self.merge()
+
+    def load_files(self):
+        """
+        Load any unloaded/un-searched-for config file sources.
+
+        Specifically, any file sources whose ``_found`` values are ``None``
+        will be sought and loaded if found; if their ``_found`` value is non
+        ``None`` (e.g. ``True`` or ``False``) they will be skipped. Typically
+        this means this method is idempotent and becomes a no-op after the
+        first run.
+        """
+        self._load_file(prefix='system')
+        self._load_file(prefix='user')
+        self._load_file(prefix='project')
+        self._load_file(prefix='runtime', absolute=True)
+
+    def _load_file(self, prefix, absolute=False):
+        # Setup
+        found = "_{0}_found".format(prefix)
+        path = "_{0}_path".format(prefix)
+        data = "_{0}".format(prefix)
+        # Short-circuit if loading appears to have occurred already
+        if getattr(self, found) is not None:
+            return
+        # Moar setup
+        if absolute:
+            absolute_path = getattr(self, path)
+            # None -> expected absolute path but none set, short circuit
+            if absolute_path is None:
+                return
+            paths = [absolute_path]
+        else:
+            path_prefix = getattr(self, "_{0}_prefix".format(prefix))
+            # Short circuit if loading seems unnecessary (eg for project config
+            # files when not running out of a project)
+            if path_prefix is None:
+                return
+            paths = [
+                '.'.join((path_prefix, x))
+                for x in self._file_suffixes
+            ]
+        # Poke 'em
+        for filepath in paths:
+            # Normalize
+            filepath = expanduser(filepath)
+            try:
+                try:
+                    type_ = splitext(filepath)[1].lstrip('.')
+                    loader = getattr(self, "_load_{0}".format(type_))
+                except AttributeError as e:
+                    msg = "Config files of type {0!r} (from file {1!r}) are not supported! Please use one of: {2!r}" # noqa
+                    raise UnknownFileType(msg.format(
+                        type_, filepath, self._file_suffixes))
+                # Store data, the path it was found at, and fact that it was
+                # found
+                setattr(self, data, loader(filepath))
+                setattr(self, path, filepath)
+                setattr(self, found, True)
+                break
+            # Typically means 'no such file', so just note & skip past.
+            except IOError as e:
+                # TODO: is there a better / x-platform way to detect this?
+                if "No such file" in e.strerror:
+                    err = "Didn't see any {0}, skipping."
+                    debug(err.format(filepath))
+                else:
+                    raise
+        # Still None -> no suffixed paths were found, record this fact
+        if getattr(self, path) is None:
+            setattr(self, found, False)
+
+    def _load_yaml(self, path):
+        with open(path) as fd:
+            return yaml.load(fd)
+
+    def _load_json(self, path):
+        with open(path) as fd:
+            return json.load(fd)
+
+    def _load_py(self, path):
+        data = {}
+        for key, value in six.iteritems(load_source('mod', path)):
+            if key.startswith('__'):
+                continue
+            data[key] = value
+        return data
+
+    @property
+    def paths(self):
+        """
+        An iterable of all successfully loaded config file paths.
+
+        No specific order.
+        """
+        paths = []
+        for prefix in "system user project runtime".split():
+            value = getattr(self, "_{0}_path".format(prefix))
+            if value is not None:
+                paths.append(value)
+        return paths
+
+    def merge(self):
+        """
+        Merge all config sources, in order.
+        """
+        debug("Merging config sources in order onto new empty _config...")
+        self._config = {}
+        debug("Defaults: {0!r}".format(self._defaults))
+        merge_dicts(self._config, self._defaults)
+        debug("Collection-driven: {0!r}".format(self._collection))
+        merge_dicts(self._config, self._collection)
+        self._merge_file('system', "System-wide")
+        self._merge_file('user', "Per-user")
+        self._merge_file('project', "Per-project")
+        debug("Environment variable config: {0!r}".format(self._env))
+        merge_dicts(self._config, self._env)
+        self._merge_file('runtime', "Runtime")
+        debug("Overrides: {0!r}".format(self._overrides))
+        merge_dicts(self._config, self._overrides)
+        debug("Modifications: {0!r}".format(self._modifications))
+        merge_dicts(self._config, self._modifications)
+        debug("Deletions: {0!r}".format(self._deletions))
+        for keypath in self._deletions.keys():
+            excise(self._config, keypath)
+
+    def _merge_file(self, name, desc):
+        # Setup
+        desc += " config file" # yup
+        found = getattr(self, "_{0}_found".format(name))
+        path = getattr(self, "_{0}_path".format(name))
+        data = getattr(self, "_{0}".format(name))
+        # None -> no loading occurred yet
+        if found is None:
+            debug("{0} has not been loaded yet, skipping".format(desc))
+        # True -> hooray
+        elif found:
+            debug("{0} ({1}): {2!r}".format(desc, path, data))
+            merge_dicts(self._config, data)
+        # False -> did try, did not succeed
+        else:
+            # TODO: how to preserve what was tried for each case but only for
+            # the negative? Just a branch here based on 'name'?
+            debug("{0} not found, skipping".format(desc))
 
     def clone(self, into=None):
         """
@@ -769,148 +871,47 @@ class Config(DataProxy):
             defer_post_init=True,
         )
 
-    def load_files(self):
+    def _modify(self, keypath, key, value):
         """
-        Load any unloaded/un-searched-for config file sources.
+        Update our user-modifications config level with new data.
 
-        Specifically, any file sources whose ``_found`` values are ``None``
-        will be sought and loaded if found; if their ``_found`` value is non
-        ``None`` (e.g. ``True`` or ``False``) they will be skipped. Typically
-        this means this method is idempotent and becomes a no-op after the
-        first run.
+        :param tuple keypath:
+            The key path identifying the sub-dict being updated. May be an
+            empty tuple if the update is occurring at the topmost level.
+
+        :param str key:
+            The actual key receiving an update.
+
+        :param value:
+            The value being written.
         """
-        self._load_file(prefix='system')
-        self._load_file(prefix='user')
-        self._load_file(prefix='project')
-        self._load_file(prefix='runtime', absolute=True)
+        # First, ensure we wipe the keypath from _deletions, in case it was
+        # previously deleted-at-runtime....
+        self._deletions.pop(keypath + (key,), None)
+        # Now we can add it to the modifications structure.
+        data = self._modifications
+        keypath = list(keypath)
+        while keypath:
+            subkey = keypath.pop(0)
+            # TODO: could use defaultdict here, but...meh?
+            if subkey not in data:
+                # TODO: generify this and the subsequent 3 lines...
+                data[subkey] = {}
+            data = data[subkey]
+        data[key] = value
+        self.merge()
 
-    def _load_file(self, prefix, absolute=False):
-        # Setup
-        found = "_{0}_found".format(prefix)
-        path = "_{0}_path".format(prefix)
-        data = "_{0}".format(prefix)
-        # Short-circuit if loading appears to have occurred already
-        if getattr(self, found) is not None:
-            return
-        # Moar setup
-        if absolute:
-            absolute_path = getattr(self, path)
-            # None -> expected absolute path but none set, short circuit
-            if absolute_path is None:
-                return
-            paths = [absolute_path]
-        else:
-            path_prefix = getattr(self, "_{0}_prefix".format(prefix))
-            # Short circuit if loading seems unnecessary (eg for project config
-            # files when not running out of a project)
-            if path_prefix is None:
-                return
-            paths = [
-                '.'.join((path_prefix, x))
-                for x in self._file_suffixes
-            ]
-        # Poke 'em
-        for filepath in paths:
-            # Normalize
-            filepath = expanduser(filepath)
-            try:
-                try:
-                    type_ = splitext(filepath)[1].lstrip('.')
-                    loader = getattr(self, "_load_{0}".format(type_))
-                except AttributeError as e:
-                    msg = "Config files of type {0!r} (from file {1!r}) are not supported! Please use one of: {2!r}" # noqa
-                    raise UnknownFileType(msg.format(
-                        type_, filepath, self._file_suffixes))
-                # Store data, the path it was found at, and fact that it was
-                # found
-                setattr(self, data, loader(filepath))
-                setattr(self, path, filepath)
-                setattr(self, found, True)
-                break
-            # Typically means 'no such file', so just note & skip past.
-            except IOError as e:
-                # TODO: is there a better / x-platform way to detect this?
-                if "No such file" in e.strerror:
-                    err = "Didn't see any {0}, skipping."
-                    debug(err.format(filepath))
-                else:
-                    raise
-        # Still None -> no suffixed paths were found, record this fact
-        if getattr(self, path) is None:
-            setattr(self, found, False)
-
-    def merge(self):
+    def _remove(self, keypath, key):
         """
-        Merge all config sources, in order.
+        Like `._modify`, but for removal.
         """
-        debug("Merging config sources in order onto new empty _config...")
-        self._config = {}
-        debug("Defaults: {0!r}".format(self._defaults))
-        merge_dicts(self._config, self._defaults)
-        debug("Collection-driven: {0!r}".format(self._collection))
-        merge_dicts(self._config, self._collection)
-        self._merge_file('system', "System-wide")
-        self._merge_file('user', "Per-user")
-        self._merge_file('project', "Per-project")
-        debug("Environment variable config: {0!r}".format(self._env))
-        merge_dicts(self._config, self._env)
-        self._merge_file('runtime', "Runtime")
-        debug("Overrides: {0!r}".format(self._overrides))
-        merge_dicts(self._config, self._overrides)
-        debug("Modifications: {0!r}".format(self._modifications))
-        merge_dicts(self._config, self._modifications)
-        debug("Deletions: {0!r}".format(self._deletions))
-        for keypath in self._deletions.keys():
-            excise(self._config, keypath)
-
-    def _merge_file(self, name, desc):
-        # Setup
-        desc += " config file" # yup
-        found = getattr(self, "_{0}_found".format(name))
-        path = getattr(self, "_{0}_path".format(name))
-        data = getattr(self, "_{0}".format(name))
-        # None -> no loading occurred yet
-        if found is None:
-            debug("{0} has not been loaded yet, skipping".format(desc))
-        # True -> hooray
-        elif found:
-            debug("{0} ({1}): {2!r}".format(desc, path, data))
-            merge_dicts(self._config, data)
-        # False -> did try, did not succeed
-        else:
-            # TODO: how to preserve what was tried for each case but only for
-            # the negative? Just a branch here based on 'name'?
-            debug("{0} not found, skipping".format(desc))
-
-    @property
-    def paths(self):
-        """
-        An iterable of all successfully loaded config file paths.
-
-        No specific order.
-        """
-        paths = []
-        for prefix in "system user project runtime".split():
-            value = getattr(self, "_{0}_path".format(prefix))
-            if value is not None:
-                paths.append(value)
-        return paths
-
-    def _load_yaml(self, path):
-        with open(path) as fd:
-            return yaml.load(fd)
-
-    def _load_json(self, path):
-        with open(path) as fd:
-            return json.load(fd)
-
-    def _load_py(self, path):
-        data = {}
-        for key, value in six.iteritems(load_source('mod', path)):
-            if key.startswith('__'):
-                continue
-            data[key] = value
-        return data
+        # NOTE: because deletions are processed in merge() last, we do not need
+        # to remove things from _modifications on removal; but we *do* do the
+        # inverse - remove from _deletions on modification.
+        # TODO: may be sane to push this step up to callers?
+        full_path = keypath + (key,)
+        self._deletions[full_path] = None
+        self.merge()
 
 
 class AmbiguousMergeError(ValueError):
