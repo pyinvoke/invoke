@@ -189,29 +189,6 @@ Valid real attributes: ['clone', 'from_data', 'global_defaults', 'load_collectio
                 c.nested.clear()
                 eq_(c, {'nested': {}})
 
-            def rest(self):
-                # setdefault()
-                c.setdefault('biz', 'baz')
-                c.merge()
-                eq_(c['biz'], 'baz')
-                c['boz'] = 'buzz'
-                c.merge()
-                eq_(len(c), 2)
-                del c['boz']
-                c.merge()
-                eq_(len(c), 1)
-                ok_('boz' not in c)
-                eq_(c.popitem(), ('biz', 'baz'))
-                c.merge()
-                eq_(len(c), 0)
-                c.update({'foo': 'bar'})
-                c.merge()
-                eq_(c['foo'], 'bar')
-                c.clear()
-                c.merge()
-                eq_(len(c), 0)
-                ok_('foo' not in c)
-
         def reinstatement_of_deleted_values_works_ok(self):
             # Sounds like a stupid thing to test, but when we have to track
             # deletions and mutations manually...it's an easy thing to overlook
