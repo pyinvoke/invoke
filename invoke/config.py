@@ -602,6 +602,9 @@ class Config(DataProxy):
         """
         Like `._modify`, but for removal.
         """
+        # NOTE: because deletions are processed in merge() last, we do not need
+        # to remove things from _modifications on removal; but we *do* do the
+        # inverse - remove from _deletions on modification.
         # TODO: may be sane to push this step up to callers?
         full_path = keypath + (key,)
         self._deletions[full_path] = None
