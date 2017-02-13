@@ -179,7 +179,11 @@ class DataProxy(object):
             # proxying object that isn't a Config, such as a Context. So we
             # just update _config and assume it'll do the needful.
             # TODO: this is getting very hairy which is a sign the object
-            # responsibilities need changing...sigh
+            # responsibilities need changing...sigh.
+            # Specifically, the "I proxy direct to a normal-ass nested dict"
+            # and "I proxy to an ephemeral/cachey dict that needs changes
+            # tracked on the side" paths feel like they ought to separate out
+            # if possible...?
             else:
                 self._config[key] = value
 
