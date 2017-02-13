@@ -33,6 +33,9 @@ class merge_dicts_(Spec):
 
     @raises(AmbiguousMergeError)
     def merging_dict_into_nondict_raises_error(self):
+        # TODO: or...should it?! If a user really wants to take a pre-existing
+        # config path and make it 'deeper' by overwriting e.g. a string with a
+        # dict of strings (or whatever)...should they be allowed to?
         d1 = {'foo': 'bar'}
         d2 = {'foo': {'uh': 'oh'}}
         merge_dicts(d1, d2)
