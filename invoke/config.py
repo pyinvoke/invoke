@@ -224,19 +224,17 @@ class DataProxy(object):
     def _is_root(self):
         return hasattr(self, '_modify')
 
+    def _track_removal_of(self, key):
+        target = None
+        if self._is_leaf:
+            target = self._root
+        elif self._is_root:
+            target = self
+        target._remove(getattr(self, '_keypath', tuple()), key)
+
     def __delitem__(self, key):
         del self._config[key]
-        # TODO: bet this can be tightened further by just ensuring
-        # self._keypath defaults to empty tuple; then can simply do (self._root
-        # if self._is_leaf else self)._remove(self._keypath, key)
-        # TODO: and then further, can just define ._get_root()
-        # TODO: and in fact we could presumably just define _remove()...? which
-        # is presently just on Config? that gets us back to "This needs more
-        # class reorg" territory tbh
-        if self._is_leaf:
-            self._root._remove(self._keypath, key)
-        elif self._is_root:
-            self._remove(tuple(), key)
+        self._track_removal_of(key)
 
     def clear(self):
         keys = list(self.keys())
