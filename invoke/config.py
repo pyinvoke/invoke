@@ -61,7 +61,6 @@ class DataProxy(object):
         iterkeys
         itervalues
         keys
-        update
         values
     """.split()) + tuple("__{0}__".format(x) for x in """
         cmp
@@ -312,6 +311,21 @@ class DataProxy(object):
         elif self.is_root():
             self._modify(tuple(), key, default)
         return ret
+
+    def update(self, *args, **kwargs):
+        if kwargs:
+            for key, value in six.iteritems(kwargs):
+                self[key] = value
+        elif args:
+            # TODO: complain if arity>1
+            arg = args[0]
+            if isinstance(arg, dict):
+                for key in arg:
+                    self[key] = arg[key]
+            else:
+                # TODO: be stricter about input in this case
+                for pair in arg:
+                    self[pair[0]] = pair[1]
 
 
 class Config(DataProxy):

@@ -215,6 +215,26 @@ Valid real attributes: ['clone', 'from_data', 'global_defaults', 'load_collectio
                 eq_(c.nested.setdefault('otherleaf', 'otherval'), 'otherval')
                 eq_(c.nested.otherleaf, 'otherval')
 
+            def update(self):
+                c = Config({'foo': 'bar', 'nested': {'leafkey': 'leafval'}})
+                # Regular update(dict)
+                c.update({'foo': 'notbar'})
+                eq_(c.foo, 'notbar')
+                c.nested.update({'leafkey': 'otherval'})
+                eq_(c.nested.leafkey, 'otherval')
+                # Apparently allowed but wholly useless
+                c.update()
+                eq_(c, {'foo': 'notbar', 'nested': {'leafkey': 'otherval'}})
+                # Kwarg edition
+                c.update(foo='otherbar')
+                eq_(c.foo, 'otherbar')
+                # Iterator of 2-tuples edition
+                c.nested.update([
+                    ('leafkey', 'yetanotherval'),
+                    ('newleaf', 'turnt'),
+                ])
+                eq_(c.nested.leafkey, 'yetanotherval')
+                eq_(c.nested.newleaf, 'turnt')
 
         def reinstatement_of_deleted_values_works_ok(self):
             # Sounds like a stupid thing to test, but when we have to track
