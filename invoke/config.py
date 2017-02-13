@@ -244,7 +244,6 @@ class DataProxy(object):
         return hasattr(self, '_modify')
 
     def __delitem__(self, key):
-        key_existed = key in self
         del self._config[key]
         # TODO: bet this can be tightened further by just ensuring
         # self._keypath defaults to empty tuple; then can simply do (self._root
