@@ -172,13 +172,22 @@ Valid real attributes: ['clear', 'clone', 'from_data', 'global_defaults', 'load_
                 eq_(c.nested.pop('leafkey'), 'leafval')
                 eq_(c, {'nested': {}})
 
-            def del_(self):
-                "del"
+            def delitem(self):
+                "__delitem__"
                 c = Config({'foo': 'bar'})
                 del c['foo']
                 eq_(c, {})
                 c.nested = {'leafkey': 'leafval'}
                 del c.nested['leafkey']
+                eq_(c, {'nested': {}})
+
+            def delattr(self):
+                "__delattr__"
+                c = Config({'foo': 'bar'})
+                del c.foo
+                eq_(c, {})
+                c.nested = {'leafkey': 'leafval'}
+                del c.nested.leafkey
                 eq_(c, {'nested': {}})
 
             def clear(self):

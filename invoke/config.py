@@ -247,6 +247,9 @@ class DataProxy(object):
         del self._config[key]
         self._track_removal_of(key)
 
+    def __delattr__(self, name):
+        del self[name]
+
     def clear(self):
         keys = list(self.keys())
         for key in keys:
