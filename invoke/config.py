@@ -248,7 +248,12 @@ class DataProxy(object):
         self._track_removal_of(key)
 
     def __delattr__(self, name):
-        del self[name]
+        # Make sure we don't screw up true attribute deletion for the
+        # situations that actually want it. (Uncommon, but not rare.)
+        if name in self:
+            del self[name]
+        else:
+            object.__delattr__(self, name)
 
     def clear(self):
         keys = list(self.keys())
