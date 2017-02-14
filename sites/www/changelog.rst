@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :release:`0.15.0 <2017-02-14>`
 * :bug:`426 major` `DataProxy <invoke.config.DataProxy>` based classes like
   `Config <invoke.config.Config>` and `Context <invoke.context.Context>` didn't
   like being `pickled <pickle>` or `copied <copy.copy>` and threw
