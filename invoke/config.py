@@ -158,10 +158,7 @@ class DataProxy(object):
 
     def __setitem__(self, key, value):
         self._config[key] = value
-        if self._is_leaf:
-            self._root._modify(self._keypath, key, value)
-        elif self._is_root:
-            self._modify(tuple(), key, value)
+        self._track_modification_of(key, value)
 
     def __getitem__(self, key):
         return self._get(key)
@@ -225,12 +222,24 @@ class DataProxy(object):
         return hasattr(self, '_modify')
 
     def _track_removal_of(self, key):
+        # Grab the root object responsible for tracking removals; either the
+        # referenced root (if we're a leaf) or ourselves (if we're not).
+        # (Intermediate nodes never have anything but __getitem__ called on
+        # them, otherwise they're by definition being treated as a leaf.)
         target = None
         if self._is_leaf:
             target = self._root
         elif self._is_root:
             target = self
         target._remove(getattr(self, '_keypath', tuple()), key)
+
+    def _track_modification_of(self, key, value):
+        target = None
+        if self._is_leaf:
+            target = self._root
+        elif self._is_root:
+            target = self
+        target._modify(getattr(self, '_keypath', tuple()), key, value)
 
     def __delitem__(self, key):
         del self._config[key]
@@ -254,23 +263,13 @@ class DataProxy(object):
         if not key_existed:
             return ret
         # Here, we can assume at least the 1st posarg (key) existed.
-        key = args[0]
-        if self._is_leaf:
-            # Bookkeeping, via our root
-            self._root._remove(self._keypath, key)
-        elif self._is_root:
-            # Bookkeeping, via ourselves
-            self._remove(tuple(), key)
+        self._track_removal_of(args[0])
         # In all cases, return the popped value.
         return ret
 
     def popitem(self):
         ret = self._config.popitem()
-        key = ret[0]
-        if self._is_leaf:
-            self._root._remove(self._keypath, key)
-        elif self._is_root:
-            self._remove(tuple(), key)
+        self._track_removal_of(ret[0])
         return ret
 
     def setdefault(self, *args):
@@ -285,10 +284,7 @@ class DataProxy(object):
         # supplied a 'default' (if they did not, the real setdefault() above
         # would have excepted.)
         key, default = args
-        if self._is_leaf:
-            self._root._modify(self._keypath, key, default)
-        elif self._is_root:
-            self._modify(tuple(), key, default)
+        self._track_modification_of(key, default)
         return ret
 
     def update(self, *args, **kwargs):
