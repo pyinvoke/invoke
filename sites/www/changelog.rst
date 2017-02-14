@@ -2,9 +2,9 @@
 Changelog
 =========
 
-* :bug:`426` `DataProxy <invoke.config.DataProxy>` based classes like `Config
-  <invoke.config.Config>` and `Context <invoke.context.Context>` didn't like
-  being `pickled <pickle>` or `copied <copy.copy>` and threw
+* :bug:`426 major` `DataProxy <invoke.config.DataProxy>` based classes like
+  `Config <invoke.config.Config>` and `Context <invoke.context.Context>` didn't
+  like being `pickled <pickle>` or `copied <copy.copy>` and threw
   ``RecursionError``. This has been fixed.
 * :feature:`-` `Config <invoke.config.Config>`'s internals got cleaned up
   somewhat; end users should not see much of a difference, but advanced
@@ -21,7 +21,7 @@ Changelog
     lifecycle a bit but allows the previous change to function without
     requiring users to call ``.merge()`` after every modification.
 
-* :bug:`-` Python 3's hashing rules differ from Python 2, specifically:
+* :bug:`- major` Python 3's hashing rules differ from Python 2, specifically:
 
     A class that overrides ``__eq__()`` and does not define ``__hash__()`` will
     have its ``__hash__()`` implicitly set to None.
@@ -34,11 +34,11 @@ Changelog
   This has been fixed by explicitly setting ``__hash__ = None`` so that the
   objects do not hash on either interpreter (there are no good immutable
   attributes by which to define hashability).
-* :bug:`-` Configuration keys named ``config`` were inadvertently exposing the
-  internal dict representation of the containing config object, instead of
-  displaying the actual value stored in that key. (Thus, a set config of
-  ``mycontext.foo.bar.config`` would act as if it was the key/value contents of
-  the ``mycontext.foo.bar`` subtree.) This has been fixed.
+* :bug:`- major` Configuration keys named ``config`` were inadvertently
+  exposing the internal dict representation of the containing config object,
+  instead of displaying the actual value stored in that key. (Thus, a set
+  config of ``mycontext.foo.bar.config`` would act as if it was the key/value
+  contents of the ``mycontext.foo.bar`` subtree.) This has been fixed.
 * :feature:`421` Updated `Config.clone <invoke.config.Config.clone>` (and a few
   other related areas) to replace use of `copy.deepcopy` with a less-rigorous
   but also less-likely-to-explode recursive dict copier. This prevents
@@ -48,7 +48,7 @@ Changelog
   kwarg allowing client libraries with their own `~invoke.config.Config`
   subclasses to easily "upgrade" vanilla Invoke config objects into their local
   variety.
-* :bug:`419` Optional parser arguments had a few issues:
+* :bug:`419 major` Optional parser arguments had a few issues:
 
   - The :ref:`conceptual docs about CLI parsing <optional-values>` mentioned
     them, but didn't actually show via example how to enable the feature,
@@ -66,11 +66,12 @@ Changelog
   downstream maintainers to nuke ``vendor/`` and prefer explicitly installed
   packages of e.g. ``six``, ``pyyaml`` or ``fluidity``. Thanks to Athmane
   Madjoudj for the patch.
-* :bug:`-` Fix configuration framework such that nested or dict-like config
-  values may be compared with regular dicts. Previously, doing so caused an
-  ``AttributeError`` (as regular dicts lack a ``.config``).
-* :bug:`413` Update behavior of ``DataProxy`` (used within
-  `~invoke.context.Context` and `~invoke.config.Config`) again, fixing two related issues:
+* :bug:`- major` Fix configuration framework such that nested or dict-like
+  config values may be compared with regular dicts. Previously, doing so caused
+  an ``AttributeError`` (as regular dicts lack a ``.config``).
+* :bug:`413 major` Update behavior of ``DataProxy`` (used within
+  `~invoke.context.Context` and `~invoke.config.Config`) again, fixing two
+  related issues:
 
   - Creating new configuration keys via attribute access wasn't possible: one
     had to do ``config['foo'] = 'bar'`` because ``config.foo = 'bar'`` would
