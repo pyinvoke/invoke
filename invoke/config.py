@@ -747,8 +747,7 @@ class Config(DataProxy):
         debug("Modifications: {0!r}".format(self._modifications))
         merge_dicts(self._config, self._modifications)
         debug("Deletions: {0!r}".format(self._deletions))
-        for keypath in self._deletions.keys():
-            excise(self._config, keypath)
+        obliterate(self._config, self._deletions)
 
     def _merge_file(self, name, desc):
         # Setup
@@ -908,8 +907,8 @@ class Config(DataProxy):
             The value being written.
         """
         # First, ensure we wipe the keypath from _deletions, in case it was
-        # previously deleted-at-runtime....
-        self._deletions.pop(keypath + (key,), None)
+        # previously deleted.
+        excise(self._deletions, keypath + (key,))
         # Now we can add it to the modifications structure.
         data = self._modifications
         keypath = list(keypath)
@@ -931,8 +930,27 @@ class Config(DataProxy):
         # to remove things from _modifications on removal; but we *do* do the
         # inverse - remove from _deletions on modification.
         # TODO: may be sane to push this step up to callers?
-        full_path = keypath + (key,)
-        self._deletions[full_path] = None
+        data = self._deletions
+        keypath = list(keypath)
+        while keypath:
+            subkey = keypath.pop(0)
+            if subkey in data:
+                data = data[subkey]
+                # If we encounter None, it means something higher up than our
+                # requested keypath is already marked as deleted; so we don't
+                # have to do anything or go further.
+                if data is None:
+                    return
+                # Otherwise it's presumably another dict, so keep looping...
+            else:
+                # Key not found -> nobody's marked anything along this part of
+                # the path for deletion, so we'll start building it out.
+                data[subkey] = {}
+                # Then prep for next iteration
+                data = data[subkey]
+        # Exited loop -> data must be the leafmost dict, so we can now set our
+        # deleted key to None
+        data[key] = None
         self.merge()
 
 
@@ -1007,12 +1025,30 @@ def copy_dict(source):
 
 def excise(dict_, keypath):
     """
-    Remove key pointed at by ``keypath`` from nested dict ``dict_``.
+    Remove key pointed at by ``keypath`` from nested dict ``dict_``, if exists.
     """
     data = dict_
     keypath = list(keypath)
     leaf_key = keypath.pop()
     while keypath:
         key = keypath.pop(0)
+        if key not in data:
+            # Not there, nothing to excise
+            return
         data = data[key]
-    del data[leaf_key]
+    if leaf_key in data:
+        del data[leaf_key]
+
+
+def obliterate(base, deletions):
+    """
+    Remove all (nested) keys mentioned in ``deletions``, from ``base``.
+    """
+    for key, value in six.iteritems(deletions):
+        if isinstance(value, dict):
+            # NOTE: not testing for whether base[key] exists; if something's
+            # listed in a deletions structure, it must exist in some source
+            # somewhere, and thus also in the cache being obliterated.
+            obliterate(base[key], deletions[key])
+        else: # implicitly None
+            del base[key]
