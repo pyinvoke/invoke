@@ -231,7 +231,8 @@ class DataProxy(object):
             target = self._root
         elif self._is_root:
             target = self
-        target._remove(getattr(self, '_keypath', tuple()), key)
+        if target is not None:
+            target._remove(getattr(self, '_keypath', tuple()), key)
 
     def _track_modification_of(self, key, value):
         target = None
@@ -239,7 +240,8 @@ class DataProxy(object):
             target = self._root
         elif self._is_root:
             target = self
-        target._modify(getattr(self, '_keypath', tuple()), key, value)
+        if target is not None:
+            target._modify(getattr(self, '_keypath', tuple()), key, value)
 
     def __delitem__(self, key):
         del self._config[key]
