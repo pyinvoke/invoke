@@ -36,7 +36,7 @@ class Context_(Spec):
     class configuration_proxy:
         "Dict-like proxy for self.config"
         def setup(self):
-            config = Config({'foo': 'bar'})
+            config = Config({'foo': 'bar', 'biz': {'baz': 'boz'}})
             self.c = Context(config=config)
 
         def direct_access_allowed(self):
@@ -47,28 +47,57 @@ class Context_(Spec):
         def getitem(self):
             "___getitem__"
             eq_(self.c['foo'], 'bar')
+            eq_(self.c['biz']['baz'], 'boz')
 
         def getattr(self):
             "__getattr__"
             eq_(self.c.foo, 'bar')
+            eq_(self.c.biz.baz, 'boz')
 
         def get(self):
             eq_(self.c.get('foo'), 'bar')
-            eq_(self.c.get('biz', 'baz'), 'baz')
+            eq_(self.c.get('nope', 'wut'), 'wut')
+            eq_(self.c.biz.get('nope', 'hrm'), 'hrm')
 
-        def keys(self):
-            skip()
+        def pop(self):
+            eq_(self.c.pop('foo'), 'bar')
+            eq_(self.c.pop('foo', 'notbar'), 'notbar')
+            eq_(self.c.biz.pop('baz'), 'boz')
 
-        def values(self):
-            skip()
+        def popitem(self):
+            eq_(self.c.biz.popitem(), ('baz', 'boz'))
+            del self.c['biz']
+            eq_(self.c.popitem(), ('foo', 'bar'))
+            eq_(self.c.config, {})
 
-        def iter(self):
-            "__iter__"
-            skip()
+        def del_(self):
+            "del"
+            del self.c['foo']
+            del self.c['biz']['baz']
+            eq_(self.c.biz, {})
+            del self.c['biz']
+            eq_(self.c.config, {})
+
+        def clear(self):
+            self.c.biz.clear()
+            eq_(self.c.biz, {})
+            self.c.clear()
+            eq_(self.c.config, {})
+
+        def setdefault(self):
+            eq_(self.c.setdefault('foo'), 'bar')
+            eq_(self.c.biz.setdefault('baz'), 'boz')
+            eq_(self.c.setdefault('notfoo', 'notbar'), 'notbar')
+            eq_(self.c.notfoo, 'notbar')
+            eq_(self.c.biz.setdefault('otherbaz', 'otherboz'), 'otherboz')
+            eq_(self.c.biz.otherbaz, 'otherboz')
 
         def update(self):
             self.c.update({'newkey': 'newval'})
             eq_(self.c['newkey'], 'newval')
+            eq_(self.c.foo, 'bar')
+            self.c.biz.update(otherbaz='otherboz')
+            eq_(self.c.biz.otherbaz, 'otherboz')
 
     class sudo:
         def setup(self):
