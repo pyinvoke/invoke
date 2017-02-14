@@ -250,6 +250,23 @@ Valid real attributes: ['clear', 'clone', 'from_data', 'global_defaults', 'load_
             # And make sure it stuck
             eq_(c.foo, 'formerly bar')
 
+        def deleting_parent_keys_of_deleted_keys_subsumes_them(self):
+            c = Config({'foo': {'bar': 'biz'}})
+            del c.foo['bar']
+            # Failure to implement this correctly means that both ('foo',) and
+            # ('foo', 'bar') are left around in the deletion-tracking structure
+            # and can cause KeyError on any subsequent merge() (including the
+            # one triggered by this second __delitem__()). Thus, if
+            # arbitrary dict ordering on iteration results in picking ('foo',)
+            # before ('foo', 'bar'), trying to nuke ('foo', 'bar') out of the
+            # core config cache will die as 'foo' is no longer a valid top
+            # level key.
+            del c.foo
+            # It's not kosher, but let's double-check in case we got lucky this
+            # time. (E.g. the issue pops up more often on Python 3 so is harder
+            # to detect on 2)
+            eq_(c._deletions, [('foo',)]) # no ('foo', 'bar')
+
         def supports_mutation_via_attribute_access(self):
             c = Config({'foo': 'bar'})
             eq_(c.foo, 'bar')
