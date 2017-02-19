@@ -13,10 +13,7 @@ try:
 except ImportError:
     # Use system modules
     import six
-    if six.PY3:
-        import yaml3 as yaml
-    else:
-        import yaml2 as yaml
+    import yaml
 
 if six.PY3:
     try:
