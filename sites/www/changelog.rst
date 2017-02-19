@@ -2,6 +2,10 @@
 Changelog
 =========
 
+* :bug:`430` Fallback importing of PyYAML when Invoke has been installed
+  without its vendor directory, was still trying to import the vendorized
+  module names (e.g. ``yaml2`` or ``yaml3`` instead of simply ``yaml``). This
+  has been fixed, thanks to Athmane Madjoudj.
 * :release:`0.15.0 <2017-02-14>`
 * :bug:`426 major` `DataProxy <invoke.config.DataProxy>` based classes like
   `Config <invoke.config.Config>` and `Context <invoke.context.Context>` didn't
