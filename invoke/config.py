@@ -46,8 +46,8 @@ class DataProxy(object):
 
     .. warning::
         All methods (of this object or in subclasses) must take care to
-        initialize new attributes via ``object.__setattr__``, or they'll run
-        into recursion errors!
+        initialize new attributes via ``self._set(name='value')``, or they'll
+        run into recursion errors!
     """
     # Attributes which get proxied through to inner merged-dict config obj.
     _proxies = tuple("""
@@ -89,11 +89,11 @@ class DataProxy(object):
             ``root`` was given (and vice versa.)
         """
         obj = cls()
-        object.__setattr__(obj, '_config', data)
-        object.__setattr__(obj, '_root', root)
+        obj._set(_config=data)
+        obj._set(_root=root)
         if keypath is None:
             keypath = tuple()
-        object.__setattr__(obj, '_keypath', keypath)
+        obj._set(_keypath=keypath)
         return obj
 
     def __getattr__(self, key):
@@ -186,13 +186,20 @@ class DataProxy(object):
             )
         return value
 
-    def _set(self, **kwargs):
+    def _set(self, *args, **kwargs):
         """
         Convenience workaround of default 'attrs are config keys' behavior.
 
-        Good for initializing new attributes; is a bit less verbose than
-        slapping ``object.__setattr__()`` everywhere.
+        Uses `object.__setattr__` to work around the class' normal proxying
+        behavior, but is less verbose than using that directly.
+
+        Has two modes (which may be combined if you really want):
+
+        - ``self._set('attrname', value)``, just like ``__setattr__``
+        - ``self._set(attname=value)`` (i.e. kwargs), even less typing.
         """
+        if args:
+            object.__setattr__(self, *args)
         for key, value in six.iteritems(kwargs):
             object.__setattr__(self, key, value)
 
