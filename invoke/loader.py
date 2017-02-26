@@ -86,11 +86,12 @@ class FilesystemLoader(Loader):
         # Make sure we haven't got duplicates on the end
         if parents[-1] == parents[-2]:
             parents = parents[:-1]
-        # Use find_module with our list of parents. ImportError from
-        # find_module means "couldn't find" not "found and couldn't import" so
-        # we turn it into a more obvious exception class.
+        # Use find_module with our list of parents with a fallback to sys.path
+        search_path = parents + sys.path
+        # ImportError from find_module means "couldn't find" not "found and
+        # couldn't import" so we turn it into a more obvious exception class.
         try:
-            tup = imp.find_module(name, parents)
+            tup = imp.find_module(name, search_path)
             debug("Found module: {0!r}".format(tup[1]))
             return tup
         except ImportError:

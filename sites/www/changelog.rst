@@ -2,6 +2,8 @@
 Changelog
 =========
 
+* :bug:`390` Fallback importing of a modules from sys.path. This has been
+  fixed, thanks to Paul Healy.
 * :bug:`430` Fallback importing of PyYAML when Invoke has been installed
   without its vendor directory, was still trying to import the vendorized
   module names (e.g. ``yaml2`` or ``yaml3`` instead of simply ``yaml``). This
