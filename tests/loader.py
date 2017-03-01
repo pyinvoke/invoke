@@ -83,3 +83,7 @@ class FilesystemLoader_(Spec):
         # There's a basic tasks.py in tests/_support
         result = self.l.load()
         eq_(type(result), Collection)
+
+    def finds_modules_on_syspath(self):
+        "finds modules on sys.path"
+        FSLoader().find('syspathmodule')
