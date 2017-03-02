@@ -437,10 +437,10 @@ class Runner(object):
         # no longer being consumed by the dead thread (and a pipe is filling
         # up.) In that case, the non-dead thread is likely to block forever on
         # a `recv` unless we add this timeout.
-        if target is self.handle_stdin:
+        if target == self.handle_stdin:
             return None
         opposite = self.handle_stderr
-        if target is self.handle_stderr:
+        if target == self.handle_stderr:
             opposite = self.handle_stdout
         if opposite in self.threads and self.threads[opposite].is_dead:
             return 1
