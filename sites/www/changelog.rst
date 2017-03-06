@@ -2,6 +2,10 @@
 Changelog
 =========
 
+* :bug:`432` Tighten application of IO thread ``join`` timeouts (in `run
+  <invoke.runners.Runner.run>`) to only happen when :issue:`351` appears
+  actually present. Otherwise, slow/overworked IO threads had a chance of being
+  joined before truly reading all data from the subprocess' pipe.
 * :bug:`430` Fallback importing of PyYAML when Invoke has been installed
   without its vendor directory, was still trying to import the vendorized
   module names (e.g. ``yaml2`` or ``yaml3`` instead of simply ``yaml``). This
