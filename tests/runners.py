@@ -777,6 +777,7 @@ stderr 25
                         assert False, "Did not raise Failure!"
 
     class threading:
+        # NOTE: see also the more generic tests in concurrency.py
         def errors_within_io_thread_body_bubble_up(self):
             class Oops(_Dummy):
                 def handle_stdout(self, **kwargs):
