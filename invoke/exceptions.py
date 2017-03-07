@@ -95,6 +95,15 @@ Stderr:{3}
 
 """.format(self.result.command, self.result.exited, stdout, stderr)
 
+    def __repr__(self):
+        # TODO: expand?
+        template = "<{}: cmd={!r} exited={}>"
+        return template.format(
+            self.__class__.__name__,
+            self.result.command,
+            self.result.exited,
+        )
+
 
 class AuthFailure(Failure):
     """

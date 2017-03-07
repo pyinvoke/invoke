@@ -517,6 +517,17 @@ class Runner_(Spec):
             eq_(r.failed, True)
 
         class UnexpectedExit_repr:
+            def similar_to_just_the_result_repr(self):
+                try:
+                    self._runner(exits=23).run(_)
+                except UnexpectedExit as e:
+                    expected = "<UnexpectedExit: cmd='{}' exited=23>"
+                    eq_(
+                        repr(e),
+                        expected.format(_),
+                    )
+
+        class UnexpectedExit_str:
             def setup(self):
                 def lines(prefix):
                     return "\n".join(
@@ -534,7 +545,7 @@ class Runner_(Spec):
                         err=self._stderr,
                     ).run(_)
                 except UnexpectedExit as e:
-                    eq_(repr(e), """Encountered a bad command exit code!
+                    eq_(str(e), """Encountered a bad command exit code!
 
 Command: '{0}'
 
@@ -555,7 +566,7 @@ Stderr: already printed
                         exits=13, out=self._stdout, err=self._stderr
                     ).run(_, pty=True)
                 except UnexpectedExit as e:
-                    eq_(repr(e), """Encountered a bad command exit code!
+                    eq_(str(e), """Encountered a bad command exit code!
 
 Command: '{0}'
 
@@ -574,7 +585,7 @@ Stderr: n/a (PTYs have no stderr)
                         exits=1, out=self._stdout, err=self._stderr
                     ).run(_, pty=True, hide=True)
                 except UnexpectedExit as e:
-                    r = repr(e)
+                    r = str(e)
                     ok_("Stderr: n/a (PTYs have no stderr)" in r)
                     ok_("Stderr: already printed" not in r)
 
@@ -589,7 +600,7 @@ Stderr: n/a (PTYs have no stderr)
                         exits=77, out=self._stdout, err=self._stderr
                     ).run(_, hide=True)
                 except UnexpectedExit as e:
-                    eq_(repr(e), """Encountered a bad command exit code!
+                    eq_(str(e), """Encountered a bad command exit code!
 
 Command: '{0}'
 
@@ -626,7 +637,7 @@ stderr 25
             @trap
             def displays_tails_of_streams_only_when_hidden(self):
                 def oops(msg, r, hide):
-                    return "{0}! hide={1}; repr output:\n\n{2}".format(
+                    return "{0}! hide={1}; str output:\n\n{2}".format(
                         msg, hide, r
                     )
                 for hide, expect_out, expect_err in (
@@ -641,7 +652,7 @@ stderr 25
                             exits=1, out=self._stdout, err=self._stderr
                         ).run(_, hide=hide)
                     except UnexpectedExit as e:
-                        r = repr(e)
+                        r = str(e)
                         # Expect that the top of output is never displayed
                         ok_(
                             "stdout 15" not in r,

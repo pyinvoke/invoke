@@ -2,8 +2,10 @@
 Changelog
 =========
 
-* :feature:`-` `Result <invoke.runners.Result>` objects now have a more useful
-  ``repr()``.
+* :feature:`-` `Result <invoke.runners.Result>` and `UnexpectedExit
+  <invoke.exceptions.UnexpectedExit>` objects now have a more useful ``repr()``
+  (and in the case of ``UnexpectedExit``, a distinct ``repr()`` from their
+  preexisting ``str()``.)
 * :bug:`432` Tighten application of IO thread ``join`` timeouts (in `run
   <invoke.runners.Runner.run>`) to only happen when :issue:`351` appears
   actually present. Otherwise, slow/overworked IO threads had a chance of being
