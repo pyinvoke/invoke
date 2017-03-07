@@ -203,7 +203,7 @@ def _printable_kwargs(kwargs):
 
 class ThreadException(Exception):
     """
-    One or more exceptions were raised within background (usually I/O) threads.
+    One or more exceptions were raised within background threads.
 
     The real underlying exceptions are stored in the `exceptions` attribute;
     see its documentation for data structure details.
