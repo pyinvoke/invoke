@@ -1314,3 +1314,6 @@ class Result_(Spec):
 
     def pty_defaults_to_False(self):
         eq_(Result().pty, False)
+
+    def repr_contains_useful_info(self):
+        eq_(repr(Result(command="foo")), "<Result cmd='foo' exited=0>")
