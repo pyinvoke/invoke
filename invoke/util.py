@@ -138,29 +138,19 @@ class ExceptionHandlingThread(threading.Thread):
             # directly and just use super() ourselves.
             if hasattr(self, '_run') and callable(self._run):
                 # TODO: this could be:
-                # - io worker with no 'result'
-                # - tunnel worker, also with no 'result'
+                # - io worker with no 'result' (always local)
+                # - tunnel worker, also with no 'result' (also always local)
                 # - threaded concurrent run(), sudo(), put(), etc, with a
-                # result
+                # result (not necessarily local; might want to be a subproc or
+                # whatever eventually)
                 # TODO: so how best to conditionally add a "capture result
-                # value of some kind"? Can't really be anything but "return
-                # value of the target/body". Do thread .run() ever return?
-                # Seems like no; we can catch exceptions here because they
-                # bubble up, but there is otherwise no access to the target
-                # except in the subclassed case (i.e. we could say "your _run()
-                # must return some useful value"). This also means the
-                # non-subclass case can't do this; but I don't think we care
-                # cuz that's only, what, tunnels?
-                # TODO: if we do that - add additional behavior only extant in
-                # this part of the if/else - we really should just split things
-                # up into two classes, maybe with the tunnel/target case
-                # subclassing to say "lol my _run() is simply
-                # super(self).run()"...duh?!?!?!? right!!!
-                # TODO: can we just tweak this a bit so Fabric can subclass it?
-                # But what about Invoke level parameterization? E.g. the old "I
-                # have a task or other callable and I want you to execute it
-                # across this vector with a strategy"? (Surely there are libs
-                # for this...?!)
+                # value of some kind"?
+                # - update so all use cases use subclassing, add functionality
+                # alongside self.exception() that is for the result of _run()
+                # - split out class that does not care about result of _run()
+                # and let it continue acting like a normal thread (meh)
+                # - assume the run/sudo/etc case will use a queue inside its
+                # worker body, orthogonal to how exception handling works
                 self._run()
             else:
                 super(ExceptionHandlingThread, self).run()
