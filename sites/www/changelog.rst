@@ -2,6 +2,20 @@
 Changelog
 =========
 
+* :feature:`-` Switched the order of the first two arguments of
+  `Config.__init__ <invoke.config.Config.__init__>`, so that the ``overrides``
+  kwarg becomes the first positional argument.
+
+  This supports the common use case of making a `Config <invoke.config.Config>`
+  object that honors the system's core/global defaults; previously, because
+  ``defaults`` was the first argument, you'd end up replacing those core
+  defaults instead of merging with them.
+
+  .. warning::
+    **This is a backwards incompatible change** if you were creating custom
+    ``Config`` objects via positional, instead of keyword, arguments. It should
+    have no effect otherwise.
+
 * :feature:`-` `Context.sudo <invoke.context.Context.sudo>` no longer prompts
   the user when the configured sudo password is empty; thus, an empty sudo
   password and a ``sudo`` program configured to require one will result in an
