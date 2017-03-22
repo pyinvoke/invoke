@@ -13,7 +13,7 @@ class ExceptionHandlingThread_(Spec):
             def worker(q):
                 q.put(7)
             self.worker = worker
-            
+
         def base_case(self):
             queue = Queue()
             t = EHThread(target=self.worker, args=[queue])
