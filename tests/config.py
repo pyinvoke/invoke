@@ -62,17 +62,19 @@ class Config_(IntegrationSpec):
             Config(runtime_path='some/path.yaml')
             load_yaml.assert_has_call('some/path.yaml')
 
-        def accepts_defaults_dict(self):
+        def accepts_defaults_dict_kwarg(self):
             c = Config(defaults={'super': 'low level'})
             eq_(c.super, 'low level')
 
-        def defaults_dict_is_first_posarg(self):
-            c = Config({'hi': 'there'})
-            eq_(c.hi, 'there')
+        def overrides_dict_is_first_posarg(self):
+            c = Config({'new': 'data', 'run': {'hide': True}})
+            eq_(c.run.hide, True) # default is False
+            eq_(c.run.warn, False) # in global defaults, untouched
+            eq_(c.new, 'data') # data only present at overrides layer
 
-        def accepts_overrides_dict(self):
-            c = Config(overrides={'I win': 'always'})
-            eq_(c['I win'], 'always')
+        def overrides_dict_is_also_a_kwarg(self):
+            c = Config(overrides={'run': {'hide': True}})
+            eq_(c.run.hide, True)
 
         def accepts_env_prefix_option(self):
             c = Config(env_prefix='INVOKE_')
