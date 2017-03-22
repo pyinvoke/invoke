@@ -144,9 +144,10 @@ The auto-responder functionality isn't working for my password prompts!
 -----------------------------------------------------------------------
 
 Some programs write password prompts or other output *directly* to the local
-terminal, bypassing the usual stdout/stderr streams. For example, this is
-exactly what `the stdlib's getpass module <getpass.getpass>` does, if you're
-calling a program that happens to be written in Python.
+terminal (the operating-system-level TTY device), bypassing the usual
+stdout/stderr streams. For example, this is exactly what `the stdlib's getpass
+module <getpass.getpass>` does, if you're calling a program that happens to be
+written in Python.
 
 When this happens, we're powerless, because all we get to see is the
 subprocess' regular output streams. Thankfully, the solution is usually easy:
