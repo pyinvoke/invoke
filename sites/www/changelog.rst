@@ -2,6 +2,22 @@
 Changelog
 =========
 
+* :feature:`-` `Context.sudo <invoke.context.Context.sudo>` no longer prompts
+  the user when the configured sudo password is empty; thus, an empty sudo
+  password and a ``sudo`` program configured to require one will result in an
+  exception.
+
+  The runtime prompting for a missing password was a temporary holdover from
+  Fabric v1, and in retrospect is undesirable. We may add it back in as an
+  opt-in behavior (probably via subclassing) in the future if anybody misses
+  it.
+
+  .. warning::
+    **This is a backwards incompatible change**, if you were relying on
+    ``sudo()`` prompting you for your password (vs configuring it). If you
+    *were* doing that, you can simply switch to ``run("sudo <command>")`` and
+    respond to the subprocess' sudo prompt by hand instead.
+
 * :feature:`-` `Result <invoke.runners.Result>` and `UnexpectedExit
   <invoke.exceptions.UnexpectedExit>` objects now have a more useful ``repr()``
   (and in the case of ``UnexpectedExit``, a distinct ``repr()`` from their

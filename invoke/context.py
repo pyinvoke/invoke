@@ -1,4 +1,3 @@
-import getpass
 import re
 
 try:
@@ -85,10 +84,10 @@ class Context(DataProxy):
 
             * searches for the configured ``sudo`` password prompt;
             * responds with the configured sudo password (``sudo.password``
-              from the :doc:`configuration </concepts/configuration>`, or a
-              runtime `getpass <getpass.getpass>` input);
-            * can tell when that response causes an authentication failure, and
-              raises an exception if so.
+              from the :doc:`configuration </concepts/configuration>`);
+            * can tell when that response causes an authentication failure
+              (e.g. if the system requires a password and one was not
+              configured), and raises `.AuthFailure` if so.
 
         * Builds a ``sudo`` command string using the supplied ``command``
           argument prefixed by the ``sudo.prefix`` configuration setting;
@@ -103,12 +102,8 @@ class Context(DataProxy):
         """
         prompt = self.config.sudo.prompt
         password = kwargs.pop('password', self.config.sudo.password)
-        if password is None:
-            msg = "No stored sudo password found, please enter it now: "
-            # TODO: use something generic/overrideable that uses getpass by
-            # default. May mean we pop this out as its own class-as-a-method or
-            # something?
-            password = getpass.getpass(msg)
+        # TODO: allow subclassing for 'get the password' so users who REALLY
+        # want lazy runtime prompting can have it easily implemented.
         # TODO: want to print a "cleaner" echo with just 'sudo <command>'; but
         # hard to do as-is, obtaining config data from outside a Runner one
         # holds is currently messy (could fix that), if instead we manually

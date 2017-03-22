@@ -103,9 +103,8 @@ class Context_(Spec):
         def setup(self):
             self.escaped_prompt = re.escape(Config().sudo.prompt)
 
-        @patch('invoke.context.getpass')
         @patch('invoke.context.Local')
-        def prefixes_command_with_sudo(self, Local, getpass):
+        def prefixes_command_with_sudo(self, Local):
             runner = Local.return_value
             Context().sudo('whoami')
             # NOTE: implicitly tests default sudo.prompt conf value
@@ -114,9 +113,8 @@ class Context_(Spec):
             eq_(runner.run.call_args[0][0], cmd)
 
         @trap
-        @patch('invoke.context.getpass')
         @mock_subprocess()
-        def echo_hides_extra_sudo_flags(self, getpass):
+        def echo_hides_extra_sudo_flags(self):
             skip() # see TODO in sudo() re: clean output display
             config = Config(overrides={'runner': _Dummy})
             Context(config=config).sudo('nope', echo=True)
@@ -126,9 +124,8 @@ class Context_(Spec):
             ok_(Context().sudo.prompt not in output)
             ok_("sudo nope" in output)
 
-        @patch('invoke.context.getpass')
         @patch('invoke.context.Local')
-        def honors_config_for_prompt_value(self, Local, getpass):
+        def honors_config_for_prompt_value(self, Local):
             runner = Local.return_value
             config = Config(overrides={'sudo': {'prompt': 'FEED ME: '}})
             Context(config=config).sudo('whoami')
@@ -140,25 +137,17 @@ class Context_(Spec):
             # NOTE: possibly best to tie into issue #2
             skip()
 
-        @patch('invoke.context.getpass')
         @patch('invoke.context.Local')
-        def _expect_responses(self,
-            expected, Local, getpass,
-            config=None, kwargs=None, getpass_reply=None,
-        ):
+        def _expect_responses(self, expected, Local, config=None, kwargs=None):
             """
             Execute mocked sudo(), expecting watchers= kwarg in its run().
 
             * expected: list of 2-tuples of FailingResponder prompt/response
             * config: Config object, if an overridden one is needed
             * kwargs: sudo() kwargs, if needed
-            * getpass_reply: return value of getpass.getpass, if needed
-
-            (Local and getpass are just mock injections.)
             """
             if kwargs is None:
                 kwargs = {}
-            getpass.getpass.return_value = getpass_reply
             runner = Local.return_value
             context = Context(config=config) if config else Context()
             context.sudo('whoami', **kwargs)
@@ -194,8 +183,7 @@ class Context_(Spec):
                 self.watcher_klass = DummyWatcher
 
             @patch('invoke.context.Local')
-            @patch('invoke.context.getpass')
-            def kwarg_only_adds_to_kwarg(self, getpass, Local):
+            def kwarg_only_adds_to_kwarg(self, Local):
                 runner = Local.return_value
                 context = Context()
                 watcher = self.watcher_klass()
@@ -211,8 +199,7 @@ class Context_(Spec):
                 eq_(watchers[0].pattern, self.escaped_prompt)
 
             @patch('invoke.context.Local')
-            @patch('invoke.context.getpass')
-            def config_only(self, getpass, Local):
+            def config_only(self, Local):
                 runner = Local.return_value
                 # Set a config-driven list of watchers
                 watcher = self.watcher_klass()
@@ -230,8 +217,7 @@ class Context_(Spec):
                 eq_(watchers[0].pattern, self.escaped_prompt)
 
             @patch('invoke.context.Local')
-            @patch('invoke.context.getpass')
-            def config_use_does_not_modify_config(self, getpass, Local):
+            def config_use_does_not_modify_config(self, Local):
                 runner = Local.return_value
                 watcher = self.watcher_klass()
                 overrides = {'run': {'watchers': [watcher]}}
@@ -252,8 +238,7 @@ class Context_(Spec):
                 eq_(config.run.watchers, [watcher], err)
 
             @patch('invoke.context.Local')
-            @patch('invoke.context.getpass')
-            def both_kwarg_and_config(self, getpass, Local):
+            def both_kwarg_and_config(self, Local):
                 runner = Local.return_value
                 # Set a config-driven list of watchers
                 conf_watcher = self.watcher_klass()
@@ -275,13 +260,8 @@ class Context_(Spec):
                 ok_(isinstance(watchers[0], FailingResponder))
                 eq_(watchers[0].pattern, self.escaped_prompt)
 
-        def prompts_when_no_configured_password_is_found(self):
-            expected = [(self.escaped_prompt, "dynamic\n")]
-            self._expect_responses(expected, getpass_reply="dynamic")
-
-        @patch('invoke.context.getpass')
         @patch('invoke.context.Local')
-        def passes_through_other_run_kwargs(self, Local, getpass):
+        def passes_through_other_run_kwargs(self, Local):
             runner = Local.return_value
             Context().sudo(
                 'whoami', echo=True, warn=False, hide=True, encoding='ascii'
@@ -293,9 +273,8 @@ class Context_(Spec):
             eq_(kwargs['hide'], True)
             eq_(kwargs['encoding'], 'ascii')
 
-        @patch('invoke.context.getpass')
         @patch('invoke.context.Local')
-        def returns_run_result(self, Local, getpass):
+        def returns_run_result(self, Local):
             runner = Local.return_value
             expected = runner.run.return_value
             result = Context().sudo('whoami')
