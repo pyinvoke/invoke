@@ -437,8 +437,8 @@ class Config(DataProxy):
 
     def __init__(
         self,
-        defaults=None,
         overrides=None,
+        defaults=None,
         system_prefix=None,
         user_prefix=None,
         project_home=None,

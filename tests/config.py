@@ -139,14 +139,14 @@ Valid real attributes: ['clear', 'clone', 'from_data', 'global_defaults', 'load_
             eq_(c.foo.bar, 'baz')
 
         def is_iterable_like_dict(self):
-            c = Config({'a': 1, 'b': 2})
+            c = Config(defaults={'a': 1, 'b': 2})
             eq_(set(c.keys()), set(['a', 'b']))
             eq_(set(list(c)), set(['a', 'b']))
 
         def supports_readonly_dict_protocols(self):
             # Use single-keypair dict to avoid sorting problems in tests.
-            c = Config({'foo': 'bar'})
-            c2 = Config({'foo': 'bar'})
+            c = Config(defaults={'foo': 'bar'})
+            c2 = Config(defaults={'foo': 'bar'})
             ok_('foo' in c)
             ok_('foo' in c2) # mostly just to trigger loading :x
             eq_(c, c2)
@@ -164,7 +164,7 @@ Valid real attributes: ['clear', 'clone', 'from_data', 'global_defaults', 'load_
         class deletion_methods:
             def pop(self):
                 # Root
-                c = Config({'foo': 'bar'})
+                c = Config(defaults={'foo': 'bar'})
                 eq_(c.pop('foo'), 'bar')
                 eq_(c, {})
                 # With the default arg
@@ -176,7 +176,7 @@ Valid real attributes: ['clear', 'clone', 'from_data', 'global_defaults', 'load_
 
             def delitem(self):
                 "__delitem__"
-                c = Config({'foo': 'bar'})
+                c = Config(defaults={'foo': 'bar'})
                 del c['foo']
                 eq_(c, {})
                 c.nested = {'leafkey': 'leafval'}
@@ -185,7 +185,7 @@ Valid real attributes: ['clear', 'clone', 'from_data', 'global_defaults', 'load_
 
             def delattr(self):
                 "__delattr__"
-                c = Config({'foo': 'bar'})
+                c = Config(defaults={'foo': 'bar'})
                 del c.foo
                 eq_(c, {})
                 c.nested = {'leafkey': 'leafval'}
@@ -193,7 +193,7 @@ Valid real attributes: ['clear', 'clone', 'from_data', 'global_defaults', 'load_
                 eq_(c, {'nested': {}})
 
             def clear(self):
-                c = Config({'foo': 'bar'})
+                c = Config(defaults={'foo': 'bar'})
                 c.clear()
                 eq_(c, {})
                 c.nested = {'leafkey': 'leafval'}
@@ -201,7 +201,7 @@ Valid real attributes: ['clear', 'clone', 'from_data', 'global_defaults', 'load_
                 eq_(c, {'nested': {}})
 
             def popitem(self):
-                c = Config({'foo': 'bar'})
+                c = Config(defaults={'foo': 'bar'})
                 eq_(c.popitem(), ('foo', 'bar'))
                 eq_(c, {})
                 c.nested = {'leafkey': 'leafval'}
@@ -210,7 +210,7 @@ Valid real attributes: ['clear', 'clone', 'from_data', 'global_defaults', 'load_
 
         class modification_methods:
             def setitem(self):
-                c = Config({'foo': 'bar'})
+                c = Config(defaults={'foo': 'bar'})
                 c['foo'] = 'notbar'
                 eq_(c.foo, 'notbar')
                 del c['foo']
@@ -227,7 +227,12 @@ Valid real attributes: ['clear', 'clone', 'from_data', 'global_defaults', 'load_
                 eq_(c.nested.otherleaf, 'otherval')
 
             def update(self):
-                c = Config({'foo': 'bar', 'nested': {'leafkey': 'leafval'}})
+                c = Config(defaults={
+                    'foo': 'bar',
+                    'nested': {
+                        'leafkey': 'leafval',
+                    },
+                })
                 # Regular update(dict)
                 c.update({'foo': 'notbar'})
                 eq_(c.foo, 'notbar')
@@ -250,7 +255,7 @@ Valid real attributes: ['clear', 'clone', 'from_data', 'global_defaults', 'load_
         def reinstatement_of_deleted_values_works_ok(self):
             # Sounds like a stupid thing to test, but when we have to track
             # deletions and mutations manually...it's an easy thing to overlook
-            c = Config({'foo': 'bar'})
+            c = Config(defaults={'foo': 'bar'})
             eq_(c.foo, 'bar')
             del c['foo']
             # Sanity checks
@@ -351,7 +356,7 @@ Valid real attributes: ['clear', 'clone', 'from_data', 'global_defaults', 'load_
 
         def string_display(self):
             "__str__ and friends"
-            config = Config({'foo': 'bar'})
+            config = Config(defaults={'foo': 'bar'})
             eq_(str(config), "<Config: {'foo': 'bar'}>")
             if six.PY2:
                 eq_(unicode(config), six.u("<Config: {'foo': 'bar'}>"))  # noqa
@@ -446,7 +451,7 @@ Valid real attributes: ['clear', 'clone', 'from_data', 'global_defaults', 'load_
 
         def can_declare_prefix(self):
             os.environ['INVOKE_FOO'] = 'bar'
-            c = Config({'foo': 'notbar'}, env_prefix='INVOKE_')
+            c = Config(defaults={'foo': 'notbar'}, env_prefix='INVOKE_')
             c.load_shell_env()
             eq_(c.foo, 'bar')
 
@@ -773,7 +778,7 @@ Valid real attributes: ['clear', 'clone', 'from_data', 'global_defaults', 'load_
 
         def preserves_env_data(self):
             os.environ['FOO'] = 'bar'
-            c = Config({'foo': 'notbar'})
+            c = Config(defaults={'foo': 'notbar'})
             c.load_shell_env()
             c2 = c.clone()
             eq_(c2.foo, 'bar')
