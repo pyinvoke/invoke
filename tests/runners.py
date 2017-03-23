@@ -811,6 +811,25 @@ stderr 25
             else:
                 assert False, "Did not raise ThreadException as expected!"
 
+        def io_thread_errors_str_has_details(self):
+            class Oops(_Dummy):
+                def handle_stdout(self, **kwargs):
+                    raise OhNoz()
+            runner = Oops(Context())
+            try:
+                runner.run("nah")
+            except ThreadException as e:
+                message = str(e)
+                # Just make sure salient bits appear present, vs e.g. default
+                # representation happening instead.
+                ok_("Saw 1 exceptions within threads" in message)
+                ok_("{'kwargs': " in message)
+                ok_("Traceback (most recent call last):\n\n" in message)
+                ok_("OhNoz" in message)
+            else:
+                assert False, "Did not raise ThreadException as expected!"
+
+
     class watchers:
         # NOTE: it's initially tempting to consider using mocks or stub
         # Responder instances for many of these, but it really doesn't save
