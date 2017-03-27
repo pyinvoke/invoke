@@ -19,7 +19,7 @@ inspiration from various sources to arrive at a powerful & clean feature set.
         if extra:
             patterns.append(extra)
         for pattern in patterns:
-            ctx.run("rm -rf %s" % pattern)
+            ctx.run("rm -rf {0}".format(pattern))
 
     @task
     def build(ctx, docs=False):

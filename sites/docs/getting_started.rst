@@ -62,7 +62,7 @@ for example::
 
     @task
     def hi(ctx, name):
-        print("Hi %s!" % name)
+        print("Hi {0}!".format(name))
 
 It can be invoked in the following ways, all resulting in "Hi Jeff!"::
 
@@ -81,7 +81,7 @@ argument (in addition to optionally giving task-level help via the docstring)::
     @task(help={'name': "Name of the person to say hi to."})
     def hi(ctx, name):
         """Say hi to someone."""
-        print("Hi %s!" % name)
+        print("Hi {0}!".format(name))
 
 This description will show up when invoking ``--help``::
 

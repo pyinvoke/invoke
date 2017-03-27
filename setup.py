@@ -21,8 +21,8 @@ long_description = """
 To find out what's new in this version of Invoke, please see `the changelog
 <http://pyinvoke.org/changelog.html#%s>`_.
 
-%s
-""" % (version, open('README.rst').read())
+{0}
+""".format(version, open('README.rst').read())
 
 setup(
     name='invoke',
