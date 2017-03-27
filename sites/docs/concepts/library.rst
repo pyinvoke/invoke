@@ -2,10 +2,11 @@
 Using Invoke as a library
 =========================
 
-Invoke was designed for its constituent parts to be usable independently,
-either out of the box or with a minimum of extra work by the maintainers. CLI
-parsing, subprocess command execution, task organization, etc, are all written
-as broadly separated concerns.
+While most of its documentation involves the user/CLI facing use cases of task
+management and command execution, Invoke was designed for its constituent parts
+to be usable independently by advanced users - either out of the box or with a
+minimum of extra work. CLI parsing, subprocess command execution, task
+organization, etc, are all written as broadly separated concerns.
 
 This document outlines use cases already known to work (because downstream
 tools like `Fabric <http://fabfile.org>`_ are already utilizing them).
@@ -13,12 +14,13 @@ tools like `Fabric <http://fabfile.org>`_ are already utilizing them).
 
 .. _reusing-as-a-binary:
 
-Reusing Invoke as a distinct binary 
-====================================
+Reusing Invoke's CLI module as a distinct binary
+================================================
 
 A major use case is distribution of your own program using Invoke under the
 hood, bound to a different binary name, and usually setting a specific task
-:doc:`namespace </concepts/namespaces>` as the default. In some cases,
+:doc:`namespace </concepts/namespaces>` as the default. (This maps somewhat
+closely to things like ``argparse`` from the standard library.) In some cases,
 removing, replacing and/or adding core CLI flags is also desired.
 
 Getting set up
@@ -43,9 +45,10 @@ First, as with any distinct Python package providing CLI
     )
 
 .. note::
-    This is not a fully valid ``setup.py``; if you don't know how Python
-    packaging works, a good starting place is `the Python Packaging User's
-    Guide <https://python-packaging-user-guide.readthedocs.io/en/latest/>`_.
+    This is just an example snippet and is not a fully valid ``setup.py``; if
+    you don't know how Python packaging works, a good starting place is `the
+    Python Packaging User's Guide
+    <https://python-packaging-user-guide.readthedocs.io/en/latest/>`_.
 
 Nothing here is specific to Invoke - it's a standard way of telling Python to
 install a ``tester`` script that executes the ``run`` method of a ``program``
