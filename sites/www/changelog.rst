@@ -2,6 +2,8 @@
 Changelog
 =========
 
+* :support:`-` Fixed some Python 2.6 incompatible string formatting that snuck
+  in recently.
 * :feature:`-` Switched the order of the first two arguments of
   `Config.__init__ <invoke.config.Config.__init__>`, so that the ``overrides``
   kwarg becomes the first positional argument.
