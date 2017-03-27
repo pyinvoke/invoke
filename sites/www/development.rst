@@ -39,6 +39,10 @@ see with ``inv --list``. Some specific tasks of note:
     * ``www`` and ``docs`` (and their subtasks like ``docs.browse``): Builds
       the WWW site and the API docs, respectively.
 
+Another good resource is to skim our ``.travis.yml`` file for the commands it
+executes - if submissions don't pass all of those commands to some degree, they
+won't pass Travis' CI builds either!
+
 
 .. _go there:
 .. _contribution-guide.org: http://contribution-guide.org
