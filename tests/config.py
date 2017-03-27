@@ -357,7 +357,6 @@ Valid real attributes: ['clear', 'clone', 'from_data', 'global_defaults', 'load_
         def string_display(self):
             "__str__ and friends"
             config = Config(defaults={'foo': 'bar'})
-            eq_(str(config), "<Config: {'foo': 'bar'}>")
             eq_(repr(config), "<Config: {'foo': 'bar'}>")
 
         def merging_does_not_wipe_user_modifications_or_deletions(self):
