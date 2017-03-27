@@ -115,12 +115,11 @@ class Collection(object):
             raise TypeError("No idea how to insert {0!r}!".format(type(obj)))
         return method(obj, name=name)
 
-    def __str__(self):
-        return "<Collection {0!r}: {1}>".format(
-            self.name, ", ".join(sorted(self.tasks.keys())))
-
     def __repr__(self):
-        return str(self)
+        return "<Collection {0!r}: {1}>".format(
+            self.name,
+            ", ".join(sorted(self.tasks.keys())),
+        )
 
     def __eq__(self, other):
         return self.name == other.name and self.tasks == other.tasks
