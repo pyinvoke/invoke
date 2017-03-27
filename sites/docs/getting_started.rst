@@ -35,8 +35,8 @@ You can then execute that new task by telling Invoke's command line runner,
 The function body can be any Python you want -- anything at all.
 
 
-Parameterizing tasks
-====================
+Task parameters
+===============
 
 Functions can have arguments, and thus so can tasks. By default, your task
 functions' args/kwargs are mapped automatically to both long and short CLI
@@ -72,11 +72,14 @@ It can be invoked in the following ways, all resulting in "Hi Jeff!"::
     $ invoke hi -n Jeff
     $ invoke hi -nJeff
 
-Adding help for parameters
---------------------------
+Adding metadata via `@task <task>`
+----------------------------------
 
-Describing the meaning of an argument can be done through the task's ``help``
-argument (in addition to optionally giving task-level help via the docstring)::
+`@task <task>` can be used without any arguments, as above, but it's also a
+convenient vector for additional metadata about the task function it decorates.
+One common example is describing the task's arguments, via the ``help``
+parameter (in addition to optionally giving task-level help via the
+docstring)::
 
     @task(help={'name': "Name of the person to say hi to."})
     def hi(ctx, name):
@@ -96,9 +99,9 @@ This description will show up when invoking ``--help``::
     Options:
       -n STRING, --name=STRING   Name of the person to say hi to.
 
-More details on how all this works can be found in the :doc:`CLI concepts
-<concepts/cli>` (for the command-line & parsing side of things) and the `.task`
-API documentation (for the declaration side).
+More details on task parameterization and metadata can be found in the
+:doc:`CLI concepts <concepts/cli>` (for the command-line & parsing side of
+things) and the `.task` API documentation (for the declaration side).
 
 
 Listing tasks
