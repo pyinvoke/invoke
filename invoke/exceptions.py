@@ -46,9 +46,6 @@ class Failure(Exception):
         self.result = result
         self.reason = reason
 
-    def __repr__(self):
-        return str(self)
-
 
 def _tail(stream):
     # TODO: make configurable
