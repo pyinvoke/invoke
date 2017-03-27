@@ -244,7 +244,7 @@ There is still a corner case where *both* possible interpretations exist as
 valid config paths (e.g. ``{'foo': {'bar': 'default'}, 'foo_bar':
 'otherdefault'}``). In this situation, we honor the `Zen of Python
 <http://zen-of-python.info/in-the-face-of-ambiguity-refuse-the-temptation-to-guess.html#12>`_
-and refuse to guess; an error is raised instead counseling users to modify
+and refuse to guess; an error is raised instead, counseling users to modify
 their configuration layout or avoid using env vars for the setting in question.
 
 
@@ -269,8 +269,8 @@ A quick example of what this means::
 
     from invoke import Collection, task
 
-    # This task & collection could just as easily come from another module
-    # somewhere.
+    # This task & collection could just as easily come from
+    # another module somewhere.
     @task
     def mytask(ctx):
         print(ctx['conflicted'])
@@ -287,16 +287,18 @@ The result of calling ``inner.mytask``::
     override value
 
 
-Example
-=======
+Example of real-world config use
+================================
+
+The previous sections had small examples within them; this section provides a
+more realistic-looking set of examples showing how the config system works.
 
 Setup
 -----
 
-As an example, we'll start out with semi-realistic tasks that hardcode their
-values, and build up to using the various configuration mechanisms. A small
-module for building `Sphinx <http://sphinx-doc.org>`_ docs might start out like
-this::
+We'll start out with semi-realistic tasks that hardcode their values, and build
+up to using the various configuration mechanisms. A small module for building
+`Sphinx <http://sphinx-doc.org>`_ docs might begin like this::
 
     from invoke import task
 
@@ -366,11 +368,15 @@ runtime value was given.  The result::
 
     @task
     def clean(ctx, target=None):
-        ctx.run("rm -rf {0}".format(target or ctx.sphinx.target))
+        if target is None:
+            target = ctx.sphinx.target
+        ctx.run("rm -rf {0}".format(target))
 
     @task
     def build(ctx, target=None):
-        ctx.run("sphinx-build docs {0}".format(target or ctx.sphinx.target))
+        if target is None:
+            target = ctx.sphinx.target
+        ctx.run("sphinx-build docs {0}".format(target))
 
     ns = Collection(clean, build)
     ns.configure({'sphinx': {'target': "docs/_build"}})
@@ -400,10 +406,13 @@ that does this::
 
 And then they can simply add this to the bottom::
 
-    ns.configure({'sphinx': {'target': "built_docs"}}) # Our docs live here
+    # Our docs live in 'built_docs', not 'docs/_build'
+    ns.configure({'sphinx': {'target': "built_docs"}})
 
 Now we have a ``docs`` sub-namespace whose build target defaults to
-``built_docs`` instead of ``docs/_build``.
+``built_docs`` instead of ``docs/_build``. Runtime users can still override
+this via flags (e.g. ``inv docs.build --target='some/other/dir'``) just as
+before.
 
 If you prefer configuration files over in-Python tweaking of your namespace
 tree, that works just as well; instead of adding the line above to the previous
