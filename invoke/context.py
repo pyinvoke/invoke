@@ -17,7 +17,7 @@ class Context(DataProxy):
 
     `.Context` objects are created during command-line parsing (or, if desired,
     by hand) and used to share parser and configuration state with executed
-    tasks (see :doc:`/concepts/context`).
+    tasks (see :ref:`why-context`).
 
     Specifically, the class offers wrappers for core API calls (such as `.run`)
     which take into account CLI parser flags, configuration files, and/or
