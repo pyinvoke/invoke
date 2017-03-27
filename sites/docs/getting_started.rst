@@ -72,10 +72,10 @@ It can be invoked in the following ways, all resulting in "Hi Jeff!"::
     $ invoke hi -n Jeff
     $ invoke hi -nJeff
 
-Adding metadata via `@task <task>`
-----------------------------------
+Adding metadata via `@task <.task>`
+-----------------------------------
 
-`@task <task>` can be used without any arguments, as above, but it's also a
+`@task <.task>` can be used without any arguments, as above, but it's also a
 convenient vector for additional metadata about the task function it decorates.
 One common example is describing the task's arguments, via the ``help``
 parameter (in addition to optionally giving task-level help via the
