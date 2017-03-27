@@ -203,16 +203,8 @@ class DataProxy(object):
         for key, value in six.iteritems(kwargs):
             object.__setattr__(self, key, value)
 
-    def __str__(self):
-        return "<{0}: {1}>".format(self.__class__.__name__, self._config)
-
-    def __unicode__(self):
-        return unicode(self.__str__())  # noqa
-
     def __repr__(self):
-        # TODO: something more useful? Not an easy object to reconstruct from a
-        # stringrep.
-        return self.__str__()
+        return "<{0}: {1}>".format(self.__class__.__name__, self._config)
 
     def __contains__(self, key):
         return key in self._config
