@@ -150,20 +150,19 @@ hide output (so it is captured only), and more. See `its API docs
 Aside: what exactly is this 'context' anyway?
 ---------------------------------------------
 
-A common problem task runners face is transmission or storage of values which
-are "global" for the current session - values loaded from :doc:`configuration
-files </concepts/configuration>` (or :ref:`other configuration vectors
-<collection-configuration>`), CLI flags, values set by 'setup' tasks, etc.
+A common problem task runners face is transmission of "global" data - values
+loaded from :doc:`configuration files </concepts/configuration>` or :ref:`other
+configuration vectors <collection-configuration>`, given via CLI flags,
+generated in 'setup' tasks, etc.
 
-Some Python libraries (such as `Fabric <http://fabfile.org>`_ 1.x) implement
-this via global module state. That approach works in the base case but makes
-testing difficult and error prone, limits concurrency, and makes the software
-more complex to use and extend.
+Some libraries (such as `Fabric <http://fabfile.org>`_ 1.x) implement this via
+module-level attributes, which makes testing difficult and error prone, limits
+concurrency, and increases implementation complexity.
 
-Invoke encapsulates its state in an explicit `~.Context` object, handed to
-tasks when they execute or instantiated and used by hand. The context is the
-primary API endpoint, offering methods which honor the current state (such as
-`.Context.run`) as well as access to that state itself.
+Invoke encapsulates state in explicit `~.Context` objects, handed to tasks when
+they execute . The context is the primary API endpoint, offering methods which
+honor the current state (such as `.Context.run`) as well as access to that
+state itself.
 
 
 Declaring pre-tasks
