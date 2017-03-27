@@ -26,13 +26,10 @@ separate layer above. Thus, Invoke was created to focus exclusively on local
 and abstract concerns, leaving Fabric 2.x concerned only with servers and
 network commands.
 
-Fabric 2 will leverage parts of Invoke's API, and allow (but not require!) use
-of Invoke's CLI features, allowing multiple use cases (build tool, high level
-SSH lib, hybrid build/orchestration tool) to coexist without negatively
-impacting each other.
-
-For more info on how this relates to Fabric specifically, please see `Fabric's
-roadmap <http://fabfile.org/roadmap.html>`_.
+Fabric 2 leverages many parts of Invoke's API, and allows (but does not
+require!) use of Invoke's CLI features, allowing multiple use cases (build
+tool, high level SSH lib, hybrid build/orchestration tool) to coexist without
+negatively impacting each other.
 
 
 Defining/executing tasks
