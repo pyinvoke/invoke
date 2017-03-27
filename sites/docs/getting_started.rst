@@ -80,7 +80,9 @@ argument (in addition to optionally giving task-level help via the docstring)::
 
     @task(help={'name': "Name of the person to say hi to."})
     def hi(ctx, name):
-        """Say hi to someone."""
+        """
+        Say hi to someone.
+        """
         print("Hi {0}!".format(name))
 
 This description will show up when invoking ``--help``::
