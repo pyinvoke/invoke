@@ -6,9 +6,8 @@ except ImportError:
     # Not available on Windows
     termios = None
 from contextlib import contextmanager
-from functools import wraps
 
-from invoke.vendor.six import BytesIO, b, iteritems
+from invoke.vendor.six import BytesIO, b, iteritems, wraps
 
 from mock import patch, Mock
 from spec import trap, Spec, eq_, ok_, skip
