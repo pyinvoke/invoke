@@ -94,7 +94,7 @@ Stderr:{3}
 
     def __repr__(self):
         # TODO: expand?
-        template = "<{}: cmd={!r} exited={}>"
+        template = "<{0}: cmd={1!r} exited={2}>"
         return template.format(
             self.__class__.__name__,
             self.result.command,
