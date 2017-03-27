@@ -521,7 +521,7 @@ class Runner_(Spec):
                 try:
                     self._runner(exits=23).run(_)
                 except UnexpectedExit as e:
-                    expected = "<UnexpectedExit: cmd='{}' exited=23>"
+                    expected = "<UnexpectedExit: cmd='{0}' exited=23>"
                     eq_(
                         repr(e),
                         expected.format(_),

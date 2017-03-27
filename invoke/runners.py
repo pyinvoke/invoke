@@ -1140,7 +1140,7 @@ class Result(object):
         # TODO: more? e.g. len of stdout/err? (how to represent cleanly in a
         # 'x=y' format like this? e.g. '4b' is ambiguous as to what it
         # represents
-        template = "<Result cmd={!r} exited={}>"
+        template = "<Result cmd={0!r} exited={1}>"
         return template.format(self.command, self.exited)
 
     @property
