@@ -36,7 +36,7 @@ inspiration from various sources to arrive at a powerful & clean feature set.
   use, Invoke (and tools built on it) are equally at home embedded in your own
   Python code or a REPL:
 
-.. testsetup::
+.. testsetup:: blurb
 
     fakeout = """
     Hello, this is pip
@@ -46,11 +46,11 @@ inspiration from various sources to arrive at a powerful & clean feature set.
     """
     proc = MockSubprocess(out=fakeout, exit=0)
 
-.. testcleanup::
+.. testcleanup:: blurb
 
     proc.stop()
 
-.. doctest::
+.. doctest:: blurb
 
     >>> from invoke import run
     >>> result = run("pip install -r requirements.txt", hide=True, warn=True)
