@@ -83,16 +83,13 @@ class ParserContext(object):
         for arg in args:
             self.add_arg(arg)
 
-    def __str__(self):
+    def __repr__(self):
         aliases = ""
         if self.aliases:
             aliases = " ({0})".format(', '.join(self.aliases))
         name = (" {0!r}{1}".format(self.name, aliases)) if self.name else ""
         args = (": {0!r}".format(self.args)) if self.args else ""
         return "<parser/Context{0}{1}>".format(name, args)
-
-    def __repr__(self):
-        return str(self)
 
     def add_arg(self, *args, **kwargs):
         """

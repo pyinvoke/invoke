@@ -73,14 +73,11 @@ class Task(object):
     def name(self):
         return self._name or self.__name__
 
-    def __str__(self):
+    def __repr__(self):
         aliases = ""
         if self.aliases:
             aliases = " ({0})".format(', '.join(self.aliases))
         return "<Task {0!r}{1}>".format(self.name, aliases)
-
-    def __repr__(self):
-        return str(self)
 
     def __eq__(self, other):
         if self.name != other.name:
@@ -363,16 +360,13 @@ class Call(object):
     def __deepcopy__(self, memo):
         return self.clone()
 
-    def __str__(self):
+    def __repr__(self):
         aka = ""
         if self.called_as is not None and self.called_as != self.task.name:
             aka = " (called as: {0!r})".format(self.called_as)
         return "<Call {0!r}{1}, args: {2!r}, kwargs: {3!r}>".format(
             self.task.name, aka, self.args, self.kwargs
         )
-
-    def __repr__(self):
-        return str(self)
 
     def __eq__(self, other):
         # NOTE: Not comparing 'called_as'; a named call of a given Task with

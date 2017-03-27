@@ -43,7 +43,7 @@ class Argument(object):
         self.optional = optional
         self.attr_name = attr_name
 
-    def __str__(self):
+    def __repr__(self):
         nicks = ""
         if self.nicknames:
             nicks = " ({0})".format(", ".join(self.nicknames))
@@ -66,9 +66,6 @@ class Argument(object):
             kind,
             flags,
         )
-
-    def __repr__(self):
-        return str(self)
 
     @property
     def name(self):

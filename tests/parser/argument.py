@@ -33,30 +33,30 @@ class Argument_(Spec):
             a = Argument('foo', attr_name='bar')
             eq_(a.name, 'bar') # not 'foo'
 
-    class string:
-        "__str__"
+    class repr:
+        "__repr__"
 
         def shows_useful_info(self):
             eq_(
-                str(Argument(names=('name', 'nick1', 'nick2'))),
+                repr(Argument(names=('name', 'nick1', 'nick2'))),
                 "<Argument: {0} ({1})>".format('name', 'nick1, nick2')
             )
 
         def does_not_show_nickname_parens_if_no_nicknames(self):
             eq_(
-                str(Argument('name')),
+                repr(Argument('name')),
                 "<Argument: name>"
             )
 
         def shows_positionalness(self):
             eq_(
-                str(Argument('name', positional=True)),
+                repr(Argument('name', positional=True)),
                 "<Argument: name *>"
             )
 
         def shows_optionalness(self):
             eq_(
-                str(Argument('name', optional=True)),
+                repr(Argument('name', optional=True)),
                 "<Argument: name ?>",
             )
 
@@ -64,13 +64,13 @@ class Argument_(Spec):
             # TODO: but do these even make sense on the same argument? For now,
             # best to have a nonsensical test than a missing one...
             eq_(
-                str(Argument('name', optional=True, positional=True)),
+                repr(Argument('name', optional=True, positional=True)),
                 "<Argument: name *?>",
             )
 
         def shows_kind_if_not_str(self):
             eq_(
-                str(Argument('age', kind=int)),
+                repr(Argument('age', kind=int)),
                 "<Argument: age [int]>",
             )
 
@@ -81,14 +81,7 @@ class Argument_(Spec):
                 optional=True,
                 positional=True,
             )
-            eq_(str(arg), "<Argument: meh (m) [int] *?>")
-
-    class repr:
-        "__repr__"
-
-        def just_aliases_dunder_str(self):
-            a = Argument(names=('name', 'name2'))
-            eq_(str(a), repr(a))
+            eq_(repr(arg), "<Argument: meh (m) [int] *?>")
 
     class kind_kwarg:
         "'kind' kwarg"
