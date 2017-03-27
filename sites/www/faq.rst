@@ -128,13 +128,14 @@ faster & cleaner, so it is the default.
 Everything just exits silently after I run a command!
 -----------------------------------------------------
 
-Double check the command's exit code! By default, any nonzero exit code results
-in Invoke halting execution & exiting with that same exit code. Some programs
-(pylint, Nagios check scripts, etc) use exit codes to indicate non-fatal
-status, which can be confusing.
+Double check the command's exit code! By default, receiving nonzero exit codes
+at the end of a `~invoke.run` call will result in Invoke halting execution &
+exiting with that same code. Some programs (pylint, Nagios check scripts,
+etc) use exit codes to indicate non-fatal status, which can be confusing.
 
 The solution here is simple: add ``warn=True`` to your `~invoke.run` call,
-which disables the automatic exit behavior.
+which disables the automatic exit behavior. Then you can check the result's
+``.exited`` attribute by hand to determine if it truly succeeded.
 
 
 The auto-responder functionality isn't working for my password prompts!
@@ -149,8 +150,8 @@ written in Python.
 When this happens, we're powerless, because all we get to see is the
 subprocess' regular output streams. Thankfully, the solution is usually easy:
 just add ``pty=True`` to your `~invoke.run` call. Forcing use of an explicit
-pseudo-terminal usually tricks these kinds of programs into behaving and
-writing prompts to stderr.
+pseudo-terminal usually tricks these kinds of programs into writing prompts to
+stderr.
 
 
 I'm getting ``IOError: Inappropriate ioctl for device`` when I run commands!
