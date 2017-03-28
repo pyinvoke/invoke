@@ -98,6 +98,7 @@ loading the inner Python module directly in your Invoke-using code, and call
 whichever methods its command-line stub is using - instead of using
 `~invoke.run`. This can often have other benefits too.
 
+.. _program-behavior-ptys:
 
 Why is my command behaving differently under Invoke versus being run by hand?
 -----------------------------------------------------------------------------
@@ -124,6 +125,14 @@ either way.
 For use cases which don't care, direct invocation without a pseudo-terminal is
 faster & cleaner, so it is the default.
 
+Why do I sometimes see ``err: stdin: is not a tty``?
+----------------------------------------------------
+
+See :ref:`program-behavior-ptys` - the same root cause (lack of a PTY by
+default) is probably what's going on. In some cases (such as via the Fabric
+library) it's happening because a shell's login files are calling programs that
+require a PTY (e.g. ``biff`` or ``mesg``) so make sure to look there if the
+actual foreground command doesn't seem at fault.
 
 Everything just exits silently after I run a command!
 -----------------------------------------------------
