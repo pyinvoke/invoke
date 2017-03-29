@@ -189,7 +189,7 @@ class Runner(object):
             of `default_encoding`).
 
         :param out_stream:
-            A file-like stream object to which the subprocess' standard error
+            A file-like stream object to which the subprocess' standard output
             should be written. If ``None`` (the default), ``sys.stdout`` will
             be used.
 
