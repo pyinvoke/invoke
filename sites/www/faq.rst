@@ -125,6 +125,8 @@ either way.
 For use cases which don't care, direct invocation without a pseudo-terminal is
 faster & cleaner, so it is the default.
 
+.. _stdin-not-tty:
+
 Why do I sometimes see ``err: stdin: is not a tty``?
 ----------------------------------------------------
 
