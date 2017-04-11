@@ -995,6 +995,8 @@ def merge_dicts(base, updates):
             else:
                 if isinstance(base[key], dict):
                     raise _merge_error(base[key], value)
+                elif isinstance(value, file):
+                    base[key] = value
                 else:
                     base[key] = copy.copy(value)
         # New values get set anew
@@ -1003,6 +1005,8 @@ def merge_dicts(base, updates):
             # updates dict, which can lead to nasty state-bleed bugs otherwise
             if isinstance(value, dict):
                 base[key] = copy_dict(value)
+            elif isinstance(value, file):
+                base[key] = value
             # Non-dict values just get set straight
             else:
                 base[key] = copy.copy(value)

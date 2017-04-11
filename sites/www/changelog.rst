@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :support:`-` Merge file objects in config object by reference.
 * :support:`-` Fixed some Python 2.6 incompatible string formatting that snuck
   in recently.
 * :feature:`-` Switched the order of the first two arguments of
