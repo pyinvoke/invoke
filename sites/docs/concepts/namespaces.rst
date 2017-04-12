@@ -1,3 +1,5 @@
+.. _task-namespaces:
+
 =======================
 Constructing namespaces
 =======================
