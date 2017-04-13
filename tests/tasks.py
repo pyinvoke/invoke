@@ -360,6 +360,17 @@ class Call_(Spec):
             call = Call(self.task, called_as='mytask')
             eq_(str(call), "<Call 'mytask', args: (), kwargs: {}>")
 
+    class make_context:
+        @raises(TypeError)
+        def requires_config_argument(self):
+            Call(_).make_context()
+
+        def creates_a_new_Context_from_given_config(self):
+            conf = Config(defaults={'foo': 'bar'})
+            ctx = Call(_).make_context(conf)
+            ok_(isinstance(ctx, Context))
+            eq_(ctx.foo, 'bar')
+
     class clone:
         def returns_new_but_equivalent_object(self):
             orig = Call(self.task)

@@ -125,9 +125,11 @@ class Executor(object):
             config.load_collection(collection_config)
             config.load_shell_env()
             debug("Finished loading collection & shell env configs")
-            # Update call's Context with runtime config, inject as 1st posarg
-            call.context.config = config
-            args = (call.context,) + args
+            # Get final context from the Call (which will know how to generate
+            # an appropriate one; e.g. subclasses might use extra data from
+            # being parameterized), handing in this config for use there.
+            context = call.make_context(config)
+            args = (context,) + args
             result = call.task(*args, **call.kwargs)
             if autoprint:
                 print(result)
