@@ -333,33 +333,3 @@ class Call_(Spec):
             clone = orig.clone()
             ok_(clone is not orig)
             ok_(clone == orig)
-
-        def modifications_on_clone_do_not_alter_original(self):
-            # Setup
-            orig = Call(
-                self.task,
-                called_as='foo',
-                args=[1, 2, 3],
-                kwargs={'key': 'val'}
-            )
-            context = Context()
-            context['setting'] = {'subsetting': 'value'}
-            orig.context = context
-            # Clone & tweak
-            clone = orig.clone()
-            newtask = Task(Mock(__name__='meh'))
-            clone.task = newtask
-            clone.called_as = 'notfoo'
-            clone.args[0] = 7
-            clone.kwargs['key'] = 'notval'
-            clone.context['setting'] = {'subsetting': 'notvalue'}
-            # Compare
-            ok_(clone.task is not orig.task)
-            eq_(orig.called_as, 'foo')
-            eq_(clone.called_as, 'notfoo')
-            eq_(orig.args, [1, 2, 3])
-            eq_(clone.args, [7, 2, 3])
-            eq_(orig.kwargs['key'], 'val')
-            eq_(clone.kwargs['key'], 'notval')
-            eq_(orig.context['setting']['subsetting'], 'value')
-            eq_(clone.context['setting']['subsetting'], 'notvalue')
