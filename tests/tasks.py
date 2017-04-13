@@ -336,17 +336,6 @@ class Call_(Spec):
             def may_be_given(self):
                 eq_(Call(_, kwargs={'foo': 'bar'}).kwargs, {'foo': 'bar'})
 
-        class context:
-            def defaults_to_anonymous_Context(self):
-                call = Call(_)
-                ok_(isinstance(call.context, Context))
-
-            def may_be_given(self):
-                c = Context(config=Config({'foo': 'bar'}))
-                call = Call(_, context=c)
-                ok_(call.context is c)
-                eq_(call.context.foo, 'bar')
-
     class stringrep:
         "__str__"
 
