@@ -176,10 +176,81 @@ you're done::
     basic functionality relies on their existence, even when left to default
     values.
 
-Wrap-up
--------
 
-At this point you've got a nicely packaged program ready for distribution, with
-no obvious hints that it's driven by Invoke. We've only shown a handful of the
-options `.Program` provides - see its API docs for details on what else it can
-do.
+Customizing the configuration system's defaults
+===============================================
+
+Besides the CLI-oriented content of the previous section, another area of
+functionality that frequently needs updating when redistributing an Invoke
+codebase (CLI or no CLI) is configuration. There are typically two concerns
+here:
+
+- Configuration filenames and the env var prefix - crucial if you ever expect
+  your users to use the configuration system;
+- Default configuration values - less critical (most defaults aren't labeled
+  with anything Invoke-specific) but still sometimes desirable.
+
+Both of these involve subclassing `.Config` (and, if using the CLI machinery,
+informing your `.Program` to use that subclass instead of the default one.)
+
+Changing filenames and/or env var prefix
+----------------------------------------
+
+By default, Invoke's config system looks for files like ``/etc/invoke.yaml``,
+``~/.invoke.json``, etc. If you're distributing client code named something
+else, like the ``Tester`` example earlier, you might instead want the config
+system to load ``/etc/tester.json`` or ``$CWD/tester.py``.
+
+Similarly, the environment variable config level looks for env vars like
+``INVOKE_RUN_ECHO``; you might prefer ``TESTER_RUN_ECHO``.
+
+There are a few `.Config` attributes controlling these values:
+
+- ``prefix``: A generic, catchall prefix used directly as the file prefix, and
+  used via all-caps as the env var prefix;
+- ``file_prefix``: For overriding just the filename prefix - otherwise, it
+  defaults to the value of ``prefix``;
+- ``env_prefix``: For overriding just the env var prefix - as you might have
+  guessed, it too defaults to the value of ``prefix``.
+
+Continuing our 'Tester' example, you'd do something like this::
+
+    from invoke import Config
+
+    class TesterConfig(Config):
+        prefix = 'tester'
+
+Or, to seek ``tester.yaml`` as before, but ``TEST_RUN_ECHO`` instead of
+``TESTER_RUN_ECHO``::
+
+    class TesterConfig(Config):
+        prefix = 'tester'
+        env_prefix = 'TEST_'
+
+Modifying default config values
+-------------------------------
+
+Default config values are simple - they're just the return value of the
+staticmethod `.Config.global_defaults`, so override that and return whatever
+you like - ideally something based on the superclass' values, as many defaults
+are assumed to exist by the rest of the system. (The helper function
+`invoke.config.merge_dicts` can be useful here.)
+
+For example, say you want Tester to always echo shell commands by default when
+your codebase calls `.Context.run`::
+
+    from invoke.config import Config, merge_dicts
+
+    class TesterConfig(Config):
+        @staticmethod
+        def global_defaults():
+            their_defaults = Config.global_defaults()
+            my_defaults = {
+                'run': {
+                    'echo': True,
+                },
+            }
+            return merge_dicts(their_defaults, my_defaults)
+
+For reference, Invoke's own base defaults (the...default defaults, you could
+say) are documented at :ref:`default-values`.

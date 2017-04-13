@@ -69,6 +69,11 @@ Below is a list of all the configuration values and/or section Invoke itself
 uses to control behaviors such as `.Context.run`'s ``echo`` and ``pty``
 flags, task deduplication, and so forth.
 
+.. note::
+    The storage location for these values is inside the `.Config` class,
+    specifically as the return value of `.Config.global_defaults`; see its API
+    docs for more details.
+
 For convenience, we refer to nested setting names with a dotted syntax, so e.g.
 ``foo.bar`` refers to what would be (in a Python config context) ``{'foo':
 {'bar': <value here>}}``. Typically, these can be read or set on `.Config` and
