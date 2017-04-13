@@ -44,6 +44,11 @@ class Context_(Spec):
             eq_(self.c.config['foo'], 'bar')
             eq_(self.c.config.foo, 'bar')
 
+        def config_attr_may_be_overwritten_at_runtime(self):
+            new_config = Config(defaults={'foo': 'notbar'})
+            self.c.config = new_config
+            eq_(self.c.foo, 'notbar')
+
         def getitem(self):
             "___getitem__"
             eq_(self.c['foo'], 'bar')

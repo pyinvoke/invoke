@@ -54,6 +54,15 @@ class Context(DataProxy):
         # otherwise considers it a config key.
         return self._config
 
+    @config.setter
+    def config(self, value):
+        # NOTE: mostly used by client libraries needing to tweak a Context's
+        # config at execution time; i.e. a Context subclass that bears its own
+        # unique data may want to be stood up when parameterizing/expanding a
+        # call list at start of a session, with the final config filled in at
+        # runtime.
+        self._set(_config=value)
+
     def run(self, command, **kwargs):
         """
         Execute a local shell command, honoring config options.
