@@ -303,6 +303,42 @@ class Call_(Spec):
     def setup(self):
         self.task = Task(Mock(__name__='mytask'))
 
+    class init:
+        class task:
+            def is_required(self):
+                skip()
+
+            def is_first_posarg(self):
+                skip()
+
+        class called_as:
+            def defaults_to_None(self):
+                skip()
+
+            def may_be_given(self):
+                skip()
+
+        class args:
+            def defaults_to_empty_tuple(self):
+                skip()
+
+            def may_be_given(self):
+                skip()
+
+        class kwargs:
+            def defaults_to_empty_dict(self):
+                skip()
+
+            def may_be_given(self):
+                skip()
+
+        class context:
+            def defaults_to_anonymous_Context(self):
+                skip()
+
+            def may_be_given(self):
+                skip()
+
     class stringrep:
         "__str__"
 

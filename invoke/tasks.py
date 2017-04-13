@@ -313,9 +313,7 @@ def task(*args, **kwargs):
 
 class Call(object):
     """
-    Represents a call/execution of a `.Task` with some arguments.
-
-    Wraps its `.Task` so it can be treated as one by `.Executor`.
+    Represents a call/execution of a `.Task` with some arguments and a context.
 
     Similar to `~functools.partial` with some added functionality (such as the
     delegation to the inner task, and optional tracking of the name it's being
@@ -346,14 +344,16 @@ class Call(object):
             Keyword arguments to call with, if any. Default: ``None``.
 
         :param context:
-            `.Context` instance to be used. Default: ``None``.
+            `.Context` instance to be used. Default: ``None``, in which case a
+            new anonymous `.Context` is created and used.
         """
         self.task = task
         self.called_as = called_as
         self.args = args or tuple()
         self.kwargs = kwargs or dict()
-        self.context = context
+        self.context = context if context is not None else Context()
 
+    # TODO: just how useful is this? feels like maybe overkill magic
     def __getattr__(self, name):
         return getattr(self.task, name)
 
@@ -378,22 +378,23 @@ class Call(object):
                 return False
         return True
 
-    def clone(self):
+    def clone(self, context=None):
         """
         Return a standalone copy of this Call.
 
         Useful when parameterizing task executions.
+
+        Offers a ``context`` kwarg because much of the time cloning involves
+        creating a new Context instance. If not given, the new `.Call` will
+        have a new blank `.Context` (i.e. same as `__init__` called with
+        ``context=None``.)
         """
-        context = None
-        if self.context is not None:
-            # TODO: context.clone()?
-            context = Context(config=self.context.config.clone())
         return Call(
             task=self.task,
             called_as=self.called_as,
             args=deepcopy(self.args),
             kwargs=deepcopy(self.kwargs),
-            context=context
+            context=context,
         )
 
 
