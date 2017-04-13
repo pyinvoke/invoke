@@ -2,6 +2,18 @@
 Changelog
 =========
 
+* :feature:`309` Overhaul how task execution contexts/configs are handled, such
+  that all contexts in a session now share the same config object, and thus
+  user modifications are preserved between tasks. This has been done in a
+  manner that should not break things like collection-based config (which may
+  still differ from task to task.)
+
+  .. warning::
+    **This is a backwards incompatible change** if you were relying on the
+    post-0.12 behavior of cloning config objects between each task execution.
+    Make sure to investigate if you find tasks affecting one another in
+    unexpected ways!
+
 * :support:`-` Fixed some Python 2.6 incompatible string formatting that snuck
   in recently.
 * :feature:`-` Switched the order of the first two arguments of
