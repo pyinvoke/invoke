@@ -326,7 +326,6 @@ bar
                 return c
             coll = Collection(task1, task2)
             ret = Executor(collection=coll).execute('task1', 'task2')
-            c1 = ret[task1]
             c2 = ret[task2]
             ok_('foo' in c2.config)
             eq_(c2.foo, 'bar')
@@ -343,7 +342,6 @@ bar
                 return c
             coll = Collection(task1, task2)
             ret = Executor(collection=coll).execute('task1', 'task2')
-            c1 = ret[task1]
             c2 = ret[task2]
             eq_(c2.config.run.echo, True)
 
@@ -359,6 +357,5 @@ bar
                 return c
             coll = Collection(task1, task2)
             ret = Executor(collection=coll).execute('task1', 'task2')
-            c1 = ret[task1]
             c2 = ret[task2]
             ok_('echo' not in c2.config.run)

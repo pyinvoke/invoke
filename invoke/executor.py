@@ -1,5 +1,4 @@
 from .config import Config
-from .context import Context
 from .parser import ParserContext
 from .util import debug
 from .tasks import Call, Task

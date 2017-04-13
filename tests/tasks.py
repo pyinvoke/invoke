@@ -327,7 +327,7 @@ class Call_(Spec):
                 eq_(Call(_).args, tuple())
 
             def may_be_given(self):
-                eq_(Call(_, args=(1,2,3)).args, (1,2,3))
+                eq_(Call(_, args=(1, 2, 3)).args, (1, 2, 3))
 
         class kwargs:
             def defaults_to_empty_dict(self):

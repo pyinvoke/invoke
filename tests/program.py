@@ -6,7 +6,7 @@ from mock import patch, Mock, ANY
 from spec import eq_, ok_, trap, skip, assert_contains, assert_not_contains
 
 from invoke import (
-    Program, Collection, Task, FilesystemLoader, Executor, Context, Config,
+    Program, Collection, Task, FilesystemLoader, Executor, Config,
     UnexpectedExit, Result,
 )
 from invoke import main
@@ -716,8 +716,7 @@ post2
             os.environ['INVOKE_RUN_ECHO'] = "1"
             expect('-c contextualized check_echo')
 
-        @patch('invoke.executor.Context', side_effect=Context)
-        def env_var_prefix_can_be_overridden(self, context_class):
+        def env_var_prefix_can_be_overridden(self):
             os.environ['MYAPP_RUN_HIDE'] = "both"
             # This forces the execution stuff, including Executor, to run
             # NOTE: it's not really possible to rework the impl so this test is
@@ -727,4 +726,5 @@ post2
             # does more of the heavy lifting re: task lookup/load/etc...
             # NOTE: check_hide will kaboom if its context's run.hide is not set
             # to True (default False).
-            Program(env_prefix='MYAPP_').run('inv -c contextualized check_hide')
+            p = Program(env_prefix='MYAPP_')
+            p.run('inv -c contextualized check_hide')
