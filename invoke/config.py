@@ -404,6 +404,10 @@ class Config(DataProxy):
 
       Defaults to ``None``, meaning to use the value of ``prefix``.
     """
+    prefix = 'invoke'
+    file_prefix = None
+    env_prefix = None
+
     @staticmethod
     def global_defaults():
         """
