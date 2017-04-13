@@ -33,34 +33,34 @@ class Config_(IntegrationSpec):
             # This is a bit funky but more useful than just replicating the
             # same test farther down?
             Config(system_prefix='meh')
-            load_yaml.assert_has_call('meh.yaml')
+            load_yaml.assert_any_call('meh.yaml')
 
         @patch.object(Config, '_load_yaml')
         def default_system_prefix_is_etc(self, load_yaml):
             # TODO: make this work on Windows somehow without being a total
             # tautology? heh.
             Config()
-            load_yaml.assert_has_call('/etc/invoke.yaml')
+            load_yaml.assert_any_call('/etc/invoke.yaml')
 
         @patch.object(Config, '_load_yaml')
         def configure_user_location_prefix(self, load_yaml):
             Config(user_prefix='whatever')
-            load_yaml.assert_has_call('whatever.yaml')
+            load_yaml.assert_any_call('whatever.yaml')
 
         @patch.object(Config, '_load_yaml')
         def default_user_prefix_is_homedir(self, load_yaml):
             Config()
-            load_yaml.assert_has_call(expanduser('~/.invoke.yaml'))
+            load_yaml.assert_any_call(expanduser('~/.invoke.yaml'))
 
         @patch.object(Config, '_load_yaml')
         def configure_project_location(self, load_yaml):
             Config(project_home='someproject')
-            load_yaml.assert_has_call('someproject/invoke.yaml')
+            load_yaml.assert_any_call('someproject/invoke.yaml')
 
         @patch.object(Config, '_load_yaml')
         def configure_runtime_path(self, load_yaml):
             Config(runtime_path='some/path.yaml')
-            load_yaml.assert_has_call('some/path.yaml')
+            load_yaml.assert_any_call('some/path.yaml')
 
         def accepts_defaults_dict_kwarg(self):
             c = Config(defaults={'super': 'low level'})
