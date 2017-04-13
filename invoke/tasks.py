@@ -384,7 +384,7 @@ class Call(object):
 
         Useful when parameterizing task executions.
 
-        :param class into: A subclass to generate instead of the current class.
+        :param into: A subclass to generate instead of the current class.
         """
         return (into if into is not None else self.__class__)(
             task=self.task,
