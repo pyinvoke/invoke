@@ -33,7 +33,7 @@ class Config_(IntegrationSpec):
             # This is a bit funky but more useful than just replicating the
             # same test farther down?
             Config(system_prefix='meh')
-            load_yaml.assert_any_call('meh.yaml')
+            load_yaml.assert_any_call('meh/invoke.yaml')
 
         @patch.object(Config, '_load_yaml')
         def default_system_prefix_is_etc(self, load_yaml):
@@ -45,10 +45,10 @@ class Config_(IntegrationSpec):
         @patch.object(Config, '_load_yaml')
         def configure_user_location_prefix(self, load_yaml):
             Config(user_prefix='whatever')
-            load_yaml.assert_any_call('whatever.yaml')
+            load_yaml.assert_any_call('whatever/invoke.yaml')
 
         @patch.object(Config, '_load_yaml')
-        def default_user_prefix_is_homedir(self, load_yaml):
+        def default_user_prefix_is_homedir_plus_dot(self, load_yaml):
             Config()
             load_yaml.assert_any_call(expanduser('~/.invoke.yaml'))
 
