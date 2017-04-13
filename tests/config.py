@@ -22,6 +22,39 @@ def _load(kwarg, type_):
     return Config(**{kwarg: path})
 
 class Config_(IntegrationSpec):
+    class class_attrs:
+        # TODO: move all other non-data-bearing kwargs to this mode
+
+        class prefix:
+            def informs_config_filenames(self):
+                assert False
+
+            def informs_env_var_prefix(self):
+                assert False
+
+            def defaults_to_invoke(self):
+                assert False
+
+        class file_prefix:
+            def informs_config_filenames(self):
+                assert False
+
+            def defaults_to_prefix(self):
+                assert False
+
+            def overrides_prefix(self):
+                assert False
+
+        class file_prefix:
+            def informs_config_filenames(self):
+                assert False
+
+            def defaults_to_prefix(self):
+                assert False
+
+            def overrides_prefix(self):
+                assert False
+
     class init:
         "__init__"
 
@@ -75,10 +108,6 @@ class Config_(IntegrationSpec):
         def overrides_dict_is_also_a_kwarg(self):
             c = Config(overrides={'run': {'hide': True}})
             eq_(c.run.hide, True)
-
-        def accepts_env_prefix_option(self):
-            c = Config(env_prefix='INVOKE_')
-            eq_(c._env_prefix, 'INVOKE_')
 
         @patch.object(Config, 'post_init')
         def can_defer_post_init_step(self, post_init):

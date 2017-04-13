@@ -61,9 +61,11 @@ class Program_(IntegrationSpec):
             eq_(Program(config_class=klass).config_class, klass) # noqa
 
         def env_prefix_defaults_to_INVOKE_(self):
+            assert False
             eq_(Program().env_prefix, 'INVOKE_')
 
         def env_prefix_can_be_overridden(self):
+            assert False
             eq_(Program(env_prefix='FOO_').env_prefix, 'FOO_')
 
 
@@ -713,10 +715,12 @@ post2
         # * warn (run.warn)
 
         def env_vars_load_with_prefix(self):
+            assert False
             os.environ['INVOKE_RUN_ECHO'] = "1"
             expect('-c contextualized check_echo')
 
         def env_var_prefix_can_be_overridden(self):
+            assert False
             os.environ['MYAPP_RUN_HIDE'] = "both"
             # This forces the execution stuff, including Executor, to run
             # NOTE: it's not really possible to rework the impl so this test is

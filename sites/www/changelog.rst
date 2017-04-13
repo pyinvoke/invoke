@@ -7,11 +7,20 @@ Changelog
   as how env var prefixes are configured.
 
   .. warning::
-    **This is a backwards incompatible change** if you were relying on the
-    ``env_prefix`` keyword argument to `Config.__init__
-    <invoke.config.Config.__init__>`; it is now the ``prefix`` or
-    ``env_prefix`` class attribute, depending. (See the new documentation for
-    this functionality at :ref:`customizing-config-defaults` for details.)
+    **This is a backwards incompatible change** if:
+
+    - you were relying on the ``env_prefix`` keyword argument to
+      `Config.__init__ <invoke.config.Config.__init__>`; it is now the
+      ``prefix`` or ``env_prefix`` class attribute, depending.
+    - or the kwarg/attribute of the same name in `Program.__init__
+      <invoke.program.Program.__init__>`; you should now be subclassing
+      ``Config`` and using its ``env_prefix`` attribute;
+    - or if you were relying on how standalone ``Config`` objects defaulted to
+      having a ``None`` value for ``env_prefix``, and thus loaded env vars
+      without an ``INVOKE_`` style prefix.
+
+      See new documentation for this functionality at
+      :ref:`customizing-config-defaults` for details.
 
 * :feature:`309` Overhaul how task execution contexts/configs are handled, such
   that all contexts in a session now share the same config object, and thus
@@ -604,7 +613,7 @@ Changelog
 * :feature:`87` (also :issue:`92`) Rework the loader module such that recursive
   filesystem searching is implemented, and is used instead of searching
   `sys.path`.
-  
+
   This adds the behavior most users expect or are familiar with from Fabric 1
   or similar tools; and it avoids nasty surprise collisions with other
   installed packages containing files named ``tasks.py``.

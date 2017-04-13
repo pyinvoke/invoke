@@ -376,6 +376,29 @@ class Config(DataProxy):
     dict-style mutators like ``pop``, ``clear`` etc) are tracked in their own
     structure, allowing the overall object to honor such method calls despite
     the source data itself not changing.
+
+    **Special class attributes**
+
+    The following class-level attributes are used for low-level configuration
+    of the config system itself, such as which file paths to load. They are
+    primarily intended for overriding by subclasses.
+
+    - ``prefix``: Supplies the default value for ``file_prefix`` (directly) and
+      ``env_prefix`` (uppercased). See their descriptions for details. Its default value is ``"invoke"``.
+    - ``file_prefix``: The config file 'basename' default (though it is not a
+      literal basename; it can contain path parts if desired) which is appended
+      to the configured values of ``system_prefix``, ``user_prefix``, etc, to
+      arrive at the final (pre-extension) file paths.
+
+      Thus, by default, a system-level config file path concatenates the
+      ``system_prefix`` of ``/etc/`` with the ``file_prefix`` of ``invoke`` to
+      arrive at paths like ``/etc/invoke.json``.
+
+    - ``env_prefix``: A prefix used (along with a joining underscore) to
+      determine which environment variables are loaded as the env var
+      configuration level. Since its default is the value of ``prefix``
+      capitalized, this means env vars like ``INVOKE_RUN_ECHO`` are sought by
+      default.
     """
     @staticmethod
     def global_defaults():
@@ -449,31 +472,26 @@ class Config(DataProxy):
             A dict containing override-level config data. Default: ``{}``.
 
         :param str system_prefix:
-            Path & partial filename for the global config file location. Should
-            include everything but the dot & file extension.
+            Base path for the global config file location; combined with the
+            prefix and file suffixes to arrive at final file path candidates.
 
-            Default: ``/etc/invoke`` (e.g. ``/etc/invoke.yaml`` or
+            Default: ``/etc/`` (thus e.g. ``/etc/invoke.yaml`` or
             ``/etc/invoke.json``).
 
         :param str user_prefix:
-            Like ``system_prefix`` but for the per-user config file.
+            Like ``system_prefix`` but for the per-user config file. These
+            variables are joined as strings, not via path-style joins, so they
+            may contain partial file paths; for the per-user config file this
+            often means a leading dot, to make the final result a hidden file
+            on most systems.
 
-            Default: ``~/.invoke`` (e.g. ``~/.invoke.yaml``).
+            Default: ``~/.`` (e.g. ``~/.invoke.yaml``).
 
         :param str project_home:
             Optional directory path location of the currently loaded
             `.Collection` (as loaded by `.Loader`). When non-empty, will
             trigger seeking of per-project config files in this location +
             ``invoke.(yaml|json|py)``.
-
-        :param str env_prefix:
-            Environment variable seek prefix; optional, defaults to ``None``.
-
-            When not ``None``, only environment variables beginning with this
-            value will be loaded. If it is set, the keys will have the prefix
-            stripped out before processing, so e.g. ``env_prefix='INVOKE_'``
-            means users must set ``INVOKE_MYSETTING`` in the shell to affect
-            the ``"mysetting"`` setting.
 
         :param str runtime_path:
             Optional file path to a runtime configuration file.

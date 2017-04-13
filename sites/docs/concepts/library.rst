@@ -227,7 +227,7 @@ Or, to seek ``tester.yaml`` as before, but ``TEST_RUN_ECHO`` instead of
 
     class TesterConfig(Config):
         prefix = 'tester'
-        env_prefix = 'TEST_'
+        env_prefix = 'TEST'
 
 Modifying default config values
 -------------------------------
