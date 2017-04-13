@@ -377,3 +377,11 @@ class Call_(Spec):
             clone = orig.clone()
             ok_(clone is not orig)
             ok_(clone == orig)
+
+        def can_clone_into_a_subclass(self):
+            orig = Call(self.task)
+            class MyCall(Call):
+                pass
+            clone = orig.clone(into=MyCall)
+            eq_(clone, orig)
+            ok_(isinstance(clone, MyCall))

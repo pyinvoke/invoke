@@ -378,13 +378,15 @@ class Call(object):
         """
         return Context(config=config)
 
-    def clone(self):
+    def clone(self, into=None):
         """
         Return a standalone copy of this Call.
 
         Useful when parameterizing task executions.
+
+        :param class into: A subclass to generate instead of the current class.
         """
-        return Call(
+        return (into if into is not None else self.__class__)(
             task=self.task,
             called_as=self.called_as,
             args=deepcopy(self.args),
