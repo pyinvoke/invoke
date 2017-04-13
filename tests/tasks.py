@@ -1,9 +1,8 @@
 from spec import Spec, skip, eq_, raises, ok_
 from mock import Mock
 
-from invoke.context import Context
-from invoke.tasks import task, Task, Call
-from invoke.loader import FilesystemLoader as Loader
+from invoke import Context, Config, task, Task, Call
+from invoke import FilesystemLoader as Loader
 
 from _util import support
 
@@ -299,45 +298,54 @@ class Task_(Spec):
             eq_(arg.name, 'longer_arg')
 
 
+# Dummy task for Call tests
+_ = object()
+
+
 class Call_(Spec):
     def setup(self):
         self.task = Task(Mock(__name__='mytask'))
 
     class init:
         class task:
+            @raises(TypeError)
             def is_required(self):
-                skip()
+                Call()
 
             def is_first_posarg(self):
-                skip()
+                ok_(Call(_).task is _)
 
         class called_as:
             def defaults_to_None(self):
-                skip()
+                eq_(Call(_).called_as, None)
 
             def may_be_given(self):
-                skip()
+                eq_(Call(_, called_as='foo').called_as, 'foo')
 
         class args:
             def defaults_to_empty_tuple(self):
-                skip()
+                eq_(Call(_).args, tuple())
 
             def may_be_given(self):
-                skip()
+                eq_(Call(_, args=(1,2,3)).args, (1,2,3))
 
         class kwargs:
             def defaults_to_empty_dict(self):
-                skip()
+                eq_(Call(_).kwargs, dict())
 
             def may_be_given(self):
-                skip()
+                eq_(Call(_, kwargs={'foo': 'bar'}).kwargs, {'foo': 'bar'})
 
         class context:
             def defaults_to_anonymous_Context(self):
-                skip()
+                call = Call(_)
+                ok_(isinstance(call.context, Context))
 
             def may_be_given(self):
-                skip()
+                c = Context(config=Config({'foo': 'bar'}))
+                call = Call(_, context=c)
+                ok_(call.context is c)
+                eq_(call.context.foo, 'bar')
 
     class stringrep:
         "__str__"
