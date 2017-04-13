@@ -24,36 +24,67 @@ def _load(kwarg, type_):
 class Config_(IntegrationSpec):
     class class_attrs:
         # TODO: move all other non-data-bearing kwargs to this mode
-
         class prefix:
-            def informs_config_filenames(self):
-                assert False
+            def defaults_to_invoke(self):
+                eq_(Config().prefix, 'invoke')
+
+            @patch.object(Config, '_load_yaml')
+            def informs_config_filenames(self, load_yaml):
+                class MyConf(Config):
+                    prefix = 'other'
+                MyConf(system_prefix='dir')
+                load_yaml.assert_any_call('dir/other.yaml')
 
             def informs_env_var_prefix(self):
-                assert False
-
-            def defaults_to_invoke(self):
-                assert False
-
-        class file_prefix:
-            def informs_config_filenames(self):
-                assert False
-
-            def defaults_to_prefix(self):
-                assert False
-
-            def overrides_prefix(self):
-                assert False
+                os.environ['OTHER_FOO'] = 'bar'
+                class MyConf(Config):
+                    prefix = 'other'
+                c = MyConf()
+                c.load_shell_env()
+                eq_(c.foo, 'bar')
 
         class file_prefix:
-            def informs_config_filenames(self):
-                assert False
-
             def defaults_to_prefix(self):
-                assert False
+                class MyConf(Config):
+                    prefix = 'other'
+                c = MyConf()
+                eq_(c.file_prefix, 'other')
 
             def overrides_prefix(self):
-                assert False
+                class MyConf(Config):
+                    file_prefix = 'other'
+                c = MyConf()
+                eq_(c.prefix, 'invoke')
+                eq_(c.file_prefix, 'other')
+
+            @patch.object(Config, '_load_yaml')
+            def informs_config_filenames(self, load_yaml):
+                class MyConf(Config):
+                    file_prefix = 'other'
+                MyConf(system_prefix='dir')
+                load_yaml.assert_any_call('dir/other.yaml')
+
+        class env_prefix:
+            def defaults_to_prefix(self):
+                class MyConf(Config):
+                    prefix = 'other'
+                c = MyConf()
+                eq_(c.env_prefix, 'other')
+
+            def overrides_prefix(self):
+                class MyConf(Config):
+                    env_prefix = 'other'
+                c = MyConf()
+                eq_(c.prefix, 'invoke')
+                eq_(c.env_prefix, 'other')
+
+            def informs_env_vars_loaded(self):
+                os.environ['OTHER_FOO'] = 'bar'
+                class MyConf(Config):
+                    env_prefix = 'other'
+                c = MyConf()
+                c.load_shell_env()
+                eq_(c.foo, 'bar')
 
     class init:
         "__init__"
