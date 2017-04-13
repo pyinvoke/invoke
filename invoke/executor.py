@@ -125,10 +125,9 @@ class Executor(object):
             config.load_collection(collection_config)
             config.load_shell_env()
             debug("Finished loading collection & shell env configs")
-            # Create a new Context object with that config, inject as posarg
-            # TODO: Fab 2 wants deeper control over context creation, for now
-            # we just pay lip service to that by ensuring it's new each time.
-            args = (Context(config=config),) + args
+            # Update call's Context with runtime config, inject as 1st posarg
+            call.context.config = config
+            args = (call.context,) + args
             result = call.task(*args, **call.kwargs)
             if autoprint:
                 print(result)

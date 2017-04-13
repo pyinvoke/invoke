@@ -718,13 +718,13 @@ post2
 
         @patch('invoke.executor.Context', side_effect=Context)
         def env_var_prefix_can_be_overridden(self, context_class):
-            os.environ['MYAPP_RUN_ECHO'] = "1"
+            os.environ['MYAPP_RUN_HIDE'] = "both"
             # This forces the execution stuff, including Executor, to run
             # NOTE: it's not really possible to rework the impl so this test is
             # cleaner - tasks require per-task/per-collection config, which can
             # only be realized at the time a given task is to be executed.
             # Unless we overhaul the Program/Executor relationship so Program
             # does more of the heavy lifting re: task lookup/load/etc...
-            Program(env_prefix='MYAPP_').run('inv -c contextualized go')
-            # Check the config obj handed from Executor to Context
-            eq_(context_class.call_args[1]['config'].run.echo, True)
+            # NOTE: check_hide will kaboom if its context's run.hide is not set
+            # to True (default False).
+            Program(env_prefix='MYAPP_').run('inv -c contextualized check_hide')
