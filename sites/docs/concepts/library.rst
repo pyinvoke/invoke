@@ -177,6 +177,8 @@ you're done::
     values.
 
 
+.. _customizing-config-defaults:
+
 Customizing the configuration system's defaults
 ===============================================
 

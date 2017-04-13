@@ -2,6 +2,17 @@
 Changelog
 =========
 
+* :feature:`418` Enhance ability of client libraries to override config
+  filename prefixes. This includes modifications to related functionality, such
+  as how env var prefixes are configured.
+
+  .. warning::
+    **This is a backwards incompatible change** if you were relying on the
+    ``env_prefix`` keyword argument to `Config.__init__
+    <invoke.config.Config.__init__>`; it is now the ``prefix`` or
+    ``env_prefix`` class attribute, depending. (See the new documentation for
+    this functionality at :ref:`customizing-config-defaults` for details.)
+
 * :feature:`309` Overhaul how task execution contexts/configs are handled, such
   that all contexts in a session now share the same config object, and thus
   user modifications are preserved between tasks. This has been done in a
