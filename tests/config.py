@@ -44,18 +44,8 @@ class Config_(IntegrationSpec):
                 eq_(c.foo, 'bar')
 
         class file_prefix:
-            def defaults_to_prefix(self):
-                class MyConf(Config):
-                    prefix = 'other'
-                c = MyConf()
-                eq_(c.file_prefix, 'other')
-
-            def overrides_prefix(self):
-                class MyConf(Config):
-                    file_prefix = 'other'
-                c = MyConf()
-                eq_(c.prefix, 'invoke')
-                eq_(c.file_prefix, 'other')
+            def defaults_to_None(self):
+                eq_(Config().file_prefix, None)
 
             @patch.object(Config, '_load_yaml')
             def informs_config_filenames(self, load_yaml):
@@ -65,18 +55,8 @@ class Config_(IntegrationSpec):
                 load_yaml.assert_any_call('dir/other.yaml')
 
         class env_prefix:
-            def defaults_to_prefix(self):
-                class MyConf(Config):
-                    prefix = 'other'
-                c = MyConf()
-                eq_(c.env_prefix, 'other')
-
-            def overrides_prefix(self):
-                class MyConf(Config):
-                    env_prefix = 'other'
-                c = MyConf()
-                eq_(c.prefix, 'invoke')
-                eq_(c.env_prefix, 'other')
+            def defaults_to_None(self):
+                eq_(Config().env_prefix, None)
 
             def informs_env_vars_loaded(self):
                 os.environ['OTHER_FOO'] = 'bar'

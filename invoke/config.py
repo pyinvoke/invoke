@@ -394,11 +394,15 @@ class Config(DataProxy):
       ``system_prefix`` of ``/etc/`` with the ``file_prefix`` of ``invoke`` to
       arrive at paths like ``/etc/invoke.json``.
 
+      Defaults to ``None``, meaning to use the value of ``prefix``.
+
     - ``env_prefix``: A prefix used (along with a joining underscore) to
       determine which environment variables are loaded as the env var
       configuration level. Since its default is the value of ``prefix``
       capitalized, this means env vars like ``INVOKE_RUN_ECHO`` are sought by
       default.
+
+      Defaults to ``None``, meaning to use the value of ``prefix``.
     """
     @staticmethod
     def global_defaults():
