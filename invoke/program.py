@@ -180,7 +180,7 @@ class Program(object):
 
             Giving this explicitly may be useful when you install your program
             under multiple names, such as Invoke itself does - it installs as
-            both ``inv`` and ``invoke``, and sets ``name="inv[oke]"`` so its
+            both ``inv`` and ``invoke``, and sets ``binary="inv[oke]"`` so its
             ``--help`` output implies both names.
 
         :param loader_class:
