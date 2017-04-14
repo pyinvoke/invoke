@@ -60,14 +60,6 @@ class Program_(IntegrationSpec):
             klass = object()
             eq_(Program(config_class=klass).config_class, klass) # noqa
 
-        def env_prefix_defaults_to_INVOKE_(self):
-            assert False
-            eq_(Program().env_prefix, 'INVOKE_')
-
-        def env_prefix_can_be_overridden(self):
-            assert False
-            eq_(Program(env_prefix='FOO_').env_prefix, 'FOO_')
-
 
     class miscellaneous:
         "miscellaneous behaviors"
@@ -715,12 +707,10 @@ post2
         # * warn (run.warn)
 
         def env_vars_load_with_prefix(self):
-            assert False
             os.environ['INVOKE_RUN_ECHO'] = "1"
             expect('-c contextualized check_echo')
 
         def env_var_prefix_can_be_overridden(self):
-            assert False
             os.environ['MYAPP_RUN_HIDE'] = "both"
             # This forces the execution stuff, including Executor, to run
             # NOTE: it's not really possible to rework the impl so this test is
@@ -730,5 +720,7 @@ post2
             # does more of the heavy lifting re: task lookup/load/etc...
             # NOTE: check_hide will kaboom if its context's run.hide is not set
             # to True (default False).
-            p = Program(env_prefix='MYAPP_')
+            class MyConf(Config):
+                env_prefix = 'MYAPP'
+            p = Program(config_class=MyConf)
             p.run('inv -c contextualized check_hide')
