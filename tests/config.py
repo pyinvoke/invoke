@@ -18,7 +18,7 @@ CONFIGS_PATH = 'configs'
 TYPES = ('yaml', 'json', 'python')
 
 def _load(kwarg, type_):
-    path = join(CONFIGS_PATH, type_, 'invoke')
+    path = join(CONFIGS_PATH, type_ + "/")
     return Config(**{kwarg: path})
 
 class Config_(IntegrationSpec):
@@ -32,14 +32,14 @@ class Config_(IntegrationSpec):
             def informs_config_filenames(self, load_yaml):
                 class MyConf(Config):
                     prefix = 'other'
-                MyConf(system_prefix='dir')
+                MyConf(system_prefix='dir/')
                 load_yaml.assert_any_call('dir/other.yaml')
 
             def informs_env_var_prefix(self):
                 os.environ['OTHER_FOO'] = 'bar'
                 class MyConf(Config):
                     prefix = 'other'
-                c = MyConf()
+                c = MyConf(defaults={'foo': 'notbar'})
                 c.load_shell_env()
                 eq_(c.foo, 'bar')
 
@@ -51,7 +51,7 @@ class Config_(IntegrationSpec):
             def informs_config_filenames(self, load_yaml):
                 class MyConf(Config):
                     file_prefix = 'other'
-                MyConf(system_prefix='dir')
+                MyConf(system_prefix='dir/')
                 load_yaml.assert_any_call('dir/other.yaml')
 
         class env_prefix:
@@ -62,7 +62,7 @@ class Config_(IntegrationSpec):
                 os.environ['OTHER_FOO'] = 'bar'
                 class MyConf(Config):
                     env_prefix = 'other'
-                c = MyConf()
+                c = MyConf(defaults={'foo': 'notbar'})
                 c.load_shell_env()
                 eq_(c.foo, 'bar')
 
@@ -76,7 +76,7 @@ class Config_(IntegrationSpec):
         def configure_global_location_prefix(self, load_yaml):
             # This is a bit funky but more useful than just replicating the
             # same test farther down?
-            Config(system_prefix='meh')
+            Config(system_prefix='meh/')
             load_yaml.assert_any_call('meh/invoke.yaml')
 
         @patch.object(Config, '_load_yaml')
@@ -88,7 +88,7 @@ class Config_(IntegrationSpec):
 
         @patch.object(Config, '_load_yaml')
         def configure_user_location_prefix(self, load_yaml):
-            Config(user_prefix='whatever')
+            Config(user_prefix='whatever/')
             load_yaml.assert_any_call('whatever/invoke.yaml')
 
         @patch.object(Config, '_load_yaml')
@@ -480,53 +480,47 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
 
     class env_vars:
         "Environment variables"
-        def base_case(self):
-            os.environ['FOO'] = 'bar'
+        def base_case_defaults_to_INVOKE_prefix(self):
+            os.environ['INVOKE_FOO'] = 'bar'
             c = Config(defaults={'foo': 'notbar'})
             c.load_shell_env()
             eq_(c.foo, 'bar')
 
-        def can_declare_prefix(self):
-            os.environ['INVOKE_FOO'] = 'bar'
-            c = Config(defaults={'foo': 'notbar'}, env_prefix='INVOKE_')
-            c.load_shell_env()
-            eq_(c.foo, 'bar')
-
         def non_predeclared_settings_do_not_get_consumed(self):
-            os.environ['HELLO'] = "is it me you're looking for?"
+            os.environ['INVOKE_HELLO'] = "is it me you're looking for?"
             c = Config()
             c.load_shell_env()
             ok_('HELLO' not in c)
             ok_('hello' not in c)
 
         def underscores_top_level(self):
-            os.environ['FOO_BAR'] = 'biz'
+            os.environ['INVOKE_FOO_BAR'] = 'biz'
             c = Config(defaults={'foo_bar': 'notbiz'})
             c.load_shell_env()
             eq_(c.foo_bar, 'biz')
 
         def underscores_nested(self):
-            os.environ['FOO_BAR'] = 'biz'
+            os.environ['INVOKE_FOO_BAR'] = 'biz'
             c = Config(defaults={'foo': {'bar': 'notbiz'}})
             c.load_shell_env()
             eq_(c.foo.bar, 'biz')
 
         def both_types_of_underscores_mixed(self):
-            os.environ['FOO_BAR_BIZ'] = 'baz'
+            os.environ['INVOKE_FOO_BAR_BIZ'] = 'baz'
             c = Config(defaults={'foo_bar': {'biz': 'notbaz'}})
             c.load_shell_env()
             eq_(c.foo_bar.biz, 'baz')
 
         @raises(AmbiguousEnvVar)
         def ambiguous_underscores_dont_guess(self):
-            os.environ['FOO_BAR'] = 'biz'
+            os.environ['INVOKE_FOO_BAR'] = 'biz'
             c = Config(defaults={'foo_bar': 'wat', 'foo': {'bar': 'huh'}})
             c.load_shell_env()
 
 
         class type_casting:
             def strings_replaced_with_env_value(self):
-                os.environ['FOO'] = six.u('myvalue')
+                os.environ['INVOKE_FOO'] = six.u('myvalue')
                 c = Config(defaults={'foo': 'myoldvalue'})
                 c.load_shell_env()
                 eq_(c.foo, six.u('myvalue'))
@@ -537,14 +531,14 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
                 # os.environ, so the test makes no sense there.
                 if six.PY3:
                     return
-                os.environ['FOO'] = 'myunicode'
+                os.environ['INVOKE_FOO'] = 'myunicode'
                 c = Config(defaults={'foo': six.u('myoldvalue')})
                 c.load_shell_env()
                 eq_(c.foo, 'myunicode')
                 ok_(isinstance(c.foo, str))
 
             def None_replaced(self):
-                os.environ['FOO'] = 'something'
+                os.environ['INVOKE_FOO'] = 'something'
                 c = Config(defaults={'foo': None})
                 c.load_shell_env()
                 eq_(c.foo, 'something')
@@ -557,14 +551,14 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
                     ('meh', True),
                     ('false', True),
                 ):
-                    os.environ['FOO'] = input_
+                    os.environ['INVOKE_FOO'] = input_
                     c = Config(defaults={'foo': bool()})
                     c.load_shell_env()
                     eq_(c.foo, result)
 
             def boolean_type_inputs_with_non_boolean_defaults(self):
                 for input_ in ('0', '1', '', 'meh', 'false'):
-                    os.environ['FOO'] = input_
+                    os.environ['INVOKE_FOO'] = input_
                     c = Config(defaults={'foo': 'bar'})
                     c.load_shell_env()
                     eq_(c.foo, input_)
@@ -580,13 +574,13 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
                 if not six.PY3:
                     tests.append((long, '5', long(5)))  # noqa
                 for old, new_, result in tests:
-                    os.environ['FOO'] = new_
+                    os.environ['INVOKE_FOO'] = new_
                     c = Config(defaults={'foo': old()})
                     c.load_shell_env()
                     eq_(c.foo, result)
 
             def arbitrary_types_work_too(self):
-                os.environ['FOO'] = 'whatever'
+                os.environ['INVOKE_FOO'] = 'whatever'
                 class Meh(object):
                     def __init__(self, thing=None):
                         pass
@@ -600,7 +594,7 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
             class uncastable_types:
                 @raises(UncastableEnvVar)
                 def _uncastable_type(self, default):
-                    os.environ['FOO'] = 'stuff'
+                    os.environ['INVOKE_FOO'] = 'stuff'
                     c = Config(defaults={'foo': default})
                     c.load_shell_env()
 
@@ -627,32 +621,32 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
             eq_(c.nested.setting, 'collection')
 
         def systemwide_overrides_collection(self):
-            c = Config(system_prefix=join(CONFIGS_PATH, 'yaml', 'invoke'))
+            c = Config(system_prefix=join(CONFIGS_PATH, 'yaml/'))
             c.load_collection({'outer': {'inner': {'hooray': 'defaults'}}})
             eq_(c.outer.inner.hooray, 'yaml')
 
         def user_overrides_systemwide(self):
             c = Config(
-                system_prefix=join(CONFIGS_PATH, 'yaml', 'invoke'),
-                user_prefix=join(CONFIGS_PATH, 'json', 'invoke'),
+                system_prefix=join(CONFIGS_PATH, 'yaml/'),
+                user_prefix=join(CONFIGS_PATH, 'json/'),
             )
             eq_(c.outer.inner.hooray, 'json')
 
         def user_overrides_collection(self):
-            c = Config(user_prefix=join(CONFIGS_PATH, 'json', 'invoke'))
+            c = Config(user_prefix=join(CONFIGS_PATH, 'json/'))
             c.load_collection({'outer': {'inner': {'hooray': 'defaults'}}})
             eq_(c.outer.inner.hooray, 'json')
 
         def project_overrides_user(self):
             c = Config(
-                user_prefix=join(CONFIGS_PATH, 'json', 'invoke'),
+                user_prefix=join(CONFIGS_PATH, 'json/'),
                 project_home=join(CONFIGS_PATH, 'yaml'),
             )
             eq_(c.outer.inner.hooray, 'yaml')
 
         def project_overrides_systemwide(self):
             c = Config(
-                system_prefix=join(CONFIGS_PATH, 'json', 'invoke'),
+                system_prefix=join(CONFIGS_PATH, 'json/'),
                 project_home=join(CONFIGS_PATH, 'yaml'),
             )
             eq_(c.outer.inner.hooray, 'yaml')
@@ -665,7 +659,7 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
             eq_(c.outer.inner.hooray, 'yaml')
 
         def env_vars_override_project(self):
-            os.environ['OUTER_INNER_HOORAY'] = 'env'
+            os.environ['INVOKE_OUTER_INNER_HOORAY'] = 'env'
             c = Config(
                 project_home=join(CONFIGS_PATH, 'yaml'),
             )
@@ -673,30 +667,30 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
             eq_(c.outer.inner.hooray, 'env')
 
         def env_vars_override_user(self):
-            os.environ['OUTER_INNER_HOORAY'] = 'env'
+            os.environ['INVOKE_OUTER_INNER_HOORAY'] = 'env'
             c = Config(
-                user_prefix=join(CONFIGS_PATH, 'yaml', 'invoke'),
+                user_prefix=join(CONFIGS_PATH, 'yaml/'),
             )
             c.load_shell_env()
             eq_(c.outer.inner.hooray, 'env')
 
         def env_vars_override_systemwide(self):
-            os.environ['OUTER_INNER_HOORAY'] = 'env'
+            os.environ['INVOKE_OUTER_INNER_HOORAY'] = 'env'
             c = Config(
-                system_prefix=join(CONFIGS_PATH, 'yaml', 'invoke'),
+                system_prefix=join(CONFIGS_PATH, 'yaml/'),
             )
             c.load_shell_env()
             eq_(c.outer.inner.hooray, 'env')
 
         def env_vars_override_collection(self):
-            os.environ['OUTER_INNER_HOORAY'] = 'env'
+            os.environ['INVOKE_OUTER_INNER_HOORAY'] = 'env'
             c = Config()
             c.load_collection({'outer': {'inner': {'hooray': 'defaults'}}})
             c.load_shell_env()
             eq_(c.outer.inner.hooray, 'env')
 
         def runtime_overrides_env_vars(self):
-            os.environ['OUTER_INNER_HOORAY'] = 'env'
+            os.environ['INVOKE_OUTER_INNER_HOORAY'] = 'env'
             c = Config(runtime_path=join(CONFIGS_PATH, 'json', 'invoke.json'))
             c.load_shell_env()
             eq_(c.outer.inner.hooray, 'json')
@@ -711,14 +705,14 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
         def runtime_overrides_user(self):
             c = Config(
                 runtime_path=join(CONFIGS_PATH, 'json', 'invoke.json'),
-                user_prefix=join(CONFIGS_PATH, 'yaml', 'invoke'),
+                user_prefix=join(CONFIGS_PATH, 'yaml/'),
             )
             eq_(c.outer.inner.hooray, 'json')
 
         def runtime_overrides_systemwide(self):
             c = Config(
                 runtime_path=join(CONFIGS_PATH, 'json', 'invoke.json'),
-                system_prefix=join(CONFIGS_PATH, 'yaml', 'invoke'),
+                system_prefix=join(CONFIGS_PATH, 'yaml/'),
             )
             eq_(c.outer.inner.hooray, 'json')
 
@@ -738,7 +732,7 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
 
         def yaml_prevents_json_or_python(self):
             c = Config(
-                system_prefix=join(CONFIGS_PATH, 'all-three', 'invoke'))
+                system_prefix=join(CONFIGS_PATH, 'all-three/'))
             ok_('json-only' not in c)
             ok_('python_only' not in c)
             ok_('yaml-only' in c)
@@ -746,7 +740,7 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
 
         def json_prevents_python(self):
             c = Config(
-                system_prefix=join(CONFIGS_PATH, 'json-and-python', 'invoke'))
+                system_prefix=join(CONFIGS_PATH, 'json-and-python/'))
             ok_('python_only' not in c)
             ok_('json-only' in c)
             eq_(c.shared, 'json-value')
@@ -760,7 +754,6 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
                 system_prefix='global',
                 user_prefix='user',
                 project_home='project',
-                env_prefix='env',
                 runtime_path='runtime.yaml',
             )
             c2 = c1.clone()
@@ -775,7 +768,9 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
             eq_(c2._system_prefix, c1._system_prefix)
             eq_(c2._user_prefix, c1._user_prefix)
             eq_(c2._project_home, c1._project_home)
-            eq_(c2._env_prefix, c1._env_prefix)
+            eq_(c2.prefix, c1.prefix)
+            eq_(c2.file_prefix, c1.file_prefix)
+            eq_(c2.env_prefix, c1.env_prefix)
             eq_(c2._runtime_path, c1._runtime_path)
 
         def preserves_merged_config(self):
@@ -791,7 +786,7 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
             eq_(c2._overrides['key'], 'override')
 
         def preserves_file_data(self):
-            c = Config(system_prefix=join(CONFIGS_PATH, 'yaml', 'invoke'))
+            c = Config(system_prefix=join(CONFIGS_PATH, 'yaml/'))
             eq_(c.outer.inner.hooray, 'yaml')
             c2 = c.clone()
             eq_(c2.outer.inner.hooray, 'yaml')
@@ -801,7 +796,7 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
             'outer': {'inner': {'hooray': 'yaml'}}
         })
         def does_not_reload_file_data(self, load_yaml):
-            path = join(CONFIGS_PATH, 'yaml', 'invoke')
+            path = join(CONFIGS_PATH, 'yaml/')
             c = Config(system_prefix=path)
             c2 = c.clone()
             eq_(c2.outer.inner.hooray, 'yaml')
@@ -809,12 +804,16 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
             # one time" (since assert_calls_with gets mad about other
             # invocations w/ different args)
             calls = load_yaml.call_args_list
-            my_call = call("{0}.yaml".format(path))
-            calls.remove(my_call)
-            ok_(my_call not in calls)
+            my_call = call("{0}invoke.yaml".format(path))
+            try:
+                calls.remove(my_call)
+                ok_(my_call not in calls)
+            except ValueError:
+                err = "{0} not found in {1} even once!"
+                assert False, err.format(my_call, calls)
 
         def preserves_env_data(self):
-            os.environ['FOO'] = 'bar'
+            os.environ['INVOKE_FOO'] = 'bar'
             c = Config(defaults={'foo': 'notbar'})
             c.load_shell_env()
             c2 = c.clone()

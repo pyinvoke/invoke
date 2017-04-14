@@ -143,7 +143,6 @@ class Program(object):
         loader_class=None,
         executor_class=None,
         config_class=None,
-        env_prefix=None,
     ):
         """
         Create a new, parameterized `.Program` instance.
@@ -197,11 +196,6 @@ class Program(object):
             The `.Config` subclass to use for the base config object.
 
             Defaults to `.Config`.
-
-        :param str env_prefix:
-            The prefix for environment variable configuration loading.
-
-            Defaults to ``INVOKE_``.
         """
         self.version = "unknown" if version is None else version
         self.namespace = namespace
@@ -211,7 +205,6 @@ class Program(object):
         self.loader_class = loader_class or FilesystemLoader
         self.executor_class = executor_class or Executor
         self.config_class = config_class or Config
-        self.env_prefix = env_prefix if env_prefix is not None else 'INVOKE_'
 
     def config_kwargs(self):
         """
@@ -241,7 +234,6 @@ class Program(object):
             overrides=overrides,
             project_home=self.collection.loaded_from,
             runtime_path=self.args.config.value,
-            env_prefix=self.env_prefix,
         )
 
     def create_config(self):

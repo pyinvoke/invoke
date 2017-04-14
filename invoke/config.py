@@ -465,7 +465,6 @@ class Config(DataProxy):
         system_prefix=None,
         user_prefix=None,
         project_home=None,
-        env_prefix=None,
         runtime_path=None,
         defer_post_init=False,
     ):
@@ -538,7 +537,7 @@ class Config(DataProxy):
         # Path prefix searched for the system config file.
         # NOTE: There is no default system prefix on Windows.
         if system_prefix is None and not WINDOWS:
-            system_prefix = '/etc/invoke'
+            system_prefix = '/etc/'
         self._set(_system_prefix=system_prefix)
         # Path to loaded system config file, if any.
         self._set(_system_path=None)
@@ -550,7 +549,7 @@ class Config(DataProxy):
 
         # Path prefix searched for per-user config files.
         if user_prefix is None:
-            user_prefix = '~/.invoke'
+            user_prefix = '~/.'
         self._set(_user_prefix=user_prefix)
         # Path to loaded user config file, if any.
         self._set(_user_path=None)
@@ -565,7 +564,7 @@ class Config(DataProxy):
         # And a normalized prefix version not really publicly exposed
         project_prefix = None
         if self._project_home is not None:
-            project_prefix = join(project_home, 'invoke')
+            project_prefix = join(project_home, '')
         self._set(_project_prefix=project_prefix)
         # Path to loaded per-project config file, if any.
         self._set(_project_path=None)
@@ -576,8 +575,10 @@ class Config(DataProxy):
         self._set(_project={})
 
         # Environment variable name prefix
+        env_prefix = self.env_prefix
         if env_prefix is None:
-            env_prefix = ''
+            env_prefix = self.prefix
+        env_prefix = "{}_".format(env_prefix.upper())
         self._set(_env_prefix=env_prefix)
         # Config data loaded from the shell environment.
         self._set(_env={})
@@ -676,6 +677,9 @@ class Config(DataProxy):
         found = "_{0}_found".format(prefix)
         path = "_{0}_path".format(prefix)
         data = "_{0}".format(prefix)
+        midfix = self.file_prefix
+        if midfix is None:
+            midfix = self.prefix
         # Short-circuit if loading appears to have occurred already
         if getattr(self, found) is not None:
             return
@@ -688,12 +692,13 @@ class Config(DataProxy):
             paths = [absolute_path]
         else:
             path_prefix = getattr(self, "_{0}_prefix".format(prefix))
+            debug("path_prefix: {!r}".format(path_prefix))
             # Short circuit if loading seems unnecessary (eg for project config
             # files when not running out of a project)
             if path_prefix is None:
                 return
             paths = [
-                '.'.join((path_prefix, x))
+                '.'.join((path_prefix + midfix, x))
                 for x in self._file_suffixes
             ]
         # Poke 'em
