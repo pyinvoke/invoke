@@ -692,7 +692,6 @@ class Config(DataProxy):
             paths = [absolute_path]
         else:
             path_prefix = getattr(self, "_{0}_prefix".format(prefix))
-            debug("path_prefix: {!r}".format(path_prefix))
             # Short circuit if loading seems unnecessary (eg for project config
             # files when not running out of a project)
             if path_prefix is None:
