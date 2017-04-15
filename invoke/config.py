@@ -579,7 +579,7 @@ class Config(DataProxy):
         env_prefix = self.env_prefix
         if env_prefix is None:
             env_prefix = self.prefix
-        env_prefix = "{}_".format(env_prefix.upper())
+        env_prefix = "{0}_".format(env_prefix.upper())
         self._set(_env_prefix=env_prefix)
         # Config data loaded from the shell environment.
         self._set(_env={})
