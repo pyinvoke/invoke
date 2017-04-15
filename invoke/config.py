@@ -524,7 +524,7 @@ class Config(DataProxy):
         self._set(_config={})
 
         # Config file suffixes to search, in preference order.
-        self._set(_file_suffixes=('yaml', 'json', 'py'))
+        self._set(_file_suffixes=('yaml', 'yml', 'json', 'py'))
 
         # Default configuration values, typically a copy of `global_defaults`.
         if defaults is None:
@@ -734,6 +734,9 @@ class Config(DataProxy):
     def _load_yaml(self, path):
         with open(path) as fd:
             return yaml.load(fd)
+
+    def _load_yml(self, path):
+        return self._load_yaml(path)
 
     def _load_json(self, path):
         with open(path) as fd:

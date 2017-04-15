@@ -2,6 +2,9 @@
 Changelog
 =========
 
+* :feature:`232` Add support for ``.yml``-suffixed config files (in addition to
+  ``.yaml``, ``.json`` and ``.py``.) Thanks to Matthias Lehmann for the
+  original request & Greg Back for an early patch.
 * :feature:`418` Enhance ability of client libraries to override config
   filename prefixes. This includes modifications to related functionality, such
   as how env var prefixes are configured.
