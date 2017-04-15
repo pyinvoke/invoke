@@ -15,7 +15,7 @@ from _util import IntegrationSpec
 
 
 CONFIGS_PATH = 'configs'
-TYPES = ('yaml', 'json', 'python')
+TYPES = ('yaml', 'yml', 'json', 'python')
 
 def _load(kwarg, type_):
     path = join(CONFIGS_PATH, type_ + "/")
@@ -730,13 +730,22 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
             )
             eq_(c.outer.inner.hooray, 'overrides')
 
-        def yaml_prevents_json_or_python(self):
+        def yaml_prevents_yml_json_or_python(self):
             c = Config(
-                system_prefix=join(CONFIGS_PATH, 'all-three/'))
+                system_prefix=join(CONFIGS_PATH, 'all-four/'))
             ok_('json-only' not in c)
             ok_('python_only' not in c)
+            ok_('yml-only' not in c)
             ok_('yaml-only' in c)
             eq_(c.shared, 'yaml-value')
+
+        def yml_prevents_json_or_python(self):
+            c = Config(
+                system_prefix=join(CONFIGS_PATH, 'three-of-em/'))
+            ok_('json-only' not in c)
+            ok_('python_only' not in c)
+            ok_('yml-only' in c)
+            eq_(c.shared, 'yml-value')
 
         def json_prevents_python(self):
             c = Config(
