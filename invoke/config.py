@@ -384,7 +384,8 @@ class Config(DataProxy):
     primarily intended for overriding by subclasses.
 
     - ``prefix``: Supplies the default value for ``file_prefix`` (directly) and
-      ``env_prefix`` (uppercased). See their descriptions for details. Its default value is ``"invoke"``.
+      ``env_prefix`` (uppercased). See their descriptions for details. Its
+      default value is ``"invoke"``.
     - ``file_prefix``: The config file 'basename' default (though it is not a
       literal basename; it can contain path parts if desired) which is appended
       to the configured values of ``system_prefix``, ``user_prefix``, etc, to
