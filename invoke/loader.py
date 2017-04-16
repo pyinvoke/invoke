@@ -73,7 +73,8 @@ class FilesystemLoader(Loader):
     @property
     def start(self):
         # Lazily determine default CWD
-        return self._start or os.getcwd()
+        # Also get realpath, so we can use .. here
+        return os.path.realpath(self._start) if self._start else os.getcwd()
 
     def find(self, name):
         # Accumulate all parent directories
