@@ -19,9 +19,9 @@ exclude = ['*.yaml3' if sys.version_info[0] == 2 else '*.yaml2']
 # Frankenstein long_description: version-specific changelog note + README
 long_description = """
 To find out what's new in this version of Invoke, please see `the changelog
-<http://pyinvoke.org/changelog.html#%s>`_.
+<http://pyinvoke.org/changelog.html#{0}>`_.
 
-{0}
+{1}
 """.format(version, open('README.rst').read())
 
 setup(
