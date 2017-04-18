@@ -73,11 +73,11 @@ Changelog
   <invoke.exceptions.UnexpectedExit>` objects now have a more useful ``repr()``
   (and in the case of ``UnexpectedExit``, a distinct ``repr()`` from their
   preexisting ``str()``.)
-* :bug:`432` Tighten application of IO thread ``join`` timeouts (in `run
+* :bug:`432 major` Tighten application of IO thread ``join`` timeouts (in `run
   <invoke.runners.Runner.run>`) to only happen when :issue:`351` appears
   actually present. Otherwise, slow/overworked IO threads had a chance of being
   joined before truly reading all data from the subprocess' pipe.
-* :bug:`430` Fallback importing of PyYAML when Invoke has been installed
+* :bug:`430 major` Fallback importing of PyYAML when Invoke has been installed
   without its vendor directory, was still trying to import the vendorized
   module names (e.g. ``yaml2`` or ``yaml3`` instead of simply ``yaml``). This
   has been fixed, thanks to Athmane Madjoudj.
