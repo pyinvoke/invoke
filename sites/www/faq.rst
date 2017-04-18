@@ -6,6 +6,8 @@ Frequently asked questions
 General project questions
 =========================
 
+.. _invoke-split-from-fabric:
+
 Why was Invoke split off from the `Fabric <http://fabfile.org>`_ project?
 -------------------------------------------------------------------------
 
