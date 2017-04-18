@@ -2,6 +2,9 @@
 Changelog
 =========
 
+* :release:`0.16.1 <2017-04-18>`
+* :bug:`-` Fix a silly typo preventing proper rendering of the packaging
+  ``long_description`` (causing an effectively blank PyPI description.)
 * :release:`0.16.0 <2017-04-18>`
 * :feature:`232` Add support for ``.yml``-suffixed config files (in addition to
   ``.yaml``, ``.json`` and ``.py``.) Thanks to Matthias Lehmann for the
