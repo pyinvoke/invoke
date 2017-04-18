@@ -2,6 +2,8 @@
 Changelog
 =========
 
+* :bug:`-` Deal with the fact that PyPI's rendering of Restructured Text has no
+  idea about our fancy new use of Sphinx's doctest module. Sob.
 * :release:`0.16.1 <2017-04-18>`
 * :bug:`-` Fix a silly typo preventing proper rendering of the packaging
   ``long_description`` (causing an effectively blank PyPI description.)
