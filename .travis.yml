@@ -59,6 +59,8 @@ script:
   # I have this in my git pre-push hook, but contributors probably don't
   - flake8
 after_success:
+  # Test setup.py long_description - did we break pypi-style rst rendering?
+  - python setup.py check -r -s
   # Test distribution builds.
   # Have to use env var to override our normal config defaults. Ho hum.
   # Also specify the virtualenv we made for the 'alternate' Python version, for
