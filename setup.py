@@ -31,6 +31,7 @@ To find out what's new in this version of Invoke, please see `the changelog
 {1}
 """.format(version, text)
 
+
 setup(
     name='invoke',
     version=version,
