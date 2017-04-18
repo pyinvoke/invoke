@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :release:`0.16.0 <2017-04-18>`
 * :feature:`232` Add support for ``.yml``-suffixed config files (in addition to
   ``.yaml``, ``.json`` and ``.py``.) Thanks to Matthias Lehmann for the
   original request & Greg Back for an early patch.
