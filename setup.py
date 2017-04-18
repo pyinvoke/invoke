@@ -21,8 +21,8 @@ exclude = ['*.yaml3' if sys.version_info[0] == 2 else '*.yaml2']
 # (Have to take an axe to the README to remove all the doctest stuff, which
 # PyPI doesn't have enabled and barfs on...sob.)
 text = open('README.rst').read()
-text = re.sub(r'testsetup:: .+', '', text)
-text = re.sub(r'testcleanup:: .+', '', text)
+text = re.sub(r'testsetup:: .+', '::', text)
+text = re.sub(r'testcleanup:: .+', '::', text)
 text = re.sub(r'doctest:: .+', 'code-block::', text)
 long_description = """
 To find out what's new in this version of Invoke, please see `the changelog

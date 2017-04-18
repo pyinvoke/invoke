@@ -2,6 +2,8 @@
 Changelog
 =========
 
+* :release:`0.16.3 <2017-04-18>`
+* :bug:`-` Even more setup.py related tomfoolery.
 * :release:`0.16.2 <2017-04-18>`
 * :bug:`-` Deal with the fact that PyPI's rendering of Restructured Text has no
   idea about our fancy new use of Sphinx's doctest module. Sob.
