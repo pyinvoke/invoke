@@ -20,6 +20,7 @@ ns.configure({
     'packaging': {
         'sign': True,
         'wheel': True,
+        'check_desc': True,
         # Because of PyYAML's dual source nonsense =/
         'dual_wheels': True,
         'changelog_file': os.path.join(
