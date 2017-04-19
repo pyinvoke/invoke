@@ -58,7 +58,6 @@ script:
   - inv -l # Sanity check
   # I have this in my git pre-push hook, but contributors probably don't
   - flake8
-after_success:
   # Test setup.py long_description - did we break pypi-style rst rendering?
   - python setup.py check -r -s
   # Test distribution builds.
@@ -75,7 +74,7 @@ after_success:
   - pip uninstall -y invoke
   - "pip install tmp/dist/*.tar.gz"
   - inv -l
-after_script:
+after_success:
   # Upload coverage data to codecov
   - codecov
 notifications:
