@@ -65,8 +65,8 @@ script:
   - "INVOKE_PACKAGING_SIGN=0 inv release.publish --dry-run --directory=tmp --alt-python=alt_env/bin/python"
   # Interpreter-specific wheel
   - pip uninstall -y invoke
-  - "if [[ $TRAVIS_PYTHON_VERSION == 3* ]]; then pip install tmp/dist/*py3*.whl; fi"
-  - "if [[ $TRAVIS_PYTHON_VERSION == 2* ]]; then pip install tmp/dist/*py2*.whl; fi"
+  - "if [[ $TRAVIS_PYTHON_VERSION == 3* || $TRAVIS_PYTHON_VERSION == pypy3 ]]; then pip install tmp/dist/*py3*.whl; fi"
+  - "if [[ $TRAVIS_PYTHON_VERSION == 2* || $TRAVIS_PYTHON_VERSION == pypy ]]; then pip install tmp/dist/*py2*.whl; fi"
   - inv -l
   # Source distribution
   - pip uninstall -y invoke
