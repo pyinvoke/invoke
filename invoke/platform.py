@@ -150,13 +150,18 @@ def bytes_to_read(input_):
 
     .. note::
         If we are unable to tell (e.g. if ``input_`` isn't a true file
-        descriptor) we fall back to suggesting reading 1 byte only.
+        descriptor or isn't a valid TTY) we fall back to suggesting reading 1
+        byte only.
 
     :param input: Input stream object (file-like).
 
     :returns: `int` number of bytes to read.
     """
-    # TODO: probably also 'or WINDOWS'
-    if not has_fileno(input_):
-        return 1
-    return struct.unpack('h', fcntl.ioctl(input_, termios.FIONREAD, "  "))[0]
+    # NOTE: we have to check both possibilities here; situations exist where
+    # it's not a tty but has a fileno, or vice versa; neither is typically
+    # going to work re: ioctl().
+    # TODO: probably also 'and not WINDOWS'
+    if isatty(input_) and has_fileno(input_):
+        fionread = fcntl.ioctl(input_, termios.FIONREAD, "  ")
+        return struct.unpack('h', fionread)[0]
+    return 1
