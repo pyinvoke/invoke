@@ -5,10 +5,10 @@ if not WINDOWS:
     import fcntl
     import termios
 
-    from mock import patch
-    from spec import Spec, eq_
+    from mock import Mock, patch
+    from spec import Spec, eq_, skip
 
-    from invoke.platform import pty_size
+    from invoke.platform import pty_size, bytes_to_read
 
 
     class platform(Spec):
@@ -45,3 +45,33 @@ if not WINDOWS:
             ):
                 ioctl.side_effect = TypeError
                 eq_(pty_size(), (80, 24))
+
+        class bytes_to_read_:
+            @patch('invoke.platform.fcntl')
+            def returns_1_when_stream_lacks_fileno(self, fcntl):
+                # A fileno() that exists but returns a non-int is a quick way to
+                # fail util.has_fileno().
+                eq_(bytes_to_read(Mock(fileno=lambda: None)), 1)
+                assert not fcntl.ioctl.called
+
+            @patch('invoke.platform.fcntl')
+            def returns_1_when_stream_has_fileno_but_is_not_a_tty(self, fcntl):
+                # It blows up otherwise anyways (struct.unpack gets mad because
+                # result isn't a string of the right length) but let's make
+                # ioctl die similarly to the real world case we're testing for
+                # here (#425)
+                fcntl.ioctl.side_effect = IOError(
+                    "Operation not supported by device"
+                )
+                stream = Mock(
+                    isatty=lambda: False,
+                    fileno=lambda: 17, # arbitrary
+                )
+                eq_(bytes_to_read(stream), 1)
+                assert not fcntl.ioctl.called
+
+            def returns_FIONREAD_result_when_stream_is_a_tty(self):
+                skip()
+
+            def returns_1_on_windows(self):
+                skip()
