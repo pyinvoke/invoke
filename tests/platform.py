@@ -49,8 +49,8 @@ if not WINDOWS:
         class bytes_to_read_:
             @patch('invoke.platform.fcntl')
             def returns_1_when_stream_lacks_fileno(self, fcntl):
-                # A fileno() that exists but returns a non-int is a quick way to
-                # fail util.has_fileno().
+                # A fileno() that exists but returns a non-int is a quick way
+                # to fail util.has_fileno().
                 eq_(bytes_to_read(Mock(fileno=lambda: None)), 1)
                 assert not fcntl.ioctl.called
 
