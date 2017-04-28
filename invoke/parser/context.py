@@ -164,6 +164,7 @@ class ParserContext(object):
         Return 2-tuple of ``(flag-spec, help-string)`` for given ``flag``.
         """
         # Obtain arg obj
+        flag = flag.replace('_', '-')
         if flag not in self.flags:
             err = "{0!r} is not a valid flag for this context! Valid flags are: {1!r}" # noqa
             raise ValueError(err.format(flag, self.flags.keys()))
