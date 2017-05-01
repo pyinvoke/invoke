@@ -38,12 +38,8 @@ before_script:
   # Make sudo user for running tests (as tests care about sudo)
   - inv travis.make_sudouser
 script:
-  # Run unit and integration tests, generating coverage report (skipping html).
-  # NOTE: Using the above-created passworded sudo-capable user so that
-  # sudo-related integration tests work as expected. (Otherwise, sudo prompt
-  # response will not be properly tested!)
-  # NOTE: This command will fail if the tests fail.
-  - "sudo -u sudouser bash -c \"source $VIRTUAL_ENV/bin/activate && inv coverage --no-html\""
+  # Execute full test suite + coverage, as the new sudo-capable user
+  - inv travis.sudo_coverage
   # Websites build OK? (Not on PyPy3, Sphinx is all "who the hell are you?" =/
   - "[[ $TRAVIS_PYTHON_VERSION != 'pypy3' ]] && inv sites"
   # Doctests in websites OK?
