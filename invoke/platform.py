@@ -160,8 +160,7 @@ def bytes_to_read(input_):
     # NOTE: we have to check both possibilities here; situations exist where
     # it's not a tty but has a fileno, or vice versa; neither is typically
     # going to work re: ioctl().
-    # TODO: probably also 'and not WINDOWS'
-    if isatty(input_) and has_fileno(input_):
+    if not WINDOWS and isatty(input_) and has_fileno(input_):
         fionread = fcntl.ioctl(input_, termios.FIONREAD, "  ")
         return struct.unpack('h', fionread)[0]
     return 1
