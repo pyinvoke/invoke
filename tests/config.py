@@ -93,6 +93,7 @@ class Config_(IntegrationSpec):
                     'sudo': {
                         'password': None,
                         'prompt': '[sudo] password: ',
+                        'user': None,
                     },
                     'tasks': {
                         'dedupe': True,

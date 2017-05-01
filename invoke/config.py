@@ -458,6 +458,7 @@ class Config(DataProxy):
             'sudo': {
                 'prompt': "[sudo] password: ",
                 'password': None,
+                'user': None,
             },
             'tasks': {
                 'dedupe': True,
