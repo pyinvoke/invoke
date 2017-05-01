@@ -3,6 +3,7 @@ import os
 from invocations.docs import docs, www, sites, watch_docs
 from invocations.testing import test, coverage, integration, watch_tests
 from invocations.packaging import vendorize, release
+from invocations import travis
 
 from invoke import Collection
 from invoke.util import LOG_FORMAT
@@ -10,7 +11,7 @@ from invoke.util import LOG_FORMAT
 
 ns = Collection(
     test, coverage, integration, vendorize, release, www, docs, sites,
-    watch_docs, watch_tests
+    watch_docs, watch_tests, travis,
 )
 ns.configure({
     'tests': {
@@ -27,5 +28,13 @@ ns.configure({
             www.configuration()['sphinx']['source'],
             'changelog.rst',
         ),
+    },
+    # TODO: perhaps move this into a tertiary, non automatically loaded, conf
+    # file so that both this & the code under test can reference it? Meh.
+    'travis': {
+        'sudo': {
+            'user': 'sudouser',
+            'password': 'mypass',
+        },
     },
 })

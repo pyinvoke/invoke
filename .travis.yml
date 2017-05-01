@@ -20,6 +20,8 @@ matrix:
     - python: pypy3
   fast_finish: true
 install:
+  # Master invocations for parity
+  - "pip install -e git+https://github.com/pyinvoke/invocations#egg=invocations"
   # Pre-requirements sanity test (again, resembles pure, non-dev install
   # environment.) Avoids e.g. spec's 'six' from gumming up our attempts to
   # import our vendorized 'six'.
@@ -33,14 +35,8 @@ install:
   - "virtualenv alt_env --python=$([[ $TRAVIS_PYTHON_VERSION == 2* ]] && echo python3 || echo /usr/bin/python)"
   - alt_env/bin/pip install wheel
 before_script:
-  # Create passworded sudoable user for sudo autoresponse testing. Put it in
-  # the Travis user's group so it can read /home/travis for virtualenv etc.
-  - sudo useradd sudouser -G travis
-  - "echo sudouser:mypass | sudo chpasswd"
-  - "sudo sh -c \"echo 'sudouser   ALL=(ALL:ALL) PASSWD:ALL' > /etc/sudoers.d/passworded\""
-  # Make sure sudouser can write to travis' homedir (used for some config
-  # tests)
-  - sudo chmod g+w /home/travis
+  # Make sudo user for running tests (as tests care about sudo)
+  - inv travis.make_sudouser
 script:
   # Run unit and integration tests, generating coverage report (skipping html).
   # NOTE: Using the above-created passworded sudo-capable user so that
