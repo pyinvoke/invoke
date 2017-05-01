@@ -2,6 +2,9 @@
 Changelog
 =========
 
+* :bug:`440` Make sure to skip a call to ``struct``/``ioctl`` on Windows
+  platforms; otherwise certain situations inside ``run`` calls would trigger
+  import errors. Thanks to ``@chrisc11`` for the report.
 * :release:`0.16.3 <2017-04-18>`
 * :bug:`-` Even more setup.py related tomfoolery.
 * :release:`0.16.2 <2017-04-18>`

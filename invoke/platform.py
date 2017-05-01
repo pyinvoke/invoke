@@ -156,7 +156,6 @@ def bytes_to_read(input_):
 
     :returns: `int` number of bytes to read.
     """
-    # TODO: probably also 'or WINDOWS'
-    if not has_fileno(input_):
+    if WINDOWS or not has_fileno(input_):
         return 1
     return struct.unpack('h', fcntl.ioctl(input_, termios.FIONREAD, "  "))[0]
