@@ -66,6 +66,40 @@ class Config_(IntegrationSpec):
                 c.load_shell_env()
                 eq_(c.foo, 'bar')
 
+    class global_defaults:
+        def basic_settings(self):
+            # Just a catchall for what the baseline config settings should
+            # be...for some reason we're not actually capturing all of these
+            # reliably (even if their defaults are often implied by the tests
+            # which override them, e.g. runner tests around warn=True, etc).
+            eq_(
+                Config.global_defaults(), {
+                    'run': {
+                        'echo': False,
+                        'echo_stdin': None,
+                        'encoding': None,
+                        'env': {},
+                        'err_stream': None,
+                        'fallback': True,
+                        'hide': None,
+                        'in_stream': None,
+                        'out_stream': None,
+                        'pty': False,
+                        'replace_env': False,
+                        'shell': '/bin/bash',
+                        'warn': False,
+                        'watchers': [],
+                    },
+                    'sudo': {
+                        'password': None,
+                        'prompt': '[sudo] password: ',
+                    },
+                    'tasks': {
+                        'dedupe': True,
+                    },
+                },
+            )
+
     class init:
         "__init__"
 
