@@ -2,6 +2,9 @@
 Changelog
 =========
 
+* :feature:`-` Add a ``user`` kwarg & config parameter to
+  `Context.sudo <invoke.context.Context.sudo>`, which corresponds roughly to
+  ``sudo -u <user> <command>``.
 * :bug:`440` Make sure to skip a call to ``struct``/``ioctl`` on Windows
   platforms; otherwise certain situations inside ``run`` calls would trigger
   import errors. Thanks to ``@chrisc11`` for the report.
