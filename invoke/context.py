@@ -81,6 +81,8 @@ class Context(DataProxy):
         """
         Execute a shell command, via ``sudo``.
 
+        **Basics**
+
         In general, this method is identical to `run`, but adds a handful of
         convenient behaviors around invoking the ``sudo`` program. It doesn't
         do anything users could not do themselves by wrapping `run`, but the
@@ -99,15 +101,43 @@ class Context(DataProxy):
               configured), and raises `.AuthFailure` if so.
 
         * Builds a ``sudo`` command string using the supplied ``command``
-          argument prefixed by the ``sudo.prefix`` configuration setting;
+          argument, prefixed by various flags (see below);
         * Executes that command via a call to `run`, returning the result.
 
-        As with `run`, these additional behaviors may be configured both via
-        the ``run`` tree of configuration settings (like ``run.echo``) or via
-        keyword arguments, which will override the configuration system.
+        **Flags used**
+
+        ``sudo`` flags used under the hood include:
+
+        - ``-S`` to allow auto-responding of password via stdin;
+        - ``-p <prompt>`` to explicitly state the prompt to use, so we can be
+          sure our auto-responder knows what to look for;
+        - ``-u <user>`` if ``user`` is not ``None``, to execute the command as
+          a user other than ``root``;
+        - When ``-u`` is present, ``-H`` is also added, to ensure the
+          subprocess has the requested user's ``$HOME`` set properly.
+
+        **Configuring behavior**
+
+        There are a couple of ways to change how this method behaves:
+
+        - Because it wraps `run`, it honors all `run` config parameters and
+          keyword arguments, in the same way that `run` does.
+
+            - Thus, invocations such as ``c.sudo('command', echo=True)`` are
+              possible, and if a config layer (such as a config file or env
+              var) specifies that e.g. ``run.warn = True``, that too will take
+              effect under `sudo`.
+
+        - `sudo` has its own set of keyword arguments (see below) and they are
+          also all controllable via the configuration system, under the
+          ``sudo.*`` tree.
+
+            - Thus you could, for example, pre-set a sudo user in a config
+              file; such as an ``invoke.json`` containing ``{"sudo": {"user":
+              "someuser"}}``.
 
         :param str password: Runtime override for ``sudo.password``.
-        :param str prefix: Runtime override for ``sudo.prefix``.
+        :param str user: Runtime override for ``sudo.user``.
         """
         prompt = self.config.sudo.prompt
         password = kwargs.pop('password', self.config.sudo.password)
