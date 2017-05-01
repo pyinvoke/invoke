@@ -141,6 +141,7 @@ class Context(DataProxy):
         """
         prompt = self.config.sudo.prompt
         password = kwargs.pop('password', self.config.sudo.password)
+        user = kwargs.pop('user', self.config.sudo.user)
         # TODO: allow subclassing for 'get the password' so users who REALLY
         # want lazy runtime prompting can have it easily implemented.
         # TODO: want to print a "cleaner" echo with just 'sudo <command>'; but
@@ -153,7 +154,10 @@ class Context(DataProxy):
         # exactly (display of actual, real full sudo command w/ -S and -p), in
         # terms of API/config? Impl is easy, just go back to passing echo
         # through to 'run'...
-        cmd_str = "sudo -S -p '{0}' {1}".format(prompt, command)
+        user_flags = ""
+        if user is not None:
+            user_flags = "-H -u {0} ".format(user)
+        cmd_str = "sudo -S -p '{0}' {1}{2}".format(prompt, user_flags, command)
         watcher = FailingResponder(
             pattern=re.escape(prompt),
             response="{0}\n".format(password),
