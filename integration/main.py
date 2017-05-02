@@ -142,13 +142,13 @@ class Main(Spec):
         def pty_size_is_realistic(self):
             # When we don't explicitly set pty size, 'stty size' sees it as
             # 0x0.
-            # When we do set it, it should be some non 0x0, non 80x24 (the
-            # default) value. (yes, this means it fails if you really do have
-            # an 80x24 terminal. but who does that?)
+            # When we do set it, it should be some non 0x0 value, ideally.
+            # (It'd be nice to also assert that it's not 80x24, which is
+            # another common headless default, but this does not play well with
+            # CI much of the time, so whatever.)
             size = run('stty size', hide=True, pty=True).stdout.strip()
             assert size != ""
             assert size != "0 0"
-            assert size != "24 80"
 
     class parsing:
         def false_as_optional_arg_default_value_works_okay(self):
