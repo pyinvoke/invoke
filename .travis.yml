@@ -46,20 +46,8 @@ script:
   - inv travis.test_installation --package=invoke --sanity="inv --list"
   # I have this in my git pre-push hook, but contributors probably don't
   - flake8
-  # Test distribution builds.
-  # Have to use env var to override our normal config defaults. Ho hum.
-  # Also specify the virtualenv we made for the 'alternate' Python version, for
-  # the dual wheel build step.
-  - "INVOKE_PACKAGING_SIGN=0 inv release.publish --dry-run --directory=tmp --alt-python=alt_env/bin/python"
-  # Interpreter-specific wheel
-  - pip uninstall -y invoke
-  - "if [[ $TRAVIS_PYTHON_VERSION == 3* || $TRAVIS_PYTHON_VERSION == pypy3 ]]; then pip install tmp/dist/*py3*.whl; fi"
-  - "if [[ $TRAVIS_PYTHON_VERSION == 2* || $TRAVIS_PYTHON_VERSION == pypy ]]; then pip install tmp/dist/*py2*.whl; fi"
-  - inv -l
-  # Source distribution
-  - pip uninstall -y invoke
-  - "pip install tmp/dist/*.tar.gz"
-  - inv -l
+  # Test distribution builds, including our custom dual wheel BS
+  - inv travis.test_packaging --package=invoke --sanity="inv -l" --alt-python=alt_env/bin/python
 after_success:
   # Upload coverage data to codecov
   - codecov
