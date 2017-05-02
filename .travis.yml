@@ -20,8 +20,6 @@ matrix:
     - python: pypy3
   fast_finish: true
 install:
-  # Master invocations for parity
-  - "pip install -e git+https://github.com/pyinvoke/invocations#egg=invocations"
   # Pre-requirements sanity test (again, resembles pure, non-dev install
   # environment.) Avoids e.g. spec's 'six' from gumming up our attempts to
   # import our vendorized 'six'.
