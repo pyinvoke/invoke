@@ -2,7 +2,7 @@
 Changelog
 =========
 
-* :bug:`425` Fix ``Inappropriate ioctl for device`` errors (usually
+* :bug:`425 major` Fix ``Inappropriate ioctl for device`` errors (usually
   ``OSError``) when running Invoke without a tty-attached stdin (i.e. when run
   under 'headless' continuous integration systems or simply as e.g. ``inv
   sometask < /dev/null`` (redirected stdin.) Thanks to Javier Domingo Cansino
@@ -10,7 +10,7 @@ Changelog
 * :feature:`-` Add a ``user`` kwarg & config parameter to
   `Context.sudo <invoke.context.Context.sudo>`, which corresponds roughly to
   ``sudo -u <user> <command>``.
-* :bug:`440` Make sure to skip a call to ``struct``/``ioctl`` on Windows
+* :bug:`440 major` Make sure to skip a call to ``struct``/``ioctl`` on Windows
   platforms; otherwise certain situations inside ``run`` calls would trigger
   import errors. Thanks to ``@chrisc11`` for the report.
 * :release:`0.16.3 <2017-04-18>`
