@@ -2,6 +2,11 @@
 Changelog
 =========
 
+* :bug:`425` Fix ``Inappropriate ioctl for device`` errors (usually
+  ``OSError``) when running Invoke without a tty-attached stdin (i.e. when run
+  under 'headless' continuous integration systems or simply as e.g. ``inv
+  sometask < /dev/null`` (redirected stdin.) Thanks to Javier Domingo Cansino
+  for the report & Tuukka Mustonen for troubleshooting assistance.
 * :feature:`-` Add a ``user`` kwarg & config parameter to
   `Context.sudo <invoke.context.Context.sudo>`, which corresponds roughly to
   ``sudo -u <user> <command>``.
