@@ -6,6 +6,7 @@ logic-flow interruptions.
 """
 
 from contextlib import contextmanager
+import os
 import select
 import sys
 
@@ -105,6 +106,28 @@ def _win_pty_size():
         return (None, None)
 
 
+def stdin_is_foregrounded_tty(stream):
+    """
+    Detect if given stdin ``stream`` seems to be in the foreground of a TTY.
+
+    Specifically, compares the current Python process group ID to that of the
+    stream's file descriptor to see if they match; if they do not match, it is
+    likely that the process has been placed in the background.
+
+    This is used as a test to determine whether we should manipulate an active
+    stdin so it runs in a character-buffered mode; touching the terminal in
+    this way when the process is backgrounded, causes most shells to pause
+    execution.
+
+    .. note::
+        Processes that aren't attached to a terminal to begin with, will always
+        fail this test, as it starts with "do you have a real ``fileno``?".
+    """
+    if not has_fileno(stream):
+        return False
+    return os.getpgrp() == os.tcgetpgrp(stream.fileno())
+
+
 @contextmanager
 def character_buffered(stream):
     """
@@ -112,7 +135,7 @@ def character_buffered(stream):
 
     Only applies to Unix-based systems; on Windows this is a no-op.
     """
-    if WINDOWS or not isatty(stream):
+    if WINDOWS or not isatty(stream) or not stdin_is_foregrounded_tty(stream):
         yield
     else:
         old_settings = termios.tcgetattr(stream)
