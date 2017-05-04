@@ -434,6 +434,11 @@ class Config(DataProxy):
             # - doing it at env var load time seems a bit silly given the
             # existing support for at-startup testing for INVOKE_DEBUG
             # 'debug': False,
+            # TODO: I feel like we want these to be more consistent re: default
+            # values stored here vs 'stored' as logic where they are
+            # referenced, there are probably some bits that are all "if None ->
+            # default" that could go here. Alternately, make _more_ of these
+            # default to None?
             'run': {
                 'warn': False,
                 'hide': None,
@@ -453,6 +458,7 @@ class Config(DataProxy):
             'sudo': {
                 'prompt': "[sudo] password: ",
                 'password': None,
+                'user': None,
             },
             'tasks': {
                 'dedupe': True,

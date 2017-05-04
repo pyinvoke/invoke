@@ -117,6 +117,30 @@ class Context_(Spec):
             ok_(runner.run.called, "sudo() never called run()!")
             eq_(runner.run.call_args[0][0], cmd)
 
+        @patch('invoke.context.Local')
+        def optional_user_argument_adds_u_and_H_flags(self, Local):
+            runner = Local.return_value
+            Context().sudo('whoami', user='rando')
+            cmd = "sudo -S -p '[sudo] password: ' -H -u rando whoami"
+            ok_(runner.run.called, "sudo() never called run()!")
+            eq_(runner.run.call_args[0][0], cmd)
+
+        @patch('invoke.context.Local')
+        def honors_config_for_user_value(self, Local):
+            runner = Local.return_value
+            config = Config(overrides={'sudo': {'user': 'rando'}})
+            Context(config=config).sudo('whoami')
+            cmd = "sudo -S -p '[sudo] password: ' -H -u rando whoami"
+            eq_(runner.run.call_args[0][0], cmd)
+
+        @patch('invoke.context.Local')
+        def user_kwarg_wins_over_config(self, Local):
+            runner = Local.return_value
+            config = Config(overrides={'sudo': {'user': 'rando'}})
+            Context(config=config).sudo('whoami', user='calrissian')
+            cmd = "sudo -S -p '[sudo] password: ' -H -u calrissian whoami"
+            eq_(runner.run.call_args[0][0], cmd)
+
         @trap
         @mock_subprocess()
         def echo_hides_extra_sudo_flags(self):
