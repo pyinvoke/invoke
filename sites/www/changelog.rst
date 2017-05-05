@@ -2,6 +2,10 @@
 Changelog
 =========
 
+* :bug:`439 major` Avoid placing stdin into bytewise read mode when it looks
+  like Invoke has been placed in the background by a shell's job control
+  system; doing so was causing the shell to pause the Invoke process (e.g. with
+  a message like ``suspended (tty output)``.) Reported by Tuukka Mustonen.
 * :bug:`425 major` Fix ``Inappropriate ioctl for device`` errors (usually
   ``OSError``) when running Invoke without a tty-attached stdin (i.e. when run
   under 'headless' continuous integration systems or simply as e.g. ``inv
