@@ -465,52 +465,6 @@ class Runner_(Spec):
             # method?
             mock_debug.assert_called_with("Encountered exception OhNoz('oh god why',) in thread for 'handle_stdin'") # noqa
 
-        @trap
-        @skip_if_windows
-        @patch('invoke.runners.sys.stdin')
-        @patch('invoke.platform.fcntl.ioctl')
-        @patch('invoke.platform.os')
-        @patch('invoke.platform.termios')
-        @patch('invoke.platform.tty')
-        @patch('invoke.platform.select')
-        # NOTE: the no-fileno edition is handled at top of this local test
-        # class, in the base case test.
-        def reads_FIONREAD_bytes_from_stdin_when_fileno(
-            self, select, tty, termios, mock_os, ioctl, stdin
-        ):
-            # Set stdin up as a file-like buffer which passes has_fileno
-            stdin.fileno.return_value = 17 # arbitrary
-            stdin_data = list("boo!")
-            def fakeread(n):
-                # Why is there no slice version of pop()?
-                data = stdin_data[:n]
-                del stdin_data[:n]
-                return ''.join(data)
-            stdin.read.side_effect = fakeread
-            # Without mocking this, we'll always get errors checking the above
-            # bogus fileno()
-            mock_os.tcgetpgrp.return_value = None
-            # Ensure select() only spits back stdin one time, despite there
-            # being multiple bytes to read (this at least partly fakes behavior
-            # from issue #58)
-            select.select.side_effect = chain(
-                [([stdin], [], [])],
-                repeat(([], [], [])),
-            )
-            # Have ioctl yield our multiple number of bytes when called with
-            # FIONREAD
-            def fake_ioctl(fd, cmd, buf):
-                # This works since each mocked attr will still be its own mock
-                # object with a distinct 'is' identity.
-                if cmd is termios.FIONREAD:
-                    return struct.pack('h', len(stdin_data))
-            ioctl.side_effect = fake_ioctl
-            # Set up our runner as one w/ mocked stdin writing (simplest way to
-            # assert how the reads & writes are happening)
-            klass = self._mock_stdin_writer()
-            self._runner(klass=klass).run(_)
-            klass.write_proc_stdin.assert_called_once_with("boo!")
-
     class failure_handling:
         @raises(UnexpectedExit)
         def fast_failures(self):
@@ -1075,6 +1029,52 @@ stderr 25
                 settings={'run': {'echo_stdin': False}},
                 expect_mirroring=False,
             )
+
+        @trap
+        @skip_if_windows
+        @patch('invoke.runners.sys.stdin')
+        @patch('invoke.platform.fcntl.ioctl')
+        @patch('invoke.platform.os')
+        @patch('invoke.platform.termios')
+        @patch('invoke.platform.tty')
+        @patch('invoke.platform.select')
+        # NOTE: the no-fileno edition is handled at top of this local test
+        # class, in the base case test.
+        def reads_FIONREAD_bytes_from_stdin_when_fileno(
+            self, select, tty, termios, mock_os, ioctl, stdin
+        ):
+            # Set stdin up as a file-like buffer which passes has_fileno
+            stdin.fileno.return_value = 17 # arbitrary
+            stdin_data = list("boo!")
+            def fakeread(n):
+                # Why is there no slice version of pop()?
+                data = stdin_data[:n]
+                del stdin_data[:n]
+                return ''.join(data)
+            stdin.read.side_effect = fakeread
+            # Without mocking this, we'll always get errors checking the above
+            # bogus fileno()
+            mock_os.tcgetpgrp.return_value = None
+            # Ensure select() only spits back stdin one time, despite there
+            # being multiple bytes to read (this at least partly fakes behavior
+            # from issue #58)
+            select.select.side_effect = chain(
+                [([stdin], [], [])],
+                repeat(([], [], [])),
+            )
+            # Have ioctl yield our multiple number of bytes when called with
+            # FIONREAD
+            def fake_ioctl(fd, cmd, buf):
+                # This works since each mocked attr will still be its own mock
+                # object with a distinct 'is' identity.
+                if cmd is termios.FIONREAD:
+                    return struct.pack('h', len(stdin_data))
+            ioctl.side_effect = fake_ioctl
+            # Set up our runner as one w/ mocked stdin writing (simplest way to
+            # assert how the reads & writes are happening)
+            klass = self._mock_stdin_writer()
+            self._runner(klass=klass).run(_)
+            klass.write_proc_stdin.assert_called_once_with("boo!")
 
     class character_buffered_stdin:
         @skip_if_windows
