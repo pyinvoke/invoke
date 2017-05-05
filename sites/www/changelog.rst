@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :release:`0.17.0 <2017-05-05>`
 * :bug:`439 major` Avoid placing stdin into bytewise read mode when it looks
   like Invoke has been placed in the background by a shell's job control
   system; doing so was causing the shell to pause the Invoke process (e.g. with
