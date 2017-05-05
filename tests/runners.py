@@ -1088,7 +1088,7 @@ stderr 25
         @patch('invoke.platform.tty')
         def setcbreak_not_called_on_non_tty_stdins(self, mock_tty):
             self._run(_, in_stream=StringIO())
-            eq_(mock_tty.setcbreak.call_args_list, [])
+            ok_(not mock_tty.setcbreak.called)
 
         @skip_if_windows
         @patch('invoke.platform.tty') # stub
