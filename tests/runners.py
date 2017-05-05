@@ -1091,6 +1091,20 @@ stderr 25
             ok_(not mock_tty.setcbreak.called)
 
         @skip_if_windows
+        @patch('invoke.platform.tty')
+        @patch('invoke.platform.os')
+        def setcbreak_not_called_if_process_not_foregrounded(
+            self, mock_os, mock_tty,
+        ):
+            # Re issue #439.
+            mock_os.getpgrp.return_value = 1337
+            mock_os.tcgetpgrp.return_value = 1338
+            self._run(_)
+            ok_(not mock_tty.setcbreak.called)
+            # Sanity
+            mock_os.tcgetpgrp.assert_called_once_with(sys.stdin.fileno())
+
+        @skip_if_windows
         @patch('invoke.platform.tty') # stub
         @patch('invoke.platform.termios')
         def tty_stdins_have_settings_restored_by_default(
