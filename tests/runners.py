@@ -469,13 +469,14 @@ class Runner_(Spec):
         @skip_if_windows
         @patch('invoke.runners.sys.stdin')
         @patch('invoke.platform.fcntl.ioctl')
+        @patch('invoke.platform.os')
         @patch('invoke.platform.termios')
         @patch('invoke.platform.tty')
         @patch('invoke.platform.select')
         # NOTE: the no-fileno edition is handled at top of this local test
         # class, in the base case test.
         def reads_FIONREAD_bytes_from_stdin_when_fileno(
-            self, select, tty, termios, ioctl, stdin
+            self, select, tty, termios, mock_os, ioctl, stdin
         ):
             # Set stdin up as a file-like buffer which passes has_fileno
             stdin.fileno.return_value = 17 # arbitrary
@@ -486,6 +487,9 @@ class Runner_(Spec):
                 del stdin_data[:n]
                 return ''.join(data)
             stdin.read.side_effect = fakeread
+            # Without mocking this, we'll always get errors checking the above
+            # bogus fileno()
+            mock_os.tcgetpgrp.return_value = None
             # Ensure select() only spits back stdin one time, despite there
             # being multiple bytes to read (this at least partly fakes behavior
             # from issue #58)
