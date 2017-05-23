@@ -114,7 +114,7 @@ class Context_(Spec):
             Context().sudo('whoami')
             # NOTE: implicitly tests default sudo.prompt conf value
             cmd = "sudo -S -p '[sudo] password: ' whoami"
-            ok_(runner.run.called, "sudo() never called run()!")
+            ok_(runner.run.called, "sudo() never called runner.run()!")
             eq_(runner.run.call_args[0][0], cmd)
 
         @patch('invoke.context.Local')
@@ -122,7 +122,7 @@ class Context_(Spec):
             runner = Local.return_value
             Context().sudo('whoami', user='rando')
             cmd = "sudo -S -p '[sudo] password: ' -H -u rando whoami"
-            ok_(runner.run.called, "sudo() never called run()!")
+            ok_(runner.run.called, "sudo() never called runner.run()!")
             eq_(runner.run.call_args[0][0], cmd)
 
         @patch('invoke.context.Local')
@@ -295,7 +295,7 @@ class Context_(Spec):
             Context().sudo(
                 'whoami', echo=True, warn=False, hide=True, encoding='ascii'
             )
-            ok_(runner.run.called, "sudo() never called run()!")
+            ok_(runner.run.called, "sudo() never called runner.run()!")
             kwargs = runner.run.call_args[1]
             eq_(kwargs['echo'], True)
             eq_(kwargs['warn'], False)

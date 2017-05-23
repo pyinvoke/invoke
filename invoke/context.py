@@ -63,6 +63,11 @@ class Context(DataProxy):
         # runtime.
         self._set(_config=value)
 
+    @property
+    def _runner(self):
+        runner_class = self.config.get('runner', Local)
+        return runner_class(context=self)
+
     def run(self, command, **kwargs):
         """
         Execute a local shell command, honoring config options.
@@ -74,8 +79,7 @@ class Context(DataProxy):
         See `.Runner.run` for details on ``command`` and the available keyword
         arguments.
         """
-        runner_class = self.config.get('runner', Local)
-        return runner_class(context=self).run(command, **kwargs)
+        return self._runner.run(command, **kwargs)
 
     def sudo(self, command, **kwargs):
         """
@@ -173,7 +177,7 @@ class Context(DataProxy):
         watchers = kwargs.pop('watchers', list(self.config.run.watchers))
         watchers.append(watcher)
         try:
-            return self.run(cmd_str, watchers=watchers, **kwargs)
+            return self._runner.run(cmd_str, watchers=watchers, **kwargs)
         except Failure as failure:
             # Transmute failures driven by our FailingResponder, into auth
             # failures - the command never even ran.
