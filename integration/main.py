@@ -2,7 +2,7 @@ import io
 import os
 import sys
 
-from spec import Spec, trap, eq_, ok_
+from spec import Spec, trap, eq_, ok_, skip
 
 from invoke.vendor import six
 
@@ -76,6 +76,17 @@ class Main(Spec):
                     os.unlink(path)
                 except OSError:
                     pass
+
+        @trap
+        def invocable_via_python_dash_m(self):
+            # TODO: replace with pytest marker after pytest port
+            if sys.version_info < (2, 7):
+                skip()
+            _output_eq(
+                "python -m invoke print_name --name mainline",
+                "mainline\n",
+            )
+
 
     class funky_characters_in_stdout:
         def setup(self):
