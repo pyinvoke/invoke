@@ -104,6 +104,54 @@ class Context_(Spec):
             self.c.biz.update(otherbaz='otherboz')
             eq_(self.c.biz.otherbaz, 'otherboz')
 
+    class prefix:
+        def setup(self):
+            self.escaped_prompt = re.escape(Config().sudo.prompt)
+
+        @patch('invoke.context.Local')
+        def prefixes_should_apply_to_run(self, Local):
+            runner = Local.return_value
+            ctx = Context()
+            with ctx.prefix('cd foo'):
+                ctx.run('whoami')
+
+            cmd = "cd foo && whoami"
+            ok_(runner.run.called, "run() never called runner.run()!")
+            eq_(runner.run.call_args[0][0], cmd)
+
+        @patch('invoke.context.Local')
+        def prefixes_should_apply_to_sudo(self, Local):
+            runner = Local.return_value
+            ctx = Context()
+            with ctx.prefix('cd foo'):
+                ctx.sudo('whoami')
+
+            cmd = "sudo -S -p '[sudo] password: ' cd foo && whoami"
+            ok_(runner.run.called, "sudo() never called runner.run()!")
+            eq_(runner.run.call_args[0][0], cmd)
+
+        @patch('invoke.context.Local')
+        def nesting_should_retain_order(self, Local):
+            runner = Local.return_value
+            ctx = Context()
+            with ctx.prefix('cd foo'):
+                with ctx.prefix('cd bar'):
+                    ctx.run('whoami')
+                    cmd = "cd foo && cd bar && whoami"
+                    ok_(runner.run.called, "run() never called runner.run()!")
+                    eq_(runner.run.call_args[0][0], cmd)
+
+                ctx.run('whoami')
+                cmd = "cd foo && whoami"
+                ok_(runner.run.called, "run() never called runner.run()!")
+                eq_(runner.run.call_args[0][0], cmd)
+
+            # also test that prefixes do not persist
+            ctx.run('whoami')
+            cmd = "whoami"
+            ok_(runner.run.called, "run() never called runner.run()!")
+            eq_(runner.run.call_args[0][0], cmd)
+
     class sudo:
         def setup(self):
             self.escaped_prompt = re.escape(Config().sudo.prompt)

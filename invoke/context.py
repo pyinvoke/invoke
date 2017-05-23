@@ -1,4 +1,5 @@
 import re
+from contextlib import contextmanager
 
 try:
     from invoke.vendor.six import raise_from, iteritems
@@ -47,6 +48,7 @@ class Context(DataProxy):
         #: ``ctx.foo`` returns the same value as ``ctx.config['foo']``.
         config = config if config is not None else Config()
         self._set(_config=config)
+        self._set(command_prefixes=list())
 
     @property
     def config(self):
@@ -79,6 +81,7 @@ class Context(DataProxy):
         See `.Runner.run` for details on ``command`` and the available keyword
         arguments.
         """
+        command = self._prefix_commands(command)
         return self._runner.run(command, **kwargs)
 
     def sudo(self, command, **kwargs):
@@ -161,6 +164,7 @@ class Context(DataProxy):
         user_flags = ""
         if user is not None:
             user_flags = "-H -u {0} ".format(user)
+        command = self._prefix_commands(command)
         cmd_str = "sudo -S -p '{0}' {1}{2}".format(prompt, user_flags, command)
         watcher = FailingResponder(
             pattern=re.escape(prompt),
@@ -195,6 +199,67 @@ class Context(DataProxy):
             # Reraise for any other error so it bubbles up normally.
             else:
                 raise
+
+    def _prefix_commands(self, command):
+        """
+        Prefixes ``command`` with all prefixes found in ``command_prefixes``.
+
+        ``command_prefixes`` is a list of strings which is modified by the
+        `prefix` context manager.
+        """
+        return ' && '.join(self.command_prefixes + [command])
+
+    @contextmanager
+    def prefix(self, command):
+        """
+        Prefix all nested `run`/`sudo` commands with given command plus ``&&``.
+
+        Most of the time, you'll want to be using this alongside a shell script
+        which alters shell state, such as ones which export or alter shell
+        environment variables.
+
+        For example, one of the most common uses of this tool is with the
+        ``workon`` command from `virtualenvwrapper
+        <https://virtualenvwrapper.readthedocs.io/en/latest/>`_::
+
+            with ctx.prefix('workon myvenv'):
+                ctx.run('./manage.py migrate')
+
+        In the above snippet, the actual shell command run would be this::
+
+            $ workon myvenv && ./manage.py migrate
+
+        This context manager is compatible with `cd`, so if your virtualenv
+        doesn't ``cd`` in its ``postactivate`` script, you could do the
+        following::
+
+            with ctx.cd('/path/to/app'):
+                with ctx.prefix('workon myvenv'):
+                    ctx.run('./manage.py migrate')
+                    ctx.run('./manage.py loaddata fixture')
+
+        Which would result in executions like so::
+
+            $ cd /path/to/app && workon myvenv && ./manage.py migrate
+            $ cd /path/to/app && workon myvenv && ./manage.py loaddata fixture
+
+        Finally, as alluded to above, `prefix` may be nested if desired, e.g.::
+
+            with ctx.prefix('workon myenv'):
+                ctx.run('ls')
+                with ctx.prefix('source /some/script'):
+                    ctx.run('touch a_file')
+
+        The result::
+
+            $ workon myenv && ls
+            $ workon myenv && source /some/script && touch a_file
+
+        Contrived, but hopefully illustrative.
+        """
+        self.command_prefixes.append(command)
+        yield
+        self.command_prefixes.pop()
 
 
 class MockContext(Context):
