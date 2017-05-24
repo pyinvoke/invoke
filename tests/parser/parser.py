@@ -365,10 +365,14 @@ class Parser_(Spec):
                 eq_(result[0].args.help.value, 'mytask')
                 ok_('help' not in result[1].args)
 
-            def task_has_help_throws_error(self):
-                # def mytask(c, help):
-                # inv mytask --help
-                skip()
+            # TODO: ideally we want an explosion, but for now, overriding
+            # happens naturally and is not the worst thing ever
+            def per_task_flag_wins_over_core_flag(self):
+                task1 = Context('mytask', args=[Argument('help')])
+                init = Context(args=[Argument('help', optional=True)])
+                parser = Parser(initial=init, contexts=[task1])
+                result = parser.parse_argv(['mytask', '--help', 'foo'])
+                eq_(result[1].args.help.value, 'foo')
 
             def task_has_no_h_shortflag_shows_per_task_help(self):
                 # def mytask(c):
