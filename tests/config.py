@@ -11,7 +11,7 @@ from invoke.exceptions import (
 )
 from invoke.vendor import six
 
-from _util import IntegrationSpec
+from _util import IntegrationSpec, skip_if_windows
 
 
 CONFIGS_PATH = 'configs'
@@ -114,6 +114,7 @@ class Config_(IntegrationSpec):
             Config(system_prefix='meh/')
             load_yaml.assert_any_call('meh/invoke.yaml')
 
+        @skip_if_windows
         @patch.object(Config, '_load_yaml')
         def default_system_prefix_is_etc(self, load_yaml):
             # TODO: make this work on Windows somehow without being a total
@@ -134,7 +135,7 @@ class Config_(IntegrationSpec):
         @patch.object(Config, '_load_yaml')
         def configure_project_location(self, load_yaml):
             Config(project_home='someproject')
-            load_yaml.assert_any_call('someproject/invoke.yaml')
+            load_yaml.assert_any_call(join('someproject', 'invoke.yaml'))
 
         @patch.object(Config, '_load_yaml')
         def configure_runtime_path(self, load_yaml):
