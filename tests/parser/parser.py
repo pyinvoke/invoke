@@ -1,4 +1,4 @@
-from spec import Spec, eq_, raises, skip
+from spec import Spec, eq_, raises, skip, ok_
 
 from invoke.parser import Parser, Context, Argument, ParseError
 

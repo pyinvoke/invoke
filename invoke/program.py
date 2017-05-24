@@ -347,7 +347,7 @@ class Program(object):
         # self.parser/collection/tasks)
         self.parse_tasks()
 
-        halp = self.args.help.value
+        halp = self.args.help.value or self.core_via_tasks.args.help.value
 
         # Core (no value given) --help output (only when bundled namespace)
         if halp is True:
@@ -360,7 +360,7 @@ class Program(object):
             if halp in self.parser.contexts:
                 msg = "Saw --help <taskname>, printing per-task help & exiting"
                 debug(msg)
-                self.print_task_help()
+                self.print_task_help(halp)
                 raise Exit
             else:
                 # TODO: feels real dumb to factor this out of Parser, but...we
@@ -503,21 +503,22 @@ class Program(object):
         """
         Parse leftover args, which are typically tasks & per-task args.
 
-        Sets ``self.parser`` to the parser used, and ``self.tasks`` to the
-        parse result.
+        Sets ``self.parser`` to the parser used, ``self.tasks`` to the
+        parsed per-task contexts, and ``self.core_via_tasks`` to a context
+        holding any core flags seen within the task contexts.
         """
-        self.parser = Parser(contexts=self.collection.to_contexts())
+        self.parser = Parser(initial=self.initial_context, contexts=self.collection.to_contexts())
         debug("Parsing tasks against {0!r}".format(self.collection))
-        self.tasks = self.parser.parse_argv(self.core.unparsed)
+        result = self.parser.parse_argv(self.core.unparsed)
+        # TODO: can we easily 'merge' this into self.core? Ehh
+        self.core_via_tasks = result.pop(0)
+        self.tasks = result
         debug("Resulting task contexts: {0!r}".format(self.tasks))
 
-    def print_task_help(self):
+    def print_task_help(self, name):
         """
         Print help for a specific task, e.g. ``inv --help <taskname>``.
         """
-        # Use the parser's contexts dict as that's the easiest way to obtain
-        # Context objects here - which are what help output needs.
-        name = self.args.help.value
         # Setup
         ctx = self.parser.contexts[name]
         tuples = ctx.help_tuples()

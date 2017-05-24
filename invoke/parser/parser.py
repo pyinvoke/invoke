@@ -162,7 +162,7 @@ class ParseMachine(StateMachine):
     def __init__(self, initial, contexts, ignore_unknown):
         # Initialize
         self.ignore_unknown = ignore_unknown
-        self.context = copy.deepcopy(initial)
+        self.initial = self.context = copy.deepcopy(initial)
         debug("Initialized with context: {0!r}".format(self.context))
         self.flag = None
         self.result = ParseResult()
@@ -207,6 +207,24 @@ class ParseMachine(StateMachine):
         # New context
         elif token in self.contexts:
             self.see_context(token)
+        # Initial-context flag being given as per-task flag (e.g. --help)
+        elif self.initial and token in self.initial.flags:
+            debug("Saw (initial-context) flag {0!r}".format(token))
+            flag = self.initial.flags[token]
+            # TODO: handle ambiguity? Right now, flags in the context that
+            # shadow initial-context flags would always naturally "win" by
+            # being higher up in this if/elsif/etc chain. Ideally we'd complain
+            # to avoid users shooting themselves in the foot?
+            # Flags of this type that take a value are always given the current
+            # context's name as a string value.
+            # TODO: document this in the parser docs
+            if flag.takes_value:
+                flag.value = self.context.name
+            else:
+                # TODO: handle inverse flags, other flag types?
+                flag.value = True
+            msg = "Setting (initial-context) flag {0!r} to value {1!r}"
+            debug(msg.format(flag, flag.value))
         # Unknown
         else:
             if not self.ignore_unknown:
