@@ -2,6 +2,15 @@
 Changelog
 =========
 
+* :feature:`205` Allow giving core flags like ``--help`` after tasks to trigger
+  per-task help. Previously, only ``inv --help taskname`` worked.
+
+  .. note::
+      Tasks with their own ``--help`` flags won't be able to leverage this
+      feature - the parser will still interpret the flag as being per-task and
+      not global. This may change in the future to simply throw an exception
+      complaining about the ambiguity. (Feedback welcome.)
+
 * :feature:`444` Add support for being used as ``python -m invoke <args>`` on
   Python 2.7 and up. Thanks to Pekka Klärck for the feature request.
 * :release:`0.17.0 <2017-05-05>`
