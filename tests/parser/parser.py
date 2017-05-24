@@ -375,9 +375,14 @@ class Parser_(Spec):
                 eq_(result[1].args.help.value, 'foo')
 
             def task_has_no_h_shortflag_shows_per_task_help(self):
-                # def mytask(c):
-                # inv mytask -h
-                skip()
+                task1 = Context('mytask')
+                arg = Argument(names=('help', 'h'), optional=True)
+                init = Context(args=[arg])
+                parser = Parser(initial=init, contexts=[task1])
+                result = parser.parse_argv(['mytask', '-h'])
+                eq_(len(result), 2)
+                eq_(result[0].args.help.value, 'mytask')
+                ok_('help' not in result[1].args)
 
             def task_has_h_shortflag_throws_error(self):
                 # def mytask(c, height):
