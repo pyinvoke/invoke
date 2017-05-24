@@ -44,6 +44,10 @@ class Main(Spec):
             ok_("Usage: inv[oke] " in run("invoke --help").stdout)
 
         @trap
+        def per_task_help(self):
+            ok_("Frobazz" in run("invoke -c _explicit foo --help").stdout)
+
+        @trap
         def shorthand_binary_name(self):
             _output_eq("inv print_foo", "foo\n")
 
