@@ -359,23 +359,6 @@ class Parser_(Spec):
             def task_has_no_help_shows_per_task_help(self):
                 task1 = Context('mytask')
                 init = Context(args=[Argument('help', optional=True)])
-                # inv mytask --help
-                # TODO: so how is the initial context related to the help
-                # exactly? what informs the per-task ParserContext objects that
-                # --help is valid? It can't know, the parser must be capable of
-                # looking at any unparsed bits and treating initial-context
-                # flags as valid. ... ALL of them? Just a select few?
-                # TODO: think it must be:
-                # - initial context exists
-                # - it has a way of stating which flags can also be given
-                # per-task
-                # - when those are seen, if they appear to accept a posarg, the
-                # task (or just its name) is given as that posarg
-                # - they are filled in the initial context, NOT the per-task
-                # one
-                # - IIRC as-is, halting flags like help/list will naturally
-                # terminate, even if tasks are given
-                # - only outstanding is then if the rest of parsing is busted
                 parser = Parser(initial=init, contexts=[task1])
                 result = parser.parse_argv(['mytask', '--help'])
                 eq_(len(result), 2)
