@@ -89,8 +89,11 @@ class Parser(object):
             # Handle non-space-delimited forms, if not currently expecting a
             # flag value and still in valid parsing territory (i.e. not in
             # "unknown" state which implies store-only)
-            if not machine.waiting_for_flag_value and is_flag(token) \
-                and not machine.result.unparsed:
+            if (
+                not machine.waiting_for_flag_value
+                and is_flag(token)
+                and not machine.result.unparsed
+            ):
                 orig = token
                 # Equals-sign-delimited flags, eg --foo=bar or -f=bar
                 if '=' in token:
@@ -108,8 +111,10 @@ class Parser(object):
                     # sure not to test the token as a context flag if we've
                     # passed into 'storing unknown stuff' territory (e.g. on a
                     # core-args pass, handling what are going to be task args)
-                    have_flag = (token in machine.context.flags
-                        and machine.current_state != 'unknown')
+                    have_flag = (
+                        token in machine.context.flags
+                        and machine.current_state != 'unknown'
+                    )
                     if have_flag and machine.context.flags[token].takes_value:
                         debug("{0!r} is a flag for current context & it takes a value, giving it {1!r}".format(token, rest)) # noqa
                         body.insert(index + 1, rest)
