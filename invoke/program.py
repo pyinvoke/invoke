@@ -507,7 +507,10 @@ class Program(object):
         parsed per-task contexts, and ``self.core_via_tasks`` to a context
         holding any core flags seen within the task contexts.
         """
-        self.parser = Parser(initial=self.initial_context, contexts=self.collection.to_contexts())
+        self.parser = Parser(
+            initial=self.initial_context,
+            contexts=self.collection.to_contexts(),
+        )
         debug("Parsing tasks against {0!r}".format(self.collection))
         result = self.parser.parse_argv(self.core.unparsed)
         # TODO: can we easily 'merge' this into self.core? Ehh
