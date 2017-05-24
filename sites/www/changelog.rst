@@ -2,6 +2,8 @@
 Changelog
 =========
 
+* :support:`448` Fix up some config-related tests that have been failing on
+  Windows for some time. Thanks to Ryan P Kilby.
 * :feature:`205` Allow giving core flags like ``--help`` after tasks to trigger
   per-task help. Previously, only ``inv --help taskname`` worked.
 
