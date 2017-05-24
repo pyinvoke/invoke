@@ -135,7 +135,7 @@ class Config_(IntegrationSpec):
         @patch.object(Config, '_load_yaml')
         def configure_project_location(self, load_yaml):
             Config(project_home='someproject')
-            load_yaml.assert_any_call('someproject/invoke.yaml')
+            load_yaml.assert_any_call(join('someproject', 'invoke.yaml'))
 
         @patch.object(Config, '_load_yaml')
         def configure_runtime_path(self, load_yaml):
