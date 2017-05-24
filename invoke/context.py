@@ -1,3 +1,4 @@
+import os
 import re
 from contextlib import contextmanager
 
@@ -49,6 +50,7 @@ class Context(DataProxy):
         config = config if config is not None else Config()
         self._set(_config=config)
         self._set(command_prefixes=list())
+        self._set(command_cwds=list())
 
     @property
     def config(self):
@@ -207,7 +209,12 @@ class Context(DataProxy):
         ``command_prefixes`` is a list of strings which is modified by the
         `prefix` context manager.
         """
-        return ' && '.join(self.command_prefixes + [command])
+        prefixes = list(self.command_prefixes)
+        current_directory = self.cwd
+        if current_directory:
+            prefixes.insert(0, 'cd %s' % current_directory)
+
+        return ' && '.join(prefixes + [command])
 
     @contextmanager
     def prefix(self, command):
@@ -260,6 +267,70 @@ class Context(DataProxy):
         self.command_prefixes.append(command)
         yield
         self.command_prefixes.pop()
+
+    @property
+    def cwd(self):
+        """
+        Returns the current working directory computed from invocations of the
+        `cd` context manager.
+        """
+        if not self.command_cwds:
+            return ''
+
+        # get the index for the subset of paths starting with the last / or ~
+        for i, path in reversed(list(enumerate(self.command_cwds))):
+            if path.startswith('~') or path.startswith('/'):
+                break
+
+        # TODO: see if there's a stronger "escape this path" function somewhere
+        # we can reuse. e.g., escaping tildes or slashes in filenames.
+        paths = [path.replace(' ', '\ ') for path in self.command_cwds[i:]]
+        return os.path.join(*paths)
+
+    @contextmanager
+    def cd(self, path):
+        """
+        Context manager that keeps directory state when executing commands.
+
+        Any calls to `run`, `sudo`, within the wrapped block will implicitly
+        have a string similar to ``"cd <path> && "`` prefixed in order to give
+        the sense that there is actually statefulness involved.
+
+        Because use of `cd` affects all such invocations, any code making use
+        of the `cwd` property will also be affected by use of `cd`.
+
+        Like the actual 'cd' shell builtin, `cd` may be called with relative
+        paths (keep in mind that your default starting directory is your user's
+        ``$HOME``) and may be nested as well.
+
+        Below is a "normal" attempt at using the shell 'cd', which doesn't work
+        since all commands are executed in individual subprocesses -- state is
+        **not** kept between invocations of `run` or `sudo`::
+
+            ctx.run('cd /var/www')
+            ctx.run('ls')
+
+        The above snippet will list the contents of the user's ``$HOME``
+        instead of ``/var/www``. With `cd`, however, it will work as expected::
+
+            with ctx.cd('/var/www'):
+                ctx.run('ls')  # Turns into "cd /var/www && ls"
+
+        Finally, a demonstration (see inline comments) of nesting::
+
+            with cd('/var/www'):
+                run('ls') # cd /var/www && ls
+                with cd('website1'):
+                    run('ls')  # cd /var/www/website1 && ls
+
+        .. note::
+
+            Space characters will be escaped automatically to make dealing with
+            such directory names easier.
+        """
+        self.command_cwds.append(path)
+        yield
+        self.command_cwds.pop()
 
 
 class MockContext(Context):

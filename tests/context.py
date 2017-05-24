@@ -1,3 +1,4 @@
+import os
 import pickle
 import re
 import sys
@@ -103,6 +104,64 @@ class Context_(Spec):
             eq_(self.c.foo, 'bar')
             self.c.biz.update(otherbaz='otherboz')
             eq_(self.c.biz.otherbaz, 'otherboz')
+
+    class cwd:
+        def setup(self):
+            self.ctx = Context()
+
+        def simple(self):
+            self.ctx.command_cwds = ['a', 'b']
+            eq_(self.ctx.cwd, os.path.join('a', 'b'))
+
+        def nested_absolute_path(self):
+            self.ctx.command_cwds = ['a', '/b', 'c']
+            eq_(self.ctx.cwd, os.path.join('/b', 'c'))
+
+        def multiple_absolute_paths(self):
+            self.ctx.command_cwds = ['a', '/b', 'c', '/d', 'e']
+            eq_(self.ctx.cwd, os.path.join('/d', 'e'))
+
+        def home(self):
+            self.ctx.command_cwds = ['a', '~b', 'c']
+            eq_(self.ctx.cwd, os.path.join('~b', 'c'))
+
+    class cd:
+        def setup(self):
+            self.escaped_prompt = re.escape(Config().sudo.prompt)
+
+        @patch('invoke.context.Local')
+        def cd_should_apply_to_run(self, Local):
+            runner = Local.return_value
+            ctx = Context()
+            with ctx.cd('foo'):
+                ctx.run('whoami')
+
+            cmd = "cd foo && whoami"
+            ok_(runner.run.called, "run() never called runner.run()!")
+            eq_(runner.run.call_args[0][0], cmd)
+
+        @patch('invoke.context.Local')
+        def cd_should_apply_to_sudo(self, Local):
+            runner = Local.return_value
+            ctx = Context()
+            with ctx.cd('foo'):
+                ctx.sudo('whoami')
+
+            cmd = "sudo -S -p '[sudo] password: ' cd foo && whoami"
+            ok_(runner.run.called, "sudo() never called runner.run()!")
+            eq_(runner.run.call_args[0][0], cmd)
+
+        @patch('invoke.context.Local')
+        def cd_should_occur_before_prefixes(self, Local):
+            runner = Local.return_value
+            ctx = Context()
+            with ctx.prefix('source venv'):
+                with ctx.cd('foo'):
+                    ctx.run('whoami')
+
+            cmd = "cd foo && source venv && whoami"
+            ok_(runner.run.called, "run() never called runner.run()!")
+            eq_(runner.run.call_args[0][0], cmd)
 
     class prefix:
         def setup(self):
