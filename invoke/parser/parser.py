@@ -38,8 +38,15 @@ class Parser(object):
     """
     def __init__(self, contexts=(), initial=None, ignore_unknown=False):
         self.initial = initial
-        self.contexts = Lexicon()
         self.ignore_unknown = ignore_unknown
+        self.set_contexts(contexts)
+        self.machine = None
+
+    def set_contexts(self, contexts):
+        """
+        Turn a list of `ParserContext` objects into an internal dict-like obj.
+        """
+        self.contexts = Lexicon()
         for context in contexts:
             debug("Adding {0}".format(context))
             if not context.name:
@@ -52,6 +59,7 @@ class Parser(object):
                 if alias in self.contexts:
                     raise ValueError(exists.format(alias))
                 self.contexts.alias(alias, to=context.name)
+
 
     def parse_argv(self, argv):
         """
@@ -69,8 +77,23 @@ class Parser(object):
 
             Parser(...).parse_argv(['invoke', '--core-opt', ...])
         """
-        machine = ParseMachine(initial=self.initial, contexts=self.contexts,
-            ignore_unknown=self.ignore_unknown)
+        # TODO: this is bad and I feel bad. at least make this a different
+        # Parser method or args or something
+        if not self.machine:
+            self.machine = ParseMachine(
+                initial=self.initial,
+                contexts=self.contexts,
+                ignore_unknown=self.ignore_unknown,
+            )
+        else:
+            # Update contexts and ignore_unknown, we're probably being resumed
+            # after a pause.
+            # TODO: maybe this wants to simply be a way of pushing collection
+            # load into Parser/ParseMachine as a callback? ehhhh. it would
+            # simplify things a lot?
+            self.machine.contexts = self.contexts
+            self.machine.ignore_unknown = self.ignore_unknown
+        machine = self.machine
         # FIXME: Why isn't there str.partition for lists? There must be a
         # better way to do this. Split argv around the double-dash remainder
         # sentinel.
@@ -162,7 +185,10 @@ class ParseMachine(StateMachine):
     def __init__(self, initial, contexts, ignore_unknown):
         # Initialize
         self.ignore_unknown = ignore_unknown
-        self.context = copy.deepcopy(initial)
+        # Store initial context as both the first value of self.context, and as
+        # a permanent self.initial (so it can be mutated by initial flags seen
+        # in per-task contexts, if necessary)
+        self.initial = self.context = copy.deepcopy(initial)
         debug("Initialized with context: {0!r}".format(self.context))
         self.flag = None
         self.result = ParseResult()
@@ -207,12 +233,31 @@ class ParseMachine(StateMachine):
         # New context
         elif token in self.contexts:
             self.see_context(token)
+        # Initial-context flag being given as per-task flag (e.g. --help)
+        elif self.initial and token in self.initial.flags:
+            debug("Saw (initial-context) flag {0!r}".format(token))
+            flag = self.initial.flags[token]
+            # TODO: handle ambiguity? Right now, flags in the context that
+            # shadow initial-context flags would always naturally "win" by
+            # being higher up in this if/elsif/etc chain. Ideally we'd complain
+            # to avoid users shooting themselves in the foot?
+            # Flags of this type that take a value are always given the current
+            # context's name as a string value.
+            # TODO: document this in the parser docs
+            if flag.takes_value:
+                flag.value = self.context.name
+            else:
+                # TODO: handle inverse flags, other flag types?
+                flag.value = True
+            msg = "Setting (initial-context) flag {0!r} to value {1!r}"
+            debug(msg.format(flag, flag.value))
         # Unknown
         else:
             if not self.ignore_unknown:
                 debug("Can't find context named {0!r}, erroring".format(token))
                 self.error("No idea what {0!r} is!".format(token))
             else:
+                debug("Bottom of handle: contexts: {0!r}".format(self.contexts))
                 debug("Bottom-of-handle() see_unknown({0!r})".format(token))
                 self.see_unknown(token)
 

@@ -310,12 +310,15 @@ class Program(object):
         debug("argv given to Program.run: {0!r}".format(argv))
         self.normalize_argv(argv)
 
-        # Obtain core args (sets self.core)
+        # Obtain core args (sets self.core & self.parser)
         self.parse_core_args()
         debug("Finished parsing core args")
 
         # Set interpreter bytecode-writing flag
         sys.dont_write_bytecode = not self.args['write-pyc'].value
+
+        # TODO: need to move the below (debug, version) around so we can
+        # revisit it if we find core flags in per-task contexts.
 
         # Enable debugging from here on out, if debug flag was given.
         # (Prior to this point, debugging requires setting INVOKE_DEBUG).
@@ -473,11 +476,12 @@ class Program(object):
         """
         Filter out core args, leaving any tasks or their args for later.
 
-        Sets ``self.core`` to the `.ParseResult` from this step.
+        Sets ``self.parser`` to the new parser, and sets ``self.core`` to the
+        `.ParseResult` from this first parsing pass.
         """
         debug("Parsing initial context (core args)")
-        parser = Parser(initial=self.initial_context, ignore_unknown=True)
-        self.core = parser.parse_argv(self.argv[1:])
+        self.parser = Parser(initial=self.initial_context, ignore_unknown=True)
+        self.core = self.parser.parse_argv(self.argv[1:])
         msg = "Core-args parse result: {0!r} & unparsed: {1!r}"
         debug(msg.format(self.core, self.core.unparsed))
 
@@ -503,10 +507,10 @@ class Program(object):
         """
         Parse leftover args, which are typically tasks & per-task args.
 
-        Sets ``self.parser`` to the parser used, and ``self.tasks`` to the
-        parse result.
+        Sets ``self.tasks`` to the parse result.
         """
-        self.parser = Parser(contexts=self.collection.to_contexts())
+        self.parser.set_contexts(self.collection.to_contexts())
+        self.parser.ignore_unknown = False
         debug("Parsing tasks against {0!r}".format(self.collection))
         self.tasks = self.parser.parse_argv(self.core.unparsed)
         debug("Resulting task contexts: {0!r}".format(self.tasks))
