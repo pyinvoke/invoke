@@ -127,8 +127,9 @@ class Executor(object):
             # Get final context from the Call (which will know how to generate
             # an appropriate one; e.g. subclasses might use extra data from
             # being parameterized), handing in this config for use there.
-            context = call.make_context(config)
-            args = (context,) + args
+            if call.task.use_context:
+                context = call.make_context(config)
+                args = (context,) + args
             result = call.task(*args, **call.kwargs)
             if autoprint:
                 print(result)
