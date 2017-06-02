@@ -215,7 +215,7 @@ class Context(DataProxy):
         prefixes = list(self.command_prefixes)
         current_directory = self.cwd
         if current_directory:
-            prefixes.insert(0, 'cd %s' % current_directory)
+            prefixes.insert(0, 'cd {0}'.format(current_directory))
 
         return ' && '.join(prefixes + [command])
 
@@ -274,8 +274,7 @@ class Context(DataProxy):
     @property
     def cwd(self):
         """
-        Returns the current working directory computed from invocations of the
-        `cd` context manager.
+        Return the current working directory, accounting for uses of `cd`.
         """
         if not self.command_cwds:
             # TODO: should this be None? Feels cleaner, though there may be
@@ -330,7 +329,6 @@ class Context(DataProxy):
                     run('ls')  # cd /var/www/website1 && ls
 
         .. note::
-
             Space characters will be escaped automatically to make dealing with
             such directory names easier.
         """
