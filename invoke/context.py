@@ -202,6 +202,9 @@ class Context(DataProxy):
             else:
                 raise
 
+    # TODO: wonder if it makes sense to move this part of things inside Runner,
+    # which would grow a `prefixes` and `cwd` init kwargs or similar. The less
+    # that's stuffed into Context, probably the better.
     def _prefix_commands(self, command):
         """
         Prefixes ``command`` with all prefixes found in ``command_prefixes``.
@@ -275,6 +278,9 @@ class Context(DataProxy):
         `cd` context manager.
         """
         if not self.command_cwds:
+            # TODO: should this be None? Feels cleaner, though there may be
+            # benefits to it being an empty string, such as relying on a no-arg
+            # `cd` typically being shorthand for "go to user's $HOME".
             return ''
 
         # get the index for the subset of paths starting with the last / or ~
