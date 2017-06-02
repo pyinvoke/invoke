@@ -2,6 +2,10 @@
 Changelog
 =========
 
+* :feature:`446` Implement `~invoke.context.Context.cd` and
+  `~invoke.context.Context.prefix` context managers (as methods on the
+  not-that-one-the-other-one `~invoke.context.Context` class.) These are based
+  on similar functionality in Fabric 1.x. Credit: Ryan P Kilby.
 * :support:`448` Fix up some config-related tests that have been failing on
   Windows for some time. Thanks to Ryan P Kilby.
 * :feature:`205` Allow giving core flags like ``--help`` after tasks to trigger
