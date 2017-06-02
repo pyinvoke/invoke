@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :release:`0.18.0 <2017-06-02>`
 * :feature:`446` Implement `~invoke.context.Context.cd` and
   `~invoke.context.Context.prefix` context managers (as methods on the
   not-that-one-the-other-one `~invoke.context.Context` class.) These are based
