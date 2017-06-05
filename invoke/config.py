@@ -33,8 +33,8 @@ else:
 
 from .env import Environment
 from .exceptions import UnknownFileType
-from .util import debug
 from .platform import WINDOWS
+from .util import debug
 
 
 class DataProxy(object):
