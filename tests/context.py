@@ -3,7 +3,7 @@ import pickle
 import re
 import sys
 
-from mock import patch, Mock
+from mock import patch, Mock, call
 from spec import Spec, skip, eq_, ok_, trap, raises
 
 from invoke import (
@@ -12,6 +12,9 @@ from invoke import (
 )
 
 from _util import mock_subprocess, _Dummy
+
+
+local_path = 'invoke.config.Local'
 
 
 class Context_(Spec):
@@ -27,9 +30,27 @@ class Context_(Spec):
             c = Context()
             ok_(hasattr(c, attr) and callable(getattr(c, attr)))
 
-        # NOTE: actual behavior of command running is tested in runners.py
-        def run(self):
-            self._expect_attr('run')
+        class run:
+            # NOTE: actual behavior of command running is tested in runners.py
+            def exists(self):
+                self._expect_attr('run')
+
+            @patch(local_path)
+            def defaults_to_Local(self, Local):
+                c = Context()
+                c.run('foo')
+                assert Local.mock_calls == [
+                    call(c), call().run('foo')
+                ]
+
+            def honors_runner_config_setting(self):
+                runner_class = Mock()
+                config = Config({'runners': {'local': runner_class}})
+                c = Context(config)
+                c.run('foo')
+                assert runner_class.mock_calls == [
+                    call(c), call().run('foo'),
+                ]
 
         def sudo(self):
             self._expect_attr('sudo')
@@ -129,7 +150,7 @@ class Context_(Spec):
         def setup(self):
             self.escaped_prompt = re.escape(Config().sudo.prompt)
 
-        @patch('invoke.context.Local')
+        @patch(local_path)
         def cd_should_apply_to_run(self, Local):
             runner = Local.return_value
             ctx = Context()
@@ -140,7 +161,7 @@ class Context_(Spec):
             ok_(runner.run.called, "run() never called runner.run()!")
             eq_(runner.run.call_args[0][0], cmd)
 
-        @patch('invoke.context.Local')
+        @patch(local_path)
         def cd_should_apply_to_sudo(self, Local):
             runner = Local.return_value
             ctx = Context()
@@ -151,7 +172,7 @@ class Context_(Spec):
             ok_(runner.run.called, "sudo() never called runner.run()!")
             eq_(runner.run.call_args[0][0], cmd)
 
-        @patch('invoke.context.Local')
+        @patch(local_path)
         def cd_should_occur_before_prefixes(self, Local):
             runner = Local.return_value
             ctx = Context()
@@ -167,7 +188,7 @@ class Context_(Spec):
         def setup(self):
             self.escaped_prompt = re.escape(Config().sudo.prompt)
 
-        @patch('invoke.context.Local')
+        @patch(local_path)
         def prefixes_should_apply_to_run(self, Local):
             runner = Local.return_value
             ctx = Context()
@@ -178,7 +199,7 @@ class Context_(Spec):
             ok_(runner.run.called, "run() never called runner.run()!")
             eq_(runner.run.call_args[0][0], cmd)
 
-        @patch('invoke.context.Local')
+        @patch(local_path)
         def prefixes_should_apply_to_sudo(self, Local):
             runner = Local.return_value
             ctx = Context()
@@ -189,7 +210,7 @@ class Context_(Spec):
             ok_(runner.run.called, "sudo() never called runner.run()!")
             eq_(runner.run.call_args[0][0], cmd)
 
-        @patch('invoke.context.Local')
+        @patch(local_path)
         def nesting_should_retain_order(self, Local):
             runner = Local.return_value
             ctx = Context()
@@ -215,7 +236,7 @@ class Context_(Spec):
         def setup(self):
             self.escaped_prompt = re.escape(Config().sudo.prompt)
 
-        @patch('invoke.context.Local')
+        @patch(local_path)
         def prefixes_command_with_sudo(self, Local):
             runner = Local.return_value
             Context().sudo('whoami')
@@ -224,7 +245,7 @@ class Context_(Spec):
             ok_(runner.run.called, "sudo() never called runner.run()!")
             eq_(runner.run.call_args[0][0], cmd)
 
-        @patch('invoke.context.Local')
+        @patch(local_path)
         def optional_user_argument_adds_u_and_H_flags(self, Local):
             runner = Local.return_value
             Context().sudo('whoami', user='rando')
@@ -232,7 +253,7 @@ class Context_(Spec):
             ok_(runner.run.called, "sudo() never called runner.run()!")
             eq_(runner.run.call_args[0][0], cmd)
 
-        @patch('invoke.context.Local')
+        @patch(local_path)
         def honors_config_for_user_value(self, Local):
             runner = Local.return_value
             config = Config(overrides={'sudo': {'user': 'rando'}})
@@ -240,7 +261,7 @@ class Context_(Spec):
             cmd = "sudo -S -p '[sudo] password: ' -H -u rando whoami"
             eq_(runner.run.call_args[0][0], cmd)
 
-        @patch('invoke.context.Local')
+        @patch(local_path)
         def user_kwarg_wins_over_config(self, Local):
             runner = Local.return_value
             config = Config(overrides={'sudo': {'user': 'rando'}})
@@ -260,7 +281,7 @@ class Context_(Spec):
             ok_(Context().sudo.prompt not in output)
             ok_("sudo nope" in output)
 
-        @patch('invoke.context.Local')
+        @patch(local_path)
         def honors_config_for_prompt_value(self, Local):
             runner = Local.return_value
             config = Config(overrides={'sudo': {'prompt': 'FEED ME: '}})
@@ -273,8 +294,7 @@ class Context_(Spec):
             # NOTE: possibly best to tie into issue #2
             skip()
 
-        @patch('invoke.context.Local')
-        def _expect_responses(self, expected, Local, config=None, kwargs=None):
+        def _expect_responses(self, expected, config=None, kwargs=None):
             """
             Execute mocked sudo(), expecting watchers= kwarg in its run().
 
@@ -284,8 +304,10 @@ class Context_(Spec):
             """
             if kwargs is None:
                 kwargs = {}
+            Local = Mock()
             runner = Local.return_value
             context = Context(config=config) if config else Context()
+            context.config.runners.local = Local
             context.sudo('whoami', **kwargs)
             # Tease out the interesting bits - pattern/response - ignoring the
             # sentinel, etc for now.
@@ -318,7 +340,7 @@ class Context_(Spec):
                         pass
                 self.watcher_klass = DummyWatcher
 
-            @patch('invoke.context.Local')
+            @patch(local_path)
             def kwarg_only_adds_to_kwarg(self, Local):
                 runner = Local.return_value
                 context = Context()
@@ -334,7 +356,7 @@ class Context_(Spec):
                 ok_(isinstance(watchers[0], FailingResponder))
                 eq_(watchers[0].pattern, self.escaped_prompt)
 
-            @patch('invoke.context.Local')
+            @patch(local_path)
             def config_only(self, Local):
                 runner = Local.return_value
                 # Set a config-driven list of watchers
@@ -352,7 +374,7 @@ class Context_(Spec):
                 ok_(isinstance(watchers[0], FailingResponder))
                 eq_(watchers[0].pattern, self.escaped_prompt)
 
-            @patch('invoke.context.Local')
+            @patch(local_path)
             def config_use_does_not_modify_config(self, Local):
                 runner = Local.return_value
                 watcher = self.watcher_klass()
@@ -373,7 +395,7 @@ class Context_(Spec):
                 err = "Our config watchers list was modified!"
                 eq_(config.run.watchers, [watcher], err)
 
-            @patch('invoke.context.Local')
+            @patch(local_path)
             def both_kwarg_and_config(self, Local):
                 runner = Local.return_value
                 # Set a config-driven list of watchers
@@ -396,7 +418,7 @@ class Context_(Spec):
                 ok_(isinstance(watchers[0], FailingResponder))
                 eq_(watchers[0].pattern, self.escaped_prompt)
 
-        @patch('invoke.context.Local')
+        @patch(local_path)
         def passes_through_other_run_kwargs(self, Local):
             runner = Local.return_value
             Context().sudo(
@@ -409,7 +431,7 @@ class Context_(Spec):
             eq_(kwargs['hide'], True)
             eq_(kwargs['encoding'], 'ascii')
 
-        @patch('invoke.context.Local')
+        @patch(local_path)
         def returns_run_result(self, Local):
             runner = Local.return_value
             expected = runner.run.return_value

@@ -9,7 +9,7 @@ except ImportError:
 
 from .config import Config, DataProxy
 from .exceptions import Failure, AuthFailure, ResponseNotAccepted
-from .runners import Local, Result
+from .runners import Result
 from .watchers import FailingResponder
 
 
@@ -67,11 +67,6 @@ class Context(DataProxy):
         # runtime.
         self._set(_config=value)
 
-    @property
-    def _runner(self):
-        runner_class = self.config.get('runner', Local)
-        return runner_class(context=self)
-
     def run(self, command, **kwargs):
         """
         Execute a local shell command, honoring config options.
@@ -83,8 +78,15 @@ class Context(DataProxy):
         See `.Runner.run` for details on ``command`` and the available keyword
         arguments.
         """
+        runner = self.config.runners.local(self)
+        return self._run(runner, command, **kwargs)
+
+    # NOTE: broken out of run() to allow for runner class injection in
+    # Fabric/etc, which needs to juggle multiple runner class types (local and
+    # remote).
+    def _run(self, runner, command, **kwargs):
         command = self._prefix_commands(command)
-        return self._runner.run(command, **kwargs)
+        return runner.run(command, **kwargs)
 
     def sudo(self, command, **kwargs):
         """
@@ -148,6 +150,11 @@ class Context(DataProxy):
         :param str password: Runtime override for ``sudo.password``.
         :param str user: Runtime override for ``sudo.user``.
         """
+        runner = self.config.runners.local(self)
+        return self._sudo(runner, command, **kwargs)
+
+    # NOTE: this is for runner injection; see NOTE above _run().
+    def _sudo(self, runner, command, **kwargs):
         prompt = self.config.sudo.prompt
         password = kwargs.pop('password', self.config.sudo.password)
         user = kwargs.pop('user', self.config.sudo.user)
@@ -183,7 +190,7 @@ class Context(DataProxy):
         watchers = kwargs.pop('watchers', list(self.config.run.watchers))
         watchers.append(watcher)
         try:
-            return self._runner.run(cmd_str, watchers=watchers, **kwargs)
+            return runner.run(cmd_str, watchers=watchers, **kwargs)
         except Failure as failure:
             # Transmute failures driven by our FailingResponder, into auth
             # failures - the command never even ran.
@@ -388,7 +395,7 @@ class MockContext(Context):
             ):
                 err = "Not sure how to yield results from a {0!r}"
                 raise TypeError(err.format(type(results)))
-            self._set("_{0}".format(method), results)
+            self._set("__{0}".format(method), results)
 
     # TODO: _maybe_ make this more metaprogrammy/flexible (using __call__ etc)?
     # Pretty worried it'd cause more hard-to-debug issues than it's presently
@@ -422,11 +429,11 @@ class MockContext(Context):
         # result? E.g. filling in .command, etc? Possibly useful for debugging
         # if one hits unexpected-order problems with what they passed in to
         # __init__.
-        return self._yield_result('_run', command)
+        return self._yield_result('__run', command)
 
     def sudo(self, command, *args, **kwargs):
         # TODO: this completely nukes the top-level behavior of sudo(), which
         # could be good or bad, depending. Most of the time I think it's good.
         # No need to supply dummy password config, etc.
         # TODO: see the TODO from run() re: injecting arg/kwarg values
-        return self._yield_result('_sudo', command)
+        return self._yield_result('__sudo', command)

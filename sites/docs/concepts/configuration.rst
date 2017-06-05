@@ -89,6 +89,10 @@ For convenience, we refer to nested setting names with a dotted syntax, so e.g.
   tree (such as ``run.echo`` or ``run.pty``) maps directly to a `.Runner.run`
   keyword argument of the same name; see that method's docstring for details on
   what these settings do & what their default values are.
+* The ``runners`` tree controls _which_ runner classes map to which execution
+  contexts; if you're using Invoke by itself, this will only tend to have a
+  single member, ``runners.local``. Client libraries may extend it with
+  additional key/value pairs, such as ``runners.remote``.
 * The ``sudo`` tree controls the behavior of `.Context.sudo`:
 
     * ``sudo.password`` controls the autoresponse password submitted to sudo's

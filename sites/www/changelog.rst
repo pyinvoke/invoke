@@ -2,6 +2,18 @@
 Changelog
 =========
 
+* :bug:`-` Update Context internals re: command execution & configuration of
+  runner subclasses, to work better in client libraries such as Fabric 2.
+
+    .. note::
+        If you were using the undocumented ``runner`` configuration value added
+        in :issue:`446`, it is now ``runners.local``.
+
+    .. warning::
+        This change modifies the internals of methods like
+        `~invoke.context.Context.run` and `~invoke.context.Context.sudo`; users
+        maintaining their own subclasses should be aware of possible breakage.
+
 * :release:`0.18.0 <2017-06-02>`
 * :feature:`446` Implement `~invoke.context.Context.cd` and
   `~invoke.context.Context.prefix` context managers (as methods on the

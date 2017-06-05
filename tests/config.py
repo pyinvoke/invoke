@@ -5,6 +5,7 @@ from os.path import join, expanduser
 from spec import eq_, ok_, raises
 from mock import patch, call
 
+from invoke.runners import Local
 from invoke.config import Config
 from invoke.exceptions import (
     AmbiguousEnvVar, UncastableEnvVar, UnknownFileType
@@ -89,6 +90,9 @@ class Config_(IntegrationSpec):
                         'shell': '/bin/bash',
                         'warn': False,
                         'watchers': [],
+                    },
+                    'runners': {
+                        'local': Local,
                     },
                     'sudo': {
                         'password': None,
@@ -198,7 +202,7 @@ class Config_(IntegrationSpec):
                 expected = """
 No attribute or config key found for 'nope'
 
-Valid keys: ['run', 'sudo', 'tasks']
+Valid keys: ['run', 'runners', 'sudo', 'tasks']
 
 Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_data', 'global_defaults', 'load_collection', 'load_files', 'load_shell_env', 'merge', 'paths', 'pop', 'popitem', 'post_init', 'prefix', 'setdefault', 'update']
 """.strip() # noqa
@@ -474,7 +478,8 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
             c = Config()
             eq_(c._project_path, None)
             eq_(list(c._project.keys()), [])
-            eq_(set(c.keys()), set(['tasks', 'run', 'sudo'])) # defaults only
+            defaults = ['tasks', 'run', 'runners', 'sudo']
+            eq_(set(c.keys()), set(defaults))
 
         def honors_conf_file_flag(self):
             c = Config(runtime_path=join(CONFIGS_PATH, 'yaml', 'invoke.yaml'))
