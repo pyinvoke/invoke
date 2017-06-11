@@ -375,7 +375,7 @@ Core options:
                                      parse remainder.
   --hide=STRING                      Set default value of run()'s 'hide' kwarg.
   --no-dedupe                        Disable task deduplication.
-  --print-completion-script=STRING   Write a completion script for your
+  --print-completion-script=STRING   Write a tab-completion script for your
                                      preferred console (bash|zsh|fish).
   --write-pyc                        Enable creation of .pyc files.
   -c STRING, --collection=STRING     Specify collection name to load.
