@@ -189,7 +189,7 @@ class Runner(object):
             of `default_encoding`).
 
         :param out_stream:
-            A file-like stream object to which the subprocess' standard error
+            A file-like stream object to which the subprocess' standard output
             should be written. If ``None`` (the default), ``sys.stdout`` will
             be used.
 
@@ -299,10 +299,11 @@ class Runner(object):
                 'output': err_stream,
             }
         # Kick off IO threads
-        self.threads, exceptions = [], []
+        self.threads = {}
+        exceptions = []
         for target, kwargs in six.iteritems(thread_args):
             t = ExceptionHandlingThread(target=target, kwargs=kwargs)
-            self.threads.append(t)
+            self.threads[target] = t
             t.start()
         # Wait for completion, then tie things off & obtain result
         # And make sure we perform that tying off even if things asplode.
@@ -324,21 +325,12 @@ class Runner(object):
                 exception = e
                 # Break out of return-to-wait() loop - we want to shut down
                 break
+        # Inform stdin-mirroring worker to stop its eternal looping
         self.program_finished.set()
-        for t in self.threads:
-            # NOTE: using a join timeout for corner case from #351 (one pipe
-            # excepts, fills up, prevents subproc from exiting, and other pipe
-            # then has a blocking read() call, causing its thread to block on
-            # join). In normal, non-#351 situations this should function
-            # similarly to a non-timeout'd join.
-            # NOTE: but we avoid a timeout for the stdin handler as it has its
-            # own termination conditions & isn't subject to this corner case.
-            timeout = None
-            if t.kwargs['target'] != self.handle_stdin:
-                # TODO: make the timeout configurable
-                timeout = 1
-            t.join(timeout)
-            e = t.exception()
+        # Join threads, setting a timeout if necessary
+        for target, thread in six.iteritems(self.threads):
+            thread.join(self._thread_timeout(target))
+            e = thread.exception()
             if e is not None:
                 exceptions.append(e)
         # If we got a main-thread exception while wait()ing, raise it now that
@@ -437,6 +429,22 @@ class Runner(object):
         if opts['watchers']:
             self.watchers = opts['watchers']
         return opts, out_stream, err_stream, in_stream
+
+    def _thread_timeout(self, target):
+        # Add a timeout to out/err thread joins when it looks like they're not
+        # dead but their counterpart is dead; this indicates issue #351 (fixed
+        # by #432) where the subproc may hang because its stdout (or stderr) is
+        # no longer being consumed by the dead thread (and a pipe is filling
+        # up.) In that case, the non-dead thread is likely to block forever on
+        # a `recv` unless we add this timeout.
+        if target == self.handle_stdin:
+            return None
+        opposite = self.handle_stderr
+        if target == self.handle_stderr:
+            opposite = self.handle_stdout
+        if opposite in self.threads and self.threads[opposite].is_dead:
+            return 1
+        return None
 
     def generate_result(self, **kwargs):
         """
@@ -725,7 +733,7 @@ class Runner(object):
             ``True`` if any threads appear to have terminated with an
             exception, ``False`` otherwise.
         """
-        return any(x.is_dead for x in self.threads)
+        return any(x.is_dead for x in self.threads.values())
 
     def wait(self):
         """
@@ -1127,6 +1135,13 @@ class Result(object):
 {1}
 """.format(x, val.rstrip()) if val else u"(no {0})".format(x))
         return u"\n".join(ret)
+
+    def __repr__(self):
+        # TODO: more? e.g. len of stdout/err? (how to represent cleanly in a
+        # 'x=y' format like this? e.g. '4b' is ambiguous as to what it
+        # represents
+        template = "<Result cmd={0!r} exited={1}>"
+        return template.format(self.command, self.exited)
 
     @property
     def ok(self):

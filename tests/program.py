@@ -6,7 +6,7 @@ from mock import patch, Mock, ANY
 from spec import eq_, ok_, trap, skip, assert_contains, assert_not_contains
 
 from invoke import (
-    Program, Collection, Task, FilesystemLoader, Executor, Context, Config,
+    Program, Collection, Task, FilesystemLoader, Executor, Config,
     UnexpectedExit, Result,
 )
 from invoke import main
@@ -59,12 +59,6 @@ class Program_(IntegrationSpec):
         def may_specify_config_class(self):
             klass = object()
             eq_(Program(config_class=klass).config_class, klass) # noqa
-
-        def env_prefix_defaults_to_INVOKE_(self):
-            eq_(Program().env_prefix, 'INVOKE_')
-
-        def env_prefix_can_be_overridden(self):
-            eq_(Program(env_prefix='FOO_').env_prefix, 'FOO_')
 
 
     class miscellaneous:
@@ -401,7 +395,7 @@ Core options:
                 for flag in ['-h', '--help']:
                     expect(flag, out=expected, program=main.program)
 
-            def bundled_namspace_help_includes_subcommand_listing(self):
+            def bundled_namespace_help_includes_subcommand_listing(self):
                 t1, t2 = Task(Mock()), Task(Mock())
                 coll = Collection(task1=t1, task2=t2)
                 p = Program(namespace=coll)
@@ -608,6 +602,13 @@ Available tasks:
                 'with_aliases (a, b)   foo',
             ))
 
+        def docstrings_are_wrapped_to_terminal_width(self):
+            self._list_eq('nontrivial_docstrings', (
+                'no_docstring',
+                'task_one       Lorem ipsum dolor sit amet, consectetur adipiscing elit.\n                 Nullam id dictum', # noqa
+                'task_two       Nulla eget ultrices ante. Curabitur sagittis commodo posuere.\n                 Duis dapibus', # noqa
+            ))
+
         def empty_collections_say_no_tasks(self):
             expect(
                 "-c empty -l",
@@ -644,6 +645,17 @@ Available tasks:
             klass = Mock()
             Program(config_class=klass).run("myapp foo", exit=False)
             eq_(len(klass.call_args_list), 1) # don't care about actual args
+
+        @trap
+        def config_attribute_is_memoized(self):
+            klass = Mock()
+            # Can't .config without .run (meh); .run calls .config once.
+            p = Program(config_class=klass)
+            p.run("myapp foo", exit=False)
+            eq_(klass.call_count, 1)
+            # Second access should use cached value
+            p.config
+            eq_(klass.call_count, 1)
 
         # NOTE: these tests all rely on the invoked tasks to perform the
         # necessary asserts.
@@ -700,15 +712,17 @@ post2
             os.environ['INVOKE_RUN_ECHO'] = "1"
             expect('-c contextualized check_echo')
 
-        @patch('invoke.executor.Context', side_effect=Context)
-        def env_var_prefix_can_be_overridden(self, context_class):
-            os.environ['MYAPP_RUN_ECHO'] = "1"
+        def env_var_prefix_can_be_overridden(self):
+            os.environ['MYAPP_RUN_HIDE'] = "both"
             # This forces the execution stuff, including Executor, to run
             # NOTE: it's not really possible to rework the impl so this test is
             # cleaner - tasks require per-task/per-collection config, which can
             # only be realized at the time a given task is to be executed.
             # Unless we overhaul the Program/Executor relationship so Program
             # does more of the heavy lifting re: task lookup/load/etc...
-            Program(env_prefix='MYAPP_').run('inv -c contextualized go')
-            # Check the config obj handed from Executor to Context
-            eq_(context_class.call_args[1]['config'].run.echo, True)
+            # NOTE: check_hide will kaboom if its context's run.hide is not set
+            # to True (default False).
+            class MyConf(Config):
+                env_prefix = 'MYAPP'
+            p = Program(config_class=MyConf)
+            p.run('inv -c contextualized check_hide')

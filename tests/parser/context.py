@@ -328,8 +328,3 @@ class Context_(Spec):
                 str(Context('bar', args=[Argument('arg1')])),
                 "<parser/Context 'bar': {'arg1': <Argument: arg1>}>"
             )
-
-        def repr_is_str(self):
-            "__repr__ mirrors __str__"
-            c = Context('foo')
-            eq_(str(c), repr(c))

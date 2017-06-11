@@ -149,7 +149,6 @@ class Program(object):
         loader_class=None,
         executor_class=None,
         config_class=None,
-        env_prefix=None,
     ):
         """
         Create a new, parameterized `.Program` instance.
@@ -190,6 +189,7 @@ class Program(object):
 
             Note that the actual names to which the program responds are
             usually configured via setup.py->entry_points->console_scripts.
+            This setting helps with ``--help`` output and tab completion.
 
         :param loader_class:
             The `.Loader` subclass to use when loading task collections.
@@ -205,11 +205,6 @@ class Program(object):
             The `.Config` subclass to use for the base config object.
 
             Defaults to `.Config`.
-
-        :param str env_prefix:
-            The prefix for environment variable configuration loading.
-
-            Defaults to ``INVOKE_``.
         """
         self.version = "unknown" if version is None else version
         self.namespace = namespace
@@ -219,23 +214,14 @@ class Program(object):
         self.loader_class = loader_class or FilesystemLoader
         self.executor_class = executor_class or Executor
         self.config_class = config_class or Config
-        self.env_prefix = env_prefix if env_prefix is not None else 'INVOKE_'
 
-    @property
-    def config(self):
+    def config_kwargs(self):
         """
-        A `.Config` object initialized with parser & collection data.
+        Return keyword arguments suitable for instantiating a `.Config`.
 
-        Specifically, parser-level flags are consulted (typically as a
-        top-level "runtime overrides" dict) and the `.Collection` object is
-        used to determine where to seek a per-project config file.
+        Expects parser data (``self.args``, etc) to be available.
 
-        This object is further updated within `.Executor` with per-task
-        configuration values and then told to load the full hierarchy (which
-        includes config files.)
-
-        The specific `.Config` subclass used may be overridden in `.__init__`
-        via ``config_class``.
+        :returns: A `dict`.
         """
         # Set up runtime overrides from flags.
         # NOTE: only fill in values that would alter behavior, otherwise we
@@ -253,14 +239,26 @@ class Program(object):
         if 'no-dedupe' in self.args and self.args['no-dedupe'].value:
             tasks['dedupe'] = False
         overrides = {'run': run, 'tasks': tasks}
-        # Stand up config object
-        c = self.config_class(
+        return dict(
             overrides=overrides,
             project_home=self.collection.loaded_from,
             runtime_path=self.args.config.value,
-            env_prefix=self.env_prefix,
         )
-        return c
+
+    def create_config(self):
+        """
+        Instantiate a `.Config` (or subclass, depending) for use in task exec.
+
+        This config object is passed data from the CLI parsing step (which must
+        be run beforehand) and is later cloned and tweaked on a per-task basis
+        by the `.Executor` it's given to.
+
+        :returns: ``None``; sets ``self.config`` instead.
+        """
+        # TODO: this is a bit silly but having it on its own keeps run() super
+        # tidy I guess? (and more importantly, lets subclasses extend the data
+        # generated from config_kwargs.)
+        self.config = self.config_class(**self.config_kwargs())
 
     def run(self, argv=None, exit=True):
         """
@@ -281,7 +279,18 @@ class Program(object):
                 using `.Executor` and friends directly instead!
         """
         try:
+            # Parse the given ARGV with our CLI parsing machinery, resulting in
+            # things like self.args (core args/flags), self.collection (the
+            # loaded namespace, which may be affected by the core flags) and
+            # self.tasks (the tasks requested for exec and their own
+            # args/flags)
             self._parse(argv)
+            # Create a base Config object (stored as self.config) now that we
+            # have CLI flags available (such as the collection, runtime config
+            # paths, overrides to core options like echo/warn, etc)
+            self.create_config()
+            # Create an Executor, passing in the data resulting from the prior
+            # steps, then tell it to execute the tasks.
             self.execute()
         except (UnexpectedExit, Exit, ParseError) as e:
             debug("Received a possibly-skippable exception: {0!r}".format(e))
@@ -347,7 +356,7 @@ class Program(object):
         # self.parser/collection/tasks)
         self.parse_tasks()
 
-        halp = self.args.help.value
+        halp = self.args.help.value or self.core_via_tasks.args.help.value
 
         # Core (no value given) --help output (only when bundled namespace)
         if halp is True:
@@ -360,7 +369,7 @@ class Program(object):
             if halp in self.parser.contexts:
                 msg = "Saw --help <taskname>, printing per-task help & exiting"
                 debug(msg)
-                self.print_task_help()
+                self.print_task_help(halp)
                 raise Exit
             else:
                 # TODO: feels real dumb to factor this out of Parser, but...we
@@ -510,21 +519,25 @@ class Program(object):
         """
         Parse leftover args, which are typically tasks & per-task args.
 
-        Sets ``self.parser`` to the parser used, and ``self.tasks`` to the
-        parse result.
+        Sets ``self.parser`` to the parser used, ``self.tasks`` to the
+        parsed per-task contexts, and ``self.core_via_tasks`` to a context
+        holding any core flags seen within the task contexts.
         """
-        self.parser = Parser(contexts=self.collection.to_contexts())
+        self.parser = Parser(
+            initial=self.initial_context,
+            contexts=self.collection.to_contexts(),
+        )
         debug("Parsing tasks against {0!r}".format(self.collection))
-        self.tasks = self.parser.parse_argv(self.core.unparsed)
+        result = self.parser.parse_argv(self.core.unparsed)
+        # TODO: can we easily 'merge' this into self.core? Ehh
+        self.core_via_tasks = result.pop(0)
+        self.tasks = result
         debug("Resulting task contexts: {0!r}".format(self.tasks))
 
-    def print_task_help(self):
+    def print_task_help(self, name):
         """
         Print help for a specific task, e.g. ``inv --help <taskname>``.
         """
-        # Use the parser's contexts dict as that's the easiest way to obtain
-        # Context objects here - which are what help output needs.
-        name = self.args.help.value
         # Setup
         ctx = self.parser.contexts[name]
         tuples = ctx.help_tuples()

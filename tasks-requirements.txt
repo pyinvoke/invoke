@@ -6,6 +6,7 @@
 semantic_version>=2.4,<2.5
 wheel==0.24
 twine==1.5
+readme_renderer==17.2
 # And this is required for the coverage task
 coverage==3.7.1
 # Technically only needed for Travis, but might as well add it here

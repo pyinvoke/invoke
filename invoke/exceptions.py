@@ -46,9 +46,6 @@ class Failure(Exception):
         self.result = result
         self.reason = reason
 
-    def __repr__(self):
-        return str(self)
-
 
 def _tail(stream):
     # TODO: make configurable
@@ -94,6 +91,15 @@ Stdout:{2}
 Stderr:{3}
 
 """.format(self.result.command, self.result.exited, stdout, stderr)
+
+    def __repr__(self):
+        # TODO: expand?
+        template = "<{0}: cmd={1!r} exited={2}>"
+        return template.format(
+            self.__class__.__name__,
+            self.result.command,
+            self.result.exited,
+        )
 
 
 class AuthFailure(Failure):
@@ -203,7 +209,7 @@ def _printable_kwargs(kwargs):
 
 class ThreadException(Exception):
     """
-    One or more exceptions were raised within background (usually I/O) threads.
+    One or more exceptions were raised within background threads.
 
     The real underlying exceptions are stored in the `exceptions` attribute;
     see its documentation for data structure details.

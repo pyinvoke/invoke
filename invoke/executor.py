@@ -1,5 +1,4 @@
 from .config import Config
-from .context import Context
 from .parser import ParserContext
 from .util import debug
 from .tasks import Call, Task
@@ -26,7 +25,7 @@ class Executor(object):
             config data, if any) by name during execution.
 
         :param config:
-            An optional `.Config` holding configuration state Defaults to an
+            An optional `.Config` holding configuration state. Defaults to an
             empty `.Config` if not given.
 
         :param core:
@@ -94,25 +93,42 @@ class Executor(object):
         # Obtain copy of directly-given tasks since they should sometimes
         # behave differently
         direct = list(calls)
-        # Expand pre/post tasks & then dedupe the entire run.
-        # Load config at this point to get latest value of dedupe option
-        config = self.config.clone()
-        expanded = self.expand_calls(calls, config)
+        # Expand pre/post tasks
+        # TODO: may make sense to bundle expansion & deduping now eh?
+        expanded = self.expand_calls(calls)
         # Get some good value for dedupe option, even if config doesn't have
         # the tree we expect. (This is a concession to testing.)
         try:
-            dedupe = config.tasks.dedupe
+            dedupe = self.config.tasks.dedupe
         except AttributeError:
             dedupe = True
-        # Actual deduping here
+        # Dedupe across entire run now that we know about all calls in order
         calls = self.dedupe(expanded) if dedupe else expanded
         # Execute
         results = {}
+        # TODO: maybe clone initial config here? Probably not necessary,
+        # especially given Executor is not designed to execute() >1 time at the
+        # moment...
         for call in calls:
             autoprint = call in direct and call.autoprint
             args = call.args
             debug("Executing {0!r}".format(call))
-            args = (call.context,) + args
+            # Hand in reference to our config, which will preserve user
+            # modifications across the lifetime of the session.
+            config = self.config
+            # But make sure we reset its task-sensitive levels each time
+            # (collection & shell env)
+            # TODO: load_collection needs to be skipped if task is anonymous
+            # (Fabric 2 or other subclassing libs only)
+            collection_config = self.collection.configuration(call.called_as)
+            config.load_collection(collection_config)
+            config.load_shell_env()
+            debug("Finished loading collection & shell env configs")
+            # Get final context from the Call (which will know how to generate
+            # an appropriate one; e.g. subclasses might use extra data from
+            # being parameterized), handing in this config for use there.
+            context = call.make_context(config)
+            args = (context,) + args
             result = call.task(*args, **call.kwargs)
             if autoprint:
                 print(result)
@@ -161,7 +177,7 @@ class Executor(object):
                 debug("{0!r}: found in list already, skipping".format(call))
         return deduped
 
-    def expand_calls(self, calls, config):
+    def expand_calls(self, calls):
         """
         Expand a list of `.Call` objects into a near-final list of same.
 
@@ -179,44 +195,15 @@ class Executor(object):
             if isinstance(call, Task):
                 call = Call(task=call)
             debug("Expanding task-call {0!r}".format(call))
-            # TODO: this is where we'll have to handle _allowing_ pre/post
-            # tasks and/or tasks that were simply invoked in the same CLI
-            # command, to affect the state of the tasks after them. Somehow.
-            call.context = Context(config=self.config_for(call, config))
-            # NOTE: handing in original config, not the mutated one handed to
-            # the Context above. Pre/post tasks may well come from a different
-            # collection, etc. Also just cleaner.
-            ret.extend(self.expand_calls(call.pre, config))
+            # TODO: this is where we _used_ to call Executor.config_for(call,
+            # config)...
+            # TODO: now we may need to preserve more info like where the call
+            # came from, etc, but I feel like that shit should go _on the call
+            # itself_ right???
+            # TODO: we _probably_ don't even want the config in here anymore,
+            # we want this to _just_ be about the recursion across pre/post
+            # tasks or parameterization...?
+            ret.extend(self.expand_calls(call.pre))
             ret.append(call)
-            ret.extend(self.expand_calls(call.post, config))
+            ret.extend(self.expand_calls(call.post))
         return ret
-
-    def config_for(self, call, config, anonymous=False):
-        """
-        Generate a `.Config` object suitable for the given task call.
-
-        :param call: `.Call` object to create config for.
-
-        :param config: Core `.Config` object to clone & build upon.
-
-        :param bool anonymous:
-            If ``True``, treat task as anonymous and don't try loading
-            collection-based config for it. (Useful for downstream code which
-            may be adding dynamically-created, collection-less tasks during the
-            load process.)
-        """
-        task_config = config.clone()
-        if not anonymous:
-            # Load collection-local config
-            task_config.load_collection(
-                self.collection.configuration(call.called_as)
-            )
-        # Load env vars, as the last step (so users can override
-        # per-collection keys via the env)
-        task_config.load_shell_env()
-        debug("Finished loading collection & shell env configs")
-        # Set up context w/ that config & add to call obj
-        # TODO: fab needs to override the class here & some of its
-        # kwargs, based on values that it derives from core args & the
-        # task
-        return task_config

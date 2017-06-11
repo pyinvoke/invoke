@@ -10,7 +10,7 @@ except ImportError:
     from lexicon import Lexicon
 
 
-from .config import merge_dicts
+from .config import merge_dicts, copy_dict
 from .parser import Context as ParserContext
 from .tasks import Task
 
@@ -115,12 +115,11 @@ class Collection(object):
             raise TypeError("No idea how to insert {0!r}!".format(type(obj)))
         return method(obj, name=name)
 
-    def __str__(self):
-        return "<Collection {0!r}: {1}>".format(
-            self.name, ", ".join(sorted(self.tasks.keys())))
-
     def __repr__(self):
-        return str(self)
+        return "<Collection {0!r}: {1}>".format(
+            self.name,
+            ", ".join(sorted(self.tasks.keys())),
+        )
 
     def __eq__(self, other):
         return self.name == other.name and self.tasks == other.tasks
@@ -175,7 +174,7 @@ class Collection(object):
                 ret.collections = copy.deepcopy(obj.collections)
                 ret.default = copy.deepcopy(obj.default)
                 # Explicitly given config wins over root ns config
-                obj_config = copy.deepcopy(obj._configuration)
+                obj_config = copy_dict(obj._configuration)
                 if config:
                     merge_dicts(obj_config, config)
                 ret._configuration = obj_config
@@ -367,9 +366,6 @@ class Collection(object):
         """
         Obtain merged configuration values from collection & children.
 
-        .. note::
-            Merging uses ``copy.deepcopy`` to prevent state bleed.
-
         :param taskpath:
             (Optional) Task name/path, identical to that used for
             `~.Collection.__getitem__` (e.g. may be dotted for nested tasks,
@@ -379,7 +375,7 @@ class Collection(object):
         :returns: A `dict` containing configuration values.
         """
         if taskpath is None:
-            return copy.deepcopy(self._configuration)
+            return copy_dict(self._configuration)
         return self.task_with_config(taskpath)[1]
 
     def configure(self, options):

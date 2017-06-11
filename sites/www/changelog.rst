@@ -2,17 +2,212 @@
 Changelog
 =========
 
+* :release:`0.18.1 <2017-06-07>`
+* :bug:`-` Update Context internals re: command execution & configuration of
+  runner subclasses, to work better in client libraries such as Fabric 2.
+
+    .. note::
+        If you were using the undocumented ``runner`` configuration value added
+        in :issue:`446`, it is now ``runners.local``.
+
+    .. warning::
+        This change modifies the internals of methods like
+        `~invoke.context.Context.run` and `~invoke.context.Context.sudo`; users
+        maintaining their own subclasses should be aware of possible breakage.
+
+* :release:`0.18.0 <2017-06-02>`
+* :feature:`446` Implement `~invoke.context.Context.cd` and
+  `~invoke.context.Context.prefix` context managers (as methods on the
+  not-that-one-the-other-one `~invoke.context.Context` class.) These are based
+  on similar functionality in Fabric 1.x. Credit: Ryan P Kilby.
+* :support:`448` Fix up some config-related tests that have been failing on
+  Windows for some time. Thanks to Ryan P Kilby.
+* :feature:`205` Allow giving core flags like ``--help`` after tasks to trigger
+  per-task help. Previously, only ``inv --help taskname`` worked.
+
+  .. note::
+      Tasks with their own ``--help`` flags won't be able to leverage this
+      feature - the parser will still interpret the flag as being per-task and
+      not global. This may change in the future to simply throw an exception
+      complaining about the ambiguity. (Feedback welcome.)
+
+* :feature:`444` Add support for being used as ``python -m invoke <args>`` on
+  Python 2.7 and up. Thanks to Pekka Klärck for the feature request.
+* :release:`0.17.0 <2017-05-05>`
+* :bug:`439 major` Avoid placing stdin into bytewise read mode when it looks
+  like Invoke has been placed in the background by a shell's job control
+  system; doing so was causing the shell to pause the Invoke process (e.g. with
+  a message like ``suspended (tty output)``.) Reported by Tuukka Mustonen.
+* :bug:`425 major` Fix ``Inappropriate ioctl for device`` errors (usually
+  ``OSError``) when running Invoke without a tty-attached stdin (i.e. when run
+  under 'headless' continuous integration systems or simply as e.g. ``inv
+  sometask < /dev/null`` (redirected stdin.) Thanks to Javier Domingo Cansino
+  for the report & Tuukka Mustonen for troubleshooting assistance.
+* :feature:`-` Add a ``user`` kwarg & config parameter to
+  `Context.sudo <invoke.context.Context.sudo>`, which corresponds roughly to
+  ``sudo -u <user> <command>``.
+* :bug:`440 major` Make sure to skip a call to ``struct``/``ioctl`` on Windows
+  platforms; otherwise certain situations inside ``run`` calls would trigger
+  import errors. Thanks to ``@chrisc11`` for the report.
+* :release:`0.16.3 <2017-04-18>`
+* :bug:`-` Even more setup.py related tomfoolery.
+* :release:`0.16.2 <2017-04-18>`
+* :bug:`-` Deal with the fact that PyPI's rendering of Restructured Text has no
+  idea about our fancy new use of Sphinx's doctest module. Sob.
+* :release:`0.16.1 <2017-04-18>`
+* :bug:`-` Fix a silly typo preventing proper rendering of the packaging
+  ``long_description`` (causing an effectively blank PyPI description.)
+* :release:`0.16.0 <2017-04-18>`
+* :feature:`232` Add support for ``.yml``-suffixed config files (in addition to
+  ``.yaml``, ``.json`` and ``.py``.) Thanks to Matthias Lehmann for the
+  original request & Greg Back for an early patch.
+* :feature:`418` Enhance ability of client libraries to override config
+  filename prefixes. This includes modifications to related functionality, such
+  as how env var prefixes are configured.
+
+  .. warning::
+    **This is a backwards incompatible change** if:
+
+    - you were relying on the ``env_prefix`` keyword argument to
+      `Config.__init__ <invoke.config.Config.__init__>`; it is now the
+      ``prefix`` or ``env_prefix`` class attribute, depending.
+    - or the kwarg/attribute of the same name in `Program.__init__
+      <invoke.program.Program.__init__>`; you should now be subclassing
+      ``Config`` and using its ``env_prefix`` attribute;
+    - or if you were relying on how standalone ``Config`` objects defaulted to
+      having a ``None`` value for ``env_prefix``, and thus loaded env vars
+      without an ``INVOKE_`` style prefix.
+
+      See new documentation for this functionality at
+      :ref:`customizing-config-defaults` for details.
+
+* :feature:`309` Overhaul how task execution contexts/configs are handled, such
+  that all contexts in a session now share the same config object, and thus
+  user modifications are preserved between tasks. This has been done in a
+  manner that should not break things like collection-based config (which may
+  still differ from task to task.)
+
+  .. warning::
+    **This is a backwards incompatible change** if you were relying on the
+    post-0.12 behavior of cloning config objects between each task execution.
+    Make sure to investigate if you find tasks affecting one another in
+    unexpected ways!
+
+* :support:`-` Fixed some Python 2.6 incompatible string formatting that snuck
+  in recently.
+* :feature:`-` Switched the order of the first two arguments of
+  `Config.__init__ <invoke.config.Config.__init__>`, so that the ``overrides``
+  kwarg becomes the first positional argument.
+
+  This supports the common use case of making a `Config <invoke.config.Config>`
+  object that honors the system's core/global defaults; previously, because
+  ``defaults`` was the first argument, you'd end up replacing those core
+  defaults instead of merging with them.
+
+  .. warning::
+    **This is a backwards incompatible change** if you were creating custom
+    ``Config`` objects via positional, instead of keyword, arguments. It should
+    have no effect otherwise.
+
+* :feature:`-` `Context.sudo <invoke.context.Context.sudo>` no longer prompts
+  the user when the configured sudo password is empty; thus, an empty sudo
+  password and a ``sudo`` program configured to require one will result in an
+  exception.
+
+  The runtime prompting for a missing password was a temporary holdover from
+  Fabric v1, and in retrospect is undesirable. We may add it back in as an
+  opt-in behavior (probably via subclassing) in the future if anybody misses
+  it.
+
+  .. warning::
+    **This is a backwards incompatible change**, if you were relying on
+    ``sudo()`` prompting you for your password (vs configuring it). If you
+    *were* doing that, you can simply switch to ``run("sudo <command>")`` and
+    respond to the subprocess' sudo prompt by hand instead.
+
+* :feature:`-` `Result <invoke.runners.Result>` and `UnexpectedExit
+  <invoke.exceptions.UnexpectedExit>` objects now have a more useful ``repr()``
+  (and in the case of ``UnexpectedExit``, a distinct ``repr()`` from their
+  preexisting ``str()``.)
+* :bug:`432 major` Tighten application of IO thread ``join`` timeouts (in `run
+  <invoke.runners.Runner.run>`) to only happen when :issue:`351` appears
+  actually present. Otherwise, slow/overworked IO threads had a chance of being
+  joined before truly reading all data from the subprocess' pipe.
+* :bug:`430 major` Fallback importing of PyYAML when Invoke has been installed
+  without its vendor directory, was still trying to import the vendorized
+  module names (e.g. ``yaml2`` or ``yaml3`` instead of simply ``yaml``). This
+  has been fixed, thanks to Athmane Madjoudj.
+* :release:`0.15.0 <2017-02-14>`
+* :bug:`426 major` `DataProxy <invoke.config.DataProxy>` based classes like
+  `Config <invoke.config.Config>` and `Context <invoke.context.Context>` didn't
+  like being `pickled <pickle>` or `copied <copy.copy>` and threw
+  ``RecursionError``. This has been fixed.
+* :feature:`-` `Config <invoke.config.Config>`'s internals got cleaned up
+  somewhat; end users should not see much of a difference, but advanced
+  users or authors of extension code may notice the following:
+
+  - Direct modification of config data (e.g. ``myconfig.section.subsection.key
+    = 'value'`` in user/task code) is now stored in its own config 'level'/data
+    structure; previously such modifications simply mutated the central,
+    'merged' config cache. This makes it much easier to determine where a final
+    observed value came from, and prevents accidental data loss.
+  - Ditto for deleted values.
+  - Merging/reconciliation of the config levels now happens automatically when
+    data is loaded or modified, which not only simplifies the object's
+    lifecycle a bit but allows the previous change to function without
+    requiring users to call ``.merge()`` after every modification.
+
+* :bug:`- major` Python 3's hashing rules differ from Python 2, specifically:
+
+    A class that overrides ``__eq__()`` and does not define ``__hash__()`` will
+    have its ``__hash__()`` implicitly set to None.
+
+  `Config <invoke.config.Config>` (specifically, its foundational class
+  `DataProxy <invoke.config.DataProxy>`) only defined ``__eq__`` which,
+  combined with the above behavior, meant that ``Config`` objects appeared to
+  hash successfully on Python 2 but yielded ``TypeErrors`` on Python 3.
+
+  This has been fixed by explicitly setting ``__hash__ = None`` so that the
+  objects do not hash on either interpreter (there are no good immutable
+  attributes by which to define hashability).
+* :bug:`- major` Configuration keys named ``config`` were inadvertently
+  exposing the internal dict representation of the containing config object,
+  instead of displaying the actual value stored in that key. (Thus, a set
+  config of ``mycontext.foo.bar.config`` would act as if it was the key/value
+  contents of the ``mycontext.foo.bar`` subtree.) This has been fixed.
+* :feature:`421` Updated `Config.clone <invoke.config.Config.clone>` (and a few
+  other related areas) to replace use of `copy.deepcopy` with a less-rigorous
+  but also less-likely-to-explode recursive dict copier. This prevents
+  frustrating ``TypeErrors`` while still preserving barriers between different
+  tasks' configuration values.
+* :feature:`-` `Config.clone <invoke.config.Config.clone>` grew a new ``into``
+  kwarg allowing client libraries with their own `~invoke.config.Config`
+  subclasses to easily "upgrade" vanilla Invoke config objects into their local
+  variety.
+* :bug:`419 major` Optional parser arguments had a few issues:
+
+  - The :ref:`conceptual docs about CLI parsing <optional-values>` mentioned
+    them, but didn't actually show via example how to enable the feature,
+    implying (incorrectly) that they were active always by default. An example
+    has been added.
+  - Even when enabled, they did not function correctly when their default
+    values were of type ``bool``; in this situation, trying to give a value (vs
+    just giving the flag name by itself) caused a parser error.  This has been
+    fixed.
+
+  Thanks to ``@ouroboroscoding`` for the report.
 * :support:`204` (via :issue:`412`) Fall back to globally-installed copies of
   our vendored dependencies, if the import from the ``vendor`` tree fails. In
   normal situations this won't happen, but it allows advanced users or
   downstream maintainers to nuke ``vendor/`` and prefer explicitly installed
   packages of e.g. ``six``, ``pyyaml`` or ``fluidity``. Thanks to Athmane
   Madjoudj for the patch.
-* :bug:`-` Fix configuration framework such that nested or dict-like config
-  values may be compared with regular dicts. Previously, doing so caused an
-  ``AttributeError`` (as regular dicts lack a ``.config``).
-* :bug:`413` Update behavior of ``DataProxy`` (used within
-  `~invoke.context.Context` and `~invoke.config.Config`) again, fixing two related issues:
+* :bug:`- major` Fix configuration framework such that nested or dict-like
+  config values may be compared with regular dicts. Previously, doing so caused
+  an ``AttributeError`` (as regular dicts lack a ``.config``).
+* :bug:`413 major` Update behavior of ``DataProxy`` (used within
+  `~invoke.context.Context` and `~invoke.config.Config`) again, fixing two
+  related issues:
 
   - Creating new configuration keys via attribute access wasn't possible: one
     had to do ``config['foo'] = 'bar'`` because ``config.foo = 'bar'`` would
@@ -477,7 +672,7 @@ Changelog
 * :feature:`87` (also :issue:`92`) Rework the loader module such that recursive
   filesystem searching is implemented, and is used instead of searching
   `sys.path`.
-  
+
   This adds the behavior most users expect or are familiar with from Fabric 1
   or similar tools; and it avoids nasty surprise collisions with other
   installed packages containing files named ``tasks.py``.

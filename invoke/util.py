@@ -103,6 +103,16 @@ class ExceptionHandlingThread(threading.Thread):
     Thread handler making it easier for parent to handle thread exceptions.
 
     Based in part on Fabric 1's ThreadHandler. See also Fabric GH issue #204.
+
+    When used directly, can be used in place of a regular ``threading.Thread``.
+    If subclassed, the subclass must do one of:
+
+    - supply ``target`` to ``__init__``
+    - define ``_run()`` instead of ``run()``
+
+    This is because this thread's entire point is to wrap behavior around the
+    thread's execution; subclasses could not redefine ``run()`` without
+    breaking that functionality.
     """
     def __init__(self, **kwargs):
         """
@@ -122,14 +132,40 @@ class ExceptionHandlingThread(threading.Thread):
 
     def run(self):
         try:
-            super(ExceptionHandlingThread, self).run()
+            # Allow subclasses implemented using the "override run()'s body"
+            # approach to work, by using _run() instead of run(). If that
+            # doesn't appear to be the case, then assume we're being used
+            # directly and just use super() ourselves.
+            if hasattr(self, '_run') and callable(self._run):
+                # TODO: this could be:
+                # - io worker with no 'result' (always local)
+                # - tunnel worker, also with no 'result' (also always local)
+                # - threaded concurrent run(), sudo(), put(), etc, with a
+                # result (not necessarily local; might want to be a subproc or
+                # whatever eventually)
+                # TODO: so how best to conditionally add a "capture result
+                # value of some kind"?
+                # - update so all use cases use subclassing, add functionality
+                # alongside self.exception() that is for the result of _run()
+                # - split out class that does not care about result of _run()
+                # and let it continue acting like a normal thread (meh)
+                # - assume the run/sudo/etc case will use a queue inside its
+                # worker body, orthogonal to how exception handling works
+                self._run()
+            else:
+                super(ExceptionHandlingThread, self).run()
         except BaseException:
             # Store for actual reraising later
             self.exc_info = sys.exc_info()
             # And log now, in case we never get to later (e.g. if executing
             # program is hung waiting for us to do something)
             msg = "Encountered exception {0!r} in thread for {1!r}"
-            debug(msg.format(self.exc_info[1], self.kwargs['target'].__name__)) # noqa
+            # Name is either target function's dunder-name, or just "_run" if
+            # we were run subclass-wise.
+            name = '_run'
+            if 'target' in self.kwargs:
+                name = self.kwargs['target'].__name__
+            debug(msg.format(self.exc_info[1], name)) # noqa
 
     def exception(self):
         """

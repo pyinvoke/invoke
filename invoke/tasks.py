@@ -73,14 +73,11 @@ class Task(object):
     def name(self):
         return self._name or self.__name__
 
-    def __str__(self):
+    def __repr__(self):
         aliases = ""
         if self.aliases:
             aliases = " ({0})".format(', '.join(self.aliases))
         return "<Task {0!r}{1}>".format(self.name, aliases)
-
-    def __repr__(self):
-        return str(self)
 
     def __eq__(self, other):
         if self.name != other.name:
@@ -182,7 +179,12 @@ class Task(object):
         # Handle default value & kind if possible
         if default not in (None, NO_DEFAULT):
             # TODO: allow setting 'kind' explicitly.
-            opts['kind'] = type(default)
+            # NOTE: skip setting 'kind' if optional is True + type(default) is
+            # bool; that results in a nonsensical Argument which gives the
+            # parser grief in a few ways.
+            kind = type(default)
+            if not (opts['optional'] and kind is bool):
+                opts['kind'] = kind
             opts['default'] = default
         # Help
         if name in self.help:
@@ -311,13 +313,11 @@ def task(*args, **kwargs):
 
 class Call(object):
     """
-    Represents a call/execution of a `.Task` with some arguments.
-
-    Wraps its `.Task` so it can be treated as one by `.Executor`.
+    Represents a call/execution of a `.Task` with given (kw)args.
 
     Similar to `~functools.partial` with some added functionality (such as the
     delegation to the inner task, and optional tracking of the name it's being
-    called by.
+    called by.)
     """
     def __init__(
         self,
@@ -325,7 +325,6 @@ class Call(object):
         called_as=None,
         args=None,
         kwargs=None,
-        context=None,
     ):
         """
         Create a new `.Call` object.
@@ -342,32 +341,26 @@ class Call(object):
 
         :param dict kwargs:
             Keyword arguments to call with, if any. Default: ``None``.
-
-        :param context:
-            `.Context` instance to be used. Default: ``None``.
         """
         self.task = task
         self.called_as = called_as
         self.args = args or tuple()
         self.kwargs = kwargs or dict()
-        self.context = context
 
+    # TODO: just how useful is this? feels like maybe overkill magic
     def __getattr__(self, name):
         return getattr(self.task, name)
 
     def __deepcopy__(self, memo):
         return self.clone()
 
-    def __str__(self):
+    def __repr__(self):
         aka = ""
         if self.called_as is not None and self.called_as != self.task.name:
             aka = " (called as: {0!r})".format(self.called_as)
         return "<Call {0!r}{1}, args: {2!r}, kwargs: {3!r}>".format(
             self.task.name, aka, self.args, self.kwargs
         )
-
-    def __repr__(self):
-        return str(self)
 
     def __eq__(self, other):
         # NOTE: Not comparing 'called_as'; a named call of a given Task with
@@ -379,22 +372,25 @@ class Call(object):
                 return False
         return True
 
-    def clone(self):
+    def make_context(self, config):
+        """
+        Generate a `.Context` appropriate for this call, with given config.
+        """
+        return Context(config=config)
+
+    def clone(self, into=None):
         """
         Return a standalone copy of this Call.
 
         Useful when parameterizing task executions.
+
+        :param into: A subclass to generate instead of the current class.
         """
-        context = None
-        if self.context is not None:
-            # TODO: context.clone()?
-            context = Context(config=self.context.config.clone())
-        return Call(
+        return (into if into is not None else self.__class__)(
             task=self.task,
             called_as=self.called_as,
             args=deepcopy(self.args),
             kwargs=deepcopy(self.kwargs),
-            context=context
         )
 
 

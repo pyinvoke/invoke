@@ -6,9 +6,8 @@ except ImportError:
     # Not available on Windows
     termios = None
 from contextlib import contextmanager
-from functools import wraps
 
-from invoke.vendor.six import BytesIO, b, iteritems
+from invoke.vendor.six import BytesIO, b, iteritems, wraps
 
 from mock import patch, Mock
 from spec import trap, Spec, eq_, ok_, skip
@@ -93,31 +92,59 @@ def expect(invocation, out=None, err=None, program=None, invoke=True,
         (test or eq_)(sys.stderr.getvalue(), err)
 
 
+class MockSubprocess(object):
+    def __init__(self, out='', err='', exit=0, isatty=None, autostart=True):
+        self.out_file = BytesIO(b(out))
+        self.err_file = BytesIO(b(err))
+        self.exit = exit
+        self.isatty = isatty
+        if autostart:
+            self.start()
+
+    def start(self):
+        # Start patchin'
+        self.popen = patch('invoke.runners.Popen')
+        Popen = self.popen.start()
+        self.read = patch('os.read')
+        read = self.read.start()
+        self.sys_stdin = patch('sys.stdin', new_callable=BytesIO)
+        sys_stdin = self.sys_stdin.start()
+        # Setup mocks
+        process = Popen.return_value
+        process.returncode = self.exit
+        process.stdout.fileno.return_value = 1
+        process.stderr.fileno.return_value = 2
+        # If requested, mock isatty to fake out pty detection
+        if self.isatty is not None:
+            sys_stdin.isatty = Mock(return_value=self.isatty)
+        def fakeread(fileno, count):
+            fd = {1: self.out_file, 2: self.err_file}[fileno]
+            return fd.read(count)
+        read.side_effect = fakeread
+        # Return the Popen mock as it's sometimes wanted inside tests
+        return Popen
+
+    def stop(self):
+        self.popen.stop()
+        self.read.stop()
+        self.sys_stdin.stop()
+
+
 def mock_subprocess(out='', err='', exit=0, isatty=None, insert_Popen=False):
     def decorator(f):
         @wraps(f)
-        @patch('invoke.runners.Popen')
-        @patch('os.read')
-        @patch('sys.stdin', new_callable=BytesIO)
         def wrapper(*args, **kwargs):
+            proc = MockSubprocess(
+                out=out, err=err, exit=exit, isatty=isatty, autostart=False,
+            )
+            Popen = proc.start()
             args = list(args)
-            Popen, read, sys_stdin = args.pop(), args.pop(), args.pop()
-            process = Popen.return_value
-            process.returncode = exit
-            process.stdout.fileno.return_value = 1
-            process.stderr.fileno.return_value = 2
-            # If requested, mock isatty to fake out pty detection
-            if isatty is not None:
-                sys_stdin.isatty = Mock(return_value=isatty)
-            out_file = BytesIO(b(out))
-            err_file = BytesIO(b(err))
-            def fakeread(fileno, count):
-                fd = {1: out_file, 2: err_file}[fileno]
-                return fd.read(count)
-            read.side_effect = fakeread
             if insert_Popen:
                 args.append(Popen)
-            f(*args, **kwargs)
+            try:
+                f(*args, **kwargs)
+            finally:
+                proc.stop()
         return wrapper
     return decorator
 

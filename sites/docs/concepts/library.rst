@@ -2,10 +2,11 @@
 Using Invoke as a library
 =========================
 
-Invoke was designed for its constituent parts to be usable independently,
-either out of the box or with a minimum of extra work by the maintainers. CLI
-parsing, subprocess command execution, task organization, etc, are all written
-as broadly separated concerns.
+While most of its documentation involves the user/CLI facing use cases of task
+management and command execution, Invoke was designed for its constituent parts
+to be usable independently by advanced users - either out of the box or with a
+minimum of extra work. CLI parsing, subprocess command execution, task
+organization, etc, are all written as broadly separated concerns.
 
 This document outlines use cases already known to work (because downstream
 tools like `Fabric <http://fabfile.org>`_ are already utilizing them).
@@ -13,12 +14,13 @@ tools like `Fabric <http://fabfile.org>`_ are already utilizing them).
 
 .. _reusing-as-a-binary:
 
-Reusing Invoke as a distinct binary 
-====================================
+Reusing Invoke's CLI module as a distinct binary
+================================================
 
 A major use case is distribution of your own program using Invoke under the
 hood, bound to a different binary name, and usually setting a specific task
-:doc:`namespace </concepts/namespaces>` as the default. In some cases,
+:doc:`namespace </concepts/namespaces>` as the default. (This maps somewhat
+closely to things like ``argparse`` from the standard library.) In some cases,
 removing, replacing and/or adding core CLI flags is also desired.
 
 Getting set up
@@ -43,9 +45,10 @@ First, as with any distinct Python package providing CLI
     )
 
 .. note::
-    This is not a fully valid ``setup.py``; if you don't know how Python
-    packaging works, a good starting place is `the Python Packaging User's
-    Guide <https://python-packaging-user-guide.readthedocs.io/en/latest/>`_.
+    This is just an example snippet and is not a fully valid ``setup.py``; if
+    you don't know how Python packaging works, a good starting place is `the
+    Python Packaging User's Guide
+    <https://python-packaging-user-guide.readthedocs.io/en/latest/>`_.
 
 Nothing here is specific to Invoke - it's a standard way of telling Python to
 install a ``tester`` script that executes the ``run`` method of a ``program``
@@ -177,10 +180,83 @@ you're done::
     basic functionality relies on their existence, even when left to default
     values.
 
-Wrap-up
--------
 
-At this point you've got a nicely packaged program ready for distribution, with
-no obvious hints that it's driven by Invoke. We've only shown a handful of the
-options `.Program` provides - see its API docs for details on what else it can
-do.
+.. _customizing-config-defaults:
+
+Customizing the configuration system's defaults
+===============================================
+
+Besides the CLI-oriented content of the previous section, another area of
+functionality that frequently needs updating when redistributing an Invoke
+codebase (CLI or no CLI) is configuration. There are typically two concerns
+here:
+
+- Configuration filenames and the env var prefix - crucial if you ever expect
+  your users to use the configuration system;
+- Default configuration values - less critical (most defaults aren't labeled
+  with anything Invoke-specific) but still sometimes desirable.
+
+Both of these involve subclassing `.Config` (and, if using the CLI machinery,
+informing your `.Program` to use that subclass instead of the default one.)
+
+Changing filenames and/or env var prefix
+----------------------------------------
+
+By default, Invoke's config system looks for files like ``/etc/invoke.yaml``,
+``~/.invoke.json``, etc. If you're distributing client code named something
+else, like the ``Tester`` example earlier, you might instead want the config
+system to load ``/etc/tester.json`` or ``$CWD/tester.py``.
+
+Similarly, the environment variable config level looks for env vars like
+``INVOKE_RUN_ECHO``; you might prefer ``TESTER_RUN_ECHO``.
+
+There are a few `.Config` attributes controlling these values:
+
+- ``prefix``: A generic, catchall prefix used directly as the file prefix, and
+  used via all-caps as the env var prefix;
+- ``file_prefix``: For overriding just the filename prefix - otherwise, it
+  defaults to the value of ``prefix``;
+- ``env_prefix``: For overriding just the env var prefix - as you might have
+  guessed, it too defaults to the value of ``prefix``.
+
+Continuing our 'Tester' example, you'd do something like this::
+
+    from invoke import Config
+
+    class TesterConfig(Config):
+        prefix = 'tester'
+
+Or, to seek ``tester.yaml`` as before, but ``TEST_RUN_ECHO`` instead of
+``TESTER_RUN_ECHO``::
+
+    class TesterConfig(Config):
+        prefix = 'tester'
+        env_prefix = 'TEST'
+
+Modifying default config values
+-------------------------------
+
+Default config values are simple - they're just the return value of the
+staticmethod `.Config.global_defaults`, so override that and return whatever
+you like - ideally something based on the superclass' values, as many defaults
+are assumed to exist by the rest of the system. (The helper function
+`invoke.config.merge_dicts` can be useful here.)
+
+For example, say you want Tester to always echo shell commands by default when
+your codebase calls `.Context.run`::
+
+    from invoke.config import Config, merge_dicts
+
+    class TesterConfig(Config):
+        @staticmethod
+        def global_defaults():
+            their_defaults = Config.global_defaults()
+            my_defaults = {
+                'run': {
+                    'echo': True,
+                },
+            }
+            return merge_dicts(their_defaults, my_defaults)
+
+For reference, Invoke's own base defaults (the...default defaults, you could
+say) are documented at :ref:`default-values`.

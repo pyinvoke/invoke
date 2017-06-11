@@ -61,11 +61,13 @@ Naturally, more than one flag may be given at a time::
 Per-task help / printing available flags
 ----------------------------------------
 
-To get help for a specific task, just give the task name as an argument to the
-core ``--help``/``-h`` option, and you'll get both its docstring (if any) and
-per-argument/flag help output::
+To get help for a specific task, you can give the task name as an argument to
+the core ``--help``/``-h`` option, or give ``--help``/``-h`` after the task
+(assuming it doesn't itself define a ``--help`` or ``-h``). When help is
+requested, you'll see the task's docstring (if any) and per-argument/flag help
+output::
 
-    $ invoke --help build
+    $ invoke --help build  # or invoke build --help
 
     Docstring:
       none
@@ -104,8 +106,8 @@ Optional flag values
 --------------------
 
 You saw a hint of this with ``--help`` specifically, but non-core options may
-also take optional values. For example, say your task has a ``--log`` flag
-that activates logging::
+also take optional values, if declared as ``optional``. For example, say your
+task has a ``--log`` flag that activates logging::
 
     $ invoke compile --log
 
@@ -116,15 +118,29 @@ but you also want it to be configurable regarding *where* to log::
 You could implement this with an additional argument (e.g. ``--log`` and
 ``--log-location``) but sometimes the concise API is the more useful one.
 
+To enable this, specify which arguments are of this 'hybrid' optional-value
+type inside ``@task``::
+
+    @task(optional=['log'])
+    def compile(ctx, log=None):
+        if log:
+            log_file = '/var/log/my.log'
+            # Value was given, vs just-True
+            if isinstance(log, unicode): 
+                log_file = log
+            # Replace w/ your actual log setup...
+            set_log_destination(log_file)
+        # Do things that might log here...
+
 When optional flag values are used, the values seen post-parse follow these
 rules:
 
 * If the flag is not given at all (``invoke compile``) the default value
-  (if any) is filled in just as normal.
+  is filled in as normal.
+* If it is given with a value (``invoke compile --log=foo.log``) then the value
+  is stored normally.
 * If the flag is given with no value (``invoke compile --log``), it is treated
   as if it were a ``bool`` and set to ``True``.
-* If it is given with a value (``invoke compile --log=foo.log``) then the value
-  is stored normally (including honoring ``kind`` if it was specified).
 
 Resolving ambiguity
 ~~~~~~~~~~~~~~~~~~~
@@ -150,7 +166,7 @@ In Python, it's common to use ``underscored_names`` for keyword arguments,
 e.g.::
 
     @task
-    def mytask(my_option=False):
+    def mytask(ctx, my_option=False):
         pass
 
 However, the typical convention for command-line flags is dashes, which aren't

@@ -70,6 +70,10 @@ class Runner_(Spec):
             with assert_cpu_usage(lt=7.0):
                 run("python -u busywork.py 10", pty=True, hide=True)
 
+        def doesnt_break_when_stdin_exists_but_null(self):
+            # Re: #425 - IOError occurs when bug present
+            run("inv -c nested_or_piped foo < /dev/null", hide=True)
+
     class IO_hangs:
         "IO hangs"
         def _hang_on_full_pipe(self, pty):
