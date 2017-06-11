@@ -108,7 +108,7 @@ def print_completion_script(console_type, binary):
                       .replace('inv invoke', ' '.join(binary_names)) # noqa
                       .replace("inv'/'invoke", "'/'".join(binary_names)) # noqa
                       .replace('invoke', binary_names[-1]) # noqa
-                      .replace('py%s' % binary_names[-1], 'pyinvoke')) # noqa
+                      .replace('py{}'.format(binary_names[-1]), 'pyinvoke')) # noqa
 
 
 def binary_selector(binary):
