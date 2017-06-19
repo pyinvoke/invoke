@@ -2,6 +2,8 @@
 Changelog
 =========
 
+* :feature:`-` Add `MockContext.set_result_for` to allow massaging a mock
+  Context's configured results after instantiation.
 * :release:`0.18.1 <2017-06-07>`
 * :bug:`-` Update Context internals re: command execution & configuration of
   runner subclasses, to work better in client libraries such as Fabric 2.

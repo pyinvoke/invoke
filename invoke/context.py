@@ -367,7 +367,7 @@ class MockContext(Context):
             the instantiated object's `~.Context.run` method (instead of
             actually executing the requested shell command).
 
-            Specifically, this method accepts:
+            Specifically, this kwarg accepts:
 
             - A single `.Result` object, which will be returned once.
             - An iterable of `Results <.Result>`, which will be returned on
@@ -437,3 +437,38 @@ class MockContext(Context):
         # No need to supply dummy password config, etc.
         # TODO: see the TODO from run() re: injecting arg/kwarg values
         return self._yield_result('__sudo', command)
+
+    def set_result_for(self, attname, command, result):
+        """
+        Modify the stored mock results for given ``attname`` (e.g. ``run``).
+
+        This is similar to how one instantiates `MockContext` with a ``run`` or
+        ``sudo`` dict kwarg. For example, this::
+
+            mc = MockContext(run={'mycommand': Result("mystdout")})
+            assert mc.run('mycommand').stdout == "mystdout"
+
+        is functionally equivalent to this::
+
+            mc = MockContext()
+            mc.set_result_for('run', 'mycommand', Result("mystdout"))
+            assert mc.run('mycommand').stdout == "mystdout"
+
+        `set_result_for` is mostly useful for modifying an already-instantiated
+        `MockContext`, such as one created by test setup or helper methods.
+        """
+        attname = '__{0}'.format(attname)
+        heck = TypeError(
+            "Can't update results for non-dict or nonexistent mock results!"
+        )
+        # Get value & complain if it's not a dict.
+        # TODO: should we allow this to set non-dict values too? Seems vaguely
+        # pointless, at that point, just make a new MockContext eh?
+        try:
+            value = getattr(self, attname)
+        except AttributeError:
+            raise heck
+        if not isinstance(value, dict):
+            raise heck
+        # OK, we're good to modify, so do so.
+        value[command] = result
