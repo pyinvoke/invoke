@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :release:`0.19.0 <2017-06-19>`
 * :feature:`-` Add `MockContext.set_result_for` to allow massaging a mock
   Context's configured results after instantiation.
 * :release:`0.18.1 <2017-06-07>`
