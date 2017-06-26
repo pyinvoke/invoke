@@ -65,12 +65,10 @@ first argument for the context - so Invoke is treating ``what`` as the context
 argument! This means it doesn't show up in help output or other command-line
 parsing stages.
 
-
 The command line says my task's first argument is invalid!
 ----------------------------------------------------------
 
 See :ref:`bad-first-arg` - it's probably the same issue.
-
 
 
 Running local shell commands (``run``)
@@ -150,7 +148,6 @@ The solution here is simple: add ``warn=True`` to your `~invoke.run` call,
 which disables the automatic exit behavior. Then you can check the result's
 ``.exited`` attribute by hand to determine if it truly succeeded.
 
-
 The auto-responder functionality isn't working for my password prompts!
 -----------------------------------------------------------------------
 
@@ -165,7 +162,6 @@ subprocess' regular output streams. Thankfully, the solution is usually easy:
 just add ``pty=True`` to your `~invoke.run` call. Forcing use of an explicit
 pseudo-terminal usually tricks these kinds of programs into writing prompts to
 stderr.
-
 
 I'm getting ``IOError: Inappropriate ioctl for device`` when I run commands!
 ----------------------------------------------------------------------------
