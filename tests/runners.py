@@ -66,7 +66,6 @@ class Runner_(Spec):
         MockedStdin.write_proc_stdin = Mock()
         return MockedStdin
 
-
     class init:
         "__init__"
         def takes_a_context_instance(self):
