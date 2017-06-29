@@ -2,6 +2,11 @@
 Changelog
 =========
 
+* :feature:`322` Allow users to completely disable the default mirroring of
+  stdin by specifying ``False`` for the ``run.in_stream`` config setting /
+  keyword argument. This can help prevent problems when running Invoke under
+  systems that have no useful standard input and which otherwise defeat our
+  pty/fileno related detection.
 * :release:`0.19.0 <2017-06-19>`
 * :feature:`-` Add `MockContext.set_result_for` to allow massaging a mock
   Context's configured results after instantiation.
