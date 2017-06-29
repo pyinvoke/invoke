@@ -172,6 +172,13 @@ replaced one of the process streams (``sys.stdin``, ``sys.stdout`` or
 which pretends that it is. For example, test runners or build systems often do
 this.
 
+99% of the time, this pops up for stdin only, in which case you may be able to
+work around it by specifying ``in_stream=False`` to `~invoke.run` (note:
+``False``, **not** ``None``!)
+
+Gory details
+~~~~~~~~~~~~
+
 Technically, what's happened is that the object handed to Invoke's command
 executor as e.g. ``run('command', in_stream=xxx)`` (or ``out_stream`` or etc;
 and these all default to the ``sys`` members listed above) implements a

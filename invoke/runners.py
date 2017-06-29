@@ -201,6 +201,12 @@ class Runner(object):
             A file-like stream object to used as the subprocess' standard
             input. If ``None`` (the default), ``sys.stdin`` will be used.
 
+            If ``False``, will disable stdin mirroring entirely (though other
+            functionality which writes to the subprocess' stdin, such as
+            autoresponding, will still function.) Disabling stdin mirroring can
+            help when ``sys.stdin`` is a misbehaving non-stream object, such as
+            under test harnesses or headless command runners.
+
         :param list watchers:
             A list of `.StreamWatcher` instances which will be used to scan the
             program's ``stdout`` or ``stderr`` and may write into its ``stdin``
@@ -281,17 +287,17 @@ class Runner(object):
                 'hide': 'stdout' in opts['hide'],
                 'output': out_stream,
             },
-            # TODO: make this & related functionality optional, for users who
-            # don't care about autoresponding & are encountering issues with
-            # the stdin mirroring? Downside is it fragments expected behavior &
-            # puts folks with true interactive use cases in a different support
-            # class.
-            self.handle_stdin: {
+        }
+        # After opt processing above, in_stream will be a real stream obj or
+        # False, so we can truth-test it. We don't even create a stdin-handling
+        # thread if it's False, meaning user indicated stdin is nonexistent or
+        # problematic.
+        if in_stream:
+            thread_args[self.handle_stdin] = {
                 'input_': in_stream,
                 'output': out_stream,
                 'echo': opts['echo_stdin'],
             }
-        }
         if not self.using_pty:
             thread_args[self.handle_stderr] = {
                 'buffer_': stderr,
