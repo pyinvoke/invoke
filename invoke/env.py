@@ -63,7 +63,11 @@ class Environment(object):
         new_vars = {}
         obj = self._path_get(key_path)
         # Sub-dict -> recurse
-        if hasattr(obj, 'keys') and hasattr(obj, '__getitem__'):
+        if (
+            hasattr(obj, 'keys')
+            and callable(obj.keys)
+            and hasattr(obj, '__getitem__')
+        ):
             for key in obj.keys():
                 merged_vars = dict(env_vars, **new_vars)
                 merged_path = key_path + [key]
