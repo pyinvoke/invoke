@@ -126,7 +126,7 @@ Running shell commands
 Many use cases for Invoke involve running local shell commands, similar to
 programs like Make or Rake. This is done via the `~.Context.run` function::
 
-    from invoke import task, run
+    from invoke import task
 
     @task
     def build(ctx):

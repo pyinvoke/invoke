@@ -8,7 +8,8 @@ Changelog
   systems that have no useful standard input and which otherwise defeat our
   pty/fileno related detection.
 * :release:`0.19.0 <2017-06-19>`
-* :feature:`-` Add `MockContext.set_result_for` to allow massaging a mock
+* :feature:`-` Add `MockContext.set_result_for
+  <invoke.context.MockContext.set_result_for>` to allow massaging a mock
   Context's configured results after instantiation.
 * :release:`0.18.1 <2017-06-07>`
 * :bug:`-` Update Context internals re: command execution & configuration of
