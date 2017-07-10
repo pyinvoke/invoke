@@ -45,6 +45,9 @@ class Failure(Exception):
     def __init__(self, result, reason=None):
         self.result = result
         self.reason = reason
+        # TODO: needs to preserve the encoding from the Runner that generated
+        # it, so it knows how to .encode representations of its stdout/err.
+        self.encoding = 'utf-8'
 
 
 def _tail(stream):
@@ -72,15 +75,17 @@ class UnexpectedExit(Failure):
         if 'stdout' not in self.result.hide:
             stdout = already_printed
         else:
-            stdout = _tail(self.result.stdout)
+            stdout = _tail(self.result.stdout).encode(self.encoding)
         if self.result.pty:
             stderr = " n/a (PTYs have no stderr)"
         else:
             if 'stderr' not in self.result.hide:
                 stderr = already_printed
             else:
-                stderr = _tail(self.result.stderr)
-        return """Encountered a bad command exit code!
+                stderr = _tail(self.result.stderr).encode(self.encoding)
+        command = self.result.command
+        exited = self.result.exited
+        template = """Encountered a bad command exit code!
 
 Command: {0!r}
 
@@ -90,7 +95,8 @@ Stdout:{2}
 
 Stderr:{3}
 
-""".format(self.result.command, self.result.exited, stdout, stderr)
+"""
+        return template.format(command, exited, stdout, stderr)
 
     def __repr__(self):
         # TODO: expand?
