@@ -82,8 +82,8 @@ For convenience, we refer to nested setting names with a dotted syntax, so e.g.
 
 - The ``tasks`` config tree holds settings relating to task execution.
 
-  - ``tasks.dedupe`` controls :ref:`deduping` and defaults to ``True``. It can
-    also be overridden at runtime via :option:`--no-dedupe`.
+    - ``tasks.dedupe`` controls :ref:`deduping` and defaults to ``True``. It
+      can also be overridden at runtime via :option:`--no-dedupe`.
 
 - The ``run`` tree controls the behavior of `.Runner.run`. Each member of this
   tree (such as ``run.echo`` or ``run.pty``) maps directly to a `.Runner.run`
