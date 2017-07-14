@@ -108,7 +108,58 @@ Result, with three names for the same task::
     setting aliases (e.g. ``@task(aliases=('foo', 'bar'))``, and is useful for
     ensuring a given task always has some aliases set no matter how it's added
     to a namespace.
-        
+
+.. _dashes-vs-underscores:
+
+Dashes vs underscores
+---------------------
+
+In the common case of functions-as-tasks, you'll often find yourself writing
+task names that contain underscores::
+
+    @task
+    def my_awesome_task(c):
+        print("Awesome!")
+
+By default, the function name is used verbatim as the task name, appears as
+such in the output of CLI commands, and is how the task must be referenced when
+invoking it::
+
+    $ inv --list
+    Available tasks:
+
+      my_awesome_task
+
+    $ inv my_awesome_task
+    Awesome!
+
+However, many users find dashes to be more aesthetically pleasing (not to
+mention easier to type). Those users can simply update their configuration to
+set ``tasks.auto_dashes`` to ``True``, for example in their personal
+``~/.invoke.yml`` file (or any other :doc:`configuration vector
+</concepts/configuration>`)::
+
+    tasks:
+        auto_dashes: true
+
+When this setting is activated, all underscores are interpreted to be dashes
+instead::
+
+    $ inv --list
+    Available tasks:
+
+      my-awesome-task
+
+    $ inv my-awesome-task
+    Awesome!
+
+.. note::
+    In the interests of avoiding confusion, this setting is "exclusive" in
+    nature - when it's on, the underscored version of task names *are not
+    valid* on the CLI. (At the pure function level within Python, of course,
+    they must continue to be referenced with underscores, as dashed names are
+    not valid Python syntax!)
+
 Nesting collections
 ===================
 
