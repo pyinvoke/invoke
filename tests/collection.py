@@ -256,6 +256,19 @@ class Collection_(Spec):
             self.c.add_task(its_me, default=False)
             eq_(self.c.default, None)
 
+        def allows_specifying_aliases(self):
+            self.c.add_task(_mytask, aliases=('task1', 'task2'))
+            assert self.c['_mytask'] is self.c['task1'] is self.c['task2']
+
+        def aliases_are_merged(self):
+            @task(aliases=('foo', 'bar'))
+            def biz(c):
+                pass
+            # NOTE: using tuple above and list below to ensure no type problems
+            self.c.add_task(biz, aliases=['baz', 'boz'])
+            for x in ('foo', 'bar', 'biz', 'baz', 'boz'):
+                assert self.c[x] is self.c['biz']
+
     class add_collection:
         def setup(self):
             self.c = Collection()

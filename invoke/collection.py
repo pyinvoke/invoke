@@ -192,7 +192,7 @@ class Collection(object):
             collection.configure(config)
         return collection
 
-    def add_task(self, task, name=None, default=None):
+    def add_task(self, task, name=None, aliases=None, default=None):
         """
         Add `.Task` ``task`` to this collection.
 
@@ -202,6 +202,11 @@ class Collection(object):
             Optional string name to bind to (overrides the task's own
             self-defined ``name`` attribute and/or any Python identifier (i.e.
             ``.func_name``.)
+
+        :param aliases:
+            Optional iterable of additional names to bind the task as, on top
+            of the primary name. These will be used in addition to any aliases
+            the task itself declares internally.
 
         :param default: Whether this task should be the collection default.
         """
@@ -217,7 +222,7 @@ class Collection(object):
         if name in self.collections:
             raise ValueError("Name conflict: this collection has a sub-collection named {0!r} already".format(name)) # noqa
         self.tasks[name] = task
-        for alias in task.aliases:
+        for alias in list(task.aliases) + list(aliases or []):
             self.tasks.alias(alias, to=name)
         if default is True or (default is None and task.is_default):
             if self.default:

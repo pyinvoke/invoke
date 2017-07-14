@@ -2,6 +2,16 @@
 Changelog
 =========
 
+* :bug:`396` ``Collection.add_task(task, aliases=('other', 'names')`` was
+  listed in the conceptual documentation, but not implemented (technically, it
+  was removed at some point and never reinstated.) It has been (re-)added and
+  now exists. Thanks to ``@jenisys`` for the report.
+
+  .. warning::
+    This technically changes argument order for `Collection.add_task
+    <invoke.collection.Collection.add_task>`, so be aware if you were using
+    positional arguments!
+
 * :feature:`322` Allow users to completely disable the default mirroring of
   stdin by specifying ``False`` for the ``run.in_stream`` config setting /
   keyword argument. This can help prevent problems when running Invoke under
