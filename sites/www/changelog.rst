@@ -2,6 +2,16 @@
 Changelog
 =========
 
+* :bug:`396` ``Collection.add_task(task, aliases=('other', 'names')`` was
+  listed in the conceptual documentation, but not implemented (technically, it
+  was removed at some point and never reinstated.) It has been (re-)added and
+  now exists. Thanks to ``@jenisys`` for the report.
+
+  .. warning::
+    This technically changes argument order for `Collection.add_task
+    <invoke.collection.Collection.add_task>`, so be aware if you were using
+    positional arguments!
+
 * :bug:`- major` Display of hidden subprocess output when a command
   execution failed (end-of-session output starting with ``Encountered a bad
   command exit code!``) was liable to display encoding errors (e.g. ``'ascii'
