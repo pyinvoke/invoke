@@ -84,6 +84,9 @@ For convenience, we refer to nested setting names with a dotted syntax, so e.g.
 
     - ``tasks.dedupe`` controls :ref:`deduping` and defaults to ``True``. It
       can also be overridden at runtime via :option:`--no-dedupe`.
+    - ``tasks.auto_dashes`` controls whether task names have underscores turned
+      to dashes on the CLI. Default: ``False``. See also
+      :ref:`dashes-vs-underscores`.
 
 - The ``run`` tree controls the behavior of `.Runner.run`. Each member of this
   tree (such as ``run.echo`` or ``run.pty``) maps directly to a `.Runner.run`
