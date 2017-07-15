@@ -279,6 +279,14 @@ class Program(object):
             # Create a base Config object (stored as self.config) now that we
             # have CLI flags available (such as the collection, runtime config
             # paths, overrides to core options like echo/warn, etc)
+            # TODO: needs a two-step config creation that is capable of
+            # affecting the CLI parse step above, then being updated (or
+            # replaced) by one honoring CLI flags that impact configuration.
+            # TODO: this way, we can have _a_ config object handy during
+            # _parse(), list_tasks, print_help, etc when determining how to
+            # show and/or parse names.
+            # TODO: then once that works well enough for #329, also implement
+            # #310!! as it needs that same thing.
             self.create_config()
             # Create an Executor, passing in the data resulting from the prior
             # steps, then tell it to execute the tasks.

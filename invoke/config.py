@@ -356,18 +356,20 @@ class Config(DataProxy):
       well as the various config file paths/prefixes
     - loads system, user and project level config files, if found
 
-    At this point, `.Config` is fully usable, but in most real-world use cases,
-    the CLI machinery (or library users) do additional work on a per-task
-    basis:
+    At this point, `.Config` is fully usable - and because it tries to
+    pre-emptively load config files, those config files can inform everything
+    that comes after, like CLI parsing. In the CLI use case, further processing
+    is done after instantiation:
 
-    - the result of CLI argument parsing is applied to the overrides level
+    - the result of argument/option parsing is applied to the overrides level
     - a runtime config file is loaded, if its flag was supplied
-    - the base config is cloned (so tasks don't inadvertently affect one
-      another)
-    - per-collection data is loaded (only possible now that we have a task in
-      hand)
-    - shell environment data is loaded (must be done at end of process due to
-      using the rest of the config as a guide for interpreting env var names)
+    - then, for each task being executed:
+
+        - per-collection data is loaded (only possible now that we have a task
+          in hand)
+        - shell environment data is loaded (must be done at end of process due
+          to using the rest of the config as a guide for interpreting env var
+          names)
 
     Any modifications made directly to the `.Config` itself (usually, after it
     has been handed to the task or other end-user code) end up stored in their
@@ -469,6 +471,7 @@ class Config(DataProxy):
             },
             'tasks': {
                 'dedupe': True,
+                'auto_dashes': False,
             },
         }
 

@@ -101,6 +101,7 @@ class Config_(IntegrationSpec):
                     },
                     'tasks': {
                         'dedupe': True,
+                        'auto_dashes': False,
                     },
                 },
             )
