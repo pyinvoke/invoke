@@ -8,6 +8,8 @@ import sys
 import threading
 import time
 
+from .util import six
+
 # Import some platform-specific things at top level so they can be mocked for
 # tests.
 try:
@@ -30,11 +32,6 @@ from .platform import (
     WINDOWS, pty_size, character_buffered, ready_for_reading, bytes_to_read,
 )
 from .util import has_fileno, isatty, ExceptionHandlingThread, encode_output
-
-try:
-    from .vendor import six
-except ImportError:
-    import six
 
 
 class Runner(object):

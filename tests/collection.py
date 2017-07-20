@@ -1,11 +1,11 @@
 import operator
 
+from invoke.util import six, reduce
+
 from spec import Spec, eq_, ok_, raises, assert_raises
 
 from invoke.collection import Collection
 from invoke.tasks import task, Task
-from invoke.vendor import six
-from invoke.vendor.six.moves import reduce
 
 from _util import load, support_path
 

@@ -1,14 +1,7 @@
 import copy
 import types
 
-try:
-    from .vendor import six
-    from .vendor.lexicon import Lexicon
-except ImportError:
-    # Use system wide modules
-    import six
-    from lexicon import Lexicon
-
+from .util import six, Lexicon
 
 from .config import merge_dicts, copy_dict
 from .parser import Context as ParserContext

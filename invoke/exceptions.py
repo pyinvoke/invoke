@@ -9,10 +9,7 @@ condition in a way easily told apart from other, truly unexpected errors".
 from traceback import format_exception
 from pprint import pformat
 
-try:
-    from .vendor import six
-except ImportError:
-    import six
+from .util import six
 
 from .util import encode_output
 

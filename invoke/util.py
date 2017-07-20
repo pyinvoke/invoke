@@ -6,6 +6,31 @@ import os
 import threading
 import sys
 
+# NOTE: This is the canonical location for commonly-used vendored modules,
+# which is the only spot that performs this try/except to allow repackaged
+# Invoke to function (e.g. distro packages which unvendor the vendored bits and
+# thus must import our 'vendored' stuff from the overall environment.)
+# All other uses of six, Lexicon, etc should do 'from .util import six' etc.
+# Saves us from having to update the same logic in a dozen places.
+# TODO: would this make more sense to put _into_ invoke.vendor? That way, the
+# import lines which now read 'from .util import <third party stuff>' would be
+# more obvious. Requires packagers to leave invoke/vendor/__init__.py alone tho
+try:
+    from .vendor import six
+    from .vendor.lexicon import Lexicon
+    if six.PY3:
+        from .vendor import yaml3 as yaml
+    else:
+        from .vendor import yaml2 as yaml
+except ImportError:
+    from lexicon import Lexicon
+    import six
+    import yaml
+
+# Grab six.moves stuff here so other modules don't have to worry about it
+# (they can't rely on the imported 'six' directly via attribute access, since
+# six.moves does import shenanigans.)
+from six.moves import reduce
 
 
 LOG_FORMAT = "%(name)s.%(module)s.%(funcName)s: %(message)s"
