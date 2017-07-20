@@ -1,7 +1,6 @@
 from invoke.vendor.six.moves.queue import Queue
 
-from invoke.exceptions import ExceptionWrapper
-from invoke.util import ExceptionHandlingThread as EHThread
+from invoke.util import ExceptionWrapper, ExceptionHandlingThread as EHThread
 
 from spec import Spec, ok_, eq_
 

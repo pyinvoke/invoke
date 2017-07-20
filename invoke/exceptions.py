@@ -6,7 +6,6 @@ exceptions used for message-passing" to simply "we needed to express an error
 condition in a way easily told apart from other, truly unexpected errors".
 """
 
-from collections import namedtuple
 from traceback import format_exception
 from pprint import pformat
 
@@ -14,6 +13,8 @@ try:
     from .vendor import six
 except ImportError:
     import six
+
+from .util import encode_output
 
 
 class CollectionNotFound(Exception):
@@ -45,9 +46,6 @@ class Failure(Exception):
     def __init__(self, result, reason=None):
         self.result = result
         self.reason = reason
-        # TODO: needs to preserve the encoding from the Runner that generated
-        # it, so it knows how to .encode representations of its stdout/err.
-        self.encoding = 'utf-8'
 
 
 def _tail(stream):
@@ -75,14 +73,20 @@ class UnexpectedExit(Failure):
         if 'stdout' not in self.result.hide:
             stdout = already_printed
         else:
-            stdout = _tail(self.result.stdout).encode(self.encoding)
+            stdout = encode_output(
+                _tail(self.result.stdout),
+                self.result.encoding,
+            )
         if self.result.pty:
             stderr = " n/a (PTYs have no stderr)"
         else:
             if 'stderr' not in self.result.hide:
                 stderr = already_printed
             else:
-                stderr = _tail(self.result.stderr).encode(self.encoding)
+                stderr = encode_output(
+                    _tail(self.result.stderr),
+                    self.result.encoding,
+                )
         command = self.result.command
         exited = self.result.exited
         template = """Encountered a bad command exit code!
@@ -182,15 +186,6 @@ class UnknownFileType(Exception):
     """
     pass
 
-
-#: A namedtuple wrapping a thread-borne exception & that thread's arguments.
-#: Mostly used as an intermediate between `.ExceptionHandlingThread` (which
-#: preserves initial exceptions) and `.ThreadException` (which holds 1..N such
-#: exceptions, as typically multiple threads are involved.)
-ExceptionWrapper = namedtuple(
-    'ExceptionWrapper',
-    'kwargs type value traceback'
-)
 
 def _printable_kwargs(kwargs):
     """
