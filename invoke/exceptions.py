@@ -216,10 +216,10 @@ class ThreadException(Exception):
         Threads which did not encounter an exception, do not contribute to this
         exception object and thus are not present inside `exceptions`.
     """
-    #: A tuple of `ExceptionWrappers <ExceptionWrapper>` containing the initial
-    #: thread constructor kwargs (because `threading.Thread` subclasses should
-    #: always be called with kwargs) and the caught exception for that thread
-    #: as seen by `sys.exc_info` (so: type, value, traceback).
+    #: A tuple of `ExceptionWrappers <invoke.util.ExceptionWrapper>` containing
+    #: the initial thread constructor kwargs (because `threading.Thread`
+    #: subclasses should always be called with kwargs) and the caught exception
+    #: for that thread as seen by `sys.exc_info` (so: type, value, traceback).
     #:
     #: .. note::
     #:     The ordering of this attribute is not well-defined.
