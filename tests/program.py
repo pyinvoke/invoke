@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import os
 import sys
 from functools import partial
@@ -351,7 +349,7 @@ ohnoz!
             # getvalue() of the faked sys.stderr (spec.trap auto-decodes it
             # normally) to have a not-quite-tautological test. otherwise we'd
             # just be comparing unicode to unicode. shrug?
-            expected = six.b("""Encountered a bad command exit code!
+            expected = b"""Encountered a bad command exit code!
 
 Command: 'meh'
 
@@ -359,13 +357,13 @@ Exit code: 54
 
 Stdout:
 
-this is not ascii: ሴ
+this is not ascii: \xe1\x88\xb4
 
 Stderr:
 
-this is also not ascii: 䌡
+this is also not ascii: \xe4\x8c\xa1
 
-""")
+"""
             got = six.BytesIO.getvalue(sys.stderr)
             assert got == expected
 
