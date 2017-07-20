@@ -16,21 +16,21 @@ import sys
 # import lines which now read 'from .util import <third party stuff>' would be
 # more obvious. Requires packagers to leave invoke/vendor/__init__.py alone tho
 try:
+    from .vendor.lexicon import Lexicon # noqa
     from .vendor import six
-    from .vendor.lexicon import Lexicon
     if six.PY3:
-        from .vendor import yaml3 as yaml
+        from .vendor import yaml3 as yaml # noqa
     else:
-        from .vendor import yaml2 as yaml
+        from .vendor import yaml2 as yaml # noqa
 except ImportError:
-    from lexicon import Lexicon
+    from lexicon import Lexicon # noqa
     import six
-    import yaml
+    import yaml # noqa
 
 # Grab six.moves stuff here so other modules don't have to worry about it
 # (they can't rely on the imported 'six' directly via attribute access, since
 # six.moves does import shenanigans.)
-from six.moves import reduce
+from six.moves import reduce # noqa
 
 
 LOG_FORMAT = "%(name)s.%(module)s.%(funcName)s: %(message)s"
