@@ -10,10 +10,7 @@ not be included in the Sphinx API documentation.
 
 import os
 
-try:
-    from .vendor import six
-except ImportError:
-    import six
+from .util import six
 
 from .exceptions import UncastableEnvVar, AmbiguousEnvVar
 from .util import debug

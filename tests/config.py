@@ -2,6 +2,7 @@ import pickle
 import os
 from os.path import join, expanduser
 
+from invoke.util import six
 from spec import eq_, ok_, raises
 from mock import patch, call
 
@@ -10,7 +11,6 @@ from invoke.config import Config
 from invoke.exceptions import (
     AmbiguousEnvVar, UncastableEnvVar, UnknownFileType
 )
-from invoke.vendor import six
 
 from _util import IntegrationSpec, skip_if_windows
 

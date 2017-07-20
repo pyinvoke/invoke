@@ -4,16 +4,7 @@ import json
 import os
 from os.path import join, splitext, expanduser
 
-try:
-    from .vendor import six
-    if six.PY3:
-        from .vendor import yaml3 as yaml
-    else:
-        from .vendor import yaml2 as yaml
-except ImportError:
-    # Use system modules
-    import six
-    import yaml
+from .util import six, yaml
 
 if six.PY3:
     try:

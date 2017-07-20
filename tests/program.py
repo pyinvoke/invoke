@@ -2,6 +2,7 @@ import os
 import sys
 from functools import partial
 
+from invoke.util import six
 from mock import patch, Mock, ANY
 from spec import eq_, ok_, trap, skip, assert_contains, assert_not_contains
 
@@ -298,13 +299,14 @@ class Program_(IntegrationSpec):
 
         @trap
         @patch('invoke.program.sys.exit')
-        def shows_UnexpectedExit_repr_when_streams_hidden(self, mock_exit):
+        def shows_UnexpectedExit_str_when_streams_hidden(self, mock_exit):
             p = Program()
             oops = UnexpectedExit(Result(
                 command='meh',
                 exited=54,
                 stdout='things!',
                 stderr='ohnoz!',
+                encoding='utf-8',
                 hide=('stdout', 'stderr'),
             ))
             p.execute = Mock(side_effect=oops)
@@ -328,6 +330,42 @@ ohnoz!
 """)
             # And exit with expected code (vs e.g. 1 or 0)
             mock_exit.assert_called_with(54)
+
+        @trap
+        @patch('invoke.program.sys.exit')
+        def UnexpectedExit_str_encodes_stdout_and_err(self, mock_exit):
+            p = Program()
+            oops = UnexpectedExit(Result(
+                command='meh',
+                exited=54,
+                stdout=six.u('this is not ascii: \u1234'),
+                stderr=six.u('this is also not ascii: \u4321'),
+                encoding='utf-8',
+                hide=('stdout', 'stderr'),
+            ))
+            p.execute = Mock(side_effect=oops)
+            p.run("myapp foo")
+            # NOTE: using explicit binary ASCII here, & accessing raw
+            # getvalue() of the faked sys.stderr (spec.trap auto-decodes it
+            # normally) to have a not-quite-tautological test. otherwise we'd
+            # just be comparing unicode to unicode. shrug?
+            expected = b"""Encountered a bad command exit code!
+
+Command: 'meh'
+
+Exit code: 54
+
+Stdout:
+
+this is not ascii: \xe1\x88\xb4
+
+Stderr:
+
+this is also not ascii: \xe4\x8c\xa1
+
+"""
+            got = six.BytesIO.getvalue(sys.stderr)
+            assert got == expected
 
         def should_show_core_usage_on_core_parse_failures(self):
             skip()

@@ -25,6 +25,15 @@ Changelog
     <invoke.collection.Collection.add_task>`, so be aware if you were using
     positional arguments!
 
+* :bug:`- major` Display of hidden subprocess output when a command
+  execution failed (end-of-session output starting with ``Encountered a bad
+  command exit code!``) was liable to display encoding errors (e.g. ``'ascii'
+  codec can't encode character ...``) when that output was not
+  ASCII-compatible.
+
+  This problem was previously solved for *non-hidden* (mirrored) subprocess
+  output, but the fix (encode the data with the local encoding) had not been
+  applied to exception display. Now it's applied in both cases.
 * :feature:`322` Allow users to completely disable the default mirroring of
   stdin by specifying ``False`` for the ``run.in_stream`` config setting /
   keyword argument. This can help prevent problems when running Invoke under

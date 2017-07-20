@@ -4,7 +4,7 @@ import sys
 
 from spec import Spec, trap, eq_, ok_, skip
 
-from invoke.vendor import six
+from invoke.util import six
 
 from invoke import run
 from invoke._version import __version__
