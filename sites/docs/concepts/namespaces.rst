@@ -16,6 +16,7 @@ namespaces use a dot-separated syntax, e.g. ``docs.build``.
 In this section, we show how building namespaces with this API is flexible but
 also allows following Python package layouts with minimal boilerplate.
 
+
 Starting out
 ============
 
@@ -47,6 +48,7 @@ Our available tasks list now looks like this::
     Available tasks:
 
         release
+
 
 Naming your tasks
 =================
@@ -160,6 +162,7 @@ instead::
     they must continue to be referenced with underscores, as dashed names are
     not valid Python syntax!)
 
+
 Nesting collections
 ===================
 
@@ -211,6 +214,7 @@ Result::
         release
         sphinx.build
         sphinx.clean
+
 
 Importing modules as collections
 ================================
@@ -338,6 +342,7 @@ Result::
         release
         docs.build
         docs.clean
+
 
 More shortcuts
 ==============
