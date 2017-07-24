@@ -35,9 +35,6 @@ follows:
    
      - Sub-collections' configurations get merged into the top level collection
        and the final result forms the basis of the overall configuration setup.
-     - Since the root collection is loaded at runtime, configuration settings
-       modifying the load process itself obviously won't take effect if defined
-       at this level.
 
 #. **System-level configuration file** stored in ``/etc/``, such as
    ``/etc/invoke.yaml``. (See :ref:`config-files` for details on this and the

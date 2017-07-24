@@ -2,6 +2,15 @@
 Changelog
 =========
 
+* :feature:`-` (required to support :issue:`310` and :issue:`329`) Break up the
+  `~invoke.config.Config` lifecycle some more, allowing it to gradually load
+  configuration vectors; this allows the CLI machinery
+  (`~invoke.executor.Executor`) to honor configuration settings from config
+  files which impact how CLI parsing and task loading behaves.
+* :feature:`310` (also :issue:`455`, :issue:`291`) Allow configuring collection
+  root directory & module name via configuration files (previously, they were
+  only configurable via CLI flags or generating a custom
+  `~invoke.program.Program`.)
 * :feature:`329` Add a new config option, ``tasks.auto_dashes``, which can be
   set to ``True`` to effectively rename all ``underscored_task_names`` as if
   they were ``dashed-task-names``. This affects ``--list``, ``--help``, and of

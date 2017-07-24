@@ -342,32 +342,38 @@ class Config(DataProxy):
 
     At initialization time, `.Config`:
 
-    - creates per-level data structures
+    - creates per-level data structures;
     - stores levels supplied to `__init__`, such as defaults or overrides, as
-      well as the various config file paths/prefixes
-    - loads system, user and project level config files, if found
+      well as the various config file paths/filename patterns;
+    - loads system, user and project level config files, if found.
 
-    At this point, `.Config` is fully usable, but in most real-world use cases,
-    the CLI machinery (or library users) do additional work on a per-task
-    basis:
+    At this point, `.Config` is fully usable - and because it pre-emptively
+    loads config files, those config files can inform everything that comes
+    after, like CLI parsing or loading of task collections.
 
-    - the result of CLI argument parsing is applied to the overrides level
-    - a runtime config file is loaded, if its flag was supplied
-    - the base config is cloned (so tasks don't inadvertently affect one
-      another)
-    - per-collection data is loaded (only possible now that we have a task in
-      hand)
-    - shell environment data is loaded (must be done at end of process due to
-      using the rest of the config as a guide for interpreting env var names)
+    In the CLI use case, further processing is done after instantiation:
 
-    Any modifications made directly to the `.Config` itself (usually, after it
-    has been handed to the task or other end-user code) end up stored in their
-    own (topmost) config level, making it easy to debug final values.
+    - the result of argument/option parsing is applied to the overrides level;
+    - a runtime config file is loaded, if its flag was supplied;
+    - then, for each task being executed:
+
+        - per-collection data is loaded (only possible now that we have a task
+          in hand);
+        - shell environment data is loaded (must be done at end of process due
+          to using the rest of the config as a guide for interpreting env var
+          names.)
+
+    At this point, the config object is handed to the task being executed, as
+    part of its execution `.Context`.
+
+    Any modifications made directly to the `.Config` itself after this point
+    end up stored in their own (topmost) config level, making it easy to debug
+    final values.
 
     Finally, any *deletions* made to the `.Config` (e.g. applications of
-    dict-style mutators like ``pop``, ``clear`` etc) are tracked in their own
-    structure, allowing the overall object to honor such method calls despite
-    the source data itself not changing.
+    dict-style mutators like ``pop``, ``clear`` etc) are also tracked in their
+    own structure, allowing the config object to honor such method calls
+    without mutating the underlying source data.
 
     **Special class attributes**
 
