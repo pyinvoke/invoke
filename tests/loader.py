@@ -50,11 +50,14 @@ class FilesystemLoader_(Spec):
     def setup(self):
         self.l = FSLoader(start=support)
 
-    def exposes_discovery_start_point(self):
+    def discovery_start_point_defaults_to_cwd(self):
+        eq_(FSLoader().start, os.getcwd())
+
+    def start_point_is_configurable(self):
         start = '/tmp/'
         eq_(FSLoader(start=start).start, start)
 
-    def has_a_default_discovery_start_point(self):
+    def exposes_start_point_as_attribute(self):
         eq_(FSLoader().start, os.getcwd())
 
     def returns_collection_object_if_name_found(self):
@@ -78,7 +81,7 @@ class FilesystemLoader_(Spec):
         indirectly = FSLoader(start=deep).load('foo')
         eq_(directly, indirectly)
 
-    def defaults_to_tasks_collection(self):
+    def defaults_to_tasks_collection_name(self):
         "defaults to 'tasks' collection"
         # There's a basic tasks.py in tests/_support
         result = self.l.load()
