@@ -13,9 +13,9 @@ Task module discovery
 =====================
 
 With no other configuration, simply calling ``invoke`` will look for a single
-Python module named ``tasks``, and will treat it as the root namespace.
-``tasks`` (and any other module name given via :ref:`the load options
-<load-options>`) is searched for in the following ways:
+Python module or package named ``tasks``, and will treat it as the root
+namespace. ``tasks`` (or any other name given via :ref:`loading configuration
+options <configuring-loading>`) is searched for in the following ways:
 
 * First, if a valid tasks module by that name already exists on Python's
   `sys.path <http://docs.python.org/release/2.7/library/sys.html#sys.path>`_,
@@ -38,18 +38,27 @@ used as valid task collections. Any that fail are discarded, the ``sys.path``
 munging done to import them is reverted, and the search continues.
 
 
-.. _load-options:
+.. _configuring-loading:
 
-Additional load options
-=======================
+Configuring the loading process
+===============================
 
-The ``-c`` / ``--collection`` command-line argument allows you to override the
-default collection name searched for. It should be a Python module name and not
-a file name (so ``-c mytasks``, not ``-c mytasks.py`` or ``-c mytasks/``.)
+You can configure the above behavior, requesting that Invoke alter the
+collection name searched for and/or the path where filesystem-level loading
+starts looking.
 
-If you need to override the default search start point so Invoke no longer
-searches from the current directory, use ``--root``. E.g. if your tasks module
-is in ``/opt/code/myproject/tasks.py`` and your CWD is, say, ``/home/myuser``,
-you might run Invoke as::
+For example, you may already have a project-level ``tasks.py`` that you can't
+easily rename; or you may want to host a number of tasks collections stored
+outside the project root and make it easy to switch between them; or any number
+of reasons.
 
-    $ invoke --root /opt/code/myproject
+Both the sought collection name and the search root can be specified via
+:ref:`configuration file options <config-files>` or as :doc:`runtime CLI flags
+</cli>`:
+
+- **Change the collection name**: Set the ``tasks.collection_name``
+  configuration option, or use the ``-c``/``--collection`` CLI flag. It should
+  be a Python module name and not a file name (so ``mytasks``, not
+  ``mytasks.py`` or ``mytasks/``.)
+- **Change the root search path**: Configure ``tasks.root_search_path`` or use
+  ``-r``/``--root``. This value may be any valid directory path.
