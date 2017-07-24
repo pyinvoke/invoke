@@ -84,6 +84,13 @@ For convenience, we refer to nested setting names with a dotted syntax, so e.g.
     - ``tasks.auto_dashes`` controls whether task names have underscores turned
       to dashes on the CLI. Default: ``False``. See also
       :ref:`dashes-vs-underscores`.
+    - ``tasks.collection_name`` controls the Python import name sought out by
+      :ref:`collection discovery <collection-discovery>`, and defaults to
+      ``"tasks"``.
+    - ``tasks.root_search_path`` allows overriding the default :ref:`collection
+      discovery <collection-discovery>` root search location. It defaults to
+      ``None``, which indicates to use the executing process' current working
+      directory.
 
 - The ``run`` tree controls the behavior of `.Runner.run`. Each member of this
   tree (such as ``run.echo`` or ``run.pty``) maps directly to a `.Runner.run`
