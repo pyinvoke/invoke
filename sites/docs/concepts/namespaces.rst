@@ -144,8 +144,8 @@ set ``tasks.auto_dashes`` to ``True``, for example in their personal
     tasks:
         auto_dashes: true
 
-When this setting is activated, all underscores are interpreted to be dashes
-instead::
+When this setting is activated, all underscores in task or collection names are
+interpreted to be dashes instead::
 
     $ inv --list
     Available tasks:
@@ -158,9 +158,9 @@ instead::
 .. note::
     In the interests of avoiding confusion, this setting is "exclusive" in
     nature - when it's on, the underscored version of task names *are not
-    valid* on the CLI. (At the pure function level within Python, of course,
-    they must continue to be referenced with underscores, as dashed names are
-    not valid Python syntax!)
+    valid* on the CLI. (However, at the pure function level within Python, they
+    must continue to be referenced with underscores, as dashed names are not
+    valid Python syntax!)
 
 
 Nesting collections
