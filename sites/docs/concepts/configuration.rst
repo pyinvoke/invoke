@@ -87,7 +87,7 @@ For convenience, we refer to nested setting names with a dotted syntax, so e.g.
     - ``tasks.collection_name`` controls the Python import name sought out by
       :ref:`collection discovery <collection-discovery>`, and defaults to
       ``"tasks"``.
-    - ``tasks.root_search_path`` allows overriding the default :ref:`collection
+    - ``tasks.search_root`` allows overriding the default :ref:`collection
       discovery <collection-discovery>` root search location. It defaults to
       ``None``, which indicates to use the executing process' current working
       directory.

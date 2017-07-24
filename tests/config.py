@@ -103,7 +103,7 @@ class Config_(IntegrationSpec):
                         'dedupe': True,
                         'auto_dashes': False,
                         'collection_name': 'tasks',
-                        'root_search_path': None,
+                        'search_root': None,
                     },
                 },
             )
