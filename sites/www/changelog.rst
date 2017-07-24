@@ -7,7 +7,7 @@ Changelog
   they were ``dashed-task-names``. This affects ``--list``, ``--help``, and of
   course the parser. For details, see :ref:`dashes-vs-underscores`. Thanks to
   Alexander Artemenko for the initial feature request.
-* :bug:`396` ``Collection.add_task(task, aliases=('other', 'names')`` was
+* :bug:`396 major` ``Collection.add_task(task, aliases=('other', 'names')`` was
   listed in the conceptual documentation, but not implemented (technically, it
   was removed at some point and never reinstated.) It has been (re-)added and
   now exists. Thanks to ``@jenisys`` for the report.
