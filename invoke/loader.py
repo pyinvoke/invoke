@@ -2,7 +2,7 @@ import os
 import sys
 import imp
 
-from .collection import Collection
+from . import Collection, Config
 from .exceptions import CollectionNotFound
 from .util import debug
 
@@ -11,7 +11,19 @@ class Loader(object):
     """
     Abstract class defining how to load a session's base `.Collection`.
     """
-    DEFAULT_COLLECTION_NAME = 'tasks'
+    def __init__(self, config=None):
+        """
+        Set up a new loader with some `.Config`.
+
+        :param config:
+            An explicit `.Config` to use; it is referenced for loading-related
+            config options, as well as being handed to the root namespace
+            `.Collection` when one is loaded/created. Defaults to an anonymous
+            ``Config()`` if none is given.
+        """
+        if config is None:
+            config = Config()
+        self.config = config
 
     def find(self, name):
         """
@@ -39,7 +51,7 @@ class Loader(object):
         or packages.)
         """
         if name is None:
-            name = self.DEFAULT_COLLECTION_NAME
+            name = self.config.tasks.collection_name
         # Find the named tasks module, depending on implementation.
         # Will raise an exception if not found.
         fd, path, desc = self.find(name)
@@ -67,12 +79,19 @@ class FilesystemLoader(Loader):
 
     Searches recursively towards filesystem root from a given start point.
     """
-    def __init__(self, start=None):
+    # TODO: could introduce config obj here for transmission to Collection
+    # TODO: otherwise Loader has to know about specific bits to transmit, such
+    # as auto-dashes, and has to grow one of those for every bit Collection
+    # ever needs to know
+    def __init__(self, start=None, **kwargs):
+        super(FilesystemLoader, self).__init__(**kwargs)
+        if start is None:
+            start = self.config.tasks.search_root
         self._start = start
 
     @property
     def start(self):
-        # Lazily determine default CWD
+        # Lazily determine default CWD if configured value is falsey
         return self._start or os.getcwd()
 
     def find(self, name):
