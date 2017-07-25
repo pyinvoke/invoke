@@ -343,22 +343,28 @@ class Config(DataProxy):
     At initialization time, `.Config`:
 
     - creates per-level data structures;
-    - stores levels supplied to `__init__`, such as defaults or overrides, as
-      well as the various config file paths/filename patterns;
-    - loads system, user and project level config files, if found.
+    - stores any levels supplied to `__init__`, such as defaults or overrides,
+      as well as the various config file paths/filename patterns;
+    - and loads config files, if found (though typically this just means system
+      and user-level files, as project and runtime files need more info before
+      they can be found and loaded.)
+        - This step can be skipped by specifying ``lazy=True``.
 
     At this point, `.Config` is fully usable - and because it pre-emptively
-    loads config files, those config files can inform everything that comes
-    after, like CLI parsing or loading of task collections.
+    loads some config files, those config files can affect anything that
+    comes after, like CLI parsing or loading of task collections.
 
-    In the CLI use case, further processing is done after instantiation:
+    In the CLI use case, further processing is done after instantiation, using
+    the ``load_*`` methods such as `load_overrides`, `load_project`, etc:
 
     - the result of argument/option parsing is applied to the overrides level;
+    - a project-level config file is loaded, as it's dependent on a loaded
+      tasks collection;
     - a runtime config file is loaded, if its flag was supplied;
     - then, for each task being executed:
 
-        - per-collection data is loaded (only possible now that we have a task
-          in hand);
+        - per-collection data is loaded (only possible now that we have
+          collection & task in hand);
         - shell environment data is loaded (must be done at end of process due
           to using the rest of the config as a guide for interpreting env var
           names.)
@@ -521,16 +527,21 @@ class Config(DataProxy):
             be a full file path to an existing file, not a directory path, or a
             prefix.
 
-        :param bool defer_post_init:
-            Whether to defer certain steps at the end of `__init__`.
+        :param bool lazy:
+            Whether to automatically load some of the lower config levels.
 
-            Specifically, the `post_init` method is normally called
-            automatically, and performs initial actions like loading config
-            files. Advanced users may wish to call that method manually after
-            manipulating the object; to do so, specify
-            ``defer_post_init=True``.
+            By default (``lazy=False``), ``__init__`` automatically calls
+            `load_system` and `load_user` to load system and user config files,
+            respectively.
 
-            Default: ``False``.
+            For more control over what is loaded when, you can say
+            ``lazy=True``, and no automatic loading is done.
+
+            .. note::
+                If you give ``defaults`` and/or ``overrides`` as ``__init__``
+                kwargs instead of waiting to use `load_defaults` or
+                `load_overrides` afterwards, those *will* still end up 'loaded'
+                immediately.
         """
         # Technically an implementation detail - do not expose in public API.
         # Stores merged configs and is accessed via DataProxy.

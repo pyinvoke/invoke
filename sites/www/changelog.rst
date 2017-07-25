@@ -7,6 +7,23 @@ Changelog
   configuration vectors; this allows the CLI machinery
   (`~invoke.executor.Executor`) to honor configuration settings from config
   files which impact how CLI parsing and task loading behaves.
+
+  Specifically, this adds more public ``Config.load_*`` methods, which in
+  tandem with the ``lazy`` kwarg to ``__init__`` (formerly ``defer_post_init``,
+  see below) allow full control over exactly when each config level is loaded.
+
+  .. warning::
+    This change is backwards incompatible if you were using the
+    ``defer_post_init`` keyword argument to ``Config.__init__``; it has been
+    renamed to ``lazy``.
+
+    Additionally, ``Config.post_init`` has been removed, in favor of
+    explicit/granular use of the ``load_*`` family of methods.
+
+    Finally: all ``load_*`` methods now call ``Config.merge`` automatically.
+    This should only be a problem if your config contents are extremely large
+    (it's an entirely in-memory dict-traversal operation.)
+
 * :feature:`310` (also :issue:`455`, :issue:`291`) Allow configuring collection
   root directory & module name via configuration files (previously, they were
   only configurable via CLI flags or generating a custom
