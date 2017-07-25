@@ -123,29 +123,9 @@ task names that contain underscores::
     def my_awesome_task(c):
         print("Awesome!")
 
-By default, the function name is used verbatim as the task name, appears as
-such in the output of CLI commands, and is how the task must be referenced when
-invoking it::
-
-    $ inv --list
-    Available tasks:
-
-      my_awesome_task
-
-    $ inv my_awesome_task
-    Awesome!
-
-However, many users find dashes to be more aesthetically pleasing (not to
-mention easier to type). Those users can simply update their configuration to
-set ``tasks.auto_dashes`` to ``True``, for example in their personal
-``~/.invoke.yml`` file (or any other :doc:`configuration vector
-</concepts/configuration>`)::
-
-    tasks:
-        auto_dashes: true
-
-When this setting is activated, all underscores in task or collection names are
-interpreted to be dashes instead::
+Similar to how task arguments are processed to turn their underscores into
+dashes (since that's a common command-line convention) all underscores in task
+or collection names are interpreted to be dashes instead, by default::
 
     $ inv --list
     Available tasks:
@@ -155,12 +135,20 @@ interpreted to be dashes instead::
     $ inv my-awesome-task
     Awesome!
 
+If you'd prefer the underscores to remain instead, you can update your
+configuration to set ``tasks.auto_dashes`` to ``False`` in one of the
+loaded-by-default :ref:`config files <config-files>` -- typically, either the
+system or user location. For example, in ``~/.invoke.yml``::
+
+    tasks:
+        auto_dashes: false
+
 .. note::
     In the interests of avoiding confusion, this setting is "exclusive" in
-    nature - when it's on, the underscored version of task names *are not
-    valid* on the CLI. (However, at the pure function level within Python, they
-    must continue to be referenced with underscores, as dashed names are not
-    valid Python syntax!)
+    nature - underscored version of task names *are not valid* on the CLI
+    unless ``auto_dashes`` is disabled. (However, at the pure function level
+    within Python, they must continue to be referenced with underscores, as
+    dashed names are not valid Python syntax!)
 
 
 Nesting collections

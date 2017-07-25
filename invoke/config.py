@@ -466,7 +466,7 @@ class Config(DataProxy):
             },
             'tasks': {
                 'dedupe': True,
-                'auto_dashes': False,
+                'auto_dashes': True,
                 'collection_name': 'tasks',
                 'search_root': None,
             },

@@ -11,11 +11,15 @@ Changelog
   root directory & module name via configuration files (previously, they were
   only configurable via CLI flags or generating a custom
   `~invoke.program.Program`.)
-* :feature:`329` Add a new config option, ``tasks.auto_dashes``, which can be
-  set to ``True`` to effectively rename all ``underscored_task_names`` as if
-  they were ``dashed-task-names``. This affects ``--list``, ``--help``, and of
-  course the parser. For details, see :ref:`dashes-vs-underscores`. Thanks to
-  Alexander Artemenko for the initial feature request.
+* :feature:`329` All task and collection names now have underscores turned into
+  dashes automatically, as task parameters have been for some time. This
+  impacts ``--list``, ``--help``, and of course the parser. For details, see
+  :ref:`dashes-vs-underscores`.
+
+  This behavior is controlled by a new config setting, ``tasks.auto_dashes``,
+  which can be set to ``False`` to go back to the classic behavior.
+
+  Thanks to Alexander Artemenko for the initial feature request.
 * :bug:`396 major` ``Collection.add_task(task, aliases=('other', 'names')`` was
   listed in the conceptual documentation, but not implemented (technically, it
   was removed at some point and never reinstated.) It has been (re-)added and

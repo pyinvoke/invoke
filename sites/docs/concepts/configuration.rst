@@ -82,7 +82,7 @@ For convenience, we refer to nested setting names with a dotted syntax, so e.g.
     - ``tasks.dedupe`` controls :ref:`deduping` and defaults to ``True``. It
       can also be overridden at runtime via :option:`--no-dedupe`.
     - ``tasks.auto_dashes`` controls whether task and collection names have
-      underscores turned to dashes on the CLI. Default: ``False``. See also
+      underscores turned to dashes on the CLI. Default: ``True``. See also
       :ref:`dashes-vs-underscores`.
     - ``tasks.collection_name`` controls the Python import name sought out by
       :ref:`collection discovery <collection-discovery>`, and defaults to
