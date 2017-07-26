@@ -143,7 +143,7 @@ class Config_(IntegrationSpec):
 
         @patch.object(Config, '_load_yaml')
         def configure_project_location(self, load_yaml):
-            Config(project_home='someproject').load_project()
+            Config(project_location='someproject').load_project()
             load_yaml.assert_any_call(join('someproject', 'invoke.yaml'))
 
         @patch.object(Config, '_load_yaml')
@@ -219,7 +219,7 @@ No attribute or config key found for 'nope'
 
 Valid keys: ['run', 'runners', 'sudo', 'tasks']
 
-Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_data', 'global_defaults', 'load_collection', 'load_project', 'load_runtime', 'load_shell_env', 'load_system', 'load_user', 'merge', 'paths', 'pop', 'popitem', 'prefix', 'setdefault', 'update']
+Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_data', 'global_defaults', 'load_collection', 'load_defaults', 'load_overrides', 'load_project', 'load_runtime', 'load_shell_env', 'load_system', 'load_user', 'merge', 'paths', 'pop', 'popitem', 'prefix', 'set_project_location', 'setdefault', 'update']
 """.strip() # noqa
                 eq_(str(e), expected)
             else:
@@ -255,6 +255,33 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
             eq_(list(six.iteritems(c)), [('foo', 'bar')])
             eq_(list(c.keys()), ['foo'])
             eq_(list(c.values()), ['bar'])
+
+        class runtime_loading_of_defaults_and_overrides:
+            def defaults_can_be_given_via_method(self):
+                c = Config()
+                assert 'foo' not in c
+                c.load_defaults({'foo': 'bar'})
+                assert c.foo == 'bar'
+
+            def defaults_can_skip_merging(self):
+                c = Config()
+                c.load_defaults({'foo': 'bar'}, merge=False)
+                assert 'foo' not in c
+                c.merge()
+                assert c.foo == 'bar'
+
+            def overrides_can_be_given_via_method(self):
+                c = Config(defaults={'foo': 'bar'})
+                assert c.foo == 'bar' # defaults level
+                c.load_overrides({'foo': 'notbar'})
+                assert c.foo == 'notbar' # overrides level
+
+            def overrides_can_skip_merging(self):
+                c = Config()
+                c.load_overrides({'foo': 'bar'}, merge=False)
+                assert 'foo' not in c
+                c.merge()
+                assert c.foo == 'bar'
 
         class deletion_methods:
             def pop(self):
@@ -514,13 +541,15 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
         def project_specific(self):
             "Local-to-project conf files"
             for type_ in TYPES:
-                c = Config(project_home=join(CONFIGS_PATH, type_))
+                c = Config(project_location=join(CONFIGS_PATH, type_))
                 assert 'outer' not in c
                 c.load_project()
                 assert c.outer.inner.hooray == type_
 
         def project_can_skip_merging(self):
-            config = Config(project_home=join(CONFIGS_PATH, 'yml'), lazy=True)
+            config = Config(
+                project_location=join(CONFIGS_PATH, 'yml'), lazy=True
+            )
             assert 'outer' not in config._project
             assert 'outer' not in config
             config.load_project(merge=False)
@@ -529,13 +558,20 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
             assert 'outer' in config._project
             assert 'outer' not in config
 
-        def loads_no_project_specific_file_if_no_project_home_given(self):
+        def loads_no_project_specific_file_if_no_project_location_given(self):
             c = Config()
             eq_(c._project_path, None)
             c.load_project()
             eq_(list(c._project.keys()), [])
             defaults = ['tasks', 'run', 'runners', 'sudo']
             eq_(set(c.keys()), set(defaults))
+
+        def project_location_can_be_set_after_init(self):
+            c = Config()
+            assert 'outer' not in c
+            c.set_project_location(join(CONFIGS_PATH, 'yml'))
+            c.load_project()
+            assert c.outer.inner.hooray == 'yml'
 
         def runtime_conf_via_cli_flag(self):
             c = Config(runtime_path=join(CONFIGS_PATH, 'yaml', 'invoke.yaml'))
@@ -768,7 +804,7 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
         def project_overrides_user(self):
             c = Config(
                 user_prefix=join(CONFIGS_PATH, 'json/'),
-                project_home=join(CONFIGS_PATH, 'yaml'),
+                project_location=join(CONFIGS_PATH, 'yaml'),
             )
             c.load_project()
             eq_(c.outer.inner.hooray, 'yaml')
@@ -776,20 +812,20 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
         def project_overrides_systemwide(self):
             c = Config(
                 system_prefix=join(CONFIGS_PATH, 'json/'),
-                project_home=join(CONFIGS_PATH, 'yaml'),
+                project_location=join(CONFIGS_PATH, 'yaml'),
             )
             c.load_project()
             eq_(c.outer.inner.hooray, 'yaml')
 
         def project_overrides_collection(self):
-            c = Config(project_home=join(CONFIGS_PATH, 'yaml'))
+            c = Config(project_location=join(CONFIGS_PATH, 'yaml'))
             c.load_project()
             c.load_collection({'outer': {'inner': {'hooray': 'defaults'}}})
             eq_(c.outer.inner.hooray, 'yaml')
 
         def env_vars_override_project(self):
             os.environ['INVOKE_OUTER_INNER_HOORAY'] = 'env'
-            c = Config(project_home=join(CONFIGS_PATH, 'yaml'))
+            c = Config(project_location=join(CONFIGS_PATH, 'yaml'))
             c.load_project()
             c.load_shell_env()
             eq_(c.outer.inner.hooray, 'env')
@@ -827,7 +863,7 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
         def runtime_overrides_project(self):
             c = Config(
                 runtime_path=join(CONFIGS_PATH, 'json', 'invoke.json'),
-                project_home=join(CONFIGS_PATH, 'yaml'),
+                project_location=join(CONFIGS_PATH, 'yaml'),
             )
             c.load_runtime()
             c.load_project()
@@ -894,7 +930,7 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
                 overrides={'key': 'override'},
                 system_prefix='global',
                 user_prefix='user',
-                project_home='project',
+                project_location='project',
                 runtime_path='runtime.yaml',
             )
             c2 = c1.clone()
@@ -908,7 +944,7 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
             ok_(c2._overrides is not c1._overrides)
             eq_(c2._system_prefix, c1._system_prefix)
             eq_(c2._user_prefix, c1._user_prefix)
-            eq_(c2._project_home, c1._project_home)
+            eq_(c2._project_prefix, c1._project_prefix)
             eq_(c2.prefix, c1.prefix)
             eq_(c2.file_prefix, c1.file_prefix)
             eq_(c2.env_prefix, c1.env_prefix)

@@ -484,7 +484,7 @@ class Config(DataProxy):
         defaults=None,
         system_prefix=None,
         user_prefix=None,
-        project_home=None,
+        project_location=None,
         runtime_path=None,
         lazy=False,
     ):
@@ -514,17 +514,16 @@ class Config(DataProxy):
 
             Default: ``~/.`` (e.g. ``~/.invoke.yaml``).
 
-        :param str project_home:
-            Optional directory path location of the currently loaded
-            `.Collection` (as loaded by `.Loader`). When non-empty, will
-            trigger seeking of per-project config files in this location +
-            ``invoke.(yaml|json|py)``.
+        :param str project_location:
+            Optional directory path of the currently loaded `.Collection` (as
+            loaded by `.Loader`). When non-empty, will trigger seeking of
+            per-project config files in this directory.
 
         :param str runtime_path:
             Optional file path to a runtime configuration file.
 
             Used to fill the penultimate slot in the config hierarchy. Should
-            be a full file path to an existing file, not a directory path, or a
+            be a full file path to an existing file, not a directory path or a
             prefix.
 
         :param bool lazy:
@@ -584,20 +583,9 @@ class Config(DataProxy):
         # Data loaded from the per-user config file.
         self._set(_user={})
 
-        # Parent directory of the current root tasks file, if applicable.
-        self._set(_project_home=project_home)
-        # And a normalized prefix version not really publicly exposed
-        project_prefix = None
-        if self._project_home is not None:
-            project_prefix = join(project_home, '')
-        self._set(_project_prefix=project_prefix)
-        # Path to loaded per-project config file, if any.
-        self._set(_project_path=None)
-        # Whether the project config file has been loaded or not (or ``None``
-        # if no loading has been attempted yet.)
-        self._set(_project_found=None)
-        # Data loaded from the per-project config file.
-        self._set(_project={})
+        # As it may want to be set post-init, project conf file related attrs
+        # get initialized or overwritten via a specific method.
+        self.set_project_location(project_location)
 
         # Environment variable name prefix
         env_prefix = self.env_prefix
@@ -642,6 +630,40 @@ class Config(DataProxy):
         self.load_user(merge=False)
         self.merge()
 
+    def load_defaults(self, data, merge=True):
+        """
+        Set or replace the 'defaults' configuration level, from ``data``.
+
+        :param dict data: The config data to load as the defaults level.
+
+        :param bool merge:
+            Whether to merge the loaded data into the central config. Default:
+            ``True``.
+
+        :returns: ``None``.
+        """
+        self._set(_defaults=data)
+        if merge:
+            self.merge()
+
+    def load_overrides(self, data, merge=True):
+        """
+        Set or replace the 'overrides' configuration level, from ``data``.
+
+        :param dict data: The config data to load as the overrides level.
+
+        :param bool merge:
+            Whether to merge the loaded data into the central config. Default:
+            ``True``.
+
+        :returns: ``None``.
+        """
+        debug("before set: {!r}".format(self._overrides))
+        self._set(_overrides=data)
+        debug("after set: {!r}".format(self._overrides))
+        if merge:
+            self.merge()
+
     def load_system(self, merge=True):
         """
         Load a system-level config file, if possible.
@@ -676,14 +698,17 @@ class Config(DataProxy):
         """
         Load a project-level config file, if possible.
 
-        Checks the configured ``_project_home`` and ``_project_prefix`` values,
-        which are typically set to the directory containing the loaded
-        collection (when used via the CLI) and the empty string (meaning no
-        extra prefix beyond "normal config file names".
+        Checks the configured ``_project_prefix`` value derived from the path
+        given to `set_project_location`, which is typically set to the directory
+        containing the loaded task collection.
 
         Thus, if one were to run the CLI tool against a tasks collection
         ``/home/myuser/code/tasks.py``, `load_project` would seek out files
         like ``/home/myuser/code/invoke.yml``.
+
+        :param bool merge:
+            Whether to merge the loaded data into the central config. Default:
+            ``True``.
 
         :returns: ``None``.
         """
@@ -696,6 +721,10 @@ class Config(DataProxy):
         When the CLI framework creates a `Config`, it sets ``_runtime_path``,
         which is a full path to the requested config file. This method attempts
         to load that file.
+
+        :param bool merge:
+            Whether to merge the loaded data into the central config. Default:
+            ``True``.
 
         :returns: ``None``.
         """
@@ -736,6 +765,26 @@ class Config(DataProxy):
         self._set(_collection=data)
         if merge:
             self.merge()
+
+    def set_project_location(self, path):
+        """
+        Set the directory path where a project-level config file may be found.
+
+        Does not do any file loading on its own; for that, see `load_project`.
+        """
+        # 'Prefix' to match the other sets of attrs
+        project_prefix = None
+        if path is not None:
+            # Ensure the prefix is normalized to a directory-like path string
+            project_prefix = join(path, '')
+        self._set(_project_prefix=project_prefix)
+        # Path to loaded per-project config file, if any.
+        self._set(_project_path=None)
+        # Whether the project config file has been loaded or not (or ``None``
+        # if no loading has been attempted yet.)
+        self._set(_project_found=None)
+        # Data loaded from the per-project config file.
+        self._set(_project={})
 
     def _load_file(self, prefix, absolute=False, merge=True):
         # Setup
@@ -936,7 +985,6 @@ class Config(DataProxy):
             user_path
             user_found
             user
-            project_home
             project_prefix
             project_path
             project_found
