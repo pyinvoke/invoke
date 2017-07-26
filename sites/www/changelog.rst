@@ -13,16 +13,27 @@ Changelog
   see below) allow full control over exactly when each config level is loaded.
 
   .. warning::
-    This change is backwards incompatible if you were using the
-    ``defer_post_init`` keyword argument to ``Config.__init__``; it has been
-    renamed to ``lazy``.
+    This change may be backwards incompatible if you were using or subclassing
+    the `~invoke.config.Config` class in any of the following ways:
 
-    Additionally, ``Config.post_init`` has been removed, in favor of
-    explicit/granular use of the ``load_*`` family of methods.
+    - If you were passing ``__init__`` kwargs such as ``project_home`` or
+      ``runtime_path`` and expecting those files to auto-load, they no longer
+      do; you must explicitly call `~invoke.config.Config.load_project` and/or
+      `~invoke.config.Config.load_runtime` explicitly.
+    - The ``defer_post_init`` keyword argument to ``Config.__init__`` has been
+      renamed to ``lazy``, and controls whether system/user config files are
+      auto-loaded.
+    - ``Config.post_init`` has been removed, in favor of explicit/granular use
+      of the ``load_*`` family of methods.
+    - All ``load_*`` methods now call ``Config.merge`` automatically by default
+      (previously, merging was deferred to the end of most config related
+      workflows.)
 
-    Finally: all ``load_*`` methods now call ``Config.merge`` automatically.
-    This should only be a problem if your config contents are extremely large
-    (it's an entirely in-memory dict-traversal operation.)
+      This should only be a problem if your config contents are extremely large
+      (it's an entirely in-memory dict-traversal operation) and can be avoided
+      by specifying ``merge=False`` to any such method. (Note that you must, at
+      some point, call `~invoke.config.Config.merge` in order for the config
+      object to work normally!)
 
 * :feature:`310` (also :issue:`455`, :issue:`291`) Allow configuring collection
   root directory & module name via configuration files (previously, they were

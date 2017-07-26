@@ -486,7 +486,7 @@ class Config(DataProxy):
         user_prefix=None,
         project_home=None,
         runtime_path=None,
-        defer_post_init=False,
+        lazy=False,
     ):
         """
         Creates a new config object.
@@ -631,21 +631,75 @@ class Config(DataProxy):
         # valuable and not just None)
         self._set(_deletions={})
 
-        if not defer_post_init:
-            self.post_init()
+        # Convenience loading of user and system files, since those require no
+        # other levels in order to function.
+        if not lazy:
+            self._load_base_conf_files()
 
-    def post_init(self):
+    def _load_base_conf_files(self):
+        # Just a refactor of something done in unlazy init or in clone()
+        self.load_system(merge=False)
+        self.load_user(merge=False)
+        self.merge()
+
+    def load_system(self, merge=True):
         """
-        Call setup steps that can occur immediately after `__init__`.
+        Load a system-level config file, if possible.
 
-        May need to be manually called if `__init__` was told
-        ``defer_post_init=True``.
+        Checks the configured ``_system_prefix`` path, which defaults to
+        ``/etc``, and will thus load files like ``/etc/invoke.yml``.
+
+        :param bool merge:
+            Whether to merge the loaded data into the central config. Default:
+            ``True``.
 
         :returns: ``None``.
         """
-        self.load_files()
-        # TODO: just use a decorator for merging probably? shrug
-        self.merge()
+        self._load_file(prefix='system', merge=merge)
+
+    def load_user(self, merge=True):
+        """
+        Load a user-level config file, if possible.
+
+        Checks the configured ``_user_prefix`` path, which defaults to ``~/.``,
+        and will thus load files like ``~/.invoke.yml``.
+
+        :param bool merge:
+            Whether to merge the loaded data into the central config. Default:
+            ``True``.
+
+        :returns: ``None``.
+        """
+        self._load_file(prefix='user', merge=merge)
+
+    def load_project(self, merge=True):
+        """
+        Load a project-level config file, if possible.
+
+        Checks the configured ``_project_home`` and ``_project_prefix`` values,
+        which are typically set to the directory containing the loaded
+        collection (when used via the CLI) and the empty string (meaning no
+        extra prefix beyond "normal config file names".
+
+        Thus, if one were to run the CLI tool against a tasks collection
+        ``/home/myuser/code/tasks.py``, `load_project` would seek out files
+        like ``/home/myuser/code/invoke.yml``.
+
+        :returns: ``None``.
+        """
+        self._load_file(prefix='project', merge=merge)
+
+    def load_runtime(self, merge=True):
+        """
+        Load a runtime-level config file, if one was specified.
+
+        When the CLI framework creates a `Config`, it sets ``_runtime_path``,
+        which is a full path to the requested config file. This method attempts
+        to load that file.
+
+        :returns: ``None``.
+        """
+        self._load_file(prefix='runtime', absolute=True, merge=merge)
 
     def load_shell_env(self):
         """
@@ -670,7 +724,7 @@ class Config(DataProxy):
         debug("Loaded shell environment, triggering final merge")
         self.merge()
 
-    def load_collection(self, data):
+    def load_collection(self, data, merge=True):
         """
         Update collection-driven config data.
 
@@ -680,24 +734,10 @@ class Config(DataProxy):
         """
         debug("Loading collection configuration")
         self._set(_collection=data)
-        self.merge()
+        if merge:
+            self.merge()
 
-    def load_files(self):
-        """
-        Load any unloaded/un-searched-for config file sources.
-
-        Specifically, any file sources whose ``_found`` values are ``None``
-        will be sought and loaded if found; if their ``_found`` value is non
-        ``None`` (e.g. ``True`` or ``False``) they will be skipped. Typically
-        this means this method is idempotent and becomes a no-op after the
-        first run.
-        """
-        self._load_file(prefix='system')
-        self._load_file(prefix='user')
-        self._load_file(prefix='project')
-        self._load_file(prefix='runtime', absolute=True)
-
-    def _load_file(self, prefix, absolute=False):
+    def _load_file(self, prefix, absolute=False, merge=True):
         # Setup
         found = "_{0}_found".format(prefix)
         path = "_{0}_path".format(prefix)
@@ -754,6 +794,9 @@ class Config(DataProxy):
         # Still None -> no suffixed paths were found, record this fact
         if getattr(self, path) is None:
             setattr(self, found, False)
+        # Merge loaded data in if any was found
+        elif merge:
+            self.merge()
 
     def _load_yaml(self, path):
         with open(path) as fd:
@@ -880,7 +923,7 @@ class Config(DataProxy):
         # mismatch going on between "I want stuff to happen in my config's
         # instantiation" and "I want cloning to not trigger certain things like
         # external data source loading".
-        # NOTE: this will include defer_post_init, see end of method
+        # NOTE: this will include lazy=True, see end of method
         new = klass(**self._clone_init_kwargs(into=into))
         # Copy/merge/etc all 'private' data sources and attributes
         for name in """
@@ -920,11 +963,11 @@ class Config(DataProxy):
         # And merge the central config too (cannot just call .merge() on the
         # new clone, since the source config may have received custom
         # alterations by user code.)
+        # TODO: isn't that false now that we've got modifications level??
         merge_dicts(new._config, self._config)
-        # Finally, call new.post_init() since it's fully merged up. This way,
-        # stuff called in post_init() will have access to the final version of
-        # the data.
-        new.post_init()
+        # Finally, do what __init__ would've done if not lazy, i.e. load
+        # user/system conf files.
+        new._load_base_conf_files()
         return new
 
     def _clone_init_kwargs(self, into=None):
@@ -951,7 +994,7 @@ class Config(DataProxy):
             # TODO: consider making this 'hardcoded' on the calling end (ie
             # inside clone()) to make sure nobody accidentally nukes it via
             # subclassing?
-            defer_post_init=True,
+            lazy=True,
         )
 
     def _modify(self, keypath, key, value):
