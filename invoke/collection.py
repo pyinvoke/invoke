@@ -92,12 +92,13 @@ class Collection(object):
         self.default = None
         self.name = None
         self._configuration = {}
+        # Specific kwargs if applicable
+        self.loaded_from = kwargs.pop('loaded_from', None)
+        self.auto_dash_names = kwargs.pop('auto_dash_names', True)
         # Name if applicable
         args = list(args)
         if args and isinstance(args[0], six.string_types):
-            self.name = args.pop(0)
-        # Specific kwargs if applicable
-        self.loaded_from = kwargs.pop('loaded_from', None)
+            self.name = self.transform(args.pop(0))
         # Dispatch args/kwargs
         for arg in args:
             self._add_object(arg)
@@ -218,11 +219,12 @@ class Collection(object):
                 name = task.__name__
             else:
                 raise ValueError("Could not obtain a name for this task!")
+        name = self.transform(name)
         if name in self.collections:
             raise ValueError("Name conflict: this collection has a sub-collection named {0!r} already".format(name)) # noqa
         self.tasks[name] = task
         for alias in list(task.aliases) + list(aliases or []):
-            self.tasks.alias(alias, to=name)
+            self.tasks.alias(self.transform(alias), to=name)
         if default is True or (default is None and task.is_default):
             if self.default:
                 msg = "'{0}' cannot be the default because '{1}' already is!"
@@ -246,6 +248,7 @@ class Collection(object):
         name = name or coll.name
         if not name:
             raise ValueError("Non-root collections must have a name!")
+        name = self.transform(name)
         # Test for conflict
         if name in self.tasks:
             raise ValueError("Name conflict: this collection has a task named {0!r} already".format(name)) # noqa
@@ -306,6 +309,8 @@ class Collection(object):
                 return self[self.default], ours
             else:
                 raise ValueError("This collection has no default task.")
+        # Normalize name to the format we're expecting
+        name = self.transform(name)
         # Non-default tasks within subcollections -> recurse (sorta)
         if '.' in name:
             coll, rest = self.split_path(name)
@@ -336,7 +341,41 @@ class Collection(object):
         return result
 
     def subtask_name(self, collection_name, task_name):
-        return '.'.join([collection_name, task_name])
+        return '.'.join([
+            self.transform(collection_name), self.transform(task_name)
+        ])
+
+    def transform(self, name):
+        """
+        Transform ``name`` with the configured auto-dashes behavior.
+
+        If ``auto_dash_names`` is ``True`` (default), all non leading/trailing
+        underscores are turned into dashes. (Leading/trailing underscores tend
+        to get stripped elsewhere in the stack.)
+
+        If it is ``False``, the inverse is applied - all dashes are turned into
+        underscores.
+        """
+        from_, to = '_', '-'
+        if not self.auto_dash_names:
+            from_, to = '-', '_'
+        replaced = []
+        end = len(name) - 1
+        for i, char in enumerate(name):
+            # Don't replace leading or trailing underscores (+ taking dotted
+            # names into account)
+            # TODO: not 100% convinced of this / it may be exposing a
+            # discrepancy between this level & higher levels which tend to
+            # strip out leading/trailing underscores entirely.
+            if (
+                i not in (0, end) and
+                char == from_ and
+                name[i - 1] != '.' and
+                name[i + 1] != '.'
+            ):
+                char = to
+            replaced.append(char)
+        return ''.join(replaced)
 
     @property
     def task_names(self):
@@ -349,7 +388,7 @@ class Collection(object):
         ret = {}
         # Our own tasks get no prefix, just go in as-is: {name: [aliases]}
         for name, task in six.iteritems(self.tasks):
-            ret[name] = task.aliases
+            ret[name] = map(self.transform, task.aliases)
         # Subcollection tasks get both name + aliases prefixed
         for coll_name, coll in six.iteritems(self.collections):
             for task_name, aliases in six.iteritems(coll.task_names):
