@@ -73,6 +73,10 @@ class Collection_(Spec):
             eq_(Collection().loaded_from, None)
             eq_(Collection(loaded_from='a/path').loaded_from, 'a/path')
 
+        def accepts_auto_dash_names_kwarg(self):
+            assert Collection().auto_dash_names == True
+            assert Collection(auto_dash_names=False).auto_dash_names == False
+
     class useful_special_methods:
         def _meh(self):
             @task
@@ -365,6 +369,48 @@ class Collection_(Spec):
         def returns_iterable_of_Contexts_corresponding_to_tasks(self):
             eq_(self.context.name, 'mytask')
             eq_(len(self.contexts), 3)
+
+        class auto_dashes:
+            def context_names_automatically_become_dashed(self):
+                @task
+                def my_task(c):
+                    pass
+                contexts = Collection(my_task).to_contexts()
+                assert contexts[0].name == 'my-task'
+
+            def percolates_to_subcollection_tasks(self):
+                @task
+                def outer_task(c):
+                    pass
+                @task
+                def inner_task(c):
+                    pass
+                coll = Collection(my_task, inner=Collection(inner_task))
+                contexts = coll.to_contexts()
+                assert contexts[0].name == 'outer-task'
+                assert contexts[1].name == 'inner.inner-task'
+
+            def percolates_to_subcollection_names(self):
+                @task
+                def my_task(c):
+                    pass
+                coll = Collection(inner_coll=Collection(my_task))
+                contexts = coll.to_contexts()
+                assert contexts[0].name == 'inner-coll.my-task'
+
+            def aliases_are_dashed_too(self):
+                @task(alias='hi_im_underscored')
+                def whatever(c):
+                    pass
+                contexts = Collection(whatever).to_contexts()
+                assert 'hi-im-underscored' in contexts[0].aliases
+
+            def honors_init_setting(self):
+                @task
+                def my_task(c):
+                    pass
+                coll = Collection(my_task, auto_dash_names=False)
+                assert coll.to_contexts()[0].name == 'my_task'
 
         def allows_flaglike_access_via_flags(self):
             assert '--text' in self.context.flags
