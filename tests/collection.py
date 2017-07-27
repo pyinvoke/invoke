@@ -74,8 +74,8 @@ class Collection_(Spec):
             eq_(Collection(loaded_from='a/path').loaded_from, 'a/path')
 
         def accepts_auto_dash_names_kwarg(self):
-            assert Collection().auto_dash_names == True
-            assert Collection(auto_dash_names=False).auto_dash_names == False
+            assert Collection().auto_dash_names is True
+            assert Collection(auto_dash_names=False).auto_dash_names is False
 
     class useful_special_methods:
         def _meh(self):

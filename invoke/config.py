@@ -695,8 +695,8 @@ class Config(DataProxy):
         Load a project-level config file, if possible.
 
         Checks the configured ``_project_prefix`` value derived from the path
-        given to `set_project_location`, which is typically set to the directory
-        containing the loaded task collection.
+        given to `set_project_location`, which is typically set to the
+        directory containing the loaded task collection.
 
         Thus, if one were to run the CLI tool against a tasks collection
         ``/home/myuser/code/tasks.py``, `load_project` would seek out files
