@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :release:`0.20.0 <2017-07-27>`
 * :feature:`-` (required to support :issue:`310` and :issue:`329`) Break up the
   `~invoke.config.Config` lifecycle some more, allowing it to gradually load
   configuration vectors; this allows the CLI machinery
