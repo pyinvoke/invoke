@@ -655,9 +655,7 @@ class Config(DataProxy):
 
         :returns: ``None``.
         """
-        debug("before set: {!r}".format(self._overrides))
         self._set(_overrides=data)
-        debug("after set: {!r}".format(self._overrides))
         if merge:
             self.merge()
 
