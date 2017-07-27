@@ -33,7 +33,7 @@ class Main(Spec):
     class basics:
         @trap
         def basic_invocation(self):
-            _output_eq("invoke print_foo", "foo\n")
+            _output_eq("invoke print-foo", "foo\n")
 
         @trap
         def version_output(self):
@@ -49,7 +49,7 @@ class Main(Spec):
 
         @trap
         def shorthand_binary_name(self):
-            _output_eq("inv print_foo", "foo\n")
+            _output_eq("inv print-foo", "foo\n")
 
         @trap
         def explicit_task_module(self):
@@ -58,7 +58,7 @@ class Main(Spec):
         @trap
         def invocation_with_args(self):
             _output_eq(
-                "inv print_name --name whatevs",
+                "inv print-name --name whatevs",
                 "whatevs\n"
             )
 
@@ -74,7 +74,7 @@ class Main(Spec):
             try:
                 with open(path, 'w') as fd:
                     fd.write("foo: bar")
-                _output_eq("inv print_config", "bar\n")
+                _output_eq("inv print-config", "bar\n")
             finally:
                 try:
                     os.unlink(path)
@@ -87,7 +87,7 @@ class Main(Spec):
             if sys.version_info < (2, 7):
                 skip()
             _output_eq(
-                "python -m invoke print_name --name mainline",
+                "python -m invoke print-name --name mainline",
                 "mainline\n",
             )
 

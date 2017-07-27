@@ -253,16 +253,16 @@ class Program_(IntegrationSpec):
             # Regression-ish test re #288
             ns = Collection.from_module(load('integration'))
             expect(
-                'print_foo',
+                'print-foo',
                 out='foo\n',
                 program=Program(namespace=ns),
             )
 
         def allows_explicit_task_module_specification(self):
-            expect("-c integration print_foo", out="foo\n")
+            expect("-c integration print-foo", out="foo\n")
 
         def handles_task_arguments(self):
-            expect("-c integration print_name --name inigo", out="inigo\n")
+            expect("-c integration print-name --name inigo", out="inigo\n")
 
         @trap
         @patch('invoke.program.sys.exit')
@@ -591,9 +591,9 @@ Available tasks:
                 'foo',
                 'post1',
                 'post2',
-                'print_foo',
-                'print_name',
-                'print_underscored_arg',
+                'print-foo',
+                'print-name',
+                'print-underscored-arg',
             ))
             for flag in ('-l', '--list'):
                 expect('-c integration {0}'.format(flag), out=expected)
@@ -606,7 +606,7 @@ Available tasks:
 
         def top_level_tasks_listed_first(self):
             self._list_eq('simple_ns_list', (
-                'z_toplevel',
+                'z-toplevel',
                 'a.b.subtask'
             ))
 
@@ -625,24 +625,24 @@ Available tasks:
         def default_tasks(self):
             # sub-ns default task display as "real.name (collection name)"
             self._list_eq('explicit_root', (
-                'top_level (othertop)',
-                'sub.sub_task (sub, sub.othersub)',
+                'top-level (other-top)',
+                'sub-level.sub-task (sub-level, sub-level.other-sub)',
             ))
 
         def docstrings_shown_alongside(self):
             self._list_eq('docstrings', (
-                'leading_whitespace    foo',
-                'no_docstring',
-                'one_line              foo',
-                'two_lines             foo',
-                'with_aliases (a, b)   foo',
+                'leading-whitespace    foo',
+                'no-docstring',
+                'one-line              foo',
+                'two-lines             foo',
+                'with-aliases (a, b)   foo',
             ))
 
         def docstrings_are_wrapped_to_terminal_width(self):
             self._list_eq('nontrivial_docstrings', (
-                'no_docstring',
-                'task_one       Lorem ipsum dolor sit amet, consectetur adipiscing elit.\n                 Nullam id dictum', # noqa
-                'task_two       Nulla eget ultrices ante. Curabitur sagittis commodo posuere.\n                 Duis dapibus', # noqa
+                'no-docstring',
+                'task-one       Lorem ipsum dolor sit amet, consectetur adipiscing elit.\n                 Nullam id dictum', # noqa
+                'task-two       Nulla eget ultrices ante. Curabitur sagittis commodo posuere.\n                 Duis dapibus', # noqa
             ))
 
         def empty_collections_say_no_tasks(self):
@@ -755,7 +755,7 @@ post2
 
         def env_vars_load_with_prefix(self):
             os.environ['INVOKE_RUN_ECHO'] = "1"
-            expect('-c contextualized check_echo')
+            expect('-c contextualized check-echo')
 
         def env_var_prefix_can_be_overridden(self):
             os.environ['MYAPP_RUN_HIDE'] = "both"
@@ -765,9 +765,9 @@ post2
             # only be realized at the time a given task is to be executed.
             # Unless we overhaul the Program/Executor relationship so Program
             # does more of the heavy lifting re: task lookup/load/etc...
-            # NOTE: check_hide will kaboom if its context's run.hide is not set
+            # NOTE: check-hide will kaboom if its context's run.hide is not set
             # to True (default False).
             class MyConf(Config):
                 env_prefix = 'MYAPP'
             p = Program(config_class=MyConf)
-            p.run('inv -c contextualized check_hide')
+            p.run('inv -c contextualized check-hide')
