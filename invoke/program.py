@@ -203,15 +203,30 @@ class Program(object):
         self.executor_class = executor_class or Executor
         self.config_class = config_class or Config
 
-    def config_kwargs(self):
+    def create_config(self):
         """
-        Return keyword arguments suitable for instantiating a `.Config`.
+        Instantiate a `.Config` (or subclass, depending) for use in task exec.
 
-        Expects parser data (``self.args``, etc) to be available.
+        This Config is fully usable but will lack runtime-derived data like
+        project & runtime config files, CLI arg overrides, etc. That data is
+        added later in `update_config`. See `.Config` docstring for lifecycle
+        details.
 
-        :returns: A `dict`.
+        :returns: ``None``; sets ``self.config`` instead.
         """
-        # Set up runtime overrides from flags.
+        # TODO: how to deal with subclasses that want lazy instantiation? Or do
+        # we just update them to not do anything on init? I.e. fab2 would
+        # simply never load_ssh_config() on init? that seems semi bad, it's a
+        # concession to runtime config path setting. feels like runtime wants
+        # ability to be set and loaded later?
+        self.config = self.config_class()
+
+    def update_config(self):
+        # Now that we have parse results and collection handy, we can grab the
+        # remaining config bits:
+        # - project config, as it is dependent on collection location
+        # - runtime config, as it is dependent on the runtime flag
+        # - the overrides config level, as it is composed of runtime flag data
         # NOTE: only fill in values that would alter behavior, otherwise we
         # want the defaults to come through.
         run = {}
@@ -226,27 +241,14 @@ class Program(object):
         tasks = {}
         if 'no-dedupe' in self.args and self.args['no-dedupe'].value:
             tasks['dedupe'] = False
-        overrides = {'run': run, 'tasks': tasks}
-        return dict(
-            overrides=overrides,
-            project_home=self.collection.loaded_from,
-            runtime_path=self.args.config.value,
-        )
-
-    def create_config(self):
-        """
-        Instantiate a `.Config` (or subclass, depending) for use in task exec.
-
-        This config object is passed data from the CLI parsing step (which must
-        be run beforehand) and is later cloned and tweaked on a per-task basis
-        by the `.Executor` it's given to.
-
-        :returns: ``None``; sets ``self.config`` instead.
-        """
-        # TODO: this is a bit silly but having it on its own keeps run() super
-        # tidy I guess? (and more importantly, lets subclasses extend the data
-        # generated from config_kwargs.)
-        self.config = self.config_class(**self.config_kwargs())
+        self.config.load_overrides({'run': run, 'tasks': tasks}, merge=False)
+        # TODO: is it worth merging these set- and load- methods? May require
+        # more tweaking of how things behave in/after __init__.
+        self.config.set_project_location(self.collection.loaded_from)
+        self.config.load_project(merge=False)
+        self.config.set_runtime_path(self.args.config.value)
+        self.config.load_runtime(merge=False)
+        self.config.merge()
 
     def run(self, argv=None, exit=True):
         """
@@ -267,16 +269,20 @@ class Program(object):
                 using `.Executor` and friends directly instead!
         """
         try:
+            # Create an initial config, which will hold defaults & values from
+            # most config file locations (all but runtime.) Used to inform
+            # loading & parsing behavior.
+            self.create_config()
             # Parse the given ARGV with our CLI parsing machinery, resulting in
             # things like self.args (core args/flags), self.collection (the
             # loaded namespace, which may be affected by the core flags) and
             # self.tasks (the tasks requested for exec and their own
             # args/flags)
             self._parse(argv)
-            # Create a base Config object (stored as self.config) now that we
-            # have CLI flags available (such as the collection, runtime config
-            # paths, overrides to core options like echo/warn, etc)
-            self.create_config()
+            # Update the earlier Config with new values from the parse step -
+            # runtime config file contents and flag-derived overrides (e.g. for
+            # run()'s echo, warn, etc options.)
+            self.update_config()
             # Create an Executor, passing in the data resulting from the prior
             # steps, then tell it to execute the tasks.
             self.execute()
@@ -482,16 +488,17 @@ class Program(object):
         """
         Load a task collection based on parsed core args, or die trying.
         """
+        # NOTE: start, coll_name both fall back to configuration values within
+        # Loader (which may, however, get them from our config.)
         start = self.args.root.value
-        loader = self.loader_class(start=start)
+        loader = self.loader_class(config=self.config, start=start)
         coll_name = self.args.collection.value
         try:
             coll = loader.load(coll_name) if coll_name else loader.load()
             self.collection = coll
-        except CollectionNotFound:
-            name = coll_name or loader.DEFAULT_COLLECTION_NAME
+        except CollectionNotFound as e:
             six.print_(
-                "Can't find any collection named {0!r}!".format(name),
+                "Can't find any collection named {0!r}!".format(e.name),
                 file=sys.stderr
             )
             raise Exit(1)

@@ -201,7 +201,7 @@ class Program_(IntegrationSpec):
         def uses_loader_class_given(self):
             klass = Mock(side_effect=FilesystemLoader)
             Program(loader_class=klass).run("myapp --help foo", exit=False)
-            klass.assert_called_with(start=ANY)
+            klass.assert_called_with(start=ANY, config=ANY)
 
 
     class execute:
@@ -676,15 +676,24 @@ Available tasks:
     class configuration:
         "Configuration-related concerns"
 
+        def _klass(self):
+            # Pauper's mock that can honor .tasks.collection_name (Loader
+            # looks in the config for this by default.)
+            instance_mock = Mock(tasks=Mock(
+                collection_name='whatever',
+                search_root='meh',
+            ))
+            return Mock(return_value=instance_mock)
+
         @trap
         def config_class_init_kwarg_is_honored(self):
-            klass = Mock()
+            klass = self._klass()
             Program(config_class=klass).run("myapp foo", exit=False)
             eq_(len(klass.call_args_list), 1) # don't care about actual args
 
         @trap
         def config_attribute_is_memoized(self):
-            klass = Mock()
+            klass = self._klass()
             # Can't .config without .run (meh); .run calls .config once.
             p = Program(config_class=klass)
             p.run("myapp foo", exit=False)
