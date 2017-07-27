@@ -385,7 +385,7 @@ class Collection_(Spec):
                 @task
                 def inner_task(c):
                     pass
-                coll = Collection(my_task, inner=Collection(inner_task))
+                coll = Collection(outer_task, inner=Collection(inner_task))
                 contexts = coll.to_contexts()
                 assert contexts[0].name == 'outer-task'
                 assert contexts[1].name == 'inner.inner-task'
@@ -399,7 +399,7 @@ class Collection_(Spec):
                 assert contexts[0].name == 'inner-coll.my-task'
 
             def aliases_are_dashed_too(self):
-                @task(alias='hi_im_underscored')
+                @task(aliases='hi_im_underscored')
                 def whatever(c):
                     pass
                 contexts = Collection(whatever).to_contexts()
