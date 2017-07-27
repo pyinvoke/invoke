@@ -222,6 +222,12 @@ class Program(object):
         self.config = self.config_class()
 
     def update_config(self):
+        """
+        Update the previously instantiated `.Config` with parsed data.
+
+        For example, this is how ``--echo`` is able to override the default
+        config value for ``run.echo``.
+        """
         # Now that we have parse results and collection handy, we can grab the
         # remaining config bits:
         # - project config, as it is dependent on collection location

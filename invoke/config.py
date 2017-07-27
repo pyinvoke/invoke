@@ -331,7 +331,7 @@ class Config(DataProxy):
     This class implements the entire dictionary protocol: methods such as
     ``keys``, ``values``, ``items``, ``pop`` and so forth should all function
     as they do on regular dicts. It also implements new config-specific methods
-    such as `.load_files`, `.load_collection` and `.clone`.
+    such as `load_system`, `load_collection`, `merge`, `clone`, etc.
 
     .. warning::
         Accordingly, this means that if you have configuration options sharing
@@ -348,6 +348,7 @@ class Config(DataProxy):
     - and loads config files, if found (though typically this just means system
       and user-level files, as project and runtime files need more info before
       they can be found and loaded.)
+
         - This step can be skipped by specifying ``lazy=True``.
 
     At this point, `.Config` is fully usable - and because it pre-emptively
