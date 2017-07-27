@@ -388,7 +388,7 @@ class Collection(object):
         ret = {}
         # Our own tasks get no prefix, just go in as-is: {name: [aliases]}
         for name, task in six.iteritems(self.tasks):
-            ret[name] = map(self.transform, task.aliases)
+            ret[name] = list(map(self.transform, task.aliases))
         # Subcollection tasks get both name + aliases prefixed
         for coll_name, coll in six.iteritems(self.collections):
             for task_name, aliases in six.iteritems(coll.task_names):
