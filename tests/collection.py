@@ -405,6 +405,16 @@ class Collection_(Spec):
                 contexts = Collection(whatever).to_contexts()
                 assert 'hi-im-underscored' in contexts[0].aliases
 
+            def leading_and_trailing_underscores_are_not_affected(self):
+                # TODO: not 100% convinced of this / it may be exposing a
+                # discrepancy between this level & higher levels which tend to
+                # strip out leading/trailing underscores entirely
+                @task
+                def _what_evers_(c):
+                    pass
+                contexts = Collection(_what_evers_).to_contexts()
+                assert contexts[0].name == '_what-evers_'
+
             def honors_init_setting(self):
                 @task(aliases=['other_name'])
                 def my_task(c):
