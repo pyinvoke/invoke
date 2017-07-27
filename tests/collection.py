@@ -399,18 +399,26 @@ class Collection_(Spec):
                 assert contexts[0].name == 'inner-coll.my-task'
 
             def aliases_are_dashed_too(self):
-                @task(aliases='hi_im_underscored')
+                @task(aliases=['hi_im_underscored'])
                 def whatever(c):
                     pass
                 contexts = Collection(whatever).to_contexts()
                 assert 'hi-im-underscored' in contexts[0].aliases
 
             def honors_init_setting(self):
-                @task
+                @task(aliases=['other_name'])
                 def my_task(c):
                     pass
-                coll = Collection(my_task, auto_dash_names=False)
-                assert coll.to_contexts()[0].name == 'my_task'
+                @task(aliases=['other_inner'])
+                def inner_task(c):
+                    pass
+                sub = Collection('inner_coll', inner_task)
+                coll = Collection(my_task, sub, auto_dash_names=False)
+                first, second = coll.to_contexts()
+                assert first.name == 'my_task'
+                assert first.aliases == ['other_name']
+                assert second.name == 'inner_coll.inner_task'
+                assert second.aliases == ['inner_coll.other_inner']
 
         def allows_flaglike_access_via_flags(self):
             assert '--text' in self.context.flags
