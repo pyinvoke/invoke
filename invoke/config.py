@@ -472,7 +472,7 @@ class Config(DataProxy):
             },
             'tasks': {
                 'dedupe': True,
-                'auto_dashes': True,
+                'auto_dash_names': True,
                 'collection_name': 'tasks',
                 'search_root': None,
             },

@@ -370,7 +370,7 @@ class Collection_(Spec):
             eq_(self.context.name, 'mytask')
             eq_(len(self.contexts), 3)
 
-        class auto_dashes:
+        class auto_dash_names:
             def context_names_automatically_become_dashed(self):
                 @task
                 def my_task(c):

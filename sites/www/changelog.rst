@@ -44,8 +44,9 @@ Changelog
   impacts ``--list``, ``--help``, and of course the parser. For details, see
   :ref:`dashes-vs-underscores`.
 
-  This behavior is controlled by a new config setting, ``tasks.auto_dashes``,
-  which can be set to ``False`` to go back to the classic behavior.
+  This behavior is controlled by a new config setting,
+  ``tasks.auto_dash_names``, which can be set to ``False`` to go back to the
+  classic behavior.
 
   Thanks to Alexander Artemenko for the initial feature request.
 * :bug:`396 major` ``Collection.add_task(task, aliases=('other', 'names')`` was

@@ -21,13 +21,19 @@ class Collection(object):
 
         In either case:
 
-        * the first positional argument may be a string, which (if given) is
+        * The first positional argument may be a string, which (if given) is
           used as the collection's default name when performing namespace
           lookups;
-        * a ``loaded_from`` keyword argument may be given, which sets metadata
+        * A ``loaded_from`` keyword argument may be given, which sets metadata
           indicating the filesystem path the collection was loaded from. This
           is used as a guide when loading per-project :ref:`configuration files
           <config-hierarchy>`.
+        * An ``auto_dash_names`` kwarg may be given, controlling whether task
+          and collection names have underscores turned to dashes in most cases;
+          it defaults to ``True`` but may be set to ``False`` to disable.
+
+          The CLI machinery will pass in the value of the
+          ``tasks.auto_dash_names`` config value to this kwarg.
 
         **The method approach**
 

@@ -136,19 +136,19 @@ or collection names are interpreted to be dashes instead, by default::
     Awesome!
 
 If you'd prefer the underscores to remain instead, you can update your
-configuration to set ``tasks.auto_dashes`` to ``False`` in one of the
+configuration to set ``tasks.auto_dash_names`` to ``False`` in one of the
 loaded-by-default :ref:`config files <config-files>` -- typically, either the
 system or user location. For example, in ``~/.invoke.yml``::
 
     tasks:
-        auto_dashes: false
+        auto_dash_names: false
 
 .. note::
     In the interests of avoiding confusion, this setting is "exclusive" in
     nature - underscored version of task names *are not valid* on the CLI
-    unless ``auto_dashes`` is disabled. (However, at the pure function level
-    within Python, they must continue to be referenced with underscores, as
-    dashed names are not valid Python syntax!)
+    unless ``auto_dash_names`` is disabled. (However, at the pure function
+    level within Python, they must continue to be referenced with underscores,
+    as dashed names are not valid Python syntax!)
 
 
 Nesting collections
