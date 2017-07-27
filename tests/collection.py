@@ -145,7 +145,7 @@ class Collection_(Spec):
         def honors_explicit_collections(self):
             coll = Collection.from_module(load('explicit_root'))
             assert 'top_level' in coll.tasks
-            assert 'sub' in coll.collections
+            assert 'sub_level' in coll.collections
             # The real key test
             assert 'sub_task' not in coll.tasks
 
@@ -443,13 +443,16 @@ class Collection_(Spec):
         def returns_all_task_names_including_subtasks(self):
             eq_(
                 set(self.c.task_names.keys()),
-                set(['top_level', 'sub.sub_task'])
+                set(['top-level', 'sub-level.sub-task'])
             )
 
         def includes_aliases_and_defaults_as_values(self):
             names = self.c.task_names
-            eq_(names['top_level'], ['othertop'])
-            eq_(names['sub.sub_task'], ['sub.othersub', 'sub'])
+            eq_(names['top-level'], ['other-top'])
+            eq_(
+                names['sub-level.sub-task'],
+                ['sub-level.other-sub', 'sub-level']
+            )
 
     class configuration:
         "Configuration methods"
