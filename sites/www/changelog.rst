@@ -68,11 +68,13 @@ Changelog
   This problem was previously solved for *non-hidden* (mirrored) subprocess
   output, but the fix (encode the data with the local encoding) had not been
   applied to exception display. Now it's applied in both cases.
-* :feature:`322` Allow users to completely disable the default mirroring of
-  stdin by specifying ``False`` for the ``run.in_stream`` config setting /
-  keyword argument. This can help prevent problems when running Invoke under
-  systems that have no useful standard input and which otherwise defeat our
-  pty/fileno related detection.
+* :feature:`322` Allow users to completely disable mirroring of stdin to
+  subprocesses, by specifying ``False`` for the ``run.in_stream`` config
+  setting and/or keyword argument.
+
+  This can help prevent problems when running Invoke under systems that have no
+  useful standard input and which otherwise defeat our pty/fileno related
+  detection.
 * :release:`0.19.0 <2017-06-19>`
 * :feature:`-` Add `MockContext.set_result_for
   <invoke.context.MockContext.set_result_for>` to allow massaging a mock
