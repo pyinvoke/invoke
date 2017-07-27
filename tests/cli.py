@@ -57,16 +57,16 @@ class CLIParsing(Spec):
         self._compare('--no-true-bool', 'true_bool', False)
 
     def namespaced_task(self):
-        self._compare_names("sub-coll.sub-task", "sub_coll.sub_task")
+        self._compare_names("sub-coll.sub-task", "sub-coll.sub-task")
 
     def aliases(self):
         self._compare_names("my-task27", "my-task2")
 
     def subcollection_aliases(self):
-        self._compare_names("sub-coll.other", "sub_coll.sub_task")
+        self._compare_names("sub-coll.other", "sub-coll.sub-task")
 
     def subcollection_default_tasks(self):
-        self._compare_names("sub-coll", "sub_coll.sub_task")
+        self._compare_names("sub-coll", "sub-coll.sub-task")
 
     def boolean_args(self):
         "my-task --boolean"
@@ -100,9 +100,9 @@ class CLIParsing(Spec):
     def _flag_value_task(self, value):
         r = self._parse("my-task -s {0} my-task2".format(value))
         eq_(len(r), 2)
-        eq_(r[0].name, 'my_task')
+        eq_(r[0].name, 'my-task')
         eq_(r[0].args.s.value, value)
-        eq_(r[1].name, 'my_task2')
+        eq_(r[1].name, 'my-task2')
 
     def flag_value_then_task(self):
         "my-task -s value my-task2"
@@ -116,16 +116,16 @@ class CLIParsing(Spec):
         "my-task --boolean my-task3 --mystring foo my-task2"
         r = self._parse("my-task --boolean my-task3 --mystring foo my-task2")
         eq_(len(r), 3)
-        eq_([x.name for x in r], ['my_task', 'my_task3', 'my_task2'])
+        eq_([x.name for x in r], ['my-task', 'my-task3', 'my-task2'])
         eq_(r[0].args.boolean.value, True)
         eq_(r[1].args.mystring.value, 'foo')
 
     def tasks_with_duplicately_named_kwargs(self):
         "my-task --mystring foo my-task3 --mystring bar"
         r = self._parse("my-task --mystring foo my-task3 --mystring bar")
-        eq_(r[0].name, 'my_task')
+        eq_(r[0].name, 'my-task')
         eq_(r[0].args.mystring.value, 'foo')
-        eq_(r[1].name, 'my_task3')
+        eq_(r[1].name, 'my-task3')
         eq_(r[1].args.mystring.value, 'bar')
 
     def multiple_short_flags_adjacent(self):
