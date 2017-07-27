@@ -596,13 +596,9 @@ class Config(DataProxy):
         # Config data loaded from the shell environment.
         self._set(_env={})
 
-        # Path to the user-specified runtime config file.
-        self._set(_runtime_path=runtime_path)
-        # Data loaded from the runtime config file.
-        self._set(_runtime={})
-        # Whether the runtime config file has been loaded or not (or ``None``
-        # if no loading has been attempted yet.)
-        self._set(_runtime_found=None)
+        # As it may want to be set post-init, runtime conf file related attrs
+        # get initialized or overwritten via a specific method.
+        self.set_runtime_path(runtime_path)
 
         # Overrides - highest normal config level. Typically filled in from
         # command-line flags.
@@ -713,6 +709,18 @@ class Config(DataProxy):
         :returns: ``None``.
         """
         self._load_file(prefix='project', merge=merge)
+
+    def set_runtime_path(self, path):
+        """
+        Set the runtime config file path.
+        """
+        # Path to the user-specified runtime config file.
+        self._set(_runtime_path=path)
+        # Data loaded from the runtime config file.
+        self._set(_runtime={})
+        # Whether the runtime config file has been loaded or not (or ``None``
+        # if no loading has been attempted yet.)
+        self._set(_runtime_found=None)
 
     def load_runtime(self, merge=True):
         """
