@@ -27,6 +27,10 @@ matrix:
     - python: pypy3
   fast_finish: true
 install:
+  # For some reason Travis' build envs have differing pip versions between
+  # minor Python versions (e.g. pip 9 on python 2.6, pip 8 on python 2.7.) This
+  # (or related issues like setuptools version) cause problems, so...
+  - pip install -U pip
   # Pre-requirements sanity test (again, resembles pure, non-dev install
   # environment.) Avoids e.g. spec's 'six' from gumming up our attempts to
   # import our vendorized 'six'.
