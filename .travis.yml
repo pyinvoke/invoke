@@ -34,6 +34,7 @@ install:
   - inv --list
   # Install remaining dev requirements (test runner, etc)
   - pip install -r dev-requirements.txt
+  - pip list --format=columns
   # Also create a workable alt-interpreter venv for testing dual package builds
   # Python 3 is nicely namespaced, globally. Python 2 is masked by Travis'
   # default venv, so we gotta hardcode it.
