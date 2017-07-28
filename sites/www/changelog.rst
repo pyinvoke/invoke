@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :release:`0.20.1 <2017-07-27>`
 * :bug:`-` Fix a broken ``six.moves`` import within ``invoke.util``; was
   causing ``ImportError`` in environments without an external copy of ``six``
   installed.
