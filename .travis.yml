@@ -32,7 +32,7 @@ install:
   # corner packaging cases. So...
   - pip install -U pip
   # Setuptools 34+ seems to get less stable
-  - pip install 'setuptools >33,<34'
+  - pip install 'setuptools>33,<34'
   # Pre-requirements sanity test (again, resembles pure, non-dev install
   # environment.) Avoids e.g. spec's 'six' from gumming up our attempts to
   # import our vendorized 'six'.
