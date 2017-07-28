@@ -2,6 +2,12 @@
 Changelog
 =========
 
+* :bug:`-` Fix a broken ``six.moves`` import within ``invoke.util``; was
+  causing ``ImportError`` in environments without an external copy of ``six``
+  installed.
+
+  The dangers of one's local and CI environments all pulling down packages that
+  use ``six``! It's everywhere!
 * :release:`0.20.0 <2017-07-27>`
 * :feature:`-` (required to support :issue:`310` and :issue:`329`) Break up the
   `~invoke.config.Config` lifecycle some more, allowing it to gradually load

@@ -15,9 +15,13 @@ import sys
 # TODO: would this make more sense to put _into_ invoke.vendor? That way, the
 # import lines which now read 'from .util import <third party stuff>' would be
 # more obvious. Requires packagers to leave invoke/vendor/__init__.py alone tho
+# NOTE: we also grab six.moves internals directly so other modules don't have
+# to worry about it (they can't rely on the imported 'six' directly via
+# attribute access, since six.moves does import shenanigans.)
 try:
     from .vendor.lexicon import Lexicon # noqa
     from .vendor import six
+    from .vendor.six.moves import reduce # noqa
     if six.PY3:
         from .vendor import yaml3 as yaml # noqa
     else:
@@ -25,12 +29,8 @@ try:
 except ImportError:
     from lexicon import Lexicon # noqa
     import six
+    from six.moves import reduce # noqa
     import yaml # noqa
-
-# Grab six.moves stuff here so other modules don't have to worry about it
-# (they can't rely on the imported 'six' directly via attribute access, since
-# six.moves does import shenanigans.)
-from six.moves import reduce # noqa
 
 
 LOG_FORMAT = "%(name)s.%(module)s.%(funcName)s: %(message)s"
