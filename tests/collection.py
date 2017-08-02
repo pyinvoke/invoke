@@ -104,27 +104,25 @@ class Collection_(Spec):
         class parameters:
             def setup(self):
                 self.mod = load('integration')
-                self.fm = Collection.from_module
+                self.from_module = Collection.from_module
 
             def name_override(self):
-                eq_(self.fm(self.mod).name, 'integration')
+                eq_(self.from_module(self.mod).name, 'integration')
                 eq_(
-                    self.fm(self.mod, name='not-integration').name,
+                    self.from_module(self.mod, name='not-integration').name,
                     'not-integration'
                 )
 
             def inline_configuration(self):
                 # No configuration given, none gotten
-                eq_(self.fm(self.mod).configuration(), {})
+                eq_(self.from_module(self.mod).configuration(), {})
                 # Config kwarg given is reflected when config obtained
-                eq_(
-                    self.fm(self.mod, config={'foo': 'bar'}).configuration(),
-                    {'foo': 'bar'}
-                )
+                coll = self.from_module(self.mod, config={'foo': 'bar'})
+                assert coll.configuration() == {'foo': 'bar'}
 
             def name_and_config_simultaneously(self):
                 # Test w/ posargs to enforce ordering, just for safety.
-                c = self.fm(self.mod, 'the name', {'the': 'config'})
+                c = self.from_module(self.mod, 'the name', {'the': 'config'})
                 eq_(c.name, 'the name')
                 eq_(c.configuration(), {'the': 'config'})
 
