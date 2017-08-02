@@ -188,11 +188,11 @@ class Collection(object):
         for candidate in ('ns', 'namespace'):
             obj = getattr(module, candidate, None)
             if obj and isinstance(obj, Collection):
-                # TODO: make this into Collection.clone() or similar
+                # TODO: make this into Collection.clone() or similar?
                 ret = instantiate(obj_name=obj.name)
-                ret.tasks = copy.deepcopy(obj.tasks)
-                ret.collections = copy.deepcopy(obj.collections)
-                ret.default = copy.deepcopy(obj.default)
+                ret.tasks = ret.transform_lexicon(obj.tasks)
+                ret.collections = ret.transform_lexicon(obj.collections)
+                ret.default = ret.transform(obj.default)
                 # Explicitly given config wins over root ns config
                 obj_config = copy_dict(obj._configuration)
                 if config:
@@ -376,6 +376,10 @@ class Collection(object):
         If it is ``False``, the inverse is applied - all dashes are turned into
         underscores.
         """
+        # Short-circuit on anything non-applicable, e.g. empty strings, bools,
+        # None, etc.
+        if not name:
+            return name
         from_, to = '_', '-'
         if not self.auto_dash_names:
             from_, to = '-', '_'
@@ -396,6 +400,23 @@ class Collection(object):
                 char = to
             replaced.append(char)
         return ''.join(replaced)
+
+    def transform_lexicon(self, old):
+        """
+        Take a Lexicon and apply `transform` to its keys and aliases.
+
+        :returns: A new Lexicon.
+        """
+        new_ = Lexicon()
+        # Lexicons exhibit only their real keys in most places, so this will
+        # only grab those, not aliases.
+        for key, value in six.iteritems(old):
+            # Deepcopy the value so we're not just copying a reference
+            new_[self.transform(key)] = copy.deepcopy(value)
+        # Also copy all aliases, which are string-to-string key mappings
+        for key, value in six.iteritems(old.aliases):
+            new_.alias(from_=self.transform(key), to=self.transform(value))
+        return new_
 
     @property
     def task_names(self):
