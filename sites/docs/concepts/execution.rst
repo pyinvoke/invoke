@@ -43,8 +43,8 @@ another.
 One task
 ========
 
-The simplest possible execution is simply to call a single task. Let's say we
-have a ``build`` task might generate some output; we'll just print for now
+The simplest possible execution is to call a single task. Let's say we have a
+``build`` task which generates some output file; we'll just print for now
 instead, to make things easier to follow::
 
     from invoke import task
@@ -64,7 +64,8 @@ Multiple tasks
 
 Like ``make`` and (some) other task runners, you can call more than one task at
 the same time. A classic example is to have a ``clean`` task that cleans up
-previously generated output, which you'd call before the next ``build``::
+previously generated output, which you might call before a new ``build`` to
+make sure previous build results don't cause problems::
 
     @task
     def clean(ctx):
@@ -84,10 +85,10 @@ As you'd expect, they run in the order requested::
 Avoiding multiple tasks
 =======================
 
-Running multiple tasks at once is actually not the most common use case,
-because anytime you have a common pattern it's good practice to make it happen
-automatically. (Leaving the multiple-task use case for the uncommon situations
-where you're mixing & matching tasks that are not usually run together.)
+Running multiple tasks at once isn't actually a frequent practice -- because
+anytime you have a common pattern, automating it is a smart move. (This leaves
+the multiple-task use case for uncommon situations where you're mixing &
+matching tasks that are not always run together.)
 
 One way to do this requires no special help from Invoke, but simply leverages
 typical Python logic: have ``build`` call ``clean`` automatically (while
@@ -144,8 +145,8 @@ bodies; and it lets you ensure that dependencies only run one time, even if
 multiple tasks in a session would otherwise want to call them (covered in the
 next section.)
 
-Here's our nascent build task tree, using the ``dependencies`` kwarg to `@task
-<.task>`::
+Here's our nascent build task tree, using the ``dependencies`` (or
+``depends_on``, for single objects) kwarg to `@task <.task>`::
 
     @task
     def clean(ctx):
@@ -165,20 +166,19 @@ calls ``clean`` automatically by default; and you can use the core
     $ inv --no-dependencies build
     Building!
 
-Of note, a convenient (and ``make``-esque) shortcut is to give ``dependencies``
-as positional arguments to ``@task``; this is exactly the same as if one gave
-an explicit iterable ``dependencies`` kwarg::
-
-    @task(clean)
-    def build(ctx):
-        print("Building!")
+.. note::
+    A convenient (and ``make``-esque) shortcut is to give ``dependencies`` as
+    positional arguments to ``@task``; this is exactly the same as if one gave
+    an explicit iterable ``dependencies`` kwarg. In other words,
+    ``@task(clean)`` is a shorter way of saying
+    ``@task(dependencies=[clean])``.
 
 
 Skipping execution via checks
 =============================
 
-To continue the "build" example (and to make it more concrete), let's say we
-want to put some real behavior in place, and make some assertions about it.
+To continue the "build" example (and make it more concrete), let's say we want
+to put some real behavior in place, and make some assertions about it.
 Specifically:
 
 - ``build`` is responsible for creating a file named ``output``
@@ -210,15 +210,15 @@ Checks may be arbitrary callables, typically taking a few forms:
 
 Our new, improved, slightly less trivial tasks file::
 
-    import os
+    from os.path import exists
     from invoke import task
 
-    @task(checks=[lambda: not os.path.exists('output')])
+    @task(check=lambda: not exists('output'))
     def clean(ctx):
         print("Cleaning!")
         ctx.run("rm output")
 
-    @task(dependencies=[clean], checks=[lambda: os.path.exists('output')])
+    @task(depends_on=clean, check=lambda: exists('output'))
     def build(ctx):
         print("Building!")
         ctx.run("touch output")
@@ -315,11 +315,11 @@ Avoiding followups
 As noted a few sections earlier, just because dependencies exist doesn't mean
 they're the only appropriate solution for "call one thing before another."
 Similarly, followups are useful, but they're best when you want some other task
-to be called "eventually" (as opposed to "always right after another task".)
-They're also not the best for situations where you want a followup to run *even
-if* the task requesting them fails.
+to be called "eventually" (as opposed to "always right after".) They're also
+not the best for situations where you want a followup to run *even if* the task
+requesting them fails.
 
-For example, if we want to ensure our build-and-upload task _never_ leaves
+For example, say we want to ensure our build-and-upload task *never* leaves
 files on disk. The previous snippet can't do this: if the network is down or
 the user lacks the right key, an exception would be thrown, and Invoke would
 never call ``clean``, leaving artifacts lying around.
@@ -354,9 +354,9 @@ acyclic graph* or *DAG*) of the tasks and their relationships, enabling
 deduplication and determination of the best execution order.
 
 .. note::
-    This deduplication does not require use of task checks - it works by
-    checking how many times a given task has been executed - but of course, the
-    two features work well together if both are being used.
+    This deduplication does not require use of task checks (tasks are simply
+    removed from the graph after they run), but the two features work well
+    together nonetheless.
 
 A quick example of what this looks like: some shared dependencies in a small
 tree::
@@ -392,10 +392,10 @@ intermediate build steps.
 Call graph edge cases
 =====================
 
-As a final aside, there are many edge cases that pop up when one starts
-combining dependencies, followups and multiple target tasks; we try enumerating
-most of these below and note how the system is expected to behave when it
-encounters them. Divergence from this behavior should be reported as a bug.
+Many edge cases can pop up when one starts combining dependencies, followups
+and calling multiple tasks in the same CLI session; we enumerate most of these
+below and note how the system is expected to behave when it encounters them.
+Divergence from this behavior should be reported as a bug.
 
 Explicitly invoked dependencies
 -------------------------------
@@ -411,9 +411,12 @@ Given a ``build`` that depends on ``clean``::
         print("Building!")
 
 What should happen if one explicitly calls ``clean`` before ``build``, despite
-it being implicitly depended upon? Should it run once, or twice? Going by the
-usual definition of a "dependency", the call graph decides that it should only
-run once::
+it being implicitly depended upon? Should it run once, or twice?
+
+This is actually sort of a trick question; from the perspective of a call
+graph, we can't add the same task twice as a dependency of another - it's
+effectively a no-op. So ``clean`` will end up only appearing in the graph once,
+and only gets run once::
 
     $ inv clean build
     Cleaning!
@@ -433,7 +436,7 @@ Similar to previous, but with followups instead::
         print("Testing!")
 
 If one calls ``inv test notify``, should ``notify`` run once or twice? As
-before, the graph says, only once::
+before, the graph says only once::
 
     $ inv test notify
     Testing!
