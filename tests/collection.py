@@ -440,6 +440,20 @@ class Collection_(Spec):
                 assert sorted(x.name for x in contexts) == sorted(names)
                 assert sorted(x.aliases for x in contexts) == sorted(aliases)
 
+            def transforms_are_applied_to_explicit_module_namespaces(self):
+                # Symptom when bug present: Collection.to_contexts() dies
+                # because it iterates over .task_names (transformed) and then
+                # tries to use results to access __getitem__ (no auto
+                # transform...because in all other situations, task structure
+                # keys are already transformed; but this wasn't the case for
+                # from_module() with explicit 'ns' objects!)
+                coll = Collection.from_module(
+                    load('simple_ns_list'), auto_dash_names=False
+                )
+                # NOTE: z_toplevel, not z-toplevel
+                expected = set(['z_toplevel', 'a.b.subtask'])
+                assert set(x.name for x in coll.to_contexts()) == expected
+
         def allows_flaglike_access_via_flags(self):
             assert '--text' in self.context.flags
 
