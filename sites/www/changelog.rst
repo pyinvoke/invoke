@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :release:`0.20.2 <2017-08-02>`
 * :bug:`465` The ``tasks.auto_dash_names`` config option added in ``0.20.0``
   wasn't being fully honored when set to ``False``; this has been fixed. Thanks
   to Luke Orland for the report.
