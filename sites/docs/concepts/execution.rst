@@ -29,7 +29,7 @@ There are a handful of important terms here:
 - **Dependencies** state that for a task to successfully execute, other tasks
   (sometimes referred to as **pre-tasks** or, in ``make``, *prerequisites*)
   must be run sometime beforehand.
-- **Triggers**  (sometimes referred to as **post-tasks**) are roughly the
+- **Followup tasks**  (sometimes referred to as **post-tasks**) are roughly the
   inverse of dependencies - a task requesting that another task always be run
   sometime *after* it itself executes.
 
@@ -181,10 +181,10 @@ Specifically:
 
 - ``build`` is responsible for creating a file named ``output``
 - ``build`` should not run if ``output`` already exists
-  
+
   - Yes, this is a simplistic example!! If you're wondering about timestamps
-  and hashes, this document isn't really for you; you may want to just skip
-  over to the `checks module documentation <checks>`.)
+    and hashes, this document isn't really for you; you may want to just skip
+    over to the `checks module documentation <checks>`.)
 
 - ``clean`` is responsible for removing ``output``
 - ``clean`` should not run if ``output`` does not exist
@@ -261,16 +261,131 @@ short-circuits when it has no work to do::
 
 This is a highly contrived example, but hopefully illustrative.
 
-Triggers
-========
 
-- single task w/ single trigger
+Followup tasks
+==============
 
-    - note that unlike dependencies, triggered tasks are not cached per se, and
-      are also pushed as late as possible (see below re: deduplication)
+Task dependencies are a common use case; less common is their effective
+inverse, calling tasks *after* the invoked task, instead of before; we refer to
+these as "followup" tasks.
 
-- commutative/recursive dependencies
-- commutative/recursive triggers
+For example, perhaps we want to invert the earlier example a bit, and build a
+file purely for the purpose of uploading to a remote server. In such a
+scenario, we may want to clean up at the end, lest we leave temporary files
+lying around on disk.
+
+Here's a tasks file with tasks for building a tarball, uploading it to a
+server, and cleaning up afterwards::
+
+    @task
+    def build(ctx):
+        print("Building!")
+        ctx.run("tar czf output.tgz source-directory")
+
+    @task
+    def clean(ctx):
+        print("Cleaning!")
+        ctx.run("rm output.tgz")
+
+    @task(dependencies=[build], followups=[clean])
+    def upload(ctx):
+        print("Uploading!")
+        ctx.run("scp output.tgz myserver:/var/www/")
+
+Typically one would use the tasks file like so::
+
+    $ ls
+    source-directory  tasks.py
+    $ inv upload
+    Building!
+    Uploading!
+    Cleaning!
+    $ ls
+    source-directory  tasks.py
+
+Notice how the intermediate artifact, ``output.tgz``, isn't present after
+things are all done, due to ``clean``.
+
+
+Avoiding followups
+==================
+
+As noted a few sections earlier, just because dependencies exist doesn't mean
+they're the only appropriate solution for "call one thing before another."
+Similarly, followups are useful, but they're best when you want some other task
+to be called "eventually" (as opposed to "always right after another task".)
+They're also not the best for situations where you want a followup to run *even
+if* the task requesting them fails.
+
+For example, if we want to ensure our build-and-upload task _never_ leaves
+files on disk. The previous snippet can't do this: if the network is down or
+the user lacks the right key, an exception would be thrown, and Invoke would
+never call ``clean``, leaving artifacts lying around.
+
+In that case, you really just want to use ``try``/``finally``::
+
+    @task(dependencies=[build])
+    def upload(ctx):
+        try:
+            print("Uploading!")
+            ctx.run("scp output.tgz myserver:/var/www/")
+        finally:
+            clean(ctx)
+
+In this case, even if your ``scp`` were to fail, ``clean`` would still get a
+shot at running.
+
+
+Recursive dependencies/followups
+================================
+
+All of the above has focused on groups of tasks with simple, one-hop
+relationships to each other. In the real world, things can be far messier. It's
+quite possible to end up calling one task, which depends on another, which
+depends on a third, which...you get the idea. Multiple tasks might share the
+same dependency - running that dependency multiple times in a session is at
+best inefficient and at worst incorrect. And once we add followups to the mix,
+the complexity increases further.
+
+Tools like Invoke tackle this by building a graph (technically, a *directed
+acyclic graph* or *DAG*) of the tasks and their relationships, enabling
+deduplication and determination of the best execution order.
+
+.. note::
+    This deduplication does not require use of task checks - it works by
+    checking how many times a given task has been executed - but of course, the
+    two features work well together if both are being used.
+
+A quick example of what this looks like: some shared dependencies in a small
+tree::
+
+    @task
+    def clean(ctx):
+        print("Cleaning!")
+
+    @task(clean)
+    def build_one_thing(ctx):
+        print("Building one thing!")
+
+    @task(clean)
+    def build_another_thing(ctx):
+        print("Building another thing!!")
+
+    @task(build_one_thing, build_another_thing)
+    def build_all_the_things(ctx):
+        print("BUILT ALL THE THINGS!!!")
+
+And execution of the topmost task::
+
+    $ inv build-all-the-things
+    Cleaning!
+    Building one thing!
+    Building another thing!!
+    BUILT ALL THE THINGS!!!
+
+Note how ``clean`` only ran once, despite being a dependency of both of the
+intermediate build steps.
+
 - deduplication, i.e. task A depends on B, but explicit call is `inv B A` - is
   result `B B A` or just `B A`?
 
