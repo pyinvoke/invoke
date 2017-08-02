@@ -126,6 +126,13 @@ class Collection_(Spec):
                 eq_(c.name, 'the name')
                 eq_(c.configuration(), {'the': 'config'})
 
+            def auto_dash_names_passed_to_constructor(self):
+                # Sanity
+                assert self.from_module(self.mod).auto_dash_names is True
+                # Test
+                coll = self.from_module(self.mod, auto_dash_names=False)
+                assert coll.auto_dash_names is False
+
         def adds_tasks(self):
             assert 'print-foo' in self.c
 
