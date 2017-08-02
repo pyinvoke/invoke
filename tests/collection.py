@@ -422,7 +422,7 @@ class Collection_(Spec):
                 expected = ['_what-evers_', 'inner._inner-cooler_']
                 assert set(x.name for x in contexts) == set(expected)
 
-            def honors_init_setting_on_topmost_namespace(self):
+            def _nested_underscores(self, auto_dash_names=None):
                 @task(aliases=['other_name'])
                 def my_task(c):
                     pass
@@ -433,7 +433,12 @@ class Collection_(Spec):
                 # tests that the top-level namespace performs the inverse
                 # transformation when necessary.
                 sub = Collection('inner_coll', inner_task)
-                coll = Collection(my_task, sub, auto_dash_names=False)
+                return Collection(
+                    my_task, sub, auto_dash_names=auto_dash_names
+                )
+
+            def honors_init_setting_on_topmost_namespace(self):
+                coll = self._nested_underscores(auto_dash_names=False)
                 contexts = coll.to_contexts()
                 names = ['my_task', 'inner_coll.inner_task']
                 aliases = [['other_name'], ['inner_coll.other_inner']]
@@ -447,11 +452,15 @@ class Collection_(Spec):
                 # transform...because in all other situations, task structure
                 # keys are already transformed; but this wasn't the case for
                 # from_module() with explicit 'ns' objects!)
+                namespace = self._nested_underscores()
+                class FakeModule(object):
+                    __name__ = 'my_module'
+                    ns = namespace
                 coll = Collection.from_module(
-                    load('simple_ns_list'), auto_dash_names=False
+                    FakeModule(), auto_dash_names=False
                 )
-                # NOTE: z_toplevel, not z-toplevel
-                expected = set(['z_toplevel', 'a.b.subtask'])
+                # NOTE: underscores, not dashes
+                expected = set(['my_task', 'inner_coll.inner_task'])
                 assert set(x.name for x in coll.to_contexts()) == expected
 
         def allows_flaglike_access_via_flags(self):
