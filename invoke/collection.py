@@ -129,7 +129,7 @@ class Collection(object):
 
     @classmethod
     def from_module(
-        self,
+        cls,
         module,
         name=None,
         config=None,
