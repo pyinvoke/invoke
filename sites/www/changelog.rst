@@ -2,6 +2,9 @@
 Changelog
 =========
 
+* :bug:`465` The ``tasks.auto_dash_names`` config option added in ``0.20.0``
+  wasn't being fully honored when set to ``False``; this has been fixed. Thanks
+  to Luke Orland for the report.
 * :release:`0.20.1 <2017-07-27>`
 * :bug:`-` Fix a broken ``six.moves`` import within ``invoke.util``; was
   causing ``ImportError`` in environments without an external copy of ``six``
