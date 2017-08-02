@@ -12,14 +12,10 @@ if six.PY3:
     except ImportError: # PyPy3
         from importlib._bootstrap import _SourceFileLoader as SourceFileLoader
     def load_source(name, path):
-        if not os.path.exists(path):
-            return {}
         return vars(SourceFileLoader('mod', path).load_module())
 else:
     import imp
     def load_source(name, path):
-        if not os.path.exists(path):
-            return {}
         return vars(imp.load_source('mod', path))
 
 from .env import Environment
