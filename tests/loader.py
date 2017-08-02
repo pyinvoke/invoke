@@ -70,6 +70,14 @@ class Loader_(Spec):
         mod = loader.load()
         assert 'z_toplevel' in mod
 
+    def instantiated_collection_is_given_copy_of_config(self):
+        # Sanity: assert default is True
+        assert _BasicLoader().load('package').auto_dash_names is True
+        # Real test: that we can override that default to False.
+        config = Config({'tasks': {'auto_dash_names': False}})
+        collection = _BasicLoader(config=config).load('package')
+        assert collection.auto_dash_names is False
+
 
 class FilesystemLoader_(Spec):
     def setup(self):
