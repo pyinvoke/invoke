@@ -403,7 +403,7 @@ class Collection(object):
 
     def transform_lexicon(self, old):
         """
-        Take a Lexicon and apply `transform` to its keys and aliases.
+        Take a Lexicon and apply `.transform` to its keys and aliases.
 
         :returns: A new Lexicon.
         """
