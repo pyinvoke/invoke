@@ -194,7 +194,16 @@ Specifically:
 .. note::
     We could phrase some of these constraints inside our tasks as well, but
     having the tests or predicates live outside task bodies lets us perform
-    extra logic, as with dependencies. Which approach you use is up to you.
+    extra logic, as with dependencies.
+
+    Conversely, some situations that would make sense for checks are made
+    unnecessary by the dependency/followup system, which uses a graph mechanism
+    to remove duplicate calls (see :ref:`recursive-dependencies`.) This leaves
+    checks primarily useful for causing a task to run *zero* times, instead of
+    *only once*.
+
+    As always, we provide these various tools, but it's up to you to decide
+    which of them apply best to your specific use case.
 
 To enable these behaviors, we update the task bodies to do real work; and we
 use the ``check`` and/or ``checks`` kwargs to `@task <.task>`, handing them
@@ -337,6 +346,8 @@ In that case, you really just want to use ``try``/``finally``::
 In this case, even if your ``scp`` were to fail, ``clean`` would still get a
 shot at running.
 
+
+.. _recursive-dependencies:
 
 Recursive dependencies/followups
 ================================
