@@ -175,6 +175,8 @@ class Collection(object):
         """
         module_name = module.__name__.split('.')[-1]
         def instantiate(obj_name=None):
+            # Explicitly given name wins over root ns name (if applicable),
+            # which wins over actual module name.
             args = [name or obj_name or module_name]
             kwargs = dict(
                 loaded_from=loaded_from,
@@ -187,8 +189,6 @@ class Collection(object):
             obj = getattr(module, candidate, None)
             if obj and isinstance(obj, Collection):
                 # TODO: make this into Collection.clone() or similar
-                # Explicitly given name wins over root ns name which wins over
-                # actual module name.
                 ret = instantiate(obj_name=obj.name)
                 ret.tasks = copy.deepcopy(obj.tasks)
                 ret.collections = copy.deepcopy(obj.collections)
