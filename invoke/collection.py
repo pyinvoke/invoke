@@ -94,7 +94,10 @@ class Collection(object):
         self._configuration = {}
         # Specific kwargs if applicable
         self.loaded_from = kwargs.pop('loaded_from', None)
-        self.auto_dash_names = kwargs.pop('auto_dash_names', True)
+        self.auto_dash_names = kwargs.pop('auto_dash_names', None)
+        # splat-kwargs version of default value (auto_dash_names=True)
+        if self.auto_dash_names is None:
+            self.auto_dash_names = True
         # Name if applicable
         args = list(args)
         if args and isinstance(args[0], six.string_types):
@@ -125,7 +128,14 @@ class Collection(object):
         return self.name == other.name and self.tasks == other.tasks
 
     @classmethod
-    def from_module(self, module, name=None, config=None, loaded_from=None):
+    def from_module(
+        self,
+        module,
+        name=None,
+        config=None,
+        loaded_from=None,
+        auto_dash_names=None,
+    ):
         """
         Return a new `.Collection` created from ``module``.
 
@@ -158,8 +168,19 @@ class Collection(object):
             Identical to the same-named kwarg from the regular class
             constructor - should be the path where the module was
             found.
+
+        :param bool auto_dash_names:
+            Identical to the same-named kwarg from the regular class
+            constructor - determines whether emitted names are auto-dashed.
         """
         module_name = module.__name__.split('.')[-1]
+        def instantiate(obj_name=None):
+            args = [name or obj_name or module_name]
+            kwargs = dict(
+                loaded_from=loaded_from,
+                auto_dash_names=auto_dash_names,
+            )
+            return Collection(*args, **kwargs)
         # See if the module provides a default NS to use in lieu of creating
         # our own collection.
         for candidate in ('ns', 'namespace'):
@@ -168,8 +189,7 @@ class Collection(object):
                 # TODO: make this into Collection.clone() or similar
                 # Explicitly given name wins over root ns name which wins over
                 # actual module name.
-                ret = Collection(name or obj.name or module_name,
-                                 loaded_from=loaded_from)
+                ret = instantiate(obj_name=obj.name)
                 ret.tasks = copy.deepcopy(obj.tasks)
                 ret.collections = copy.deepcopy(obj.collections)
                 ret.default = copy.deepcopy(obj.default)
@@ -185,7 +205,7 @@ class Collection(object):
             vars(module).values()
         )
         # Again, explicit name wins over implicit one from module path
-        collection = Collection(name or module_name, loaded_from=loaded_from)
+        collection = instantiate()
         for task in tasks:
             collection.add_task(task)
         if config:

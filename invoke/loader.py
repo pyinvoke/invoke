@@ -64,7 +64,11 @@ class Loader(object):
             # Actual import
             module = imp.load_module(name, fd, path, desc)
             # Make a collection from it, and done
-            return Collection.from_module(module, loaded_from=parent)
+            return Collection.from_module(
+                module,
+                loaded_from=parent,
+                auto_dash_names=self.config.tasks.auto_dash_names,
+            )
         finally:
             # Ensure we clean up the opened file object returned by find(), if
             # there was one (eg found packages, vs modules, don't open any
