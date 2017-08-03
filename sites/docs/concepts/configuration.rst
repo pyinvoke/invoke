@@ -64,7 +64,7 @@ Default configuration values
 
 Below is a list of all the configuration values and/or section Invoke itself
 uses to control behaviors such as `.Context.run`'s ``echo`` and ``pty``
-flags, task deduplication, and so forth.
+flags, task discovery, and so forth.
 
 .. note::
     The storage location for these values is inside the `.Config` class,
@@ -79,8 +79,6 @@ For convenience, we refer to nested setting names with a dotted syntax, so e.g.
 
 - The ``tasks`` config tree holds settings relating to task execution.
 
-    - ``tasks.dedupe`` controls :ref:`deduping` and defaults to ``True``. It
-      can also be overridden at runtime via :option:`--no-dedupe`.
     - ``tasks.auto_dash_names`` controls whether task and collection names have
       underscores turned to dashes on the CLI. Default: ``True``. See also
       :ref:`dashes-vs-underscores`.
