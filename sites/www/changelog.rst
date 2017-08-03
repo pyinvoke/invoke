@@ -32,6 +32,13 @@ Changelog
 
     Checks are covered in :ref:`the task execution docs <task-execution>` and
     also in a new module offering built-in checks, `invoke.checks`.
+  - Accompanying these new features, the CLI and config options
+    around deduplication have been replaced with ones controlling whether
+    dependency management and/or task checks are considered. For example, you
+    can temporarily disable checks with ``--no-checks``.
+
+    See the :ref:`CLI <inv>` and :ref:`config <configuration>` docs for
+    details.
 
   .. warning::
     These changes are backwards incompatible if you used the ``pre`` and/or
@@ -41,6 +48,9 @@ Changelog
     Similarly, if you were interacting with task objects directly and accessing
     their ``.pre`` and ``.post`` attributes, those are now ``.dependencies``
     and ``.followups``, respectively.
+
+    Task deduplication is gone, and thus so is ``--no-dedupe`` and the
+    ``tasks.no_dedupe`` config option.
 
     Finally, if you were relying on the incorrect behavior surrounding
     deduplication of post-tasks (outlined in :issue:`298`) it has been fixed,

@@ -57,9 +57,13 @@ The core options (which must be given before any task names) are as follows:
 
     Set default value of run()'s 'hide' kwarg.
 
-.. option:: --no-dedupe
+.. option:: --no-checks
 
-    Disable task deduplication.
+    Disable task checks.
+
+.. option:: --no-dependencies
+
+    Disable task dependencies / followups.
 
 .. option:: -c STRING, --collection=STRING
 

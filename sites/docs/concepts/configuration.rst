@@ -82,6 +82,11 @@ For convenience, we refer to nested setting names with a dotted syntax, so e.g.
     - ``tasks.auto_dash_names`` controls whether task and collection names have
       underscores turned to dashes on the CLI. Default: ``True``. See also
       :ref:`dashes-vs-underscores`.
+    - ``tasks.checks`` controls whether task check callables are consulted
+      during :ref:`task execution <task-execution>`. Default: ``True``.
+    - ``tasks.dependencies`` controls whether task dependencies and followups
+      are consulted during :ref:`task execution <task-execution>`. Default:
+      ``True``.
     - ``tasks.collection_name`` controls the Python import name sought out by
       :ref:`collection discovery <collection-discovery>`, and defaults to
       ``"tasks"``.
