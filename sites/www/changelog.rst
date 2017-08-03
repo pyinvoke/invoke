@@ -2,6 +2,50 @@
 Changelog
 =========
 
+* :feature:`461` Expanded/overhauled task execution to provide more
+  functionality & enhance what already existed. Specifically:
+
+  - The original concept of "pre-" and "post-tasks" has been upgraded to use a
+    directed acyclic graph (which fixes some bugs with what used to be called
+    "task deduplication", including :issue:`298`) and renamed to "dependencies"
+    and "followups".
+
+    You may specify dependencies as single values or iterables via
+    ``@task(depends_on=clean)`` (or ``@task(depends_on=[clean, test])``), and
+    followups as ``@task(afterwards=notify)`` (or ``@task(afterwards=[upload,
+    notify])``.)
+
+    See :ref:`task-execution` for details.
+  - Tasks may declare "checks" that allow their execution to be skipped if
+    specific requirements are already met. This allows not only for classic
+    ``make``-style skipping of already-generated files, but any arbitrary state
+    check - think checks for config settings, database contents, etc.
+
+    This functionality is implemented as new `@task <invoke.tasks.task>`
+    kwargs, ``check`` (takes a single value) and ``checks`` (takes an
+    iterable), which accept callable objects which may return ``True`` ("the
+    check passed") to skip execution of the task.
+
+    For example, decorating a task with ``@task(check=lambda:
+    os.path.exists('/some/artifact')`` will cause the task to be skipped if
+    ``/some/artifact`` already exists.
+
+    Checks are covered in :ref:`the task execution docs <task-execution>` and
+    also in a new module offering built-in checks, `invoke.checks`.
+
+  .. warning::
+    These changes are backwards incompatible if you used the ``pre`` and/or
+    ``post`` kwargs to `@task <invoke.tasks.task>`/`~invoke.tasks.Task`; they
+    are now ``depends_on`` and ``afterwards``, respectively.
+
+    Similarly, if you were interacting with task objects directly and accessing
+    their ``.pre`` and ``.post`` attributes, those are now ``.dependencies``
+    and ``.followups``, respectively.
+
+    Finally, if you were relying on the incorrect behavior surrounding
+    deduplication of post-tasks (outlined in :issue:`298`) it has been fixed,
+    and you should update your tasks accordingly.
+
 * :release:`0.20.1 <2017-07-27>`
 * :bug:`-` Fix a broken ``six.moves`` import within ``invoke.util``; was
   causing ``ImportError`` in environments without an external copy of ``six``
