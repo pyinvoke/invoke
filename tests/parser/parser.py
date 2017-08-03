@@ -389,12 +389,14 @@ class Parser_(Spec):
                 # inv mytask -h
                 skip()
 
-        class other_core_flags_do_not_work_in_task_contexts:
+        def no_dependencies(self):
+            # TODO: inv task-with-deps --no-dependencies
+            # TODO: ought to work exactly like inv --no-dependencies task-w-d
+            skip()
+
+        class some_core_flags_do_not_work_in_task_contexts:
             # NOTE: only doing a subset here for sanity tests
             def list_(self):
-                skip()
-
-            def no_dedupe(self):
                 skip()
 
         # TODO: can define what core flags work as per-task flags, somehow?

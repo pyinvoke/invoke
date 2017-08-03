@@ -412,7 +412,7 @@ Core options:
   --complete                       Print tab-completion candidates for given
                                    parse remainder.
   --hide=STRING                    Set default value of run()'s 'hide' kwarg.
-  --no-dedupe                      Disable task deduplication.
+  --no-dependencies                Disable task dependencies/followups.
   --write-pyc                      Enable creation of .pyc files.
   -c STRING, --collection=STRING   Specify collection name to load.
   -d, --debug                      Enable debug output.
@@ -719,34 +719,6 @@ Available tasks:
         def runtime_config_file_honored(self):
             with cd('configs'):
                 expect("-c runtime -f yaml/invoke.yaml mytask")
-
-        def tasks_dedupe_honors_configuration(self):
-            # Kinda-sorta duplicates some tests in executor.py, but eh.
-            with cd('configs'):
-                # Runtime conf file
-                expect(
-                    "-c integration -f no-dedupe.yaml biz",
-                    out="""
-foo
-foo
-bar
-biz
-post1
-post2
-post2
-""".lstrip())
-                # Flag beats runtime
-                expect(
-                    "-c integration -f dedupe.yaml --no-dedupe biz",
-                    out="""
-foo
-foo
-bar
-biz
-post1
-post2
-post2
-""".lstrip())
 
         # * debug (top level?)
         # * hide (run.hide...lol)

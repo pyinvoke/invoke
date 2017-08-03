@@ -115,10 +115,12 @@ class Program(object):
                 help="Specify collection name to load."
             ),
             Argument(
-                names=('no-dedupe',),
+                # TODO: phrase as 'dependencies' and default to true? same
+                # effect/flag, different name/value when used post-parsing?
+                names=('no-dependencies',),
                 kind=bool,
                 default=False,
-                help="Disable task deduplication."
+                help="Disable task dependencies/followups."
             ),
             Argument(
                 names=('root', 'r'),

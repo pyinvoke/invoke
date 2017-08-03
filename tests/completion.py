@@ -40,12 +40,12 @@ class ShellCompletion(IntegrationSpec):
     def top_level_with_dash_means_core_options(self):
         output = _complete('-')
         # No point mirroring all core options, just spot check a few
-        for flag in ('--no-dedupe', '-d', '--debug', '-V', '--version'):
+        for flag in ('--no-dependencies', '-d', '--debug', '-V', '--version'):
             assert_contains(output, "{0}\n".format(flag))
 
     def bare_double_dash_shows_only_long_core_options(self):
         output = _complete('--')
-        assert_contains(output, '--no-dedupe')
+        assert_contains(output, '--no-dependencies')
         assert_not_contains(output, '-V')
 
     def task_names_only_complete_other_task_names(self):
