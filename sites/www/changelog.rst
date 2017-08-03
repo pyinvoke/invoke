@@ -773,7 +773,7 @@ Changelog
 * :release:`0.8.0 <2014-06-08>`
 * :feature:`135` (also bugs :issue:`120`, :issue:`123`) Implement post-tasks to
   match pre-tasks, and allow control over the arguments passed to both (via
-  `invoke.tasks.call`). For details, see :ref:`pre-post-tasks`.
+  `invoke.tasks.call`).
 
   .. warning::
       Pre-tasks were overhauled a moderate amount to implement this feature;

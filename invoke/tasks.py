@@ -396,9 +396,9 @@ def call(task, *args, **kwargs):
     """
     Describes execution of a `.Task`, typically with pre-supplied arguments.
 
-    Useful for setting up :ref:`pre/post task invocations
-    <parameterizing-pre-post-tasks>`. It's actually just a convenient wrapper
-    around the `.Call` class, which may be used directly instead if desired.
+    Useful for setting up :doc:`task dependencies/followups
+    </concepts/execution>`. It's actually just a convenient wrapper around the
+    `.Call` class, which may be used directly instead if desired.
 
     For example, here's two build-like tasks that both refer to a ``setup``
     pre-task, one with no baked-in argument values (and thus no need to use

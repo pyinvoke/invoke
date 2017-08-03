@@ -18,7 +18,7 @@ Basic concepts / terminology
 
 There are a handful of important terms here:
 
-- **Tasks** are executable units of logic, i.e. instances of `Task`, which
+- **Tasks** are executable units of logic, i.e. instances of `.Task`, which
   typically wrap functions or other callables.
 - Tasks may declare that their purpose is to produce some state (a file
   on-disk, as with ``make``; runtime configuration data; a database value; etc)
@@ -186,7 +186,7 @@ Specifically:
 
   - Yes, this is a simplistic example!! If you're wondering about timestamps
     and hashes, this document isn't really for you; you may want to just skip
-    over to the `checks module documentation <checks>`.)
+    over to the `checks module documentation <invoke.checks>`.)
 
 - ``clean`` is responsible for removing ``output``
 - ``clean`` should not run if ``output`` does not exist
