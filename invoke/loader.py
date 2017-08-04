@@ -2,7 +2,7 @@ import os
 import sys
 import imp
 
-from . import Collection, Config
+from . import Config
 from .exceptions import CollectionNotFound
 from .util import debug
 
@@ -67,12 +67,10 @@ class Loader(object):
                 sys.path.insert(0, parent)
             # Actual import
             module = imp.load_module(name, fd, path, desc)
-            # Make a collection from it, and done
-            return Collection.from_module(
-                module,
-                loaded_from=parent,
-                auto_dash_names=self.config.tasks.auto_dash_names,
-            )
+            # Return module + path.
+            # TODO: is there a reason we're not simply having clients refer to
+            # os.path.dirname(module.__file__)?
+            return module, parent
         finally:
             # Ensure we clean up the opened file object returned by find(), if
             # there was one (eg found packages, vs modules, don't open any

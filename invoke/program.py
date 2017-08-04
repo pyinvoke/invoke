@@ -7,11 +7,9 @@ import textwrap
 
 from .util import six
 
+from . import Collection, Config, Executor, FilesystemLoader
 from .complete import complete
-from .config import Config
-from .loader import FilesystemLoader
 from .parser import Parser, ParserContext, Argument
-from .executor import Executor
 from .exceptions import (
     UnexpectedExit, CollectionNotFound, ParseError, Exit,
 )
@@ -228,9 +226,8 @@ class Program(object):
         For example, this is how ``--echo`` is able to override the default
         config value for ``run.echo``.
         """
-        # Now that we have parse results and collection handy, we can grab the
-        # remaining config bits:
-        # - project config, as it is dependent on collection location
+        # Now that we have parse results handy, we can grab the remaining
+        # config bits:
         # - runtime config, as it is dependent on the runtime flag
         # - the overrides config level, as it is composed of runtime flag data
         # NOTE: only fill in values that would alter behavior, otherwise we
@@ -248,10 +245,6 @@ class Program(object):
         if 'no-dedupe' in self.args and self.args['no-dedupe'].value:
             tasks['dedupe'] = False
         self.config.load_overrides({'run': run, 'tasks': tasks}, merge=False)
-        # TODO: is it worth merging these set- and load- methods? May require
-        # more tweaking of how things behave in/after __init__.
-        self.config.set_project_location(self.collection.loaded_from)
-        self.config.load_project(merge=False)
         self.config.set_runtime_path(self.args.config.value)
         self.config.load_runtime(merge=False)
         self.config.merge()
@@ -512,8 +505,18 @@ class Program(object):
         loader = self.loader_class(config=self.config, start=start)
         coll_name = self.args.collection.value
         try:
-            coll = loader.load(coll_name) if coll_name else loader.load()
-            self.collection = coll
+            module, parent = loader.load(coll_name)
+            # This is the earliest we can load project config, so we should -
+            # allows project config to affect the task parsing step!
+            # TODO: is it worth merging these set- and load- methods? May
+            # require more tweaking of how things behave in/after __init__.
+            self.config.set_project_location(parent)
+            self.config.load_project()
+            self.collection = Collection.from_module(
+                module,
+                loaded_from=parent,
+                auto_dash_names=self.config.tasks.auto_dash_names,
+            )
         except CollectionNotFound as e:
             six.print_(
                 "Can't find any collection named {0!r}!".format(e.name),
