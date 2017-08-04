@@ -7,7 +7,6 @@ from spec import Spec, eq_, raises
 
 from invoke import Config
 from invoke.loader import Loader, FilesystemLoader as FSLoader
-from invoke.collection import Collection
 from invoke.exceptions import CollectionNotFound
 
 from _util import support
