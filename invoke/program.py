@@ -284,7 +284,13 @@ class Program(object):
             # loaded namespace, which may be affected by the core flags) and
             # self.tasks (the tasks requested for exec and their own
             # args/flags)
-            self._parse(argv)
+            self.parse_core(argv)
+            # Handle collection concerns including project config
+            self.parse_collection()
+            # Parse remainder of argv as task-related input
+            self.parse_tasks()
+            # End of parsing (typically bailout stuff like --list, --help)
+            self.parse_cleanup()
             # Update the earlier Config with new values from the parse step -
             # runtime config file contents and flag-derived overrides (e.g. for
             # run()'s echo, warn, etc options.)
@@ -315,7 +321,7 @@ class Program(object):
         except KeyboardInterrupt:
             sys.exit(1) # Same behavior as Python itself outside of REPL
 
-    def _parse(self, argv):
+    def parse_core(self, argv):
         debug("argv given to Program.run: {0!r}".format(argv))
         self.normalize_argv(argv)
 
@@ -337,6 +343,10 @@ class Program(object):
             self.print_version()
             raise Exit
 
+    def parse_collection(self):
+        """
+        Load a tasks collection & project-level config.
+        """
         # Load a collection of tasks unless one was already set.
         if self.namespace is not None:
             debug("Program was given a default namespace, skipping collection loading") # noqa
@@ -352,10 +362,12 @@ class Program(object):
                 raise Exit
             self.load_collection()
 
-        # Parse remainder into task contexts (sets
-        # self.parser/collection/tasks)
-        self.parse_tasks()
+        # TODO: load project conf, if possible, gracefully
 
+    def parse_cleanup(self):
+        """
+        Post-parsing, pre-execution steps such as --help, --list, etc.
+        """
         halp = self.args.help.value or self.core_via_tasks.args.help.value
 
         # Core (no value given) --help output (only when bundled namespace)
