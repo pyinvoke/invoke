@@ -137,8 +137,8 @@ or collection names are interpreted to be dashes instead, by default::
 
 If you'd prefer the underscores to remain instead, you can update your
 configuration to set ``tasks.auto_dash_names`` to ``False`` in one of the
-loaded-by-default :ref:`config files <config-files>` -- typically, either the
-system or user location. For example, in ``~/.invoke.yml``::
+non-runtime :ref:`config files <config-files>` (system, user, or project.) For
+example, in ``~/.invoke.yml``::
 
     tasks:
         auto_dash_names: false

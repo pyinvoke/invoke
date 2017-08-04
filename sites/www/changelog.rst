@@ -56,6 +56,29 @@ Changelog
     deduplication of post-tasks (outlined in :issue:`298`) it has been fixed,
     and you should update your tasks accordingly.
 
+* :release:`0.20.3 <2017-08-04>`
+* :bug:`467` (Arguably also a feature, but since it enables behavior users
+  clearly found intuitive, we're considering it a bug.) Split up the parsing
+  machinery of `Program <invoke.program.Program>` and pushed the `Collection
+  <invoke.collection.Collection>`-making out of `Loader
+  <invoke.loader.Loader>`. Combined, this allows us to honor the project-level
+  config file *before* the second (task-oriented) CLI parsing step, instead of
+  after.
+
+  For example, this means you can turn off ``auto_dash_names`` in your
+  per-project configs and not only in your system or user configs.
+
+  Report again courtesy of Luke Orland.
+
+  .. warning::
+    This is a backwards incompatible change *if* you were subclassing and
+    overriding any of the affected methods in the ``Program`` or ``Loader``
+    classes.
+
+* :release:`0.20.2 <2017-08-02>`
+* :bug:`465` The ``tasks.auto_dash_names`` config option added in ``0.20.0``
+  wasn't being fully honored when set to ``False``; this has been fixed. Thanks
+  to Luke Orland for the report.
 * :release:`0.20.1 <2017-07-27>`
 * :bug:`-` Fix a broken ``six.moves`` import within ``invoke.util``; was
   causing ``ImportError`` in environments without an external copy of ``six``

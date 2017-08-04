@@ -94,7 +94,10 @@ class Collection(object):
         self._configuration = {}
         # Specific kwargs if applicable
         self.loaded_from = kwargs.pop('loaded_from', None)
-        self.auto_dash_names = kwargs.pop('auto_dash_names', True)
+        self.auto_dash_names = kwargs.pop('auto_dash_names', None)
+        # splat-kwargs version of default value (auto_dash_names=True)
+        if self.auto_dash_names is None:
+            self.auto_dash_names = True
         # Name if applicable
         args = list(args)
         if args and isinstance(args[0], six.string_types):
@@ -125,7 +128,14 @@ class Collection(object):
         return self.name == other.name and self.tasks == other.tasks
 
     @classmethod
-    def from_module(self, module, name=None, config=None, loaded_from=None):
+    def from_module(
+        cls,
+        module,
+        name=None,
+        config=None,
+        loaded_from=None,
+        auto_dash_names=None,
+    ):
         """
         Return a new `.Collection` created from ``module``.
 
@@ -158,21 +168,31 @@ class Collection(object):
             Identical to the same-named kwarg from the regular class
             constructor - should be the path where the module was
             found.
+
+        :param bool auto_dash_names:
+            Identical to the same-named kwarg from the regular class
+            constructor - determines whether emitted names are auto-dashed.
         """
         module_name = module.__name__.split('.')[-1]
+        def instantiate(obj_name=None):
+            # Explicitly given name wins over root ns name (if applicable),
+            # which wins over actual module name.
+            args = [name or obj_name or module_name]
+            kwargs = dict(
+                loaded_from=loaded_from,
+                auto_dash_names=auto_dash_names,
+            )
+            return Collection(*args, **kwargs)
         # See if the module provides a default NS to use in lieu of creating
         # our own collection.
         for candidate in ('ns', 'namespace'):
             obj = getattr(module, candidate, None)
             if obj and isinstance(obj, Collection):
-                # TODO: make this into Collection.clone() or similar
-                # Explicitly given name wins over root ns name which wins over
-                # actual module name.
-                ret = Collection(name or obj.name or module_name,
-                                 loaded_from=loaded_from)
-                ret.tasks = copy.deepcopy(obj.tasks)
-                ret.collections = copy.deepcopy(obj.collections)
-                ret.default = copy.deepcopy(obj.default)
+                # TODO: make this into Collection.clone() or similar?
+                ret = instantiate(obj_name=obj.name)
+                ret.tasks = ret.transform_lexicon(obj.tasks)
+                ret.collections = ret.transform_lexicon(obj.collections)
+                ret.default = ret.transform(obj.default)
                 # Explicitly given config wins over root ns config
                 obj_config = copy_dict(obj._configuration)
                 if config:
@@ -185,7 +205,7 @@ class Collection(object):
             vars(module).values()
         )
         # Again, explicit name wins over implicit one from module path
-        collection = Collection(name or module_name, loaded_from=loaded_from)
+        collection = instantiate()
         for task in tasks:
             collection.add_task(task)
         if config:
@@ -356,6 +376,10 @@ class Collection(object):
         If it is ``False``, the inverse is applied - all dashes are turned into
         underscores.
         """
+        # Short-circuit on anything non-applicable, e.g. empty strings, bools,
+        # None, etc.
+        if not name:
+            return name
         from_, to = '_', '-'
         if not self.auto_dash_names:
             from_, to = '-', '_'
@@ -376,6 +400,23 @@ class Collection(object):
                 char = to
             replaced.append(char)
         return ''.join(replaced)
+
+    def transform_lexicon(self, old):
+        """
+        Take a Lexicon and apply `.transform` to its keys and aliases.
+
+        :returns: A new Lexicon.
+        """
+        new_ = Lexicon()
+        # Lexicons exhibit only their real keys in most places, so this will
+        # only grab those, not aliases.
+        for key, value in six.iteritems(old):
+            # Deepcopy the value so we're not just copying a reference
+            new_[self.transform(key)] = copy.deepcopy(value)
+        # Also copy all aliases, which are string-to-string key mappings
+        for key, value in six.iteritems(old.aliases):
+            new_.alias(from_=self.transform(key), to=self.transform(value))
+        return new_
 
     @property
     def task_names(self):

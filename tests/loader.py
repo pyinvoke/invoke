@@ -1,12 +1,12 @@
 import imp
 import os
 import sys
+import types
 
 from spec import Spec, eq_, raises
 
 from invoke import Config
 from invoke.loader import Loader, FilesystemLoader as FSLoader
-from invoke.collection import Collection
 from invoke.exceptions import CollectionNotFound
 
 from _util import support
@@ -29,6 +29,11 @@ class Loader_(Spec):
         loader = _BasicLoader()
         assert isinstance(loader.config, Config)
         assert loader.config.tasks.collection_name == 'tasks'
+
+    def returns_module_and_location(self):
+        mod, path = _BasicLoader().load('namespacing')
+        assert isinstance(mod, types.ModuleType)
+        assert path == support
 
     def may_configure_config_via_constructor(self):
         config = Config({'tasks': {'collection_name': 'mytasks'}})
@@ -65,10 +70,9 @@ class Loader_(Spec):
                 return super(MockLoader, self).find(name)
         config = Config({'tasks': {'collection_name': 'simple_ns_list'}})
         loader = MockLoader(config=config)
-        # More sanity: expect a task from simple_ns_list (and not 'foo' from
-        # _support/tasks.py)
-        mod = loader.load()
-        assert 'z_toplevel' in mod
+        # More sanity: expect simple_ns_list.py (not tasks.py)
+        mod, path = loader.load()
+        assert mod.__file__ == os.path.join(support, 'simple_ns_list.py')
 
 
 class FilesystemLoader_(Spec):
@@ -89,10 +93,6 @@ class FilesystemLoader_(Spec):
         config = Config({'tasks': {'search_root': 'nowhere'}})
         eq_(FSLoader(config=config).start, 'nowhere')
 
-    def returns_collection_object_if_name_found(self):
-        result = self.l.load('foo')
-        eq_(type(result), Collection)
-
     @raises(CollectionNotFound)
     def raises_CollectionNotFound_if_not_found(self):
         self.l.load('nope')
@@ -109,9 +109,3 @@ class FilesystemLoader_(Spec):
         deep = os.path.join(support, 'ignoreme', 'ignoremetoo')
         indirectly = FSLoader(start=deep).load('foo')
         eq_(directly, indirectly)
-
-    def defaults_to_tasks_collection_name(self):
-        "defaults to 'tasks' collection"
-        # There's a basic tasks.py in tests/_support
-        result = self.l.load()
-        eq_(type(result), Collection)

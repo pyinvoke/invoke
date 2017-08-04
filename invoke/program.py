@@ -7,11 +7,9 @@ import textwrap
 
 from .util import six
 
+from . import Collection, Config, Executor, FilesystemLoader
 from .complete import complete
-from .config import Config
-from .loader import FilesystemLoader
 from .parser import Parser, ParserContext, Argument
-from .executor import Executor
 from .exceptions import (
     UnexpectedExit, CollectionNotFound, ParseError, Exit,
 )
@@ -230,9 +228,8 @@ class Program(object):
         For example, this is how ``--echo`` is able to override the default
         config value for ``run.echo``.
         """
-        # Now that we have parse results and collection handy, we can grab the
-        # remaining config bits:
-        # - project config, as it is dependent on collection location
+        # Now that we have parse results handy, we can grab the remaining
+        # config bits:
         # - runtime config, as it is dependent on the runtime flag
         # - the overrides config level, as it is composed of runtime flag data
         # NOTE: only fill in values that would alter behavior, otherwise we
@@ -250,10 +247,6 @@ class Program(object):
         if 'no-dedupe' in self.args and self.args['no-dedupe'].value:
             tasks['dedupe'] = False
         self.config.load_overrides({'run': run, 'tasks': tasks}, merge=False)
-        # TODO: is it worth merging these set- and load- methods? May require
-        # more tweaking of how things behave in/after __init__.
-        self.config.set_project_location(self.collection.loaded_from)
-        self.config.load_project(merge=False)
         self.config.set_runtime_path(self.args.config.value)
         self.config.load_runtime(merge=False)
         self.config.merge()
@@ -286,7 +279,13 @@ class Program(object):
             # loaded namespace, which may be affected by the core flags) and
             # self.tasks (the tasks requested for exec and their own
             # args/flags)
-            self._parse(argv)
+            self.parse_core(argv)
+            # Handle collection concerns including project config
+            self.parse_collection()
+            # Parse remainder of argv as task-related input
+            self.parse_tasks()
+            # End of parsing (typically bailout stuff like --list, --help)
+            self.parse_cleanup()
             # Update the earlier Config with new values from the parse step -
             # runtime config file contents and flag-derived overrides (e.g. for
             # run()'s echo, warn, etc options.)
@@ -317,7 +316,7 @@ class Program(object):
         except KeyboardInterrupt:
             sys.exit(1) # Same behavior as Python itself outside of REPL
 
-    def _parse(self, argv):
+    def parse_core(self, argv):
         debug("argv given to Program.run: {0!r}".format(argv))
         self.normalize_argv(argv)
 
@@ -339,6 +338,10 @@ class Program(object):
             self.print_version()
             raise Exit
 
+    def parse_collection(self):
+        """
+        Load a tasks collection & project-level config.
+        """
         # Load a collection of tasks unless one was already set.
         if self.namespace is not None:
             debug("Program was given a default namespace, skipping collection loading") # noqa
@@ -354,10 +357,12 @@ class Program(object):
                 raise Exit
             self.load_collection()
 
-        # Parse remainder into task contexts (sets
-        # self.parser/collection/tasks)
-        self.parse_tasks()
+        # TODO: load project conf, if possible, gracefully
 
+    def parse_cleanup(self):
+        """
+        Post-parsing, pre-execution steps such as --help, --list, etc.
+        """
         halp = self.args.help.value or self.core_via_tasks.args.help.value
 
         # Core (no value given) --help output (only when bundled namespace)
@@ -502,8 +507,18 @@ class Program(object):
         loader = self.loader_class(config=self.config, start=start)
         coll_name = self.args.collection.value
         try:
-            coll = loader.load(coll_name) if coll_name else loader.load()
-            self.collection = coll
+            module, parent = loader.load(coll_name)
+            # This is the earliest we can load project config, so we should -
+            # allows project config to affect the task parsing step!
+            # TODO: is it worth merging these set- and load- methods? May
+            # require more tweaking of how things behave in/after __init__.
+            self.config.set_project_location(parent)
+            self.config.load_project()
+            self.collection = Collection.from_module(
+                module,
+                loaded_from=parent,
+                auto_dash_names=self.config.tasks.auto_dash_names,
+            )
         except CollectionNotFound as e:
             six.print_(
                 "Can't find any collection named {0!r}!".format(e.name),
