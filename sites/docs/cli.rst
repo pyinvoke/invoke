@@ -63,7 +63,7 @@ The core options (which must be given before any task names) are as follows:
 
 .. option:: --no-dependencies
 
-    Disable task dependencies / followups.
+    Disable the dependency system.
 
 .. option:: -c STRING, --collection=STRING
 

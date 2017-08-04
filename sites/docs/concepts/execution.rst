@@ -145,14 +145,14 @@ bodies; and it lets you ensure that dependencies only run one time, even if
 multiple tasks in a session would otherwise want to call them (covered in the
 next section.)
 
-Here's our nascent build task tree, using the ``dependencies`` (or
-``depends_on``, for single objects) kwarg to `@task <.task>`::
+Here's our nascent build task tree, using the ``depends_on`` kwarg to `@task
+<.task>`::
 
     @task
     def clean(ctx):
         print("Cleaning!")
 
-    @task(dependencies=[clean])
+    @task(depends_on=[clean])
     def build(ctx):
         print("Building!")
 
@@ -167,11 +167,12 @@ calls ``clean`` automatically by default; and you can use the core
     Building!
 
 .. note::
-    A convenient (and ``make``-esque) shortcut is to give ``dependencies`` as
+    A convenient (and ``make``-esque) shortcut is to give dependencies as
     positional arguments to ``@task``; this is exactly the same as if one gave
-    an explicit iterable ``dependencies`` kwarg. In other words,
-    ``@task(clean)`` is a shorter way of saying
-    ``@task(dependencies=[clean])``.
+    an explicit, iterable ``depends_on`` kwarg. In other words, ``@task(clean)``
+    is a shorter way of saying ``@task(depends_on=[clean])``; ``@task(clean,
+    check_config)`` is equivalent to ``@task(depends_on=[clean,
+    check_config])``; etc.
 
 
 Skipping execution via checks
@@ -227,7 +228,7 @@ Our new, improved, slightly less trivial tasks file::
         print("Cleaning!")
         ctx.run("rm output")
 
-    @task(depends_on=clean, check=lambda: exists('output'))
+    @task(depends_on=[clean], check=lambda: exists('output'))
     def build(ctx):
         print("Building!")
         ctx.run("touch output")
@@ -277,8 +278,9 @@ Followup tasks
 ==============
 
 Task dependencies are a common use case; less common is their effective
-inverse, calling tasks *after* the invoked task, instead of before; we refer to
-these as "followup" tasks.
+inverse, calling tasks *after* the invoked task, instead of before. We refer to
+these as "followup" tasks ("followups" in plural) and their `@task <.task>`
+keyword is ``afterwards``.
 
 For example, perhaps we want to invert the earlier example a bit, and build a
 file purely for the purpose of uploading to a remote server. In such a
@@ -298,7 +300,7 @@ server, and cleaning up afterwards::
         print("Cleaning!")
         ctx.run("rm output.tgz")
 
-    @task(dependencies=[build], followups=[clean])
+    @task(depends_on=[build], afterwards=[clean])
     def upload(ctx):
         print("Uploading!")
         ctx.run("scp output.tgz myserver:/var/www/")
@@ -335,7 +337,7 @@ never call ``clean``, leaving artifacts lying around.
 
 In that case, you really just want to use ``try``/``finally``::
 
-    @task(dependencies=[build])
+    @task(depends_on=[build])
     def upload(ctx):
         try:
             print("Uploading!")
@@ -349,8 +351,8 @@ shot at running.
 
 .. _recursive-dependencies:
 
-Recursive dependencies/followups
-================================
+Recursive dependencies
+======================
 
 All of the above has focused on groups of tasks with simple, one-hop
 relationships to each other. In the real world, things can be far messier. It's
@@ -442,7 +444,7 @@ Similar to previous, but with followups instead::
     def notify(ctx):
         print("Notifying!")
 
-    @task(followups=[notify])
+    @task(afterwards=[notify])
     def test(ctx):
         print("Testing!")
 
@@ -456,11 +458,11 @@ before, the graph says only once::
 Explicity invoked dependencies given afterwards
 -----------------------------------------------
 
-What if a dependency is given *after* a task that depends on it? Referencing the
-``clean``/``build`` example from before, where ``build`` depends on ``clean``,
-what if we wanted to test our build task and then clean up afterwards (i.e.
-we're testing the act of building and don't truly care about keeping the
-result, for now.)
+What if a dependency is explicitly requested to run *after* a task that depends
+on it? Referencing the ``clean``/``build`` example from before, where ``build``
+depends on ``clean``, what if we wanted to test our build task and then clean
+up afterwards (i.e. we're testing the act of building and don't truly care
+about keeping the result, for now.)
 
 So we run ``inv build clean``...but does that second ``clean`` actually run, or
 not?
@@ -498,11 +500,11 @@ Say we've got two tasks which both follow up with the same, third task::
     def notify(ctx):
         print("Notifying!")
 
-    @task(followups=[notify])
+    @task(afterwards=[notify])
     def build(ctx):
         print("Building!")
 
-    @task(followups=[notify])
+    @task(afterwards=[notify])
     def test(ctx):
         print("Testing!")
 

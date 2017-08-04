@@ -412,7 +412,7 @@ Core options:
   --complete                       Print tab-completion candidates for given
                                    parse remainder.
   --hide=STRING                    Set default value of run()'s 'hide' kwarg.
-  --no-dependencies                Disable task dependencies/followups.
+  --no-dependencies                Disable the dependency system.
   --write-pyc                      Enable creation of .pyc files.
   -c STRING, --collection=STRING   Specify collection name to load.
   -d, --debug                      Enable debug output.

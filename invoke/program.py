@@ -120,11 +120,11 @@ class Program(object):
                 names=('no-dependencies',),
                 kind=bool,
                 default=False,
-                help="Disable task dependencies/followups."
+                help="Disable the dependency system.",
             ),
             Argument(
                 names=('root', 'r'),
-                help="Change root directory used for finding task modules."
+                help="Change root directory used for finding task modules.",
             ),
         ]
 

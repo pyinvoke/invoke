@@ -10,12 +10,10 @@ Changelog
     "task deduplication", including :issue:`298`) and renamed to "dependencies"
     and "followups".
 
-    You may specify dependencies as single values or iterables via
-    ``@task(depends_on=clean)`` (or ``@task(depends_on=[clean, test])``), and
-    followups as ``@task(afterwards=notify)`` (or ``@task(afterwards=[upload,
-    notify])``.)
-
-    See :ref:`task-execution` for details.
+    You may specify dependencies via ``@task(depends_on=[clean,
+    check_config])`` (or, as before, as positional args: ``@task(clean,
+    check_config)``) and followups as ``@task(afterwards=[notify])``. See
+    :ref:`task-execution` for details.
   - Tasks may declare "checks" that allow their execution to be skipped if
     specific requirements are already met. This allows not only for classic
     ``make``-style skipping of already-generated files, but any arbitrary state
@@ -50,7 +48,9 @@ Changelog
     and ``.followups``, respectively.
 
     Task deduplication is gone, and thus so is ``--no-dedupe`` and the
-    ``tasks.no_dedupe`` config option.
+    ``tasks.no_dedupe`` config option. However, you may now disable the depency
+    system (slightly analogous to disabling deduplication) with
+    ``--no-dependencies``.
 
     Finally, if you were relying on the incorrect behavior surrounding
     deduplication of post-tasks (outlined in :issue:`298`) it has been fixed,
