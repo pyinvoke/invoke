@@ -85,6 +85,7 @@ class Executor_(IntegrationSpec):
             self.executor.execute('task4')
             eq_(self.task1.body.call_count, 1)
 
+        # TODO: this needs to change for #261...somehow...
         def calls_default_to_empty_args_always(self):
             dep_body, followup_body = Mock(), Mock()
             t1 = Task(dep_body)
@@ -97,7 +98,7 @@ class Executor_(IntegrationSpec):
                 eq_(len(args), 1)
                 ok_(isinstance(args[0], Context))
 
-        def _call_objs(self):
+        def call_objs_play_well_with_context_args(self):
             # Setup
             dep_body, followup_body = Mock(), Mock()
             t1 = Task(dep_body)
@@ -119,9 +120,6 @@ class Executor_(IntegrationSpec):
             eq_(kwargs, {'biz': 'baz'})
             assert isinstance(args[0], Context)
             eq_(args[1], 7)
-
-        def call_objs_play_well_with_context_args(self):
-            self._call_objs()
 
     class deduping_and_chaining:
         def chaining_is_depth_first(self):
