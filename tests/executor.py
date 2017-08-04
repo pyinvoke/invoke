@@ -49,6 +49,9 @@ class Executor_(IntegrationSpec):
             self.executor.execute('task1')
             assert self.task1.body.called
 
+        # TODO: multiple tasks, we cover it implicitly in the dependency stuff,
+        # but there are no vanilla tests for it?
+
         def kwargs(self):
             k = {'foo': 'bar'}
             self.executor.execute(('task1', k))
@@ -76,12 +79,12 @@ class Executor_(IntegrationSpec):
             ok_(isinstance(args[0], Context))
             eq_(len(args), 1)
 
-    class basic_dependencies:
-        def dependencies(self):
+    class call_graph:
+        def basic_dependencies(self):
             self.executor.execute('task2')
             eq_(self.task1.body.call_count, 1)
 
-        def followups(self):
+        def basic_followups(self):
             self.executor.execute('task4')
             eq_(self.task1.body.call_count, 1)
 
@@ -121,7 +124,10 @@ class Executor_(IntegrationSpec):
             assert isinstance(args[0], Context)
             eq_(args[1], 7)
 
-    class deduping_and_chaining:
+        # TODO: this should "mostly" work, with the property that things like
+        # "clean -> [clean_html, clean_tgz]" actually means one could
+        # parallelize the two sub-clean tasks. For now, we can at least iterate
+        # them in the given order, as we did before...?
         def chaining_is_depth_first(self):
             expect('-c depth_first deploy', out="""
 Cleaning HTML
@@ -137,79 +143,45 @@ Testing
         def _expect(self, args, expected):
             expect('-c integration {0}'.format(args), out=expected.lstrip())
 
-        class adjacent_hooks:
-            def deduping(self):
-                self._expect('biz', """
-foo
-bar
-biz
-followup1
-followup2
-""")
+        def basic_dep_and_followup_collapsing_via_graph(self):
+            # TODO: prove that depending on foo+bar, when bar also depends on
+            # foo; and following-up with followup1+2, when followup1 follows up
+            # with followup2; all of those together (calling biz) does NOT run
+            # foo twice, NOR does it run followup2 twice.
+            pass
 
-            def no_deduping(self):
-                self._expect('--no-dedupe biz', """
-foo
-foo
-bar
-biz
-followup1
-followup2
-followup2
-""")
-
-        class non_adjacent_hooks:
-            def deduping(self):
-                self._expect('boz', """
-foo
-bar
-boz
-followup2
-followup1
-""")
-
-            def no_deduping(self):
-                self._expect('--no-dedupe boz', """
-foo
-bar
-foo
-boz
-followup2
-followup1
-followup2
-""")
-
-        # AKA, a (foo) (foo -> bar) scenario arising from foo + bar
-        class adjacent_top_level_tasks:
-            def deduping(self):
-                self._expect('foo bar', """
+        def cli_targets_plus_deps_deduplicate(self):
+            # bar depends on foo; calling "foo bar" does not run "foo" 2x
+            self._expect('foo bar', """
 foo
 bar
 """)
 
-            def no_deduping(self):
-                self._expect('--no-dedupe foo bar', """
-foo
-foo
-bar
-""")
+        def cli_targets_plus_followups_deduplicate(self):
+            # TODO: same as previous but with a followup instead
+            pass
 
-        # AKA (foo -> bar) (foo)
-        class non_adjacent_top_level_tasks:
-            def deduping(self):
-                self._expect('foo bar', """
-foo
-bar
-""")
+        def dependencies_given_as_cli_targets_afterwards(self):
+            # bar depends on foo; calling "bar foo" DOES run 'foo' twice, i.e.,
+            # "foo bar foo".
+            # TODO: this
+            pass
 
-            def no_deduping(self):
-                self._expect('--no-dedupe foo bar', """
-foo
-foo
-bar
-""")
+        def multiple_cli_targets_with_same_followup(self):
+            # Add another task that depends on 'followup2'; run it + followup1
+            # (which also depends on followup2); assert that we get "newtask
+            # followup1 followup2" and _not_ e.g. "newtask followup2 followup1
+            # followup2" _or" "newtask followup2 followup1".
+            # TODO: fucking rename all of these to be more realistic? UGH
+            # NOTE: this is/was #298
+            pass
 
-        def deduping_treats_different_calls_to_same_task_differently(self):
+        # TODO: does this still make sense in a DAG world? think so? or does
+        # fixing #261 imply doing away with using calls explicitly? (surely it
+        # doesn't, otherwise how do we handle parameterization aka #228)
+        # TODO: should we update the concept doc with a few examples of using
+        # `call` objects (assuming we do still use em)?
+        def graph_treats_different_calls_to_same_task_differently(self):
             body = Mock()
             t1 = Task(body)
             dep = [call(t1, 5), call(t1, 7), call(t1, 5)]
@@ -223,6 +195,12 @@ bar
                 ok_(isinstance(body_call[0][0], Context))
                 param_list.append(body_call[0][1])
             ok_(set(param_list) == set((5, 7)))
+
+    class checks:
+        # TODO: tests for the brand new checks stuff, however that wants to
+        # work. Probably basics only...
+        # TODO: then add a new test module for the individual checks
+        # themselves.
 
     class collection_driven_config:
         "Collection-driven config concerns"

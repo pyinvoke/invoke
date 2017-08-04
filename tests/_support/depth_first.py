@@ -29,6 +29,6 @@ def pretest(ctx):
 def test(ctx):
     print("Testing")
 
-@task(build, post=[test])
+@task(depends_on=[build], afterwards=[test])
 def deploy(ctx):
     print("Deploying")
