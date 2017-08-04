@@ -9,7 +9,7 @@ from .util import debug
 
 class Loader(object):
     """
-    Abstract class defining how to load a session's base `.Collection`.
+    Abstract class defining how to find/import a session's base `.Collection`.
     """
     def __init__(self, config=None):
         """
@@ -17,9 +17,8 @@ class Loader(object):
 
         :param config:
             An explicit `.Config` to use; it is referenced for loading-related
-            config options, as well as being handed to the root namespace
-            `.Collection` when one is loaded/created. Defaults to an anonymous
-            ``Config()`` if none is given.
+            config options. Defaults to an anonymous ``Config()`` if none is
+            given.
         """
         if config is None:
             config = Config()
@@ -40,7 +39,7 @@ class Loader(object):
 
     def load(self, name=None):
         """
-        Load and return collection identified by ``name``.
+        Load and return collection module identified by ``name``.
 
         This method requires a working implementation of `.find` in order to
         function.
@@ -49,6 +48,11 @@ class Loader(object):
         parent directory to the front of `sys.path` to provide normal Python
         import behavior (i.e. so the loaded module may load local-to-it modules
         or packages.)
+
+        :returns:
+            Two-tuple of ``(module, directory)`` where ``module`` is the
+            collection-containing Python module object, and ``directory`` is
+            the string path to the directory the module was found in.
         """
         if name is None:
             name = self.config.tasks.collection_name
