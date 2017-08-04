@@ -12,15 +12,15 @@ def yup(ctx):
     return "It's alive!"
 
 
-@task(pre=[yup])
-def pre_check(ctx):
+@task(depends_on=[yup])
+def dependency_check(ctx):
     pass
 
 
-@task(post=[yup])
-def post_check(ctx):
+@task(afterwards=[yup])
+def followup_check(ctx):
     pass
 
 
 sub = Collection('sub', yup)
-ns = Collection(nope, yup, pre_check, post_check, sub)
+ns = Collection(nope, yup, dependency_check, followup_check, sub)

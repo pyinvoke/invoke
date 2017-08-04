@@ -12,9 +12,9 @@ class Executor_(IntegrationSpec):
         s = super(Executor_, self)
         s.setup()
         self.task1 = Task(Mock(return_value=7))
-        self.task2 = Task(Mock(return_value=10), pre=[self.task1])
-        self.task3 = Task(Mock(), pre=[self.task1])
-        self.task4 = Task(Mock(return_value=15), post=[self.task1])
+        self.task2 = Task(Mock(return_value=10), depends_on=[self.task1])
+        self.task3 = Task(Mock(), requires=[self.task1])
+        self.task4 = Task(Mock(return_value=15), afterwards=[self.task1])
         self.contextualized = Task(Mock())
         coll = Collection()
         coll.add_task(self.task1, name='task1')
@@ -76,48 +76,46 @@ class Executor_(IntegrationSpec):
             ok_(isinstance(args[0], Context))
             eq_(len(args), 1)
 
-    class basic_pre_post:
-        "basic pre/post task functionality"
-
-        def pre_tasks(self):
+    class basic_dependencies:
+        def dependencies(self):
             self.executor.execute('task2')
             eq_(self.task1.body.call_count, 1)
 
-        def post_tasks(self):
+        def followups(self):
             self.executor.execute('task4')
             eq_(self.task1.body.call_count, 1)
 
         def calls_default_to_empty_args_always(self):
-            pre_body, post_body = Mock(), Mock()
-            t1 = Task(pre_body)
-            t2 = Task(post_body)
-            t3 = Task(Mock(), pre=[t1], post=[t2])
+            dep_body, followup_body = Mock(), Mock()
+            t1 = Task(dep_body)
+            t2 = Task(followup_body)
+            t3 = Task(Mock(), depends_on=[t1], afterwards=[t2])
             e = Executor(collection=Collection(t1=t1, t2=t2, t3=t3))
             e.execute(('t3', {'something': 'meh'}))
-            for body in (pre_body, post_body):
+            for body in (dep_body, followup_body):
                 args = body.call_args[0]
                 eq_(len(args), 1)
                 ok_(isinstance(args[0], Context))
 
         def _call_objs(self):
             # Setup
-            pre_body, post_body = Mock(), Mock()
-            t1 = Task(pre_body)
-            t2 = Task(post_body)
+            dep_body, followup_body = Mock(), Mock()
+            t1 = Task(dep_body)
+            t2 = Task(followup_body)
             t3 = Task(Mock(),
-                pre=[call(t1, 5, foo='bar')],
-                post=[call(t2, 7, biz='baz')],
+                depends_on=[call(t1, 5, foo='bar')],
+                afterwards=[call(t2, 7, biz='baz')],
             )
             c = Collection(t1=t1, t2=t2, t3=t3)
             e = Executor(collection=c)
             e.execute('t3')
-            # Pre-task asserts
-            args, kwargs = pre_body.call_args
+            # Dependency asserts
+            args, kwargs = dep_body.call_args
             eq_(kwargs, {'foo': 'bar'})
             assert isinstance(args[0], Context)
             eq_(args[1], 5)
-            # Post-task asserts
-            args, kwargs = post_body.call_args
+            # Followup asserts
+            args, kwargs = followup_body.call_args
             eq_(kwargs, {'biz': 'baz'})
             assert isinstance(args[0], Context)
             eq_(args[1], 7)
@@ -147,8 +145,8 @@ Testing
 foo
 bar
 biz
-post1
-post2
+followup1
+followup2
 """)
 
             def no_deduping(self):
@@ -157,9 +155,9 @@ foo
 foo
 bar
 biz
-post1
-post2
-post2
+followup1
+followup2
+followup2
 """)
 
         class non_adjacent_hooks:
@@ -168,8 +166,8 @@ post2
 foo
 bar
 boz
-post2
-post1
+followup2
+followup1
 """)
 
             def no_deduping(self):
@@ -178,9 +176,9 @@ foo
 bar
 foo
 boz
-post2
-post1
-post2
+followup2
+followup1
+followup2
 """)
 
         # AKA, a (foo) (foo -> bar) scenario arising from foo + bar
@@ -216,8 +214,8 @@ bar
         def deduping_treats_different_calls_to_same_task_differently(self):
             body = Mock()
             t1 = Task(body)
-            pre = [call(t1, 5), call(t1, 7), call(t1, 5)]
-            t2 = Task(Mock(), pre=pre)
+            dep = [call(t1, 5), call(t1, 7), call(t1, 5)]
+            t2 = Task(Mock(), depends_on=dep)
             c = Collection(t1=t1, t2=t2)
             e = Executor(collection=c)
             e.execute('t2')
@@ -269,13 +267,13 @@ bar
         def base_case(self):
             eq_(self.executor.execute('task1'), {self.task1: 7})
 
-        def with_pre_tasks(self):
+        def with_dependencies(self):
             eq_(
                 self.executor.execute('task2'),
                 {self.task1: 7, self.task2: 10}
             )
 
-        def with_post_tasks(self):
+        def with_followups(self):
             eq_(
                 self.executor.execute('task4'),
                 {self.task1: 7, self.task4: 15}
@@ -291,11 +289,11 @@ bar
         def prints_return_value_to_stdout_when_on_and_in_collection(self):
             expect("-c autoprint sub.yup", out="It's alive!\n")
 
-        def does_not_fire_on_pre_tasks(self):
-            expect("-c autoprint pre_check", out="")
+        def does_not_fire_on_dependencies(self):
+            expect("-c autoprint dependency_check", out="")
 
-        def does_not_fire_on_post_tasks(self):
-            expect("-c autoprint post_check", out="")
+        def does_not_fire_on_followups(self):
+            expect("-c autoprint followup_check", out="")
 
     class inter_task_context_and_config_sharing:
         def context_is_new_but_config_is_same(self):

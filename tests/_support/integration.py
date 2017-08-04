@@ -22,17 +22,17 @@ def bar(ctx):
     print("bar")
 
 @task
-def post2(ctx):
-    print("post2")
+def followup2(ctx):
+    print("followup2")
 
-@task(post=[post2])
-def post1(ctx):
-    print("post1")
+@task(afterwards=[followup2])
+def followup1(ctx):
+    print("followup1")
 
-@task(foo, bar, post=[post1, post2])
+@task(depends_on=[foo, bar], afterwards=[followup1, followup2])
 def biz(ctx):
     print("biz")
 
-@task(bar, foo, post=[post2, post1])
+@task(depends_on=[bar, foo], afterwards=[followup2, followup1])
 def boz(ctx):
     print("boz")
