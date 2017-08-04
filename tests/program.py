@@ -707,9 +707,13 @@ Available tasks:
         # TODO: can probably tighten these up to assert things about
         # Program.config instead?
 
-        def per_project_config_files_are_loaded(self):
-            with cd(os.path.join('configs', 'yaml')):
-                expect("mytask")
+        def per_project_config_files_are_loaded_before_task_parsing(self):
+            # Relies on auto_dash_names being loaded at project-conf level;
+            # fixes #467; when bug present, project conf is loaded _after_
+            # attempt to parse tasks, causing explosion when i_have_underscores
+            # is only sent to parser as i-have-underscores.
+            with cd(os.path.join('configs', 'underscores')):
+                expect("i_have_underscores")
 
         def per_project_config_files_load_with_explicit_ns(self):
             # Re: #234
