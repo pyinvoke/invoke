@@ -68,16 +68,16 @@ class task_(Spec):
             pass
         eq_(len(mytask.positional), 0)
 
-    def pre_tasks_stored_directly(self):
+    def dependencies_stored_directly(self):
         @task
         def whatever(ctx):
             pass
-        @task(pre=[whatever])
+        @task(depends_on=[whatever])
         def func(ctx):
             pass
-        eq_(func.pre, [whatever])
+        eq_(func.dependencies, [whatever])
 
-    def allows_star_args_as_shortcut_for_pre(self):
+    def allows_star_args_as_shortcut_for_depends_on(self):
         @task
         def pre1(ctx):
             pass
@@ -87,19 +87,24 @@ class task_(Spec):
         @task(pre1, pre2)
         def func(ctx):
             pass
-        eq_(func.pre, (pre1, pre2))
+        eq_(func.dependencies, (pre1, pre2))
 
     @raises(TypeError)
-    def disallows_ambiguity_between_star_args_and_pre_kwarg(self):
+    def disallows_ambiguity_between_star_args_and_depends_on(self):
         @task
         def pre1(ctx):
             pass
         @task
         def pre2(ctx):
             pass
-        @task(pre1, pre=[pre2])
+        @task(pre1, depends_on=[pre2])
         def func(ctx):
             pass
+
+    # TODO: wow there were never any post= tests at all huh? Boo. Add some in
+    # for 'afterwards'/followups.
+
+    # TODO: add tests for checks/check as well.
 
     def sets_name(self):
         @task(name='foo')
