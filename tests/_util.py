@@ -88,8 +88,13 @@ def expect(invocation, out=None, err=None, program=None, invoke=True,
     # Perform tests
     if out is not None:
         (test or eq_)(sys.stdout.getvalue(), out)
+    stderr = sys.stderr.getvalue()
     if err is not None:
-        (test or eq_)(sys.stderr.getvalue(), err)
+        (test or eq_)(stderr, err)
+    # Guard against silent failures; since we say exit=False this is the only
+    # real way to tell if stuff died in a manner we didn't expect.
+    elif stderr:
+        assert False, "Unexpected stderr: {0}".format(stderr)
 
 
 class MockSubprocess(object):
