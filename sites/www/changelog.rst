@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :release:`0.20.3 <2017-08-04>`
 * :bug:`467` (Arguably also a feature, but since it enables behavior users
   clearly found intuitive, we're considering it a bug.) Split up the parsing
   machinery of `Program <invoke.program.Program>` and pushed the `Collection
