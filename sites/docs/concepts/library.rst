@@ -192,8 +192,10 @@ here:
 - Default configuration values - less critical (most defaults aren't labeled
   with anything Invoke-specific) but still sometimes desirable.
 
-Both of these involve subclassing `.Config` (and, if using the CLI machinery,
-informing your `.Program` to use that subclass instead of the default one.)
+.. note::
+    Both of these involve subclassing `.Config` (and, if using the CLI machinery, 
+    informing your `.Program` to use that subclass instead of the default one.)
+
 
 Changing filenames and/or env var prefix
 ----------------------------------------
@@ -241,6 +243,7 @@ are assumed to exist by the rest of the system. (The helper function
 For example, say you want Tester to always echo shell commands by default when
 your codebase calls `.Context.run`::
 
+    from invoke import Program
     from invoke.config import Config, merge_dicts
 
     class TesterConfig(Config):
@@ -253,6 +256,8 @@ your codebase calls `.Context.run`::
                 },
             }
             return merge_dicts(their_defaults, my_defaults)
+
+    program = Program(config_class=TesterConfig, version='0.1.0')
 
 For reference, Invoke's own base defaults (the...default defaults, you could
 say) are documented at :ref:`default-values`.
