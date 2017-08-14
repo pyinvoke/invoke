@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :release:`0.20.4 <2017-08-14>`
 * :bug:`-` The behavior of `Config <invoke.config.Config>` when ``lazy=True``
   didn't match that described in the API docs, after the recent updates to its
   lifecycle. (Specifically, any config data given to the constructor was not
