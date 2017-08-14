@@ -620,12 +620,14 @@ class Config(DataProxy):
         # other levels in order to function.
         if not lazy:
             self._load_base_conf_files()
+        # Always merge, otherwise defaults, etc are not usable until creator or
+        # a subroutine does so.
+        self.merge()
 
     def _load_base_conf_files(self):
         # Just a refactor of something done in unlazy init or in clone()
         self.load_system(merge=False)
         self.load_user(merge=False)
-        self.merge()
 
     def load_defaults(self, data, merge=True):
         """
@@ -1020,9 +1022,12 @@ class Config(DataProxy):
         # alterations by user code.)
         # TODO: isn't that false now that we've got modifications level??
         merge_dicts(new._config, self._config)
-        # Finally, do what __init__ would've done if not lazy, i.e. load
-        # user/system conf files.
+        # Do what __init__ would've done if not lazy, i.e. load user/system
+        # conf files.
         new._load_base_conf_files()
+        # Finally, merge() for reals (_load_base_conf_files doesn't do so
+        # internally, so that data wouldn't otherwise show up.)
+        new.merge()
         return new
 
     def _clone_init_kwargs(self, into=None):

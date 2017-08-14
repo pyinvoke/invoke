@@ -179,9 +179,12 @@ class Config_(IntegrationSpec):
         @patch.object(Config, 'load_system')
         @patch.object(Config, 'load_user')
         def can_defer_loading_system_and_user_files(self, load_u, load_s):
-            Config(lazy=True)
+            config = Config(lazy=True)
             assert not load_s.called
             assert not load_u.called
+            # Make sure default levels are still in place! (When bug present,
+            # i.e. merge() never called, config appears effectively empty.)
+            assert config.run.echo is False
 
     class basic_API:
         "Basic API components"
