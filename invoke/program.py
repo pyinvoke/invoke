@@ -212,19 +212,18 @@ class Program(object):
 
         :returns: ``None``; sets ``self.config`` instead.
         """
-        # TODO: how to deal with subclasses that want lazy instantiation? Or do
-        # we just update them to not do anything on init? I.e. fab2 would
-        # simply never load_ssh_config() on init? that seems semi bad, it's a
-        # concession to runtime config path setting. feels like runtime wants
-        # ability to be set and loaded later?
         self.config = self.config_class()
 
-    def update_config(self):
+    def update_config(self, merge=True):
         """
         Update the previously instantiated `.Config` with parsed data.
 
         For example, this is how ``--echo`` is able to override the default
         config value for ``run.echo``.
+
+        :param bool merge:
+            Whether to merge at the end, or defer. Primarily useful for
+            subclassers. Default: ``True``.
         """
         # Now that we have parse results handy, we can grab the remaining
         # config bits:
@@ -247,7 +246,8 @@ class Program(object):
         self.config.load_overrides({'run': run, 'tasks': tasks}, merge=False)
         self.config.set_runtime_path(self.args.config.value)
         self.config.load_runtime(merge=False)
-        self.config.merge()
+        if merge:
+            self.config.merge()
 
     def run(self, argv=None, exit=True):
         """
