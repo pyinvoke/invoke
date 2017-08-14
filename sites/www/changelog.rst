@@ -2,6 +2,11 @@
 Changelog
 =========
 
+* :bug:`-` The behavior of `Config <invoke.config.Config>` when ``lazy=True``
+  didn't match that described in the API docs, after the recent updates to its
+  lifecycle. (Specifically, any config data given to the constructor was not
+  visible in the resulting instance until ``merge()`` was explicitly called.)
+  This has been fixed, along with other related minor issues.
 * :release:`0.20.3 <2017-08-04>`
 * :bug:`467` (Arguably also a feature, but since it enables behavior users
   clearly found intuitive, we're considering it a bug.) Split up the parsing
