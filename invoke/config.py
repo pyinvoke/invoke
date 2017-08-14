@@ -1017,11 +1017,6 @@ class Config(DataProxy):
             # eventually)
             else:
                 merge_dicts(getattr(new, name), my_data)
-        # And merge the central config too (cannot just call .merge() on the
-        # new clone, since the source config may have received custom
-        # alterations by user code.)
-        # TODO: isn't that false now that we've got modifications level??
-        merge_dicts(new._config, self._config)
         # Do what __init__ would've done if not lazy, i.e. load user/system
         # conf files.
         new.load_base_conf_files()
