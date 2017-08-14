@@ -619,12 +619,12 @@ class Config(DataProxy):
         # Convenience loading of user and system files, since those require no
         # other levels in order to function.
         if not lazy:
-            self._load_base_conf_files()
+            self.load_base_conf_files()
         # Always merge, otherwise defaults, etc are not usable until creator or
         # a subroutine does so.
         self.merge()
 
-    def _load_base_conf_files(self):
+    def load_base_conf_files(self):
         # Just a refactor of something done in unlazy init or in clone()
         self.load_system(merge=False)
         self.load_user(merge=False)
@@ -1024,7 +1024,7 @@ class Config(DataProxy):
         merge_dicts(new._config, self._config)
         # Do what __init__ would've done if not lazy, i.e. load user/system
         # conf files.
-        new._load_base_conf_files()
+        new.load_base_conf_files()
         # Finally, merge() for reals (_load_base_conf_files doesn't do so
         # internally, so that data wouldn't otherwise show up.)
         new.merge()
