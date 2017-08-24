@@ -175,8 +175,7 @@ class ParseMachine(StateMachine):
     def waiting_for_flag_value(self):
         return (
             self.flag and
-            self.flag.takes_value and
-            self.flag.raw_value is None
+            self.flag.takes_value
         )
 
     def handle(self, token):
