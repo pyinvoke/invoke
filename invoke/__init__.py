@@ -15,7 +15,7 @@ from .program import Program # noqa
 from .runners import ( # noqa
     Runner, Local, Failure, Result, # noqa
 ) # noqa
-from .tasks import task, call, Call, Task # noqa
+from .tasks import task, contextless_task, call, Call, Task # noqa
 from .watchers import ( # noqa
     StreamWatcher, Responder, FailingResponder, # noqa
 ) # noqa

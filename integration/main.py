@@ -63,6 +63,11 @@ class Main(Spec):
             )
 
         @trap
+        def contextless_task_invocation(self):
+            _output_eq("invoke print-foo-without-context", "foo\n")
+            _output_eq("inv print-name-without-context -n xxx", "xxx\n")
+
+        @trap
         def bad_collection_exits_nonzero(self):
             result = run("inv -c nope -l", warn=True)
             eq_(result.exited, 1)

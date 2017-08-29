@@ -44,6 +44,7 @@ class Task(object):
         pre=None,
         post=None,
         autoprint=False,
+        use_context=True,
     ):
         # Real callable
         self.body = body
@@ -55,6 +56,7 @@ class Task(object):
         self._name = name
         self.aliases = aliases
         self.is_default = default
+        self.use_context = use_context
         # Arg/flag/parser hints
         self.positional = self.fill_implicit_positionals(positional)
         self.optional = optional
@@ -101,8 +103,8 @@ class Task(object):
         return hash(self.name) + hash(self.body)
 
     def __call__(self, *args, **kwargs):
-        # Guard against calling tasks with no context.
-        if not isinstance(args[0], Context):
+        # Guard against calling tasks requiring context without one.
+        if self.use_context and not isinstance(args[0], Context):
             err = "Task expected a Context as its first arg, got {0} instead!"
             # TODO: raise a custom subclass _of_ TypeError instead
             raise TypeError(err.format(type(args[0])))
@@ -134,13 +136,14 @@ class Task(object):
         arg_names = spec.args[:]
         matched_args = [reversed(x) for x in [spec.args, spec.defaults or []]]
         spec_dict = dict(zip_longest(*matched_args, fillvalue=NO_DEFAULT))
-        # Pop context argument
+        # Pop context argument (unless using contextless tasks)
         try:
-            context_arg = arg_names.pop(0)
+            if self.use_context:
+                context_arg = arg_names.pop(0)
+                del spec_dict[context_arg]
         except IndexError:
             # TODO: see TODO under __call__, this should be same type
-            raise TypeError("Tasks must have an initial Context argument!")
-        del spec_dict[context_arg]
+            raise TypeError("Task expected a Context as its first argument!")
         return arg_names, spec_dict
 
     def fill_implicit_positionals(self, positional):
@@ -260,6 +263,8 @@ def task(*args, **kwargs):
     * ``autoprint``: Boolean determining whether to automatically print this
       task's return value to standard output when invoked directly via the CLI.
       Defaults to False.
+    * ``use_context``: Boolean specifying should task have context as its
+      first argument or not. Defaults to True.
 
     If any non-keyword arguments are given, they are taken as the value of the
     ``pre`` kwarg for convenience's sake. (It is an error to give both
@@ -287,6 +292,7 @@ def task(*args, **kwargs):
     pre = kwargs.pop('pre', [])
     post = kwargs.pop('post', [])
     autoprint = kwargs.pop('autoprint', False)
+    use_context = kwargs.pop('use_context', True)
     # Handle unknown kwargs
     if kwargs:
         kwarg = (" unknown kwargs {0!r}".format(kwargs)) if kwargs else ""
@@ -304,9 +310,19 @@ def task(*args, **kwargs):
             pre=pre,
             post=post,
             autoprint=autoprint,
+            use_context=use_context,
         )
         return obj
     return inner
+
+
+def contextless_task(*args, **kwargs):
+    """
+    Marks wrapped callable object as a valid contextless Invoke task.
+
+    Exactly same as `.task` but with ``use_context=True`` set.
+    """
+    return task(*args, use_context=False, **kwargs)
 
 
 class Call(object):
