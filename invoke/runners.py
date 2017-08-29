@@ -8,6 +8,8 @@ import sys
 import threading
 import time
 
+from .util import six
+
 # Import some platform-specific things at top level so they can be mocked for
 # tests.
 try:
@@ -29,12 +31,7 @@ from .exceptions import (
 from .platform import (
     WINDOWS, pty_size, character_buffered, ready_for_reading, bytes_to_read,
 )
-from .util import has_fileno, isatty, ExceptionHandlingThread
-
-try:
-    from .vendor import six
-except ImportError:
-    import six
+from .util import has_fileno, isatty, ExceptionHandlingThread, encode_output
 
 
 class Runner(object):
@@ -201,6 +198,12 @@ class Runner(object):
             A file-like stream object to used as the subprocess' standard
             input. If ``None`` (the default), ``sys.stdin`` will be used.
 
+            If ``False``, will disable stdin mirroring entirely (though other
+            functionality which writes to the subprocess' stdin, such as
+            autoresponding, will still function.) Disabling stdin mirroring can
+            help when ``sys.stdin`` is a misbehaving non-stream object, such as
+            under test harnesses or headless command runners.
+
         :param list watchers:
             A list of `.StreamWatcher` instances which will be used to scan the
             program's ``stdout`` or ``stderr`` and may write into its ``stdin``
@@ -281,17 +284,17 @@ class Runner(object):
                 'hide': 'stdout' in opts['hide'],
                 'output': out_stream,
             },
-            # TODO: make this & related functionality optional, for users who
-            # don't care about autoresponding & are encountering issues with
-            # the stdin mirroring? Downside is it fragments expected behavior &
-            # puts folks with true interactive use cases in a different support
-            # class.
-            self.handle_stdin: {
+        }
+        # After opt processing above, in_stream will be a real stream obj or
+        # False, so we can truth-test it. We don't even create a stdin-handling
+        # thread if it's False, meaning user indicated stdin is nonexistent or
+        # problematic.
+        if in_stream:
+            thread_args[self.handle_stdin] = {
                 'input_': in_stream,
                 'output': out_stream,
                 'echo': opts['echo_stdin'],
             }
-        }
         if not self.using_pty:
             thread_args[self.handle_stderr] = {
                 'buffer_': stderr,
@@ -379,6 +382,7 @@ class Runner(object):
             exited=exited,
             pty=self.using_pty,
             hide=opts['hide'],
+            encoding=self.encoding,
         )
         # Any presence of WatcherError from the threads indicates a watcher was
         # upset and aborted execution; make a generic Failure out of it and
@@ -503,19 +507,7 @@ class Runner(object):
 
         :returns: ``None``.
         """
-        # Encode under Python 2 only, because of the common problem where
-        # sys.stdout/err on Python 2 end up using sys.getdefaultencoding(),
-        # which is frequently NOT the same thing as the real local terminal
-        # encoding (reflected as sys.stdout.encoding). I.e. even when
-        # sys.stdout.encoding is UTF-8, ascii is still actually used, and
-        # explodes.
-        # Python 3 doesn't have this problem, so we delegate encoding to the
-        # io.*Writer classes involved.
-        if six.PY2:
-            # TODO: split up self.encoding, only use the one for 'local
-            # encoding' here.
-            string = string.encode(self.encoding)
-        stream.write(string)
+        stream.write(encode_output(string, self.encoding))
         stream.flush()
 
     def _handle_output(self, buffer_, hide, output, reader):
@@ -1044,6 +1036,9 @@ class Result(object):
         was invoked via a pty, in which case it will be empty; see
         `.Runner.run`.)
 
+    :param str encoding:
+        The string encoding used by the local shell environment.
+
     :param str command:
         The command which was executed.
 
@@ -1090,6 +1085,7 @@ class Result(object):
         self,
         stdout="",
         stderr="",
+        encoding=None,
         command="",
         shell="",
         env=None,
@@ -1099,6 +1095,7 @@ class Result(object):
     ):
         self.stdout = stdout
         self.stderr = stderr
+        self.encoding = encoding
         self.command = command
         self.shell = shell
         self.env = {} if env is None else env

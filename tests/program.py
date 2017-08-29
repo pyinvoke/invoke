@@ -2,6 +2,7 @@ import os
 import sys
 from functools import partial
 
+from invoke.util import six
 from mock import patch, Mock, ANY
 from spec import eq_, ok_, trap, skip, assert_contains, assert_not_contains
 
@@ -200,7 +201,7 @@ class Program_(IntegrationSpec):
         def uses_loader_class_given(self):
             klass = Mock(side_effect=FilesystemLoader)
             Program(loader_class=klass).run("myapp --help foo", exit=False)
-            klass.assert_called_with(start=ANY)
+            klass.assert_called_with(start=ANY, config=ANY)
 
 
     class execute:
@@ -252,16 +253,16 @@ class Program_(IntegrationSpec):
             # Regression-ish test re #288
             ns = Collection.from_module(load('integration'))
             expect(
-                'print_foo',
+                'print-foo',
                 out='foo\n',
                 program=Program(namespace=ns),
             )
 
         def allows_explicit_task_module_specification(self):
-            expect("-c integration print_foo", out="foo\n")
+            expect("-c integration print-foo", out="foo\n")
 
         def handles_task_arguments(self):
-            expect("-c integration print_name --name inigo", out="inigo\n")
+            expect("-c integration print-name --name inigo", out="inigo\n")
 
         @trap
         @patch('invoke.program.sys.exit')
@@ -298,13 +299,14 @@ class Program_(IntegrationSpec):
 
         @trap
         @patch('invoke.program.sys.exit')
-        def shows_UnexpectedExit_repr_when_streams_hidden(self, mock_exit):
+        def shows_UnexpectedExit_str_when_streams_hidden(self, mock_exit):
             p = Program()
             oops = UnexpectedExit(Result(
                 command='meh',
                 exited=54,
                 stdout='things!',
                 stderr='ohnoz!',
+                encoding='utf-8',
                 hide=('stdout', 'stderr'),
             ))
             p.execute = Mock(side_effect=oops)
@@ -328,6 +330,42 @@ ohnoz!
 """)
             # And exit with expected code (vs e.g. 1 or 0)
             mock_exit.assert_called_with(54)
+
+        @trap
+        @patch('invoke.program.sys.exit')
+        def UnexpectedExit_str_encodes_stdout_and_err(self, mock_exit):
+            p = Program()
+            oops = UnexpectedExit(Result(
+                command='meh',
+                exited=54,
+                stdout=six.u('this is not ascii: \u1234'),
+                stderr=six.u('this is also not ascii: \u4321'),
+                encoding='utf-8',
+                hide=('stdout', 'stderr'),
+            ))
+            p.execute = Mock(side_effect=oops)
+            p.run("myapp foo")
+            # NOTE: using explicit binary ASCII here, & accessing raw
+            # getvalue() of the faked sys.stderr (spec.trap auto-decodes it
+            # normally) to have a not-quite-tautological test. otherwise we'd
+            # just be comparing unicode to unicode. shrug?
+            expected = b"""Encountered a bad command exit code!
+
+Command: 'meh'
+
+Exit code: 54
+
+Stdout:
+
+this is not ascii: \xe1\x88\xb4
+
+Stderr:
+
+this is also not ascii: \xe4\x8c\xa1
+
+"""
+            got = six.BytesIO.getvalue(sys.stderr)
+            assert got == expected
 
         def should_show_core_usage_on_core_parse_failures(self):
             skip()
@@ -553,9 +591,9 @@ Available tasks:
                 'foo',
                 'post1',
                 'post2',
-                'print_foo',
-                'print_name',
-                'print_underscored_arg',
+                'print-foo',
+                'print-name',
+                'print-underscored-arg',
             ))
             for flag in ('-l', '--list'):
                 expect('-c integration {0}'.format(flag), out=expected)
@@ -568,7 +606,7 @@ Available tasks:
 
         def top_level_tasks_listed_first(self):
             self._list_eq('simple_ns_list', (
-                'z_toplevel',
+                'z-toplevel',
                 'a.b.subtask'
             ))
 
@@ -587,24 +625,24 @@ Available tasks:
         def default_tasks(self):
             # sub-ns default task display as "real.name (collection name)"
             self._list_eq('explicit_root', (
-                'top_level (othertop)',
-                'sub.sub_task (sub, sub.othersub)',
+                'top-level (other-top)',
+                'sub-level.sub-task (sub-level, sub-level.other-sub)',
             ))
 
         def docstrings_shown_alongside(self):
             self._list_eq('docstrings', (
-                'leading_whitespace    foo',
-                'no_docstring',
-                'one_line              foo',
-                'two_lines             foo',
-                'with_aliases (a, b)   foo',
+                'leading-whitespace    foo',
+                'no-docstring',
+                'one-line              foo',
+                'two-lines             foo',
+                'with-aliases (a, b)   foo',
             ))
 
         def docstrings_are_wrapped_to_terminal_width(self):
             self._list_eq('nontrivial_docstrings', (
-                'no_docstring',
-                'task_one       Lorem ipsum dolor sit amet, consectetur adipiscing elit.\n                 Nullam id dictum', # noqa
-                'task_two       Nulla eget ultrices ante. Curabitur sagittis commodo posuere.\n                 Duis dapibus', # noqa
+                'no-docstring',
+                'task-one       Lorem ipsum dolor sit amet, consectetur adipiscing elit.\n                 Nullam id dictum', # noqa
+                'task-two       Nulla eget ultrices ante. Curabitur sagittis commodo posuere.\n                 Duis dapibus', # noqa
             ))
 
         def empty_collections_say_no_tasks(self):
@@ -638,15 +676,24 @@ Available tasks:
     class configuration:
         "Configuration-related concerns"
 
+        def _klass(self):
+            # Pauper's mock that can honor .tasks.collection_name (Loader
+            # looks in the config for this by default.)
+            instance_mock = Mock(tasks=Mock(
+                collection_name='whatever',
+                search_root='meh',
+            ))
+            return Mock(return_value=instance_mock)
+
         @trap
         def config_class_init_kwarg_is_honored(self):
-            klass = Mock()
+            klass = self._klass()
             Program(config_class=klass).run("myapp foo", exit=False)
             eq_(len(klass.call_args_list), 1) # don't care about actual args
 
         @trap
         def config_attribute_is_memoized(self):
-            klass = Mock()
+            klass = self._klass()
             # Can't .config without .run (meh); .run calls .config once.
             p = Program(config_class=klass)
             p.run("myapp foo", exit=False)
@@ -660,9 +707,13 @@ Available tasks:
         # TODO: can probably tighten these up to assert things about
         # Program.config instead?
 
-        def per_project_config_files_are_loaded(self):
-            with cd(os.path.join('configs', 'yaml')):
-                expect("mytask")
+        def per_project_config_files_are_loaded_before_task_parsing(self):
+            # Relies on auto_dash_names being loaded at project-conf level;
+            # fixes #467; when bug present, project conf is loaded _after_
+            # attempt to parse tasks, causing explosion when i_have_underscores
+            # is only sent to parser as i-have-underscores.
+            with cd(os.path.join('configs', 'underscores')):
+                expect("i_have_underscores")
 
         def per_project_config_files_load_with_explicit_ns(self):
             # Re: #234
@@ -708,7 +759,7 @@ post2
 
         def env_vars_load_with_prefix(self):
             os.environ['INVOKE_RUN_ECHO'] = "1"
-            expect('-c contextualized check_echo')
+            expect('-c contextualized check-echo')
 
         def env_var_prefix_can_be_overridden(self):
             os.environ['MYAPP_RUN_HIDE'] = "both"
@@ -718,9 +769,9 @@ post2
             # only be realized at the time a given task is to be executed.
             # Unless we overhaul the Program/Executor relationship so Program
             # does more of the heavy lifting re: task lookup/load/etc...
-            # NOTE: check_hide will kaboom if its context's run.hide is not set
+            # NOTE: check-hide will kaboom if its context's run.hide is not set
             # to True (default False).
             class MyConf(Config):
                 env_prefix = 'MYAPP'
             p = Program(config_class=MyConf)
-            p.run('inv -c contextualized check_hide')
+            p.run('inv -c contextualized check-hide')

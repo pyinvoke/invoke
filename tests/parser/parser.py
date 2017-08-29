@@ -1,4 +1,4 @@
-from spec import Spec, eq_, raises
+from spec import Spec, eq_, raises, skip, ok_
 
 from invoke.parser import Parser, Context, Argument, ParseError
 
@@ -353,6 +353,52 @@ class Parser_(Spec):
             )
             eq_(result[0].args.meh.value, 'mehval1')
             eq_(result[1].args.meh.value, 'mehval2')
+
+    class per_task_core_flags:
+        class help_:
+            def task_has_no_help_shows_per_task_help(self):
+                task1 = Context('mytask')
+                init = Context(args=[Argument('help', optional=True)])
+                parser = Parser(initial=init, contexts=[task1])
+                result = parser.parse_argv(['mytask', '--help'])
+                eq_(len(result), 2)
+                eq_(result[0].args.help.value, 'mytask')
+                ok_('help' not in result[1].args)
+
+            # TODO: ideally we want an explosion, but for now, overriding
+            # happens naturally and is not the worst thing ever
+            def per_task_flag_wins_over_core_flag(self):
+                task1 = Context('mytask', args=[Argument('help')])
+                init = Context(args=[Argument('help', optional=True)])
+                parser = Parser(initial=init, contexts=[task1])
+                result = parser.parse_argv(['mytask', '--help', 'foo'])
+                eq_(result[1].args.help.value, 'foo')
+
+            def task_has_no_h_shortflag_shows_per_task_help(self):
+                task1 = Context('mytask')
+                arg = Argument(names=('help', 'h'), optional=True)
+                init = Context(args=[arg])
+                parser = Parser(initial=init, contexts=[task1])
+                result = parser.parse_argv(['mytask', '-h'])
+                eq_(len(result), 2)
+                eq_(result[0].args.help.value, 'mytask')
+                ok_('help' not in result[1].args)
+
+            def task_has_h_shortflag_throws_error(self):
+                # def mytask(c, height):
+                # inv mytask -h
+                skip()
+
+        class other_core_flags_do_not_work_in_task_contexts:
+            # NOTE: only doing a subset here for sanity tests
+            def list_(self):
+                skip()
+
+            def no_dedupe(self):
+                skip()
+
+        # TODO: can define what core flags work as per-task flags, somehow?
+        # I.e. how to implement --roles/--hosts in fab 2?
 
 
 class ParseResult_(Spec):

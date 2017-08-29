@@ -1,11 +1,11 @@
 import operator
 
+from invoke.util import six, reduce
+
 from spec import Spec, eq_, ok_, raises, assert_raises
 
 from invoke.collection import Collection
 from invoke.tasks import task, Task
-from invoke.vendor import six
-from invoke.vendor.six.moves import reduce
 
 from _util import load, support_path
 
@@ -73,6 +73,10 @@ class Collection_(Spec):
             eq_(Collection().loaded_from, None)
             eq_(Collection(loaded_from='a/path').loaded_from, 'a/path')
 
+        def accepts_auto_dash_names_kwarg(self):
+            assert Collection().auto_dash_names is True
+            assert Collection(auto_dash_names=False).auto_dash_names is False
+
     class useful_special_methods:
         def _meh(self):
             @task
@@ -100,32 +104,37 @@ class Collection_(Spec):
         class parameters:
             def setup(self):
                 self.mod = load('integration')
-                self.fm = Collection.from_module
+                self.from_module = Collection.from_module
 
             def name_override(self):
-                eq_(self.fm(self.mod).name, 'integration')
+                eq_(self.from_module(self.mod).name, 'integration')
                 eq_(
-                    self.fm(self.mod, name='not-integration').name,
+                    self.from_module(self.mod, name='not-integration').name,
                     'not-integration'
                 )
 
             def inline_configuration(self):
                 # No configuration given, none gotten
-                eq_(self.fm(self.mod).configuration(), {})
+                eq_(self.from_module(self.mod).configuration(), {})
                 # Config kwarg given is reflected when config obtained
-                eq_(
-                    self.fm(self.mod, config={'foo': 'bar'}).configuration(),
-                    {'foo': 'bar'}
-                )
+                coll = self.from_module(self.mod, config={'foo': 'bar'})
+                assert coll.configuration() == {'foo': 'bar'}
 
             def name_and_config_simultaneously(self):
                 # Test w/ posargs to enforce ordering, just for safety.
-                c = self.fm(self.mod, 'the name', {'the': 'config'})
+                c = self.from_module(self.mod, 'the name', {'the': 'config'})
                 eq_(c.name, 'the name')
                 eq_(c.configuration(), {'the': 'config'})
 
+            def auto_dash_names_passed_to_constructor(self):
+                # Sanity
+                assert self.from_module(self.mod).auto_dash_names is True
+                # Test
+                coll = self.from_module(self.mod, auto_dash_names=False)
+                assert coll.auto_dash_names is False
+
         def adds_tasks(self):
-            assert 'print_foo' in self.c
+            assert 'print-foo' in self.c
 
         def derives_collection_name_from_module_name(self):
             eq_(self.c.name, 'integration')
@@ -140,14 +149,14 @@ class Collection_(Spec):
 
         def honors_explicit_collections(self):
             coll = Collection.from_module(load('explicit_root'))
-            assert 'top_level' in coll.tasks
-            assert 'sub' in coll.collections
+            assert 'top-level' in coll.tasks
+            assert 'sub-level' in coll.collections
             # The real key test
-            assert 'sub_task' not in coll.tasks
+            assert 'sub-task' not in coll.tasks
 
         def allows_tasks_with_explicit_names_to_override_bound_name(self):
             coll = Collection.from_module(load('subcollection_task_name'))
-            assert 'explicit_name' in coll.tasks # not 'implicit_name'
+            assert 'explicit-name' in coll.tasks # not 'implicit_name'
 
         def returns_unique_Collection_objects_for_same_input_module(self):
             # Ignoring self.c for now, just in case it changes later.
@@ -195,13 +204,13 @@ class Collection_(Spec):
                 )
 
             def inline_name_overrides_root_namespace_object_name(self):
-                eq_(self.unchanged.name, 'builtin_name')
-                eq_(self.changed.name, 'override_name')
+                eq_(self.unchanged.name, 'builtin-name')
+                eq_(self.changed.name, 'override-name')
 
             def root_namespace_object_name_overrides_module_name(self):
                 # Duplicates part of previous test for explicitness' sake.
                 # I.e. proves that the name doesn't end up 'explicit_root'.
-                eq_(self.unchanged.name, 'builtin_name')
+                eq_(self.unchanged.name, 'builtin-name')
 
     class add_task:
         def setup(self):
@@ -255,6 +264,19 @@ class Collection_(Spec):
                 pass
             self.c.add_task(its_me, default=False)
             eq_(self.c.default, None)
+
+        def allows_specifying_aliases(self):
+            self.c.add_task(_mytask, aliases=('task1', 'task2'))
+            assert self.c['_mytask'] is self.c['task1'] is self.c['task2']
+
+        def aliases_are_merged(self):
+            @task(aliases=('foo', 'bar'))
+            def biz(c):
+                pass
+            # NOTE: using tuple above and list below to ensure no type problems
+            self.c.add_task(biz, aliases=['baz', 'boz'])
+            for x in ('foo', 'bar', 'biz', 'baz', 'boz'):
+                assert self.c[x] is self.c['biz']
 
     class add_collection:
         def setup(self):
@@ -353,6 +375,94 @@ class Collection_(Spec):
             eq_(self.context.name, 'mytask')
             eq_(len(self.contexts), 3)
 
+        class auto_dash_names:
+            def context_names_automatically_become_dashed(self):
+                @task
+                def my_task(c):
+                    pass
+                contexts = Collection(my_task).to_contexts()
+                assert contexts[0].name == 'my-task'
+
+            def percolates_to_subcollection_tasks(self):
+                @task
+                def outer_task(c):
+                    pass
+                @task
+                def inner_task(c):
+                    pass
+                coll = Collection(outer_task, inner=Collection(inner_task))
+                contexts = coll.to_contexts()
+                expected = set(['outer-task', 'inner.inner-task'])
+                assert set(x.name for x in contexts) == expected
+
+            def percolates_to_subcollection_names(self):
+                @task
+                def my_task(c):
+                    pass
+                coll = Collection(inner_coll=Collection(my_task))
+                contexts = coll.to_contexts()
+                assert contexts[0].name == 'inner-coll.my-task'
+
+            def aliases_are_dashed_too(self):
+                @task(aliases=['hi_im_underscored'])
+                def whatever(c):
+                    pass
+                contexts = Collection(whatever).to_contexts()
+                assert 'hi-im-underscored' in contexts[0].aliases
+
+            def leading_and_trailing_underscores_are_not_affected(self):
+                @task
+                def _what_evers_(c):
+                    pass
+                @task
+                def _inner_cooler_(c):
+                    pass
+                inner = Collection('inner', _inner_cooler_)
+                contexts = Collection(_what_evers_, inner).to_contexts()
+                expected = ['_what-evers_', 'inner._inner-cooler_']
+                assert set(x.name for x in contexts) == set(expected)
+
+            def _nested_underscores(self, auto_dash_names=None):
+                @task(aliases=['other_name'])
+                def my_task(c):
+                    pass
+                @task(aliases=['other_inner'])
+                def inner_task(c):
+                    pass
+                # NOTE: explicitly not giving kwarg to subcollection; this
+                # tests that the top-level namespace performs the inverse
+                # transformation when necessary.
+                sub = Collection('inner_coll', inner_task)
+                return Collection(
+                    my_task, sub, auto_dash_names=auto_dash_names
+                )
+
+            def honors_init_setting_on_topmost_namespace(self):
+                coll = self._nested_underscores(auto_dash_names=False)
+                contexts = coll.to_contexts()
+                names = ['my_task', 'inner_coll.inner_task']
+                aliases = [['other_name'], ['inner_coll.other_inner']]
+                assert sorted(x.name for x in contexts) == sorted(names)
+                assert sorted(x.aliases for x in contexts) == sorted(aliases)
+
+            def transforms_are_applied_to_explicit_module_namespaces(self):
+                # Symptom when bug present: Collection.to_contexts() dies
+                # because it iterates over .task_names (transformed) and then
+                # tries to use results to access __getitem__ (no auto
+                # transform...because in all other situations, task structure
+                # keys are already transformed; but this wasn't the case for
+                # from_module() with explicit 'ns' objects!)
+                namespace = self._nested_underscores()
+                class FakeModule(object):
+                    __name__ = 'my_module'
+                    ns = namespace
+                coll = Collection.from_module(
+                    FakeModule(), auto_dash_names=False
+                )
+                # NOTE: underscores, not dashes
+                expected = set(['my_task', 'inner_coll.inner_task'])
+                assert set(x.name for x in coll.to_contexts()) == expected
+
         def allows_flaglike_access_via_flags(self):
             assert '--text' in self.context.flags
 
@@ -384,13 +494,16 @@ class Collection_(Spec):
         def returns_all_task_names_including_subtasks(self):
             eq_(
                 set(self.c.task_names.keys()),
-                set(['top_level', 'sub.sub_task'])
+                set(['top-level', 'sub-level.sub-task'])
             )
 
         def includes_aliases_and_defaults_as_values(self):
             names = self.c.task_names
-            eq_(names['top_level'], ['othertop'])
-            eq_(names['sub.sub_task'], ['sub.othersub', 'sub'])
+            eq_(names['top-level'], ['other-top'])
+            eq_(
+                names['sub-level.sub-task'],
+                ['sub-level.other-sub', 'sub-level']
+            )
 
     class configuration:
         "Configuration methods"

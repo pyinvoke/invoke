@@ -66,7 +66,6 @@ class Runner_(Spec):
         MockedStdin.write_proc_stdin = Mock()
         return MockedStdin
 
-
     class init:
         "__init__"
         def takes_a_context_instance(self):
@@ -445,6 +444,17 @@ class Runner_(Spec):
             # stdin mirroring occurs char-by-char
             calls = list(map(lambda x: call(x), "Hey, listen!"))
             klass.write_proc_stdin.assert_has_calls(calls, any_order=False)
+
+        def can_be_disabled_entirely(self):
+            # Mock handle_stdin so we can assert it's not even called
+            class MockedHandleStdin(_Dummy):
+                pass
+            MockedHandleStdin.handle_stdin = Mock()
+            self._runner(klass=MockedHandleStdin).run(
+                _,
+                in_stream=False, # vs None or a stream
+            )
+            assert not MockedHandleStdin.handle_stdin.called
 
         @patch('invoke.util.debug')
         def exceptions_get_logged(self, mock_debug):

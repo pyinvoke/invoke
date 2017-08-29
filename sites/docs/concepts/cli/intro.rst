@@ -61,11 +61,13 @@ Naturally, more than one flag may be given at a time::
 Per-task help / printing available flags
 ----------------------------------------
 
-To get help for a specific task, just give the task name as an argument to the
-core ``--help``/``-h`` option, and you'll get both its docstring (if any) and
-per-argument/flag help output::
+To get help for a specific task, you can give the task name as an argument to
+the core ``--help``/``-h`` option, or give ``--help``/``-h`` after the task
+(assuming it doesn't itself define a ``--help`` or ``-h``). When help is
+requested, you'll see the task's docstring (if any) and per-argument/flag help
+output::
 
-    $ invoke --help build
+    $ invoke --help build  # or invoke build --help
 
     Docstring:
       none

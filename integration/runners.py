@@ -59,7 +59,7 @@ class Runner_(Spec):
 
         def nested_invoke_sessions_not_conflated_with_mocked_stdin(self):
             # Also re: GH issue #308. This one will just hang forever. Woo!
-            run("inv -c nested_or_piped calls_foo", hide=True)
+            run("inv -c nested_or_piped calls-foo", hide=True)
 
         def isnt_cpu_heavy(self):
             "stdin mirroring isn't CPU-heavy"

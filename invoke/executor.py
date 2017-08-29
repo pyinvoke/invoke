@@ -1,12 +1,9 @@
+from .util import six
+
 from .config import Config
 from .parser import ParserContext
 from .util import debug
 from .tasks import Call, Task
-
-try:
-    from .vendor import six
-except ImportError:
-    import six
 
 
 class Executor(object):

@@ -7,18 +7,16 @@ from copy import deepcopy
 import inspect
 import types
 
-try:
-    from .vendor import six
-except ImportError:
-    import six
-
-from .context import Context
-from .parser import Argument, translate_underscores
+from .util import six
 
 if six.PY3:
     from itertools import zip_longest
 else:
     from itertools import izip_longest as zip_longest
+
+from .context import Context
+from .parser import Argument, translate_underscores
+
 
 
 #: Sentinel object representing a truly blank value (vs ``None``).
