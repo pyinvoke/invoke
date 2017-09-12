@@ -542,3 +542,50 @@ class MockContext_(Spec):
     @raises(TypeError)
     def unexpected_kwarg_type_yields_TypeError(self):
         MockContext(run=123)
+
+    class can_modify_return_value_maps_after_instantiation:
+        class non_dict_type_instantiation_values_yield_TypeErrors:
+            class no_stored_result:
+                @raises(TypeError)
+                def run(self):
+                    mc = MockContext()
+                    mc.set_result_for('run', 'whatever', Result('bar'))
+
+                @raises(TypeError)
+                def sudo(self):
+                    mc = MockContext()
+                    mc.set_result_for('sudo', 'whatever', Result('bar'))
+
+            class single_result:
+                @raises(TypeError)
+                def run(self):
+                    mc = MockContext(run=Result('foo'))
+                    mc.set_result_for('run', 'whatever', Result('bar'))
+
+                @raises(TypeError)
+                def sudo(self):
+                    mc = MockContext(sudo=Result('foo'))
+                    mc.set_result_for('sudo', 'whatever', Result('bar'))
+
+            class iterable_result:
+                @raises(TypeError)
+                def run(self):
+                    mc = MockContext(run=[Result('foo')])
+                    mc.set_result_for('run', 'whatever', Result('bar'))
+
+                @raises(TypeError)
+                def sudo(self):
+                    mc = MockContext(sudo=[Result('foo')])
+                    mc.set_result_for('sudo', 'whatever', Result('bar'))
+
+        def run(self):
+            mc = MockContext(run={'foo': Result('bar')})
+            assert mc.run('foo').stdout == 'bar'
+            mc.set_result_for('run', 'foo', Result('biz'))
+            assert mc.run('foo').stdout == 'biz'
+
+        def sudo(self):
+            mc = MockContext(sudo={'foo': Result('bar')})
+            assert mc.sudo('foo').stdout == 'bar'
+            mc.set_result_for('sudo', 'foo', Result('biz'))
+            assert mc.sudo('foo').stdout == 'biz'

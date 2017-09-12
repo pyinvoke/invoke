@@ -16,6 +16,7 @@ namespaces use a dot-separated syntax, e.g. ``docs.build``.
 In this section, we show how building namespaces with this API is flexible but
 also allows following Python package layouts with minimal boilerplate.
 
+
 Starting out
 ============
 
@@ -47,6 +48,7 @@ Our available tasks list now looks like this::
     Available tasks:
 
         release
+
 
 Naming your tasks
 =================
@@ -85,11 +87,8 @@ The result::
 
         ns.add_task(release, 'deploy')
 
-
 Aliases
 -------
-
-.. FIXME: add back aliases and merge at add_task time, as we do with name. HURR
 
 Tasks may have additional names or aliases, given as the ``aliases`` keyword
 argument; these are appended to, instead of replacing, any implicit or explicit
@@ -111,7 +110,47 @@ Result, with three names for the same task::
     setting aliases (e.g. ``@task(aliases=('foo', 'bar'))``, and is useful for
     ensuring a given task always has some aliases set no matter how it's added
     to a namespace.
-        
+
+.. _dashes-vs-underscores:
+
+Dashes vs underscores
+---------------------
+
+In the common case of functions-as-tasks, you'll often find yourself writing
+task names that contain underscores::
+
+    @task
+    def my_awesome_task(c):
+        print("Awesome!")
+
+Similar to how task arguments are processed to turn their underscores into
+dashes (since that's a common command-line convention) all underscores in task
+or collection names are interpreted to be dashes instead, by default::
+
+    $ inv --list
+    Available tasks:
+
+      my-awesome-task
+
+    $ inv my-awesome-task
+    Awesome!
+
+If you'd prefer the underscores to remain instead, you can update your
+configuration to set ``tasks.auto_dash_names`` to ``False`` in one of the
+non-runtime :ref:`config files <config-files>` (system, user, or project.) For
+example, in ``~/.invoke.yml``::
+
+    tasks:
+        auto_dash_names: false
+
+.. note::
+    In the interests of avoiding confusion, this setting is "exclusive" in
+    nature - underscored version of task names *are not valid* on the CLI
+    unless ``auto_dash_names`` is disabled. (However, at the pure function
+    level within Python, they must continue to be referenced with underscores,
+    as dashed names are not valid Python syntax!)
+
+
 Nesting collections
 ===================
 
@@ -163,6 +202,7 @@ Result::
         release
         sphinx.build
         sphinx.clean
+
 
 Importing modules as collections
 ================================
@@ -290,6 +330,7 @@ Result::
         release
         docs.build
         docs.clean
+
 
 More shortcuts
 ==============

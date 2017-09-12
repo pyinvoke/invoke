@@ -1,7 +1,7 @@
 from spec import Spec, skip, eq_, raises, ok_
 from mock import Mock
 
-from invoke import Context, Config, task, Task, Call
+from invoke import Context, Config, task, Task, Call, Collection
 from invoke import FilesystemLoader as Loader
 
 from _util import support
@@ -19,9 +19,13 @@ def _func(ctx):
 class task_(Spec):
     "@task"
 
+    def _load(self, name):
+        mod, _ = self.loader.load(name)
+        return Collection.from_module(mod)
+
     def setup(self):
         self.loader = Loader(start=support)
-        self.vanilla = self.loader.load('decorator')
+        self.vanilla = self._load('decorator')
 
     def allows_access_to_wrapped_object(self):
         def lolcats(ctx):
@@ -38,13 +42,13 @@ class task_(Spec):
         eq_(self.vanilla[''], self.vanilla['biz'])
 
     def has_autoprint_option(self):
-        ap = self.loader.load('autoprint')
+        ap = self._load('autoprint')
         eq_(ap['nope'].autoprint, False)
         eq_(ap['yup'].autoprint, True)
 
     @raises(ValueError)
     def raises_ValueError_on_multiple_defaults(self):
-        self.loader.load('decorator_multi_default')
+        self._load('decorator_multi_default')
 
     def sets_arg_help(self):
         eq_(self.vanilla['punch'].help['why'], 'Motive')

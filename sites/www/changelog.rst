@@ -2,6 +2,120 @@
 Changelog
 =========
 
+* :release:`0.20.4 <2017-08-14>`
+* :bug:`-` The behavior of `Config <invoke.config.Config>` when ``lazy=True``
+  didn't match that described in the API docs, after the recent updates to its
+  lifecycle. (Specifically, any config data given to the constructor was not
+  visible in the resulting instance until ``merge()`` was explicitly called.)
+  This has been fixed, along with other related minor issues.
+* :release:`0.20.3 <2017-08-04>`
+* :bug:`467` (Arguably also a feature, but since it enables behavior users
+  clearly found intuitive, we're considering it a bug.) Split up the parsing
+  machinery of `Program <invoke.program.Program>` and pushed the `Collection
+  <invoke.collection.Collection>`-making out of `Loader
+  <invoke.loader.Loader>`. Combined, this allows us to honor the project-level
+  config file *before* the second (task-oriented) CLI parsing step, instead of
+  after.
+
+  For example, this means you can turn off ``auto_dash_names`` in your
+  per-project configs and not only in your system or user configs.
+
+  Report again courtesy of Luke Orland.
+
+  .. warning::
+    This is a backwards incompatible change *if* you were subclassing and
+    overriding any of the affected methods in the ``Program`` or ``Loader``
+    classes.
+
+* :release:`0.20.2 <2017-08-02>`
+* :bug:`465` The ``tasks.auto_dash_names`` config option added in ``0.20.0``
+  wasn't being fully honored when set to ``False``; this has been fixed. Thanks
+  to Luke Orland for the report.
+* :release:`0.20.1 <2017-07-27>`
+* :bug:`-` Fix a broken ``six.moves`` import within ``invoke.util``; was
+  causing ``ImportError`` in environments without an external copy of ``six``
+  installed.
+
+  The dangers of one's local and CI environments all pulling down packages that
+  use ``six``! It's everywhere!
+* :release:`0.20.0 <2017-07-27>`
+* :feature:`-` (required to support :issue:`310` and :issue:`329`) Break up the
+  `~invoke.config.Config` lifecycle some more, allowing it to gradually load
+  configuration vectors; this allows the CLI machinery
+  (`~invoke.executor.Executor`) to honor configuration settings from config
+  files which impact how CLI parsing and task loading behaves.
+
+  Specifically, this adds more public ``Config.load_*`` methods, which in
+  tandem with the ``lazy`` kwarg to ``__init__`` (formerly ``defer_post_init``,
+  see below) allow full control over exactly when each config level is loaded.
+
+  .. warning::
+    This change may be backwards incompatible if you were using or subclassing
+    the `~invoke.config.Config` class in any of the following ways:
+
+    - If you were passing ``__init__`` kwargs such as ``project_home`` or
+      ``runtime_path`` and expecting those files to auto-load, they no longer
+      do; you must explicitly call `~invoke.config.Config.load_project` and/or
+      `~invoke.config.Config.load_runtime` explicitly.
+    - The ``defer_post_init`` keyword argument to ``Config.__init__`` has been
+      renamed to ``lazy``, and controls whether system/user config files are
+      auto-loaded.
+    - ``Config.post_init`` has been removed, in favor of explicit/granular use
+      of the ``load_*`` family of methods.
+    - All ``load_*`` methods now call ``Config.merge`` automatically by default
+      (previously, merging was deferred to the end of most config related
+      workflows.)
+
+      This should only be a problem if your config contents are extremely large
+      (it's an entirely in-memory dict-traversal operation) and can be avoided
+      by specifying ``merge=False`` to any such method. (Note that you must, at
+      some point, call `~invoke.config.Config.merge` in order for the config
+      object to work normally!)
+
+* :feature:`310` (also :issue:`455`, :issue:`291`) Allow configuring collection
+  root directory & module name via configuration files (previously, they were
+  only configurable via CLI flags or generating a custom
+  `~invoke.program.Program`.)
+* :feature:`329` All task and collection names now have underscores turned into
+  dashes automatically, as task parameters have been for some time. This
+  impacts ``--list``, ``--help``, and of course the parser. For details, see
+  :ref:`dashes-vs-underscores`.
+
+  This behavior is controlled by a new config setting,
+  ``tasks.auto_dash_names``, which can be set to ``False`` to go back to the
+  classic behavior.
+
+  Thanks to Alexander Artemenko for the initial feature request.
+* :bug:`396 major` ``Collection.add_task(task, aliases=('other', 'names')`` was
+  listed in the conceptual documentation, but not implemented (technically, it
+  was removed at some point and never reinstated.) It has been (re-)added and
+  now exists. Thanks to ``@jenisys`` for the report.
+
+  .. warning::
+    This technically changes argument order for `Collection.add_task
+    <invoke.collection.Collection.add_task>`, so be aware if you were using
+    positional arguments!
+
+* :bug:`- major` Display of hidden subprocess output when a command
+  execution failed (end-of-session output starting with ``Encountered a bad
+  command exit code!``) was liable to display encoding errors (e.g. ``'ascii'
+  codec can't encode character ...``) when that output was not
+  ASCII-compatible.
+
+  This problem was previously solved for *non-hidden* (mirrored) subprocess
+  output, but the fix (encode the data with the local encoding) had not been
+  applied to exception display. Now it's applied in both cases.
+* :feature:`322` Allow users to completely disable mirroring of stdin to
+  subprocesses, by specifying ``False`` for the ``run.in_stream`` config
+  setting and/or keyword argument.
+
+  This can help prevent problems when running Invoke under systems that have no
+  useful standard input and which otherwise defeat our pty/fileno related
+  detection.
+* :release:`0.19.0 <2017-06-19>`
+* :feature:`-` Add `MockContext.set_result_for
+  <invoke.context.MockContext.set_result_for>` to allow massaging a mock
+  Context's configured results after instantiation.
 * :release:`0.18.1 <2017-06-07>`
 * :bug:`-` Update Context internals re: command execution & configuration of
   runner subclasses, to work better in client libraries such as Fabric 2.

@@ -13,16 +13,16 @@ Task module discovery
 =====================
 
 With no other configuration, simply calling ``invoke`` will look for a single
-Python module named ``tasks``, and will treat it as the root namespace.
-``tasks`` (and any other module name given via :ref:`the load options
-<load-options>`) is searched for in the following ways:
+Python module or package named ``tasks``, and will treat it as the root
+namespace. ``tasks`` (or any other name given via :ref:`loading configuration
+options <configuring-loading>`) is searched for in the following ways:
 
 * First, if a valid tasks module by that name already exists on Python's
-  `sys.path <http://docs.python.org/release/2.6.7/library/sys.html#sys.path>`_,
+  `sys.path <http://docs.python.org/release/2.7/library/sys.html#sys.path>`_,
   no more searching is done -- that module is selected.
 * Failing that, search towards the root of the local filesystem, starting with
   the user's current working directory (`os.getcwd
-  <http://docs.python.org/release/2.6.7/library/os.html#os.getcwd>`_) and try
+  <http://docs.python.org/release/2.7/library/os.html#os.getcwd>`_) and try
   importing again with each directory temporarily added to ``sys.path``.
 
     * Due to how Python's import machinery works, this approach will always
@@ -38,24 +38,27 @@ used as valid task collections. Any that fail are discarded, the ``sys.path``
 munging done to import them is reverted, and the search continues.
 
 
-.. _load-options:
+.. _configuring-loading:
 
-Additional load options
-=======================
+Configuring the loading process
+===============================
 
-The ``-c`` / ``--collection`` command-line argument allows you to override the
-default collection name searched for. It should be a Python module name and not
-a file name (so ``-c mytasks``, not ``-c mytasks.py`` or ``-c mytasks/``.) This
-option is repeatable and may be used to load multiple collections at runtime.
+You can configure the above behavior, requesting that Invoke alter the
+collection name searched for and/or the path where filesystem-level loading
+starts looking.
 
-.. note::
-    When multiple collections are specified, the first collection given will be
-    used as the root or default namespace. The rest will be attached to it as
-    sub-collections. See :doc:`namespaces` for details.
+For example, you may already have a project-level ``tasks.py`` that you can't
+easily rename; or you may want to host a number of tasks collections stored
+outside the project root and make it easy to switch between them; or any number
+of reasons.
 
-If you need to override the default search start point so Invoke no longer
-searches from the current directory, use ``--root``. E.g. if your tasks module
-is in ``/opt/code/myproject/tasks.py`` and your CWD is, say, ``/home/myuser``,
-you might run Invoke as::
+Both the sought collection name and the search root can be specified via
+:ref:`configuration file options <config-files>` or as :doc:`runtime CLI flags
+</cli>`:
 
-    $ invoke --root /opt/code/myproject
+- **Change the collection name**: Set the ``tasks.collection_name``
+  configuration option, or use the ``-c``/``--collection`` CLI flag. It should
+  be a Python module name and not a file name (so ``mytasks``, not
+  ``mytasks.py`` or ``mytasks/``.)
+- **Change the root search path**: Configure ``tasks.search_root`` or use
+  ``-r``/``--root``. This value may be any valid directory path.

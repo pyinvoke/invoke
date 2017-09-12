@@ -292,10 +292,10 @@ bar
             expect("-c autoprint sub.yup", out="It's alive!\n")
 
         def does_not_fire_on_pre_tasks(self):
-            expect("-c autoprint pre_check", out="")
+            expect("-c autoprint pre-check", out="")
 
         def does_not_fire_on_post_tasks(self):
-            expect("-c autoprint post_check", out="")
+            expect("-c autoprint post-check", out="")
 
     class inter_task_context_and_config_sharing:
         def context_is_new_but_config_is_same(self):

@@ -2,16 +2,27 @@ import os
 import sys
 import imp
 
-from .collection import Collection
+from . import Config
 from .exceptions import CollectionNotFound
 from .util import debug
 
 
 class Loader(object):
     """
-    Abstract class defining how to load a session's base `.Collection`.
+    Abstract class defining how to find/import a session's base `.Collection`.
     """
-    DEFAULT_COLLECTION_NAME = 'tasks'
+    def __init__(self, config=None):
+        """
+        Set up a new loader with some `.Config`.
+
+        :param config:
+            An explicit `.Config` to use; it is referenced for loading-related
+            config options. Defaults to an anonymous ``Config()`` if none is
+            given.
+        """
+        if config is None:
+            config = Config()
+        self.config = config
 
     def find(self, name):
         """
@@ -28,7 +39,7 @@ class Loader(object):
 
     def load(self, name=None):
         """
-        Load and return collection identified by ``name``.
+        Load and return collection module identified by ``name``.
 
         This method requires a working implementation of `.find` in order to
         function.
@@ -37,9 +48,14 @@ class Loader(object):
         parent directory to the front of `sys.path` to provide normal Python
         import behavior (i.e. so the loaded module may load local-to-it modules
         or packages.)
+
+        :returns:
+            Two-tuple of ``(module, directory)`` where ``module`` is the
+            collection-containing Python module object, and ``directory`` is
+            the string path to the directory the module was found in.
         """
         if name is None:
-            name = self.DEFAULT_COLLECTION_NAME
+            name = self.config.tasks.collection_name
         # Find the named tasks module, depending on implementation.
         # Will raise an exception if not found.
         fd, path, desc = self.find(name)
@@ -51,8 +67,10 @@ class Loader(object):
                 sys.path.insert(0, parent)
             # Actual import
             module = imp.load_module(name, fd, path, desc)
-            # Make a collection from it, and done
-            return Collection.from_module(module, loaded_from=parent)
+            # Return module + path.
+            # TODO: is there a reason we're not simply having clients refer to
+            # os.path.dirname(module.__file__)?
+            return module, parent
         finally:
             # Ensure we clean up the opened file object returned by find(), if
             # there was one (eg found packages, vs modules, don't open any
@@ -67,12 +85,19 @@ class FilesystemLoader(Loader):
 
     Searches recursively towards filesystem root from a given start point.
     """
-    def __init__(self, start=None):
+    # TODO: could introduce config obj here for transmission to Collection
+    # TODO: otherwise Loader has to know about specific bits to transmit, such
+    # as auto-dashes, and has to grow one of those for every bit Collection
+    # ever needs to know
+    def __init__(self, start=None, **kwargs):
+        super(FilesystemLoader, self).__init__(**kwargs)
+        if start is None:
+            start = self.config.tasks.search_root
         self._start = start
 
     @property
     def start(self):
-        # Lazily determine default CWD
+        # Lazily determine default CWD if configured value is falsey
         return self._start or os.getcwd()
 
     def find(self, name):
