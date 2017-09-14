@@ -182,10 +182,21 @@ class ParseMachine(StateMachine):
         if not takes_value:
             return False
         # OK, this flag is one that takes values.
-        # Does it already have one?
+        # Is it a list type? If so, it's always happy to accept more
+        # regardless.
+        # TODO: how to handle somebody wanting it to be some other iterable
+        # like tuple or custom class? Or do we just say unsupported?
+        if self.flag.kind is list:
+            return True
+        # Not a list, okay. Does it already have a value?
         has_value = self.flag.raw_value is not None
         # If it doesn't have one, we're waiting for one (which tells the parser
         # how to proceed and typically to store the next token.)
+        # TODO: in the negative case here, we should do something else instead:
+        # - Except, "hey you screwed up, you already gave that flag!"
+        # - Overwrite, "oh you changed your mind?" - which requires more work
+        # elsewhere too, unfortunately. (Perhaps additional properties on
+        # Argument that can be queried, e.g. "arg.is_iterable"?)
         return not has_value
 
     def handle(self, token):

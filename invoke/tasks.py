@@ -44,6 +44,7 @@ class Task(object):
         pre=None,
         post=None,
         autoprint=False,
+        iterable=None,
     ):
         # Real callable
         self.body = body
@@ -58,6 +59,7 @@ class Task(object):
         # Arg/flag/parser hints
         self.positional = self.fill_implicit_positionals(positional)
         self.optional = optional
+        self.iterable = iterable or []
         self.auto_shortflags = auto_shortflags
         self.help = help or {}
         # Call chain bidness
@@ -161,6 +163,13 @@ class Task(object):
         opts['positional'] = name in self.positional
         # Whether it is a value-optional flag
         opts['optional'] = name in self.optional
+        # Whether it should be of an iterable (list) kind
+        if name in self.iterable:
+            opts['kind'] = list
+            # If user gave a non-None default, hopefully they know better
+            # than us what they want here (and hopefully it offers the list
+            # protocol...) - otherwise supply useful default
+            opts['default'] = default if default is not None else []
         # Argument name(s) (replace w/ dashed version if underscores present,
         # and move the underscored version to be the attr_name instead.)
         if '_' in name:
@@ -281,6 +290,7 @@ def task(*args, **kwargs):
     aliases = kwargs.pop('aliases', ())
     positional = kwargs.pop('positional', None)
     optional = tuple(kwargs.pop('optional', ()))
+    iterable = kwargs.pop('iterable', None)
     default = kwargs.pop('default', False)
     auto_shortflags = kwargs.pop('auto_shortflags', True)
     help = kwargs.pop('help', {})
@@ -298,6 +308,7 @@ def task(*args, **kwargs):
             aliases=aliases,
             positional=positional,
             optional=optional,
+            iterable=iterable,
             default=default,
             auto_shortflags=auto_shortflags,
             help=help,

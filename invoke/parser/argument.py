@@ -36,7 +36,11 @@ class Argument(object):
             raise TypeError("An Argument must have at least one name.")
         self.names = tuple(names if names else (name,))
         self.kind = kind
-        self.raw_value = self._value = None
+        initial_value = None
+        # Special case: list-type args start out as empty list, not None.
+        if self.kind is list:
+            initial_value = []
+        self.raw_value = self._value = initial_value
         self.default = default
         self.help = help
         self.positional = positional
@@ -99,8 +103,19 @@ class Argument(object):
 
         Sets ``self.raw_value`` to ``value`` directly.
 
-        Sets ``self.value`` to ``self.kind(value)``, unless ``cast=False`` in
-        which case the raw value is also used.
+        Sets ``self.value`` to ``self.kind(value)``, unless:
+
+        - ``cast=False``, in which case the raw value is also used.
+        - ``self.kind==list``, in which case the value is appended to
+          ``self.value`` instead of cast & overwritten.
         """
         self.raw_value = value
-        self._value = (self.kind if cast else lambda x: x)(value)
+        # Default to do-nothing/identity function
+        func = lambda x: x
+        # If cast, set to self.kind, which should be str/int/etc
+        if cast:
+            func = self.kind
+            # But if self.kind is a list, append instead.
+            if self.kind is list:
+                func = lambda x: self._value + [x]
+        self._value = func(value)
