@@ -173,11 +173,20 @@ class ParseMachine(StateMachine):
 
     @property
     def waiting_for_flag_value(self):
-        return (
+        # Do we have a current flag, and does it expect a value (vs being a
+        # bool/toggle)?
+        takes_value = (
             self.flag and
-            self.flag.takes_value and
-            self.flag.raw_value is None
+            self.flag.takes_value
         )
+        if not takes_value:
+            return False
+        # OK, this flag is one that takes values.
+        # Does it already have one?
+        has_value = self.flag.raw_value is not None
+        # If it doesn't have one, we're waiting for one (which tells the parser
+        # how to proceed and typically to store the next token.)
+        return not has_value
 
     def handle(self, token):
         debug("Handling token: {0!r}".format(token))
@@ -196,6 +205,7 @@ class ParseMachine(StateMachine):
             self.switch_to_flag(token, inverse=True)
         # Value for current flag
         elif self.waiting_for_flag_value:
+            debug("We're waiting for a flag value so {0!r} must be it?".format(token)) # noqa
             self.see_value(token)
         # Positional args (must come above context-name check in case we still
         # need a posarg and the user legitimately wants to give it a value that
