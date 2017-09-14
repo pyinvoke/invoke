@@ -339,6 +339,22 @@ class Parser_(Spec):
                 p = Parser([c1, c2])
                 self._test_for_ambiguity("--foo othertask", p)
 
+    class list_type_arguments:
+        def _parse(self, *args):
+            c = Context('mytask', args=(Argument('mylist', kind=list),))
+            argv = ['mytask'] + list(args)
+            return Parser([c]).parse_argv(argv)[0].args.mylist.value
+
+        def can_be_given_no_times_resulting_in_default_empty_list(self):
+            assert self._parse() == []
+
+        def given_once_becomes_single_item_list(self):
+            assert self._parse('--mylist', 'foo') == ['foo']
+
+        def given_N_times_becomes_list_of_len_N(self):
+            expected = ['foo', 'bar', 'biz']
+            assert self._parse('--mylist', 'foo', 'bar', 'biz') == expected
+
     class task_repetition:
         def is_happy_to_handle_same_task_multiple_times(self):
             task1 = Context('mytask')

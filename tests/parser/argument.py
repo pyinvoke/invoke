@@ -95,6 +95,8 @@ class Argument_(Spec):
 
         def non_bool_implies_value_needed(self):
             assert Argument(name='a', kind=int).takes_value
+            assert Argument(name='b', kind=str).takes_value
+            assert Argument(name='c', kind=list).takes_value
 
         def bool_implies_no_value_needed(self):
             assert not Argument(name='a', kind=bool).takes_value
@@ -110,6 +112,9 @@ class Argument_(Spec):
         @raises(ValueError)
         def may_validate_on_set(self):
             Argument('a', kind=int).value = 'five'
+
+        def list_implies_initial_value_of_empty_list(self):
+            assert Argument('mylist', kind=list).value == []
 
     class names:
         def returns_tuple_of_all_names(self):
@@ -154,6 +159,17 @@ class Argument_(Spec):
             a.value = '5'
             eq_(a.value, 5)
             eq_(a.raw_value, '5')
+
+        def list_kind_triggers_append_instead_of_overwrite(self):
+            # TODO: when put this way it makes the API look pretty strange;
+            # maybe a sign we should switch to explicit setter methods
+            # (selected on kind, perhaps) instead of using an implicit setter
+            a = Argument('mylist', kind=list)
+            assert a.value == []
+            a.value = 'val1'
+            assert a.value == ['val1']
+            a.value = 'val2'
+            assert a.value == ['val1', 'val2']
 
     class value:
         def returns_default_if_not_set(self):

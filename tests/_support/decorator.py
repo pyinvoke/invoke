@@ -52,3 +52,7 @@ def implicit_positionals(ctx, pos1, pos2, nonpos=None):
 @task(optional=['myopt'])
 def optional_values(ctx, myopt):
     pass
+
+@task(iterable=['mylist'])
+def iterable_values(c, mylist=None):
+    pass

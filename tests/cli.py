@@ -10,10 +10,10 @@ class CLIParsing(Spec):
     High level parsing tests
     """
     def setup(self):
-        @task(positional=[])
+        @task(positional=[], iterable=['my_list'])
         def my_task(ctx, mystring, s, boolean=False, b=False, v=False,
             long_name=False, true_bool=True, _leading_underscore=False,
-            trailing_underscore_=False):
+            trailing_underscore_=False, my_list=None):
             pass
         @task(aliases=['my_task27'])
         def my_task2(ctx):
@@ -135,3 +135,9 @@ class CLIParsing(Spec):
             a = r[0].args
             eq_(a.b.value, True)
             eq_(a.v.value, True)
+
+    def list_type_flag_can_be_given_N_times_building_a_list(self):
+        "my-task --my-list foo --my-list bar"
+        # Test both the singular and plural cases, just to be safe.
+        self._compare("--my-list foo", 'my-list', ['foo'])
+        self._compare("--my-list foo --my-list bar", 'my-list', ['foo', 'bar'])
