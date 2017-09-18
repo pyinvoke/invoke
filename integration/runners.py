@@ -1,6 +1,5 @@
 import os
 import platform
-import time
 
 from mock import Mock
 from spec import Spec, eq_, ok_, skip
@@ -9,7 +8,6 @@ from invoke import (
     run, Local, Context, ThreadException, Responder, FailingResponder,
     WatcherError, Failure
 )
-from invoke.util import ExceptionHandlingThread
 
 from _util import assert_cpu_usage
 
@@ -61,70 +59,20 @@ class Runner_(Spec):
 
         def nested_invoke_sessions_not_conflated_with_mocked_stdin(self):
             # Also re: GH issue #308. This one will just hang forever. Woo!
-            run("inv -c nested_or_piped calls_foo", hide=True)
+            run("inv -c nested_or_piped calls-foo", hide=True)
 
         def isnt_cpu_heavy(self):
             "stdin mirroring isn't CPU-heavy"
             # CPU measurement under PyPy is...rather different. NBD.
             if PYPY:
                 skip()
-            with assert_cpu_usage(lt=5.0):
+            # Python 3.5 has been seen using up to ~6.0s CPU time under Travis
+            with assert_cpu_usage(lt=7.0):
                 run("python -u busywork.py 10", pty=True, hide=True)
 
-    class interrupts:
-        def _run_and_kill(self, pty):
-            def bg_body():
-                # No reliable way to detect "an exception happened in the inner
-                # child that wasn't KeyboardInterrupt", so best we can do is:
-                # * Ensure exited 130
-                # * Get mad if any output is seen that doesn't look like
-                # KeyboardInterrupt stacktrace (because it's probably some
-                # OTHER stacktrace).
-                pty_flag = "--pty" if pty else "--no-pty"
-                result = run(
-                    "inv -c signal_tasks expect SIGINT {0}".format(pty_flag),
-                    hide=True,
-                    warn=True,
-                )
-                bad_signal = result.exited != 130
-                output = result.stdout + result.stderr
-                had_keyboardint = 'KeyboardInterrupt' in output
-                if bad_signal or (output and not had_keyboardint):
-                    err = "Subprocess had output and/or bad exit:"
-                    raise Exception("{0}\n\n{1}".format(err, result))
-
-            # Execute sub-invoke in a thread so we can talk to its subprocess
-            # while it's running.
-            # TODO: useful async API for run() which at least wraps threads for
-            # you, and exposes the inner PID
-            bg = ExceptionHandlingThread(target=bg_body)
-            bg.start()
-            # Wait a bit to ensure subprocess is in the right state & not still
-            # starting up (lolpython?). NOTE: if you bump this you must also
-            # bump the `signal.alarm` call within _support/signaling.py!
-            # Otherwise both tests will always fail as the ALARM fires
-            # (resulting in "Never got any signals!" in debug log) before this
-            # here sleep finishes.
-            time.sleep(2 if PYPY else 1)
-            # Send expected signal (use pty to ensure no intermediate 'sh'
-            # processes on Linux; is of no consequence on Darwin.)
-            interpreter = 'pypy' if PYPY else 'python'
-            cmd = "pkill -INT -f \"{0}.*inv -c signal_tasks\""
-            run(cmd.format(interpreter), pty=True)
-            # Rejoin subprocess thread & check for exceptions
-            bg.join()
-            wrapper = bg.exception()
-            if wrapper:
-                # This is an ExceptionWrapper, not an actual exception, since
-                # most places using ExceptionHandlingThread need access to the
-                # thread's arguments & such. We just want the exception here.
-                raise wrapper.value
-
-        def pty_True(self):
-            self._run_and_kill(pty=True)
-
-        def pty_False(self):
-            self._run_and_kill(pty=False)
+        def doesnt_break_when_stdin_exists_but_null(self):
+            # Re: #425 - IOError occurs when bug present
+            run("inv -c nested_or_piped foo < /dev/null", hide=True)
 
     class IO_hangs:
         "IO hangs"

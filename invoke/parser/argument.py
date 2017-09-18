@@ -43,19 +43,29 @@ class Argument(object):
         self.optional = optional
         self.attr_name = attr_name
 
-    def __str__(self):
+    def __repr__(self):
         nicks = ""
         if self.nicknames:
             nicks = " ({0})".format(", ".join(self.nicknames))
-        return "<{0}: {1}{2}{3}>".format(
+        flags = ""
+        if self.positional or self.optional:
+            flags = " "
+        if self.positional:
+            flags += "*"
+        if self.optional:
+            flags += "?"
+        # TODO: store this default value somewhere other than signature of
+        # Argument.__init__?
+        kind = ""
+        if self.kind != str:
+            kind = " [{0}]".format(self.kind.__name__)
+        return "<{0}: {1}{2}{3}{4}>".format(
             self.__class__.__name__,
             self.name,
             nicks,
-            "*" if self.positional else ""
+            kind,
+            flags,
         )
-
-    def __repr__(self):
-        return str(self)
 
     @property
     def name(self):

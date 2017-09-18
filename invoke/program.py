@@ -1,15 +1,15 @@
+from __future__ import unicode_literals, print_function
+
 import inspect
 import os
 import sys
 import textwrap
 
-from .vendor import six
+from .util import six
 
+from . import Collection, Config, Executor, FilesystemLoader
 from .complete import complete
-from .config import Config
-from .loader import FilesystemLoader
 from .parser import Parser, ParserContext, Argument
-from .executor import Executor
 from .exceptions import (
     UnexpectedExit, CollectionNotFound, ParseError, Exit,
 )
@@ -72,6 +72,12 @@ class Program(object):
                 help="Set default value of run()'s 'hide' kwarg.",
             ),
             Argument(
+                names=('list', 'l'),
+                kind=bool,
+                default=False,
+                help="List available tasks."
+            ),
+            Argument(
                 names=('pty', 'p'),
                 kind=bool,
                 default=False,
@@ -107,12 +113,6 @@ class Program(object):
                 help="Specify collection name to load."
             ),
             Argument(
-                names=('list', 'l'),
-                kind=bool,
-                default=False,
-                help="List available tasks."
-            ),
-            Argument(
                 names=('no-dedupe',),
                 kind=bool,
                 default=False,
@@ -138,7 +138,6 @@ class Program(object):
         loader_class=None,
         executor_class=None,
         config_class=None,
-        env_prefix=None,
     ):
         """
         Create a new, parameterized `.Program` instance.
@@ -175,7 +174,7 @@ class Program(object):
 
             Giving this explicitly may be useful when you install your program
             under multiple names, such as Invoke itself does - it installs as
-            both ``inv`` and ``invoke``, and sets ``name="inv[oke]"`` so its
+            both ``inv`` and ``invoke``, and sets ``binary="inv[oke]"`` so its
             ``--help`` output implies both names.
 
         :param loader_class:
@@ -192,11 +191,6 @@ class Program(object):
             The `.Config` subclass to use for the base config object.
 
             Defaults to `.Config`.
-
-        :param str env_prefix:
-            The prefix for environment variable configuration loading.
-
-            Defaults to ``INVOKE_``.
         """
         self.version = "unknown" if version is None else version
         self.namespace = namespace
@@ -206,25 +200,35 @@ class Program(object):
         self.loader_class = loader_class or FilesystemLoader
         self.executor_class = executor_class or Executor
         self.config_class = config_class or Config
-        self.env_prefix = env_prefix if env_prefix is not None else 'INVOKE_'
 
-    @property
-    def config(self):
+    def create_config(self):
         """
-        A `.Config` object initialized with parser & collection data.
+        Instantiate a `.Config` (or subclass, depending) for use in task exec.
 
-        Specifically, parser-level flags are consulted (typically as a
-        top-level "runtime overrides" dict) and the `.Collection` object is
-        used to determine where to seek a per-project config file.
+        This Config is fully usable but will lack runtime-derived data like
+        project & runtime config files, CLI arg overrides, etc. That data is
+        added later in `update_config`. See `.Config` docstring for lifecycle
+        details.
 
-        This object is further updated within `.Executor` with per-task
-        configuration values and then told to load the full hierarchy (which
-        includes config files.)
-
-        The specific `.Config` subclass used may be overridden in `.__init__`
-        via ``config_class``.
+        :returns: ``None``; sets ``self.config`` instead.
         """
-        # Set up runtime overrides from flags.
+        self.config = self.config_class()
+
+    def update_config(self, merge=True):
+        """
+        Update the previously instantiated `.Config` with parsed data.
+
+        For example, this is how ``--echo`` is able to override the default
+        config value for ``run.echo``.
+
+        :param bool merge:
+            Whether to merge at the end, or defer. Primarily useful for
+            subclassers. Default: ``True``.
+        """
+        # Now that we have parse results handy, we can grab the remaining
+        # config bits:
+        # - runtime config, as it is dependent on the runtime flag
+        # - the overrides config level, as it is composed of runtime flag data
         # NOTE: only fill in values that would alter behavior, otherwise we
         # want the defaults to come through.
         run = {}
@@ -237,17 +241,13 @@ class Program(object):
         if self.args.echo.value:
             run['echo'] = True
         tasks = {}
-        if self.args['no-dedupe'].value:
+        if 'no-dedupe' in self.args and self.args['no-dedupe'].value:
             tasks['dedupe'] = False
-        overrides = {'run': run, 'tasks': tasks}
-        # Stand up config object
-        c = self.config_class(
-            overrides=overrides,
-            project_home=self.collection.loaded_from,
-            runtime_path=self.args.config.value,
-            env_prefix=self.env_prefix,
-        )
-        return c
+        self.config.load_overrides({'run': run, 'tasks': tasks}, merge=False)
+        self.config.set_runtime_path(self.args.config.value)
+        self.config.load_runtime(merge=False)
+        if merge:
+            self.config.merge()
 
     def run(self, argv=None, exit=True):
         """
@@ -268,13 +268,38 @@ class Program(object):
                 using `.Executor` and friends directly instead!
         """
         try:
-            self._parse(argv)
+            # Create an initial config, which will hold defaults & values from
+            # most config file locations (all but runtime.) Used to inform
+            # loading & parsing behavior.
+            self.create_config()
+            # Parse the given ARGV with our CLI parsing machinery, resulting in
+            # things like self.args (core args/flags), self.collection (the
+            # loaded namespace, which may be affected by the core flags) and
+            # self.tasks (the tasks requested for exec and their own
+            # args/flags)
+            self.parse_core(argv)
+            # Handle collection concerns including project config
+            self.parse_collection()
+            # Parse remainder of argv as task-related input
+            self.parse_tasks()
+            # End of parsing (typically bailout stuff like --list, --help)
+            self.parse_cleanup()
+            # Update the earlier Config with new values from the parse step -
+            # runtime config file contents and flag-derived overrides (e.g. for
+            # run()'s echo, warn, etc options.)
+            self.update_config()
+            # Create an Executor, passing in the data resulting from the prior
+            # steps, then tell it to execute the tasks.
             self.execute()
         except (UnexpectedExit, Exit, ParseError) as e:
             debug("Received a possibly-skippable exception: {0!r}".format(e))
-            # Print error message from parser if necessary.
+            # Print error messages from parser, runner, etc if necessary;
+            # prevents messy traceback but still clues interactive user into
+            # problems.
             if isinstance(e, ParseError):
-                sys.stderr.write("{0}\n".format(e))
+                print(e, file=sys.stderr)
+            if isinstance(e, UnexpectedExit) and e.result.hide:
+                print(e, file=sys.stderr, end='')
             # Terminate execution unless we were told not to.
             if exit:
                 if isinstance(e, UnexpectedExit):
@@ -287,9 +312,9 @@ class Program(object):
             else:
                 debug("Invoked as run(..., exit=False), ignoring exception")
         except KeyboardInterrupt:
-            sys.exit(130) # Standard POSIX exit code for SIGINT
+            sys.exit(1) # Same behavior as Python itself outside of REPL
 
-    def _parse(self, argv):
+    def parse_core(self, argv):
         debug("argv given to Program.run: {0!r}".format(argv))
         self.normalize_argv(argv)
 
@@ -311,6 +336,10 @@ class Program(object):
             self.print_version()
             raise Exit
 
+    def parse_collection(self):
+        """
+        Load a tasks collection & project-level config.
+        """
         # Load a collection of tasks unless one was already set.
         if self.namespace is not None:
             debug("Program was given a default namespace, skipping collection loading") # noqa
@@ -326,11 +355,13 @@ class Program(object):
                 raise Exit
             self.load_collection()
 
-        # Parse remainder into task contexts (sets
-        # self.parser/collection/tasks)
-        self.parse_tasks()
+        # TODO: load project conf, if possible, gracefully
 
-        halp = self.args.help.value
+    def parse_cleanup(self):
+        """
+        Post-parsing, pre-execution steps such as --help, --list, etc.
+        """
+        halp = self.args.help.value or self.core_via_tasks.args.help.value
 
         # Core (no value given) --help output (only when bundled namespace)
         if halp is True:
@@ -343,7 +374,7 @@ class Program(object):
             if halp in self.parser.contexts:
                 msg = "Saw --help <taskname>, printing per-task help & exiting"
                 debug(msg)
-                self.print_task_help()
+                self.print_task_help(halp)
                 raise Exit
             else:
                 # TODO: feels real dumb to factor this out of Parser, but...we
@@ -468,16 +499,27 @@ class Program(object):
         """
         Load a task collection based on parsed core args, or die trying.
         """
+        # NOTE: start, coll_name both fall back to configuration values within
+        # Loader (which may, however, get them from our config.)
         start = self.args.root.value
-        loader = self.loader_class(start=start)
+        loader = self.loader_class(config=self.config, start=start)
         coll_name = self.args.collection.value
         try:
-            coll = loader.load(coll_name) if coll_name else loader.load()
-            self.collection = coll
-        except CollectionNotFound:
-            name = coll_name or loader.DEFAULT_COLLECTION_NAME
+            module, parent = loader.load(coll_name)
+            # This is the earliest we can load project config, so we should -
+            # allows project config to affect the task parsing step!
+            # TODO: is it worth merging these set- and load- methods? May
+            # require more tweaking of how things behave in/after __init__.
+            self.config.set_project_location(parent)
+            self.config.load_project()
+            self.collection = Collection.from_module(
+                module,
+                loaded_from=parent,
+                auto_dash_names=self.config.tasks.auto_dash_names,
+            )
+        except CollectionNotFound as e:
             six.print_(
-                "Can't find any collection named {0!r}!".format(name),
+                "Can't find any collection named {0!r}!".format(e.name),
                 file=sys.stderr
             )
             raise Exit(1)
@@ -486,21 +528,25 @@ class Program(object):
         """
         Parse leftover args, which are typically tasks & per-task args.
 
-        Sets ``self.parser`` to the parser used, and ``self.tasks`` to the
-        parse result.
+        Sets ``self.parser`` to the parser used, ``self.tasks`` to the
+        parsed per-task contexts, and ``self.core_via_tasks`` to a context
+        holding any core flags seen within the task contexts.
         """
-        self.parser = Parser(contexts=self.collection.to_contexts())
+        self.parser = Parser(
+            initial=self.initial_context,
+            contexts=self.collection.to_contexts(),
+        )
         debug("Parsing tasks against {0!r}".format(self.collection))
-        self.tasks = self.parser.parse_argv(self.core.unparsed)
+        result = self.parser.parse_argv(self.core.unparsed)
+        # TODO: can we easily 'merge' this into self.core? Ehh
+        self.core_via_tasks = result.pop(0)
+        self.tasks = result
         debug("Resulting task contexts: {0!r}".format(self.tasks))
 
-    def print_task_help(self):
+    def print_task_help(self, name):
         """
         Print help for a specific task, e.g. ``inv --help <taskname>``.
         """
-        # Use the parser's contexts dict as that's the easiest way to obtain
-        # Context objects here - which are what help output needs.
-        name = self.args.help.value
         # Setup
         ctx = self.parser.contexts[name]
         tuples = ctx.help_tuples()

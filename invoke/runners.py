@@ -2,12 +2,13 @@
 
 import locale
 import os
-from signal import SIGINT, SIGTERM
 import struct
 from subprocess import Popen, PIPE
 import sys
 import threading
 import time
+
+from .util import six
 
 # Import some platform-specific things at top level so they can be mocked for
 # tests.
@@ -28,11 +29,9 @@ from .exceptions import (
     UnexpectedExit, Failure, ThreadException, WatcherError,
 )
 from .platform import (
-    WINDOWS, pty_size, character_buffered, ready_for_reading, read_byte,
+    WINDOWS, pty_size, character_buffered, ready_for_reading, bytes_to_read,
 )
-from .util import has_fileno, isatty, ExceptionHandlingThread
-
-from .vendor import six
+from .util import has_fileno, isatty, ExceptionHandlingThread, encode_output
 
 
 class Runner(object):
@@ -187,7 +186,7 @@ class Runner(object):
             of `default_encoding`).
 
         :param out_stream:
-            A file-like stream object to which the subprocess' standard error
+            A file-like stream object to which the subprocess' standard output
             should be written. If ``None`` (the default), ``sys.stdout`` will
             be used.
 
@@ -198,6 +197,12 @@ class Runner(object):
         :param in_stream:
             A file-like stream object to used as the subprocess' standard
             input. If ``None`` (the default), ``sys.stdin`` will be used.
+
+            If ``False``, will disable stdin mirroring entirely (though other
+            functionality which writes to the subprocess' stdin, such as
+            autoresponding, will still function.) Disabling stdin mirroring can
+            help when ``sys.stdin`` is a misbehaving non-stream object, such as
+            under test harnesses or headless command runners.
 
         :param list watchers:
             A list of `.StreamWatcher` instances which will be used to scan the
@@ -252,16 +257,6 @@ class Runner(object):
         :raises:
             `.ThreadException` (if the background I/O threads encountered
             exceptions other than `.WatcherError`).
-
-        :raises:
-            ``KeyboardInterrupt``, if the user generates one during command
-            execution by pressing Ctrl-C.
-
-            .. note::
-                In normal usage, Invoke's top-level CLI tooling will catch
-                these & exit with return code ``130`` (typical POSIX behavior)
-                instead of printing a traceback and exiting ``1`` (which is
-                what Python normally does).
         """
         try:
             return self._run_body(command, **kwargs)
@@ -286,69 +281,59 @@ class Runner(object):
         thread_args = {
             self.handle_stdout: {
                 'buffer_': stdout,
-                'hide': 'out' in opts['hide'],
+                'hide': 'stdout' in opts['hide'],
                 'output': out_stream,
             },
-            # TODO: make this & related functionality optional, for users who
-            # don't care about autoresponding & are encountering issues with
-            # the stdin mirroring? Downside is it fragments expected behavior &
-            # puts folks with true interactive use cases in a different support
-            # class.
-            self.handle_stdin: {
+        }
+        # After opt processing above, in_stream will be a real stream obj or
+        # False, so we can truth-test it. We don't even create a stdin-handling
+        # thread if it's False, meaning user indicated stdin is nonexistent or
+        # problematic.
+        if in_stream:
+            thread_args[self.handle_stdin] = {
                 'input_': in_stream,
                 'output': out_stream,
                 'echo': opts['echo_stdin'],
             }
-        }
         if not self.using_pty:
             thread_args[self.handle_stderr] = {
                 'buffer_': stderr,
-                'hide': 'err' in opts['hide'],
+                'hide': 'stderr' in opts['hide'],
                 'output': err_stream,
             }
         # Kick off IO threads
-        self.threads, exceptions = [], []
+        self.threads = {}
+        exceptions = []
         for target, kwargs in six.iteritems(thread_args):
             t = ExceptionHandlingThread(target=target, kwargs=kwargs)
-            self.threads.append(t)
+            self.threads[target] = t
             t.start()
         # Wait for completion, then tie things off & obtain result
         # And make sure we perform that tying off even if things asplode.
         exception = None
-        try:
-            self.wait()
-        except BaseException as e: # Make sure we nab ^C etc
-            exception = e
-            # TODO: consider consuming the KeyboardInterrupt instead of storing
-            # it for later raise; this would allow for subprocesses which don't
-            # actually exit on Ctrl-C (e.g. vim). NOTE: but this would make it
-            # harder to correctly detect it and exit 130 once everything wraps
-            # up...
-            # TODO: generally, but especially if we do ignore
-            # KeyboardInterrupt, honor other signals sent to our own process
-            # and transmit them to the subprocess before handling 'normally'.
-            # TODO: we should probably re-raise anything that's not
-            # KeyboardInterrupt? This is quite possibly swallowing things.
-            # NOTE: we handle this now instead of at actual-exception-handling
-            # time because otherwise the stdout/err reader threads may block
-            # until the subprocess exits.
-            if isinstance(exception, KeyboardInterrupt):
-                self.send_interrupt(exception)
+        while True:
+            try:
+                self.wait()
+                break # done waiting!
+            # NOTE: we handle all this now instead of at
+            # actual-exception-handling time because otherwise the stdout/err
+            # reader threads may block until the subprocess exits.
+            # TODO: honor other signals sent to our own process and transmit
+            # them to the subprocess before handling 'normally'.
+            except KeyboardInterrupt as e:
+                self.send_interrupt(e)
+                # NOTE: no break; we want to return to self.wait()
+            except BaseException as e: # Want to handle SystemExit etc still
+                # Store exception for post-shutdown reraise
+                exception = e
+                # Break out of return-to-wait() loop - we want to shut down
+                break
+        # Inform stdin-mirroring worker to stop its eternal looping
         self.program_finished.set()
-        for t in self.threads:
-            # NOTE: using a join timeout for corner case from #351 (one pipe
-            # excepts, fills up, prevents subproc from exiting, and other pipe
-            # then has a blocking read() call, causing its thread to block on
-            # join). In normal, non-#351 situations this should function
-            # similarly to a non-timeout'd join.
-            # NOTE: but we avoid a timeout for the stdin handler as it has its
-            # own termination conditions & isn't subject to this corner case.
-            timeout = None
-            if t.kwargs['target'] != self.handle_stdin:
-                # TODO: make the timeout configurable
-                timeout = 1
-            t.join(timeout)
-            e = t.exception()
+        # Join threads, setting a timeout if necessary
+        for target, thread in six.iteritems(self.threads):
+            thread.join(self._thread_timeout(target))
+            e = thread.exception()
             if e is not None:
                 exceptions.append(e)
         # If we got a main-thread exception while wait()ing, raise it now that
@@ -396,6 +381,8 @@ class Runner(object):
             stderr=stderr,
             exited=exited,
             pty=self.using_pty,
+            hide=opts['hide'],
+            encoding=self.encoding,
         )
         # Any presence of WatcherError from the threads indicates a watcher was
         # upset and aborted execution; make a generic Failure out of it and
@@ -424,7 +411,7 @@ class Runner(object):
         # Act like a normal function would, i.e. TypeError
         if kwargs:
             err = "run() got an unexpected keyword argument '{0}'"
-            raise TypeError(err.format(kwargs.keys()[0]))
+            raise TypeError(err.format(list(kwargs.keys())[0]))
         # If hide was True, turn off echoing
         if opts['hide'] is True:
             opts['echo'] = False
@@ -446,6 +433,22 @@ class Runner(object):
         if opts['watchers']:
             self.watchers = opts['watchers']
         return opts, out_stream, err_stream, in_stream
+
+    def _thread_timeout(self, target):
+        # Add a timeout to out/err thread joins when it looks like they're not
+        # dead but their counterpart is dead; this indicates issue #351 (fixed
+        # by #432) where the subproc may hang because its stdout (or stderr) is
+        # no longer being consumed by the dead thread (and a pipe is filling
+        # up.) In that case, the non-dead thread is likely to block forever on
+        # a `recv` unless we add this timeout.
+        if target == self.handle_stdin:
+            return None
+        opposite = self.handle_stderr
+        if target == self.handle_stderr:
+            opposite = self.handle_stdout
+        if opposite in self.threads and self.threads[opposite].is_dead:
+            return 1
+        return None
 
     def generate_result(self, **kwargs):
         """
@@ -504,19 +507,7 @@ class Runner(object):
 
         :returns: ``None``.
         """
-        # Encode under Python 2 only, because of the common problem where
-        # sys.stdout/err on Python 2 end up using sys.getdefaultencoding(),
-        # which is frequently NOT the same thing as the real local terminal
-        # encoding (reflected as sys.stdout.encoding). I.e. even when
-        # sys.stdout.encoding is UTF-8, ascii is still actually used, and
-        # explodes.
-        # Python 3 doesn't have this problem, so we delegate encoding to the
-        # io.*Writer classes involved.
-        if six.PY2:
-            # TODO: split up self.encoding, only use the one for 'local
-            # encoding' here.
-            string = string.encode(self.encoding)
-        stream.write(string)
+        stream.write(encode_output(string, self.encoding))
         stream.flush()
 
     def _handle_output(self, buffer_, hide, output, reader):
@@ -575,7 +566,7 @@ class Runner(object):
 
     def read_our_stdin(self, input_):
         """
-        Read & decode one byte from a local stdin stream.
+        Read & decode bytes from a local stdin stream.
 
         :param input_:
             Actual stream object to read from. Maps to ``in_stream`` in `run`,
@@ -583,23 +574,23 @@ class Runner(object):
             object.
 
         :returns:
-            A Unicode string, the result of decoding the read byte (this might
+            A Unicode string, the result of decoding the read bytes (this might
             be the empty string if the pipe has closed/reached EOF); or
             ``None`` if stdin wasn't ready for reading yet.
         """
         # TODO: consider moving the character_buffered contextmanager call in
         # here? Downside is it would be flipping those switches for every byte
         # read instead of once per session, which could be costly (?).
-        byte = None
+        bytes_ = None
         if ready_for_reading(input_):
-            byte = read_byte(input_)
+            bytes_ = input_.read(bytes_to_read(input_))
             # Decode if it appears to be binary-type. (From real terminal
             # streams, usually yes; from file-like objects, often no.)
-            if byte and isinstance(byte, six.binary_type):
+            if bytes_ and isinstance(bytes_, six.binary_type):
                 # TODO: will decoding 1 byte at a time break multibyte
                 # character encodings? How to square interactivity with that?
-                byte = self.decode(byte)
-        return byte
+                bytes_ = self.decode(bytes_)
+        return bytes_
 
     def handle_stdin(self, input_, output, echo):
         """
@@ -630,23 +621,22 @@ class Runner(object):
         # exposing some regression in Fabric 1.x itself.
         with character_buffered(input_):
             while True:
-                # Read 1 byte at a time for interactivity's sake.
-                char = self.read_our_stdin(input_)
-                if char:
+                data = self.read_our_stdin(input_)
+                if data:
                     # Mirror what we just read to process' stdin.
                     # We perform an encode so Python 3 gets bytes (streams +
                     # str's in Python 3 == no bueno) but skip the decode step,
                     # since there's presumably no need (nobody's interacting
                     # with this data programmatically).
-                    self.write_proc_stdin(char)
+                    self.write_proc_stdin(data)
                     # Also echo it back to local stdout (or whatever
                     # out_stream is set to) when necessary.
                     if echo is None:
                         echo = self.should_echo_stdin(input_, output)
                     if echo:
-                        self.write_our_output(stream=output, string=char)
+                        self.write_our_output(stream=output, string=data)
                 # Empty string/char/byte != None. Can't just use 'else' here.
-                elif char is not None:
+                elif data is not None:
                     # When reading from file-like objects that aren't "real"
                     # terminal streams, an empty byte signals EOF.
                     break
@@ -654,7 +644,7 @@ class Runner(object):
                 # running, *and* we don't seem to be reading anything out of
                 # stdin. (NOTE: If we only test the former, we may encounter
                 # race conditions re: unread stdin.)
-                if self.program_finished.is_set() and not char:
+                if self.program_finished.is_set() and not data:
                     break
                 # Take a nap so we're not chewing CPU.
                 time.sleep(self.input_sleep)
@@ -735,7 +725,7 @@ class Runner(object):
             ``True`` if any threads appear to have terminated with an
             exception, ``False`` otherwise.
         """
-        return any(x.is_dead for x in self.threads)
+        return any(x.is_dead for x in self.threads.values())
 
     def wait(self):
         """
@@ -854,12 +844,17 @@ class Runner(object):
         """
         Submit an interrupt signal to the running subprocess.
 
+        In almost all implementations, the default behavior is what will be
+        desired: submit ``\x03`` to the subprocess' stdin pipe. However, we
+        leave this as a public method in case this default needs to be
+        augmented or replaced.
+
         :param interrupt:
             The locally-sourced ``KeyboardInterrupt`` causing the method call.
 
         :returns: ``None``.
         """
-        raise NotImplementedError
+        self.write_proc_stdin(u'\x03')
 
     def returncode(self):
         """
@@ -1001,27 +996,24 @@ class Local(Runner):
         else:
             return self.process.poll() is not None
 
-    def send_interrupt(self, interrupt):
-        # NOTE: No need to reraise the interrupt since we have full control
-        # over the local process and can kill it.
-        if self.using_pty:
-            os.kill(self.pid, SIGINT)
-        else:
-            # Use send_signal with platform-appropriate signal (Windows doesn't
-            # support SIGINT unfortunately, only SIGTERM).
-            # NOTE: could use subprocess.terminate() (which is cross-platform)
-            # but feels best to use SIGINT as much as we possibly can as it's
-            # most appropriate. terminate() always sends SIGTERM.
-            # NOTE: in interactive POSIX terminals, this is technically
-            # unnecessary as Ctrl-C submits the INT to the entire foreground
-            # process group (which will be both Invoke and its spawned
-            # subprocess). However, it doesn't seem to hurt, & ensures that a
-            # *non-interactive* SIGINT is forwarded correctly.
-            self.process.send_signal(SIGINT if not WINDOWS else SIGTERM)
-
     def returncode(self):
         if self.using_pty:
-            return os.WEXITSTATUS(self.status)
+            # No subprocess.returncode available; use WIFEXITED/WIFSIGNALED to
+            # determine whch of WEXITSTATUS / WTERMSIG to use.
+            # TODO: is it safe to just say "call all WEXITSTATUS/WTERMSIG and
+            # return whichever one of them is nondefault"? Probably not?
+            # NOTE: doing this in an arbitrary order should be safe since only
+            # one of the WIF* methods ought to ever return True.
+            code = None
+            if os.WIFEXITED(self.status):
+                code = os.WEXITSTATUS(self.status)
+            elif os.WIFSIGNALED(self.status):
+                code = os.WTERMSIG(self.status)
+                # Match subprocess.returncode by turning signals into negative
+                # 'exit code' integers.
+                code = -1 * code
+            return code
+            # TODO: do we care about WIFSTOPPED? Maybe someday?
         else:
             return self.process.returncode
 
@@ -1044,6 +1036,9 @@ class Result(object):
         was invoked via a pty, in which case it will be empty; see
         `.Runner.run`.)
 
+    :param str encoding:
+        The string encoding used by the local shell environment.
+
     :param str command:
         The command which was executed.
 
@@ -1060,6 +1055,17 @@ class Result(object):
     :param bool pty:
         A boolean describing whether the subprocess was invoked with a pty or
         not; see `.Runner.run`.
+
+    :param tuple hide:
+        A tuple of stream names (none, one or both of ``('stdout', 'stderr')``)
+        which were hidden from the user when the generating command executed;
+        this is a normalized value derived from the ``hide`` parameter of
+        `.Runner.run`.
+
+        For example, ``run('command', hide='stdout')`` will yield a `Result`
+        where ``result.hide == ('stdout',)``; ``hide=True`` or ``hide='both'``
+        results in ``result.hide == ('stdout', 'stderr')``; and ``hide=False``
+        (the default) generates ``result.hide == ()`` (the empty tuple.)
 
     .. note::
         `Result` objects' truth evaluation is equivalent to their `.ok`
@@ -1079,19 +1085,23 @@ class Result(object):
         self,
         stdout="",
         stderr="",
+        encoding=None,
         command="",
         shell="",
         env=None,
         exited=0,
         pty=False,
+        hide=tuple(),
     ):
         self.stdout = stdout
         self.stderr = stderr
+        self.encoding = encoding
         self.command = command
         self.shell = shell
         self.env = {} if env is None else env
         self.exited = exited
         self.pty = pty
+        self.hide = hide
 
     @property
     def return_code(self):
@@ -1123,6 +1133,13 @@ class Result(object):
 """.format(x, val.rstrip()) if val else u"(no {0})".format(x))
         return u"\n".join(ret)
 
+    def __repr__(self):
+        # TODO: more? e.g. len of stdout/err? (how to represent cleanly in a
+        # 'x=y' format like this? e.g. '4b' is ambiguous as to what it
+        # represents
+        template = "<Result cmd={0!r} exited={1}>"
+        return template.format(self.command, self.exited)
+
     @property
     def ok(self):
         """
@@ -1149,11 +1166,11 @@ def normalize_hide(val):
     if val in (None, False):
         hide = ()
     elif val in ('both', True):
-        hide = ('out', 'err')
-    elif val == 'stdout':
-        hide = ('out',)
-    elif val == 'stderr':
-        hide = ('err',)
+        hide = ('stdout', 'stderr')
+    elif val == 'out':
+        hide = ('stdout',)
+    elif val == 'err':
+        hide = ('stderr',)
     else:
         hide = (val,)
     return hide

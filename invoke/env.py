@@ -10,7 +10,7 @@ not be included in the Sphinx API documentation.
 
 import os
 
-from .vendor import six
+from .util import six
 
 from .exceptions import UncastableEnvVar, AmbiguousEnvVar
 from .util import debug
@@ -33,8 +33,8 @@ class Environment(object):
         """
         # Obtain allowed env var -> existing value map
         env_vars = self._crawl(key_path=[], env_vars={})
-        m = "Scanning for env vars according to prefix: {1!r}, mapping: {0!r}"
-        debug(m.format(env_vars, self._prefix))
+        m = "Scanning for env vars according to prefix: {0!r}, mapping: {1!r}"
+        debug(m.format(self._prefix, env_vars))
         # Check for actual env var (honoring prefix) and try to set
         for env_var, key_path in six.iteritems(env_vars):
             real_var = (self._prefix or "") + env_var
@@ -60,7 +60,11 @@ class Environment(object):
         new_vars = {}
         obj = self._path_get(key_path)
         # Sub-dict -> recurse
-        if hasattr(obj, 'keys') and hasattr(obj, '__getitem__'):
+        if (
+            hasattr(obj, 'keys')
+            and callable(obj.keys)
+            and hasattr(obj, '__getitem__')
+        ):
             for key in obj.keys():
                 merged_vars = dict(env_vars, **new_vars)
                 merged_path = key_path + [key]

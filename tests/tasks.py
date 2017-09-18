@@ -1,9 +1,8 @@
 from spec import Spec, skip, eq_, raises, ok_
 from mock import Mock
 
-from invoke.context import Context
-from invoke.tasks import task, Task, Call
-from invoke.loader import FilesystemLoader as Loader
+from invoke import Context, Config, task, Task, Call, Collection
+from invoke import FilesystemLoader as Loader
 
 from _util import support
 
@@ -20,9 +19,13 @@ def _func(ctx):
 class task_(Spec):
     "@task"
 
+    def _load(self, name):
+        mod, _ = self.loader.load(name)
+        return Collection.from_module(mod)
+
     def setup(self):
         self.loader = Loader(start=support)
-        self.vanilla = self.loader.load('decorator')
+        self.vanilla = self._load('decorator')
 
     def allows_access_to_wrapped_object(self):
         def lolcats(ctx):
@@ -39,13 +42,13 @@ class task_(Spec):
         eq_(self.vanilla[''], self.vanilla['biz'])
 
     def has_autoprint_option(self):
-        ap = self.loader.load('autoprint')
+        ap = self._load('autoprint')
         eq_(ap['nope'].autoprint, False)
         eq_(ap['yup'].autoprint, True)
 
     @raises(ValueError)
     def raises_ValueError_on_multiple_defaults(self):
-        self.loader.load('decorator_multi_default')
+        self._load('decorator_multi_default')
 
     def sets_arg_help(self):
         eq_(self.vanilla['punch'].help['why'], 'Motive')
@@ -218,6 +221,21 @@ class Task_(Spec):
                 [False, True, False]
             )
 
+        def optional_prevents_bool_defaults_from_affecting_kind(self):
+            # Re #416. See notes in the function under test for rationale.
+            @task(optional=['myarg'])
+            def mytask(c, myarg=False):
+                pass
+            arg = mytask.get_arguments()[0]
+            ok_(arg.kind is str) # not bool!
+
+        def optional_plus_nonbool_default_does_not_override_kind(self):
+            @task(optional=['myarg'])
+            def mytask(c, myarg=17):
+                pass
+            arg = mytask.get_arguments()[0]
+            ok_(arg.kind is int) # not str!
+
         def turns_function_signature_into_Arguments(self):
             eq_(len(self.args), 3, str(self.args))
             assert 'arg2' in self.argdict
@@ -284,9 +302,43 @@ class Task_(Spec):
             eq_(arg.name, 'longer_arg')
 
 
+# Dummy task for Call tests
+_ = object()
+
+
 class Call_(Spec):
     def setup(self):
         self.task = Task(Mock(__name__='mytask'))
+
+    class init:
+        class task:
+            @raises(TypeError)
+            def is_required(self):
+                Call()
+
+            def is_first_posarg(self):
+                ok_(Call(_).task is _)
+
+        class called_as:
+            def defaults_to_None(self):
+                eq_(Call(_).called_as, None)
+
+            def may_be_given(self):
+                eq_(Call(_, called_as='foo').called_as, 'foo')
+
+        class args:
+            def defaults_to_empty_tuple(self):
+                eq_(Call(_).args, tuple())
+
+            def may_be_given(self):
+                eq_(Call(_, args=(1, 2, 3)).args, (1, 2, 3))
+
+        class kwargs:
+            def defaults_to_empty_dict(self):
+                eq_(Call(_).kwargs, dict())
+
+            def may_be_given(self):
+                eq_(Call(_, kwargs={'foo': 'bar'}).kwargs, {'foo': 'bar'})
 
     class stringrep:
         "__str__"
@@ -312,6 +364,17 @@ class Call_(Spec):
             call = Call(self.task, called_as='mytask')
             eq_(str(call), "<Call 'mytask', args: (), kwargs: {}>")
 
+    class make_context:
+        @raises(TypeError)
+        def requires_config_argument(self):
+            Call(_).make_context()
+
+        def creates_a_new_Context_from_given_config(self):
+            conf = Config(defaults={'foo': 'bar'})
+            ctx = Call(_).make_context(conf)
+            ok_(isinstance(ctx, Context))
+            eq_(ctx.foo, 'bar')
+
     class clone:
         def returns_new_but_equivalent_object(self):
             orig = Call(self.task)
@@ -319,32 +382,10 @@ class Call_(Spec):
             ok_(clone is not orig)
             ok_(clone == orig)
 
-        def modifications_on_clone_do_not_alter_original(self):
-            # Setup
-            orig = Call(
-                self.task,
-                called_as='foo',
-                args=[1, 2, 3],
-                kwargs={'key': 'val'}
-            )
-            context = Context()
-            context['setting'] = 'value'
-            orig.context = context
-            # Clone & tweak
-            clone = orig.clone()
-            newtask = Task(Mock(__name__='meh'))
-            clone.task = newtask
-            clone.called_as = 'notfoo'
-            clone.args[0] = 7
-            clone.kwargs['key'] = 'notval'
-            clone.context['setting'] = 'notvalue'
-            # Compare
-            ok_(clone.task is not orig.task)
-            eq_(orig.called_as, 'foo')
-            eq_(clone.called_as, 'notfoo')
-            eq_(orig.args, [1, 2, 3])
-            eq_(clone.args, [7, 2, 3])
-            eq_(orig.kwargs['key'], 'val')
-            eq_(clone.kwargs['key'], 'notval')
-            eq_(orig.context['setting'], 'value')
-            eq_(clone.context['setting'], 'notvalue')
+        def can_clone_into_a_subclass(self):
+            orig = Call(self.task)
+            class MyCall(Call):
+                pass
+            clone = orig.clone(into=MyCall)
+            eq_(clone, orig)
+            ok_(isinstance(clone, MyCall))

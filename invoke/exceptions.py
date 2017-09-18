@@ -6,11 +6,12 @@ exceptions used for message-passing" to simply "we needed to express an error
 condition in a way easily told apart from other, truly unexpected errors".
 """
 
-from collections import namedtuple
 from traceback import format_exception
 from pprint import pformat
 
-from .vendor import six
+from .util import six
+
+from .util import encode_output
 
 
 class CollectionNotFound(Exception):
@@ -43,31 +44,69 @@ class Failure(Exception):
         self.result = result
         self.reason = reason
 
-    def __repr__(self):
-        return str(self)
+
+def _tail(stream):
+    # TODO: make configurable
+    # TODO: preserve alternate line endings? Mehhhh
+    tail = "\n\n" + "\n".join(stream.splitlines()[-10:])
+    # NOTE: no trailing \n preservation; easier for below display if normalized
+    return tail
 
 
 class UnexpectedExit(Failure):
     """
     A shell command ran to completion but exited with an unexpected exit code.
+
+    Its string representation displays the following:
+
+    - Command executed;
+    - Exit code;
+    - The last 10 lines of stdout, if it was hidden;
+    - The last 10 lines of stderr, if it was hidden and non-empty (e.g.
+      pty=False; when pty=True, stderr never happens.)
     """
     def __str__(self):
-        err_label = "Stderr"
-        err_text = self.result.stderr
+        already_printed = ' already printed'
+        if 'stdout' not in self.result.hide:
+            stdout = already_printed
+        else:
+            stdout = encode_output(
+                _tail(self.result.stdout),
+                self.result.encoding,
+            )
         if self.result.pty:
-            err_label = "Stdout (pty=True; no stderr possible)"
-            err_text = self.result.stdout
-        return """Encountered a bad command exit code!
+            stderr = " n/a (PTYs have no stderr)"
+        else:
+            if 'stderr' not in self.result.hide:
+                stderr = already_printed
+            else:
+                stderr = encode_output(
+                    _tail(self.result.stderr),
+                    self.result.encoding,
+                )
+        command = self.result.command
+        exited = self.result.exited
+        template = """Encountered a bad command exit code!
 
 Command: {0!r}
 
 Exit code: {1}
 
-{2}:
+Stdout:{2}
 
-{3}
+Stderr:{3}
 
-""".format(self.result.command, self.result.exited, err_label, err_text)
+"""
+        return template.format(command, exited, stdout, stderr)
+
+    def __repr__(self):
+        # TODO: expand?
+        template = "<{0}: cmd={1!r} exited={2}>"
+        return template.format(
+            self.__class__.__name__,
+            self.result.command,
+            self.result.exited,
+        )
 
 
 class AuthFailure(Failure):
@@ -145,15 +184,6 @@ class UnknownFileType(Exception):
     pass
 
 
-#: A namedtuple wrapping a thread-borne exception & that thread's arguments.
-#: Mostly used as an intermediate between `.ExceptionHandlingThread` (which
-#: preserves initial exceptions) and `.ThreadException` (which holds 1..N such
-#: exceptions, as typically multiple threads are involved.)
-ExceptionWrapper = namedtuple(
-    'ExceptionWrapper',
-    'kwargs type value traceback'
-)
-
 def _printable_kwargs(kwargs):
     """
     Return print-friendly version of a thread-related ``kwargs`` dict.
@@ -177,7 +207,7 @@ def _printable_kwargs(kwargs):
 
 class ThreadException(Exception):
     """
-    One or more exceptions were raised within background (usually I/O) threads.
+    One or more exceptions were raised within background threads.
 
     The real underlying exceptions are stored in the `exceptions` attribute;
     see its documentation for data structure details.
@@ -186,10 +216,10 @@ class ThreadException(Exception):
         Threads which did not encounter an exception, do not contribute to this
         exception object and thus are not present inside `exceptions`.
     """
-    #: A tuple of `ExceptionWrappers <ExceptionWrapper>` containing the initial
-    #: thread constructor kwargs (because `threading.Thread` subclasses should
-    #: always be called with kwargs) and the caught exception for that thread
-    #: as seen by `sys.exc_info` (so: type, value, traceback).
+    #: A tuple of `ExceptionWrappers <invoke.util.ExceptionWrapper>` containing
+    #: the initial thread constructor kwargs (because `threading.Thread`
+    #: subclasses should always be called with kwargs) and the caught exception
+    #: for that thread as seen by `sys.exc_info` (so: type, value, traceback).
     #:
     #: .. note::
     #:     The ordering of this attribute is not well-defined.

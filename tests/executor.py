@@ -292,7 +292,70 @@ bar
             expect("-c autoprint sub.yup", out="It's alive!\n")
 
         def does_not_fire_on_pre_tasks(self):
-            expect("-c autoprint pre_check", out="")
+            expect("-c autoprint pre-check", out="")
 
         def does_not_fire_on_post_tasks(self):
-            expect("-c autoprint post_check", out="")
+            expect("-c autoprint post-check", out="")
+
+    class inter_task_context_and_config_sharing:
+        def context_is_new_but_config_is_same(self):
+            @task
+            def task1(c):
+                return c
+            @task
+            def task2(c):
+                return c
+            coll = Collection(task1, task2)
+            ret = Executor(collection=coll).execute('task1', 'task2')
+            c1 = ret[task1]
+            c2 = ret[task2]
+            ok_(c1 is not c2)
+            # TODO: eventually we may want to change this again, as long as the
+            # effective values within the config are still matching...? Ehh
+            ok_(c1.config is c2.config)
+
+        def new_config_data_is_preserved_between_tasks(self):
+            @task
+            def task1(c):
+                c.foo = 'bar'
+                # NOTE: returned for test inspection, not as mechanism of
+                # sharing data!
+                return c
+            @task
+            def task2(c):
+                return c
+            coll = Collection(task1, task2)
+            ret = Executor(collection=coll).execute('task1', 'task2')
+            c2 = ret[task2]
+            ok_('foo' in c2.config)
+            eq_(c2.foo, 'bar')
+
+        def config_mutation_is_preserved_between_tasks(self):
+            @task
+            def task1(c):
+                c.config.run.echo = True
+                # NOTE: returned for test inspection, not as mechanism of
+                # sharing data!
+                return c
+            @task
+            def task2(c):
+                return c
+            coll = Collection(task1, task2)
+            ret = Executor(collection=coll).execute('task1', 'task2')
+            c2 = ret[task2]
+            eq_(c2.config.run.echo, True)
+
+        def config_deletion_is_preserved_between_tasks(self):
+            @task
+            def task1(c):
+                del c.config.run.echo
+                # NOTE: returned for test inspection, not as mechanism of
+                # sharing data!
+                return c
+            @task
+            def task2(c):
+                return c
+            coll = Collection(task1, task2)
+            ret = Executor(collection=coll).execute('task1', 'task2')
+            c2 = ret[task2]
+            ok_('echo' not in c2.config.run)
