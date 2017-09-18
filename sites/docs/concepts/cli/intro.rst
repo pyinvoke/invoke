@@ -159,6 +159,39 @@ guess
 <http://zen-of-python.info/in-the-face-of-ambiguity-refuse-the-temptation-to-guess.html#12>`_
 and raise an error.
 
+.. _iterable-flag-values:
+
+Iterable flag values
+--------------------
+
+A not-uncommon use case for CLI programs is the desire to build a list of
+values for a given option, instead of a single value. While this *can* be done
+via sub-string parsing -- e.g. having users invoke a command with ``--mylist
+item1,item2,item3`` and splitting on the comma -- it's often preferable to
+specify the option multiple times and store the values in a list (instead of
+overwriting or erroring.)
+
+In Invoke, this is enabled by hinting to the parser that one or more task
+arguments are ``iterable`` in nature (similar to how one specifies ``optional``
+or ``positional``)::
+
+    @task(iterable=['my_list'])
+    def mytask(c, my_list):
+        print(my_list)
+
+When not given at all, the default value for ``my_list`` will be an empty list;
+otherwise, the result is a list, appending each value seen, in order, without
+any other manipulation (so no deduplication, etc)::
+
+    $ inv mytask
+    []
+    $ inv mytask --my-list foo
+    ['foo']
+    $ inv mytask --my-list foo --my-list bar
+    ['foo', 'bar']
+    $ inv mytask --my-list foo --my-list bar --my-list foo
+    ['foo', 'bar', 'foo']
+
 Dashes vs underscores in flag names
 -----------------------------------
 
