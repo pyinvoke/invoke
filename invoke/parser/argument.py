@@ -129,7 +129,7 @@ class Argument(object):
         - ``cast=False``, in which case the raw value is also used.
         - ``self.kind==list``, in which case the value is appended to
           ``self.value`` instead of cast & overwritten.
-        - ``self.incrementable==True`, in which case the value is ignored and
+        - ``self.incrementable==True``, in which case the value is ignored and
           the current (assumed int) value is simply incremented.
         """
         self.raw_value = value
