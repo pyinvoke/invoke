@@ -31,7 +31,9 @@ class Task(object):
     # and in @task.
     # TODO: allow central per-session / per-taskmodule control over some of
     # them, e.g. (auto_)positional, auto_shortflags.
-    # NOTE: we shadow __builtins__.help here. It's purposeful. :(
+    # NOTE: we shadow __builtins__.help here on purpose - obfuscating to avoid
+    # it feels bad, given the builtin will never actually be in play anywhere
+    # except a debug shell whose frame is exactly inside this class.
     def __init__(self,
         body,
         name=None,
