@@ -61,7 +61,7 @@ class DataProxy(object):
     """.split())
 
     @classmethod
-    def from_data(cls, data, root=None, keypath=None):
+    def from_data(cls, data, root=None, keypath=tuple()):
         """
         Alternate constructor for 'baby' DataProxies used as sub-dict values.
 
@@ -85,8 +85,6 @@ class DataProxy(object):
         obj = cls()
         obj._set(_config=data)
         obj._set(_root=root)
-        if keypath is None:
-            keypath = tuple()
         obj._set(_keypath=keypath)
         return obj
 
@@ -428,15 +426,14 @@ class Config(DataProxy):
         ``Config.global_defaults`` and applying `.merge_dicts` to the result,
         to add to or modify these values.
         """
-        shell = '/bin/bash'
         if WINDOWS:
             # Create proper path to cmd.exe based on environment variable
             # https://en.wikipedia.org/wiki/COMSPEC
-            try:
-                shell = environ['COMSPEC']  # This will read path to cmd.exe
-            except KeyError:
-                # In case of any problem assume that cmd.exe is in windows PATH
-                shell = 'cmd.exe'
+            # In case of any problem assume that cmd.exe is in windows PATH
+            shell = environ['COMSPEC'] if 'COMSPEC' in environ and 'cmd.exe' \
+                                          in environ['COMSPEC'] else 'cmd.exe'
+        else:
+            shell = '/bin/bash'
 
         return {
             # TODO: we document 'debug' but it's not truly implemented outside
