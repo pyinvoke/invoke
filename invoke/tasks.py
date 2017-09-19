@@ -259,6 +259,8 @@ def task(*args, **kwargs):
       given as value-taking options (e.g. ``--my-arg=myvalue``, wherein the
       task is given ``"myvalue"``) or as Boolean flags (``--my-arg``, resulting
       in ``True``).
+    * ``iterable``: Iterable of argument names, declaring them to :ref:`build
+      iterable values <iterable-flag-values>`.
     * ``default``: Boolean option specifying whether this task should be its
       collection's default task (i.e. called if the collection's own name is
       given.)
