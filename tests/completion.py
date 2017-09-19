@@ -19,6 +19,37 @@ def _complete(invocation, collection=None):
     return sys.stdout.getvalue()
 
 
+class CompletionScriptPrinter(IntegrationSpec):
+    """
+    Printing the completion script
+    """
+
+    def prints_for_invoke(self):
+        expect(
+            '--print-completion-script bash',
+            program=Program(binary='inv[oke]'),
+            out="inv invoke", test=assert_contains
+        )
+
+    def only_accepts_certain_console_types(self):
+        expect(
+            '--print-completion-script',
+            err="needed value and was not given one", test=assert_contains
+        )
+        expect(
+            '--print-completion-script bla',
+            err="not supported. Choose either", test=assert_contains
+        )
+
+    def prints_for_custom_binary(self):
+        expect(
+            'myapp --print-completion-script zsh',
+            program=Program(binary='mya[pp]'),
+            invoke=False,
+            out="mya myapp", test=assert_contains
+        )
+
+
 class ShellCompletion(IntegrationSpec):
     """
     Shell tab-completion behavior
@@ -29,6 +60,23 @@ class ShellCompletion(IntegrationSpec):
             '-c simple_ns_list --complete',
             out="z-toplevel\na.b.subtask\n"
         )
+
+    def custom_binary_name_completes(self):
+        expect(
+            'myapp -c integration --complete -- ba',
+            program=Program(binary='myapp'),
+            invoke=False,
+            out="bar", test=assert_contains
+        )
+
+    def aliased_custom_binary_name_completes(self):
+        for used_binary in ('my', 'myapp'):
+            expect(
+                '{0} -c integration --complete -- ba'.format(used_binary),
+                program=Program(binary='my[app]'),
+                invoke=False,
+                out="bar", test=assert_contains
+            )
 
     def no_input_with_no_tasks_yields_empty_response(self):
         expect('-c empty --complete', out="")

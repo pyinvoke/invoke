@@ -7,8 +7,8 @@ import textwrap
 
 from .util import six
 
+from .completion.complete import complete, print_completion_script
 from . import Collection, Config, Executor, FilesystemLoader
-from .complete import complete
 from .parser import Parser, ParserContext, Argument
 from .exceptions import (
     UnexpectedExit, CollectionNotFound, ParseError, Exit,
@@ -39,6 +39,12 @@ class Program(object):
                 kind=bool,
                 default=False,
                 help="Print tab-completion candidates for given parse remainder.", # noqa
+            ),
+            Argument(
+                names=('print-completion-script',),
+                kind=str,
+                default='',
+                help="Write a tab-completion script for your preferred console (bash|zsh|fish).", # noqa
             ),
             Argument(
                 names=('debug', 'd'),
@@ -167,15 +173,18 @@ class Program(object):
             binstub installed as ``foobar``, it will default to ``Foobar``.
 
         :param str binary:
-            The binary name as displayed in ``--help`` output.
+            The binary name(s) you intend to address this program with. Useful
+            if you install it under a full name as well as a short name and
+            want both of them to appear in ``--help`` output and be recognized
+            in tab completion. An example is Invoke itself - it installs as
+            both ``inv`` and ``invoke``, and sets ``binary="inv[oke]"``.
 
             If ``None`` (default), uses the first word in ``argv`` verbatim (as
             with ``name`` above, except not capitalized).
 
-            Giving this explicitly may be useful when you install your program
-            under multiple names, such as Invoke itself does - it installs as
-            both ``inv`` and ``invoke``, and sets ``binary="inv[oke]"`` so its
-            ``--help`` output implies both names.
+            Note that the actual names to which the program responds are
+            usually configured via setup.py->entry_points->console_scripts.
+            This setting helps with ``--help`` output and tab completion.
 
         :param loader_class:
             The `.Loader` subclass to use when loading task collections.
@@ -388,7 +397,14 @@ class Program(object):
 
         # Print completion helpers if necessary
         if self.args.complete.value:
-            complete(self.core, self.initial_context, self.collection)
+            complete(self.binary, self.core, self.initial_context,
+                     self.collection)
+
+        # Print completion script if necessary
+        if self.args['print-completion-script'].value:
+            print_completion_script(self.args['print-completion-script'].value,
+                                    self.binary)
+            raise Exit
 
         # Fallback behavior if no tasks were given & no default specified
         # (mostly a subroutine for overriding purposes)

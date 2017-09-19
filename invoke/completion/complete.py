@@ -2,17 +2,19 @@
 Command-line completion mechanisms, executed by the core ``--complete`` flag.
 """
 
+import os
 import re
 import shlex
 
-from .exceptions import Exit, ParseError
-from .parser import Parser
-from .util import debug, sort_names
+from ..exceptions import Exit, ParseError
+from ..parser import Parser
+from ..util import debug, sort_names
 
 
-def complete(core, initial_context, collection):
+def complete(binary, core, initial_context, collection):
     # Strip out program name (scripts give us full command line)
-    invocation = re.sub(r'^(inv|invoke) ', '', core.remainder)
+    invocation = re.sub(r'^(%s) ' % binary_selector(binary), '',
+                        core.remainder)
     debug("Completing for invocation: {0!r}".format(invocation))
     # Tokenize (shlex will have to do)
     tokens = shlex.split(invocation)
@@ -91,3 +93,34 @@ def print_task_names(collection):
         # so important that it's worth bending over backwards here.
         for alias in collection.task_names[name]:
             print(alias)
+
+
+def print_completion_script(console_type, binary):
+    if console_type not in ('bash', 'zsh', 'fish'):
+        raise ParseError('Console type "%s" not supported. Choose either '
+                         'bash, zsh or fish.')
+    path2script = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                               console_type)
+    debug("Printing completion script from %s" % path2script)
+    binary_names = binary_selector(binary).split("|")
+    with open(path2script, 'r') as script:
+        for line in script.readlines():
+            print(line.strip("\n")
+                      .replace('inv invoke', ' '.join(binary_names)) # noqa
+                      .replace("inv'/'invoke", "'/'".join(binary_names)) # noqa
+                      .replace('invoke', binary_names[-1]) # noqa
+                      .replace('py{0}'.format(binary_names[-1]), 'pyinvoke')) # noqa
+
+
+def binary_selector(binary):
+    """
+    Return a selector which can be used in regular expressions
+    to match binary name in strings.
+    E.g. if you use binary=inv[oke], this gives you 'inv|invoke'.
+         if you use binary=fabric, this simply returns 'fabric'.
+    """
+    m = re.match(r"(\w+)\[?(\w+)?\]?", binary)
+    if m.group(2):
+        return "{0}|{0}{1}".format(m.group(1), m.group(2))
+    else:
+        return m.group(1)

@@ -148,6 +148,10 @@ Notice how the 'usage' line changed (to specify 'subcommands' instead of
 'tasks'); the list of specific subcommands is now printed as part of
 ``--help``; and ``--list`` has been removed from the options.
 
+You can enable :ref:`tab-completion<tab-completion>` for your distinct
+binary and subcommands. 
+
+
 Modifying core parser arguments
 -------------------------------
 

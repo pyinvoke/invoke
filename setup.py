@@ -44,6 +44,7 @@ setup(
     url='http://docs.pyinvoke.org',
 
     packages=find_packages(exclude=exclude),
+    package_data={'invoke.completion': ['bash', 'zsh', 'fish']},
     entry_points={
         'console_scripts': [
             'invoke = invoke.main:program.run',

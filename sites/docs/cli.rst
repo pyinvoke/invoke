@@ -50,8 +50,16 @@ The core options (which must be given before any task names) are as follows:
         --foo-arg
         --foo-arg-2
 
-    For more details on how to use this option, see the bundled completion
-    scripts stored in ``completion/`` in the source distribution.
+    For more details on how to make best use of this option, see the 
+    print-completion-script option below.
+
+
+.. option:: --print-completion-script=STRING
+
+    Print a completion script for the console type you prefer (bash, zsh or
+    fish). This can be sourced into the current session in order to enjoy
+    :ref:`tab-completion for tasks and options <tab-completion>`.
+
 
 .. option:: --hide=STRING
 
@@ -102,19 +110,35 @@ The core options (which must be given before any task names) are as follows:
     Warn, instead of failing, when shell commands fail.
 
 
+.. _tab-completion:
+
 Shell tab completion
 ====================
 
-Invoke ships with some shell completion scripts, which leverage a core CLI
-mechanism suitable for use in custom completion scripts as well. If you're
+Invoke ships with some shell completion scripts. If you're 
 using Bash or Zsh, simply do the following:
 
-* Obtain the source distribution, or visit the ``/completion/`` folder `on Github
-  <https://github.com/pyinvoke/invoke/blob/master/completion/>`_, and place a
-  copy of the appropriate file (e.g. ``/completion/bash`` for Bash users)
-  somewhere on your local system.
-* ``source`` the file in your shell login file (e.g. ``.bash_profile``,
-  ``.zshrc``).
+* ``source`` the shell completion helper script provided by Invoke into
+  your current session::
+
+        $ source <(invoke --print-completion-script bash)
+        
+  or::
+
+        $ source <(invoke --print-completion-script zsh)
+ 
+  ..
+
+    * The line above is probably most useful if you place it in your shell 
+      login file (i.e. ``~/.bash_profile`` or ``~/.zshrc``).    
+    * If your program uses :ref:`a distinct binary name <reusing-as-a-binary>`,
+      substitute that for ``invoke`` in the command above and in the guide
+      below.
+    * Specifying ``fish`` as console type (instead of ``bash`` or
+      ``zsh``) is supported, but is currently not suitable to be sourced.
+      Copy the output of ``invoke --print-completion-script fish``
+      into a file in your ``~/.config/fish/completions`` directory.
+
 * By default, tabbing after typing ``inv`` or ``invoke`` will display task
   names from your current directory/project's tasks file.
 * Tabbing after typing a dash (``-``) or double dash (``--``) will display
