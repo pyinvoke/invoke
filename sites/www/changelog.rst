@@ -2,6 +2,13 @@
 Changelog
 =========
 
+* :feature:`132` Implement 'iterable' and 'incrementable' CLI flags, allowing
+  for invocations like ``inv mytask --listy foo --listy bar`` (resulting in a
+  call like ``mytask(listy=['foo', 'bar'])``) or ``inv mytask -vvv`` (resulting
+  in e.g. ``mytask(verbose=3)``. Specifically, these require use of the new
+  :ref:`iterable <iterable-flag-values>` and :ref:`incrementable
+  <incrementable-flag-values>` arguments to `@task <invoke.tasks.task>` - see
+  those links to the conceptual docs for details.
 * :release:`0.20.4 <2017-08-14>`
 * :bug:`-` The behavior of `Config <invoke.config.Config>` when ``lazy=True``
   didn't match that described in the API docs, after the recent updates to its
