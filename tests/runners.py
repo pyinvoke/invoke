@@ -1322,7 +1322,8 @@ class Local_(Spec):
         def defaults_to_bash_when_pty_False(self, mock_Popen):
             self._run(_, pty=False)
             if sys.platform == 'win32':
-                path, cmd = os.path.split(mock_Popen.call_args_list[0][1]['executable'])
+                path, cmd = os.path.split(mock_Popen.call_args_list[0][1]
+                                          ['executable'])
                 eq_(cmd, 'cmd.exe')
             else:
                 eq_(mock_Popen.call_args_list[0][1]['executable'], '/bin/bash')
