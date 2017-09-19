@@ -290,6 +290,8 @@ def task(*args, **kwargs):
         kwargs['pre'] = args
     # @task(options)
     # TODO: pull in centrally defined defaults here (see Task)
+    # TODO: clean up all of the values which are iterables, some are tuple and
+    # some are None->list, ugh
     name = kwargs.pop('name', None)
     aliases = kwargs.pop('aliases', ())
     positional = kwargs.pop('positional', None)
