@@ -70,6 +70,7 @@ class Config_(IntegrationSpec):
                 eq_(c.foo, 'bar')
 
     class global_defaults:
+        @skip_if_windows
         def basic_settings(self):
             # Just a catchall for what the baseline config settings should
             # be...for some reason we're not actually capturing all of these

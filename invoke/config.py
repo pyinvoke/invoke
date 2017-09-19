@@ -430,7 +430,14 @@ class Config(DataProxy):
         """
         shell = '/bin/bash'
         if WINDOWS:
-            shell = environ['COMSPEC']  # This will read path to cmd.exe
+            # Create proper path to cmd.exe based on environment variable
+            # https://en.wikipedia.org/wiki/COMSPEC
+            try:
+                shell = environ['COMSPEC']  # This will read path to cmd.exe
+            except KeyError:
+                # In case of any problem assume that cmd.exe is in windows PATH
+                shell = 'cmd.exe'
+
         return {
             # TODO: we document 'debug' but it's not truly implemented outside
             # of env var and CLI flag. If we honor it, we have to go around and

@@ -134,9 +134,11 @@ class Runner_(Spec):
             eq_(runner.run(_, pty=True).pty, True)
 
     class shell:
+        @skip_if_windows
         def defaults_to_bash_when_pty_True(self):
             eq_(self._run(_, pty=True).shell, '/bin/bash')
 
+        @skip_if_windows
         def defaults_to_bash_when_pty_False(self):
             eq_(self._run(_, pty=False).shell, '/bin/bash')
 
@@ -224,6 +226,7 @@ class Runner_(Spec):
         def command_executed(self):
             eq_(self._run(_).command, _)
 
+        @skip_if_windows
         def shell_used(self):
             eq_(self._run(_).shell, '/bin/bash')
 
