@@ -1309,6 +1309,7 @@ class Local_(Spec):
             self._run(_, pty=True)
             eq_(mock_os.execve.call_args_list[0][0][0], '/bin/bash')
 
+        @skip_if_windows
         @mock_subprocess(insert_Popen=True)
         def defaults_to_bash_when_pty_False(self, mock_Popen):
             self._run(_, pty=False)
