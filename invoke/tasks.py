@@ -47,6 +47,7 @@ class Task(object):
         post=None,
         autoprint=False,
         iterable=None,
+        incrementable=None,
     ):
         # Real callable
         self.body = body
@@ -62,6 +63,7 @@ class Task(object):
         self.positional = self.fill_implicit_positionals(positional)
         self.optional = optional
         self.iterable = iterable or []
+        self.incrementable = incrementable or []
         self.auto_shortflags = auto_shortflags
         self.help = help or {}
         # Call chain bidness
@@ -172,6 +174,9 @@ class Task(object):
             # than us what they want here (and hopefully it offers the list
             # protocol...) - otherwise supply useful default
             opts['default'] = default if default is not None else []
+        # Whether it should increment its value or not
+        if name in self.incrementable:
+            opts['incrementable'] = True
         # Argument name(s) (replace w/ dashed version if underscores present,
         # and move the underscored version to be the attr_name instead.)
         if '_' in name:
@@ -261,6 +266,8 @@ def task(*args, **kwargs):
       in ``True``).
     * ``iterable``: Iterable of argument names, declaring them to :ref:`build
       iterable values <iterable-flag-values>`.
+    * ``incrementable``: Iterable of argument names, declaring them to
+      :ref:`increment their values <incrementable-flag-values>`.
     * ``default``: Boolean option specifying whether this task should be its
       collection's default task (i.e. called if the collection's own name is
       given.)
@@ -297,6 +304,7 @@ def task(*args, **kwargs):
     positional = kwargs.pop('positional', None)
     optional = tuple(kwargs.pop('optional', ()))
     iterable = kwargs.pop('iterable', None)
+    incrementable = kwargs.pop('incrementable', None)
     default = kwargs.pop('default', False)
     auto_shortflags = kwargs.pop('auto_shortflags', True)
     help = kwargs.pop('help', {})
@@ -315,6 +323,7 @@ def task(*args, **kwargs):
             positional=positional,
             optional=optional,
             iterable=iterable,
+            incrementable=incrementable,
             default=default,
             auto_shortflags=auto_shortflags,
             help=help,
