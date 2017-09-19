@@ -136,15 +136,15 @@ class Runner_(Spec):
     class shell:
         def defaults_to_bash_when_pty_True(self):
             if sys.platform == 'win32':
-                _, exe = os.path.split(self._run(_, pty=True).shell)
-                eq_(exe, 'cmd.exe')
+                path, cmd = os.path.split(self._run(_, pty=True).shell)
+                eq_(cmd, 'cmd.exe')
             else:
                 eq_(self._run(_, pty=True).shell, '/bin/bash')
 
         def defaults_to_bash_when_pty_False(self):
             if sys.platform == 'win32':
-                _, exe = os.path.split(self._run(_, pty=False).shell)
-                eq_(exe, 'cmd.exe')
+                path, cmd = os.path.split(self._run(_, pty=False).shell)
+                eq_(cmd, 'cmd.exe')
             else:
                 eq_(self._run(_, pty=False).shell, '/bin/bash')
 
@@ -234,8 +234,8 @@ class Runner_(Spec):
 
         def shell_used(self):
             if sys.platform == 'win32':
-                _, exe = os.path.split(self._run(_).shell)
-                eq_(exe, 'cmd.exe')
+                path, cmd = os.path.split(self._run(_).shell)
+                eq_(cmd, 'cmd.exe')
             else:
                 eq_(self._run(_).shell, '/bin/bash')
 
@@ -1322,8 +1322,8 @@ class Local_(Spec):
         def defaults_to_bash_when_pty_False(self, mock_Popen):
             self._run(_, pty=False)
             if sys.platform == 'win32':
-                _, exe = os.path.split(mock_Popen.call_args_list[0][1]['executable'])
-                eq_(exe, 'cmd.exe')
+                path, cmd = os.path.split(mock_Popen.call_args_list[0][1]['executable'])
+                eq_(cmd, 'cmd.exe')
             else:
                 eq_(mock_Popen.call_args_list[0][1]['executable'], '/bin/bash')
 
