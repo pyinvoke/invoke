@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :release:`0.21.0 <2017-09-18>`
 * :feature:`132` Implement 'iterable' and 'incrementable' CLI flags, allowing
   for invocations like ``inv mytask --listy foo --listy bar`` (resulting in a
   call like ``mytask(listy=['foo', 'bar'])``) or ``inv mytask -vvv`` (resulting
