@@ -271,7 +271,7 @@ class Runner(object):
         env = self.generate_env(opts['env'], opts['replace_env'])
         # Echo running command
         if opts['echo']:
-            print("\033[1;37m{0}\033[0m".format(command))
+            print(echo_output(self.context, command))
         # Start executing the actual command (runs in background)
         self.start(command, shell, env)
         # Arrive at final encoding if neither config nor kwargs had one
@@ -1174,3 +1174,10 @@ def normalize_hide(val):
     else:
         hide = (val,)
     return hide
+
+
+def echo_output(context, command):
+    if hasattr(context, 'host'):
+        return "\033[1;37m[{0}] run: {1}\033[0m".format(context.host, command)
+    else:
+        return "\033[1;37m{0}\033[0m".format(command)

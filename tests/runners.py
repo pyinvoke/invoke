@@ -14,7 +14,7 @@ from mock import patch, Mock, call
 
 from invoke import (
     Runner, Local, Context, Config, Failure, ThreadException, Responder,
-    WatcherError, UnexpectedExit, StreamWatcher, Result,
+    WatcherError, UnexpectedExit, StreamWatcher, Result, echo_output
 )
 from invoke.platform import WINDOWS
 
@@ -258,6 +258,15 @@ class Runner_(Spec):
             self._run("my command", echo=True)
             # TODO: vendor & use a color module
             eq_(sys.stdout.getvalue(), "\x1b[1;37mmy command\x1b[0m\n")
+
+        @trap
+        def uses_ansi_bold_with_host(self):
+            context = Context()
+            res_without_host = "\x1b[1;37mmy command\x1b[0m"
+            eq_(echo_output(context, "my command"), res_without_host)
+            setattr(context, "host", "192.168.0.1")
+            res = "\033[1;37m[192.168.0.1] run: my command\033[0m"
+            eq_(echo_output(context, "my command"), res)
 
     class encoding:
         # NOTE: these tests just check what Runner.encoding ends up as; it's
