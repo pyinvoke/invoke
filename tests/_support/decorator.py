@@ -56,3 +56,7 @@ def optional_values(ctx, myopt):
 @task(iterable=['mylist'])
 def iterable_values(c, mylist=None):
     pass
+
+@task(incrementable=['verbose'])
+def incrementable_values(c, verbose=None):
+    pass

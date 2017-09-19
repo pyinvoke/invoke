@@ -192,6 +192,45 @@ any other manipulation (so no deduplication, etc)::
     $ inv mytask --my-list foo --my-list bar --my-list foo
     ['foo', 'bar', 'foo']
 
+.. _incrementable-flag-values:
+
+Incrementable flag values
+-------------------------
+
+This is arguably a sub-case of :ref:`iterable flag values
+<iterable-flag-values>` (seen above) - it has the same core interface of "give
+a CLI argument multiple times, and have that do something other than error or
+overwrite a single value." However, 'incrementables' (as you may have guessed)
+increment an integer instead of building a list of strings. This is commonly
+found in verbosity flags and similar functionality.
+
+An example of exactly that::
+
+    @task(incrementable=['verbose'])
+    def mytask(c, verbose=0):
+        print(verbose)
+
+And its use::
+
+    $ inv mytask
+    0
+    $ inv mytask --verbose
+    1
+    $ inv mytask -v
+    1
+    $inv mytask -vvv
+    3
+
+Happily, because in Python 0 is 'falsey' and 1 (or any other number) is
+'truthy', this functions a lot like a boolean flag as well, at least if one
+defaults it to 0.
+
+.. note::
+    You may supply any integer default value for such arguments (it simply
+    serves as the starting value), but take care that consumers of the argument
+    are written understanding that it is always going to appear 'truthy' unless
+    it's 0!
+
 Dashes vs underscores in flag names
 -----------------------------------
 

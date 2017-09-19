@@ -66,6 +66,9 @@ class task_(Spec):
     def allows_annotating_args_as_iterable(self):
         eq_(self.vanilla['iterable_values'].iterable, ['mylist'])
 
+    def allows_annotating_args_as_incrementable(self):
+        eq_(self.vanilla['incrementable_values'].incrementable, ['verbose'])
+
     def when_positional_arg_missing_all_non_default_args_are_positional(self):
         eq_(self.vanilla['implicit_positionals'].positional, ['pos1', 'pos2'])
 

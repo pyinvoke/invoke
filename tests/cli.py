@@ -10,10 +10,10 @@ class CLIParsing(Spec):
     High level parsing tests
     """
     def setup(self):
-        @task(positional=[], iterable=['my_list'])
+        @task(positional=[], iterable=['my_list'], incrementable=['verbose'])
         def my_task(ctx, mystring, s, boolean=False, b=False, v=False,
             long_name=False, true_bool=True, _leading_underscore=False,
-            trailing_underscore_=False, my_list=None):
+            trailing_underscore_=False, my_list=None, verbose=0):
             pass
         @task(aliases=['my_task27'])
         def my_task2(ctx):
@@ -141,3 +141,9 @@ class CLIParsing(Spec):
         # Test both the singular and plural cases, just to be safe.
         self._compare("--my-list foo", 'my-list', ['foo'])
         self._compare("--my-list foo --my-list bar", 'my-list', ['foo', 'bar'])
+
+    def incrementable_type_flag_can_be_used_as_a_switch_or_counter(self):
+        "my-task -v, -vv, -vvvvv etc, except with explicit --verbose"
+        self._compare("", 'verbose', 0)
+        self._compare("--verbose", 'verbose', 1)
+        self._compare("--verbose --verbose --verbose", 'verbose', 3)

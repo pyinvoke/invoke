@@ -171,6 +171,18 @@ class Argument_(Spec):
             a.value = 'val2'
             assert a.value == ['val1', 'val2']
 
+        def incrementable_True_triggers_increment_of_default(self):
+            a = Argument('verbose', kind=int, default=0, incrementable=True)
+            assert a.value == 0
+            # NOTE: parser currently just goes "Argument.takes_value is false?
+            # Gonna stuff True/False in there." So this looks pretty silly out
+            # of context (as with list-types above.)
+            a.value = True
+            assert a.value == 1
+            for _ in range(4):
+                a.value = True
+            assert a.value == 5
+
     class value:
         def returns_default_if_not_set(self):
             a = Argument('a', default=25)
