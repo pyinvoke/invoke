@@ -134,13 +134,19 @@ class Runner_(Spec):
             eq_(runner.run(_, pty=True).pty, True)
 
     class shell:
-        @skip_if_windows
         def defaults_to_bash_when_pty_True(self):
-            eq_(self._run(_, pty=True).shell, '/bin/bash')
+            if sys.platform == 'win32':
+                _, exe = os.path.split(self._run(_, pty=True).shell)
+                eq_(exe, 'cmd.exe')
+            else:
+                eq_(self._run(_, pty=True).shell, '/bin/bash')
 
-        @skip_if_windows
         def defaults_to_bash_when_pty_False(self):
-            eq_(self._run(_, pty=False).shell, '/bin/bash')
+            if sys.platform == 'win32':
+                _, exe = os.path.split(self._run(_, pty=False).shell)
+                eq_(exe, 'cmd.exe')
+            else:
+                eq_(self._run(_, pty=False).shell, '/bin/bash')
 
         def may_be_overridden(self):
             eq_(self._run(_, shell='/bin/zsh').shell, '/bin/zsh')
@@ -226,9 +232,12 @@ class Runner_(Spec):
         def command_executed(self):
             eq_(self._run(_).command, _)
 
-        @skip_if_windows
         def shell_used(self):
-            eq_(self._run(_).shell, '/bin/bash')
+            if sys.platform == 'win32':
+                _, exe = os.path.split(self._run(_).shell)
+                eq_(exe, 'cmd.exe')
+            else:
+                eq_(self._run(_).shell, '/bin/bash')
 
         def hide_param_exposed_and_normalized(self):
             eq_(self._run(_, hide=True).hide, ('stdout', 'stderr'))
@@ -1309,11 +1318,14 @@ class Local_(Spec):
             self._run(_, pty=True)
             eq_(mock_os.execve.call_args_list[0][0][0], '/bin/bash')
 
-        @skip_if_windows
         @mock_subprocess(insert_Popen=True)
         def defaults_to_bash_when_pty_False(self, mock_Popen):
             self._run(_, pty=False)
-            eq_(mock_Popen.call_args_list[0][1]['executable'], '/bin/bash')
+            if sys.platform == 'win32':
+                _, exe = os.path.split(mock_Popen.call_args_list[0][1]['executable'])
+                eq_(exe, 'cmd.exe')
+            else:
+                eq_(mock_Popen.call_args_list[0][1]['executable'], '/bin/bash')
 
         @mock_pty(insert_os=True)
         def may_be_overridden_when_pty_True(self, mock_os):
