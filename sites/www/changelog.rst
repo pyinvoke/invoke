@@ -2,6 +2,15 @@
 Changelog
 =========
 
+* :support:`364` Drop Python 2.6 and Python 3.3 support, as these versions now
+  account for only very low percentages of the userbase and are unsupported (or
+  about to be unsupported) by the rest of the ecosystem, including ``pip``.
+
+  This includes updating documentation & packaging metadata as well as taking
+  advantage of basic syntax additions like set literals/comprehensions (``{1,
+  2, 3}`` instead of ``set([1, 2, 3])``) and removing positional string
+  argument specifiers (``"{}".format(val)`` instead of ``"{0}".format(val)``).
+
 * :release:`0.21.0 <2017-09-18>`
 * :feature:`132` Implement 'iterable' and 'incrementable' CLI flags, allowing
   for invocations like ``inv mytask --listy foo --listy bar`` (resulting in a
