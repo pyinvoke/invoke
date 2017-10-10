@@ -606,7 +606,7 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
             eq_(c.outer.inner.hooray, 'python')
             # Real test that builtins, etc are stripped out
             for special in ('builtins', 'file', 'package', 'name', 'doc'):
-                ok_('__{0}__'.format(special) not in c)
+                ok_('__{}__'.format(special) not in c)
 
 
     class collection_level_config_loading:
@@ -984,12 +984,12 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
             # one time" (since assert_calls_with gets mad about other
             # invocations w/ different args)
             calls = load_yaml.call_args_list
-            my_call = call("{0}invoke.yaml".format(path))
+            my_call = call("{}invoke.yaml".format(path))
             try:
                 calls.remove(my_call)
                 ok_(my_call not in calls)
             except ValueError:
-                err = "{0} not found in {1} even once!"
+                err = "{} not found in {} even once!"
                 assert False, err.format(my_call, calls)
 
         def preserves_env_data(self):

@@ -98,7 +98,7 @@ class CLIParsing(Spec):
         eq_(r[0].args.s.value, 'value')
 
     def _flag_value_task(self, value):
-        r = self._parse("my-task -s {0} my-task2".format(value))
+        r = self._parse("my-task -s {} my-task2".format(value))
         eq_(len(r), 2)
         eq_(r[0].name, 'my-task')
         eq_(r[0].args.s.value, value)
@@ -131,7 +131,7 @@ class CLIParsing(Spec):
     def multiple_short_flags_adjacent(self):
         "my-task -bv (and inverse)"
         for args in ('-bv', '-vb'):
-            r = self._parse("my-task {0}".format(args))
+            r = self._parse("my-task {}".format(args))
             a = r[0].args
             eq_(a.b.value, True)
             eq_(a.v.value, True)

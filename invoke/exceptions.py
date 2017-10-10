@@ -88,20 +88,20 @@ class UnexpectedExit(Failure):
         exited = self.result.exited
         template = """Encountered a bad command exit code!
 
-Command: {0!r}
+Command: {!r}
 
-Exit code: {1}
+Exit code: {}
 
-Stdout:{2}
+Stdout:{}
 
-Stderr:{3}
+Stderr:{}
 
 """
         return template.format(command, exited, stdout, stderr)
 
     def __repr__(self):
         # TODO: expand?
-        template = "<{0}: cmd={1!r} exited={2}>"
+        template = "<{}: cmd={!r} exited={}>"
         return template.format(
             self.__class__.__name__,
             self.result.command,
@@ -123,7 +123,7 @@ class AuthFailure(Failure):
         self.prompt = prompt
 
     def __str__(self):
-        err = "The password submitted to prompt {0!r} was rejected."
+        err = "The password submitted to prompt {!r} was rejected."
         return err.format(self.prompt)
 
 
@@ -237,7 +237,7 @@ class ThreadException(Exception):
         details = []
         for x in self.exceptions:
             # Build useful display
-            detail = "Thread args: {0}\n\n{1}"
+            detail = "Thread args: {}\n\n{}"
             details.append(detail.format(
                 pformat(_printable_kwargs(x.kwargs)),
                 "\n".join(format_exception(x.type, x.value, x.traceback)),
@@ -248,10 +248,10 @@ class ThreadException(Exception):
             "\n\n".join(details),
         )
         return """
-Saw {0} exceptions within threads ({1}):
+Saw {} exceptions within threads ({}):
 
 
-{2}
+{}
 """.format(*args)
 
 

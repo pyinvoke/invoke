@@ -121,10 +121,10 @@ class task_(Spec):
 class Task_(Spec):
     def has_useful_repr(self):
         i = repr(Task(_func))
-        assert '_func' in i, "'func' not found in {0!r}".format(i)
+        assert '_func' in i, "'func' not found in {!r}".format(i)
         e = repr(Task(_func, name='funky'))
-        assert 'funky' in e, "'funky' not found in {0!r}".format(e)
-        assert '_func' not in e, "'_func' unexpectedly seen in {0!r}".format(e)
+        assert 'funky' in e, "'funky' not found in {!r}".format(e)
+        assert '_func' not in e, "'_func' unexpectedly seen in {!r}".format(e)
 
     def equality_testing(self):
         t1 = Task(_func, name='foo')

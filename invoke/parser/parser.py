@@ -41,10 +41,10 @@ class Parser(object):
         self.contexts = Lexicon()
         self.ignore_unknown = ignore_unknown
         for context in contexts:
-            debug("Adding {0}".format(context))
+            debug("Adding {}".format(context))
             if not context.name:
                 raise ValueError("Non-initial contexts must have names.")
-            exists = "A context named/aliased {0!r} is already in this parser!"
+            exists = "A context named/aliased {!r} is already in this parser!"
             if context.name in self.contexts:
                 raise ValueError(exists.format(context.name))
             self.contexts[context.name] = context
@@ -74,7 +74,7 @@ class Parser(object):
         # FIXME: Why isn't there str.partition for lists? There must be a
         # better way to do this. Split argv around the double-dash remainder
         # sentinel.
-        debug("Starting argv: {0!r}".format(argv,))
+        debug("Starting argv: {!r}".format(argv,))
         try:
             ddash = argv.index('--')
         except ValueError:
@@ -82,7 +82,7 @@ class Parser(object):
         body = argv[:ddash]
         remainder = argv[ddash:][1:] # [1:] to strip off remainder itself
         if remainder:
-            debug("Remainder: argv[{0!r}:][1:] => {1!r}".format(
+            debug("Remainder: argv[{!r}:][1:] => {!r}".format(
                 ddash, remainder
             ))
         for index, token in enumerate(body):
@@ -98,14 +98,14 @@ class Parser(object):
                 # Equals-sign-delimited flags, eg --foo=bar or -f=bar
                 if '=' in token:
                     token, _, value = token.partition('=')
-                    debug("Splitting x=y expr {0!r} into tokens {1!r} and {2!r}".format( # noqa
+                    debug("Splitting x=y expr {!r} into tokens {!r} and {!r}".format( # noqa
                         orig, token, value))
                     body.insert(index + 1, value)
                 # Contiguous boolean short flags, e.g. -qv
                 elif not is_long_flag(token) and len(token) > 2:
                     full_token = token[:]
                     rest, token = token[2:], token[:2]
-                    err = "Splitting {0!r} into token {1!r} and rest {2!r}"
+                    err = "Splitting {!r} into token {!r} and rest {!r}"
                     debug(err.format(full_token, token, rest))
                     # Handle boolean flag block vs short-flag + value. Make
                     # sure not to test the token as a context flag if we've
@@ -116,11 +116,11 @@ class Parser(object):
                         and machine.current_state != 'unknown'
                     )
                     if have_flag and machine.context.flags[token].takes_value:
-                        debug("{0!r} is a flag for current context & it takes a value, giving it {1!r}".format(token, rest)) # noqa
+                        debug("{!r} is a flag for current context & it takes a value, giving it {!r}".format(token, rest)) # noqa
                         body.insert(index + 1, rest)
                     else:
-                        rest = ['-{0}'.format(x) for x in rest]
-                        debug("Splitting multi-flag glob {0!r} into {1!r} and {2!r}".format( # noqa
+                        rest = ['-{}'.format(x) for x in rest]
+                        debug("Splitting multi-flag glob {!r} into {!r} and {!r}".format( # noqa
                             orig, token, rest))
                         for item in reversed(rest):
                             body.insert(index + 1, item)
@@ -157,17 +157,17 @@ class ParseMachine(StateMachine):
     )
 
     def changing_state(self, from_, to):
-        debug("ParseMachine: {0!r} => {1!r}".format(from_, to))
+        debug("ParseMachine: {!r} => {!r}".format(from_, to))
 
     def __init__(self, initial, contexts, ignore_unknown):
         # Initialize
         self.ignore_unknown = ignore_unknown
         self.initial = self.context = copy.deepcopy(initial)
-        debug("Initialized with context: {0!r}".format(self.context))
+        debug("Initialized with context: {!r}".format(self.context))
         self.flag = None
         self.result = ParseResult()
         self.contexts = copy.deepcopy(contexts)
-        debug("Available contexts: {0!r}".format(self.contexts))
+        debug("Available contexts: {!r}".format(self.contexts))
         # In case StateMachine does anything in __init__
         super(ParseMachine, self).__init__()
 
@@ -200,29 +200,29 @@ class ParseMachine(StateMachine):
         return not has_value
 
     def handle(self, token):
-        debug("Handling token: {0!r}".format(token))
+        debug("Handling token: {!r}".format(token))
         # Handle unknown state at the top: we don't care about even
         # possibly-valid input if we've encountered unknown input.
         if self.current_state == 'unknown':
-            debug("Top-of-handle() see_unknown({0!r})".format(token))
+            debug("Top-of-handle() see_unknown({!r})".format(token))
             self.see_unknown(token)
             return
         # Flag
         if self.context and token in self.context.flags:
-            debug("Saw flag {0!r}".format(token))
+            debug("Saw flag {!r}".format(token))
             self.switch_to_flag(token)
         elif self.context and token in self.context.inverse_flags:
-            debug("Saw inverse flag {0!r}".format(token))
+            debug("Saw inverse flag {!r}".format(token))
             self.switch_to_flag(token, inverse=True)
         # Value for current flag
         elif self.waiting_for_flag_value:
-            debug("We're waiting for a flag value so {0!r} must be it?".format(token)) # noqa
+            debug("We're waiting for a flag value so {!r} must be it?".format(token)) # noqa
             self.see_value(token)
         # Positional args (must come above context-name check in case we still
         # need a posarg and the user legitimately wants to give it a value that
         # just happens to be a valid context name.)
         elif self.context and self.context.needs_positional_arg:
-            msg = "Context {0!r} requires positional args, eating {1!r}"
+            msg = "Context {!r} requires positional args, eating {!r}"
             debug(msg.format(self.context, token))
             self.see_positional_arg(token)
         # New context
@@ -230,7 +230,7 @@ class ParseMachine(StateMachine):
             self.see_context(token)
         # Initial-context flag being given as per-task flag (e.g. --help)
         elif self.initial and token in self.initial.flags:
-            debug("Saw (initial-context) flag {0!r}".format(token))
+            debug("Saw (initial-context) flag {!r}".format(token))
             flag = self.initial.flags[token]
             # TODO: handle ambiguity? Right now, flags in the context that
             # shadow initial-context flags would always naturally "win" by
@@ -244,39 +244,39 @@ class ParseMachine(StateMachine):
             else:
                 # TODO: handle inverse flags, other flag types?
                 flag.value = True
-            msg = "Setting (initial-context) flag {0!r} to value {1!r}"
+            msg = "Setting (initial-context) flag {!r} to value {!r}"
             debug(msg.format(flag, flag.value))
         # Unknown
         else:
             if not self.ignore_unknown:
-                debug("Can't find context named {0!r}, erroring".format(token))
-                self.error("No idea what {0!r} is!".format(token))
+                debug("Can't find context named {!r}, erroring".format(token))
+                self.error("No idea what {!r} is!".format(token))
             else:
-                debug("Bottom-of-handle() see_unknown({0!r})".format(token))
+                debug("Bottom-of-handle() see_unknown({!r})".format(token))
                 self.see_unknown(token)
 
     def store_only(self, token):
         # Start off the unparsed list
-        debug("Storing unknown token {0!r}".format(token))
+        debug("Storing unknown token {!r}".format(token))
         self.result.unparsed.append(token)
 
     def complete_context(self):
-        debug("Wrapping up context {0!r}".format(
+        debug("Wrapping up context {!r}".format(
             self.context.name if self.context else self.context
         ))
         # Ensure all of context's positional args have been given.
         if self.context and self.context.needs_positional_arg:
-            err = "'{0}' did not receive all required positional arguments!"
+            err = "'{}' did not receive all required positional arguments!"
             self.error(err.format(self.context.name))
         if self.context and self.context not in self.result:
             self.result.append(self.context)
 
     def switch_to_context(self, name):
         self.context = copy.deepcopy(self.contexts[name])
-        debug("Moving to context {0!r}".format(name))
-        debug("Context args: {0!r}".format(self.context.args))
-        debug("Context flags: {0!r}".format(self.context.flags))
-        debug("Context inverse_flags: {0!r}".format(
+        debug("Moving to context {!r}".format(name))
+        debug("Context args: {!r}".format(self.context.args))
+        debug("Context flags: {!r}".format(self.context.flags))
+        debug("Context inverse_flags: {!r}".format(
             self.context.inverse_flags
         ))
 
@@ -288,13 +288,13 @@ class ParseMachine(StateMachine):
             and self.flag.raw_value is None
             and not self.flag.optional
         ):
-            err = "Flag {0!r} needed value and was not given one!"
+            err = "Flag {!r} needed value and was not given one!"
             self.error(err.format(self.flag))
         # Handle optional-value flags; at this point they were not given an
         # explicit value, but they were seen, ergo they should get treated like
         # bools.
         if self.flag and self.flag.raw_value is None and self.flag.optional:
-            msg = "Saw optional flag {0!r} go by w/ no value; setting to True"
+            msg = "Saw optional flag {!r} go by w/ no value; setting to True"
             debug(msg.format(self.flag.name))
             # Skip casting so the bool gets preserved
             self.flag.set_value(True, cast=False)
@@ -323,7 +323,7 @@ class ParseMachine(StateMachine):
         # Value matches another valid task/context name?
         tests.append(value in self.contexts)
         if any(tests):
-            msg = "{0!r} is ambiguous when given after an optional-value flag"
+            msg = "{!r} is ambiguous when given after an optional-value flag"
             raise ParseError(msg.format(value))
 
     def switch_to_flag(self, flag, inverse=False):
@@ -333,20 +333,20 @@ class ParseMachine(StateMachine):
         flag = self.context.inverse_flags[flag] if inverse else flag
         # Update state
         self.flag = self.context.flags[flag]
-        debug("Moving to flag {0!r}".format(self.flag))
+        debug("Moving to flag {!r}".format(self.flag))
         # Handle boolean flags (which can immediately be updated)
         if not self.flag.takes_value:
             val = not inverse
-            debug("Marking seen flag {0!r} as {1}".format(self.flag, val))
+            debug("Marking seen flag {!r} as {}".format(self.flag, val))
             self.flag.value = val
 
     def see_value(self, value):
         self.check_ambiguity(value)
         if self.flag.takes_value:
-            debug("Setting flag {0!r} to value {1!r}".format(self.flag, value))
+            debug("Setting flag {!r} to value {!r}".format(self.flag, value))
             self.flag.value = value
         else:
-            self.error("Flag {0!r} doesn't take any value!".format(self.flag))
+            self.error("Flag {!r} doesn't take any value!".format(self.flag))
 
     def see_positional_arg(self, value):
         for arg in self.context.positional_args:

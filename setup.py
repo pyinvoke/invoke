@@ -26,9 +26,9 @@ text = re.sub(r'testcleanup:: .+', '::', text)
 text = re.sub(r'doctest:: .+', 'code-block::', text)
 long_description = """
 To find out what's new in this version of Invoke, please see `the changelog
-<http://pyinvoke.org/changelog.html#{0}>`_.
+<http://pyinvoke.org/changelog.html#{}>`_.
 
-{1}
+{}
 """.format(version, text)
 
 

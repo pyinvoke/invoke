@@ -115,11 +115,11 @@ class Collection(object):
         elif isinstance(obj, (Collection, types.ModuleType)):
             method = self.add_collection
         else:
-            raise TypeError("No idea how to insert {0!r}!".format(type(obj)))
+            raise TypeError("No idea how to insert {!r}!".format(type(obj)))
         return method(obj, name=name)
 
     def __repr__(self):
-        return "<Collection {0!r}: {1}>".format(
+        return "<Collection {!r}: {}>".format(
             self.name,
             ", ".join(sorted(self.tasks.keys())),
         )
@@ -241,13 +241,13 @@ class Collection(object):
                 raise ValueError("Could not obtain a name for this task!")
         name = self.transform(name)
         if name in self.collections:
-            raise ValueError("Name conflict: this collection has a sub-collection named {0!r} already".format(name)) # noqa
+            raise ValueError("Name conflict: this collection has a sub-collection named {!r} already".format(name)) # noqa
         self.tasks[name] = task
         for alias in list(task.aliases) + list(aliases or []):
             self.tasks.alias(self.transform(alias), to=name)
         if default is True or (default is None and task.is_default):
             if self.default:
-                msg = "'{0}' cannot be the default because '{1}' already is!"
+                msg = "'{}' cannot be the default because '{}' already is!"
                 raise ValueError(msg.format(name, self.default))
             self.default = name
 
@@ -271,7 +271,7 @@ class Collection(object):
         name = self.transform(name)
         # Test for conflict
         if name in self.tasks:
-            raise ValueError("Name conflict: this collection has a task named {0!r} already".format(name)) # noqa
+            raise ValueError("Name conflict: this collection has a task named {!r} already".format(name)) # noqa
         # Insert
         self.collections[name] = coll
 

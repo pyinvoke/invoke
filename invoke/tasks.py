@@ -80,8 +80,8 @@ class Task(object):
     def __repr__(self):
         aliases = ""
         if self.aliases:
-            aliases = " ({0})".format(', '.join(self.aliases))
-        return "<Task {0!r}{1}>".format(self.name, aliases)
+            aliases = " ({})".format(', '.join(self.aliases))
+        return "<Task {!r}{}>".format(self.name, aliases)
 
     def __eq__(self, other):
         if self.name != other.name:
@@ -109,7 +109,7 @@ class Task(object):
     def __call__(self, *args, **kwargs):
         # Guard against calling tasks with no context.
         if not isinstance(args[0], Context):
-            err = "Task expected a Context as its first arg, got {0} instead!"
+            err = "Task expected a Context as its first arg, got {} instead!"
             # TODO: raise a custom subclass _of_ TypeError instead
             raise TypeError(err.format(type(args[0])))
         result = self.body(*args, **kwargs)
@@ -313,7 +313,7 @@ def task(*args, **kwargs):
     autoprint = kwargs.pop('autoprint', False)
     # Handle unknown kwargs
     if kwargs:
-        kwarg = (" unknown kwargs {0!r}".format(kwargs)) if kwargs else ""
+        kwarg = (" unknown kwargs {!r}".format(kwargs)) if kwargs else ""
         raise TypeError("@task was called with" + kwarg)
     def inner(obj):
         obj = Task(
@@ -381,8 +381,8 @@ class Call(object):
     def __repr__(self):
         aka = ""
         if self.called_as is not None and self.called_as != self.task.name:
-            aka = " (called as: {0!r})".format(self.called_as)
-        return "<Call {0!r}{1}, args: {2!r}, kwargs: {3!r}>".format(
+            aka = " (called as: {!r})".format(self.called_as)
+        return "<Call {!r}{}, args: {!r}, kwargs: {!r}>".format(
             self.task.name, aka, self.args, self.kwargs
         )
 

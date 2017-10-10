@@ -350,7 +350,7 @@ class Runner_(Spec):
                 self._run(_, hide=value)
             except ValueError as e:
                 msg = "Error from run(hide=xxx) did not tell user what the bad value was!" # noqa
-                msg += "\nException msg: {0}".format(e)
+                msg += "\nException msg: {}".format(e)
                 ok_(value in str(e), msg)
             else:
                 assert False, "run() did not raise ValueError for bad hide= value" # noqa
@@ -489,7 +489,7 @@ class Runner_(Spec):
                 try:
                     self._runner(exits=23).run(_)
                 except UnexpectedExit as e:
-                    expected = "<UnexpectedExit: cmd='{0}' exited=23>"
+                    expected = "<UnexpectedExit: cmd='{}' exited=23>"
                     eq_(
                         repr(e),
                         expected.format(_),
@@ -499,7 +499,7 @@ class Runner_(Spec):
             def setup(self):
                 def lines(prefix):
                     return "\n".join(
-                        "{0} {1}".format(prefix, x) for x in range(1, 26)
+                        "{} {}".format(prefix, x) for x in range(1, 26)
                     ) + "\n"
                 self._stdout = lines('stdout')
                 self._stderr = lines('stderr')
@@ -515,7 +515,7 @@ class Runner_(Spec):
                 except UnexpectedExit as e:
                     eq_(str(e), """Encountered a bad command exit code!
 
-Command: '{0}'
+Command: '{}'
 
 Exit code: 23
 
@@ -536,7 +536,7 @@ Stderr: already printed
                 except UnexpectedExit as e:
                     eq_(str(e), """Encountered a bad command exit code!
 
-Command: '{0}'
+Command: '{}'
 
 Exit code: 13
 
@@ -570,7 +570,7 @@ Stderr: n/a (PTYs have no stderr)
                 except UnexpectedExit as e:
                     eq_(str(e), """Encountered a bad command exit code!
 
-Command: '{0}'
+Command: '{}'
 
 Exit code: 77
 
@@ -605,7 +605,7 @@ stderr 25
             @trap
             def displays_tails_of_streams_only_when_hidden(self):
                 def oops(msg, r, hide):
-                    return "{0}! hide={1}; str output:\n\n{2}".format(
+                    return "{}! hide={}; str output:\n\n{}".format(
                         msg, hide, r
                     )
                 for hide, expect_out, expect_err in (
@@ -731,7 +731,7 @@ stderr 25
                         self._watcher_error()
                     except Failure as e:
                         exited = e.result.exited
-                        err = "Expected None, got {0!r}".format(exited)
+                        err = "Expected None, got {!r}".format(exited)
                         ok_(exited is None, err)
 
                 def ok_and_bool_still_are_falsey(self):

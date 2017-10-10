@@ -139,7 +139,7 @@ Testing
 """.lstrip())
 
         def _expect(self, args, expected):
-            expect('-c integration {0}'.format(args), out=expected.lstrip())
+            expect('-c integration {}'.format(args), out=expected.lstrip())
 
         class adjacent_hooks:
             def deduping(self):
