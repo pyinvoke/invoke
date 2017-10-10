@@ -204,7 +204,7 @@ class Runner(object):
             help when ``sys.stdin`` is a misbehaving non-stream object, such as
             under test harnesses or headless command runners.
 
-        :param list watchers:
+        :param watchers:
             A list of `.StreamWatcher` instances which will be used to scan the
             program's ``stdout`` or ``stderr`` and may write into its ``stdin``
             (typically ``str`` or ``bytes`` objects depending on Python
@@ -535,7 +535,7 @@ class Runner(object):
         Intended for use as a thread target. Only terminates when all stdout
         from the subprocess has been read.
 
-        :param list buffer_: The capture buffer shared with the main thread.
+        :param buffer_: The capture buffer shared with the main thread.
         :param bool hide: Whether or not to replay data into ``output``.
         :param output:
             Output stream (file-like object) to write data into when not
@@ -669,7 +669,7 @@ class Runner(object):
         from the ``watchers`` kwarg of `run` - see :doc:`/concepts/watchers`
         for a conceptual overview.
 
-        :param list buffer:
+        :param buffer:
             The capture buffer for this thread's particular IO stream.
 
         :returns: ``None``.
