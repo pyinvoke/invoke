@@ -551,8 +551,9 @@ class Program(object):
         ctx = self.parser.contexts[name]
         tuples = ctx.help_tuples()
         docstring = inspect.getdoc(self.collection[name])
-        header = "Usage: {0} [--core-opts] {1} {{1}}[other tasks here ...]".format(self.binary, name) # noqa
-        print(header.format("[--options] " if tuples else ""))
+        header = "Usage: {} [--core-opts] {} {}[other tasks here ...]"
+        opts = "[--options] " if tuples else ""
+        print(header.format(self.binary, name, opts))
         print("")
         print("Docstring:")
         if docstring:
