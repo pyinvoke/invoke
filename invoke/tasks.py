@@ -216,7 +216,7 @@ class Task(object):
         tuples = [(x, spec_dict[x]) for x in arg_names]
         # Prime the list of all already-taken names (mostly for help in
         # choosing auto shortflags)
-        taken_names = set(x[0] for x in tuples)
+        taken_names = {x[0] for x in tuples}
         # Build arg list (arg_opts will take care of setting up shortnames,
         # etc)
         args = []

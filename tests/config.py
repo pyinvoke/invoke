@@ -238,8 +238,8 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
 
         def is_iterable_like_dict(self):
             c = Config(defaults={'a': 1, 'b': 2})
-            eq_(set(c.keys()), set(['a', 'b']))
-            eq_(set(list(c)), set(['a', 'b']))
+            eq_(set(c.keys()), {'a', 'b'})
+            eq_(set(list(c)), {'a', 'b'})
 
         def supports_readonly_dict_protocols(self):
             # Use single-keypair dict to avoid sorting problems in tests.
