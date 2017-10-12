@@ -133,6 +133,16 @@ class Task_(Spec):
         t3 = Task(_func, name='bar')
         assert t1 != t3
 
+    def equality_not_by_body_text_but_by_ref(self):
+        def make_task(name):
+            @task
+            def task1(ctx):
+                print(f'Hello {name}')
+
+            return task1
+
+        assert make_task('Hello') != make_task('World')
+
     class attributes:
         def has_default_flag(self):
             eq_(Task(_func).is_default, False)

@@ -86,19 +86,8 @@ class Task(object):
     def __eq__(self, other):
         if self.name != other.name:
             return False
-        # Functions do not define __eq__ but func_code objects apparently do.
-        # (If we're wrapping some other callable, they will be responsible for
-        # defining equality on their end.)
-        if self.body == other.body:
-            return True
-        else:
-            try:
-                return (
-                    six.get_function_code(self.body) ==
-                    six.get_function_code(other.body)
-                )
-            except AttributeError:
-                return False
+            
+        return self.body == other.body
 
     def __hash__(self):
         # Presumes name and body will never be changed. Hrm.

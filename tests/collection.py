@@ -18,6 +18,15 @@ def _func(ctx):
     pass
 
 
+@task
+def eq_task1(ctx):
+    pass
+
+@task
+def eq_task2(ctx):
+    pass
+
+
 class Collection_(Spec):
     class init:
         "__init__"
@@ -79,13 +88,7 @@ class Collection_(Spec):
 
     class useful_special_methods:
         def _meh(self):
-            @task
-            def task1(ctx):
-                pass
-            @task
-            def task2(ctx):
-                pass
-            return Collection('meh', task1=task1, task2=task2)
+            return Collection('meh', task1=eq_task1, task2=eq_task2)
 
         def setup(self):
             self.c = self._meh()
