@@ -338,8 +338,8 @@ ohnoz!
             oops = UnexpectedExit(Result(
                 command='meh',
                 exited=54,
-                stdout=six.u('this is not ascii: \u1234'),
-                stderr=six.u('this is also not ascii: \u4321'),
+                stdout=u'this is not ascii: \u1234',
+                stderr=u'this is also not ascii: \u4321',
                 encoding='utf-8',
                 hide=('stdout', 'stderr'),
             ))

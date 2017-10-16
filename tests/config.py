@@ -687,10 +687,10 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
 
         class type_casting:
             def strings_replaced_with_env_value(self):
-                os.environ['INVOKE_FOO'] = six.u('myvalue')
+                os.environ['INVOKE_FOO'] = u'myvalue'
                 c = Config(defaults={'foo': 'myoldvalue'})
                 c.load_shell_env()
-                eq_(c.foo, six.u('myvalue'))
+                eq_(c.foo, u'myvalue')
                 ok_(isinstance(c.foo, six.text_type))
 
             def unicode_replaced_with_env_value(self):
@@ -699,7 +699,7 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
                 if six.PY3:
                     return
                 os.environ['INVOKE_FOO'] = 'myunicode'
-                c = Config(defaults={'foo': six.u('myoldvalue')})
+                c = Config(defaults={'foo': u'myoldvalue'})
                 c.load_shell_env()
                 eq_(c.foo, 'myunicode')
                 ok_(isinstance(c.foo, str))
