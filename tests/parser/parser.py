@@ -356,6 +356,27 @@ class Parser_(Spec):
             expected = ['foo', 'bar', 'biz']
             assert self._parse('--mylist', 'foo', 'bar', 'biz') == expected
 
+        def iterables_work_correctly_outside_a_vacuum(self):
+            # Undetected bug where I was primarily focused on the -vvv use
+            # case...'normal' incrementables never left 'waiting for value'
+            # state in the parser! so _subsequent_ task names & such never got
+            # parsed right, always got appended to the list.
+            c = Context('mytask', args=[Argument('mylist', kind=list)])
+            c2 = Context('othertask')
+            argv = [
+                'mytask', '--mylist', 'val', '--mylist', 'val2', 'othertask'
+            ]
+            result = Parser([c, c2]).parse_argv(argv)
+            # When bug present, result only has one context (for 'mytask') and
+            # its 'mylist' consists of ['val', 'val2', 'othertask']. (the
+            # middle '--mylist' was handled semi-correctly.)
+            mylist = result[0].args.mylist.value
+            assert mylist == ['val', 'val2']
+            contexts = len(result)
+            err = "Got {} parse context results instead of 2!".format(contexts)
+            assert contexts == 2, err
+            assert result[1].name == 'othertask'
+
     class task_repetition:
         def is_happy_to_handle_same_task_multiple_times(self):
             task1 = Context('mytask')
