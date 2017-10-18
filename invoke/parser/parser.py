@@ -165,6 +165,7 @@ class ParseMachine(StateMachine):
         self.initial = self.context = copy.deepcopy(initial)
         debug("Initialized with context: {!r}".format(self.context))
         self.flag = None
+        self.flag_got_value = False
         self.result = ParseResult()
         self.contexts = copy.deepcopy(contexts)
         debug("Available contexts: {!r}".format(self.contexts))
@@ -182,11 +183,11 @@ class ParseMachine(StateMachine):
         if not takes_value:
             return False
         # OK, this flag is one that takes values.
-        # Is it a list type? If so, it's always happy to accept more
-        # regardless.
+        # Is it a list type (which has only just been switched to)? Then it'll
+        # always accept more values.
         # TODO: how to handle somebody wanting it to be some other iterable
         # like tuple or custom class? Or do we just say unsupported?
-        if self.flag.kind is list:
+        if self.flag.kind is list and not self.flag_got_value:
             return True
         # Not a list, okay. Does it already have a value?
         has_value = self.flag.raw_value is not None
@@ -334,6 +335,10 @@ class ParseMachine(StateMachine):
         # Update state
         self.flag = self.context.flags[flag]
         debug("Moving to flag {!r}".format(self.flag))
+        # Bookkeeping for iterable-type flags (where the typical 'value
+        # non-empty/nondefault -> clearly it got its value already' test is
+        # insufficient)
+        self.flag_got_value = False
         # Handle boolean flags (which can immediately be updated)
         if not self.flag.takes_value:
             val = not inverse
@@ -345,6 +350,7 @@ class ParseMachine(StateMachine):
         if self.flag.takes_value:
             debug("Setting flag {!r} to value {!r}".format(self.flag, value))
             self.flag.value = value
+            self.flag_got_value = True
         else:
             self.error("Flag {!r} doesn't take any value!".format(self.flag))
 
