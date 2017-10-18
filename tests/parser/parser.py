@@ -354,7 +354,9 @@ class Parser_(Spec):
 
         def given_N_times_becomes_list_of_len_N(self):
             expected = ['foo', 'bar', 'biz']
-            assert self._parse('--mylist', 'foo', 'bar', 'biz') == expected
+            assert self._parse(
+                '--mylist', 'foo', '--mylist', 'bar', '--mylist', 'biz'
+            ) == expected
 
         def iterables_work_correctly_outside_a_vacuum(self):
             # Undetected bug where I was primarily focused on the -vvv use
