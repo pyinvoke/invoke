@@ -2,6 +2,9 @@
 Changelog
 =========
 
+* :bug:`-` Iterable-type CLI args were actually still somewhat broken & were
+  'eating' values after themselves in the parser stream (thus e.g. preventing
+  parsing of subsequent tasks or flags.) This has been fixed.
 * :support:`364` Drop Python 2.6 and Python 3.3 support, as these versions now
   account for only very low percentages of the userbase and are unsupported (or
   about to be unsupported) by the rest of the ecosystem, including ``pip``.
