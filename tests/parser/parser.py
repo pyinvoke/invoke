@@ -340,6 +340,7 @@ class Parser_(Spec):
                 self._test_for_ambiguity("--foo othertask", p)
 
     class list_type_arguments:
+        "list-type (iterable) arguments"
         def _parse(self, *args):
             c = Context('mytask', args=(Argument('mylist', kind=list),))
             argv = ['mytask'] + list(args)
