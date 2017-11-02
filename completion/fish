@@ -1,5 +1,10 @@
 # Invoke (pyinvoke.org) tab-completion script to the fish shell
 # Copy it to the ~/.config/fish/completions directory
+# Or download it
+# curl https://raw.githubusercontent.com/pyinvoke/invoke/master/completion/fish --create-dirs -o  ~/.config/fish/completions/invoke.fish
+# for shorhand version change destination file name 
+# curl https://raw.githubusercontent.com/pyinvoke/invoke/master/completion/fish --create-dirs -o  ~/.config/fish/completions/inv.fish
+# then you need to change invoke here to inv
 
 function __complete_invoke
     invoke --complete -- (commandline --tokenize)
