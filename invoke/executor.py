@@ -84,9 +84,9 @@ class Executor(object):
             with two keys, one for ``build`` and one for ``setup``.
         """
         # Normalize input
-        debug("Examining top level tasks {0!r}".format([x for x in tasks]))
+        debug("Examining top level tasks {!r}".format([x for x in tasks]))
         calls = self.normalize(tasks)
-        debug("Tasks (now Calls) with kwargs: {0!r}".format(calls))
+        debug("Tasks (now Calls) with kwargs: {!r}".format(calls))
         # Obtain copy of directly-given tasks since they should sometimes
         # behave differently
         direct = list(calls)
@@ -109,7 +109,7 @@ class Executor(object):
         for call in calls:
             autoprint = call in direct and call.autoprint
             args = call.args
-            debug("Executing {0!r}".format(call))
+            debug("Executing {!r}".format(call))
             # Hand in reference to our config, which will preserve user
             # modifications across the lifetime of the session.
             config = self.config
@@ -168,10 +168,10 @@ class Executor(object):
         debug("Deduplicating tasks...")
         for call in calls:
             if call not in deduped:
-                debug("{0!r}: no duplicates found, ok".format(call))
+                debug("{!r}: no duplicates found, ok".format(call))
                 deduped.append(call)
             else:
-                debug("{0!r}: found in list already, skipping".format(call))
+                debug("{!r}: found in list already, skipping".format(call))
         return deduped
 
     def expand_calls(self, calls):
@@ -191,7 +191,7 @@ class Executor(object):
             # task lists, which may contain 'raw' Task objects)
             if isinstance(call, Task):
                 call = Call(task=call)
-            debug("Expanding task-call {0!r}".format(call))
+            debug("Expanding task-call {!r}".format(call))
             # TODO: this is where we _used_ to call Executor.config_for(call,
             # config)...
             # TODO: now we may need to preserve more info like where the call

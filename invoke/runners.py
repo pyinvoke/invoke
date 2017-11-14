@@ -204,7 +204,7 @@ class Runner(object):
             help when ``sys.stdin`` is a misbehaving non-stream object, such as
             under test harnesses or headless command runners.
 
-        :param list watchers:
+        :param watchers:
             A list of `.StreamWatcher` instances which will be used to scan the
             program's ``stdout`` or ``stderr`` and may write into its ``stdin``
             (typically ``str`` or ``bytes`` objects depending on Python
@@ -271,7 +271,7 @@ class Runner(object):
         env = self.generate_env(opts['env'], opts['replace_env'])
         # Echo running command
         if opts['echo']:
-            print("\033[1;37m{0}\033[0m".format(command))
+            print("\033[1;37m{}\033[0m".format(command))
         # Start executing the actual command (runs in background)
         self.start(command, shell, env)
         # Arrive at final encoding if neither config nor kwargs had one
@@ -410,7 +410,7 @@ class Runner(object):
         # Handle invalid kwarg keys (anything left in kwargs).
         # Act like a normal function would, i.e. TypeError
         if kwargs:
-            err = "run() got an unexpected keyword argument '{0}'"
+            err = "run() got an unexpected keyword argument '{}'"
             raise TypeError(err.format(list(kwargs.keys())[0]))
         # If hide was True, turn off echoing
         if opts['hide'] is True:
@@ -535,7 +535,7 @@ class Runner(object):
         Intended for use as a thread target. Only terminates when all stdout
         from the subprocess has been read.
 
-        :param list buffer_: The capture buffer shared with the main thread.
+        :param buffer_: The capture buffer shared with the main thread.
         :param bool hide: Whether or not to replay data into ``output``.
         :param output:
             Output stream (file-like object) to write data into when not
@@ -669,7 +669,7 @@ class Runner(object):
         from the ``watchers`` kwarg of `run` - see :doc:`/concepts/watchers`
         for a conceptual overview.
 
-        :param list buffer:
+        :param buffer:
             The capture buffer for this thread's particular IO stream.
 
         :returns: ``None``.
@@ -1122,22 +1122,22 @@ class Result(object):
 
     def __str__(self):
         if self.exited is not None:
-            desc = "Command exited with status {0}.".format(self.exited)
+            desc = "Command exited with status {}.".format(self.exited)
         else:
             desc = "Command was not fully executed due to watcher error."
         ret = [desc]
         for x in ('stdout', 'stderr'):
             val = getattr(self, x)
-            ret.append(u"""=== {0} ===
-{1}
-""".format(x, val.rstrip()) if val else u"(no {0})".format(x))
+            ret.append(u"""=== {} ===
+{}
+""".format(x, val.rstrip()) if val else u"(no {})".format(x))
         return u"\n".join(ret)
 
     def __repr__(self):
         # TODO: more? e.g. len of stdout/err? (how to represent cleanly in a
         # 'x=y' format like this? e.g. '4b' is ambiguous as to what it
         # represents
-        template = "<Result cmd={0!r} exited={1}>"
+        template = "<Result cmd={!r} exited={}>"
         return template.format(self.command, self.exited)
 
     @property
@@ -1161,7 +1161,7 @@ class Result(object):
 def normalize_hide(val):
     hide_vals = (None, False, 'out', 'stdout', 'err', 'stderr', 'both', True)
     if val not in hide_vals:
-        err = "'hide' got {0!r} which is not in {1!r}"
+        err = "'hide' got {!r} which is not in {!r}"
         raise ValueError(err.format(val, hide_vals))
     if val in (None, False):
         hide = ()

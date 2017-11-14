@@ -10,10 +10,10 @@ class CLIParsing(Spec):
     High level parsing tests
     """
     def setup(self):
-        @task(positional=[])
+        @task(positional=[], iterable=['my_list'], incrementable=['verbose'])
         def my_task(ctx, mystring, s, boolean=False, b=False, v=False,
             long_name=False, true_bool=True, _leading_underscore=False,
-            trailing_underscore_=False):
+            trailing_underscore_=False, my_list=None, verbose=0):
             pass
         @task(aliases=['my_task27'])
         def my_task2(ctx):
@@ -98,7 +98,7 @@ class CLIParsing(Spec):
         eq_(r[0].args.s.value, 'value')
 
     def _flag_value_task(self, value):
-        r = self._parse("my-task -s {0} my-task2".format(value))
+        r = self._parse("my-task -s {} my-task2".format(value))
         eq_(len(r), 2)
         eq_(r[0].name, 'my-task')
         eq_(r[0].args.s.value, value)
@@ -131,7 +131,19 @@ class CLIParsing(Spec):
     def multiple_short_flags_adjacent(self):
         "my-task -bv (and inverse)"
         for args in ('-bv', '-vb'):
-            r = self._parse("my-task {0}".format(args))
+            r = self._parse("my-task {}".format(args))
             a = r[0].args
             eq_(a.b.value, True)
             eq_(a.v.value, True)
+
+    def list_type_flag_can_be_given_N_times_building_a_list(self):
+        "my-task --my-list foo --my-list bar"
+        # Test both the singular and plural cases, just to be safe.
+        self._compare("--my-list foo", 'my-list', ['foo'])
+        self._compare("--my-list foo --my-list bar", 'my-list', ['foo', 'bar'])
+
+    def incrementable_type_flag_can_be_used_as_a_switch_or_counter(self):
+        "my-task -v, -vv, -vvvvv etc, except with explicit --verbose"
+        self._compare("", 'verbose', 0)
+        self._compare("--verbose", 'verbose', 1)
+        self._compare("--verbose --verbose --verbose", 'verbose', 3)

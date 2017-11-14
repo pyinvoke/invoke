@@ -103,7 +103,7 @@ class FilesystemLoader(Loader):
     def find(self, name):
         # Accumulate all parent directories
         start = self.start
-        debug("FilesystemLoader find starting at {0!r}".format(start))
+        debug("FilesystemLoader find starting at {!r}".format(start))
         parents = [os.path.abspath(start)]
         parents.append(os.path.dirname(parents[-1]))
         while parents[-1] != parents[-2]:
@@ -116,9 +116,9 @@ class FilesystemLoader(Loader):
         # we turn it into a more obvious exception class.
         try:
             tup = imp.find_module(name, parents)
-            debug("Found module: {0!r}".format(tup[1]))
+            debug("Found module: {!r}".format(tup[1]))
             return tup
         except ImportError:
-            msg = "ImportError loading {0!r}, raising CollectionNotFound"
+            msg = "ImportError loading {!r}, raising CollectionNotFound"
             debug(msg.format(name))
             raise CollectionNotFound(name=name, start=start)

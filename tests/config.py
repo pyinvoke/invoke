@@ -239,8 +239,8 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
 
         def is_iterable_like_dict(self):
             c = Config(defaults={'a': 1, 'b': 2})
-            eq_(set(c.keys()), set(['a', 'b']))
-            eq_(set(list(c)), set(['a', 'b']))
+            eq_(set(c.keys()), {'a', 'b'})
+            eq_(set(list(c)), {'a', 'b'})
 
         def supports_readonly_dict_protocols(self):
             # Use single-keypair dict to avoid sorting problems in tests.
@@ -607,7 +607,7 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
             eq_(c.outer.inner.hooray, 'python')
             # Real test that builtins, etc are stripped out
             for special in ('builtins', 'file', 'package', 'name', 'doc'):
-                ok_('__{0}__'.format(special) not in c)
+                ok_('__{}__'.format(special) not in c)
 
 
     class collection_level_config_loading:
@@ -688,10 +688,10 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
 
         class type_casting:
             def strings_replaced_with_env_value(self):
-                os.environ['INVOKE_FOO'] = six.u('myvalue')
+                os.environ['INVOKE_FOO'] = u'myvalue'
                 c = Config(defaults={'foo': 'myoldvalue'})
                 c.load_shell_env()
-                eq_(c.foo, six.u('myvalue'))
+                eq_(c.foo, u'myvalue')
                 ok_(isinstance(c.foo, six.text_type))
 
             def unicode_replaced_with_env_value(self):
@@ -700,7 +700,7 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
                 if six.PY3:
                     return
                 os.environ['INVOKE_FOO'] = 'myunicode'
-                c = Config(defaults={'foo': six.u('myoldvalue')})
+                c = Config(defaults={'foo': u'myoldvalue'})
                 c.load_shell_env()
                 eq_(c.foo, 'myunicode')
                 ok_(isinstance(c.foo, str))
@@ -985,12 +985,12 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
             # one time" (since assert_calls_with gets mad about other
             # invocations w/ different args)
             calls = load_yaml.call_args_list
-            my_call = call("{0}invoke.yaml".format(path))
+            my_call = call("{}invoke.yaml".format(path))
             try:
                 calls.remove(my_call)
                 ok_(my_call not in calls)
             except ValueError:
-                err = "{0} not found in {1} even once!"
+                err = "{} not found in {} even once!"
                 assert False, err.format(my_call, calls)
 
         def preserves_env_data(self):

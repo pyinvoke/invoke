@@ -2,6 +2,26 @@
 Changelog
 =========
 
+* :bug:`-` Iterable-type CLI args were actually still somewhat broken & were
+  'eating' values after themselves in the parser stream (thus e.g. preventing
+  parsing of subsequent tasks or flags.) This has been fixed.
+* :support:`364` Drop Python 2.6 and Python 3.3 support, as these versions now
+  account for only very low percentages of the userbase and are unsupported (or
+  about to be unsupported) by the rest of the ecosystem, including ``pip``.
+
+  This includes updating documentation & packaging metadata as well as taking
+  advantage of basic syntax additions like set literals/comprehensions (``{1,
+  2, 3}`` instead of ``set([1, 2, 3])``) and removing positional string
+  argument specifiers (``"{}".format(val)`` instead of ``"{0}".format(val)``).
+
+* :release:`0.21.0 <2017-09-18>`
+* :feature:`132` Implement 'iterable' and 'incrementable' CLI flags, allowing
+  for invocations like ``inv mytask --listy foo --listy bar`` (resulting in a
+  call like ``mytask(listy=['foo', 'bar'])``) or ``inv mytask -vvv`` (resulting
+  in e.g. ``mytask(verbose=3)``. Specifically, these require use of the new
+  :ref:`iterable <iterable-flag-values>` and :ref:`incrementable
+  <incrementable-flag-values>` arguments to `@task <invoke.tasks.task>` - see
+  those links to the conceptual docs for details.
 * :release:`0.20.4 <2017-08-14>`
 * :bug:`-` The behavior of `Config <invoke.config.Config>` when ``lazy=True``
   didn't match that described in the API docs, after the recent updates to its

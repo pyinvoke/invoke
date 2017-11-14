@@ -100,9 +100,9 @@ class FailingResponder_(Spec):
         except ResponseNotAccepted as e:
             message = str(e)
             # Expect useful bits in exception text
-            err = "Didn't see pattern in {0!r}".format(message)
+            err = "Didn't see pattern in {!r}".format(message)
             ok_("ju[^ ]{2}" in message, err)
-            err = "Didn't see failure sentinel in {0!r}".format(message)
+            err = "Didn't see failure sentinel in {!r}".format(message)
             ok_("lolnope" in message, err)
         else:
             assert False, "Did not raise ResponseNotAccepted!"

@@ -139,7 +139,7 @@ Testing
 """.lstrip())
 
         def _expect(self, args, expected):
-            expect('-c integration {0}'.format(args), out=expected.lstrip())
+            expect('-c integration {}'.format(args), out=expected.lstrip())
 
         class adjacent_hooks:
             def deduping(self):
@@ -226,7 +226,7 @@ bar
             for body_call in body.call_args_list:
                 ok_(isinstance(body_call[0][0], Context))
                 param_list.append(body_call[0][1])
-            ok_(set(param_list) == set((5, 7)))
+            ok_(set(param_list) == {5, 7})
 
     class collection_driven_config:
         "Collection-driven config concerns"

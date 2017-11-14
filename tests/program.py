@@ -272,11 +272,11 @@ class Program_(IntegrationSpec):
             # that this line doesn't raise an exception and thus fail the
             # test, is what we're testing...
             nah = 'nopenotvalidsorry'
-            p.run("myapp {0}".format(nah))
+            p.run("myapp {}".format(nah))
             # Expect that we did print the core body of the ParseError (e.g.
             # "no idea what foo is!") and exit 1. (Intent is to display that
             # info w/o a full traceback, basically.)
-            eq_(sys.stderr.getvalue(), "No idea what '{0}' is!\n".format(nah))
+            eq_(sys.stderr.getvalue(), "No idea what '{}' is!\n".format(nah))
             mock_exit.assert_called_with(1)
 
         @trap
@@ -338,8 +338,8 @@ ohnoz!
             oops = UnexpectedExit(Result(
                 command='meh',
                 exited=54,
-                stdout=six.u('this is not ascii: \u1234'),
-                stderr=six.u('this is also not ascii: \u4321'),
+                stdout=u'this is not ascii: \u1234',
+                stderr=u'this is also not ascii: \u4321',
                 encoding='utf-8',
                 hide=('stdout', 'stderr'),
             ))
@@ -478,7 +478,7 @@ Options:
 
 """.lstrip()
                 for flag in ['-h', '--help']:
-                    expect('-c decorator {0} punch'.format(flag), out=expected)
+                    expect('-c decorator {} punch'.format(flag), out=expected)
 
             def works_for_unparameterized_tasks(self):
                 expected = """
@@ -575,12 +575,12 @@ Options:
             return """
 Available tasks:
 
-{0}
+{}
 
 """.format('\n'.join("  " + x for x in lines)).lstrip()
 
         def _list_eq(self, collection, listing):
-            cmd = '-c {0} --list'.format(collection)
+            cmd = '-c {} --list'.format(collection)
             expect(cmd, out=self._listing(listing))
 
         def simple_output(self):
@@ -596,7 +596,7 @@ Available tasks:
                 'print-underscored-arg',
             ))
             for flag in ('-l', '--list'):
-                expect('-c integration {0}'.format(flag), out=expected)
+                expect('-c integration {}'.format(flag), out=expected)
 
         def namespacing(self):
             self._list_eq('namespacing', (
@@ -657,7 +657,7 @@ Available tasks:
         def _test_flag(self, flag, key, value=True):
             p = Program()
             p.execute = Mock() # neuter
-            p.run('inv {0} foo'.format(flag))
+            p.run('inv {} foo'.format(flag))
             eq_(p.config.run[key], value)
 
         def warn_only(self):

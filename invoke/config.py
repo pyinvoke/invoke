@@ -53,7 +53,7 @@ class DataProxy(object):
         itervalues
         keys
         values
-    """.split()) + tuple("__{0}__".format(x) for x in """
+    """.split()) + tuple("__{}__".format(x) for x in """
         cmp
         contains
         iter
@@ -100,12 +100,12 @@ class DataProxy(object):
             if key in self._proxies:
                 return getattr(self._config, key)
             # Otherwise, raise useful AttributeError to follow getattr proto.
-            err = "No attribute or config key found for {0!r}".format(key)
+            err = "No attribute or config key found for {!r}".format(key)
             attrs = [x for x in dir(self.__class__) if not x.startswith('_')]
-            err += "\n\nValid keys: {0!r}".format(
+            err += "\n\nValid keys: {!r}".format(
                 sorted(list(self._config.keys()))
             )
-            err += "\n\nValid real attributes: {0!r}".format(attrs)
+            err += "\n\nValid real attributes: {!r}".format(attrs)
             raise AttributeError(err)
 
     def __setattr__(self, key, value):
@@ -196,7 +196,7 @@ class DataProxy(object):
             object.__setattr__(self, key, value)
 
     def __repr__(self):
-        return "<{0}: {1}>".format(self.__class__.__name__, self._config)
+        return "<{}: {}>".format(self.__class__.__name__, self._config)
 
     def __contains__(self, key):
         return key in self._config
@@ -601,7 +601,7 @@ class Config(DataProxy):
         env_prefix = self.env_prefix
         if env_prefix is None:
             env_prefix = self.prefix
-        env_prefix = "{0}_".format(env_prefix.upper())
+        env_prefix = "{}_".format(env_prefix.upper())
         self._set(_env_prefix=env_prefix)
         # Config data loaded from the shell environment.
         self._set(_env={})
@@ -806,9 +806,9 @@ class Config(DataProxy):
 
     def _load_file(self, prefix, absolute=False, merge=True):
         # Setup
-        found = "_{0}_found".format(prefix)
-        path = "_{0}_path".format(prefix)
-        data = "_{0}".format(prefix)
+        found = "_{}_found".format(prefix)
+        path = "_{}_path".format(prefix)
+        data = "_{}".format(prefix)
         midfix = self.file_prefix
         if midfix is None:
             midfix = self.prefix
@@ -823,7 +823,7 @@ class Config(DataProxy):
                 return
             paths = [absolute_path]
         else:
-            path_prefix = getattr(self, "_{0}_prefix".format(prefix))
+            path_prefix = getattr(self, "_{}_prefix".format(prefix))
             # Short circuit if loading seems unnecessary (eg for project config
             # files when not running out of a project)
             if path_prefix is None:
@@ -839,9 +839,9 @@ class Config(DataProxy):
             try:
                 try:
                     type_ = splitext(filepath)[1].lstrip('.')
-                    loader = getattr(self, "_load_{0}".format(type_))
+                    loader = getattr(self, "_load_{}".format(type_))
                 except AttributeError as e:
-                    msg = "Config files of type {0!r} (from file {1!r}) are not supported! Please use one of: {2!r}" # noqa
+                    msg = "Config files of type {!r} (from file {!r}) are not supported! Please use one of: {!r}" # noqa
                     raise UnknownFileType(msg.format(
                         type_, filepath, self._file_suffixes))
                 # Store data, the path it was found at, and fact that it was
@@ -854,7 +854,7 @@ class Config(DataProxy):
             except IOError as e:
                 # TODO: is there a better / x-platform way to detect this?
                 if "No such file" in e.strerror:
-                    err = "Didn't see any {0}, skipping."
+                    err = "Didn't see any {}, skipping."
                     debug(err.format(filepath))
                 else:
                     raise
@@ -893,7 +893,7 @@ class Config(DataProxy):
         """
         paths = []
         for prefix in "system user project runtime".split():
-            value = getattr(self, "_{0}_path".format(prefix))
+            value = getattr(self, "_{}_path".format(prefix))
             if value is not None:
                 paths.append(value)
         return paths
@@ -904,41 +904,41 @@ class Config(DataProxy):
         """
         debug("Merging config sources in order onto new empty _config...")
         self._config = {}
-        debug("Defaults: {0!r}".format(self._defaults))
+        debug("Defaults: {!r}".format(self._defaults))
         merge_dicts(self._config, self._defaults)
-        debug("Collection-driven: {0!r}".format(self._collection))
+        debug("Collection-driven: {!r}".format(self._collection))
         merge_dicts(self._config, self._collection)
         self._merge_file('system', "System-wide")
         self._merge_file('user', "Per-user")
         self._merge_file('project', "Per-project")
-        debug("Environment variable config: {0!r}".format(self._env))
+        debug("Environment variable config: {!r}".format(self._env))
         merge_dicts(self._config, self._env)
         self._merge_file('runtime', "Runtime")
-        debug("Overrides: {0!r}".format(self._overrides))
+        debug("Overrides: {!r}".format(self._overrides))
         merge_dicts(self._config, self._overrides)
-        debug("Modifications: {0!r}".format(self._modifications))
+        debug("Modifications: {!r}".format(self._modifications))
         merge_dicts(self._config, self._modifications)
-        debug("Deletions: {0!r}".format(self._deletions))
+        debug("Deletions: {!r}".format(self._deletions))
         obliterate(self._config, self._deletions)
 
     def _merge_file(self, name, desc):
         # Setup
         desc += " config file" # yup
-        found = getattr(self, "_{0}_found".format(name))
-        path = getattr(self, "_{0}_path".format(name))
-        data = getattr(self, "_{0}".format(name))
+        found = getattr(self, "_{}_found".format(name))
+        path = getattr(self, "_{}_path".format(name))
+        data = getattr(self, "_{}".format(name))
         # None -> no loading occurred yet
         if found is None:
-            debug("{0} has not been loaded yet, skipping".format(desc))
+            debug("{} has not been loaded yet, skipping".format(desc))
         # True -> hooray
         elif found:
-            debug("{0} ({1}): {2!r}".format(desc, path, data))
+            debug("{} ({}): {!r}".format(desc, path, data))
             merge_dicts(self._config, data)
         # False -> did try, did not succeed
         else:
             # TODO: how to preserve what was tried for each case but only for
             # the negative? Just a branch here based on 'name'?
-            debug("{0} not found, skipping".format(desc))
+            debug("{} not found, skipping".format(desc))
 
     def clone(self, into=None):
         """
@@ -978,7 +978,7 @@ class Config(DataProxy):
         """
         # Sanity check for 'into'
         if into is not None and not issubclass(into, self.__class__):
-            err = "'into' must be a subclass of {0}!"
+            err = "'into' must be a subclass of {}!"
             raise TypeError(err.format(self.__class__.__name__))
         # Construct new object
         klass = self.__class__ if into is None else into
@@ -1015,7 +1015,7 @@ class Config(DataProxy):
             overrides
             modifications
         """.split():
-            name = "_{0}".format(name)
+            name = "_{}".format(name)
             my_data = getattr(self, name)
             # Non-dict data gets carried over straight (via a copy())
             # NOTE: presumably someone could really screw up and change these
@@ -1174,12 +1174,12 @@ def merge_dicts(base, updates):
     return base
 
 def _merge_error(orig, new_):
-    return AmbiguousMergeError("Can't cleanly merge {0} with {1}".format(
+    return AmbiguousMergeError("Can't cleanly merge {} with {}".format(
         _format_mismatch(orig), _format_mismatch(new_)
     ))
 
 def _format_mismatch(x):
-    return "{0} ({1!r})".format(type(x), x)
+    return "{} ({!r})".format(type(x), x)
 
 
 def copy_dict(source):
