@@ -426,7 +426,7 @@ class Config(DataProxy):
         ``Config.global_defaults`` and applying `.merge_dicts` to the result,
         to add to or modify these values.
         """
-        return {
+        defaults = {
             # TODO: we document 'debug' but it's not truly implemented outside
             # of env var and CLI flag. If we honor it, we have to go around and
             # figure out at what points we might want to call
@@ -478,6 +478,12 @@ class Config(DataProxy):
                 'search_root': None,
             },
         }
+
+        # BUGFIX: (#407) If on Windows, use default shell setting.
+        if WINDOWS:
+            defaults['run']['shell'] = os.environ['COMSPEC']
+
+        return defaults
 
     def __init__(
         self,

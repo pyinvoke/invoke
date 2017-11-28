@@ -2,6 +2,10 @@
 Changelog
 =========
 
+* :bug:`407` Fix Windows shell compatibility bug. Change
+  `Config.global_defaults <invoke.config.Config.global_defaults>` so when
+  invoke is used on Windows, the default shell is set to Windows' default
+  shell setting.
 * :bug:`-` Iterable-type CLI args were actually still somewhat broken & were
   'eating' values after themselves in the parser stream (thus e.g. preventing
   parsing of subsequent tasks or flags.) This has been fixed.
