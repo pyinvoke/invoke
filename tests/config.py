@@ -11,6 +11,7 @@ from invoke.config import Config
 from invoke.exceptions import (
     AmbiguousEnvVar, UncastableEnvVar, UnknownFileType
 )
+from invoke.platform import WINDOWS
 
 from _util import IntegrationSpec, skip_if_windows
 
@@ -75,8 +76,7 @@ class Config_(IntegrationSpec):
             # be...for some reason we're not actually capturing all of these
             # reliably (even if their defaults are often implied by the tests
             # which override them, e.g. runner tests around warn=True, etc).
-            eq_(
-                Config.global_defaults(), {
+            defaults = {
                     'run': {
                         'echo': False,
                         'echo_stdin': None,
@@ -107,8 +107,12 @@ class Config_(IntegrationSpec):
                         'collection_name': 'tasks',
                         'search_root': None,
                     },
-                },
-            )
+                }
+            if WINDOWS:
+                defaults['run']['shell'] = os.environ.get('COMSPEC')
+                if defaults['run']['shell'] is None:
+                    defaults['run']['shell'] = 'C:\\Windows\\System32\\cmd.exe'
+            eq_(Config.global_defaults(), defaults)
 
     class init:
         "__init__"
