@@ -111,7 +111,7 @@ class Config_(IntegrationSpec):
             if WINDOWS:
                 defaults['run']['shell'] = os.environ.get('COMSPEC')
                 if defaults['run']['shell'] is None:
-                    defaults['run']['shell'] = "C:\\Windows\\System32\\cmd.exe"
+                    defaults['run']['shell'] = 'C:\\Windows\\System32\\cmd.exe'
             eq_(Config.global_defaults(), defaults)
 
     class init:

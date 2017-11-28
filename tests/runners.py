@@ -1302,14 +1302,26 @@ class Local_(Spec):
 
     class shell:
         @mock_pty(insert_os=True)
-        def defaults_to_bash_when_pty_True(self, mock_os):
+        def defaults_to_bash_or_cmd_when_pty_True(self, mock_os):
             self._run(_, pty=True)
-            eq_(mock_os.execve.call_args_list[0][0][0], '/bin/bash')
+            if WINDOWS:
+                shell = os.environ.get('COMSPEC')
+                if shell is None:
+                    shell = 'C:\\Windows\\System32\\cmd.exe'
+            else:
+                shell = '/bin/bash'
+            eq_(mock_os.execve.call_args_list[0][0][0], shell)
 
         @mock_subprocess(insert_Popen=True)
-        def defaults_to_bash_when_pty_False(self, mock_Popen):
+        def defaults_to_bash_or_cmd_when_pty_False(self, mock_Popen):
             self._run(_, pty=False)
-            eq_(mock_Popen.call_args_list[0][1]['executable'], '/bin/bash')
+            if WINDOWS:
+                shell = os.environ.get('COMSPEC')
+                if shell is None:
+                    shell = 'C:\\Windows\\System32\\cmd.exe'
+            else:
+                shell = '/bin/bash'
+            eq_(mock_Popen.call_args_list[0][1]['executable'], shell)
 
         @mock_pty(insert_os=True)
         def may_be_overridden_when_pty_True(self, mock_os):

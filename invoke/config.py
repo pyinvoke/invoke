@@ -483,7 +483,7 @@ class Config(DataProxy):
         if WINDOWS:
             defaults['run']['shell'] = os.environ.get('COMSPEC')
             if defaults['run']['shell'] is None:
-                defaults['run']['shell'] = "C:\\Windows\\System32\\cmd.exe"
+                defaults['run']['shell'] = 'C:\\Windows\\System32\\cmd.exe'
 
         return defaults
 
