@@ -481,7 +481,9 @@ class Config(DataProxy):
 
         # BUGFIX: (#407) If on Windows, use default shell setting.
         if WINDOWS:
-            defaults['run']['shell'] = os.environ['COMSPEC']
+            defaults['run']['shell'] = os.environ.get('COMSPEC')
+            if defaults['run']['shell'] is None:
+                defaults['run']['shell'] = "C:\\Windows\\System32\\cmd.exe"
 
         return defaults
 
