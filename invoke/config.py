@@ -429,7 +429,7 @@ class Config(DataProxy):
         # back to an unqualified cmd.exe otherwise.
         if WINDOWS:
             comspec = os.environ.get('COMSPEC', '')
-            shell = comspec if 'cmd.exe' in comspec else 'cmd.exe'
+            shell = comspec if comspec != '' else 'cmd.exe'
         # Else, assume Unix, most distros of which have /bin/bash available.
         # TODO: consider an automatic fallback to /bin/sh for systems lacking
         # /bin/bash; however users may configure run.shell quite easily, so...
