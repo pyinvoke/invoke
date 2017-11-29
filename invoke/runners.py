@@ -100,7 +100,9 @@ class Runner(object):
 
         :param str command: The shell command to execute.
 
-        :param str shell: Which shell binary to use. Default: ``/bin/bash``.
+        :param str shell:
+            Which shell binary to use. Default: ``/bin/bash`` (on Unix;
+            ``COMSPEC`` or ``cmd.exe`` on Windows.)
 
         :param bool warn:
             Whether to warn and continue, instead of raising
