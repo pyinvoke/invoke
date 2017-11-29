@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :release:`0.22.0 <2017-11-29>`
 * :bug:`407 major` (also :issue:`494`, :issue:`67`) Update the default value of
   the ``run.shell`` config value so that it reflects a Windows-appropriate
   value (specifically, the ``COMSPEC`` env var or a fallback of ``cmd.exe``) on
