@@ -25,8 +25,6 @@ else:
 from .env import Environment
 from .exceptions import UnknownFileType
 from .platform import WINDOWS
-if WINDOWS:
-    from os import environ
 from .runners import Local
 from .util import debug
 
@@ -426,12 +424,15 @@ class Config(DataProxy):
         ``Config.global_defaults`` and applying `.merge_dicts` to the result,
         to add to or modify these values.
         """
+        # On Windows, which won't have /bin/bash, check for a cmd.exe-bearing
+        # COMSPEC env var (https://en.wikipedia.org/wiki/COMSPEC) and then fall
+        # back to an unqualified cmd.exe otherwise.
         if WINDOWS:
-            # Create proper path to cmd.exe based on environment variable
-            # https://en.wikipedia.org/wiki/COMSPEC
-            # In case of any problem assume that cmd.exe is in windows PATH
-            shell = environ['COMSPEC'] if 'COMSPEC' in environ and 'cmd.exe' \
-                                          in environ['COMSPEC'] else 'cmd.exe'
+            comspec = os.environ.get('COMSPEC', '')
+            shell = comspec if 'cmd.exe' in comspec else 'cmd.exe'
+        # Else, assume Unix, most distros of which have /bin/bash available.
+        # TODO: consider an automatic fallback to /bin/sh for systems lacking
+        # /bin/bash; however users may configure run.shell quite easily, so...
         else:
             shell = '/bin/bash'
 
