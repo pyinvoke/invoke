@@ -424,12 +424,11 @@ class Config(DataProxy):
         ``Config.global_defaults`` and applying `.merge_dicts` to the result,
         to add to or modify these values.
         """
-        # On Windows, which won't have /bin/bash, check for a cmd.exe-bearing
-        # COMSPEC env var (https://en.wikipedia.org/wiki/COMSPEC) and then fall
-        # back to an unqualified cmd.exe otherwise.
+        # On Windows, which won't have /bin/bash, check for a set COMSPEC env
+        # var (https://en.wikipedia.org/wiki/COMSPEC) or fallback to an
+        # unqualified cmd.exe otherwise.
         if WINDOWS:
-            comspec = os.environ.get('COMSPEC', '')
-            shell = comspec if 'cmd.exe' in comspec else 'cmd.exe'
+            shell = os.environ.get('COMSPEC', 'cmd.exe')
         # Else, assume Unix, most distros of which have /bin/bash available.
         # TODO: consider an automatic fallback to /bin/sh for systems lacking
         # /bin/bash; however users may configure run.shell quite easily, so...
