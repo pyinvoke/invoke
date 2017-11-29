@@ -2,6 +2,12 @@
 Changelog
 =========
 
+* :bug:`407` (also :issue:`494`, :issue:`67`) Update the default value of the
+  ``run.shell`` config value so that it reflects a Windows-appropriate value
+  (specifically, the ``COMSPEC`` env var or a fallback of ``cmd.exe``) on
+  Windows platforms. This prevents Windows users from being forced to always
+  ship around configuration-level overrides. Thanks to Maciej 'maQ' Kusz for
+  the original patchset & to ``@thebjorn`` for many assists.
 * :bug:`-` Iterable-type CLI args were actually still somewhat broken & were
   'eating' values after themselves in the parser stream (thus e.g. preventing
   parsing of subsequent tasks or flags.) This has been fixed.
