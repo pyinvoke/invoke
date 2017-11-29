@@ -46,6 +46,12 @@ def _runner(out='', err='', **kwargs):
     runner.read_proc_stderr = err_file.read
     return runner
 
+def _expect_platform_shell(shell):
+    if WINDOWS:
+        assert shell.endswith('cmd.exe')
+    else:
+        assert shell == '/bin/bash'
+
 
 class Runner_(Spec):
     # NOTE: these copies of _run and _runner form the base case of "test Runner
@@ -134,19 +140,11 @@ class Runner_(Spec):
             eq_(runner.run(_, pty=True).pty, True)
 
     class shell:
-        def defaults_to_bash_when_pty_True(self):
-            if sys.platform == 'win32':
-                path, cmd = os.path.split(self._run(_, pty=True).shell)
-                eq_(cmd, 'cmd.exe')
-            else:
-                eq_(self._run(_, pty=True).shell, '/bin/bash')
+        def defaults_to_bash_or_cmdexe_when_pty_True(self):
+            _expect_platform_shell(self._run(_, pty=True).shell)
 
-        def defaults_to_bash_when_pty_False(self):
-            if sys.platform == 'win32':
-                path, cmd = os.path.split(self._run(_, pty=False).shell)
-                eq_(cmd, 'cmd.exe')
-            else:
-                eq_(self._run(_, pty=False).shell, '/bin/bash')
+        def defaults_to_bash_or_cmdexe_when_pty_False(self):
+            _expect_platform_shell(self._run(_, pty=False).shell)
 
         def may_be_overridden(self):
             eq_(self._run(_, shell='/bin/zsh').shell, '/bin/zsh')
@@ -233,11 +231,7 @@ class Runner_(Spec):
             eq_(self._run(_).command, _)
 
         def shell_used(self):
-            if sys.platform == 'win32':
-                path, cmd = os.path.split(self._run(_).shell)
-                eq_(cmd, 'cmd.exe')
-            else:
-                eq_(self._run(_).shell, '/bin/bash')
+            _expect_platform_shell(self._run(_).shell)
 
         def hide_param_exposed_and_normalized(self):
             eq_(self._run(_, hide=True).hide, ('stdout', 'stderr'))
@@ -1314,19 +1308,18 @@ class Local_(Spec):
 
     class shell:
         @mock_pty(insert_os=True)
-        def defaults_to_bash_when_pty_True(self, mock_os):
+        def defaults_to_bash_or_cmdexe_when_pty_True(self, mock_os):
+            # NOTE: yea, windows can't run pty == true, but this is really
+            # testing config behavior, so...meh
             self._run(_, pty=True)
-            eq_(mock_os.execve.call_args_list[0][0][0], '/bin/bash')
+            _expect_platform_shell(mock_os.execve.call_args_list[0][0][0])
 
         @mock_subprocess(insert_Popen=True)
-        def defaults_to_bash_when_pty_False(self, mock_Popen):
+        def defaults_to_bash_or_cmdexe_when_pty_False(self, mock_Popen):
             self._run(_, pty=False)
-            if sys.platform == 'win32':
-                path, cmd = os.path.split(mock_Popen.call_args_list[0][1]
-                                          ['executable'])
-                eq_(cmd, 'cmd.exe')
-            else:
-                eq_(mock_Popen.call_args_list[0][1]['executable'], '/bin/bash')
+            _expect_platform_shell(
+                mock_Popen.call_args_list[0][1]['executable']
+            )
 
         @mock_pty(insert_os=True)
         def may_be_overridden_when_pty_True(self, mock_os):
