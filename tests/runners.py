@@ -46,6 +46,12 @@ def _runner(out='', err='', **kwargs):
     runner.read_proc_stderr = err_file.read
     return runner
 
+def _expect_platform_shell(shell):
+    if WINDOWS:
+        assert shell.endswith('cmd.exe')
+    else:
+        assert shell == '/bin/bash'
+
 
 class Runner_(Spec):
     # NOTE: these copies of _run and _runner form the base case of "test Runner
@@ -65,7 +71,6 @@ class Runner_(Spec):
             pass
         MockedStdin.write_proc_stdin = Mock()
         return MockedStdin
-
 
     class init:
         "__init__"
@@ -135,11 +140,11 @@ class Runner_(Spec):
             eq_(runner.run(_, pty=True).pty, True)
 
     class shell:
-        def defaults_to_bash_when_pty_True(self):
-            eq_(self._run(_, pty=True).shell, '/bin/bash')
+        def defaults_to_bash_or_cmdexe_when_pty_True(self):
+            _expect_platform_shell(self._run(_, pty=True).shell)
 
-        def defaults_to_bash_when_pty_False(self):
-            eq_(self._run(_, pty=False).shell, '/bin/bash')
+        def defaults_to_bash_or_cmdexe_when_pty_False(self):
+            _expect_platform_shell(self._run(_, pty=False).shell)
 
         def may_be_overridden(self):
             eq_(self._run(_, shell='/bin/zsh').shell, '/bin/zsh')
@@ -226,7 +231,7 @@ class Runner_(Spec):
             eq_(self._run(_).command, _)
 
         def shell_used(self):
-            eq_(self._run(_).shell, '/bin/bash')
+            _expect_platform_shell(self._run(_).shell)
 
         def hide_param_exposed_and_normalized(self):
             eq_(self._run(_, hide=True).hide, ('stdout', 'stderr'))
@@ -351,7 +356,7 @@ class Runner_(Spec):
                 self._run(_, hide=value)
             except ValueError as e:
                 msg = "Error from run(hide=xxx) did not tell user what the bad value was!" # noqa
-                msg += "\nException msg: {0}".format(e)
+                msg += "\nException msg: {}".format(e)
                 ok_(value in str(e), msg)
             else:
                 assert False, "run() did not raise ValueError for bad hide= value" # noqa
@@ -446,6 +451,17 @@ class Runner_(Spec):
             calls = list(map(lambda x: call(x), "Hey, listen!"))
             klass.write_proc_stdin.assert_has_calls(calls, any_order=False)
 
+        def can_be_disabled_entirely(self):
+            # Mock handle_stdin so we can assert it's not even called
+            class MockedHandleStdin(_Dummy):
+                pass
+            MockedHandleStdin.handle_stdin = Mock()
+            self._runner(klass=MockedHandleStdin).run(
+                _,
+                in_stream=False, # vs None or a stream
+            )
+            assert not MockedHandleStdin.handle_stdin.called
+
         @patch('invoke.util.debug')
         def exceptions_get_logged(self, mock_debug):
             # Make write_proc_stdin asplode
@@ -465,48 +481,6 @@ class Runner_(Spec):
             # method?
             mock_debug.assert_called_with("Encountered exception OhNoz('oh god why',) in thread for 'handle_stdin'") # noqa
 
-        @trap
-        @skip_if_windows
-        @patch('invoke.runners.sys.stdin')
-        @patch('invoke.platform.fcntl.ioctl')
-        @patch('invoke.platform.termios')
-        @patch('invoke.platform.tty')
-        @patch('invoke.platform.select')
-        # NOTE: the no-fileno edition is handled at top of this local test
-        # class, in the base case test.
-        def reads_FIONREAD_bytes_from_stdin_when_fileno(
-            self, select, tty, termios, ioctl, stdin
-        ):
-            # Set stdin up as a file-like buffer which passes has_fileno
-            stdin.fileno.return_value = 17 # arbitrary
-            stdin_data = list("boo!")
-            def fakeread(n):
-                # Why is there no slice version of pop()?
-                data = stdin_data[:n]
-                del stdin_data[:n]
-                return ''.join(data)
-            stdin.read.side_effect = fakeread
-            # Ensure select() only spits back stdin one time, despite there
-            # being multiple bytes to read (this at least partly fakes behavior
-            # from issue #58)
-            select.select.side_effect = chain(
-                [([stdin], [], [])],
-                repeat(([], [], [])),
-            )
-            # Have ioctl yield our multiple number of bytes when called with
-            # FIONREAD
-            def fake_ioctl(fd, cmd, buf):
-                # This works since each mocked attr will still be its own mock
-                # object with a distinct 'is' identity.
-                if cmd is termios.FIONREAD:
-                    return struct.pack('h', len(stdin_data))
-            ioctl.side_effect = fake_ioctl
-            # Set up our runner as one w/ mocked stdin writing (simplest way to
-            # assert how the reads & writes are happening)
-            klass = self._mock_stdin_writer()
-            self._runner(klass=klass).run(_)
-            klass.write_proc_stdin.assert_called_once_with("boo!")
-
     class failure_handling:
         @raises(UnexpectedExit)
         def fast_failures(self):
@@ -517,10 +491,21 @@ class Runner_(Spec):
             eq_(r.failed, True)
 
         class UnexpectedExit_repr:
+            def similar_to_just_the_result_repr(self):
+                try:
+                    self._runner(exits=23).run(_)
+                except UnexpectedExit as e:
+                    expected = "<UnexpectedExit: cmd='{}' exited=23>"
+                    eq_(
+                        repr(e),
+                        expected.format(_),
+                    )
+
+        class UnexpectedExit_str:
             def setup(self):
                 def lines(prefix):
                     return "\n".join(
-                        "{0} {1}".format(prefix, x) for x in range(1, 26)
+                        "{} {}".format(prefix, x) for x in range(1, 26)
                     ) + "\n"
                 self._stdout = lines('stdout')
                 self._stderr = lines('stderr')
@@ -534,9 +519,9 @@ class Runner_(Spec):
                         err=self._stderr,
                     ).run(_)
                 except UnexpectedExit as e:
-                    eq_(repr(e), """Encountered a bad command exit code!
+                    eq_(str(e), """Encountered a bad command exit code!
 
-Command: '{0}'
+Command: '{}'
 
 Exit code: 23
 
@@ -555,9 +540,9 @@ Stderr: already printed
                         exits=13, out=self._stdout, err=self._stderr
                     ).run(_, pty=True)
                 except UnexpectedExit as e:
-                    eq_(repr(e), """Encountered a bad command exit code!
+                    eq_(str(e), """Encountered a bad command exit code!
 
-Command: '{0}'
+Command: '{}'
 
 Exit code: 13
 
@@ -574,7 +559,7 @@ Stderr: n/a (PTYs have no stderr)
                         exits=1, out=self._stdout, err=self._stderr
                     ).run(_, pty=True, hide=True)
                 except UnexpectedExit as e:
-                    r = repr(e)
+                    r = str(e)
                     ok_("Stderr: n/a (PTYs have no stderr)" in r)
                     ok_("Stderr: already printed" not in r)
 
@@ -589,9 +574,9 @@ Stderr: n/a (PTYs have no stderr)
                         exits=77, out=self._stdout, err=self._stderr
                     ).run(_, hide=True)
                 except UnexpectedExit as e:
-                    eq_(repr(e), """Encountered a bad command exit code!
+                    eq_(str(e), """Encountered a bad command exit code!
 
-Command: '{0}'
+Command: '{}'
 
 Exit code: 77
 
@@ -626,7 +611,7 @@ stderr 25
             @trap
             def displays_tails_of_streams_only_when_hidden(self):
                 def oops(msg, r, hide):
-                    return "{0}! hide={1}; repr output:\n\n{2}".format(
+                    return "{}! hide={}; str output:\n\n{}".format(
                         msg, hide, r
                     )
                 for hide, expect_out, expect_err in (
@@ -641,7 +626,7 @@ stderr 25
                             exits=1, out=self._stdout, err=self._stderr
                         ).run(_, hide=hide)
                     except UnexpectedExit as e:
-                        r = repr(e)
+                        r = str(e)
                         # Expect that the top of output is never displayed
                         ok_(
                             "stdout 15" not in r,
@@ -752,7 +737,7 @@ stderr 25
                         self._watcher_error()
                     except Failure as e:
                         exited = e.result.exited
-                        err = "Expected None, got {0!r}".format(exited)
+                        err = "Expected None, got {!r}".format(exited)
                         ok_(exited is None, err)
 
                 def ok_and_bool_still_are_falsey(self):
@@ -777,6 +762,7 @@ stderr 25
                         assert False, "Did not raise Failure!"
 
     class threading:
+        # NOTE: see also the more generic tests in concurrency.py
         def errors_within_io_thread_body_bubble_up(self):
             class Oops(_Dummy):
                 def handle_stdout(self, **kwargs):
@@ -798,6 +784,25 @@ stderr 25
                 # implementation-specific, though, so possibly not worthwhile.
             else:
                 assert False, "Did not raise ThreadException as expected!"
+
+        def io_thread_errors_str_has_details(self):
+            class Oops(_Dummy):
+                def handle_stdout(self, **kwargs):
+                    raise OhNoz()
+            runner = Oops(Context())
+            try:
+                runner.run("nah")
+            except ThreadException as e:
+                message = str(e)
+                # Just make sure salient bits appear present, vs e.g. default
+                # representation happening instead.
+                ok_("Saw 1 exceptions within threads" in message)
+                ok_("{'kwargs': " in message)
+                ok_("Traceback (most recent call last):\n\n" in message)
+                ok_("OhNoz" in message)
+            else:
+                assert False, "Did not raise ThreadException as expected!"
+
 
     class watchers:
         # NOTE: it's initially tempting to consider using mocks or stub
@@ -1041,6 +1046,52 @@ stderr 25
                 expect_mirroring=False,
             )
 
+        @trap
+        @skip_if_windows
+        @patch('invoke.runners.sys.stdin')
+        @patch('invoke.platform.fcntl.ioctl')
+        @patch('invoke.platform.os')
+        @patch('invoke.platform.termios')
+        @patch('invoke.platform.tty')
+        @patch('invoke.platform.select')
+        # NOTE: the no-fileno edition is handled at top of this local test
+        # class, in the base case test.
+        def reads_FIONREAD_bytes_from_stdin_when_fileno(
+            self, select, tty, termios, mock_os, ioctl, stdin
+        ):
+            # Set stdin up as a file-like buffer which passes has_fileno
+            stdin.fileno.return_value = 17 # arbitrary
+            stdin_data = list("boo!")
+            def fakeread(n):
+                # Why is there no slice version of pop()?
+                data = stdin_data[:n]
+                del stdin_data[:n]
+                return ''.join(data)
+            stdin.read.side_effect = fakeread
+            # Without mocking this, we'll always get errors checking the above
+            # bogus fileno()
+            mock_os.tcgetpgrp.return_value = None
+            # Ensure select() only spits back stdin one time, despite there
+            # being multiple bytes to read (this at least partly fakes behavior
+            # from issue #58)
+            select.select.side_effect = chain(
+                [([stdin], [], [])],
+                repeat(([], [], [])),
+            )
+            # Have ioctl yield our multiple number of bytes when called with
+            # FIONREAD
+            def fake_ioctl(fd, cmd, buf):
+                # This works since each mocked attr will still be its own mock
+                # object with a distinct 'is' identity.
+                if cmd is termios.FIONREAD:
+                    return struct.pack('h', len(stdin_data))
+            ioctl.side_effect = fake_ioctl
+            # Set up our runner as one w/ mocked stdin writing (simplest way to
+            # assert how the reads & writes are happening)
+            klass = self._mock_stdin_writer()
+            self._runner(klass=klass).run(_)
+            klass.write_proc_stdin.assert_called_once_with("boo!")
+
     class character_buffered_stdin:
         @skip_if_windows
         @patch('invoke.platform.tty')
@@ -1053,7 +1104,21 @@ stderr 25
         @patch('invoke.platform.tty')
         def setcbreak_not_called_on_non_tty_stdins(self, mock_tty):
             self._run(_, in_stream=StringIO())
-            eq_(mock_tty.setcbreak.call_args_list, [])
+            ok_(not mock_tty.setcbreak.called)
+
+        @skip_if_windows
+        @patch('invoke.platform.tty')
+        @patch('invoke.platform.os')
+        def setcbreak_not_called_if_process_not_foregrounded(
+            self, mock_os, mock_tty,
+        ):
+            # Re issue #439.
+            mock_os.getpgrp.return_value = 1337
+            mock_os.tcgetpgrp.return_value = 1338
+            self._run(_)
+            ok_(not mock_tty.setcbreak.called)
+            # Sanity
+            mock_os.tcgetpgrp.assert_called_once_with(sys.stdin.fileno())
 
         @skip_if_windows
         @patch('invoke.platform.tty') # stub
@@ -1210,6 +1275,11 @@ class Local_(Spec):
             # Doesn't-blow-up test.
             self._run(_, pty=True)
 
+        @mock_pty(trailing_error=OSError("I/O error"))
+        def other_spurious_OSErrors_handled_gracefully(self):
+            # Doesn't-blow-up test.
+            self._run(_, pty=True)
+
         @mock_pty(trailing_error=OSError("wat"))
         def non_spurious_OSErrors_bubble_up(self):
             try:
@@ -1243,14 +1313,18 @@ class Local_(Spec):
 
     class shell:
         @mock_pty(insert_os=True)
-        def defaults_to_bash_when_pty_True(self, mock_os):
+        def defaults_to_bash_or_cmdexe_when_pty_True(self, mock_os):
+            # NOTE: yea, windows can't run pty == true, but this is really
+            # testing config behavior, so...meh
             self._run(_, pty=True)
-            eq_(mock_os.execve.call_args_list[0][0][0], '/bin/bash')
+            _expect_platform_shell(mock_os.execve.call_args_list[0][0][0])
 
         @mock_subprocess(insert_Popen=True)
-        def defaults_to_bash_when_pty_False(self, mock_Popen):
+        def defaults_to_bash_or_cmdexe_when_pty_False(self, mock_Popen):
             self._run(_, pty=False)
-            eq_(mock_Popen.call_args_list[0][1]['executable'], '/bin/bash')
+            _expect_platform_shell(
+                mock_Popen.call_args_list[0][1]['executable']
+            )
 
         @mock_pty(insert_os=True)
         def may_be_overridden_when_pty_True(self, mock_os):
@@ -1313,3 +1387,6 @@ class Result_(Spec):
 
     def pty_defaults_to_False(self):
         eq_(Result().pty, False)
+
+    def repr_contains_useful_info(self):
+        eq_(repr(Result(command="foo")), "<Result cmd='foo' exited=0>")

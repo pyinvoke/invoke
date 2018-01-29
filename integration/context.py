@@ -14,6 +14,6 @@ class Context_(Spec):
             # running on Travis, basically.
             if not os.environ.get('TRAVIS', False):
                 skip()
-            config = Config(overrides={'sudo': {'password': 'mypass'}})
+            config = Config({'sudo': {'password': 'mypass'}})
             result = Context(config=config).sudo('whoami', hide=True)
             eq_(result.stdout.strip(), 'root')

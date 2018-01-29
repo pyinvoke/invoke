@@ -2,11 +2,291 @@
 Changelog
 =========
 
-* :bug:`432` Tighten application of IO thread ``join`` timeouts (in `run
+* :bug:`437` When merging configuration levels together (which uses
+  `copy.copy` by default), pass file objects by reference so they don't get
+  closed. Catch & patch by Paul Healy.
+* :support:`469 backported` Fix up the :ref:`doc/example
+  <customizing-config-defaults>` re: subclassing `~invoke.config.Config`.
+  Credit: ``@Aiky30``.
+* :bug:`488` Account for additional I/O related ``OSError`` error strings
+  when attempting to capture only this specific subtype of error. This should
+  fix some issues with less common libc implementations such as ``musl`` (as
+  found on e.g. Alpine Linux.) Thanks to Rajitha Perera for the report.
+* :release:`0.22.0 <2017-11-29>`
+* :bug:`407 major` (also :issue:`494`, :issue:`67`) Update the default value of
+  the ``run.shell`` config value so that it reflects a Windows-appropriate
+  value (specifically, the ``COMSPEC`` env var or a fallback of ``cmd.exe``) on
+  Windows platforms. This prevents Windows users from being forced to always
+  ship around configuration-level overrides.
+
+  Thanks to Maciej 'maQ' Kusz for the original patchset, and to ``@thebjorn``
+  and Garrett Jenkins for providing lots of feedback.
+* :bug:`- major` Iterable-type CLI args were actually still somewhat broken &
+  were 'eating' values after themselves in the parser stream (thus e.g.
+  preventing parsing of subsequent tasks or flags.) This has been fixed.
+* :support:`364` Drop Python 2.6 and Python 3.3 support, as these versions now
+  account for only very low percentages of the userbase and are unsupported (or
+  about to be unsupported) by the rest of the ecosystem, including ``pip``.
+
+  This includes updating documentation & packaging metadata as well as taking
+  advantage of basic syntax additions like set literals/comprehensions (``{1,
+  2, 3}`` instead of ``set([1, 2, 3])``) and removing positional string
+  argument specifiers (``"{}".format(val)`` instead of ``"{0}".format(val)``).
+
+* :release:`0.21.0 <2017-09-18>`
+* :feature:`132` Implement 'iterable' and 'incrementable' CLI flags, allowing
+  for invocations like ``inv mytask --listy foo --listy bar`` (resulting in a
+  call like ``mytask(listy=['foo', 'bar'])``) or ``inv mytask -vvv`` (resulting
+  in e.g. ``mytask(verbose=3)``. Specifically, these require use of the new
+  :ref:`iterable <iterable-flag-values>` and :ref:`incrementable
+  <incrementable-flag-values>` arguments to `@task <invoke.tasks.task>` - see
+  those links to the conceptual docs for details.
+* :release:`0.20.4 <2017-08-14>`
+* :bug:`-` The behavior of `Config <invoke.config.Config>` when ``lazy=True``
+  didn't match that described in the API docs, after the recent updates to its
+  lifecycle. (Specifically, any config data given to the constructor was not
+  visible in the resulting instance until ``merge()`` was explicitly called.)
+  This has been fixed, along with other related minor issues.
+* :release:`0.20.3 <2017-08-04>`
+* :bug:`467` (Arguably also a feature, but since it enables behavior users
+  clearly found intuitive, we're considering it a bug.) Split up the parsing
+  machinery of `Program <invoke.program.Program>` and pushed the `Collection
+  <invoke.collection.Collection>`-making out of `Loader
+  <invoke.loader.Loader>`. Combined, this allows us to honor the project-level
+  config file *before* the second (task-oriented) CLI parsing step, instead of
+  after.
+
+  For example, this means you can turn off ``auto_dash_names`` in your
+  per-project configs and not only in your system or user configs.
+
+  Report again courtesy of Luke Orland.
+
+  .. warning::
+    This is a backwards incompatible change *if* you were subclassing and
+    overriding any of the affected methods in the ``Program`` or ``Loader``
+    classes.
+
+* :release:`0.20.2 <2017-08-02>`
+* :bug:`465` The ``tasks.auto_dash_names`` config option added in ``0.20.0``
+  wasn't being fully honored when set to ``False``; this has been fixed. Thanks
+  to Luke Orland for the report.
+* :release:`0.20.1 <2017-07-27>`
+* :bug:`-` Fix a broken ``six.moves`` import within ``invoke.util``; was
+  causing ``ImportError`` in environments without an external copy of ``six``
+  installed.
+
+  The dangers of one's local and CI environments all pulling down packages that
+  use ``six``! It's everywhere!
+* :release:`0.20.0 <2017-07-27>`
+* :feature:`-` (required to support :issue:`310` and :issue:`329`) Break up the
+  `~invoke.config.Config` lifecycle some more, allowing it to gradually load
+  configuration vectors; this allows the CLI machinery
+  (`~invoke.executor.Executor`) to honor configuration settings from config
+  files which impact how CLI parsing and task loading behaves.
+
+  Specifically, this adds more public ``Config.load_*`` methods, which in
+  tandem with the ``lazy`` kwarg to ``__init__`` (formerly ``defer_post_init``,
+  see below) allow full control over exactly when each config level is loaded.
+
+  .. warning::
+    This change may be backwards incompatible if you were using or subclassing
+    the `~invoke.config.Config` class in any of the following ways:
+
+    - If you were passing ``__init__`` kwargs such as ``project_home`` or
+      ``runtime_path`` and expecting those files to auto-load, they no longer
+      do; you must explicitly call `~invoke.config.Config.load_project` and/or
+      `~invoke.config.Config.load_runtime` explicitly.
+    - The ``defer_post_init`` keyword argument to ``Config.__init__`` has been
+      renamed to ``lazy``, and controls whether system/user config files are
+      auto-loaded.
+    - ``Config.post_init`` has been removed, in favor of explicit/granular use
+      of the ``load_*`` family of methods.
+    - All ``load_*`` methods now call ``Config.merge`` automatically by default
+      (previously, merging was deferred to the end of most config related
+      workflows.)
+
+      This should only be a problem if your config contents are extremely large
+      (it's an entirely in-memory dict-traversal operation) and can be avoided
+      by specifying ``merge=False`` to any such method. (Note that you must, at
+      some point, call `~invoke.config.Config.merge` in order for the config
+      object to work normally!)
+
+* :feature:`310` (also :issue:`455`, :issue:`291`) Allow configuring collection
+  root directory & module name via configuration files (previously, they were
+  only configurable via CLI flags or generating a custom
+  `~invoke.program.Program`.)
+* :feature:`329` All task and collection names now have underscores turned into
+  dashes automatically, as task parameters have been for some time. This
+  impacts ``--list``, ``--help``, and of course the parser. For details, see
+  :ref:`dashes-vs-underscores`.
+
+  This behavior is controlled by a new config setting,
+  ``tasks.auto_dash_names``, which can be set to ``False`` to go back to the
+  classic behavior.
+
+  Thanks to Alexander Artemenko for the initial feature request.
+* :bug:`396 major` ``Collection.add_task(task, aliases=('other', 'names')`` was
+  listed in the conceptual documentation, but not implemented (technically, it
+  was removed at some point and never reinstated.) It has been (re-)added and
+  now exists. Thanks to ``@jenisys`` for the report.
+
+  .. warning::
+    This technically changes argument order for `Collection.add_task
+    <invoke.collection.Collection.add_task>`, so be aware if you were using
+    positional arguments!
+
+* :bug:`- major` Display of hidden subprocess output when a command
+  execution failed (end-of-session output starting with ``Encountered a bad
+  command exit code!``) was liable to display encoding errors (e.g. ``'ascii'
+  codec can't encode character ...``) when that output was not
+  ASCII-compatible.
+
+  This problem was previously solved for *non-hidden* (mirrored) subprocess
+  output, but the fix (encode the data with the local encoding) had not been
+  applied to exception display. Now it's applied in both cases.
+* :feature:`322` Allow users to completely disable mirroring of stdin to
+  subprocesses, by specifying ``False`` for the ``run.in_stream`` config
+  setting and/or keyword argument.
+
+  This can help prevent problems when running Invoke under systems that have no
+  useful standard input and which otherwise defeat our pty/fileno related
+  detection.
+* :release:`0.19.0 <2017-06-19>`
+* :feature:`-` Add `MockContext.set_result_for
+  <invoke.context.MockContext.set_result_for>` to allow massaging a mock
+  Context's configured results after instantiation.
+* :release:`0.18.1 <2017-06-07>`
+* :bug:`-` Update Context internals re: command execution & configuration of
+  runner subclasses, to work better in client libraries such as Fabric 2.
+
+    .. note::
+        If you were using the undocumented ``runner`` configuration value added
+        in :issue:`446`, it is now ``runners.local``.
+
+    .. warning::
+        This change modifies the internals of methods like
+        `~invoke.context.Context.run` and `~invoke.context.Context.sudo`; users
+        maintaining their own subclasses should be aware of possible breakage.
+
+* :release:`0.18.0 <2017-06-02>`
+* :feature:`446` Implement `~invoke.context.Context.cd` and
+  `~invoke.context.Context.prefix` context managers (as methods on the
+  not-that-one-the-other-one `~invoke.context.Context` class.) These are based
+  on similar functionality in Fabric 1.x. Credit: Ryan P Kilby.
+* :support:`448` Fix up some config-related tests that have been failing on
+  Windows for some time. Thanks to Ryan P Kilby.
+* :feature:`205` Allow giving core flags like ``--help`` after tasks to trigger
+  per-task help. Previously, only ``inv --help taskname`` worked.
+
+  .. note::
+      Tasks with their own ``--help`` flags won't be able to leverage this
+      feature - the parser will still interpret the flag as being per-task and
+      not global. This may change in the future to simply throw an exception
+      complaining about the ambiguity. (Feedback welcome.)
+
+* :feature:`444` Add support for being used as ``python -m invoke <args>`` on
+  Python 2.7 and up. Thanks to Pekka Klärck for the feature request.
+* :release:`0.17.0 <2017-05-05>`
+* :bug:`439 major` Avoid placing stdin into bytewise read mode when it looks
+  like Invoke has been placed in the background by a shell's job control
+  system; doing so was causing the shell to pause the Invoke process (e.g. with
+  a message like ``suspended (tty output)``.) Reported by Tuukka Mustonen.
+* :bug:`425 major` Fix ``Inappropriate ioctl for device`` errors (usually
+  ``OSError``) when running Invoke without a tty-attached stdin (i.e. when run
+  under 'headless' continuous integration systems or simply as e.g. ``inv
+  sometask < /dev/null`` (redirected stdin.) Thanks to Javier Domingo Cansino
+  for the report & Tuukka Mustonen for troubleshooting assistance.
+* :feature:`-` Add a ``user`` kwarg & config parameter to
+  `Context.sudo <invoke.context.Context.sudo>`, which corresponds roughly to
+  ``sudo -u <user> <command>``.
+* :bug:`440 major` Make sure to skip a call to ``struct``/``ioctl`` on Windows
+  platforms; otherwise certain situations inside ``run`` calls would trigger
+  import errors. Thanks to ``@chrisc11`` for the report.
+* :release:`0.16.3 <2017-04-18>`
+* :bug:`-` Even more setup.py related tomfoolery.
+* :release:`0.16.2 <2017-04-18>`
+* :bug:`-` Deal with the fact that PyPI's rendering of Restructured Text has no
+  idea about our fancy new use of Sphinx's doctest module. Sob.
+* :release:`0.16.1 <2017-04-18>`
+* :bug:`-` Fix a silly typo preventing proper rendering of the packaging
+  ``long_description`` (causing an effectively blank PyPI description.)
+* :release:`0.16.0 <2017-04-18>`
+* :feature:`232` Add support for ``.yml``-suffixed config files (in addition to
+  ``.yaml``, ``.json`` and ``.py``.) Thanks to Matthias Lehmann for the
+  original request & Greg Back for an early patch.
+* :feature:`418` Enhance ability of client libraries to override config
+  filename prefixes. This includes modifications to related functionality, such
+  as how env var prefixes are configured.
+
+  .. warning::
+    **This is a backwards incompatible change** if:
+
+    - you were relying on the ``env_prefix`` keyword argument to
+      `Config.__init__ <invoke.config.Config.__init__>`; it is now the
+      ``prefix`` or ``env_prefix`` class attribute, depending.
+    - or the kwarg/attribute of the same name in `Program.__init__
+      <invoke.program.Program.__init__>`; you should now be subclassing
+      ``Config`` and using its ``env_prefix`` attribute;
+    - or if you were relying on how standalone ``Config`` objects defaulted to
+      having a ``None`` value for ``env_prefix``, and thus loaded env vars
+      without an ``INVOKE_`` style prefix.
+
+      See new documentation for this functionality at
+      :ref:`customizing-config-defaults` for details.
+
+* :feature:`309` Overhaul how task execution contexts/configs are handled, such
+  that all contexts in a session now share the same config object, and thus
+  user modifications are preserved between tasks. This has been done in a
+  manner that should not break things like collection-based config (which may
+  still differ from task to task.)
+
+  .. warning::
+    **This is a backwards incompatible change** if you were relying on the
+    post-0.12 behavior of cloning config objects between each task execution.
+    Make sure to investigate if you find tasks affecting one another in
+    unexpected ways!
+
+* :support:`-` Fixed some Python 2.6 incompatible string formatting that snuck
+  in recently.
+* :feature:`-` Switched the order of the first two arguments of
+  `Config.__init__ <invoke.config.Config.__init__>`, so that the ``overrides``
+  kwarg becomes the first positional argument.
+
+  This supports the common use case of making a `Config <invoke.config.Config>`
+  object that honors the system's core/global defaults; previously, because
+  ``defaults`` was the first argument, you'd end up replacing those core
+  defaults instead of merging with them.
+
+  .. warning::
+    **This is a backwards incompatible change** if you were creating custom
+    ``Config`` objects via positional, instead of keyword, arguments. It should
+    have no effect otherwise.
+
+* :feature:`-` `Context.sudo <invoke.context.Context.sudo>` no longer prompts
+  the user when the configured sudo password is empty; thus, an empty sudo
+  password and a ``sudo`` program configured to require one will result in an
+  exception.
+
+  The runtime prompting for a missing password was a temporary holdover from
+  Fabric v1, and in retrospect is undesirable. We may add it back in as an
+  opt-in behavior (probably via subclassing) in the future if anybody misses
+  it.
+
+  .. warning::
+    **This is a backwards incompatible change**, if you were relying on
+    ``sudo()`` prompting you for your password (vs configuring it). If you
+    *were* doing that, you can simply switch to ``run("sudo <command>")`` and
+    respond to the subprocess' sudo prompt by hand instead.
+
+* :feature:`-` `Result <invoke.runners.Result>` and `UnexpectedExit
+  <invoke.exceptions.UnexpectedExit>` objects now have a more useful ``repr()``
+  (and in the case of ``UnexpectedExit``, a distinct ``repr()`` from their
+  preexisting ``str()``.)
+* :bug:`432 major` Tighten application of IO thread ``join`` timeouts (in `run
   <invoke.runners.Runner.run>`) to only happen when :issue:`351` appears
   actually present. Otherwise, slow/overworked IO threads had a chance of being
   joined before truly reading all data from the subprocess' pipe.
-* :bug:`430` Fallback importing of PyYAML when Invoke has been installed
+* :bug:`430 major` Fallback importing of PyYAML when Invoke has been installed
   without its vendor directory, was still trying to import the vendorized
   module names (e.g. ``yaml2`` or ``yaml3`` instead of simply ``yaml``). This
   has been fixed, thanks to Athmane Madjoudj.
@@ -545,7 +825,7 @@ Changelog
 * :feature:`87` (also :issue:`92`) Rework the loader module such that recursive
   filesystem searching is implemented, and is used instead of searching
   `sys.path`.
-  
+
   This adds the behavior most users expect or are familiar with from Fabric 1
   or similar tools; and it avoids nasty surprise collisions with other
   installed packages containing files named ``tasks.py``.

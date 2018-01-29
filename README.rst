@@ -1,4 +1,4 @@
-Invoke is a Python (2.6+ and 3.3+) task execution tool & library, drawing
+Invoke is a Python (2.7 and 3.4+) task execution tool & library, drawing
 inspiration from various sources to arrive at a powerful & clean feature set.
 
 * Like Ruby's Rake tool and Invoke's own predecessor Fabric 1.x, it provides a
@@ -19,7 +19,7 @@ inspiration from various sources to arrive at a powerful & clean feature set.
         if extra:
             patterns.append(extra)
         for pattern in patterns:
-            ctx.run("rm -rf %s" % pattern)
+            ctx.run("rm -rf {}".format(pattern))
 
     @task
     def build(ctx, docs=False):
@@ -34,15 +34,31 @@ inspiration from various sources to arrive at a powerful & clean feature set.
 
 * Where Fabric 1.x considered the command-line approach the default mode of
   use, Invoke (and tools built on it) are equally at home embedded in your own
-  Python code or a REPL::
+  Python code or a REPL:
 
-    >>> from invoke import run
-    >>> result = run("pip install -r requirements.txt", hide=True, warn=True)
-    >>> print(result.ok)
-    True
-    >>> print(result.stdout[-1])
-    Successfully installed invocations-0.13.0 pep8-1.5.7 spec-1.3.1
-    >>>
+  .. testsetup:: blurb
+
+      fakeout = """
+      Hello, this is pip
+      Installing is fun
+      Fake output is fake
+      Successfully installed invocations-0.13.0 pep8-1.5.7 spec-1.3.1
+      """
+      proc = MockSubprocess(out=fakeout, exit=0)
+
+  .. testcleanup:: blurb
+
+      proc.stop()
+
+  .. doctest:: blurb
+
+      >>> from invoke import run
+      >>> cmd = "pip install -r requirements.txt"
+      >>> result = run(cmd, hide=True, warn=True)
+      >>> print(result.ok)
+      True
+      >>> print(result.stdout.splitlines()[-1])
+      Successfully installed invocations-0.13.0 pep8-1.5.7 spec-1.3.1
 
 * Following the lead of most Unix CLI applications, it offers a traditional
   flag-based style of command-line parsing, deriving flag names and value types

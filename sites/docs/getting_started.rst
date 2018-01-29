@@ -35,8 +35,8 @@ You can then execute that new task by telling Invoke's command line runner,
 The function body can be any Python you want -- anything at all.
 
 
-Parameterizing tasks
-====================
+Task parameters
+===============
 
 Functions can have arguments, and thus so can tasks. By default, your task
 functions' args/kwargs are mapped automatically to both long and short CLI
@@ -62,7 +62,7 @@ for example::
 
     @task
     def hi(ctx, name):
-        print("Hi %s!" % name)
+        print("Hi {}!".format(name))
 
 It can be invoked in the following ways, all resulting in "Hi Jeff!"::
 
@@ -72,16 +72,21 @@ It can be invoked in the following ways, all resulting in "Hi Jeff!"::
     $ invoke hi -n Jeff
     $ invoke hi -nJeff
 
-Adding help for parameters
---------------------------
+Adding metadata via `@task <.task>`
+-----------------------------------
 
-Describing the meaning of an argument can be done through the task's ``help``
-argument (in addition to optionally giving task-level help via the docstring)::
+`@task <.task>` can be used without any arguments, as above, but it's also a
+convenient vector for additional metadata about the task function it decorates.
+One common example is describing the task's arguments, via the ``help``
+parameter (in addition to optionally giving task-level help via the
+docstring)::
 
     @task(help={'name': "Name of the person to say hi to."})
     def hi(ctx, name):
-        """Say hi to someone."""
-        print("Hi %s!" % name)
+        """
+        Say hi to someone.
+        """
+        print("Hi {}!".format(name))
 
 This description will show up when invoking ``--help``::
 
@@ -94,9 +99,9 @@ This description will show up when invoking ``--help``::
     Options:
       -n STRING, --name=STRING   Name of the person to say hi to.
 
-More details on how all this works can be found in the :doc:`CLI concepts
-<concepts/cli>` (for the command-line & parsing side of things) and the `.task`
-API documentation (for the declaration side).
+More details on task parameterization and metadata can be found in the
+:doc:`CLI concepts <concepts/cli>` (for the command-line & parsing side of
+things) and the `.task` API documentation (for the declaration side).
 
 
 Listing tasks
@@ -121,7 +126,7 @@ Running shell commands
 Many use cases for Invoke involve running local shell commands, similar to
 programs like Make or Rake. This is done via the `~.Context.run` function::
 
-    from invoke import task, run
+    from invoke import task
 
     @task
     def build(ctx):
@@ -139,6 +144,25 @@ You'll see the command's output in your terminal as it runs::
 captured output, exit code, and so forth; it also allows you to activate a PTY,
 hide output (so it is captured only), and more. See `its API docs
 <.Context.run>` for details.
+
+.. _why-context:
+
+Aside: what exactly is this 'context' anyway?
+---------------------------------------------
+
+A common problem task runners face is transmission of "global" data - values
+loaded from :doc:`configuration files </concepts/configuration>` or :ref:`other
+configuration vectors <collection-configuration>`, given via CLI flags,
+generated in 'setup' tasks, etc.
+
+Some libraries (such as `Fabric <http://fabfile.org>`_ 1.x) implement this via
+module-level attributes, which makes testing difficult and error prone, limits
+concurrency, and increases implementation complexity.
+
+Invoke encapsulates state in explicit `~.Context` objects, handed to tasks when
+they execute . The context is the primary API endpoint, offering methods which
+honor the current state (such as `.Context.run`) as well as access to that
+state itself.
 
 
 Declaring pre-tasks

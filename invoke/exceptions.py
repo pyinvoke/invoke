@@ -6,14 +6,12 @@ exceptions used for message-passing" to simply "we needed to express an error
 condition in a way easily told apart from other, truly unexpected errors".
 """
 
-from collections import namedtuple
 from traceback import format_exception
 from pprint import pformat
 
-try:
-    from .vendor import six
-except ImportError:
-    import six
+from .util import six
+
+from .util import encode_output
 
 
 class CollectionNotFound(Exception):
@@ -46,9 +44,6 @@ class Failure(Exception):
         self.result = result
         self.reason = reason
 
-    def __repr__(self):
-        return str(self)
-
 
 def _tail(stream):
     # TODO: make configurable
@@ -75,25 +70,43 @@ class UnexpectedExit(Failure):
         if 'stdout' not in self.result.hide:
             stdout = already_printed
         else:
-            stdout = _tail(self.result.stdout)
+            stdout = encode_output(
+                _tail(self.result.stdout),
+                self.result.encoding,
+            )
         if self.result.pty:
             stderr = " n/a (PTYs have no stderr)"
         else:
             if 'stderr' not in self.result.hide:
                 stderr = already_printed
             else:
-                stderr = _tail(self.result.stderr)
-        return """Encountered a bad command exit code!
+                stderr = encode_output(
+                    _tail(self.result.stderr),
+                    self.result.encoding,
+                )
+        command = self.result.command
+        exited = self.result.exited
+        template = """Encountered a bad command exit code!
 
-Command: {0!r}
+Command: {!r}
 
-Exit code: {1}
+Exit code: {}
 
-Stdout:{2}
+Stdout:{}
 
-Stderr:{3}
+Stderr:{}
 
-""".format(self.result.command, self.result.exited, stdout, stderr)
+"""
+        return template.format(command, exited, stdout, stderr)
+
+    def __repr__(self):
+        # TODO: expand?
+        template = "<{}: cmd={!r} exited={}>"
+        return template.format(
+            self.__class__.__name__,
+            self.result.command,
+            self.result.exited,
+        )
 
 
 class AuthFailure(Failure):
@@ -110,7 +123,7 @@ class AuthFailure(Failure):
         self.prompt = prompt
 
     def __str__(self):
-        err = "The password submitted to prompt {0!r} was rejected."
+        err = "The password submitted to prompt {!r} was rejected."
         return err.format(self.prompt)
 
 
@@ -171,15 +184,6 @@ class UnknownFileType(Exception):
     pass
 
 
-#: A namedtuple wrapping a thread-borne exception & that thread's arguments.
-#: Mostly used as an intermediate between `.ExceptionHandlingThread` (which
-#: preserves initial exceptions) and `.ThreadException` (which holds 1..N such
-#: exceptions, as typically multiple threads are involved.)
-ExceptionWrapper = namedtuple(
-    'ExceptionWrapper',
-    'kwargs type value traceback'
-)
-
 def _printable_kwargs(kwargs):
     """
     Return print-friendly version of a thread-related ``kwargs`` dict.
@@ -203,7 +207,7 @@ def _printable_kwargs(kwargs):
 
 class ThreadException(Exception):
     """
-    One or more exceptions were raised within background (usually I/O) threads.
+    One or more exceptions were raised within background threads.
 
     The real underlying exceptions are stored in the `exceptions` attribute;
     see its documentation for data structure details.
@@ -212,10 +216,10 @@ class ThreadException(Exception):
         Threads which did not encounter an exception, do not contribute to this
         exception object and thus are not present inside `exceptions`.
     """
-    #: A tuple of `ExceptionWrappers <ExceptionWrapper>` containing the initial
-    #: thread constructor kwargs (because `threading.Thread` subclasses should
-    #: always be called with kwargs) and the caught exception for that thread
-    #: as seen by `sys.exc_info` (so: type, value, traceback).
+    #: A tuple of `ExceptionWrappers <invoke.util.ExceptionWrapper>` containing
+    #: the initial thread constructor kwargs (because `threading.Thread`
+    #: subclasses should always be called with kwargs) and the caught exception
+    #: for that thread as seen by `sys.exc_info` (so: type, value, traceback).
     #:
     #: .. note::
     #:     The ordering of this attribute is not well-defined.
@@ -233,7 +237,7 @@ class ThreadException(Exception):
         details = []
         for x in self.exceptions:
             # Build useful display
-            detail = "Thread args: {0}\n\n{1}"
+            detail = "Thread args: {}\n\n{}"
             details.append(detail.format(
                 pformat(_printable_kwargs(x.kwargs)),
                 "\n".join(format_exception(x.type, x.value, x.traceback)),
@@ -244,10 +248,10 @@ class ThreadException(Exception):
             "\n\n".join(details),
         )
         return """
-Saw {0} exceptions within threads ({1}):
+Saw {} exceptions within threads ({}):
 
 
-{2}
+{}
 """.format(*args)
 
 

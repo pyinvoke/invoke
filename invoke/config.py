@@ -4,16 +4,7 @@ import json
 import os
 from os.path import join, splitext, expanduser
 
-try:
-    from .vendor import six
-    if six.PY3:
-        from .vendor import yaml3 as yaml
-    else:
-        from .vendor import yaml2 as yaml
-except ImportError:
-    # Use system modules
-    import six
-    import yaml
+from .util import six, yaml
 
 if six.PY3:
     try:
@@ -33,8 +24,9 @@ else:
 
 from .env import Environment
 from .exceptions import UnknownFileType
-from .util import debug
 from .platform import WINDOWS
+from .runners import Local
+from .util import debug
 
 
 class DataProxy(object):
@@ -59,7 +51,7 @@ class DataProxy(object):
         itervalues
         keys
         values
-    """.split()) + tuple("__{0}__".format(x) for x in """
+    """.split()) + tuple("__{}__".format(x) for x in """
         cmp
         contains
         iter
@@ -67,7 +59,7 @@ class DataProxy(object):
     """.split())
 
     @classmethod
-    def from_data(cls, data, root=None, keypath=None):
+    def from_data(cls, data, root=None, keypath=tuple()):
         """
         Alternate constructor for 'baby' DataProxies used as sub-dict values.
 
@@ -91,8 +83,6 @@ class DataProxy(object):
         obj = cls()
         obj._set(_config=data)
         obj._set(_root=root)
-        if keypath is None:
-            keypath = tuple()
         obj._set(_keypath=keypath)
         return obj
 
@@ -108,12 +98,12 @@ class DataProxy(object):
             if key in self._proxies:
                 return getattr(self._config, key)
             # Otherwise, raise useful AttributeError to follow getattr proto.
-            err = "No attribute or config key found for {0!r}".format(key)
+            err = "No attribute or config key found for {!r}".format(key)
             attrs = [x for x in dir(self.__class__) if not x.startswith('_')]
-            err += "\n\nValid keys: {0!r}".format(
+            err += "\n\nValid keys: {!r}".format(
                 sorted(list(self._config.keys()))
             )
-            err += "\n\nValid real attributes: {0!r}".format(attrs)
+            err += "\n\nValid real attributes: {!r}".format(attrs)
             raise AttributeError(err)
 
     def __setattr__(self, key, value):
@@ -203,16 +193,8 @@ class DataProxy(object):
         for key, value in six.iteritems(kwargs):
             object.__setattr__(self, key, value)
 
-    def __str__(self):
-        return "<{0}: {1}>".format(self.__class__.__name__, self._config)
-
-    def __unicode__(self):
-        return unicode(self.__str__())  # noqa
-
     def __repr__(self):
-        # TODO: something more useful? Not an easy object to reconstruct from a
-        # stringrep.
-        return self.__str__()
+        return "<{}: {}>".format(self.__class__.__name__, self._config)
 
     def __contains__(self, key):
         return key in self._config
@@ -347,7 +329,7 @@ class Config(DataProxy):
     This class implements the entire dictionary protocol: methods such as
     ``keys``, ``values``, ``items``, ``pop`` and so forth should all function
     as they do on regular dicts. It also implements new config-specific methods
-    such as `.load_files`, `.load_collection` and `.clone`.
+    such as `load_system`, `load_collection`, `merge`, `clone`, etc.
 
     .. warning::
         Accordingly, this means that if you have configuration options sharing
@@ -358,33 +340,78 @@ class Config(DataProxy):
 
     At initialization time, `.Config`:
 
-    - creates per-level data structures
-    - stores levels supplied to `__init__`, such as defaults or overrides, as
-      well as the various config file paths/prefixes
-    - loads system, user and project level config files, if found
+    - creates per-level data structures;
+    - stores any levels supplied to `__init__`, such as defaults or overrides,
+      as well as the various config file paths/filename patterns;
+    - and loads config files, if found (though typically this just means system
+      and user-level files, as project and runtime files need more info before
+      they can be found and loaded.)
 
-    At this point, `.Config` is fully usable, but in most real-world use cases,
-    the CLI machinery (or library users) do additional work on a per-task
-    basis:
+        - This step can be skipped by specifying ``lazy=True``.
 
-    - the result of CLI argument parsing is applied to the overrides level
-    - a runtime config file is loaded, if its flag was supplied
-    - the base config is cloned (so tasks don't inadvertently affect one
-      another)
-    - per-collection data is loaded (only possible now that we have a task in
-      hand)
-    - shell environment data is loaded (must be done at end of process due to
-      using the rest of the config as a guide for interpreting env var names)
+    At this point, `.Config` is fully usable - and because it pre-emptively
+    loads some config files, those config files can affect anything that
+    comes after, like CLI parsing or loading of task collections.
 
-    Any modifications made directly to the `.Config` itself (usually, after it
-    has been handed to the task or other end-user code) end up stored in their
-    own (topmost) config level, making it easy to debug final values.
+    In the CLI use case, further processing is done after instantiation, using
+    the ``load_*`` methods such as `load_overrides`, `load_project`, etc:
+
+    - the result of argument/option parsing is applied to the overrides level;
+    - a project-level config file is loaded, as it's dependent on a loaded
+      tasks collection;
+    - a runtime config file is loaded, if its flag was supplied;
+    - then, for each task being executed:
+
+        - per-collection data is loaded (only possible now that we have
+          collection & task in hand);
+        - shell environment data is loaded (must be done at end of process due
+          to using the rest of the config as a guide for interpreting env var
+          names.)
+
+    At this point, the config object is handed to the task being executed, as
+    part of its execution `.Context`.
+
+    Any modifications made directly to the `.Config` itself after this point
+    end up stored in their own (topmost) config level, making it easy to debug
+    final values.
 
     Finally, any *deletions* made to the `.Config` (e.g. applications of
-    dict-style mutators like ``pop``, ``clear`` etc) are tracked in their own
-    structure, allowing the overall object to honor such method calls despite
-    the source data itself not changing.
+    dict-style mutators like ``pop``, ``clear`` etc) are also tracked in their
+    own structure, allowing the config object to honor such method calls
+    without mutating the underlying source data.
+
+    **Special class attributes**
+
+    The following class-level attributes are used for low-level configuration
+    of the config system itself, such as which file paths to load. They are
+    primarily intended for overriding by subclasses.
+
+    - ``prefix``: Supplies the default value for ``file_prefix`` (directly) and
+      ``env_prefix`` (uppercased). See their descriptions for details. Its
+      default value is ``"invoke"``.
+    - ``file_prefix``: The config file 'basename' default (though it is not a
+      literal basename; it can contain path parts if desired) which is appended
+      to the configured values of ``system_prefix``, ``user_prefix``, etc, to
+      arrive at the final (pre-extension) file paths.
+
+      Thus, by default, a system-level config file path concatenates the
+      ``system_prefix`` of ``/etc/`` with the ``file_prefix`` of ``invoke`` to
+      arrive at paths like ``/etc/invoke.json``.
+
+      Defaults to ``None``, meaning to use the value of ``prefix``.
+
+    - ``env_prefix``: A prefix used (along with a joining underscore) to
+      determine which environment variables are loaded as the env var
+      configuration level. Since its default is the value of ``prefix``
+      capitalized, this means env vars like ``INVOKE_RUN_ECHO`` are sought by
+      default.
+
+      Defaults to ``None``, meaning to use the value of ``prefix``.
     """
+    prefix = 'invoke'
+    file_prefix = None
+    env_prefix = None
+
     @staticmethod
     def global_defaults():
         """
@@ -397,6 +424,17 @@ class Config(DataProxy):
         ``Config.global_defaults`` and applying `.merge_dicts` to the result,
         to add to or modify these values.
         """
+        # On Windows, which won't have /bin/bash, check for a set COMSPEC env
+        # var (https://en.wikipedia.org/wiki/COMSPEC) or fallback to an
+        # unqualified cmd.exe otherwise.
+        if WINDOWS:
+            shell = os.environ.get('COMSPEC', 'cmd.exe')
+        # Else, assume Unix, most distros of which have /bin/bash available.
+        # TODO: consider an automatic fallback to /bin/sh for systems lacking
+        # /bin/bash; however users may configure run.shell quite easily, so...
+        else:
+            shell = '/bin/bash'
+
         return {
             # TODO: we document 'debug' but it's not truly implemented outside
             # of env var and CLI flag. If we honor it, we have to go around and
@@ -410,10 +448,15 @@ class Config(DataProxy):
             # - doing it at env var load time seems a bit silly given the
             # existing support for at-startup testing for INVOKE_DEBUG
             # 'debug': False,
+            # TODO: I feel like we want these to be more consistent re: default
+            # values stored here vs 'stored' as logic where they are
+            # referenced, there are probably some bits that are all "if None ->
+            # default" that could go here. Alternately, make _more_ of these
+            # default to None?
             'run': {
                 'warn': False,
                 'hide': None,
-                'shell': '/bin/bash',
+                'shell': shell,
                 'pty': False,
                 'fallback': True,
                 'env': {},
@@ -426,25 +469,34 @@ class Config(DataProxy):
                 'watchers': [],
                 'echo_stdin': None,
             },
+            # This doesn't live inside the 'run' tree; otherwise it'd make it
+            # somewhat harder to extend/override in Fabric 2 which has a split
+            # local/remote runner situation.
+            'runners': {
+                'local': Local,
+            },
             'sudo': {
                 'prompt': "[sudo] password: ",
                 'password': None,
+                'user': None,
             },
             'tasks': {
                 'dedupe': True,
+                'auto_dash_names': True,
+                'collection_name': 'tasks',
+                'search_root': None,
             },
         }
 
     def __init__(
         self,
-        defaults=None,
         overrides=None,
+        defaults=None,
         system_prefix=None,
         user_prefix=None,
-        project_home=None,
-        env_prefix=None,
+        project_location=None,
         runtime_path=None,
-        defer_post_init=False,
+        lazy=False,
     ):
         """
         Creates a new config object.
@@ -457,56 +509,55 @@ class Config(DataProxy):
             A dict containing override-level config data. Default: ``{}``.
 
         :param str system_prefix:
-            Path & partial filename for the global config file location. Should
-            include everything but the dot & file extension.
+            Base path for the global config file location; combined with the
+            prefix and file suffixes to arrive at final file path candidates.
 
-            Default: ``/etc/invoke`` (e.g. ``/etc/invoke.yaml`` or
+            Default: ``/etc/`` (thus e.g. ``/etc/invoke.yaml`` or
             ``/etc/invoke.json``).
 
         :param str user_prefix:
-            Like ``system_prefix`` but for the per-user config file.
+            Like ``system_prefix`` but for the per-user config file. These
+            variables are joined as strings, not via path-style joins, so they
+            may contain partial file paths; for the per-user config file this
+            often means a leading dot, to make the final result a hidden file
+            on most systems.
 
-            Default: ``~/.invoke`` (e.g. ``~/.invoke.yaml``).
+            Default: ``~/.`` (e.g. ``~/.invoke.yaml``).
 
-        :param str project_home:
-            Optional directory path location of the currently loaded
-            `.Collection` (as loaded by `.Loader`). When non-empty, will
-            trigger seeking of per-project config files in this location +
-            ``invoke.(yaml|json|py)``.
-
-        :param str env_prefix:
-            Environment variable seek prefix; optional, defaults to ``None``.
-
-            When not ``None``, only environment variables beginning with this
-            value will be loaded. If it is set, the keys will have the prefix
-            stripped out before processing, so e.g. ``env_prefix='INVOKE_'``
-            means users must set ``INVOKE_MYSETTING`` in the shell to affect
-            the ``"mysetting"`` setting.
+        :param str project_location:
+            Optional directory path of the currently loaded `.Collection` (as
+            loaded by `.Loader`). When non-empty, will trigger seeking of
+            per-project config files in this directory.
 
         :param str runtime_path:
             Optional file path to a runtime configuration file.
 
             Used to fill the penultimate slot in the config hierarchy. Should
-            be a full file path to an existing file, not a directory path, or a
+            be a full file path to an existing file, not a directory path or a
             prefix.
 
-        :param bool defer_post_init:
-            Whether to defer certain steps at the end of `__init__`.
+        :param bool lazy:
+            Whether to automatically load some of the lower config levels.
 
-            Specifically, the `post_init` method is normally called
-            automatically, and performs initial actions like loading config
-            files. Advanced users may wish to call that method manually after
-            manipulating the object; to do so, specify
-            ``defer_post_init=True``.
+            By default (``lazy=False``), ``__init__`` automatically calls
+            `load_system` and `load_user` to load system and user config files,
+            respectively.
 
-            Default: ``False``.
+            For more control over what is loaded when, you can say
+            ``lazy=True``, and no automatic loading is done.
+
+            .. note::
+                If you give ``defaults`` and/or ``overrides`` as ``__init__``
+                kwargs instead of waiting to use `load_defaults` or
+                `load_overrides` afterwards, those *will* still end up 'loaded'
+                immediately.
         """
         # Technically an implementation detail - do not expose in public API.
         # Stores merged configs and is accessed via DataProxy.
         self._set(_config={})
 
         # Config file suffixes to search, in preference order.
-        self._set(_file_suffixes=('yaml', 'json', 'py'))
+        self._set(_file_suffixes=('yaml', 'yml', 'json', 'py'))
 
         # Default configuration values, typically a copy of `global_defaults`.
         if defaults is None:
@@ -520,7 +571,7 @@ class Config(DataProxy):
         # Path prefix searched for the system config file.
         # NOTE: There is no default system prefix on Windows.
         if system_prefix is None and not WINDOWS:
-            system_prefix = '/etc/invoke'
+            system_prefix = '/etc/'
         self._set(_system_prefix=system_prefix)
         # Path to loaded system config file, if any.
         self._set(_system_path=None)
@@ -532,7 +583,7 @@ class Config(DataProxy):
 
         # Path prefix searched for per-user config files.
         if user_prefix is None:
-            user_prefix = '~/.invoke'
+            user_prefix = '~/.'
         self._set(_user_prefix=user_prefix)
         # Path to loaded user config file, if any.
         self._set(_user_path=None)
@@ -542,35 +593,22 @@ class Config(DataProxy):
         # Data loaded from the per-user config file.
         self._set(_user={})
 
-        # Parent directory of the current root tasks file, if applicable.
-        self._set(_project_home=project_home)
-        # And a normalized prefix version not really publicly exposed
-        project_prefix = None
-        if self._project_home is not None:
-            project_prefix = join(project_home, 'invoke')
-        self._set(_project_prefix=project_prefix)
-        # Path to loaded per-project config file, if any.
-        self._set(_project_path=None)
-        # Whether the project config file has been loaded or not (or ``None``
-        # if no loading has been attempted yet.)
-        self._set(_project_found=None)
-        # Data loaded from the per-project config file.
-        self._set(_project={})
+        # As it may want to be set post-init, project conf file related attrs
+        # get initialized or overwritten via a specific method.
+        self.set_project_location(project_location)
 
         # Environment variable name prefix
+        env_prefix = self.env_prefix
         if env_prefix is None:
-            env_prefix = ''
+            env_prefix = self.prefix
+        env_prefix = "{}_".format(env_prefix.upper())
         self._set(_env_prefix=env_prefix)
         # Config data loaded from the shell environment.
         self._set(_env={})
 
-        # Path to the user-specified runtime config file.
-        self._set(_runtime_path=runtime_path)
-        # Data loaded from the runtime config file.
-        self._set(_runtime={})
-        # Whether the runtime config file has been loaded or not (or ``None``
-        # if no loading has been attempted yet.)
-        self._set(_runtime_found=None)
+        # As it may want to be set post-init, runtime conf file related attrs
+        # get initialized or overwritten via a specific method.
+        self.set_runtime_path(runtime_path)
 
         # Overrides - highest normal config level. Typically filled in from
         # command-line flags.
@@ -587,21 +625,128 @@ class Config(DataProxy):
         # valuable and not just None)
         self._set(_deletions={})
 
-        if not defer_post_init:
-            self.post_init()
+        # Convenience loading of user and system files, since those require no
+        # other levels in order to function.
+        if not lazy:
+            self.load_base_conf_files()
+        # Always merge, otherwise defaults, etc are not usable until creator or
+        # a subroutine does so.
+        self.merge()
 
-    def post_init(self):
+    def load_base_conf_files(self):
+        # Just a refactor of something done in unlazy init or in clone()
+        self.load_system(merge=False)
+        self.load_user(merge=False)
+
+    def load_defaults(self, data, merge=True):
         """
-        Call setup steps that can occur immediately after `__init__`.
+        Set or replace the 'defaults' configuration level, from ``data``.
 
-        May need to be manually called if `__init__` was told
-        ``defer_post_init=True``.
+        :param dict data: The config data to load as the defaults level.
+
+        :param bool merge:
+            Whether to merge the loaded data into the central config. Default:
+            ``True``.
 
         :returns: ``None``.
         """
-        self.load_files()
-        # TODO: just use a decorator for merging probably? shrug
-        self.merge()
+        self._set(_defaults=data)
+        if merge:
+            self.merge()
+
+    def load_overrides(self, data, merge=True):
+        """
+        Set or replace the 'overrides' configuration level, from ``data``.
+
+        :param dict data: The config data to load as the overrides level.
+
+        :param bool merge:
+            Whether to merge the loaded data into the central config. Default:
+            ``True``.
+
+        :returns: ``None``.
+        """
+        self._set(_overrides=data)
+        if merge:
+            self.merge()
+
+    def load_system(self, merge=True):
+        """
+        Load a system-level config file, if possible.
+
+        Checks the configured ``_system_prefix`` path, which defaults to
+        ``/etc``, and will thus load files like ``/etc/invoke.yml``.
+
+        :param bool merge:
+            Whether to merge the loaded data into the central config. Default:
+            ``True``.
+
+        :returns: ``None``.
+        """
+        self._load_file(prefix='system', merge=merge)
+
+    def load_user(self, merge=True):
+        """
+        Load a user-level config file, if possible.
+
+        Checks the configured ``_user_prefix`` path, which defaults to ``~/.``,
+        and will thus load files like ``~/.invoke.yml``.
+
+        :param bool merge:
+            Whether to merge the loaded data into the central config. Default:
+            ``True``.
+
+        :returns: ``None``.
+        """
+        self._load_file(prefix='user', merge=merge)
+
+    def load_project(self, merge=True):
+        """
+        Load a project-level config file, if possible.
+
+        Checks the configured ``_project_prefix`` value derived from the path
+        given to `set_project_location`, which is typically set to the
+        directory containing the loaded task collection.
+
+        Thus, if one were to run the CLI tool against a tasks collection
+        ``/home/myuser/code/tasks.py``, `load_project` would seek out files
+        like ``/home/myuser/code/invoke.yml``.
+
+        :param bool merge:
+            Whether to merge the loaded data into the central config. Default:
+            ``True``.
+
+        :returns: ``None``.
+        """
+        self._load_file(prefix='project', merge=merge)
+
+    def set_runtime_path(self, path):
+        """
+        Set the runtime config file path.
+        """
+        # Path to the user-specified runtime config file.
+        self._set(_runtime_path=path)
+        # Data loaded from the runtime config file.
+        self._set(_runtime={})
+        # Whether the runtime config file has been loaded or not (or ``None``
+        # if no loading has been attempted yet.)
+        self._set(_runtime_found=None)
+
+    def load_runtime(self, merge=True):
+        """
+        Load a runtime-level config file, if one was specified.
+
+        When the CLI framework creates a `Config`, it sets ``_runtime_path``,
+        which is a full path to the requested config file. This method attempts
+        to load that file.
+
+        :param bool merge:
+            Whether to merge the loaded data into the central config. Default:
+            ``True``.
+
+        :returns: ``None``.
+        """
+        self._load_file(prefix='runtime', absolute=True, merge=merge)
 
     def load_shell_env(self):
         """
@@ -626,7 +771,7 @@ class Config(DataProxy):
         debug("Loaded shell environment, triggering final merge")
         self.merge()
 
-    def load_collection(self, data):
+    def load_collection(self, data, merge=True):
         """
         Update collection-driven config data.
 
@@ -636,28 +781,37 @@ class Config(DataProxy):
         """
         debug("Loading collection configuration")
         self._set(_collection=data)
-        self.merge()
+        if merge:
+            self.merge()
 
-    def load_files(self):
+    def set_project_location(self, path):
         """
-        Load any unloaded/un-searched-for config file sources.
+        Set the directory path where a project-level config file may be found.
 
-        Specifically, any file sources whose ``_found`` values are ``None``
-        will be sought and loaded if found; if their ``_found`` value is non
-        ``None`` (e.g. ``True`` or ``False``) they will be skipped. Typically
-        this means this method is idempotent and becomes a no-op after the
-        first run.
+        Does not do any file loading on its own; for that, see `load_project`.
         """
-        self._load_file(prefix='system')
-        self._load_file(prefix='user')
-        self._load_file(prefix='project')
-        self._load_file(prefix='runtime', absolute=True)
+        # 'Prefix' to match the other sets of attrs
+        project_prefix = None
+        if path is not None:
+            # Ensure the prefix is normalized to a directory-like path string
+            project_prefix = join(path, '')
+        self._set(_project_prefix=project_prefix)
+        # Path to loaded per-project config file, if any.
+        self._set(_project_path=None)
+        # Whether the project config file has been loaded or not (or ``None``
+        # if no loading has been attempted yet.)
+        self._set(_project_found=None)
+        # Data loaded from the per-project config file.
+        self._set(_project={})
 
-    def _load_file(self, prefix, absolute=False):
+    def _load_file(self, prefix, absolute=False, merge=True):
         # Setup
-        found = "_{0}_found".format(prefix)
-        path = "_{0}_path".format(prefix)
-        data = "_{0}".format(prefix)
+        found = "_{}_found".format(prefix)
+        path = "_{}_path".format(prefix)
+        data = "_{}".format(prefix)
+        midfix = self.file_prefix
+        if midfix is None:
+            midfix = self.prefix
         # Short-circuit if loading appears to have occurred already
         if getattr(self, found) is not None:
             return
@@ -669,13 +823,13 @@ class Config(DataProxy):
                 return
             paths = [absolute_path]
         else:
-            path_prefix = getattr(self, "_{0}_prefix".format(prefix))
+            path_prefix = getattr(self, "_{}_prefix".format(prefix))
             # Short circuit if loading seems unnecessary (eg for project config
             # files when not running out of a project)
             if path_prefix is None:
                 return
             paths = [
-                '.'.join((path_prefix, x))
+                '.'.join((path_prefix + midfix, x))
                 for x in self._file_suffixes
             ]
         # Poke 'em
@@ -685,9 +839,9 @@ class Config(DataProxy):
             try:
                 try:
                     type_ = splitext(filepath)[1].lstrip('.')
-                    loader = getattr(self, "_load_{0}".format(type_))
+                    loader = getattr(self, "_load_{}".format(type_))
                 except AttributeError as e:
-                    msg = "Config files of type {0!r} (from file {1!r}) are not supported! Please use one of: {2!r}" # noqa
+                    msg = "Config files of type {!r} (from file {!r}) are not supported! Please use one of: {!r}" # noqa
                     raise UnknownFileType(msg.format(
                         type_, filepath, self._file_suffixes))
                 # Store data, the path it was found at, and fact that it was
@@ -700,17 +854,23 @@ class Config(DataProxy):
             except IOError as e:
                 # TODO: is there a better / x-platform way to detect this?
                 if "No such file" in e.strerror:
-                    err = "Didn't see any {0}, skipping."
+                    err = "Didn't see any {}, skipping."
                     debug(err.format(filepath))
                 else:
                     raise
         # Still None -> no suffixed paths were found, record this fact
         if getattr(self, path) is None:
             setattr(self, found, False)
+        # Merge loaded data in if any was found
+        elif merge:
+            self.merge()
 
     def _load_yaml(self, path):
         with open(path) as fd:
             return yaml.load(fd)
+
+    def _load_yml(self, path):
+        return self._load_yaml(path)
 
     def _load_json(self, path):
         with open(path) as fd:
@@ -733,7 +893,7 @@ class Config(DataProxy):
         """
         paths = []
         for prefix in "system user project runtime".split():
-            value = getattr(self, "_{0}_path".format(prefix))
+            value = getattr(self, "_{}_path".format(prefix))
             if value is not None:
                 paths.append(value)
         return paths
@@ -744,41 +904,41 @@ class Config(DataProxy):
         """
         debug("Merging config sources in order onto new empty _config...")
         self._config = {}
-        debug("Defaults: {0!r}".format(self._defaults))
+        debug("Defaults: {!r}".format(self._defaults))
         merge_dicts(self._config, self._defaults)
-        debug("Collection-driven: {0!r}".format(self._collection))
+        debug("Collection-driven: {!r}".format(self._collection))
         merge_dicts(self._config, self._collection)
         self._merge_file('system', "System-wide")
         self._merge_file('user', "Per-user")
         self._merge_file('project', "Per-project")
-        debug("Environment variable config: {0!r}".format(self._env))
+        debug("Environment variable config: {!r}".format(self._env))
         merge_dicts(self._config, self._env)
         self._merge_file('runtime', "Runtime")
-        debug("Overrides: {0!r}".format(self._overrides))
+        debug("Overrides: {!r}".format(self._overrides))
         merge_dicts(self._config, self._overrides)
-        debug("Modifications: {0!r}".format(self._modifications))
+        debug("Modifications: {!r}".format(self._modifications))
         merge_dicts(self._config, self._modifications)
-        debug("Deletions: {0!r}".format(self._deletions))
+        debug("Deletions: {!r}".format(self._deletions))
         obliterate(self._config, self._deletions)
 
     def _merge_file(self, name, desc):
         # Setup
         desc += " config file" # yup
-        found = getattr(self, "_{0}_found".format(name))
-        path = getattr(self, "_{0}_path".format(name))
-        data = getattr(self, "_{0}".format(name))
+        found = getattr(self, "_{}_found".format(name))
+        path = getattr(self, "_{}_path".format(name))
+        data = getattr(self, "_{}".format(name))
         # None -> no loading occurred yet
         if found is None:
-            debug("{0} has not been loaded yet, skipping".format(desc))
+            debug("{} has not been loaded yet, skipping".format(desc))
         # True -> hooray
         elif found:
-            debug("{0} ({1}): {2!r}".format(desc, path, data))
+            debug("{} ({}): {!r}".format(desc, path, data))
             merge_dicts(self._config, data)
         # False -> did try, did not succeed
         else:
             # TODO: how to preserve what was tried for each case but only for
             # the negative? Just a branch here based on 'name'?
-            debug("{0} not found, skipping".format(desc))
+            debug("{} not found, skipping".format(desc))
 
     def clone(self, into=None):
         """
@@ -818,7 +978,7 @@ class Config(DataProxy):
         """
         # Sanity check for 'into'
         if into is not None and not issubclass(into, self.__class__):
-            err = "'into' must be a subclass of {0}!"
+            err = "'into' must be a subclass of {}!"
             raise TypeError(err.format(self.__class__.__name__))
         # Construct new object
         klass = self.__class__ if into is None else into
@@ -830,7 +990,7 @@ class Config(DataProxy):
         # mismatch going on between "I want stuff to happen in my config's
         # instantiation" and "I want cloning to not trigger certain things like
         # external data source loading".
-        # NOTE: this will include defer_post_init, see end of method
+        # NOTE: this will include lazy=True, see end of method
         new = klass(**self._clone_init_kwargs(into=into))
         # Copy/merge/etc all 'private' data sources and attributes
         for name in """
@@ -843,7 +1003,6 @@ class Config(DataProxy):
             user_path
             user_found
             user
-            project_home
             project_prefix
             project_path
             project_found
@@ -856,7 +1015,7 @@ class Config(DataProxy):
             overrides
             modifications
         """.split():
-            name = "_{0}".format(name)
+            name = "_{}".format(name)
             my_data = getattr(self, name)
             # Non-dict data gets carried over straight (via a copy())
             # NOTE: presumably someone could really screw up and change these
@@ -867,14 +1026,12 @@ class Config(DataProxy):
             # eventually)
             else:
                 merge_dicts(getattr(new, name), my_data)
-        # And merge the central config too (cannot just call .merge() on the
-        # new clone, since the source config may have received custom
-        # alterations by user code.)
-        merge_dicts(new._config, self._config)
-        # Finally, call new.post_init() since it's fully merged up. This way,
-        # stuff called in post_init() will have access to the final version of
-        # the data.
-        new.post_init()
+        # Do what __init__ would've done if not lazy, i.e. load user/system
+        # conf files.
+        new.load_base_conf_files()
+        # Finally, merge() for reals (_load_base_conf_files doesn't do so
+        # internally, so that data wouldn't otherwise show up.)
+        new.merge()
         return new
 
     def _clone_init_kwargs(self, into=None):
@@ -901,7 +1058,7 @@ class Config(DataProxy):
             # TODO: consider making this 'hardcoded' on the calling end (ie
             # inside clone()) to make sure nobody accidentally nukes it via
             # subclassing?
-            defer_post_init=True,
+            lazy=True,
         )
 
     def _modify(self, keypath, key, value):
@@ -1003,6 +1160,10 @@ def merge_dicts(base, updates):
             else:
                 if isinstance(base[key], dict):
                     raise _merge_error(base[key], value)
+                # Fileno-bearing objects are probably 'real' files which do not
+                # copy well & must be passed by reference. Meh.
+                elif hasattr(value, 'fileno'):
+                    base[key] = value
                 else:
                     base[key] = copy.copy(value)
         # New values get set anew
@@ -1011,18 +1172,22 @@ def merge_dicts(base, updates):
             # updates dict, which can lead to nasty state-bleed bugs otherwise
             if isinstance(value, dict):
                 base[key] = copy_dict(value)
+            # Fileno-bearing objects are probably 'real' files which do not
+            # copy well & must be passed by reference. Meh.
+            elif hasattr(value, 'fileno'):
+                base[key] = value
             # Non-dict values just get set straight
             else:
                 base[key] = copy.copy(value)
     return base
 
 def _merge_error(orig, new_):
-    return AmbiguousMergeError("Can't cleanly merge {0} with {1}".format(
+    return AmbiguousMergeError("Can't cleanly merge {} with {}".format(
         _format_mismatch(orig), _format_mismatch(new_)
     ))
 
 def _format_mismatch(x):
-    return "{0} ({1!r})".format(type(x), x)
+    return "{} ({!r})".format(type(x), x)
 
 
 def copy_dict(source):

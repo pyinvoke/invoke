@@ -20,8 +20,8 @@ def to_flag(name):
 def sort_candidate(arg):
     names = arg.names
     # TODO: is there no "split into two buckets on predicate" builtin?
-    shorts = set(x for x in names if len(x.strip('-')) == 1)
-    longs = set(x for x in names if x not in shorts)
+    shorts = {x for x in names if len(x.strip('-')) == 1}
+    longs = {x for x in names if x not in shorts}
     return sorted(shorts if shorts else longs)[0]
 
 def flag_key(x):
@@ -83,16 +83,13 @@ class ParserContext(object):
         for arg in args:
             self.add_arg(arg)
 
-    def __str__(self):
+    def __repr__(self):
         aliases = ""
         if self.aliases:
-            aliases = " ({0})".format(', '.join(self.aliases))
-        name = (" {0!r}{1}".format(self.name, aliases)) if self.name else ""
-        args = (": {0!r}".format(self.args)) if self.args else ""
-        return "<parser/Context{0}{1}>".format(name, args)
-
-    def __repr__(self):
-        return str(self)
+            aliases = " ({})".format(', '.join(self.aliases))
+        name = (" {!r}{}".format(self.name, aliases)) if self.name else ""
+        args = (": {!r}".format(self.args)) if self.args else ""
+        return "<parser/Context{}{}>".format(name, args)
 
     def add_arg(self, *args, **kwargs):
         """
@@ -117,7 +114,7 @@ class ParserContext(object):
         # Uniqueness constraint: no name collisions
         for name in arg.names:
             if name in self.args:
-                msg = "Tried to add an argument named {0!r} but one already exists!" # noqa
+                msg = "Tried to add an argument named {!r} but one already exists!" # noqa
                 raise ValueError(msg.format(name))
         # First name used as "main" name for purposes of aliasing
         main = arg.names[0] # NOT arg.name
@@ -138,7 +135,7 @@ class ParserContext(object):
             # Invert the 'main' flag name here, which will be a dashed version
             # of the primary argument name if underscore-to-dash transformation
             # occurred.
-            inverse_name = to_flag("no-{0}".format(main))
+            inverse_name = to_flag("no-{}".format(main))
             self.inverse_flags[inverse_name] = to_flag(main)
 
     @property
@@ -168,7 +165,7 @@ class ParserContext(object):
         """
         # Obtain arg obj
         if flag not in self.flags:
-            err = "{0!r} is not a valid flag for this context! Valid flags are: {1!r}" # noqa
+            err = "{!r} is not a valid flag for this context! Valid flags are: {!r}" # noqa
             raise ValueError(err.format(flag, self.flags.keys()))
         arg = self.flags[flag]
         # Determine expected value type, if any
@@ -182,17 +179,17 @@ class ParserContext(object):
                 # Short flags are -f VAL, long are --foo=VAL
                 # When optional, also, -f [VAL] and --foo[=VAL]
                 if len(name.strip('-')) == 1:
-                    value_ = ("[{0}]".format(value)) if arg.optional else value
-                    valuestr = " {0}".format(value_)
+                    value_ = ("[{}]".format(value)) if arg.optional else value
+                    valuestr = " {}".format(value_)
                 else:
-                    valuestr = "={0}".format(value)
+                    valuestr = "={}".format(value)
                     if arg.optional:
-                        valuestr = "[{0}]".format(valuestr)
+                        valuestr = "[{}]".format(valuestr)
             else:
                 # no value => boolean
                 # check for inverse
                 if name in self.inverse_flags.values():
-                    name = "--[no-]{0}".format(name[2:])
+                    name = "--[no-]{}".format(name[2:])
 
                 valuestr = ""
             # Tack together

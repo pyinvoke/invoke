@@ -33,30 +33,30 @@ class Argument_(Spec):
             a = Argument('foo', attr_name='bar')
             eq_(a.name, 'bar') # not 'foo'
 
-    class string:
-        "__str__"
+    class repr:
+        "__repr__"
 
         def shows_useful_info(self):
             eq_(
-                str(Argument(names=('name', 'nick1', 'nick2'))),
-                "<Argument: {0} ({1})>".format('name', 'nick1, nick2')
+                repr(Argument(names=('name', 'nick1', 'nick2'))),
+                "<Argument: {} ({})>".format('name', 'nick1, nick2')
             )
 
         def does_not_show_nickname_parens_if_no_nicknames(self):
             eq_(
-                str(Argument('name')),
+                repr(Argument('name')),
                 "<Argument: name>"
             )
 
         def shows_positionalness(self):
             eq_(
-                str(Argument('name', positional=True)),
+                repr(Argument('name', positional=True)),
                 "<Argument: name *>"
             )
 
         def shows_optionalness(self):
             eq_(
-                str(Argument('name', optional=True)),
+                repr(Argument('name', optional=True)),
                 "<Argument: name ?>",
             )
 
@@ -64,13 +64,13 @@ class Argument_(Spec):
             # TODO: but do these even make sense on the same argument? For now,
             # best to have a nonsensical test than a missing one...
             eq_(
-                str(Argument('name', optional=True, positional=True)),
+                repr(Argument('name', optional=True, positional=True)),
                 "<Argument: name *?>",
             )
 
         def shows_kind_if_not_str(self):
             eq_(
-                str(Argument('age', kind=int)),
+                repr(Argument('age', kind=int)),
                 "<Argument: age [int]>",
             )
 
@@ -81,14 +81,7 @@ class Argument_(Spec):
                 optional=True,
                 positional=True,
             )
-            eq_(str(arg), "<Argument: meh (m) [int] *?>")
-
-    class repr:
-        "__repr__"
-
-        def just_aliases_dunder_str(self):
-            a = Argument(names=('name', 'name2'))
-            eq_(str(a), repr(a))
+            eq_(repr(arg), "<Argument: meh (m) [int] *?>")
 
     class kind_kwarg:
         "'kind' kwarg"
@@ -102,6 +95,8 @@ class Argument_(Spec):
 
         def non_bool_implies_value_needed(self):
             assert Argument(name='a', kind=int).takes_value
+            assert Argument(name='b', kind=str).takes_value
+            assert Argument(name='c', kind=list).takes_value
 
         def bool_implies_no_value_needed(self):
             assert not Argument(name='a', kind=bool).takes_value
@@ -117,6 +112,9 @@ class Argument_(Spec):
         @raises(ValueError)
         def may_validate_on_set(self):
             Argument('a', kind=int).value = 'five'
+
+        def list_implies_initial_value_of_empty_list(self):
+            assert Argument('mylist', kind=list).value == []
 
     class names:
         def returns_tuple_of_all_names(self):
@@ -161,6 +159,29 @@ class Argument_(Spec):
             a.value = '5'
             eq_(a.value, 5)
             eq_(a.raw_value, '5')
+
+        def list_kind_triggers_append_instead_of_overwrite(self):
+            # TODO: when put this way it makes the API look pretty strange;
+            # maybe a sign we should switch to explicit setter methods
+            # (selected on kind, perhaps) instead of using an implicit setter
+            a = Argument('mylist', kind=list)
+            assert a.value == []
+            a.value = 'val1'
+            assert a.value == ['val1']
+            a.value = 'val2'
+            assert a.value == ['val1', 'val2']
+
+        def incrementable_True_triggers_increment_of_default(self):
+            a = Argument('verbose', kind=int, default=0, incrementable=True)
+            assert a.value == 0
+            # NOTE: parser currently just goes "Argument.takes_value is false?
+            # Gonna stuff True/False in there." So this looks pretty silly out
+            # of context (as with list-types above.)
+            a.value = True
+            assert a.value == 1
+            for _ in range(4):
+                a.value = True
+            assert a.value == 5
 
     class value:
         def returns_default_if_not_set(self):

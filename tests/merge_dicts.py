@@ -85,6 +85,11 @@ class merge_dicts_(Spec):
         # BUT that 'proj' remains UNTOUCHED
         eq_(proj['foo']['bar']['biz'], 'proj value')
 
+    def merge_file_types_by_reference(self):
+        d1 = {}
+        d2 = {'foo': open(__file__)}
+        merge_dicts(d1, d2)
+        eq_(d1['foo'].closed, False)
 
 class copy_dict_(Spec):
     def returns_deep_copy_of_given_dict(self):

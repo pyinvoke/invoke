@@ -1,5 +1,6 @@
-import getpass
+import os
 import re
+from contextlib import contextmanager
 
 try:
     from invoke.vendor.six import raise_from, iteritems
@@ -8,7 +9,7 @@ except ImportError:
 
 from .config import Config, DataProxy
 from .exceptions import Failure, AuthFailure, ResponseNotAccepted
-from .runners import Local, Result
+from .runners import Result
 from .watchers import FailingResponder
 
 
@@ -18,7 +19,7 @@ class Context(DataProxy):
 
     `.Context` objects are created during command-line parsing (or, if desired,
     by hand) and used to share parser and configuration state with executed
-    tasks (see :doc:`/concepts/context`).
+    tasks (see :ref:`why-context`).
 
     Specifically, the class offers wrappers for core API calls (such as `.run`)
     which take into account CLI parser flags, configuration files, and/or
@@ -48,12 +49,23 @@ class Context(DataProxy):
         #: ``ctx.foo`` returns the same value as ``ctx.config['foo']``.
         config = config if config is not None else Config()
         self._set(_config=config)
+        self._set(command_prefixes=list())
+        self._set(command_cwds=list())
 
     @property
     def config(self):
         # Allows Context to expose a .config attribute even though DataProxy
         # otherwise considers it a config key.
         return self._config
+
+    @config.setter
+    def config(self, value):
+        # NOTE: mostly used by client libraries needing to tweak a Context's
+        # config at execution time; i.e. a Context subclass that bears its own
+        # unique data may want to be stood up when parameterizing/expanding a
+        # call list at start of a session, with the final config filled in at
+        # runtime.
+        self._set(_config=value)
 
     def run(self, command, **kwargs):
         """
@@ -66,12 +78,21 @@ class Context(DataProxy):
         See `.Runner.run` for details on ``command`` and the available keyword
         arguments.
         """
-        runner_class = self.config.get('runner', Local)
-        return runner_class(context=self).run(command, **kwargs)
+        runner = self.config.runners.local(self)
+        return self._run(runner, command, **kwargs)
+
+    # NOTE: broken out of run() to allow for runner class injection in
+    # Fabric/etc, which needs to juggle multiple runner class types (local and
+    # remote).
+    def _run(self, runner, command, **kwargs):
+        command = self._prefix_commands(command)
+        return runner.run(command, **kwargs)
 
     def sudo(self, command, **kwargs):
         """
         Execute a shell command, via ``sudo``.
+
+        **Basics**
 
         In general, this method is identical to `run`, but adds a handful of
         convenient behaviors around invoking the ``sudo`` program. It doesn't
@@ -85,30 +106,60 @@ class Context(DataProxy):
 
             * searches for the configured ``sudo`` password prompt;
             * responds with the configured sudo password (``sudo.password``
-              from the :doc:`configuration </concepts/configuration>`, or a
-              runtime `getpass <getpass.getpass>` input);
-            * can tell when that response causes an authentication failure, and
-              raises an exception if so.
+              from the :doc:`configuration </concepts/configuration>`);
+            * can tell when that response causes an authentication failure
+              (e.g. if the system requires a password and one was not
+              configured), and raises `.AuthFailure` if so.
 
         * Builds a ``sudo`` command string using the supplied ``command``
-          argument prefixed by the ``sudo.prefix`` configuration setting;
+          argument, prefixed by various flags (see below);
         * Executes that command via a call to `run`, returning the result.
 
-        As with `run`, these additional behaviors may be configured both via
-        the ``run`` tree of configuration settings (like ``run.echo``) or via
-        keyword arguments, which will override the configuration system.
+        **Flags used**
+
+        ``sudo`` flags used under the hood include:
+
+        - ``-S`` to allow auto-responding of password via stdin;
+        - ``-p <prompt>`` to explicitly state the prompt to use, so we can be
+          sure our auto-responder knows what to look for;
+        - ``-u <user>`` if ``user`` is not ``None``, to execute the command as
+          a user other than ``root``;
+        - When ``-u`` is present, ``-H`` is also added, to ensure the
+          subprocess has the requested user's ``$HOME`` set properly.
+
+        **Configuring behavior**
+
+        There are a couple of ways to change how this method behaves:
+
+        - Because it wraps `run`, it honors all `run` config parameters and
+          keyword arguments, in the same way that `run` does.
+
+            - Thus, invocations such as ``c.sudo('command', echo=True)`` are
+              possible, and if a config layer (such as a config file or env
+              var) specifies that e.g. ``run.warn = True``, that too will take
+              effect under `sudo`.
+
+        - `sudo` has its own set of keyword arguments (see below) and they are
+          also all controllable via the configuration system, under the
+          ``sudo.*`` tree.
+
+            - Thus you could, for example, pre-set a sudo user in a config
+              file; such as an ``invoke.json`` containing ``{"sudo": {"user":
+              "someuser"}}``.
 
         :param str password: Runtime override for ``sudo.password``.
-        :param str prefix: Runtime override for ``sudo.prefix``.
+        :param str user: Runtime override for ``sudo.user``.
         """
+        runner = self.config.runners.local(self)
+        return self._sudo(runner, command, **kwargs)
+
+    # NOTE: this is for runner injection; see NOTE above _run().
+    def _sudo(self, runner, command, **kwargs):
         prompt = self.config.sudo.prompt
         password = kwargs.pop('password', self.config.sudo.password)
-        if password is None:
-            msg = "No stored sudo password found, please enter it now: "
-            # TODO: use something generic/overrideable that uses getpass by
-            # default. May mean we pop this out as its own class-as-a-method or
-            # something?
-            password = getpass.getpass(msg)
+        user = kwargs.pop('user', self.config.sudo.user)
+        # TODO: allow subclassing for 'get the password' so users who REALLY
+        # want lazy runtime prompting can have it easily implemented.
         # TODO: want to print a "cleaner" echo with just 'sudo <command>'; but
         # hard to do as-is, obtaining config data from outside a Runner one
         # holds is currently messy (could fix that), if instead we manually
@@ -119,10 +170,14 @@ class Context(DataProxy):
         # exactly (display of actual, real full sudo command w/ -S and -p), in
         # terms of API/config? Impl is easy, just go back to passing echo
         # through to 'run'...
-        cmd_str = "sudo -S -p '{0}' {1}".format(prompt, command)
+        user_flags = ""
+        if user is not None:
+            user_flags = "-H -u {} ".format(user)
+        command = self._prefix_commands(command)
+        cmd_str = "sudo -S -p '{}' {}{}".format(prompt, user_flags, command)
         watcher = FailingResponder(
             pattern=re.escape(prompt),
-            response="{0}\n".format(password),
+            response="{}\n".format(password),
             sentinel="Sorry, try again.\n",
         )
         # Ensure we merge any user-specified watchers with our own.
@@ -135,7 +190,7 @@ class Context(DataProxy):
         watchers = kwargs.pop('watchers', list(self.config.run.watchers))
         watchers.append(watcher)
         try:
-            return self.run(cmd_str, watchers=watchers, **kwargs)
+            return runner.run(cmd_str, watchers=watchers, **kwargs)
         except Failure as failure:
             # Transmute failures driven by our FailingResponder, into auth
             # failures - the command never even ran.
@@ -153,6 +208,140 @@ class Context(DataProxy):
             # Reraise for any other error so it bubbles up normally.
             else:
                 raise
+
+    # TODO: wonder if it makes sense to move this part of things inside Runner,
+    # which would grow a `prefixes` and `cwd` init kwargs or similar. The less
+    # that's stuffed into Context, probably the better.
+    def _prefix_commands(self, command):
+        """
+        Prefixes ``command`` with all prefixes found in ``command_prefixes``.
+
+        ``command_prefixes`` is a list of strings which is modified by the
+        `prefix` context manager.
+        """
+        prefixes = list(self.command_prefixes)
+        current_directory = self.cwd
+        if current_directory:
+            prefixes.insert(0, 'cd {}'.format(current_directory))
+
+        return ' && '.join(prefixes + [command])
+
+    @contextmanager
+    def prefix(self, command):
+        """
+        Prefix all nested `run`/`sudo` commands with given command plus ``&&``.
+
+        Most of the time, you'll want to be using this alongside a shell script
+        which alters shell state, such as ones which export or alter shell
+        environment variables.
+
+        For example, one of the most common uses of this tool is with the
+        ``workon`` command from `virtualenvwrapper
+        <https://virtualenvwrapper.readthedocs.io/en/latest/>`_::
+
+            with ctx.prefix('workon myvenv'):
+                ctx.run('./manage.py migrate')
+
+        In the above snippet, the actual shell command run would be this::
+
+            $ workon myvenv && ./manage.py migrate
+
+        This context manager is compatible with `cd`, so if your virtualenv
+        doesn't ``cd`` in its ``postactivate`` script, you could do the
+        following::
+
+            with ctx.cd('/path/to/app'):
+                with ctx.prefix('workon myvenv'):
+                    ctx.run('./manage.py migrate')
+                    ctx.run('./manage.py loaddata fixture')
+
+        Which would result in executions like so::
+
+            $ cd /path/to/app && workon myvenv && ./manage.py migrate
+            $ cd /path/to/app && workon myvenv && ./manage.py loaddata fixture
+
+        Finally, as alluded to above, `prefix` may be nested if desired, e.g.::
+
+            with ctx.prefix('workon myenv'):
+                ctx.run('ls')
+                with ctx.prefix('source /some/script'):
+                    ctx.run('touch a_file')
+
+        The result::
+
+            $ workon myenv && ls
+            $ workon myenv && source /some/script && touch a_file
+
+        Contrived, but hopefully illustrative.
+        """
+        self.command_prefixes.append(command)
+        yield
+        self.command_prefixes.pop()
+
+    @property
+    def cwd(self):
+        """
+        Return the current working directory, accounting for uses of `cd`.
+        """
+        if not self.command_cwds:
+            # TODO: should this be None? Feels cleaner, though there may be
+            # benefits to it being an empty string, such as relying on a no-arg
+            # `cd` typically being shorthand for "go to user's $HOME".
+            return ''
+
+        # get the index for the subset of paths starting with the last / or ~
+        for i, path in reversed(list(enumerate(self.command_cwds))):
+            if path.startswith('~') or path.startswith('/'):
+                break
+
+        # TODO: see if there's a stronger "escape this path" function somewhere
+        # we can reuse. e.g., escaping tildes or slashes in filenames.
+        paths = [path.replace(' ', '\ ') for path in self.command_cwds[i:]]
+        return os.path.join(*paths)
+
+    @contextmanager
+    def cd(self, path):
+        """
+        Context manager that keeps directory state when executing commands.
+
+        Any calls to `run`, `sudo`, within the wrapped block will implicitly
+        have a string similar to ``"cd <path> && "`` prefixed in order to give
+        the sense that there is actually statefulness involved.
+
+        Because use of `cd` affects all such invocations, any code making use
+        of the `cwd` property will also be affected by use of `cd`.
+
+        Like the actual 'cd' shell builtin, `cd` may be called with relative
+        paths (keep in mind that your default starting directory is your user's
+        ``$HOME``) and may be nested as well.
+
+        Below is a "normal" attempt at using the shell 'cd', which doesn't work
+        since all commands are executed in individual subprocesses -- state is
+        **not** kept between invocations of `run` or `sudo`::
+
+            ctx.run('cd /var/www')
+            ctx.run('ls')
+
+        The above snippet will list the contents of the user's ``$HOME``
+        instead of ``/var/www``. With `cd`, however, it will work as expected::
+
+            with ctx.cd('/var/www'):
+                ctx.run('ls')  # Turns into "cd /var/www && ls"
+
+        Finally, a demonstration (see inline comments) of nesting::
+
+            with cd('/var/www'):
+                run('ls') # cd /var/www && ls
+                with cd('website1'):
+                    run('ls')  # cd /var/www/website1 && ls
+
+        .. note::
+            Space characters will be escaped automatically to make dealing with
+            such directory names easier.
+        """
+        self.command_cwds.append(path)
+        yield
+        self.command_cwds.pop()
 
 
 class MockContext(Context):
@@ -178,7 +367,7 @@ class MockContext(Context):
             the instantiated object's `~.Context.run` method (instead of
             actually executing the requested shell command).
 
-            Specifically, this method accepts:
+            Specifically, this kwarg accepts:
 
             - A single `.Result` object, which will be returned once.
             - An iterable of `Results <.Result>`, which will be returned on
@@ -204,9 +393,9 @@ class MockContext(Context):
                 and not isinstance(results, Result)
                 # No need for explicit dict test; they have __iter__
             ):
-                err = "Not sure how to yield results from a {0!r}"
+                err = "Not sure how to yield results from a {!r}"
                 raise TypeError(err.format(type(results)))
-            self._set("_{0}".format(method), results)
+            self._set("__{}".format(method), results)
 
     # TODO: _maybe_ make this more metaprogrammy/flexible (using __call__ etc)?
     # Pretty worried it'd cause more hard-to-debug issues than it's presently
@@ -240,11 +429,46 @@ class MockContext(Context):
         # result? E.g. filling in .command, etc? Possibly useful for debugging
         # if one hits unexpected-order problems with what they passed in to
         # __init__.
-        return self._yield_result('_run', command)
+        return self._yield_result('__run', command)
 
     def sudo(self, command, *args, **kwargs):
         # TODO: this completely nukes the top-level behavior of sudo(), which
         # could be good or bad, depending. Most of the time I think it's good.
         # No need to supply dummy password config, etc.
         # TODO: see the TODO from run() re: injecting arg/kwarg values
-        return self._yield_result('_sudo', command)
+        return self._yield_result('__sudo', command)
+
+    def set_result_for(self, attname, command, result):
+        """
+        Modify the stored mock results for given ``attname`` (e.g. ``run``).
+
+        This is similar to how one instantiates `MockContext` with a ``run`` or
+        ``sudo`` dict kwarg. For example, this::
+
+            mc = MockContext(run={'mycommand': Result("mystdout")})
+            assert mc.run('mycommand').stdout == "mystdout"
+
+        is functionally equivalent to this::
+
+            mc = MockContext()
+            mc.set_result_for('run', 'mycommand', Result("mystdout"))
+            assert mc.run('mycommand').stdout == "mystdout"
+
+        `set_result_for` is mostly useful for modifying an already-instantiated
+        `MockContext`, such as one created by test setup or helper methods.
+        """
+        attname = '__{}'.format(attname)
+        heck = TypeError(
+            "Can't update results for non-dict or nonexistent mock results!"
+        )
+        # Get value & complain if it's not a dict.
+        # TODO: should we allow this to set non-dict values too? Seems vaguely
+        # pointless, at that point, just make a new MockContext eh?
+        try:
+            value = getattr(self, attname)
+        except AttributeError:
+            raise heck
+        if not isinstance(value, dict):
+            raise heck
+        # OK, we're good to modify, so do so.
+        value[command] = result
