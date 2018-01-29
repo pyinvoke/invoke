@@ -24,8 +24,8 @@ methods like `.Context.run`) and exposes it to users' tasks as
 The configuration hierarchy
 ===========================
 
-In brief, the order in which configuration values are loaded (and overridden -
-each new level overrides the one above it) is as follows:
+In brief, the order in which configuration values override one another is as
+follows:
 
 #. **Internal default values** for behaviors which are controllable via
    configuration. See :ref:`default-values` for details.
@@ -33,11 +33,8 @@ each new level overrides the one above it) is as follows:
    `.Collection.configure`. (See :ref:`collection-configuration` below for
    details.)
    
-     * Sub-collections' configurations get merged into the top level collection
+     - Sub-collections' configurations get merged into the top level collection
        and the final result forms the basis of the overall configuration setup.
-     * Since the root collection is loaded at runtime, configuration settings
-       modifying the load process itself obviously won't take effect if defined
-       at this level.
 
 #. **System-level configuration file** stored in ``/etc/``, such as
    ``/etc/invoke.yaml``. (See :ref:`config-files` for details on this and the
@@ -50,13 +47,14 @@ each new level overrides the one above it) is as follows:
    </concepts/loading>`), this might be ``/home/user/myproject/invoke.yaml``.
 #. **Environment variables** found in the invoking shell environment.
 
-    * These aren't as strongly hierarchical as the rest, nor is the shell
+    - These aren't as strongly hierarchical as the rest, nor is the shell
       environment namespace owned wholly by Invoke, so we must rely on slightly
       verbose prefixing instead - see :ref:`env-vars` for details.
 
 #. **Runtime configuration file** whose path is given to :option:`-f`, e.g.
    ``inv -f /random/path/to/config_file.yaml``.
 #. **Command-line flags** for certain core settings, such as :option:`-e`.
+#. **Modifications made by user code** at runtime.
 
 
 .. _default-values:
@@ -68,22 +66,56 @@ Below is a list of all the configuration values and/or section Invoke itself
 uses to control behaviors such as `.Context.run`'s ``echo`` and ``pty``
 flags, task deduplication, and so forth.
 
+.. note::
+    The storage location for these values is inside the `.Config` class,
+    specifically as the return value of `.Config.global_defaults`; see its API
+    docs for more details.
+
 For convenience, we refer to nested setting names with a dotted syntax, so e.g.
 ``foo.bar`` refers to what would be (in a Python config context) ``{'foo':
 {'bar': <value here>}}``. Typically, these can be read or set on `.Config` and
 `.Context` objects using attribute syntax, which looks nearly identical:
 ``ctx.foo.bar``.
 
-* The ``tasks`` config tree holds settings relating to task execution.
+- The ``tasks`` config tree holds settings relating to task execution.
 
-  * ``tasks.dedupe`` controls :ref:`deduping` and defaults to ``True``. It can
-    also be overridden at runtime via :option:`--no-dedupe`.
+    - ``tasks.dedupe`` controls :ref:`deduping` and defaults to ``True``. It
+      can also be overridden at runtime via :option:`--no-dedupe`.
+    - ``tasks.auto_dash_names`` controls whether task and collection names have
+      underscores turned to dashes on the CLI. Default: ``True``. See also
+      :ref:`dashes-vs-underscores`.
+    - ``tasks.collection_name`` controls the Python import name sought out by
+      :ref:`collection discovery <collection-discovery>`, and defaults to
+      ``"tasks"``.
+    - ``tasks.search_root`` allows overriding the default :ref:`collection
+      discovery <collection-discovery>` root search location. It defaults to
+      ``None``, which indicates to use the executing process' current working
+      directory.
 
-* The ``run`` tree controls the behavior of `.Runner.run`. Each member of this
+- The ``run`` tree controls the behavior of `.Runner.run`. Each member of this
   tree (such as ``run.echo`` or ``run.pty``) maps directly to a `.Runner.run`
   keyword argument of the same name; see that method's docstring for details on
   what these settings do & what their default values are.
-* A top level config setting, ``debug``, controls whether debug-level output is
+- The ``runners`` tree controls _which_ runner classes map to which execution
+  contexts; if you're using Invoke by itself, this will only tend to have a
+  single member, ``runners.local``. Client libraries may extend it with
+  additional key/value pairs, such as ``runners.remote``.
+- The ``sudo`` tree controls the behavior of `.Context.sudo`:
+
+    - ``sudo.password`` controls the autoresponse password submitted to sudo's
+      password prompt. Default: ``None``.
+
+      .. warning::
+        While it's possible to store this setting, like any other, in
+        :doc:`configuration files </concepts/configuration>` -- doing so is
+        inherently insecure. We highly recommend filling this config value in
+        at runtime from a secrets management system of some kind.
+
+    - ``sudo.prompt`` holds the sudo password prompt text, which is both
+      supplied to ``sudo -p``, and searched for when performing
+      :doc:`auto-response </concepts/watchers>`. Default: ``[sudo] password:``.
+
+- A top level config setting, ``debug``, controls whether debug-level output is
   logged; it defaults to ``False``.
   
   ``debug`` can be toggled via the :option:`-d` CLI flag, which enables
@@ -102,10 +134,10 @@ Loading
 -------
 
 For each configuration file location mentioned in the previous section, we
-search for files ending in ``.yaml``, ``.json`` or ``.py`` (**in that
+search for files ending in ``.yaml``, ``.yml``, ``.json`` or ``.py`` (**in that
 order!**), load the first one we find, and ignore any others that might exist.
 
-For example, if Invoke is run on a system containing both ``/etc/invoke.yaml``
+For example, if Invoke is run on a system containing both ``/etc/invoke.yml``
 *and* ``/etc/invoke.json``, **only the YAML file will be loaded**. This helps
 keep things simple, both conceptually and in the implementation.
 
@@ -116,7 +148,7 @@ Invoke's configuration allows arbitrary nesting, and thus so do our config file
 formats. All three of the below examples result in a configuration equivalent
 to ``{'debug': True, 'run': {'echo': True}}``:
 
-* **YAML**
+- **YAML**
 
   .. code-block:: yaml
 
@@ -124,7 +156,7 @@ to ``{'debug': True, 'run': {'echo': True}}``:
       run:
           echo: true
 
-* **JSON**
+- **JSON**
 
   .. code-block:: javascript
 
@@ -135,7 +167,7 @@ to ``{'debug': True, 'run': {'echo': True}}``:
           }
       }
 
-* **Python**::
+- **Python**::
 
     debug = True
     run = {
@@ -181,7 +213,7 @@ Since env vars can only be used to override existing settings, the previous
 value of a given setting is used as a guide in casting the strings we get back
 from the shell:
 
-* If the current value is a string or Unicode object, it is replaced with the
+- If the current value is a string or Unicode object, it is replaced with the
   value from the environment, with no casting whatsoever;
 
     * Depending on interpreter and environment, this means that a setting
@@ -190,21 +222,21 @@ from the shell:
       as it prevents users from accidentally limiting themselves to non-Unicode
       strings.
 
-* If the current value is ``None``, it too is replaced with the string from the
+- If the current value is ``None``, it too is replaced with the string from the
   environment;
-* Booleans are set as follows: ``0`` and the empty value/string (e.g.
+- Booleans are set as follows: ``0`` and the empty value/string (e.g.
   ``SETTING=``, or ``unset SETTING``, or etc) evaluate to ``False``, and any
   other value evaluates to ``True``.
-* Lists and tuples are currently unsupported and will raise an exception;
+- Lists and tuples are currently unsupported and will raise an exception;
 
-    * In the future we may implement convenience transformations, such as
+    - In the future we may implement convenience transformations, such as
       splitting on commas to form a list; however since users can always
       perform such operations themselves, it may not be a high priority.
 
-* All other types - integers, longs, floats, etc - are simply used as
+- All other types - integers, longs, floats, etc - are simply used as
   constructors for the incoming value.
 
-    * For example, a ``foobar`` setting whose default value is the integer
+    - For example, a ``foobar`` setting whose default value is the integer
       ``1`` will run all env var inputs through `int`, and thus ``FOOBAR=5``
       will result in the Python value ``5``, not ``"5"``.
 
@@ -228,7 +260,7 @@ There is still a corner case where *both* possible interpretations exist as
 valid config paths (e.g. ``{'foo': {'bar': 'default'}, 'foo_bar':
 'otherdefault'}``). In this situation, we honor the `Zen of Python
 <http://zen-of-python.info/in-the-face-of-ambiguity-refuse-the-temptation-to-guess.html#12>`_
-and refuse to guess; an error is raised instead counseling users to modify
+and refuse to guess; an error is raised instead, counseling users to modify
 their configuration layout or avoid using env vars for the setting in question.
 
 
@@ -251,10 +283,10 @@ the root will win, versus inner ones closer to the task being invoked.
 
 A quick example of what this means::
 
-    from invoke import Collection, ctask as task
+    from invoke import Collection, task
 
-    # This task & collection could just as easily come from another module
-    # somewhere.
+    # This task & collection could just as easily come from
+    # another module somewhere.
     @task
     def mytask(ctx):
         print(ctx['conflicted'])
@@ -271,76 +303,77 @@ The result of calling ``inner.mytask``::
     override value
 
 
-Example
-=======
+Example of real-world config use
+================================
+
+The previous sections had small examples within them; this section provides a
+more realistic-looking set of examples showing how the config system works.
 
 Setup
 -----
 
-As an example, we'll start out with some semi-realistic, non-contextualized
-tasks that hardcode their values, and build up to using the various
-configuration mechanisms. A small module for building `Sphinx
-<http://sphinx-doc.org>`_ docs might start out like this::
+We'll start out with semi-realistic tasks that hardcode their values, and build
+up to using the various configuration mechanisms. A small module for building
+`Sphinx <http://sphinx-doc.org>`_ docs might begin like this::
 
-    from invoke import task, run
-
-    @task
-    def clean():
-        run("rm -rf docs/_build")
+    from invoke import task
 
     @task
-    def build():
-        run("sphinx-build docs docs/_build")
+    def clean(ctx):
+        ctx.run("rm -rf docs/_build")
+
+    @task
+    def build(ctx):
+        ctx.run("sphinx-build docs docs/_build")
 
 Then maybe you refactor the build target::
 
     target = "docs/_build"
 
     @task
-    def clean():
-        run("rm -rf {0}".format(target))
+    def clean(ctx):
+        ctx.run("rm -rf {}".format(target))
 
     @task
-    def build():
-        run("sphinx-build docs {0}".format(target))
+    def build(ctx):
+        ctx.run("sphinx-build docs {}".format(target))
 
 We can also allow runtime parameterization::
 
     default_target = "docs/_build"
 
     @task
-    def clean(target=default_target):
-        run("rm -rf {0}".format(target))
+    def clean(ctx, target=default_target):
+        ctx.run("rm -rf {}".format(target))
 
     @task
-    def build(target=default_target):
-        run("sphinx-build docs {0}".format(target))
+    def build(ctx, target=default_target):
+        ctx.run("sphinx-build docs {}".format(target))
 
 This task module works for a single set of users, but what if we want to allow
 reuse? Somebody may want to use this module with a different default target.
-You *can* kludge it using non-contextualized tasks, but using a context to
-configure these settings is usually the better solution [1]_.
+Using the configuration data (made available via the context arg) to configure
+these settings is usually the better solution [1]_.
 
-Switching to contexts
----------------------
+Configuring via task collection
+-------------------------------
 
 The configuration `setting <.Collection.configure>` and `getting
 <.Context.config>` APIs make it easy to move otherwise 'hardcoded' default
 values into a config structure which downstream users are free to redefine.
-Let's apply this to our example. First we switch to using contextualized tasks
-and add an explicit namespace object::
+Let's apply this to our example. First we add an explicit namespace object::
 
-    from invoke import Collection, ctask as task
+    from invoke import Collection, task
 
     default_target = "docs/_build"
 
     @task
     def clean(ctx, target=default_target):
-        ctx.run("rm -rf {0}".format(target))
+        ctx.run("rm -rf {}".format(target))
 
     @task
     def build(ctx, target=default_target):
-        ctx.run("sphinx-build docs {0}".format(target))
+        ctx.run("sphinx-build docs {}".format(target))
 
     ns = Collection(clean, build)
 
@@ -351,16 +384,18 @@ runtime value was given.  The result::
 
     @task
     def clean(ctx, target=None):
-        ctx.run("rm -rf {0}".format(target or ctx.sphinx.target))
+        if target is None:
+            target = ctx.sphinx.target
+        ctx.run("rm -rf {}".format(target))
 
     @task
     def build(ctx, target=None):
-        ctx.run("sphinx-build docs {0}".format(target or ctx.sphinx.target))
+        if target is None:
+            target = ctx.sphinx.target
+        ctx.run("sphinx-build docs {}".format(target))
 
     ns = Collection(clean, build)
     ns.configure({'sphinx': {'target': "docs/_build"}})
-
-.. TODO: change all [foo.bar] shit into [foo][bar]
 
 The result isn't significantly more complex than what we began with, and as
 we'll see next, it's now trivial for users to override your defaults in various
@@ -374,7 +409,7 @@ tree into which a distributed module has been imported. E.g. if the above
 module is distributed as ``myproject.docs``, someone can define a ``tasks.py``
 that does this::
 
-    from invoke import Collection, ctask as task
+    from invoke import Collection, task
     from myproject import docs
 
     @task
@@ -387,10 +422,13 @@ that does this::
 
 And then they can simply add this to the bottom::
 
-    ns.configure({'sphinx': {'target': "built_docs"}}) # Our docs live here
+    # Our docs live in 'built_docs', not 'docs/_build'
+    ns.configure({'sphinx': {'target': "built_docs"}})
 
 Now we have a ``docs`` sub-namespace whose build target defaults to
-``built_docs`` instead of ``docs/_build``.
+``built_docs`` instead of ``docs/_build``. Runtime users can still override
+this via flags (e.g. ``inv docs.build --target='some/other/dir'``) just as
+before.
 
 If you prefer configuration files over in-Python tweaking of your namespace
 tree, that works just as well; instead of adding the line above to the previous
@@ -412,4 +450,3 @@ additional configuration methods which may be suitable depending on your needs.
     module-level ``default_path`` variable won't play well with concurrency;
     wrapping the tasks with different default arguments works but is fragile
     and adds boilerplate.
-

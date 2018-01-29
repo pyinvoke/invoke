@@ -1,7 +1,7 @@
 from spec import eq_, ok_
-from mock import Mock, call as mock_call
+from mock import Mock
 
-from invoke import Collection, Config, Context, Executor, Task, ctask, call
+from invoke import Collection, Config, Context, Executor, Task, call, task
 from invoke.parser import ParserContext
 
 from _util import expect, IntegrationSpec
@@ -15,7 +15,7 @@ class Executor_(IntegrationSpec):
         self.task2 = Task(Mock(return_value=10), pre=[self.task1])
         self.task3 = Task(Mock(), pre=[self.task1])
         self.task4 = Task(Mock(return_value=15), post=[self.task1])
-        self.contextualized = Task(Mock(), contextualized=True)
+        self.contextualized = Task(Mock())
         coll = Collection()
         coll.add_task(self.task1, name='task1')
         coll.add_task(self.task2, name='task2')
@@ -52,7 +52,11 @@ class Executor_(IntegrationSpec):
         def kwargs(self):
             k = {'foo': 'bar'}
             self.executor.execute(('task1', k))
-            self.task1.body.assert_called_once_with(**k)
+            args = self.task1.body.call_args[0]
+            kwargs = self.task1.body.call_args[1]
+            ok_(isinstance(args[0], Context))
+            eq_(len(args), 1)
+            eq_(kwargs['foo'], 'bar')
 
         def contextualized_tasks_are_given_parser_context_arg(self):
             self.executor.execute('contextualized')
@@ -68,7 +72,9 @@ class Executor_(IntegrationSpec):
             coll.add_task(task, name='mytask', default=True)
             executor = Executor(collection=coll)
             executor.execute()
-            task.body.assert_called_with()
+            args = task.body.call_args[0]
+            ok_(isinstance(args[0], Context))
+            eq_(len(args), 1)
 
     class basic_pre_post:
         "basic pre/post task functionality"
@@ -89,13 +95,15 @@ class Executor_(IntegrationSpec):
             e = Executor(collection=Collection(t1=t1, t2=t2, t3=t3))
             e.execute(('t3', {'something': 'meh'}))
             for body in (pre_body, post_body):
-                eq_(body.call_args, tuple())
+                args = body.call_args[0]
+                eq_(len(args), 1)
+                ok_(isinstance(args[0], Context))
 
-        def _call_objs(self, contextualized):
+        def _call_objs(self):
             # Setup
             pre_body, post_body = Mock(), Mock()
-            t1 = Task(pre_body, contextualized=contextualized)
-            t2 = Task(post_body, contextualized=contextualized)
+            t1 = Task(pre_body)
+            t2 = Task(post_body)
             t3 = Task(Mock(),
                 pre=[call(t1, 5, foo='bar')],
                 post=[call(t2, 7, biz='baz')],
@@ -106,25 +114,16 @@ class Executor_(IntegrationSpec):
             # Pre-task asserts
             args, kwargs = pre_body.call_args
             eq_(kwargs, {'foo': 'bar'})
-            if contextualized:
-                assert isinstance(args[0], Context)
-                eq_(args[1], 5)
-            else:
-                eq_(args, (5,))
+            assert isinstance(args[0], Context)
+            eq_(args[1], 5)
             # Post-task asserts
             args, kwargs = post_body.call_args
             eq_(kwargs, {'biz': 'baz'})
-            if contextualized:
-                assert isinstance(args[0], Context)
-                eq_(args[1], 7)
-            else:
-                eq_(args, (7,))
-
-        def may_be_call_objects_specifying_args(self):
-            self._call_objs(contextualized=False)
+            assert isinstance(args[0], Context)
+            eq_(args[1], 7)
 
         def call_objs_play_well_with_context_args(self):
-            self._call_objs(contextualized=True)
+            self._call_objs()
 
     class deduping_and_chaining:
         def chaining_is_depth_first(self):
@@ -140,7 +139,7 @@ Testing
 """.lstrip())
 
         def _expect(self, args, expected):
-            expect('-c integration {0}'.format(args), out=expected.lstrip())
+            expect('-c integration {}'.format(args), out=expected.lstrip())
 
         class adjacent_hooks:
             def deduping(self):
@@ -223,12 +222,16 @@ bar
             e = Executor(collection=c)
             e.execute('t2')
             # Does not call the second t1(5)
-            body.assert_has_calls([mock_call(5), mock_call(7)])
+            param_list = []
+            for body_call in body.call_args_list:
+                ok_(isinstance(body_call[0][0], Context))
+                param_list.append(body_call[0][1])
+            ok_(set(param_list) == {5, 7})
 
     class collection_driven_config:
         "Collection-driven config concerns"
         def hands_collection_configuration_to_context(self):
-            @ctask
+            @task
             def mytask(ctx):
                 eq_(ctx.my_key, 'value')
             c = Collection(mytask)
@@ -236,10 +239,10 @@ bar
             Executor(collection=c).execute('mytask')
 
         def hands_task_specific_configuration_to_context(self):
-            @ctask
+            @task
             def mytask(ctx):
                 eq_(ctx.my_key, 'value')
-            @ctask
+            @task
             def othertask(ctx):
                 eq_(ctx.my_key, 'othervalue')
             inner1 = Collection('inner1', mytask)
@@ -251,7 +254,7 @@ bar
             e.execute('inner1.mytask', 'inner2.othertask')
 
         def subcollection_config_works_with_default_tasks(self):
-            @ctask(default=True)
+            @task(default=True)
             def mytask(ctx):
                 eq_(ctx.my_key, 'value')
             # Sets up a task "known as" sub.mytask which may be called as
@@ -289,7 +292,70 @@ bar
             expect("-c autoprint sub.yup", out="It's alive!\n")
 
         def does_not_fire_on_pre_tasks(self):
-            expect("-c autoprint pre_check", out="")
+            expect("-c autoprint pre-check", out="")
 
         def does_not_fire_on_post_tasks(self):
-            expect("-c autoprint post_check", out="")
+            expect("-c autoprint post-check", out="")
+
+    class inter_task_context_and_config_sharing:
+        def context_is_new_but_config_is_same(self):
+            @task
+            def task1(c):
+                return c
+            @task
+            def task2(c):
+                return c
+            coll = Collection(task1, task2)
+            ret = Executor(collection=coll).execute('task1', 'task2')
+            c1 = ret[task1]
+            c2 = ret[task2]
+            ok_(c1 is not c2)
+            # TODO: eventually we may want to change this again, as long as the
+            # effective values within the config are still matching...? Ehh
+            ok_(c1.config is c2.config)
+
+        def new_config_data_is_preserved_between_tasks(self):
+            @task
+            def task1(c):
+                c.foo = 'bar'
+                # NOTE: returned for test inspection, not as mechanism of
+                # sharing data!
+                return c
+            @task
+            def task2(c):
+                return c
+            coll = Collection(task1, task2)
+            ret = Executor(collection=coll).execute('task1', 'task2')
+            c2 = ret[task2]
+            ok_('foo' in c2.config)
+            eq_(c2.foo, 'bar')
+
+        def config_mutation_is_preserved_between_tasks(self):
+            @task
+            def task1(c):
+                c.config.run.echo = True
+                # NOTE: returned for test inspection, not as mechanism of
+                # sharing data!
+                return c
+            @task
+            def task2(c):
+                return c
+            coll = Collection(task1, task2)
+            ret = Executor(collection=coll).execute('task1', 'task2')
+            c2 = ret[task2]
+            eq_(c2.config.run.echo, True)
+
+        def config_deletion_is_preserved_between_tasks(self):
+            @task
+            def task1(c):
+                del c.config.run.echo
+                # NOTE: returned for test inspection, not as mechanism of
+                # sharing data!
+                return c
+            @task
+            def task2(c):
+                return c
+            coll = Collection(task1, task2)
+            ret = Executor(collection=coll).execute('task1', 'task2')
+            c2 = ret[task2]
+            ok_('echo' not in c2.config.run)

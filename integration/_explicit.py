@@ -2,5 +2,8 @@ from invoke import task
 
 
 @task
-def foo():
+def foo(c):
+    """
+    Frobazz
+    """
     print("Yup")

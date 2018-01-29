@@ -97,7 +97,7 @@ class Context_(Spec):
             # here. Yes that makes this an integration test, but it's nice to
             # test it here at this level & not just in cli tests.
             @task
-            def mytask(underscored_option=True):
+            def mytask(ctx, underscored_option=True):
                 pass
             self.c.add_arg(mytask.get_arguments()[0])
             eq_(
@@ -165,7 +165,7 @@ class Context_(Spec):
             # Task/Collection generated Context
             # (will expose flags n such)
             @task(help={'otherarg': 'other help'}, optional=['optval'])
-            def mytask(myarg, otherarg, optval):
+            def mytask(ctx, myarg, otherarg, optval):
                 pass
             col = Collection(mytask)
             self.tasked = col.to_contexts()[0]
@@ -242,7 +242,7 @@ class Context_(Spec):
             # TODO: consider redoing help_for to be more flexible on input --
             # arg value or flag; or even Argument objects. ?
             @task(help={'otherarg': 'other help'})
-            def mytask(myarg, otherarg):
+            def mytask(ctx, myarg, otherarg):
                 pass
             c = Collection(mytask).to_contexts()[0]
             eq_(
@@ -328,8 +328,3 @@ class Context_(Spec):
                 str(Context('bar', args=[Argument('arg1')])),
                 "<parser/Context 'bar': {'arg1': <Argument: arg1>}>"
             )
-
-        def repr_is_str(self):
-            "__repr__ mirrors __str__"
-            c = Context('foo')
-            eq_(str(c), repr(c))

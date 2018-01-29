@@ -34,9 +34,6 @@ class Init(Spec):
         def task_decorator(self):
             assert invoke.task is invoke.tasks.task
 
-        def ctask_decorator(self):
-            assert invoke.ctask is invoke.tasks.ctask
-
         def task_class(self):
             assert invoke.Task is invoke.tasks.Task
 
@@ -46,11 +43,11 @@ class Init(Spec):
         def context_class(self):
             assert invoke.Context is invoke.context.Context
 
+        def mock_context_class(self):
+            assert invoke.MockContext is invoke.context.MockContext
+
         def config_class(self):
             assert invoke.Config is invoke.config.Config
-
-        def run_function(self):
-            assert invoke.run # lol
 
         def pty_size_function(self):
             assert invoke.pty_size is invoke.platform.pty_size
@@ -74,6 +71,11 @@ class Init(Spec):
 
         def runner_result(self):
             assert invoke.Result is invoke.runners.Result
+
+        def watchers(self):
+            assert invoke.StreamWatcher is invoke.watchers.StreamWatcher
+            assert invoke.Responder is invoke.watchers.Responder
+            assert invoke.FailingResponder is invoke.watchers.FailingResponder
 
         def program(self):
             assert invoke.Program is invoke.program.Program

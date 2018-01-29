@@ -1,1 +1,1 @@
-hooray = 'python'
+outer = {'inner': {'hooray': 'python'}}

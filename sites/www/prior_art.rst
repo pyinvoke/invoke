@@ -15,10 +15,11 @@ were already great 80-90% solutions out there, but none that fit our needs
   lacking in other ways.
 * **Simplicity** - tools that try to do many things often suffer for it due to
   lack of focus. We wanted to build something clean and simple that just did
-  one thing well.
-* **Customizability/control** - Invoke was designed to work well with other
-  tools such as `Fabric <http://fabfile.org>`_ and we felt that the work needed
-  to adapt existing tools towards this goal would impede progress.
+  one thing (ok...two things) well.
+* **Customizability/control** - Invoke was designed to work well with (and be a
+  foundation for) other tools such as `Fabric <http://fabfile.org>`_'s second
+  version, and we felt that the work needed to adapt existing tools towards
+  this goal would impede progress.
 
 Some of the pre-existing solutions in this space in the Python world include:
 

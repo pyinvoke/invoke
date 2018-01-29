@@ -1,6 +1,11 @@
 from contextlib import contextmanager
 from resource import getrusage, RUSAGE_SELF
+import sys
 import time
+
+from invoke.vendor.six import wraps
+
+from spec import skip
 
 
 def current_cpu_usage():
@@ -34,3 +39,18 @@ def assert_cpu_usage(lt, verbose=False):
         print("Used {0:.2}% CPU over {1:.2}s".format(percentage, time_diff))
 
     assert percentage < lt
+
+
+def only_utf8(f):
+    """
+    Decorator causing tests to skip if local shell pipes aren't UTF-8.
+    """
+    # TODO: use actual test selection labels or whatever nose has
+    @wraps(f)
+    def inner(*args, **kwargs):
+        if getattr(sys.stdout, 'encoding', None) == 'UTF-8':
+            return f(*args, **kwargs)
+        # TODO: could remove this so they show green, but figure yellow is more
+        # appropriate
+        skip()
+    return inner

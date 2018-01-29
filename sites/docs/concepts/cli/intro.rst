@@ -61,11 +61,13 @@ Naturally, more than one flag may be given at a time::
 Per-task help / printing available flags
 ----------------------------------------
 
-To get help for a specific task, just give the task name as an argument to the
-core ``--help``/``-h`` option, and you'll get both its docstring (if any) and
-per-argument/flag help output::
+To get help for a specific task, you can give the task name as an argument to
+the core ``--help``/``-h`` option, or give ``--help``/``-h`` after the task
+(assuming it doesn't itself define a ``--help`` or ``-h``). When help is
+requested, you'll see the task's docstring (if any) and per-argument/flag help
+output::
 
-    $ invoke --help build
+    $ invoke --help build  # or invoke build --help
 
     Docstring:
       none
@@ -104,8 +106,8 @@ Optional flag values
 --------------------
 
 You saw a hint of this with ``--help`` specifically, but non-core options may
-also take optional values. For example, say your task has a ``--log`` flag
-that activates logging::
+also take optional values, if declared as ``optional``. For example, say your
+task has a ``--log`` flag that activates logging::
 
     $ invoke compile --log
 
@@ -116,15 +118,29 @@ but you also want it to be configurable regarding *where* to log::
 You could implement this with an additional argument (e.g. ``--log`` and
 ``--log-location``) but sometimes the concise API is the more useful one.
 
+To enable this, specify which arguments are of this 'hybrid' optional-value
+type inside ``@task``::
+
+    @task(optional=['log'])
+    def compile(ctx, log=None):
+        if log:
+            log_file = '/var/log/my.log'
+            # Value was given, vs just-True
+            if isinstance(log, unicode): 
+                log_file = log
+            # Replace w/ your actual log setup...
+            set_log_destination(log_file)
+        # Do things that might log here...
+
 When optional flag values are used, the values seen post-parse follow these
 rules:
 
 * If the flag is not given at all (``invoke compile``) the default value
-  (if any) is filled in just as normal.
+  is filled in as normal.
+* If it is given with a value (``invoke compile --log=foo.log``) then the value
+  is stored normally.
 * If the flag is given with no value (``invoke compile --log``), it is treated
   as if it were a ``bool`` and set to ``True``.
-* If it is given with a value (``invoke compile --log=foo.log``) then the value
-  is stored normally (including honoring ``kind`` if it was specified).
 
 Resolving ambiguity
 ~~~~~~~~~~~~~~~~~~~
@@ -143,6 +159,78 @@ guess
 <http://zen-of-python.info/in-the-face-of-ambiguity-refuse-the-temptation-to-guess.html#12>`_
 and raise an error.
 
+.. _iterable-flag-values:
+
+Iterable flag values
+--------------------
+
+A not-uncommon use case for CLI programs is the desire to build a list of
+values for a given option, instead of a single value. While this *can* be done
+via sub-string parsing -- e.g. having users invoke a command with ``--mylist
+item1,item2,item3`` and splitting on the comma -- it's often preferable to
+specify the option multiple times and store the values in a list (instead of
+overwriting or erroring.)
+
+In Invoke, this is enabled by hinting to the parser that one or more task
+arguments are ``iterable`` in nature (similar to how one specifies ``optional``
+or ``positional``)::
+
+    @task(iterable=['my_list'])
+    def mytask(c, my_list):
+        print(my_list)
+
+When not given at all, the default value for ``my_list`` will be an empty list;
+otherwise, the result is a list, appending each value seen, in order, without
+any other manipulation (so no deduplication, etc)::
+
+    $ inv mytask
+    []
+    $ inv mytask --my-list foo
+    ['foo']
+    $ inv mytask --my-list foo --my-list bar
+    ['foo', 'bar']
+    $ inv mytask --my-list foo --my-list bar --my-list foo
+    ['foo', 'bar', 'foo']
+
+.. _incrementable-flag-values:
+
+Incrementable flag values
+-------------------------
+
+This is arguably a sub-case of :ref:`iterable flag values
+<iterable-flag-values>` (seen above) - it has the same core interface of "give
+a CLI argument multiple times, and have that do something other than error or
+overwrite a single value." However, 'incrementables' (as you may have guessed)
+increment an integer instead of building a list of strings. This is commonly
+found in verbosity flags and similar functionality.
+
+An example of exactly that::
+
+    @task(incrementable=['verbose'])
+    def mytask(c, verbose=0):
+        print(verbose)
+
+And its use::
+
+    $ inv mytask
+    0
+    $ inv mytask --verbose
+    1
+    $ inv mytask -v
+    1
+    $inv mytask -vvv
+    3
+
+Happily, because in Python 0 is 'falsey' and 1 (or any other number) is
+'truthy', this functions a lot like a boolean flag as well, at least if one
+defaults it to 0.
+
+.. note::
+    You may supply any integer default value for such arguments (it simply
+    serves as the starting value), but take care that consumers of the argument
+    are written understanding that it is always going to appear 'truthy' unless
+    it's 0!
+
 Dashes vs underscores in flag names
 -----------------------------------
 
@@ -150,7 +238,7 @@ In Python, it's common to use ``underscored_names`` for keyword arguments,
 e.g.::
 
     @task
-    def mytask(my_option=False):
+    def mytask(ctx, my_option=False):
         pass
 
 However, the typical convention for command-line flags is dashes, which aren't
@@ -181,7 +269,7 @@ However, in some cases, you want the opposite - a default of ``True``, which
 can be easily disabled. For example, colored output::
 
     @task
-    def run_tests(color=True):
+    def run_tests(ctx, color=True):
         # ...
 
 Here, what we really want on the command line is a ``--no-color`` flag that

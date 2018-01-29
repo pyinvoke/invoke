@@ -1,8 +1,8 @@
 from spec import eq_
 
-from invoke import ctask
+from invoke import task
 
 
-@ctask
+@task
 def mytask(c):
-    eq_(c.hooray, 'yaml')
+    eq_(c.outer.inner.hooray, 'yaml')

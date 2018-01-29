@@ -7,15 +7,16 @@ from copy import deepcopy
 import inspect
 import types
 
-from .vendor import six
-
-from .context import Context
-from .parser import Argument, translate_underscores
+from .util import six
 
 if six.PY3:
     from itertools import zip_longest
 else:
     from itertools import izip_longest as zip_longest
+
+from .context import Context
+from .parser import Argument, translate_underscores
+
 
 
 #: Sentinel object representing a truly blank value (vs ``None``).
@@ -30,11 +31,12 @@ class Task(object):
     # and in @task.
     # TODO: allow central per-session / per-taskmodule control over some of
     # them, e.g. (auto_)positional, auto_shortflags.
-    # NOTE: we shadow __builtins__.help here. It's purposeful. :(
+    # NOTE: we shadow __builtins__.help here on purpose - obfuscating to avoid
+    # it feels bad, given the builtin will never actually be in play anywhere
+    # except a debug shell whose frame is exactly inside this class.
     def __init__(self,
         body,
         name=None,
-        contextualized=False,
         aliases=(),
         positional=None,
         optional=(),
@@ -44,14 +46,14 @@ class Task(object):
         pre=None,
         post=None,
         autoprint=False,
+        iterable=None,
+        incrementable=None,
     ):
         # Real callable
         self.body = body
         # Must copy doc/name here because Sphinx is stupid about properties.
         self.__doc__ = getattr(body, '__doc__', '')
         self.__name__ = getattr(body, '__name__', '')
-        # Is this a contextualized task?
-        self.contextualized = contextualized
         # Default name, alternate names, and whether it should act as the
         # default for its parent collection
         self._name = name
@@ -60,6 +62,8 @@ class Task(object):
         # Arg/flag/parser hints
         self.positional = self.fill_implicit_positionals(positional)
         self.optional = optional
+        self.iterable = iterable or []
+        self.incrementable = incrementable or []
         self.auto_shortflags = auto_shortflags
         self.help = help or {}
         # Call chain bidness
@@ -73,14 +77,11 @@ class Task(object):
     def name(self):
         return self._name or self.__name__
 
-    def __str__(self):
+    def __repr__(self):
         aliases = ""
         if self.aliases:
-            aliases = " ({0})".format(', '.join(self.aliases))
-        return "<Task {0!r}{1}>".format(self.name, aliases)
-
-    def __repr__(self):
-        return str(self)
+            aliases = " ({})".format(', '.join(self.aliases))
+        return "<Task {!r}{}>".format(self.name, aliases)
 
     def __eq__(self, other):
         if self.name != other.name:
@@ -106,9 +107,10 @@ class Task(object):
         return hash(self.name) + hash(self.body)
 
     def __call__(self, *args, **kwargs):
-        # Guard against calling contextualized tasks with no context.
-        if self.contextualized and not isinstance(args[0], Context):
-            err = "Contextualized task expected a Context, got {0} instead!"
+        # Guard against calling tasks with no context.
+        if not isinstance(args[0], Context):
+            err = "Task expected a Context as its first arg, got {} instead!"
+            # TODO: raise a custom subclass _of_ TypeError instead
             raise TypeError(err.format(type(args[0])))
         result = self.body(*args, **kwargs)
         self.times_called += 1
@@ -138,10 +140,13 @@ class Task(object):
         arg_names = spec.args[:]
         matched_args = [reversed(x) for x in [spec.args, spec.defaults or []]]
         spec_dict = dict(zip_longest(*matched_args, fillvalue=NO_DEFAULT))
-        # Remove context argument, if applicable
-        if self.contextualized:
+        # Pop context argument
+        try:
             context_arg = arg_names.pop(0)
-            del spec_dict[context_arg]
+        except IndexError:
+            # TODO: see TODO under __call__, this should be same type
+            raise TypeError("Tasks must have an initial Context argument!")
+        del spec_dict[context_arg]
         return arg_names, spec_dict
 
     def fill_implicit_positionals(self, positional):
@@ -162,6 +167,16 @@ class Task(object):
         opts['positional'] = name in self.positional
         # Whether it is a value-optional flag
         opts['optional'] = name in self.optional
+        # Whether it should be of an iterable (list) kind
+        if name in self.iterable:
+            opts['kind'] = list
+            # If user gave a non-None default, hopefully they know better
+            # than us what they want here (and hopefully it offers the list
+            # protocol...) - otherwise supply useful default
+            opts['default'] = default if default is not None else []
+        # Whether it should increment its value or not
+        if name in self.incrementable:
+            opts['incrementable'] = True
         # Argument name(s) (replace w/ dashed version if underscores present,
         # and move the underscored version to be the attr_name instead.)
         if '_' in name:
@@ -178,7 +193,12 @@ class Task(object):
         # Handle default value & kind if possible
         if default not in (None, NO_DEFAULT):
             # TODO: allow setting 'kind' explicitly.
-            opts['kind'] = type(default)
+            # NOTE: skip setting 'kind' if optional is True + type(default) is
+            # bool; that results in a nonsensical Argument which gives the
+            # parser grief in a few ways.
+            kind = type(default)
+            if not (opts['optional'] and kind is bool):
+                opts['kind'] = kind
             opts['default'] = default
         # Help
         if name in self.help:
@@ -196,7 +216,7 @@ class Task(object):
         tuples = [(x, spec_dict[x]) for x in arg_names]
         # Prime the list of all already-taken names (mostly for help in
         # choosing auto shortflags)
-        taken_names = set(x[0] for x in tuples)
+        taken_names = {x[0] for x in tuples}
         # Build arg list (arg_opts will take care of setting up shortnames,
         # etc)
         args = []
@@ -229,9 +249,6 @@ def task(*args, **kwargs):
     * ``name``: Default name to use when binding to a `.Collection`. Useful for
       avoiding Python namespace issues (i.e. when the desired CLI level name
       can't or shouldn't be used as the Python level name.)
-    * ``contextualized``: Hints to callers (especially the CLI) that this task
-      expects to be given a `.Context` object as its first argument when
-      called.
     * ``aliases``: Specify one or more aliases for this task, allowing it to be
       invoked as multiple different names. For example, a task named ``mytask``
       with a simple ``@task`` wrapper may only be invoked as ``"mytask"``.
@@ -247,6 +264,10 @@ def task(*args, **kwargs):
       given as value-taking options (e.g. ``--my-arg=myvalue``, wherein the
       task is given ``"myvalue"``) or as Boolean flags (``--my-arg``, resulting
       in ``True``).
+    * ``iterable``: Iterable of argument names, declaring them to :ref:`build
+      iterable values <iterable-flag-values>`.
+    * ``incrementable``: Iterable of argument names, declaring them to
+      :ref:`increment their values <incrementable-flag-values>`.
     * ``default``: Boolean option specifying whether this task should be its
       collection's default task (i.e. called if the collection's own name is
       given.)
@@ -265,8 +286,6 @@ def task(*args, **kwargs):
     ``*args`` and ``pre`` at the same time.)
     """
     # @task -- no options were (probably) given.
-    # Also handles ctask's use case when given as @ctask, equivalent to
-    # @task(obj, contextualized=True).
     if len(args) == 1 and callable(args[0]) and not isinstance(args[0], Task):
         return Task(args[0], **kwargs)
     # @task(pre, tasks, here)
@@ -278,11 +297,14 @@ def task(*args, **kwargs):
         kwargs['pre'] = args
     # @task(options)
     # TODO: pull in centrally defined defaults here (see Task)
+    # TODO: clean up all of the values which are iterables, some are tuple and
+    # some are None->list, ugh
     name = kwargs.pop('name', None)
-    contextualized = kwargs.pop('contextualized', False)
     aliases = kwargs.pop('aliases', ())
     positional = kwargs.pop('positional', None)
     optional = tuple(kwargs.pop('optional', ()))
+    iterable = kwargs.pop('iterable', None)
+    incrementable = kwargs.pop('incrementable', None)
     default = kwargs.pop('default', False)
     auto_shortflags = kwargs.pop('auto_shortflags', True)
     help = kwargs.pop('help', {})
@@ -291,16 +313,17 @@ def task(*args, **kwargs):
     autoprint = kwargs.pop('autoprint', False)
     # Handle unknown kwargs
     if kwargs:
-        kwarg = (" unknown kwargs {0!r}".format(kwargs)) if kwargs else ""
+        kwarg = (" unknown kwargs {!r}".format(kwargs)) if kwargs else ""
         raise TypeError("@task was called with" + kwarg)
     def inner(obj):
         obj = Task(
             obj,
             name=name,
-            contextualized=contextualized,
             aliases=aliases,
             positional=positional,
             optional=optional,
+            iterable=iterable,
+            incrementable=incrementable,
             default=default,
             auto_shortflags=auto_shortflags,
             help=help,
@@ -312,25 +335,13 @@ def task(*args, **kwargs):
     return inner
 
 
-def ctask(*args, **kwargs):
-    """
-    Wrapper for `.task` which sets ``contextualized=True`` by default.
-
-    Please see `.task` for documentation.
-    """
-    kwargs.setdefault('contextualized', True)
-    return task(*args, **kwargs)
-
-
 class Call(object):
     """
-    Represents a call/execution of a `.Task` with some arguments.
-
-    Wraps its `.Task` so it can be treated as one by `.Executor`.
+    Represents a call/execution of a `.Task` with given (kw)args.
 
     Similar to `~functools.partial` with some added functionality (such as the
     delegation to the inner task, and optional tracking of the name it's being
-    called by.
+    called by.)
     """
     def __init__(
         self,
@@ -338,7 +349,6 @@ class Call(object):
         called_as=None,
         args=None,
         kwargs=None,
-        context=None,
     ):
         """
         Create a new `.Call` object.
@@ -355,33 +365,26 @@ class Call(object):
 
         :param dict kwargs:
             Keyword arguments to call with, if any. Default: ``None``.
-
-        :param context:
-            `.Context` instance to be used if the wrapped `.Task` is
-            :ref:`contextualized <concepts-context>`. Default: ``None``.
         """
         self.task = task
         self.called_as = called_as
         self.args = args or tuple()
         self.kwargs = kwargs or dict()
-        self.context = context
 
+    # TODO: just how useful is this? feels like maybe overkill magic
     def __getattr__(self, name):
         return getattr(self.task, name)
 
     def __deepcopy__(self, memo):
         return self.clone()
 
-    def __str__(self):
+    def __repr__(self):
         aka = ""
         if self.called_as is not None and self.called_as != self.task.name:
-            aka = " (called as: {0!r})".format(self.called_as)
-        return "<Call {0!r}{1}, args: {2!r}, kwargs: {3!r}>".format(
+            aka = " (called as: {!r})".format(self.called_as)
+        return "<Call {!r}{}, args: {!r}, kwargs: {!r}>".format(
             self.task.name, aka, self.args, self.kwargs
         )
-
-    def __repr__(self):
-        return str(self)
 
     def __eq__(self, other):
         # NOTE: Not comparing 'called_as'; a named call of a given Task with
@@ -393,22 +396,25 @@ class Call(object):
                 return False
         return True
 
-    def clone(self):
+    def make_context(self, config):
+        """
+        Generate a `.Context` appropriate for this call, with given config.
+        """
+        return Context(config=config)
+
+    def clone(self, into=None):
         """
         Return a standalone copy of this Call.
 
         Useful when parameterizing task executions.
+
+        :param into: A subclass to generate instead of the current class.
         """
-        context = None
-        if self.context is not None:
-            # TODO: context.clone()?
-            context = Context(config=self.context.config.clone())
-        return Call(
+        return (into if into is not None else self.__class__)(
             task=self.task,
             called_as=self.called_as,
             args=deepcopy(self.args),
             kwargs=deepcopy(self.kwargs),
-            context=context
         )
 
 

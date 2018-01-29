@@ -6,11 +6,12 @@ exceptions used for message-passing" to simply "we needed to express an error
 condition in a way easily told apart from other, truly unexpected errors".
 """
 
-from collections import namedtuple
 from traceback import format_exception
 from pprint import pformat
 
-from .vendor import six
+from .util import six
+
+from .util import encode_output
 
 
 class CollectionNotFound(Exception):
@@ -23,30 +24,107 @@ class Failure(Exception):
     """
     Exception subclass representing failure of a command execution.
 
-    It exhibits a ``result`` attribute containing the related `.Result` object,
-    whose attributes may be inspected to determine why the command failed.
+    "Failure" may mean the command executed and the shell indicated an unusual
+    result (usually, a non-zero exit code), or it may mean something else, like
+    a ``sudo`` command which was aborted when the supplied password failed
+    authentication.
+
+    Two attributes allow introspection to determine the nature of the problem:
+
+    * ``result``: a `.Result` instance with info about the command being
+      executed and, if it ran to completion, how it exited.
+    * ``reason``: ``None``, if the command finished; or an exception instance
+      if e.g. a `.StreamWatcher` raised `WatcherError`.
+
+    This class is only rarely raised by itself; most of the time `.Runner.run`
+    (or a wrapper of same, such as `.Context.sudo`) will raise a specific
+    subclass like `UnexpectedExit` or `AuthFailure`.
     """
-    def __init__(self, result):
+    def __init__(self, result, reason=None):
         self.result = result
+        self.reason = reason
 
+
+def _tail(stream):
+    # TODO: make configurable
+    # TODO: preserve alternate line endings? Mehhhh
+    tail = "\n\n" + "\n".join(stream.splitlines()[-10:])
+    # NOTE: no trailing \n preservation; easier for below display if normalized
+    return tail
+
+
+class UnexpectedExit(Failure):
+    """
+    A shell command ran to completion but exited with an unexpected exit code.
+
+    Its string representation displays the following:
+
+    - Command executed;
+    - Exit code;
+    - The last 10 lines of stdout, if it was hidden;
+    - The last 10 lines of stderr, if it was hidden and non-empty (e.g.
+      pty=False; when pty=True, stderr never happens.)
+    """
     def __str__(self):
-        err_label = "Stderr"
-        err_text = self.result.stderr
+        already_printed = ' already printed'
+        if 'stdout' not in self.result.hide:
+            stdout = already_printed
+        else:
+            stdout = encode_output(
+                _tail(self.result.stdout),
+                self.result.encoding,
+            )
         if self.result.pty:
-            err_label = "Stdout (pty=True; no stderr possible)"
-            err_text = self.result.stdout
-        return """Command execution failure!
+            stderr = " n/a (PTYs have no stderr)"
+        else:
+            if 'stderr' not in self.result.hide:
+                stderr = already_printed
+            else:
+                stderr = encode_output(
+                    _tail(self.result.stderr),
+                    self.result.encoding,
+                )
+        command = self.result.command
+        exited = self.result.exited
+        template = """Encountered a bad command exit code!
 
-Exit code: {0}
+Command: {!r}
 
-{1}:
+Exit code: {}
 
-{2}
+Stdout:{}
 
-""".format(self.result.exited, err_label, err_text)
+Stderr:{}
+
+"""
+        return template.format(command, exited, stdout, stderr)
 
     def __repr__(self):
-        return str(self)
+        # TODO: expand?
+        template = "<{}: cmd={!r} exited={}>"
+        return template.format(
+            self.__class__.__name__,
+            self.result.command,
+            self.result.exited,
+        )
+
+
+class AuthFailure(Failure):
+    """
+    An authentication failure, e.g. due to an incorrect ``sudo`` password.
+
+    .. note::
+        `.Result` objects attached to these exceptions typically lack exit code
+        information, since the command was never fully executed - the exception
+        was raised instead.
+    """
+    def __init__(self, result, prompt):
+        self.result = result
+        self.prompt = prompt
+
+    def __str__(self):
+        err = "The password submitted to prompt {!r} was rejected."
+        return err.format(self.prompt)
 
 
 class ParseError(Exception):
@@ -106,12 +184,6 @@ class UnknownFileType(Exception):
     pass
 
 
-#: A namedtuple wrapping a thread-borne exception & that thread's arguments.
-ExceptionWrapper = namedtuple(
-    'ExceptionWrapper',
-    'kwargs type value traceback'
-)
-
 def _printable_kwargs(kwargs):
     """
     Return print-friendly version of a thread-related ``kwargs`` dict.
@@ -135,7 +207,7 @@ def _printable_kwargs(kwargs):
 
 class ThreadException(Exception):
     """
-    One or more exceptions were raised within background (usually I/O) threads.
+    One or more exceptions were raised within background threads.
 
     The real underlying exceptions are stored in the `exceptions` attribute;
     see its documentation for data structure details.
@@ -144,10 +216,10 @@ class ThreadException(Exception):
         Threads which did not encounter an exception, do not contribute to this
         exception object and thus are not present inside `exceptions`.
     """
-    #: A tuple of `ExceptionWrappers <ExceptionWrapper>` containing the initial
-    #: thread constructor kwargs (because `threading.Thread` subclasses should
-    #: always be called with kwargs) and the caught exception for that thread
-    #: as seen by `sys.exc_info` (so: type, value, traceback).
+    #: A tuple of `ExceptionWrappers <invoke.util.ExceptionWrapper>` containing
+    #: the initial thread constructor kwargs (because `threading.Thread`
+    #: subclasses should always be called with kwargs) and the caught exception
+    #: for that thread as seen by `sys.exc_info` (so: type, value, traceback).
     #:
     #: .. note::
     #:     The ordering of this attribute is not well-defined.
@@ -165,7 +237,7 @@ class ThreadException(Exception):
         details = []
         for x in self.exceptions:
             # Build useful display
-            detail = "Thread args: {0}\n\n{1}"
+            detail = "Thread args: {}\n\n{}"
             details.append(detail.format(
                 pformat(_printable_kwargs(x.kwargs)),
                 "\n".join(format_exception(x.type, x.value, x.traceback)),
@@ -176,8 +248,33 @@ class ThreadException(Exception):
             "\n\n".join(details),
         )
         return """
-Saw {0} exceptions within threads ({1}):
+Saw {} exceptions within threads ({}):
 
 
-{2}
+{}
 """.format(*args)
+
+
+class WatcherError(Exception):
+    """
+    Generic parent exception class for `.StreamWatcher`-related errors.
+
+    Typically, one of these exceptions indicates a `.StreamWatcher` noticed
+    something anomalous in an output stream, such as an authentication response
+    failure.
+
+    `.Runner` catches these and attaches them to `.Failure` exceptions so they
+    can be referenced by intermediate code and/or act as extra info for end
+    users.
+    """
+    pass
+
+
+class ResponseNotAccepted(WatcherError):
+    """
+    A responder/watcher class noticed a 'bad' response to its submission.
+
+    Mostly used by `.FailingResponder` and subclasses, e.g. "oh dear I
+    autosubmitted a sudo password and it was incorrect."
+    """
+    pass

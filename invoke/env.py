@@ -10,7 +10,7 @@ not be included in the Sphinx API documentation.
 
 import os
 
-from .vendor import six
+from .util import six
 
 from .exceptions import UncastableEnvVar, AmbiguousEnvVar
 from .util import debug
@@ -33,14 +33,14 @@ class Environment(object):
         """
         # Obtain allowed env var -> existing value map
         env_vars = self._crawl(key_path=[], env_vars={})
-        m = "Scanning for env vars according to prefix: {1!r}, mapping: {0!r}"
-        debug(m.format(env_vars, self._prefix))
+        m = "Scanning for env vars according to prefix: {!r}, mapping: {!r}"
+        debug(m.format(self._prefix, env_vars))
         # Check for actual env var (honoring prefix) and try to set
         for env_var, key_path in six.iteritems(env_vars):
             real_var = (self._prefix or "") + env_var
             if real_var in os.environ:
                 self._path_set(key_path, os.environ[real_var])
-        debug("Obtained env var config: {0!r}".format(self.data))
+        debug("Obtained env var config: {!r}".format(self.data))
         return self.data
 
     def _crawl(self, key_path, env_vars):
@@ -60,7 +60,11 @@ class Environment(object):
         new_vars = {}
         obj = self._path_get(key_path)
         # Sub-dict -> recurse
-        if hasattr(obj, 'keys') and hasattr(obj, '__getitem__'):
+        if (
+            hasattr(obj, 'keys')
+            and callable(obj.keys)
+            and hasattr(obj, '__getitem__')
+        ):
             for key in obj.keys():
                 merged_vars = dict(env_vars, **new_vars)
                 merged_path = key_path + [key]
@@ -68,7 +72,7 @@ class Environment(object):
                 # Handle conflicts
                 for key in crawled:
                     if key in new_vars:
-                        err = "Found >1 source for {0}"
+                        err = "Found >1 source for {}"
                         raise AmbiguousEnvVar(err.format(key))
                 # Merge and continue
                 new_vars.update(crawled)
@@ -108,7 +112,7 @@ class Environment(object):
         elif old is None:
             return new_
         elif isinstance(old, (list, tuple)):
-            err = "Can't adapt an environment string into a {0}!"
+            err = "Can't adapt an environment string into a {}!"
             err = err.format(type(old))
             raise UncastableEnvVar(err)
         else:
