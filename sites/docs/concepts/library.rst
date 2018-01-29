@@ -193,8 +193,9 @@ here:
   with anything Invoke-specific) but still sometimes desirable.
 
 .. note::
-    Both of these involve subclassing `.Config` (and, if using the CLI machinery, 
-    informing your `.Program` to use that subclass instead of the default one.)
+    Both of these involve subclassing `.Config` (and, if using the CLI
+    machinery, informing your `.Program` to use that subclass instead of the
+    default one.)
 
 
 Changing filenames and/or env var prefix
