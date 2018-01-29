@@ -139,6 +139,12 @@ class Collection_(Spec):
         def derives_collection_name_from_module_name(self):
             eq_(self.c.name, 'integration')
 
+        def works_great_with_subclassing(self):
+            class MyCollection(Collection):
+                pass
+            c = MyCollection.from_module(load('integration'))
+            assert isinstance(c, MyCollection)
+
         def submodule_names_are_stripped_to_last_chunk(self):
             with support_path():
                 from package import module
