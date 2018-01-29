@@ -205,7 +205,7 @@ class ExceptionHandlingThread(threading.Thread):
             self.exc_info = sys.exc_info()
             # And log now, in case we never get to later (e.g. if executing
             # program is hung waiting for us to do something)
-            msg = "Encountered exception {0!r} in thread for {1!r}"
+            msg = "Encountered exception {!r} in thread for {!r}"
             # Name is either target function's dunder-name, or just "_run" if
             # we were run subclass-wise.
             name = '_run'

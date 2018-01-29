@@ -2,6 +2,45 @@
 Changelog
 =========
 
+* :bug:`488` Account for additional I/O related ``OSError`` error strings
+  when attempting to capture only this specific subtype of error. This should
+  fix some issues with less common libc implementations such as ``musl`` (as
+  found on e.g. Alpine Linux.) Thanks to Rajitha Perera for the report.
+* :release:`0.22.0 <2017-11-29>`
+* :bug:`407 major` (also :issue:`494`, :issue:`67`) Update the default value of
+  the ``run.shell`` config value so that it reflects a Windows-appropriate
+  value (specifically, the ``COMSPEC`` env var or a fallback of ``cmd.exe``) on
+  Windows platforms. This prevents Windows users from being forced to always
+  ship around configuration-level overrides.
+
+  Thanks to Maciej 'maQ' Kusz for the original patchset, and to ``@thebjorn``
+  and Garrett Jenkins for providing lots of feedback.
+* :bug:`- major` Iterable-type CLI args were actually still somewhat broken &
+  were 'eating' values after themselves in the parser stream (thus e.g.
+  preventing parsing of subsequent tasks or flags.) This has been fixed.
+* :support:`364` Drop Python 2.6 and Python 3.3 support, as these versions now
+  account for only very low percentages of the userbase and are unsupported (or
+  about to be unsupported) by the rest of the ecosystem, including ``pip``.
+
+  This includes updating documentation & packaging metadata as well as taking
+  advantage of basic syntax additions like set literals/comprehensions (``{1,
+  2, 3}`` instead of ``set([1, 2, 3])``) and removing positional string
+  argument specifiers (``"{}".format(val)`` instead of ``"{0}".format(val)``).
+
+* :release:`0.21.0 <2017-09-18>`
+* :feature:`132` Implement 'iterable' and 'incrementable' CLI flags, allowing
+  for invocations like ``inv mytask --listy foo --listy bar`` (resulting in a
+  call like ``mytask(listy=['foo', 'bar'])``) or ``inv mytask -vvv`` (resulting
+  in e.g. ``mytask(verbose=3)``. Specifically, these require use of the new
+  :ref:`iterable <iterable-flag-values>` and :ref:`incrementable
+  <incrementable-flag-values>` arguments to `@task <invoke.tasks.task>` - see
+  those links to the conceptual docs for details.
+* :release:`0.20.4 <2017-08-14>`
+* :bug:`-` The behavior of `Config <invoke.config.Config>` when ``lazy=True``
+  didn't match that described in the API docs, after the recent updates to its
+  lifecycle. (Specifically, any config data given to the constructor was not
+  visible in the resulting instance until ``merge()`` was explicitly called.)
+  This has been fixed, along with other related minor issues.
 * :release:`0.20.3 <2017-08-04>`
 * :bug:`467` (Arguably also a feature, but since it enables behavior users
   clearly found intuitive, we're considering it a bug.) Split up the parsing

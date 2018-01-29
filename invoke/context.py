@@ -172,12 +172,12 @@ class Context(DataProxy):
         # through to 'run'...
         user_flags = ""
         if user is not None:
-            user_flags = "-H -u {0} ".format(user)
+            user_flags = "-H -u {} ".format(user)
         command = self._prefix_commands(command)
-        cmd_str = "sudo -S -p '{0}' {1}{2}".format(prompt, user_flags, command)
+        cmd_str = "sudo -S -p '{}' {}{}".format(prompt, user_flags, command)
         watcher = FailingResponder(
             pattern=re.escape(prompt),
-            response="{0}\n".format(password),
+            response="{}\n".format(password),
             sentinel="Sorry, try again.\n",
         )
         # Ensure we merge any user-specified watchers with our own.
@@ -222,7 +222,7 @@ class Context(DataProxy):
         prefixes = list(self.command_prefixes)
         current_directory = self.cwd
         if current_directory:
-            prefixes.insert(0, 'cd {0}'.format(current_directory))
+            prefixes.insert(0, 'cd {}'.format(current_directory))
 
         return ' && '.join(prefixes + [command])
 
@@ -393,9 +393,9 @@ class MockContext(Context):
                 and not isinstance(results, Result)
                 # No need for explicit dict test; they have __iter__
             ):
-                err = "Not sure how to yield results from a {0!r}"
+                err = "Not sure how to yield results from a {!r}"
                 raise TypeError(err.format(type(results)))
-            self._set("__{0}".format(method), results)
+            self._set("__{}".format(method), results)
 
     # TODO: _maybe_ make this more metaprogrammy/flexible (using __call__ etc)?
     # Pretty worried it'd cause more hard-to-debug issues than it's presently
@@ -457,7 +457,7 @@ class MockContext(Context):
         `set_result_for` is mostly useful for modifying an already-instantiated
         `MockContext`, such as one created by test setup or helper methods.
         """
-        attname = '__{0}'.format(attname)
+        attname = '__{}'.format(attname)
         heck = TypeError(
             "Can't update results for non-dict or nonexistent mock results!"
         )

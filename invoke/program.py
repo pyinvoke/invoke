@@ -212,19 +212,18 @@ class Program(object):
 
         :returns: ``None``; sets ``self.config`` instead.
         """
-        # TODO: how to deal with subclasses that want lazy instantiation? Or do
-        # we just update them to not do anything on init? I.e. fab2 would
-        # simply never load_ssh_config() on init? that seems semi bad, it's a
-        # concession to runtime config path setting. feels like runtime wants
-        # ability to be set and loaded later?
         self.config = self.config_class()
 
-    def update_config(self):
+    def update_config(self, merge=True):
         """
         Update the previously instantiated `.Config` with parsed data.
 
         For example, this is how ``--echo`` is able to override the default
         config value for ``run.echo``.
+
+        :param bool merge:
+            Whether to merge at the end, or defer. Primarily useful for
+            subclassers. Default: ``True``.
         """
         # Now that we have parse results handy, we can grab the remaining
         # config bits:
@@ -247,7 +246,8 @@ class Program(object):
         self.config.load_overrides({'run': run, 'tasks': tasks}, merge=False)
         self.config.set_runtime_path(self.args.config.value)
         self.config.load_runtime(merge=False)
-        self.config.merge()
+        if merge:
+            self.config.merge()
 
     def run(self, argv=None, exit=True):
         """
@@ -292,7 +292,7 @@ class Program(object):
             # steps, then tell it to execute the tasks.
             self.execute()
         except (UnexpectedExit, Exit, ParseError) as e:
-            debug("Received a possibly-skippable exception: {0!r}".format(e))
+            debug("Received a possibly-skippable exception: {!r}".format(e))
             # Print error messages from parser, runner, etc if necessary;
             # prevents messy traceback but still clues interactive user into
             # problems.
@@ -315,7 +315,7 @@ class Program(object):
             sys.exit(1) # Same behavior as Python itself outside of REPL
 
     def parse_core(self, argv):
-        debug("argv given to Program.run: {0!r}".format(argv))
+        debug("argv given to Program.run: {!r}".format(argv))
         self.normalize_argv(argv)
 
         # Obtain core args (sets self.core)
@@ -379,7 +379,7 @@ class Program(object):
             else:
                 # TODO: feels real dumb to factor this out of Parser, but...we
                 # should?
-                raise ParseError("No idea what '{0}' is!".format(halp))
+                raise ParseError("No idea what '{}' is!".format(halp))
 
         # Print discovered tasks if necessary
         if self.args.list.value:
@@ -428,10 +428,10 @@ class Program(object):
         """
         if argv is None:
             argv = sys.argv
-            debug("argv was None; using sys.argv: {0!r}".format(argv))
+            debug("argv was None; using sys.argv: {!r}".format(argv))
         elif isinstance(argv, six.string_types):
             argv = argv.split()
-            debug("argv was string-like; splitting: {0!r}".format(argv))
+            debug("argv was string-like; splitting: {!r}".format(argv))
         self.argv = argv
 
     @property
@@ -469,13 +469,13 @@ class Program(object):
         return ParserContext(args=args)
 
     def print_version(self):
-        print("{0} {1}".format(self.name, self.version or "unknown"))
+        print("{} {}".format(self.name, self.version or "unknown"))
 
     def print_help(self):
         usage_suffix = "task1 [--task1-opts] ... taskN [--taskN-opts]"
         if self.namespace is not None:
             usage_suffix = "<subcommand> [--subcommand-opts] ..."
-        print("Usage: {0} [--core-opts] {1}".format(self.binary, usage_suffix))
+        print("Usage: {} [--core-opts] {}".format(self.binary, usage_suffix))
         print("")
         print("Core options:")
         print("")
@@ -492,7 +492,7 @@ class Program(object):
         debug("Parsing initial context (core args)")
         parser = Parser(initial=self.initial_context, ignore_unknown=True)
         self.core = parser.parse_argv(self.argv[1:])
-        msg = "Core-args parse result: {0!r} & unparsed: {1!r}"
+        msg = "Core-args parse result: {!r} & unparsed: {!r}"
         debug(msg.format(self.core, self.core.unparsed))
 
     def load_collection(self):
@@ -519,7 +519,7 @@ class Program(object):
             )
         except CollectionNotFound as e:
             six.print_(
-                "Can't find any collection named {0!r}!".format(e.name),
+                "Can't find any collection named {!r}!".format(e.name),
                 file=sys.stderr
             )
             raise Exit(1)
@@ -536,12 +536,12 @@ class Program(object):
             initial=self.initial_context,
             contexts=self.collection.to_contexts(),
         )
-        debug("Parsing tasks against {0!r}".format(self.collection))
+        debug("Parsing tasks against {!r}".format(self.collection))
         result = self.parser.parse_argv(self.core.unparsed)
         # TODO: can we easily 'merge' this into self.core? Ehh
         self.core_via_tasks = result.pop(0)
         self.tasks = result
-        debug("Resulting task contexts: {0!r}".format(self.tasks))
+        debug("Resulting task contexts: {!r}".format(self.tasks))
 
     def print_task_help(self, name):
         """
@@ -551,8 +551,9 @@ class Program(object):
         ctx = self.parser.contexts[name]
         tuples = ctx.help_tuples()
         docstring = inspect.getdoc(self.collection[name])
-        header = "Usage: {1} [--core-opts] {0} {{0}}[other tasks here ...]".format(name, self.binary) # noqa
-        print(header.format("[--options] " if tuples else ""))
+        header = "Usage: {} [--core-opts] {} {}[other tasks here ...]"
+        opts = "[--options] " if tuples else ""
+        print(header.format(self.binary, name, opts))
         print("")
         print("Docstring:")
         if docstring:
@@ -578,7 +579,7 @@ class Program(object):
         task_names = self.collection.task_names
         # Short circuit if no tasks to show
         if not task_names:
-            msg = "No tasks found in collection '{0}'!"
+            msg = "No tasks found in collection '{}'!"
             print(msg.format(self.collection.name))
             raise Exit
         pairs = []
@@ -587,7 +588,7 @@ class Program(object):
             aliases = sort_names(task_names[primary])
             name = primary
             if aliases:
-                name += " ({0})".format(', '.join(aliases))
+                name += " ({})".format(', '.join(aliases))
             # Add docstring 1st lines
             task = self.collection[primary]
             help_ = ""

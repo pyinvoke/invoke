@@ -392,8 +392,8 @@ class Collection_(Spec):
                     pass
                 coll = Collection(outer_task, inner=Collection(inner_task))
                 contexts = coll.to_contexts()
-                expected = set(['outer-task', 'inner.inner-task'])
-                assert set(x.name for x in contexts) == expected
+                expected = {'outer-task', 'inner.inner-task'}
+                assert {x.name for x in contexts} == expected
 
             def percolates_to_subcollection_names(self):
                 @task
@@ -419,8 +419,8 @@ class Collection_(Spec):
                     pass
                 inner = Collection('inner', _inner_cooler_)
                 contexts = Collection(_what_evers_, inner).to_contexts()
-                expected = ['_what-evers_', 'inner._inner-cooler_']
-                assert set(x.name for x in contexts) == set(expected)
+                expected = {'_what-evers_', 'inner._inner-cooler_'}
+                assert {x.name for x in contexts} == expected
 
             def _nested_underscores(self, auto_dash_names=None):
                 @task(aliases=['other_name'])
@@ -460,8 +460,8 @@ class Collection_(Spec):
                     FakeModule(), auto_dash_names=False
                 )
                 # NOTE: underscores, not dashes
-                expected = set(['my_task', 'inner_coll.inner_task'])
-                assert set(x.name for x in coll.to_contexts()) == expected
+                expected = {'my_task', 'inner_coll.inner_task'}
+                assert {x.name for x in coll.to_contexts()} == expected
 
         def allows_flaglike_access_via_flags(self):
             assert '--text' in self.context.flags
@@ -494,7 +494,7 @@ class Collection_(Spec):
         def returns_all_task_names_including_subtasks(self):
             eq_(
                 set(self.c.task_names.keys()),
-                set(['top-level', 'sub-level.sub-task'])
+                {'top-level', 'sub-level.sub-task'}
             )
 
         def includes_aliases_and_defaults_as_values(self):
@@ -519,7 +519,7 @@ class Collection_(Spec):
             self.root.configure({'foo': 'bar'})
             eq_(self.root.configuration()['foo'], 'bar')
             self.root.configure({'biz': 'baz'})
-            eq_(set(self.root.configuration().keys()), set(['foo', 'biz']))
+            eq_(set(self.root.configuration().keys()), {'foo', 'biz'})
 
         def configure_merging_is_recursive_for_nested_dicts(self):
             self.root.configure({'foo': 'bar', 'biz': {'baz': 'boz'}})
@@ -544,12 +544,12 @@ class Collection_(Spec):
             inner.configure({'foo': 'bar'})
             self.root.configure({'biz': 'baz'})
             # With no inner collection
-            eq_(set(self.root.configuration().keys()), set(['biz']))
+            eq_(set(self.root.configuration().keys()), {'biz'})
             # With inner collection
             self.root.add_collection(inner)
             eq_(
                 set(self.root.configuration('inner.task').keys()),
-                set(['foo', 'biz'])
+                {'foo', 'biz'}
             )
 
         def parents_overwrite_children_in_path(self):

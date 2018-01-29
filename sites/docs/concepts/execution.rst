@@ -125,7 +125,7 @@ specify a call signature::
     @task
     def clean(ctx, which=None):
         which = which or 'pyc'
-        print("Cleaning {0}".format(which))
+        print("Cleaning {}".format(which))
 
     @task(pre=[call(clean, which='all')]) # or call(clean, 'all')
     def build(ctx):

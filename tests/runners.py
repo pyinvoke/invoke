@@ -46,6 +46,12 @@ def _runner(out='', err='', **kwargs):
     runner.read_proc_stderr = err_file.read
     return runner
 
+def _expect_platform_shell(shell):
+    if WINDOWS:
+        assert shell.endswith('cmd.exe')
+    else:
+        assert shell == '/bin/bash'
+
 
 class Runner_(Spec):
     # NOTE: these copies of _run and _runner form the base case of "test Runner
@@ -134,11 +140,11 @@ class Runner_(Spec):
             eq_(runner.run(_, pty=True).pty, True)
 
     class shell:
-        def defaults_to_bash_when_pty_True(self):
-            eq_(self._run(_, pty=True).shell, '/bin/bash')
+        def defaults_to_bash_or_cmdexe_when_pty_True(self):
+            _expect_platform_shell(self._run(_, pty=True).shell)
 
-        def defaults_to_bash_when_pty_False(self):
-            eq_(self._run(_, pty=False).shell, '/bin/bash')
+        def defaults_to_bash_or_cmdexe_when_pty_False(self):
+            _expect_platform_shell(self._run(_, pty=False).shell)
 
         def may_be_overridden(self):
             eq_(self._run(_, shell='/bin/zsh').shell, '/bin/zsh')
@@ -225,7 +231,7 @@ class Runner_(Spec):
             eq_(self._run(_).command, _)
 
         def shell_used(self):
-            eq_(self._run(_).shell, '/bin/bash')
+            _expect_platform_shell(self._run(_).shell)
 
         def hide_param_exposed_and_normalized(self):
             eq_(self._run(_, hide=True).hide, ('stdout', 'stderr'))
@@ -350,7 +356,7 @@ class Runner_(Spec):
                 self._run(_, hide=value)
             except ValueError as e:
                 msg = "Error from run(hide=xxx) did not tell user what the bad value was!" # noqa
-                msg += "\nException msg: {0}".format(e)
+                msg += "\nException msg: {}".format(e)
                 ok_(value in str(e), msg)
             else:
                 assert False, "run() did not raise ValueError for bad hide= value" # noqa
@@ -489,7 +495,7 @@ class Runner_(Spec):
                 try:
                     self._runner(exits=23).run(_)
                 except UnexpectedExit as e:
-                    expected = "<UnexpectedExit: cmd='{0}' exited=23>"
+                    expected = "<UnexpectedExit: cmd='{}' exited=23>"
                     eq_(
                         repr(e),
                         expected.format(_),
@@ -499,7 +505,7 @@ class Runner_(Spec):
             def setup(self):
                 def lines(prefix):
                     return "\n".join(
-                        "{0} {1}".format(prefix, x) for x in range(1, 26)
+                        "{} {}".format(prefix, x) for x in range(1, 26)
                     ) + "\n"
                 self._stdout = lines('stdout')
                 self._stderr = lines('stderr')
@@ -515,7 +521,7 @@ class Runner_(Spec):
                 except UnexpectedExit as e:
                     eq_(str(e), """Encountered a bad command exit code!
 
-Command: '{0}'
+Command: '{}'
 
 Exit code: 23
 
@@ -536,7 +542,7 @@ Stderr: already printed
                 except UnexpectedExit as e:
                     eq_(str(e), """Encountered a bad command exit code!
 
-Command: '{0}'
+Command: '{}'
 
 Exit code: 13
 
@@ -570,7 +576,7 @@ Stderr: n/a (PTYs have no stderr)
                 except UnexpectedExit as e:
                     eq_(str(e), """Encountered a bad command exit code!
 
-Command: '{0}'
+Command: '{}'
 
 Exit code: 77
 
@@ -605,7 +611,7 @@ stderr 25
             @trap
             def displays_tails_of_streams_only_when_hidden(self):
                 def oops(msg, r, hide):
-                    return "{0}! hide={1}; str output:\n\n{2}".format(
+                    return "{}! hide={}; str output:\n\n{}".format(
                         msg, hide, r
                     )
                 for hide, expect_out, expect_err in (
@@ -731,7 +737,7 @@ stderr 25
                         self._watcher_error()
                     except Failure as e:
                         exited = e.result.exited
-                        err = "Expected None, got {0!r}".format(exited)
+                        err = "Expected None, got {!r}".format(exited)
                         ok_(exited is None, err)
 
                 def ok_and_bool_still_are_falsey(self):
@@ -1269,6 +1275,11 @@ class Local_(Spec):
             # Doesn't-blow-up test.
             self._run(_, pty=True)
 
+        @mock_pty(trailing_error=OSError("I/O error"))
+        def other_spurious_OSErrors_handled_gracefully(self):
+            # Doesn't-blow-up test.
+            self._run(_, pty=True)
+
         @mock_pty(trailing_error=OSError("wat"))
         def non_spurious_OSErrors_bubble_up(self):
             try:
@@ -1302,14 +1313,18 @@ class Local_(Spec):
 
     class shell:
         @mock_pty(insert_os=True)
-        def defaults_to_bash_when_pty_True(self, mock_os):
+        def defaults_to_bash_or_cmdexe_when_pty_True(self, mock_os):
+            # NOTE: yea, windows can't run pty == true, but this is really
+            # testing config behavior, so...meh
             self._run(_, pty=True)
-            eq_(mock_os.execve.call_args_list[0][0][0], '/bin/bash')
+            _expect_platform_shell(mock_os.execve.call_args_list[0][0][0])
 
         @mock_subprocess(insert_Popen=True)
-        def defaults_to_bash_when_pty_False(self, mock_Popen):
+        def defaults_to_bash_or_cmdexe_when_pty_False(self, mock_Popen):
             self._run(_, pty=False)
-            eq_(mock_Popen.call_args_list[0][1]['executable'], '/bin/bash')
+            _expect_platform_shell(
+                mock_Popen.call_args_list[0][1]['executable']
+            )
 
         @mock_pty(insert_os=True)
         def may_be_overridden_when_pty_True(self, mock_os):

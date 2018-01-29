@@ -37,7 +37,7 @@ class Main(Spec):
 
         @trap
         def version_output(self):
-            _output_eq("invoke --version", "Invoke {0}\n".format(__version__))
+            _output_eq("invoke --version", "Invoke {}\n".format(__version__))
 
         @trap
         def help_output(self):
@@ -129,7 +129,7 @@ class Main(Spec):
                 return
             # GH issue 191
             substr = "      hello\t\t\nworld with spaces"
-            cmd = """ eval 'echo "{0}" ' """.format(substr)
+            cmd = """ eval 'echo "{}" ' """.format(substr)
             expected = '      hello\t\t\r\nworld with spaces\r\n'
             eq_(run(cmd, pty=True, hide='both').stdout, expected)
 
@@ -137,8 +137,8 @@ class Main(Spec):
             if WINDOWS:
                 return
             os.chdir('_support')
-            err_echo = "{0} err.py".format(sys.executable)
-            command = "echo foo && {0} bar".format(err_echo)
+            err_echo = "{} err.py".format(sys.executable)
+            command = "echo foo && {} bar".format(err_echo)
             r = run(command, hide='both', pty=True)
             eq_(r.stdout, 'foo\r\nbar\r\n')
             eq_(r.stderr, '')
@@ -177,6 +177,6 @@ class Main(Spec):
                 ('--meh=whee', 'whee'),
             ):
                 _output_eq(
-                    "inv -c parsing foo {0}".format(argstr),
+                    "inv -c parsing foo {}".format(argstr),
                     expected + "\n",
                 )

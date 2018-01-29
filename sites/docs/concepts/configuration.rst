@@ -332,11 +332,11 @@ Then maybe you refactor the build target::
 
     @task
     def clean(ctx):
-        ctx.run("rm -rf {0}".format(target))
+        ctx.run("rm -rf {}".format(target))
 
     @task
     def build(ctx):
-        ctx.run("sphinx-build docs {0}".format(target))
+        ctx.run("sphinx-build docs {}".format(target))
 
 We can also allow runtime parameterization::
 
@@ -344,11 +344,11 @@ We can also allow runtime parameterization::
 
     @task
     def clean(ctx, target=default_target):
-        ctx.run("rm -rf {0}".format(target))
+        ctx.run("rm -rf {}".format(target))
 
     @task
     def build(ctx, target=default_target):
-        ctx.run("sphinx-build docs {0}".format(target))
+        ctx.run("sphinx-build docs {}".format(target))
 
 This task module works for a single set of users, but what if we want to allow
 reuse? Somebody may want to use this module with a different default target.
@@ -369,11 +369,11 @@ Let's apply this to our example. First we add an explicit namespace object::
 
     @task
     def clean(ctx, target=default_target):
-        ctx.run("rm -rf {0}".format(target))
+        ctx.run("rm -rf {}".format(target))
 
     @task
     def build(ctx, target=default_target):
-        ctx.run("sphinx-build docs {0}".format(target))
+        ctx.run("sphinx-build docs {}".format(target))
 
     ns = Collection(clean, build)
 
@@ -386,13 +386,13 @@ runtime value was given.  The result::
     def clean(ctx, target=None):
         if target is None:
             target = ctx.sphinx.target
-        ctx.run("rm -rf {0}".format(target))
+        ctx.run("rm -rf {}".format(target))
 
     @task
     def build(ctx, target=None):
         if target is None:
             target = ctx.sphinx.target
-        ctx.run("sphinx-build docs {0}".format(target))
+        ctx.run("sphinx-build docs {}".format(target))
 
     ns = Collection(clean, build)
     ns.configure({'sphinx': {'target': "docs/_build"}})

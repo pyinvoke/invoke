@@ -13,7 +13,7 @@ from .util import debug, sort_names
 def complete(core, initial_context, collection):
     # Strip out program name (scripts give us full command line)
     invocation = re.sub(r'^(inv|invoke) ', '', core.remainder)
-    debug("Completing for invocation: {0!r}".format(invocation))
+    debug("Completing for invocation: {!r}".format(invocation))
     # Tokenize (shlex will have to do)
     tokens = shlex.split(invocation)
     # Make ourselves a parser (can't just reuse original one as it's mutated /
@@ -25,26 +25,26 @@ def complete(core, initial_context, collection):
     # Handle flags (partial or otherwise)
     if tokens and tokens[-1].startswith('-'):
         tail = tokens[-1]
-        debug("Invocation's tail {0!r} is flag-like".format(tail))
+        debug("Invocation's tail {!r} is flag-like".format(tail))
         # Gently parse invocation to obtain 'current' context.
         # Use last seen context in case of failure (required for
         # otherwise-invalid partial invocations being completed).
         try:
-            debug("Seeking context name in tokens: {0!r}".format(tokens))
+            debug("Seeking context name in tokens: {!r}".format(tokens))
             contexts = parser.parse_argv(tokens)
         except ParseError as e:
-            debug("Got parser error ({0!r}), grabbing its last-seen context {1!r}".format(e, e.context)) # noqa
+            debug("Got parser error ({!r}), grabbing its last-seen context {!r}".format(e, e.context)) # noqa
             contexts = [e.context]
         # Fall back to core context if no context seen.
-        debug("Parsed invocation, contexts: {0!r}".format(contexts))
+        debug("Parsed invocation, contexts: {!r}".format(contexts))
         if not contexts or not contexts[-1]:
             context = initial_context
         else:
             context = contexts[-1]
-        debug("Selected context: {0!r}".format(context))
+        debug("Selected context: {!r}".format(context))
         # Unknown flags (could be e.g. only partially typed out; could be
         # wholly invalid; doesn't matter) complete with flags.
-        debug("Looking for {0!r} in {1!r}".format(tail, context.flags))
+        debug("Looking for {!r} in {!r}".format(tail, context.flags))
         if tail not in context.flags:
             debug("Not found, completing with flag names")
             # Long flags - partial or just the dashes - complete w/ long flags

@@ -13,7 +13,7 @@ from _util import (
 def _complete(invocation, collection=None):
     colstr = ""
     if collection:
-        colstr = "-c {0}".format(collection)
+        colstr = "-c {}".format(collection)
     command = "inv --complete {0} -- inv {0} {1}".format(colstr, invocation)
     Program().run(command, exit=False)
     return sys.stdout.getvalue()
@@ -41,7 +41,7 @@ class ShellCompletion(IntegrationSpec):
         output = _complete('-')
         # No point mirroring all core options, just spot check a few
         for flag in ('--no-dedupe', '-d', '--debug', '-V', '--version'):
-            assert_contains(output, "{0}\n".format(flag))
+            assert_contains(output, "{}\n".format(flag))
 
     def bare_double_dash_shows_only_long_core_options(self):
         output = _complete('--')
@@ -98,6 +98,6 @@ class ShellCompletion(IntegrationSpec):
         for flag in ('--arg1', '--otherarg'):
             for given in ('--ar', '--nope'):
                 assert_contains(
-                    _complete('multiple-args {0}'.format(given), 'foo'),
+                    _complete('multiple-args {}'.format(given), 'foo'),
                     flag
                 )
