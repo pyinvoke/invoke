@@ -1275,6 +1275,11 @@ class Local_(Spec):
             # Doesn't-blow-up test.
             self._run(_, pty=True)
 
+        @mock_pty(trailing_error=OSError("I/O error"))
+        def other_spurious_OSErrors_handled_gracefully(self):
+            # Doesn't-blow-up test.
+            self._run(_, pty=True)
+
         @mock_pty(trailing_error=OSError("wat"))
         def non_spurious_OSErrors_bubble_up(self):
             try:
