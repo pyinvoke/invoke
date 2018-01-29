@@ -917,8 +917,15 @@ class Local(Runner):
             try:
                 data = os.read(self.parent_fd, num_bytes)
             except OSError as e:
-                # Only eat this specific OSError so we don't hide others
-                if "Input/output error" not in str(e):
+                # Only eat I/O specific OSErrors so we don't hide others
+                stringified = str(e)
+                io_errors = (
+                    # The typical default
+                    "Input/output error",
+                    # Some less common platforms phrase it this way
+                    "I/O error",
+                )
+                if not any(error in stringified for error in io_errors):
                     raise
                 # The bad OSErrors happen after all expected output has
                 # appeared, so we return a falsey value, which triggers the
