@@ -2,7 +2,9 @@
 Changelog
 =========
 
-* :support:`-` Merge file objects in config object by reference.
+* :bug:`437` When merging configuration levels together (which uses
+  `copy.copy` by default), pass file objects by reference so they don't get
+  closed. Catch & patch by Paul Healy.
 * :support:`469 backported` Fix up the :ref:`doc/example
   <customizing-config-defaults>` re: subclassing `~invoke.config.Config`.
   Credit: ``@Aiky30``.
