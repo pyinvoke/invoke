@@ -1160,7 +1160,9 @@ def merge_dicts(base, updates):
             else:
                 if isinstance(base[key], dict):
                     raise _merge_error(base[key], value)
-                elif isinstance(value, file):
+                # Fileno-bearing objects are probably 'real' files which do not
+                # copy well & must be passed by reference. Meh.
+                elif hasattr(value, 'fileno'):
                     base[key] = value
                 else:
                     base[key] = copy.copy(value)
@@ -1170,7 +1172,9 @@ def merge_dicts(base, updates):
             # updates dict, which can lead to nasty state-bleed bugs otherwise
             if isinstance(value, dict):
                 base[key] = copy_dict(value)
-            elif isinstance(value, file):
+            # Fileno-bearing objects are probably 'real' files which do not
+            # copy well & must be passed by reference. Meh.
+            elif hasattr(value, 'fileno'):
                 base[key] = value
             # Non-dict values just get set straight
             else:
