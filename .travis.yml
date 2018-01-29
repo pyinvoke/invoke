@@ -26,10 +26,9 @@ matrix:
   # Additionally, -dev/-nightly builds may be unstable; we do not want them
   # marking our own tests as outright failures.
   allow_failures:
-    - python:
-      - "pypy3"
-      - "3.7-dev"
-      - "nightly"
+    - python: "pypy3"
+    - python: "3.7-dev"
+    - python: "nightly"
   fast_finish: true
 install:
   # For some reason Travis' build envs have wildly different pip/setuptools
