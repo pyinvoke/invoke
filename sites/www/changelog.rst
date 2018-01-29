@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :release:`0.22.1 <2018-01-29>`
 * :bug:`342` Accidentally hardcoded ``Collection`` instead of ``cls`` in
   `Collection.from_module <invoke.collection.Collection.from_module>` (an
   alternate constructor and therefore a classmethod.) This made it rather hard
