@@ -2,6 +2,10 @@
 Changelog
 =========
 
+* :bug:`488` Account for additional I/O related ``OSError`` error strings
+  when attempting to capture only this specific subtype of error. This should
+  fix some issues with less common libc implementations such as ``musl`` (as
+  found on e.g. Alpine Linux.) Thanks to Rajitha Perera for the report.
 * :release:`0.22.0 <2017-11-29>`
 * :bug:`407 major` (also :issue:`494`, :issue:`67`) Update the default value of
   the ``run.shell`` config value so that it reflects a Windows-appropriate
