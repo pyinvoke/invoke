@@ -2,6 +2,9 @@
 Changelog
 =========
 
+* :support:`469 backported` Fix up the :ref:`doc/example
+  <customizing-config-defaults>` re: subclassing `~invoke.config.Config`.
+  Credit: ``@Aiky30``.
 * :bug:`488` Account for additional I/O related ``OSError`` error strings
   when attempting to capture only this specific subtype of error. This should
   fix some issues with less common libc implementations such as ``musl`` (as
