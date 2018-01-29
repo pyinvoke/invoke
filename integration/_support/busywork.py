@@ -14,10 +14,10 @@ import time
 num_cycles = int(sys.argv[1])
 
 for i in range(num_cycles):
-    out = "[{0}] This is my stdout, there are many like it, but...\n".format(i)
+    out = "[{}] This is my stdout, there are many like it, but...\n".format(i)
     sys.stdout.write(out)
     sys.stdout.flush()
-    err = "[{0}] To err is human, to stderr is superhuman\n".format(i)
+    err = "[{}] To err is human, to stderr is superhuman\n".format(i)
     sys.stderr.write(err)
     sys.stderr.flush()
     time.sleep(0.1)

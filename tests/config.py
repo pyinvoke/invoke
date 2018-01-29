@@ -2,26 +2,115 @@ import pickle
 import os
 from os.path import join, expanduser
 
+from invoke.util import six
 from spec import eq_, ok_, raises
 from mock import patch, call
 
+from invoke.runners import Local
 from invoke.config import Config
 from invoke.exceptions import (
     AmbiguousEnvVar, UncastableEnvVar, UnknownFileType
 )
-from invoke.vendor import six
 
-from _util import IntegrationSpec
+from _util import IntegrationSpec, skip_if_windows
 
 
 CONFIGS_PATH = 'configs'
-TYPES = ('yaml', 'json', 'python')
+TYPES = ('yaml', 'yml', 'json', 'python')
 
-def _load(kwarg, type_):
-    path = join(CONFIGS_PATH, type_, 'invoke')
-    return Config(**{kwarg: path})
+def _load(kwarg, type_, **kwargs):
+    path = join(CONFIGS_PATH, type_ + "/")
+    kwargs[kwarg] = path
+    return Config(**kwargs)
+
 
 class Config_(IntegrationSpec):
+    class class_attrs:
+        # TODO: move all other non-data-bearing kwargs to this mode
+        class prefix:
+            def defaults_to_invoke(self):
+                eq_(Config().prefix, 'invoke')
+
+            @patch.object(Config, '_load_yaml')
+            def informs_config_filenames(self, load_yaml):
+                class MyConf(Config):
+                    prefix = 'other'
+                MyConf(system_prefix='dir/')
+                load_yaml.assert_any_call('dir/other.yaml')
+
+            def informs_env_var_prefix(self):
+                os.environ['OTHER_FOO'] = 'bar'
+                class MyConf(Config):
+                    prefix = 'other'
+                c = MyConf(defaults={'foo': 'notbar'})
+                c.load_shell_env()
+                eq_(c.foo, 'bar')
+
+        class file_prefix:
+            def defaults_to_None(self):
+                eq_(Config().file_prefix, None)
+
+            @patch.object(Config, '_load_yaml')
+            def informs_config_filenames(self, load_yaml):
+                class MyConf(Config):
+                    file_prefix = 'other'
+                MyConf(system_prefix='dir/')
+                load_yaml.assert_any_call('dir/other.yaml')
+
+        class env_prefix:
+            def defaults_to_None(self):
+                eq_(Config().env_prefix, None)
+
+            def informs_env_vars_loaded(self):
+                os.environ['OTHER_FOO'] = 'bar'
+                class MyConf(Config):
+                    env_prefix = 'other'
+                c = MyConf(defaults={'foo': 'notbar'})
+                c.load_shell_env()
+                eq_(c.foo, 'bar')
+
+    class global_defaults:
+        @skip_if_windows
+        def basic_settings(self):
+            # Just a catchall for what the baseline config settings should
+            # be...for some reason we're not actually capturing all of these
+            # reliably (even if their defaults are often implied by the tests
+            # which override them, e.g. runner tests around warn=True, etc).
+            eq_(
+                Config.global_defaults(), {
+                    'run': {
+                        'echo': False,
+                        'echo_stdin': None,
+                        'encoding': None,
+                        'env': {},
+                        'err_stream': None,
+                        'fallback': True,
+                        'hide': None,
+                        'in_stream': None,
+                        'out_stream': None,
+                        'pty': False,
+                        'replace_env': False,
+                        'shell': '/bin/bash',
+                        'warn': False,
+                        'watchers': [],
+                    },
+                    'runners': {
+                        'local': Local,
+                    },
+                    'sudo': {
+                        'password': None,
+                        'prompt': '[sudo] password: ',
+                        'user': None,
+                    },
+                    'tasks': {
+                        'dedupe': True,
+                        'auto_dash_names': True,
+                        'collection_name': 'tasks',
+                        'search_root': None,
+                    },
+                },
+            )
+
     class init:
         "__init__"
 
@@ -32,35 +121,36 @@ class Config_(IntegrationSpec):
         def configure_global_location_prefix(self, load_yaml):
             # This is a bit funky but more useful than just replicating the
             # same test farther down?
-            Config(system_prefix='meh')
-            load_yaml.assert_has_call('meh.yaml')
+            Config(system_prefix='meh/')
+            load_yaml.assert_any_call('meh/invoke.yaml')
 
+        @skip_if_windows
         @patch.object(Config, '_load_yaml')
         def default_system_prefix_is_etc(self, load_yaml):
             # TODO: make this work on Windows somehow without being a total
             # tautology? heh.
             Config()
-            load_yaml.assert_has_call('/etc/invoke.yaml')
+            load_yaml.assert_any_call('/etc/invoke.yaml')
 
         @patch.object(Config, '_load_yaml')
         def configure_user_location_prefix(self, load_yaml):
-            Config(user_prefix='whatever')
-            load_yaml.assert_has_call('whatever.yaml')
+            Config(user_prefix='whatever/')
+            load_yaml.assert_any_call('whatever/invoke.yaml')
 
         @patch.object(Config, '_load_yaml')
-        def default_user_prefix_is_homedir(self, load_yaml):
+        def default_user_prefix_is_homedir_plus_dot(self, load_yaml):
             Config()
-            load_yaml.assert_has_call(expanduser('~/.invoke.yaml'))
+            load_yaml.assert_any_call(expanduser('~/.invoke.yaml'))
 
         @patch.object(Config, '_load_yaml')
         def configure_project_location(self, load_yaml):
-            Config(project_home='someproject')
-            load_yaml.assert_has_call('someproject/invoke.yaml')
+            Config(project_location='someproject').load_project()
+            load_yaml.assert_any_call(join('someproject', 'invoke.yaml'))
 
         @patch.object(Config, '_load_yaml')
         def configure_runtime_path(self, load_yaml):
-            Config(runtime_path='some/path.yaml')
-            load_yaml.assert_has_call('some/path.yaml')
+            Config(runtime_path='some/path.yaml').load_runtime()
+            load_yaml.assert_any_call('some/path.yaml')
 
         def accepts_defaults_dict_kwarg(self):
             c = Config(defaults={'super': 'low level'})
@@ -76,17 +166,26 @@ class Config_(IntegrationSpec):
             c = Config(overrides={'run': {'hide': True}})
             eq_(c.run.hide, True)
 
-        def accepts_env_prefix_option(self):
-            c = Config(env_prefix='INVOKE_')
-            eq_(c._env_prefix, 'INVOKE_')
-
-        @patch.object(Config, 'post_init')
-        def can_defer_post_init_step(self, post_init):
+        @patch.object(Config, 'load_system')
+        @patch.object(Config, 'load_user')
+        @patch.object(Config, 'merge')
+        def system_and_user_files_loaded_automatically(
+            self, merge, load_u, load_s
+        ):
             Config()
-            post_init.assert_called_once_with()
-            post_init.reset_mock()
-            Config(defer_post_init=True)
-            ok_(not post_init.called)
+            load_s.assert_called_once_with(merge=False)
+            load_u.assert_called_once_with(merge=False)
+            merge.assert_called_once_with()
+
+        @patch.object(Config, 'load_system')
+        @patch.object(Config, 'load_user')
+        def can_defer_loading_system_and_user_files(self, load_u, load_s):
+            config = Config(lazy=True)
+            assert not load_s.called
+            assert not load_u.called
+            # Make sure default levels are still in place! (When bug present,
+            # i.e. merge() never called, config appears effectively empty.)
+            assert config.run.echo is False
 
     class basic_API:
         "Basic API components"
@@ -122,9 +221,9 @@ class Config_(IntegrationSpec):
                 expected = """
 No attribute or config key found for 'nope'
 
-Valid keys: ['run', 'sudo', 'tasks']
+Valid keys: ['run', 'runners', 'sudo', 'tasks']
 
-Valid real attributes: ['clear', 'clone', 'from_data', 'global_defaults', 'load_collection', 'load_files', 'load_shell_env', 'merge', 'paths', 'pop', 'popitem', 'post_init', 'setdefault', 'update']
+Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_data', 'global_defaults', 'load_base_conf_files', 'load_collection', 'load_defaults', 'load_overrides', 'load_project', 'load_runtime', 'load_shell_env', 'load_system', 'load_user', 'merge', 'paths', 'pop', 'popitem', 'prefix', 'set_project_location', 'set_runtime_path', 'setdefault', 'update']
 """.strip() # noqa
                 eq_(str(e), expected)
             else:
@@ -140,8 +239,8 @@ Valid real attributes: ['clear', 'clone', 'from_data', 'global_defaults', 'load_
 
         def is_iterable_like_dict(self):
             c = Config(defaults={'a': 1, 'b': 2})
-            eq_(set(c.keys()), set(['a', 'b']))
-            eq_(set(list(c)), set(['a', 'b']))
+            eq_(set(c.keys()), {'a', 'b'})
+            eq_(set(list(c)), {'a', 'b'})
 
         def supports_readonly_dict_protocols(self):
             # Use single-keypair dict to avoid sorting problems in tests.
@@ -160,6 +259,33 @@ Valid real attributes: ['clear', 'clone', 'from_data', 'global_defaults', 'load_
             eq_(list(six.iteritems(c)), [('foo', 'bar')])
             eq_(list(c.keys()), ['foo'])
             eq_(list(c.values()), ['bar'])
+
+        class runtime_loading_of_defaults_and_overrides:
+            def defaults_can_be_given_via_method(self):
+                c = Config()
+                assert 'foo' not in c
+                c.load_defaults({'foo': 'bar'})
+                assert c.foo == 'bar'
+
+            def defaults_can_skip_merging(self):
+                c = Config()
+                c.load_defaults({'foo': 'bar'}, merge=False)
+                assert 'foo' not in c
+                c.merge()
+                assert c.foo == 'bar'
+
+            def overrides_can_be_given_via_method(self):
+                c = Config(defaults={'foo': 'bar'})
+                assert c.foo == 'bar' # defaults level
+                c.load_overrides({'foo': 'notbar'})
+                assert c.foo == 'notbar' # overrides level
+
+            def overrides_can_skip_merging(self):
+                c = Config()
+                c.load_overrides({'foo': 'bar'}, merge=False)
+                assert 'foo' not in c
+                c.merge()
+                assert c.foo == 'bar'
 
         class deletion_methods:
             def pop(self):
@@ -378,35 +504,99 @@ Valid real attributes: ['clear', 'clone', 'from_data', 'global_defaults', 'load_
 
         def system_global(self):
             "Systemwide conf files"
+            # NOTE: using lazy=True to avoid autoloading so we can prove
+            # load_system() works.
             for type_ in TYPES:
-                config = _load('system_prefix', type_)
-                eq_(config['outer']['inner']['hooray'], type_)
+                config = _load('system_prefix', type_, lazy=True)
+                assert 'outer' not in config
+                config.load_system()
+                assert config.outer.inner.hooray == type_
+
+        def system_can_skip_merging(self):
+            config = _load('system_prefix', 'yml', lazy=True)
+            assert 'outer' not in config._system
+            assert 'outer' not in config
+            config.load_system(merge=False)
+            # Test that we loaded into the per-level dict, but not the
+            # central/merged config.
+            assert 'outer' in config._system
+            assert 'outer' not in config
 
         def user_specific(self):
             "User-specific conf files"
+            # NOTE: using lazy=True to avoid autoloading so we can prove
+            # load_user() works.
             for type_ in TYPES:
-                config = _load('user_prefix', type_)
-                eq_(config['outer']['inner']['hooray'], type_)
+                config = _load('user_prefix', type_, lazy=True)
+                assert 'outer' not in config
+                config.load_user()
+                assert config.outer.inner.hooray == type_
+
+        def user_can_skip_merging(self):
+            config = _load('user_prefix', 'yml', lazy=True)
+            assert 'outer' not in config._user
+            assert 'outer' not in config
+            config.load_user(merge=False)
+            # Test that we loaded into the per-level dict, but not the
+            # central/merged config.
+            assert 'outer' in config._user
+            assert 'outer' not in config
 
         def project_specific(self):
             "Local-to-project conf files"
             for type_ in TYPES:
-                c = Config(project_home=join(CONFIGS_PATH, type_))
-                eq_(c.outer.inner.hooray, type_)
+                c = Config(project_location=join(CONFIGS_PATH, type_))
+                assert 'outer' not in c
+                c.load_project()
+                assert c.outer.inner.hooray == type_
 
-        def loads_no_project_specific_file_if_no_project_home_given(self):
+        def project_can_skip_merging(self):
+            config = Config(
+                project_location=join(CONFIGS_PATH, 'yml'), lazy=True
+            )
+            assert 'outer' not in config._project
+            assert 'outer' not in config
+            config.load_project(merge=False)
+            # Test that we loaded into the per-level dict, but not the
+            # central/merged config.
+            assert 'outer' in config._project
+            assert 'outer' not in config
+
+        def loads_no_project_specific_file_if_no_project_location_given(self):
             c = Config()
             eq_(c._project_path, None)
+            c.load_project()
             eq_(list(c._project.keys()), [])
-            eq_(set(c.keys()), set(['tasks', 'run', 'sudo'])) # defaults only
+            defaults = ['tasks', 'run', 'runners', 'sudo']
+            eq_(set(c.keys()), set(defaults))
 
-        def honors_conf_file_flag(self):
+        def project_location_can_be_set_after_init(self):
+            c = Config()
+            assert 'outer' not in c
+            c.set_project_location(join(CONFIGS_PATH, 'yml'))
+            c.load_project()
+            assert c.outer.inner.hooray == 'yml'
+
+        def runtime_conf_via_cli_flag(self):
             c = Config(runtime_path=join(CONFIGS_PATH, 'yaml', 'invoke.yaml'))
+            c.load_runtime()
             eq_(c.outer.inner.hooray, 'yaml')
+
+        def runtime_can_skip_merging(self):
+            path = join(CONFIGS_PATH, 'yaml', 'invoke.yaml')
+            config = Config(runtime_path=path, lazy=True)
+            assert 'outer' not in config._runtime
+            assert 'outer' not in config
+            config.load_runtime(merge=False)
+            # Test that we loaded into the per-level dict, but not the
+            # central/merged config.
+            assert 'outer' in config._runtime
+            assert 'outer' not in config
 
         @raises(UnknownFileType)
         def unknown_suffix_in_runtime_path_raises_useful_error(self):
             c = Config(runtime_path=join(CONFIGS_PATH, 'screw.ini'))
+            c.load_runtime()
             eq_(c.boo, 'ini') # Should raise exception
 
         def python_modules_dont_load_special_vars(self):
@@ -417,7 +607,25 @@ Valid real attributes: ['clear', 'clone', 'from_data', 'global_defaults', 'load_
             eq_(c.outer.inner.hooray, 'python')
             # Real test that builtins, etc are stripped out
             for special in ('builtins', 'file', 'package', 'name', 'doc'):
-                ok_('__{0}__'.format(special) not in c)
+                ok_('__{}__'.format(special) not in c)
+
+
+    class collection_level_config_loading:
+        def performed_explicitly_and_directly(self):
+            # TODO: do we want to update the other levels to allow 'direct'
+            # loading like this, now that they all have explicit methods?
+            c = Config()
+            assert 'foo' not in c
+            c.load_collection({'foo': 'bar'})
+            assert c.foo == 'bar'
+
+        def merging_can_be_deferred(self):
+            c = Config()
+            assert 'foo' not in c._collection
+            assert 'foo' not in c
+            c.load_collection({'foo': 'bar'}, merge=False)
+            assert 'foo' in c._collection
+            assert 'foo' not in c
 
 
     class comparison_and_hashing:
@@ -440,56 +648,50 @@ Valid real attributes: ['clear', 'clone', 'from_data', 'global_defaults', 'load_
 
     class env_vars:
         "Environment variables"
-        def base_case(self):
-            os.environ['FOO'] = 'bar'
+        def base_case_defaults_to_INVOKE_prefix(self):
+            os.environ['INVOKE_FOO'] = 'bar'
             c = Config(defaults={'foo': 'notbar'})
             c.load_shell_env()
             eq_(c.foo, 'bar')
 
-        def can_declare_prefix(self):
-            os.environ['INVOKE_FOO'] = 'bar'
-            c = Config(defaults={'foo': 'notbar'}, env_prefix='INVOKE_')
-            c.load_shell_env()
-            eq_(c.foo, 'bar')
-
         def non_predeclared_settings_do_not_get_consumed(self):
-            os.environ['HELLO'] = "is it me you're looking for?"
+            os.environ['INVOKE_HELLO'] = "is it me you're looking for?"
             c = Config()
             c.load_shell_env()
             ok_('HELLO' not in c)
             ok_('hello' not in c)
 
         def underscores_top_level(self):
-            os.environ['FOO_BAR'] = 'biz'
+            os.environ['INVOKE_FOO_BAR'] = 'biz'
             c = Config(defaults={'foo_bar': 'notbiz'})
             c.load_shell_env()
             eq_(c.foo_bar, 'biz')
 
         def underscores_nested(self):
-            os.environ['FOO_BAR'] = 'biz'
+            os.environ['INVOKE_FOO_BAR'] = 'biz'
             c = Config(defaults={'foo': {'bar': 'notbiz'}})
             c.load_shell_env()
             eq_(c.foo.bar, 'biz')
 
         def both_types_of_underscores_mixed(self):
-            os.environ['FOO_BAR_BIZ'] = 'baz'
+            os.environ['INVOKE_FOO_BAR_BIZ'] = 'baz'
             c = Config(defaults={'foo_bar': {'biz': 'notbaz'}})
             c.load_shell_env()
             eq_(c.foo_bar.biz, 'baz')
 
         @raises(AmbiguousEnvVar)
         def ambiguous_underscores_dont_guess(self):
-            os.environ['FOO_BAR'] = 'biz'
+            os.environ['INVOKE_FOO_BAR'] = 'biz'
             c = Config(defaults={'foo_bar': 'wat', 'foo': {'bar': 'huh'}})
             c.load_shell_env()
 
 
         class type_casting:
             def strings_replaced_with_env_value(self):
-                os.environ['FOO'] = six.u('myvalue')
+                os.environ['INVOKE_FOO'] = u'myvalue'
                 c = Config(defaults={'foo': 'myoldvalue'})
                 c.load_shell_env()
-                eq_(c.foo, six.u('myvalue'))
+                eq_(c.foo, u'myvalue')
                 ok_(isinstance(c.foo, six.text_type))
 
             def unicode_replaced_with_env_value(self):
@@ -497,14 +699,14 @@ Valid real attributes: ['clear', 'clone', 'from_data', 'global_defaults', 'load_
                 # os.environ, so the test makes no sense there.
                 if six.PY3:
                     return
-                os.environ['FOO'] = 'myunicode'
-                c = Config(defaults={'foo': six.u('myoldvalue')})
+                os.environ['INVOKE_FOO'] = 'myunicode'
+                c = Config(defaults={'foo': u'myoldvalue'})
                 c.load_shell_env()
                 eq_(c.foo, 'myunicode')
                 ok_(isinstance(c.foo, str))
 
             def None_replaced(self):
-                os.environ['FOO'] = 'something'
+                os.environ['INVOKE_FOO'] = 'something'
                 c = Config(defaults={'foo': None})
                 c.load_shell_env()
                 eq_(c.foo, 'something')
@@ -517,14 +719,14 @@ Valid real attributes: ['clear', 'clone', 'from_data', 'global_defaults', 'load_
                     ('meh', True),
                     ('false', True),
                 ):
-                    os.environ['FOO'] = input_
+                    os.environ['INVOKE_FOO'] = input_
                     c = Config(defaults={'foo': bool()})
                     c.load_shell_env()
                     eq_(c.foo, result)
 
             def boolean_type_inputs_with_non_boolean_defaults(self):
                 for input_ in ('0', '1', '', 'meh', 'false'):
-                    os.environ['FOO'] = input_
+                    os.environ['INVOKE_FOO'] = input_
                     c = Config(defaults={'foo': 'bar'})
                     c.load_shell_env()
                     eq_(c.foo, input_)
@@ -540,13 +742,13 @@ Valid real attributes: ['clear', 'clone', 'from_data', 'global_defaults', 'load_
                 if not six.PY3:
                     tests.append((long, '5', long(5)))  # noqa
                 for old, new_, result in tests:
-                    os.environ['FOO'] = new_
+                    os.environ['INVOKE_FOO'] = new_
                     c = Config(defaults={'foo': old()})
                     c.load_shell_env()
                     eq_(c.foo, result)
 
             def arbitrary_types_work_too(self):
-                os.environ['FOO'] = 'whatever'
+                os.environ['INVOKE_FOO'] = 'whatever'
                 class Meh(object):
                     def __init__(self, thing=None):
                         pass
@@ -560,7 +762,7 @@ Valid real attributes: ['clear', 'clone', 'from_data', 'global_defaults', 'load_
             class uncastable_types:
                 @raises(UncastableEnvVar)
                 def _uncastable_type(self, default):
-                    os.environ['FOO'] = 'stuff'
+                    os.environ['INVOKE_FOO'] = 'stuff'
                     c = Config(defaults={'foo': default})
                     c.load_shell_env()
 
@@ -587,104 +789,110 @@ Valid real attributes: ['clear', 'clone', 'from_data', 'global_defaults', 'load_
             eq_(c.nested.setting, 'collection')
 
         def systemwide_overrides_collection(self):
-            c = Config(system_prefix=join(CONFIGS_PATH, 'yaml', 'invoke'))
+            c = Config(system_prefix=join(CONFIGS_PATH, 'yaml/'))
             c.load_collection({'outer': {'inner': {'hooray': 'defaults'}}})
             eq_(c.outer.inner.hooray, 'yaml')
 
         def user_overrides_systemwide(self):
             c = Config(
-                system_prefix=join(CONFIGS_PATH, 'yaml', 'invoke'),
-                user_prefix=join(CONFIGS_PATH, 'json', 'invoke'),
+                system_prefix=join(CONFIGS_PATH, 'yaml/'),
+                user_prefix=join(CONFIGS_PATH, 'json/'),
             )
             eq_(c.outer.inner.hooray, 'json')
 
         def user_overrides_collection(self):
-            c = Config(user_prefix=join(CONFIGS_PATH, 'json', 'invoke'))
+            c = Config(user_prefix=join(CONFIGS_PATH, 'json/'))
             c.load_collection({'outer': {'inner': {'hooray': 'defaults'}}})
             eq_(c.outer.inner.hooray, 'json')
 
         def project_overrides_user(self):
             c = Config(
-                user_prefix=join(CONFIGS_PATH, 'json', 'invoke'),
-                project_home=join(CONFIGS_PATH, 'yaml'),
+                user_prefix=join(CONFIGS_PATH, 'json/'),
+                project_location=join(CONFIGS_PATH, 'yaml'),
             )
+            c.load_project()
             eq_(c.outer.inner.hooray, 'yaml')
 
         def project_overrides_systemwide(self):
             c = Config(
-                system_prefix=join(CONFIGS_PATH, 'json', 'invoke'),
-                project_home=join(CONFIGS_PATH, 'yaml'),
+                system_prefix=join(CONFIGS_PATH, 'json/'),
+                project_location=join(CONFIGS_PATH, 'yaml'),
             )
+            c.load_project()
             eq_(c.outer.inner.hooray, 'yaml')
 
         def project_overrides_collection(self):
-            c = Config(
-                project_home=join(CONFIGS_PATH, 'yaml'),
-            )
+            c = Config(project_location=join(CONFIGS_PATH, 'yaml'))
+            c.load_project()
             c.load_collection({'outer': {'inner': {'hooray': 'defaults'}}})
             eq_(c.outer.inner.hooray, 'yaml')
 
         def env_vars_override_project(self):
-            os.environ['OUTER_INNER_HOORAY'] = 'env'
-            c = Config(
-                project_home=join(CONFIGS_PATH, 'yaml'),
-            )
+            os.environ['INVOKE_OUTER_INNER_HOORAY'] = 'env'
+            c = Config(project_location=join(CONFIGS_PATH, 'yaml'))
+            c.load_project()
             c.load_shell_env()
             eq_(c.outer.inner.hooray, 'env')
 
         def env_vars_override_user(self):
-            os.environ['OUTER_INNER_HOORAY'] = 'env'
+            os.environ['INVOKE_OUTER_INNER_HOORAY'] = 'env'
             c = Config(
-                user_prefix=join(CONFIGS_PATH, 'yaml', 'invoke'),
+                user_prefix=join(CONFIGS_PATH, 'yaml/'),
             )
             c.load_shell_env()
             eq_(c.outer.inner.hooray, 'env')
 
         def env_vars_override_systemwide(self):
-            os.environ['OUTER_INNER_HOORAY'] = 'env'
+            os.environ['INVOKE_OUTER_INNER_HOORAY'] = 'env'
             c = Config(
-                system_prefix=join(CONFIGS_PATH, 'yaml', 'invoke'),
+                system_prefix=join(CONFIGS_PATH, 'yaml/'),
             )
             c.load_shell_env()
             eq_(c.outer.inner.hooray, 'env')
 
         def env_vars_override_collection(self):
-            os.environ['OUTER_INNER_HOORAY'] = 'env'
+            os.environ['INVOKE_OUTER_INNER_HOORAY'] = 'env'
             c = Config()
             c.load_collection({'outer': {'inner': {'hooray': 'defaults'}}})
             c.load_shell_env()
             eq_(c.outer.inner.hooray, 'env')
 
         def runtime_overrides_env_vars(self):
-            os.environ['OUTER_INNER_HOORAY'] = 'env'
+            os.environ['INVOKE_OUTER_INNER_HOORAY'] = 'env'
             c = Config(runtime_path=join(CONFIGS_PATH, 'json', 'invoke.json'))
+            c.load_runtime()
             c.load_shell_env()
             eq_(c.outer.inner.hooray, 'json')
 
         def runtime_overrides_project(self):
             c = Config(
                 runtime_path=join(CONFIGS_PATH, 'json', 'invoke.json'),
-                project_home=join(CONFIGS_PATH, 'yaml'),
+                project_location=join(CONFIGS_PATH, 'yaml'),
             )
+            c.load_runtime()
+            c.load_project()
             eq_(c.outer.inner.hooray, 'json')
 
         def runtime_overrides_user(self):
             c = Config(
                 runtime_path=join(CONFIGS_PATH, 'json', 'invoke.json'),
-                user_prefix=join(CONFIGS_PATH, 'yaml', 'invoke'),
+                user_prefix=join(CONFIGS_PATH, 'yaml/'),
             )
+            c.load_runtime()
             eq_(c.outer.inner.hooray, 'json')
 
         def runtime_overrides_systemwide(self):
             c = Config(
                 runtime_path=join(CONFIGS_PATH, 'json', 'invoke.json'),
-                system_prefix=join(CONFIGS_PATH, 'yaml', 'invoke'),
+                system_prefix=join(CONFIGS_PATH, 'yaml/'),
             )
+            c.load_runtime()
             eq_(c.outer.inner.hooray, 'json')
 
         def runtime_overrides_collection(self):
             c = Config(runtime_path=join(CONFIGS_PATH, 'json', 'invoke.json'))
             c.load_collection({'outer': {'inner': {'hooray': 'defaults'}}})
+            c.load_runtime()
             eq_(c.outer.inner.hooray, 'json')
 
         def cli_overrides_override_all(self):
@@ -694,19 +902,26 @@ Valid real attributes: ['clear', 'clone', 'from_data', 'global_defaults', 'load_
                 overrides={'outer': {'inner': {'hooray': 'overrides'}}},
                 runtime_path=join(CONFIGS_PATH, 'json', 'invoke.json')
             )
+            c.load_runtime()
             eq_(c.outer.inner.hooray, 'overrides')
 
-        def yaml_prevents_json_or_python(self):
-            c = Config(
-                system_prefix=join(CONFIGS_PATH, 'all-three', 'invoke'))
+        def yaml_prevents_yml_json_or_python(self):
+            c = Config(system_prefix=join(CONFIGS_PATH, 'all-four/'))
             ok_('json-only' not in c)
             ok_('python_only' not in c)
+            ok_('yml-only' not in c)
             ok_('yaml-only' in c)
             eq_(c.shared, 'yaml-value')
 
+        def yml_prevents_json_or_python(self):
+            c = Config(system_prefix=join(CONFIGS_PATH, 'three-of-em/'))
+            ok_('json-only' not in c)
+            ok_('python_only' not in c)
+            ok_('yml-only' in c)
+            eq_(c.shared, 'yml-value')
+
         def json_prevents_python(self):
-            c = Config(
-                system_prefix=join(CONFIGS_PATH, 'json-and-python', 'invoke'))
+            c = Config(system_prefix=join(CONFIGS_PATH, 'json-and-python/'))
             ok_('python_only' not in c)
             ok_('json-only' in c)
             eq_(c.shared, 'json-value')
@@ -719,8 +934,7 @@ Valid real attributes: ['clear', 'clone', 'from_data', 'global_defaults', 'load_
                 overrides={'key': 'override'},
                 system_prefix='global',
                 user_prefix='user',
-                project_home='project',
-                env_prefix='env',
+                project_location='project',
                 runtime_path='runtime.yaml',
             )
             c2 = c1.clone()
@@ -734,8 +948,10 @@ Valid real attributes: ['clear', 'clone', 'from_data', 'global_defaults', 'load_
             ok_(c2._overrides is not c1._overrides)
             eq_(c2._system_prefix, c1._system_prefix)
             eq_(c2._user_prefix, c1._user_prefix)
-            eq_(c2._project_home, c1._project_home)
-            eq_(c2._env_prefix, c1._env_prefix)
+            eq_(c2._project_prefix, c1._project_prefix)
+            eq_(c2.prefix, c1.prefix)
+            eq_(c2.file_prefix, c1.file_prefix)
+            eq_(c2.env_prefix, c1.env_prefix)
             eq_(c2._runtime_path, c1._runtime_path)
 
         def preserves_merged_config(self):
@@ -751,7 +967,7 @@ Valid real attributes: ['clear', 'clone', 'from_data', 'global_defaults', 'load_
             eq_(c2._overrides['key'], 'override')
 
         def preserves_file_data(self):
-            c = Config(system_prefix=join(CONFIGS_PATH, 'yaml', 'invoke'))
+            c = Config(system_prefix=join(CONFIGS_PATH, 'yaml/'))
             eq_(c.outer.inner.hooray, 'yaml')
             c2 = c.clone()
             eq_(c2.outer.inner.hooray, 'yaml')
@@ -761,7 +977,7 @@ Valid real attributes: ['clear', 'clone', 'from_data', 'global_defaults', 'load_
             'outer': {'inner': {'hooray': 'yaml'}}
         })
         def does_not_reload_file_data(self, load_yaml):
-            path = join(CONFIGS_PATH, 'yaml', 'invoke')
+            path = join(CONFIGS_PATH, 'yaml/')
             c = Config(system_prefix=path)
             c2 = c.clone()
             eq_(c2.outer.inner.hooray, 'yaml')
@@ -769,12 +985,16 @@ Valid real attributes: ['clear', 'clone', 'from_data', 'global_defaults', 'load_
             # one time" (since assert_calls_with gets mad about other
             # invocations w/ different args)
             calls = load_yaml.call_args_list
-            my_call = call("{0}.yaml".format(path))
-            calls.remove(my_call)
-            ok_(my_call not in calls)
+            my_call = call("{}invoke.yaml".format(path))
+            try:
+                calls.remove(my_call)
+                ok_(my_call not in calls)
+            except ValueError:
+                err = "{} not found in {} even once!"
+                assert False, err.format(my_call, calls)
 
         def preserves_env_data(self):
-            os.environ['FOO'] = 'bar'
+            os.environ['INVOKE_FOO'] = 'bar'
             c = Config(defaults={'foo': 'notbar'})
             c.load_shell_env()
             c2 = c.clone()
@@ -788,35 +1008,6 @@ Valid real attributes: ['clear', 'clone', 'from_data', 'global_defaults', 'load_
             ok_(isinstance(c, MyConfig)) # sanity
             c2 = c.clone()
             ok_(isinstance(c2, MyConfig)) # actual test
-
-        def modified_config_data_is_present_during_post_init(self):
-            # Scenario: subclass wants to honor config settings when doing
-            # post-init stuff like loading additional config files (see eg
-            # Fabric 2 + loading SSH config files).
-            # This is enabled by splitting out the post-init step into its own
-            # method & ensuring clone() only calls it at the very end.
-            # Without that, a clone will exhibit default-level values (instead
-            # of the source's final values) until the very end of clone().
-            class MyConfig(Config):
-                @staticmethod
-                def global_defaults():
-                    return dict(
-                        Config.global_defaults(),
-                        internal_setting='default!',
-                    )
-
-                def post_init(self):
-                    super(MyConfig, self).post_init()
-                    # Have to just record the visible value at time we're
-                    # called, no other great way to notice something that ends
-                    # up "correct" by end of clone()...!
-                    self.recorded_internal_setting = self.internal_setting
-
-            original = MyConfig()
-            eq_(original.internal_setting, 'default!')
-            original.internal_setting = 'custom!'
-            clone = original.clone()
-            eq_(clone.recorded_internal_setting, 'custom!')
 
         class into_kwarg:
             "'into' kwarg"

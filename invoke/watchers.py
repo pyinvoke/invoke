@@ -121,7 +121,7 @@ class FailingResponder(Responder):
         )
         # Error out if we seem to have failed after a previous response.
         if self.tried and failed:
-            err = "Auto-response to r\"{0}\" failed with {1!r}!".format(
+            err = "Auto-response to r\"{}\" failed with {!r}!".format(
                 self.pattern, self.sentinel)
             raise ResponseNotAccepted(err)
         # Once we see that we had a response, take note

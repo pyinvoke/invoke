@@ -62,7 +62,7 @@ for example::
 
     @task
     def hi(ctx, name):
-        print("Hi {0}!".format(name))
+        print("Hi {}!".format(name))
 
 It can be invoked in the following ways, all resulting in "Hi Jeff!"::
 
@@ -86,7 +86,7 @@ docstring)::
         """
         Say hi to someone.
         """
-        print("Hi {0}!".format(name))
+        print("Hi {}!".format(name))
 
 This description will show up when invoking ``--help``::
 
@@ -126,7 +126,7 @@ Running shell commands
 Many use cases for Invoke involve running local shell commands, similar to
 programs like Make or Rake. This is done via the `~.Context.run` function::
 
-    from invoke import task, run
+    from invoke import task
 
     @task
     def build(ctx):

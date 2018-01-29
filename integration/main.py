@@ -2,9 +2,9 @@ import io
 import os
 import sys
 
-from spec import Spec, trap, eq_, ok_
+from spec import Spec, trap, eq_, ok_, skip
 
-from invoke.vendor import six
+from invoke.util import six
 
 from invoke import run
 from invoke._version import __version__
@@ -33,19 +33,23 @@ class Main(Spec):
     class basics:
         @trap
         def basic_invocation(self):
-            _output_eq("invoke print_foo", "foo\n")
+            _output_eq("invoke print-foo", "foo\n")
 
         @trap
         def version_output(self):
-            _output_eq("invoke --version", "Invoke {0}\n".format(__version__))
+            _output_eq("invoke --version", "Invoke {}\n".format(__version__))
 
         @trap
         def help_output(self):
             ok_("Usage: inv[oke] " in run("invoke --help").stdout)
 
         @trap
+        def per_task_help(self):
+            ok_("Frobazz" in run("invoke -c _explicit foo --help").stdout)
+
+        @trap
         def shorthand_binary_name(self):
-            _output_eq("inv print_foo", "foo\n")
+            _output_eq("inv print-foo", "foo\n")
 
         @trap
         def explicit_task_module(self):
@@ -54,7 +58,7 @@ class Main(Spec):
         @trap
         def invocation_with_args(self):
             _output_eq(
-                "inv print_name --name whatevs",
+                "inv print-name --name whatevs",
                 "whatevs\n"
             )
 
@@ -70,12 +74,23 @@ class Main(Spec):
             try:
                 with open(path, 'w') as fd:
                     fd.write("foo: bar")
-                _output_eq("inv print_config", "bar\n")
+                _output_eq("inv print-config", "bar\n")
             finally:
                 try:
                     os.unlink(path)
                 except OSError:
                     pass
+
+        @trap
+        def invocable_via_python_dash_m(self):
+            # TODO: replace with pytest marker after pytest port
+            if sys.version_info < (2, 7):
+                skip()
+            _output_eq(
+                "python -m invoke print-name --name mainline",
+                "mainline\n",
+            )
+
 
     class funky_characters_in_stdout:
         def setup(self):
@@ -114,7 +129,7 @@ class Main(Spec):
                 return
             # GH issue 191
             substr = "      hello\t\t\nworld with spaces"
-            cmd = """ eval 'echo "{0}" ' """.format(substr)
+            cmd = """ eval 'echo "{}" ' """.format(substr)
             expected = '      hello\t\t\r\nworld with spaces\r\n'
             eq_(run(cmd, pty=True, hide='both').stdout, expected)
 
@@ -122,8 +137,8 @@ class Main(Spec):
             if WINDOWS:
                 return
             os.chdir('_support')
-            err_echo = "{0} err.py".format(sys.executable)
-            command = "echo foo && {0} bar".format(err_echo)
+            err_echo = "{} err.py".format(sys.executable)
+            command = "echo foo && {} bar".format(err_echo)
             r = run(command, hide='both', pty=True)
             eq_(r.stdout, 'foo\r\nbar\r\n')
             eq_(r.stderr, '')
@@ -162,6 +177,6 @@ class Main(Spec):
                 ('--meh=whee', 'whee'),
             ):
                 _output_eq(
-                    "inv -c parsing foo {0}".format(argstr),
+                    "inv -c parsing foo {}".format(argstr),
                     expected + "\n",
                 )

@@ -28,7 +28,7 @@ html_sidebars = {
 
 # Everything intersphinx's to Python
 intersphinx_mapping = {
-    'python': ('http://docs.python.org/2.6', None),
+    'python': ('https://docs.python.org/2.7/', None),
 }
 
 # Doctest settings
@@ -40,7 +40,7 @@ from _util import MockSubprocess
 # Regular settings
 project = 'Invoke'
 year = datetime.now().year
-copyright = '{0} Jeff Forcier'.format(year)
+copyright = '{} Jeff Forcier'.format(year)
 master_doc = 'index'
 templates_path = ['_templates']
 exclude_trees = ['_build']

@@ -33,11 +33,8 @@ follows:
    `.Collection.configure`. (See :ref:`collection-configuration` below for
    details.)
    
-     * Sub-collections' configurations get merged into the top level collection
+     - Sub-collections' configurations get merged into the top level collection
        and the final result forms the basis of the overall configuration setup.
-     * Since the root collection is loaded at runtime, configuration settings
-       modifying the load process itself obviously won't take effect if defined
-       at this level.
 
 #. **System-level configuration file** stored in ``/etc/``, such as
    ``/etc/invoke.yaml``. (See :ref:`config-files` for details on this and the
@@ -50,7 +47,7 @@ follows:
    </concepts/loading>`), this might be ``/home/user/myproject/invoke.yaml``.
 #. **Environment variables** found in the invoking shell environment.
 
-    * These aren't as strongly hierarchical as the rest, nor is the shell
+    - These aren't as strongly hierarchical as the rest, nor is the shell
       environment namespace owned wholly by Invoke, so we must rely on slightly
       verbose prefixing instead - see :ref:`env-vars` for details.
 
@@ -69,24 +66,43 @@ Below is a list of all the configuration values and/or section Invoke itself
 uses to control behaviors such as `.Context.run`'s ``echo`` and ``pty``
 flags, task deduplication, and so forth.
 
+.. note::
+    The storage location for these values is inside the `.Config` class,
+    specifically as the return value of `.Config.global_defaults`; see its API
+    docs for more details.
+
 For convenience, we refer to nested setting names with a dotted syntax, so e.g.
 ``foo.bar`` refers to what would be (in a Python config context) ``{'foo':
 {'bar': <value here>}}``. Typically, these can be read or set on `.Config` and
 `.Context` objects using attribute syntax, which looks nearly identical:
 ``ctx.foo.bar``.
 
-* The ``tasks`` config tree holds settings relating to task execution.
+- The ``tasks`` config tree holds settings relating to task execution.
 
-  * ``tasks.dedupe`` controls :ref:`deduping` and defaults to ``True``. It can
-    also be overridden at runtime via :option:`--no-dedupe`.
+    - ``tasks.dedupe`` controls :ref:`deduping` and defaults to ``True``. It
+      can also be overridden at runtime via :option:`--no-dedupe`.
+    - ``tasks.auto_dash_names`` controls whether task and collection names have
+      underscores turned to dashes on the CLI. Default: ``True``. See also
+      :ref:`dashes-vs-underscores`.
+    - ``tasks.collection_name`` controls the Python import name sought out by
+      :ref:`collection discovery <collection-discovery>`, and defaults to
+      ``"tasks"``.
+    - ``tasks.search_root`` allows overriding the default :ref:`collection
+      discovery <collection-discovery>` root search location. It defaults to
+      ``None``, which indicates to use the executing process' current working
+      directory.
 
-* The ``run`` tree controls the behavior of `.Runner.run`. Each member of this
+- The ``run`` tree controls the behavior of `.Runner.run`. Each member of this
   tree (such as ``run.echo`` or ``run.pty``) maps directly to a `.Runner.run`
   keyword argument of the same name; see that method's docstring for details on
   what these settings do & what their default values are.
-* The ``sudo`` tree controls the behavior of `.Context.sudo`:
+- The ``runners`` tree controls _which_ runner classes map to which execution
+  contexts; if you're using Invoke by itself, this will only tend to have a
+  single member, ``runners.local``. Client libraries may extend it with
+  additional key/value pairs, such as ``runners.remote``.
+- The ``sudo`` tree controls the behavior of `.Context.sudo`:
 
-    * ``sudo.password`` controls the autoresponse password submitted to sudo's
+    - ``sudo.password`` controls the autoresponse password submitted to sudo's
       password prompt. Default: ``None``.
 
       .. warning::
@@ -95,11 +111,11 @@ For convenience, we refer to nested setting names with a dotted syntax, so e.g.
         inherently insecure. We highly recommend filling this config value in
         at runtime from a secrets management system of some kind.
 
-    * ``sudo.prompt`` holds the sudo password prompt text, which is both
+    - ``sudo.prompt`` holds the sudo password prompt text, which is both
       supplied to ``sudo -p``, and searched for when performing
       :doc:`auto-response </concepts/watchers>`. Default: ``[sudo] password:``.
 
-* A top level config setting, ``debug``, controls whether debug-level output is
+- A top level config setting, ``debug``, controls whether debug-level output is
   logged; it defaults to ``False``.
   
   ``debug`` can be toggled via the :option:`-d` CLI flag, which enables
@@ -118,10 +134,10 @@ Loading
 -------
 
 For each configuration file location mentioned in the previous section, we
-search for files ending in ``.yaml``, ``.json`` or ``.py`` (**in that
+search for files ending in ``.yaml``, ``.yml``, ``.json`` or ``.py`` (**in that
 order!**), load the first one we find, and ignore any others that might exist.
 
-For example, if Invoke is run on a system containing both ``/etc/invoke.yaml``
+For example, if Invoke is run on a system containing both ``/etc/invoke.yml``
 *and* ``/etc/invoke.json``, **only the YAML file will be loaded**. This helps
 keep things simple, both conceptually and in the implementation.
 
@@ -132,7 +148,7 @@ Invoke's configuration allows arbitrary nesting, and thus so do our config file
 formats. All three of the below examples result in a configuration equivalent
 to ``{'debug': True, 'run': {'echo': True}}``:
 
-* **YAML**
+- **YAML**
 
   .. code-block:: yaml
 
@@ -140,7 +156,7 @@ to ``{'debug': True, 'run': {'echo': True}}``:
       run:
           echo: true
 
-* **JSON**
+- **JSON**
 
   .. code-block:: javascript
 
@@ -151,7 +167,7 @@ to ``{'debug': True, 'run': {'echo': True}}``:
           }
       }
 
-* **Python**::
+- **Python**::
 
     debug = True
     run = {
@@ -197,7 +213,7 @@ Since env vars can only be used to override existing settings, the previous
 value of a given setting is used as a guide in casting the strings we get back
 from the shell:
 
-* If the current value is a string or Unicode object, it is replaced with the
+- If the current value is a string or Unicode object, it is replaced with the
   value from the environment, with no casting whatsoever;
 
     * Depending on interpreter and environment, this means that a setting
@@ -206,21 +222,21 @@ from the shell:
       as it prevents users from accidentally limiting themselves to non-Unicode
       strings.
 
-* If the current value is ``None``, it too is replaced with the string from the
+- If the current value is ``None``, it too is replaced with the string from the
   environment;
-* Booleans are set as follows: ``0`` and the empty value/string (e.g.
+- Booleans are set as follows: ``0`` and the empty value/string (e.g.
   ``SETTING=``, or ``unset SETTING``, or etc) evaluate to ``False``, and any
   other value evaluates to ``True``.
-* Lists and tuples are currently unsupported and will raise an exception;
+- Lists and tuples are currently unsupported and will raise an exception;
 
-    * In the future we may implement convenience transformations, such as
+    - In the future we may implement convenience transformations, such as
       splitting on commas to form a list; however since users can always
       perform such operations themselves, it may not be a high priority.
 
-* All other types - integers, longs, floats, etc - are simply used as
+- All other types - integers, longs, floats, etc - are simply used as
   constructors for the incoming value.
 
-    * For example, a ``foobar`` setting whose default value is the integer
+    - For example, a ``foobar`` setting whose default value is the integer
       ``1`` will run all env var inputs through `int`, and thus ``FOOBAR=5``
       will result in the Python value ``5``, not ``"5"``.
 
@@ -316,11 +332,11 @@ Then maybe you refactor the build target::
 
     @task
     def clean(ctx):
-        ctx.run("rm -rf {0}".format(target))
+        ctx.run("rm -rf {}".format(target))
 
     @task
     def build(ctx):
-        ctx.run("sphinx-build docs {0}".format(target))
+        ctx.run("sphinx-build docs {}".format(target))
 
 We can also allow runtime parameterization::
 
@@ -328,11 +344,11 @@ We can also allow runtime parameterization::
 
     @task
     def clean(ctx, target=default_target):
-        ctx.run("rm -rf {0}".format(target))
+        ctx.run("rm -rf {}".format(target))
 
     @task
     def build(ctx, target=default_target):
-        ctx.run("sphinx-build docs {0}".format(target))
+        ctx.run("sphinx-build docs {}".format(target))
 
 This task module works for a single set of users, but what if we want to allow
 reuse? Somebody may want to use this module with a different default target.
@@ -353,11 +369,11 @@ Let's apply this to our example. First we add an explicit namespace object::
 
     @task
     def clean(ctx, target=default_target):
-        ctx.run("rm -rf {0}".format(target))
+        ctx.run("rm -rf {}".format(target))
 
     @task
     def build(ctx, target=default_target):
-        ctx.run("sphinx-build docs {0}".format(target))
+        ctx.run("sphinx-build docs {}".format(target))
 
     ns = Collection(clean, build)
 
@@ -370,13 +386,13 @@ runtime value was given.  The result::
     def clean(ctx, target=None):
         if target is None:
             target = ctx.sphinx.target
-        ctx.run("rm -rf {0}".format(target))
+        ctx.run("rm -rf {}".format(target))
 
     @task
     def build(ctx, target=None):
         if target is None:
             target = ctx.sphinx.target
-        ctx.run("sphinx-build docs {0}".format(target))
+        ctx.run("sphinx-build docs {}".format(target))
 
     ns = Collection(clean, build)
     ns.configure({'sphinx': {'target': "docs/_build"}})

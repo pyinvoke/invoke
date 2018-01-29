@@ -1,8 +1,9 @@
+import os
 import pickle
 import re
 import sys
 
-from mock import patch, Mock
+from mock import patch, Mock, call
 from spec import Spec, skip, eq_, ok_, trap, raises
 
 from invoke import (
@@ -11,6 +12,9 @@ from invoke import (
 )
 
 from _util import mock_subprocess, _Dummy
+
+
+local_path = 'invoke.config.Local'
 
 
 class Context_(Spec):
@@ -26,9 +30,27 @@ class Context_(Spec):
             c = Context()
             ok_(hasattr(c, attr) and callable(getattr(c, attr)))
 
-        # NOTE: actual behavior of command running is tested in runners.py
-        def run(self):
-            self._expect_attr('run')
+        class run:
+            # NOTE: actual behavior of command running is tested in runners.py
+            def exists(self):
+                self._expect_attr('run')
+
+            @patch(local_path)
+            def defaults_to_Local(self, Local):
+                c = Context()
+                c.run('foo')
+                assert Local.mock_calls == [
+                    call(c), call().run('foo')
+                ]
+
+            def honors_runner_config_setting(self):
+                runner_class = Mock()
+                config = Config({'runners': {'local': runner_class}})
+                c = Context(config)
+                c.run('foo')
+                assert runner_class.mock_calls == [
+                    call(c), call().run('foo'),
+                ]
 
         def sudo(self):
             self._expect_attr('sudo')
@@ -43,6 +65,11 @@ class Context_(Spec):
             eq_(self.c.config.__class__, Config)
             eq_(self.c.config['foo'], 'bar')
             eq_(self.c.config.foo, 'bar')
+
+        def config_attr_may_be_overwritten_at_runtime(self):
+            new_config = Config(defaults={'foo': 'notbar'})
+            self.c.config = new_config
+            eq_(self.c.foo, 'notbar')
 
         def getitem(self):
             "___getitem__"
@@ -99,17 +126,147 @@ class Context_(Spec):
             self.c.biz.update(otherbaz='otherboz')
             eq_(self.c.biz.otherbaz, 'otherboz')
 
+    class cwd:
+        def setup(self):
+            self.ctx = Context()
+
+        def simple(self):
+            self.ctx.command_cwds = ['a', 'b']
+            eq_(self.ctx.cwd, os.path.join('a', 'b'))
+
+        def nested_absolute_path(self):
+            self.ctx.command_cwds = ['a', '/b', 'c']
+            eq_(self.ctx.cwd, os.path.join('/b', 'c'))
+
+        def multiple_absolute_paths(self):
+            self.ctx.command_cwds = ['a', '/b', 'c', '/d', 'e']
+            eq_(self.ctx.cwd, os.path.join('/d', 'e'))
+
+        def home(self):
+            self.ctx.command_cwds = ['a', '~b', 'c']
+            eq_(self.ctx.cwd, os.path.join('~b', 'c'))
+
+    class cd:
+        def setup(self):
+            self.escaped_prompt = re.escape(Config().sudo.prompt)
+
+        @patch(local_path)
+        def cd_should_apply_to_run(self, Local):
+            runner = Local.return_value
+            ctx = Context()
+            with ctx.cd('foo'):
+                ctx.run('whoami')
+
+            cmd = "cd foo && whoami"
+            ok_(runner.run.called, "run() never called runner.run()!")
+            eq_(runner.run.call_args[0][0], cmd)
+
+        @patch(local_path)
+        def cd_should_apply_to_sudo(self, Local):
+            runner = Local.return_value
+            ctx = Context()
+            with ctx.cd('foo'):
+                ctx.sudo('whoami')
+
+            cmd = "sudo -S -p '[sudo] password: ' cd foo && whoami"
+            ok_(runner.run.called, "sudo() never called runner.run()!")
+            eq_(runner.run.call_args[0][0], cmd)
+
+        @patch(local_path)
+        def cd_should_occur_before_prefixes(self, Local):
+            runner = Local.return_value
+            ctx = Context()
+            with ctx.prefix('source venv'):
+                with ctx.cd('foo'):
+                    ctx.run('whoami')
+
+            cmd = "cd foo && source venv && whoami"
+            ok_(runner.run.called, "run() never called runner.run()!")
+            eq_(runner.run.call_args[0][0], cmd)
+
+    class prefix:
+        def setup(self):
+            self.escaped_prompt = re.escape(Config().sudo.prompt)
+
+        @patch(local_path)
+        def prefixes_should_apply_to_run(self, Local):
+            runner = Local.return_value
+            ctx = Context()
+            with ctx.prefix('cd foo'):
+                ctx.run('whoami')
+
+            cmd = "cd foo && whoami"
+            ok_(runner.run.called, "run() never called runner.run()!")
+            eq_(runner.run.call_args[0][0], cmd)
+
+        @patch(local_path)
+        def prefixes_should_apply_to_sudo(self, Local):
+            runner = Local.return_value
+            ctx = Context()
+            with ctx.prefix('cd foo'):
+                ctx.sudo('whoami')
+
+            cmd = "sudo -S -p '[sudo] password: ' cd foo && whoami"
+            ok_(runner.run.called, "sudo() never called runner.run()!")
+            eq_(runner.run.call_args[0][0], cmd)
+
+        @patch(local_path)
+        def nesting_should_retain_order(self, Local):
+            runner = Local.return_value
+            ctx = Context()
+            with ctx.prefix('cd foo'):
+                with ctx.prefix('cd bar'):
+                    ctx.run('whoami')
+                    cmd = "cd foo && cd bar && whoami"
+                    ok_(runner.run.called, "run() never called runner.run()!")
+                    eq_(runner.run.call_args[0][0], cmd)
+
+                ctx.run('whoami')
+                cmd = "cd foo && whoami"
+                ok_(runner.run.called, "run() never called runner.run()!")
+                eq_(runner.run.call_args[0][0], cmd)
+
+            # also test that prefixes do not persist
+            ctx.run('whoami')
+            cmd = "whoami"
+            ok_(runner.run.called, "run() never called runner.run()!")
+            eq_(runner.run.call_args[0][0], cmd)
+
     class sudo:
         def setup(self):
             self.escaped_prompt = re.escape(Config().sudo.prompt)
 
-        @patch('invoke.context.Local')
+        @patch(local_path)
         def prefixes_command_with_sudo(self, Local):
             runner = Local.return_value
             Context().sudo('whoami')
             # NOTE: implicitly tests default sudo.prompt conf value
             cmd = "sudo -S -p '[sudo] password: ' whoami"
-            ok_(runner.run.called, "sudo() never called run()!")
+            ok_(runner.run.called, "sudo() never called runner.run()!")
+            eq_(runner.run.call_args[0][0], cmd)
+
+        @patch(local_path)
+        def optional_user_argument_adds_u_and_H_flags(self, Local):
+            runner = Local.return_value
+            Context().sudo('whoami', user='rando')
+            cmd = "sudo -S -p '[sudo] password: ' -H -u rando whoami"
+            ok_(runner.run.called, "sudo() never called runner.run()!")
+            eq_(runner.run.call_args[0][0], cmd)
+
+        @patch(local_path)
+        def honors_config_for_user_value(self, Local):
+            runner = Local.return_value
+            config = Config(overrides={'sudo': {'user': 'rando'}})
+            Context(config=config).sudo('whoami')
+            cmd = "sudo -S -p '[sudo] password: ' -H -u rando whoami"
+            eq_(runner.run.call_args[0][0], cmd)
+
+        @patch(local_path)
+        def user_kwarg_wins_over_config(self, Local):
+            runner = Local.return_value
+            config = Config(overrides={'sudo': {'user': 'rando'}})
+            Context(config=config).sudo('whoami', user='calrissian')
+            cmd = "sudo -S -p '[sudo] password: ' -H -u calrissian whoami"
             eq_(runner.run.call_args[0][0], cmd)
 
         @trap
@@ -124,7 +281,7 @@ class Context_(Spec):
             ok_(Context().sudo.prompt not in output)
             ok_("sudo nope" in output)
 
-        @patch('invoke.context.Local')
+        @patch(local_path)
         def honors_config_for_prompt_value(self, Local):
             runner = Local.return_value
             config = Config(overrides={'sudo': {'prompt': 'FEED ME: '}})
@@ -137,8 +294,7 @@ class Context_(Spec):
             # NOTE: possibly best to tie into issue #2
             skip()
 
-        @patch('invoke.context.Local')
-        def _expect_responses(self, expected, Local, config=None, kwargs=None):
+        def _expect_responses(self, expected, config=None, kwargs=None):
             """
             Execute mocked sudo(), expecting watchers= kwarg in its run().
 
@@ -148,8 +304,10 @@ class Context_(Spec):
             """
             if kwargs is None:
                 kwargs = {}
+            Local = Mock()
             runner = Local.return_value
             context = Context(config=config) if config else Context()
+            context.config.runners.local = Local
             context.sudo('whoami', **kwargs)
             # Tease out the interesting bits - pattern/response - ignoring the
             # sentinel, etc for now.
@@ -182,7 +340,7 @@ class Context_(Spec):
                         pass
                 self.watcher_klass = DummyWatcher
 
-            @patch('invoke.context.Local')
+            @patch(local_path)
             def kwarg_only_adds_to_kwarg(self, Local):
                 runner = Local.return_value
                 context = Context()
@@ -198,7 +356,7 @@ class Context_(Spec):
                 ok_(isinstance(watchers[0], FailingResponder))
                 eq_(watchers[0].pattern, self.escaped_prompt)
 
-            @patch('invoke.context.Local')
+            @patch(local_path)
             def config_only(self, Local):
                 runner = Local.return_value
                 # Set a config-driven list of watchers
@@ -216,7 +374,7 @@ class Context_(Spec):
                 ok_(isinstance(watchers[0], FailingResponder))
                 eq_(watchers[0].pattern, self.escaped_prompt)
 
-            @patch('invoke.context.Local')
+            @patch(local_path)
             def config_use_does_not_modify_config(self, Local):
                 runner = Local.return_value
                 watcher = self.watcher_klass()
@@ -237,7 +395,7 @@ class Context_(Spec):
                 err = "Our config watchers list was modified!"
                 eq_(config.run.watchers, [watcher], err)
 
-            @patch('invoke.context.Local')
+            @patch(local_path)
             def both_kwarg_and_config(self, Local):
                 runner = Local.return_value
                 # Set a config-driven list of watchers
@@ -260,20 +418,20 @@ class Context_(Spec):
                 ok_(isinstance(watchers[0], FailingResponder))
                 eq_(watchers[0].pattern, self.escaped_prompt)
 
-        @patch('invoke.context.Local')
+        @patch(local_path)
         def passes_through_other_run_kwargs(self, Local):
             runner = Local.return_value
             Context().sudo(
                 'whoami', echo=True, warn=False, hide=True, encoding='ascii'
             )
-            ok_(runner.run.called, "sudo() never called run()!")
+            ok_(runner.run.called, "sudo() never called runner.run()!")
             kwargs = runner.run.call_args[1]
             eq_(kwargs['echo'], True)
             eq_(kwargs['warn'], False)
             eq_(kwargs['hide'], True)
             eq_(kwargs['encoding'], 'ascii')
 
-        @patch('invoke.context.Local')
+        @patch(local_path)
         def returns_run_result(self, Local):
             runner = Local.return_value
             expected = runner.run.return_value
@@ -384,3 +542,50 @@ class MockContext_(Spec):
     @raises(TypeError)
     def unexpected_kwarg_type_yields_TypeError(self):
         MockContext(run=123)
+
+    class can_modify_return_value_maps_after_instantiation:
+        class non_dict_type_instantiation_values_yield_TypeErrors:
+            class no_stored_result:
+                @raises(TypeError)
+                def run(self):
+                    mc = MockContext()
+                    mc.set_result_for('run', 'whatever', Result('bar'))
+
+                @raises(TypeError)
+                def sudo(self):
+                    mc = MockContext()
+                    mc.set_result_for('sudo', 'whatever', Result('bar'))
+
+            class single_result:
+                @raises(TypeError)
+                def run(self):
+                    mc = MockContext(run=Result('foo'))
+                    mc.set_result_for('run', 'whatever', Result('bar'))
+
+                @raises(TypeError)
+                def sudo(self):
+                    mc = MockContext(sudo=Result('foo'))
+                    mc.set_result_for('sudo', 'whatever', Result('bar'))
+
+            class iterable_result:
+                @raises(TypeError)
+                def run(self):
+                    mc = MockContext(run=[Result('foo')])
+                    mc.set_result_for('run', 'whatever', Result('bar'))
+
+                @raises(TypeError)
+                def sudo(self):
+                    mc = MockContext(sudo=[Result('foo')])
+                    mc.set_result_for('sudo', 'whatever', Result('bar'))
+
+        def run(self):
+            mc = MockContext(run={'foo': Result('bar')})
+            assert mc.run('foo').stdout == 'bar'
+            mc.set_result_for('run', 'foo', Result('biz'))
+            assert mc.run('foo').stdout == 'biz'
+
+        def sudo(self):
+            mc = MockContext(sudo={'foo': Result('bar')})
+            assert mc.sudo('foo').stdout == 'bar'
+            mc.set_result_for('sudo', 'foo', Result('biz'))
+            assert mc.sudo('foo').stdout == 'biz'

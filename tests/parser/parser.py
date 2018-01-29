@@ -1,4 +1,4 @@
-from spec import Spec, eq_, raises
+from spec import Spec, eq_, raises, skip, ok_
 
 from invoke.parser import Parser, Context, Argument, ParseError
 
@@ -339,6 +339,46 @@ class Parser_(Spec):
                 p = Parser([c1, c2])
                 self._test_for_ambiguity("--foo othertask", p)
 
+    class list_type_arguments:
+        "list-type (iterable) arguments"
+        def _parse(self, *args):
+            c = Context('mytask', args=(Argument('mylist', kind=list),))
+            argv = ['mytask'] + list(args)
+            return Parser([c]).parse_argv(argv)[0].args.mylist.value
+
+        def can_be_given_no_times_resulting_in_default_empty_list(self):
+            assert self._parse() == []
+
+        def given_once_becomes_single_item_list(self):
+            assert self._parse('--mylist', 'foo') == ['foo']
+
+        def given_N_times_becomes_list_of_len_N(self):
+            expected = ['foo', 'bar', 'biz']
+            assert self._parse(
+                '--mylist', 'foo', '--mylist', 'bar', '--mylist', 'biz'
+            ) == expected
+
+        def iterables_work_correctly_outside_a_vacuum(self):
+            # Undetected bug where I was primarily focused on the -vvv use
+            # case...'normal' incrementables never left 'waiting for value'
+            # state in the parser! so _subsequent_ task names & such never got
+            # parsed right, always got appended to the list.
+            c = Context('mytask', args=[Argument('mylist', kind=list)])
+            c2 = Context('othertask')
+            argv = [
+                'mytask', '--mylist', 'val', '--mylist', 'val2', 'othertask'
+            ]
+            result = Parser([c, c2]).parse_argv(argv)
+            # When bug present, result only has one context (for 'mytask') and
+            # its 'mylist' consists of ['val', 'val2', 'othertask']. (the
+            # middle '--mylist' was handled semi-correctly.)
+            mylist = result[0].args.mylist.value
+            assert mylist == ['val', 'val2']
+            contexts = len(result)
+            err = "Got {} parse context results instead of 2!".format(contexts)
+            assert contexts == 2, err
+            assert result[1].name == 'othertask'
+
     class task_repetition:
         def is_happy_to_handle_same_task_multiple_times(self):
             task1 = Context('mytask')
@@ -353,6 +393,52 @@ class Parser_(Spec):
             )
             eq_(result[0].args.meh.value, 'mehval1')
             eq_(result[1].args.meh.value, 'mehval2')
+
+    class per_task_core_flags:
+        class help_:
+            def task_has_no_help_shows_per_task_help(self):
+                task1 = Context('mytask')
+                init = Context(args=[Argument('help', optional=True)])
+                parser = Parser(initial=init, contexts=[task1])
+                result = parser.parse_argv(['mytask', '--help'])
+                eq_(len(result), 2)
+                eq_(result[0].args.help.value, 'mytask')
+                ok_('help' not in result[1].args)
+
+            # TODO: ideally we want an explosion, but for now, overriding
+            # happens naturally and is not the worst thing ever
+            def per_task_flag_wins_over_core_flag(self):
+                task1 = Context('mytask', args=[Argument('help')])
+                init = Context(args=[Argument('help', optional=True)])
+                parser = Parser(initial=init, contexts=[task1])
+                result = parser.parse_argv(['mytask', '--help', 'foo'])
+                eq_(result[1].args.help.value, 'foo')
+
+            def task_has_no_h_shortflag_shows_per_task_help(self):
+                task1 = Context('mytask')
+                arg = Argument(names=('help', 'h'), optional=True)
+                init = Context(args=[arg])
+                parser = Parser(initial=init, contexts=[task1])
+                result = parser.parse_argv(['mytask', '-h'])
+                eq_(len(result), 2)
+                eq_(result[0].args.help.value, 'mytask')
+                ok_('help' not in result[1].args)
+
+            def task_has_h_shortflag_throws_error(self):
+                # def mytask(c, height):
+                # inv mytask -h
+                skip()
+
+        class other_core_flags_do_not_work_in_task_contexts:
+            # NOTE: only doing a subset here for sanity tests
+            def list_(self):
+                skip()
+
+            def no_dedupe(self):
+                skip()
+
+        # TODO: can define what core flags work as per-task flags, somehow?
+        # I.e. how to implement --roles/--hosts in fab 2?
 
 
 class ParseResult_(Spec):

@@ -8,6 +8,8 @@ import sys
 import threading
 import time
 
+from .util import six
+
 # Import some platform-specific things at top level so they can be mocked for
 # tests.
 try:
@@ -29,12 +31,7 @@ from .exceptions import (
 from .platform import (
     WINDOWS, pty_size, character_buffered, ready_for_reading, bytes_to_read,
 )
-from .util import has_fileno, isatty, ExceptionHandlingThread
-
-try:
-    from .vendor import six
-except ImportError:
-    import six
+from .util import has_fileno, isatty, ExceptionHandlingThread, encode_output
 
 
 class Runner(object):
@@ -103,7 +100,9 @@ class Runner(object):
 
         :param str command: The shell command to execute.
 
-        :param str shell: Which shell binary to use. Default: ``/bin/bash``.
+        :param str shell:
+            Which shell binary to use. Default: ``/bin/bash`` (on Unix;
+            ``COMSPEC`` or ``cmd.exe`` on Windows.)
 
         :param bool warn:
             Whether to warn and continue, instead of raising
@@ -201,7 +200,13 @@ class Runner(object):
             A file-like stream object to used as the subprocess' standard
             input. If ``None`` (the default), ``sys.stdin`` will be used.
 
-        :param list watchers:
+            If ``False``, will disable stdin mirroring entirely (though other
+            functionality which writes to the subprocess' stdin, such as
+            autoresponding, will still function.) Disabling stdin mirroring can
+            help when ``sys.stdin`` is a misbehaving non-stream object, such as
+            under test harnesses or headless command runners.
+
+        :param watchers:
             A list of `.StreamWatcher` instances which will be used to scan the
             program's ``stdout`` or ``stderr`` and may write into its ``stdin``
             (typically ``str`` or ``bytes`` objects depending on Python
@@ -268,7 +273,7 @@ class Runner(object):
         env = self.generate_env(opts['env'], opts['replace_env'])
         # Echo running command
         if opts['echo']:
-            print("\033[1;37m{0}\033[0m".format(command))
+            print("\033[1;37m{}\033[0m".format(command))
         # Start executing the actual command (runs in background)
         self.start(command, shell, env)
         # Arrive at final encoding if neither config nor kwargs had one
@@ -281,17 +286,17 @@ class Runner(object):
                 'hide': 'stdout' in opts['hide'],
                 'output': out_stream,
             },
-            # TODO: make this & related functionality optional, for users who
-            # don't care about autoresponding & are encountering issues with
-            # the stdin mirroring? Downside is it fragments expected behavior &
-            # puts folks with true interactive use cases in a different support
-            # class.
-            self.handle_stdin: {
+        }
+        # After opt processing above, in_stream will be a real stream obj or
+        # False, so we can truth-test it. We don't even create a stdin-handling
+        # thread if it's False, meaning user indicated stdin is nonexistent or
+        # problematic.
+        if in_stream:
+            thread_args[self.handle_stdin] = {
                 'input_': in_stream,
                 'output': out_stream,
                 'echo': opts['echo_stdin'],
             }
-        }
         if not self.using_pty:
             thread_args[self.handle_stderr] = {
                 'buffer_': stderr,
@@ -379,6 +384,7 @@ class Runner(object):
             exited=exited,
             pty=self.using_pty,
             hide=opts['hide'],
+            encoding=self.encoding,
         )
         # Any presence of WatcherError from the threads indicates a watcher was
         # upset and aborted execution; make a generic Failure out of it and
@@ -406,7 +412,7 @@ class Runner(object):
         # Handle invalid kwarg keys (anything left in kwargs).
         # Act like a normal function would, i.e. TypeError
         if kwargs:
-            err = "run() got an unexpected keyword argument '{0}'"
+            err = "run() got an unexpected keyword argument '{}'"
             raise TypeError(err.format(list(kwargs.keys())[0]))
         # If hide was True, turn off echoing
         if opts['hide'] is True:
@@ -503,19 +509,7 @@ class Runner(object):
 
         :returns: ``None``.
         """
-        # Encode under Python 2 only, because of the common problem where
-        # sys.stdout/err on Python 2 end up using sys.getdefaultencoding(),
-        # which is frequently NOT the same thing as the real local terminal
-        # encoding (reflected as sys.stdout.encoding). I.e. even when
-        # sys.stdout.encoding is UTF-8, ascii is still actually used, and
-        # explodes.
-        # Python 3 doesn't have this problem, so we delegate encoding to the
-        # io.*Writer classes involved.
-        if six.PY2:
-            # TODO: split up self.encoding, only use the one for 'local
-            # encoding' here.
-            string = string.encode(self.encoding)
-        stream.write(string)
+        stream.write(encode_output(string, self.encoding))
         stream.flush()
 
     def _handle_output(self, buffer_, hide, output, reader):
@@ -543,7 +537,7 @@ class Runner(object):
         Intended for use as a thread target. Only terminates when all stdout
         from the subprocess has been read.
 
-        :param list buffer_: The capture buffer shared with the main thread.
+        :param buffer_: The capture buffer shared with the main thread.
         :param bool hide: Whether or not to replay data into ``output``.
         :param output:
             Output stream (file-like object) to write data into when not
@@ -677,7 +671,7 @@ class Runner(object):
         from the ``watchers`` kwarg of `run` - see :doc:`/concepts/watchers`
         for a conceptual overview.
 
-        :param list buffer:
+        :param buffer:
             The capture buffer for this thread's particular IO stream.
 
         :returns: ``None``.
@@ -923,8 +917,15 @@ class Local(Runner):
             try:
                 data = os.read(self.parent_fd, num_bytes)
             except OSError as e:
-                # Only eat this specific OSError so we don't hide others
-                if "Input/output error" not in str(e):
+                # Only eat I/O specific OSErrors so we don't hide others
+                stringified = str(e)
+                io_errors = (
+                    # The typical default
+                    "Input/output error",
+                    # Some less common platforms phrase it this way
+                    "I/O error",
+                )
+                if not any(error in stringified for error in io_errors):
                     raise
                 # The bad OSErrors happen after all expected output has
                 # appeared, so we return a falsey value, which triggers the
@@ -1044,6 +1045,9 @@ class Result(object):
         was invoked via a pty, in which case it will be empty; see
         `.Runner.run`.)
 
+    :param str encoding:
+        The string encoding used by the local shell environment.
+
     :param str command:
         The command which was executed.
 
@@ -1090,6 +1094,7 @@ class Result(object):
         self,
         stdout="",
         stderr="",
+        encoding=None,
         command="",
         shell="",
         env=None,
@@ -1099,6 +1104,7 @@ class Result(object):
     ):
         self.stdout = stdout
         self.stderr = stderr
+        self.encoding = encoding
         self.command = command
         self.shell = shell
         self.env = {} if env is None else env
@@ -1125,22 +1131,22 @@ class Result(object):
 
     def __str__(self):
         if self.exited is not None:
-            desc = "Command exited with status {0}.".format(self.exited)
+            desc = "Command exited with status {}.".format(self.exited)
         else:
             desc = "Command was not fully executed due to watcher error."
         ret = [desc]
         for x in ('stdout', 'stderr'):
             val = getattr(self, x)
-            ret.append(u"""=== {0} ===
-{1}
-""".format(x, val.rstrip()) if val else u"(no {0})".format(x))
+            ret.append(u"""=== {} ===
+{}
+""".format(x, val.rstrip()) if val else u"(no {})".format(x))
         return u"\n".join(ret)
 
     def __repr__(self):
         # TODO: more? e.g. len of stdout/err? (how to represent cleanly in a
         # 'x=y' format like this? e.g. '4b' is ambiguous as to what it
         # represents
-        template = "<Result cmd={0!r} exited={1}>"
+        template = "<Result cmd={!r} exited={}>"
         return template.format(self.command, self.exited)
 
     @property
@@ -1164,7 +1170,7 @@ class Result(object):
 def normalize_hide(val):
     hide_vals = (None, False, 'out', 'stdout', 'err', 'stderr', 'both', True)
     if val not in hide_vals:
-        err = "'hide' got {0!r} which is not in {1!r}"
+        err = "'hide' got {!r} which is not in {!r}"
         raise ValueError(err.format(val, hide_vals))
     if val in (None, False):
         hide = ()
