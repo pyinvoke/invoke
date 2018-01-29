@@ -2,6 +2,8 @@
 Changelog
 =========
 
+* :support:`433 backported` Add -dev and -nightly style Python versions to our
+  Travis builds. Thanks to ``@SylvainDe`` for the contribution.
 * :bug:`437` When merging configuration levels together (which uses
   `copy.copy` by default), pass file objects by reference so they don't get
   closed. Catch & patch by Paul Healy.
