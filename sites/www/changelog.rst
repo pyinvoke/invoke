@@ -2,6 +2,11 @@
 Changelog
 =========
 
+* :bug:`342` Accidentally hardcoded ``Collection`` instead of ``cls`` in
+  `Collection.from_module <invoke.collection.Collection.from_module>` (an
+  alternate constructor and therefore a classmethod.) This made it rather hard
+  to properly subclass `~invoke.collection.Collection`. Report and initial
+  patch courtesy of Luc Saffre.
 * :support:`433 backported` Add -dev and -nightly style Python versions to our
   Travis builds. Thanks to ``@SylvainDe`` for the contribution.
 * :bug:`437` When merging configuration levels together (which uses
