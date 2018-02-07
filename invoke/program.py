@@ -11,7 +11,7 @@ from . import Collection, Config, Executor, FilesystemLoader
 from .complete import complete
 from .parser import Parser, ParserContext, Argument
 from .exceptions import (
-    UnexpectedExit, CollectionNotFound, ParseError, Exit,
+    UnexpectedExit, CollectionNotFound, ParseError, UserError, Exit,
 )
 from .util import debug, enable_logging, sort_names
 from .platform import pty_size
@@ -297,6 +297,8 @@ class Program(object):
             # prevents messy traceback but still clues interactive user into
             # problems.
             if isinstance(e, ParseError):
+                print(e, file=sys.stderr)
+            if isinstance(e, UserError):
                 print(e, file=sys.stderr)
             if isinstance(e, UnexpectedExit) and e.result.hide:
                 print(e, file=sys.stderr, end='')
