@@ -8,7 +8,7 @@ except ImportError:
     from fluidity import StateMachine, state, transition
 
 from ..util import debug
-from ..exceptions import ParseError
+from ..exceptions import ParseError, UserError
 
 
 def is_flag(value):
@@ -268,7 +268,7 @@ class ParseMachine(StateMachine):
         # Ensure all of context's positional args have been given.
         if self.context and self.context.needs_positional_arg:
             err = "'{}' did not receive all required positional arguments!"
-            self.error(err.format(self.context.name))
+            self.user_error(err.format(self.context.name))
         if self.context and self.context not in self.result:
             self.result.append(self.context)
 
@@ -362,6 +362,9 @@ class ParseMachine(StateMachine):
 
     def error(self, msg):
         raise ParseError(msg, self.context)
+
+    def user_error(self, msg):
+        raise UserError(msg, self.context)
 
 
 class ParseResult(list):

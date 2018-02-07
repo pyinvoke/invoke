@@ -138,6 +138,17 @@ class ParseError(Exception):
         self.context = context
 
 
+class UserError(ParseError):
+    """
+    An error arising from the parsing of command-line flags/arguments where
+    the cause is known to be a user error.
+
+    New users, forgetful users, drunk users, etc.
+    """
+    def __init__(self, msg, context=None):
+        super(UserError, self).__init__(msg, context)
+
+
 class Exit(Exception):
     """
     Simple stand-in for SystemExit that lets us gracefully exit.
