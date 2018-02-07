@@ -147,7 +147,6 @@ class UserError(ParseError):
     """
     def __init__(self, msg, context=None):
         super(UserError, self).__init__(msg)
-        self.context = context
 
 
 class Exit(Exception):
