@@ -299,7 +299,7 @@ class Program(object):
             if isinstance(e, ParseError):
                 print(e, file=sys.stderr)
             if isinstance(e, UserError):
-                print(e, file=sys.stderr)
+                self.print_help()
             if isinstance(e, UnexpectedExit) and e.result.hide:
                 print(e, file=sys.stderr, end='')
             # Terminate execution unless we were told not to.
