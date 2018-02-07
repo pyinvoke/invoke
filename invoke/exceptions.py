@@ -146,7 +146,7 @@ class UserError(ParseError):
     New users, forgetful users, drunk users, etc.
     """
     def __init__(self, msg, context=None):
-        super(UserError, self).__init__(msg)
+        super(UserError, self).__init__(msg, context)
 
 
 class Exit(Exception):
