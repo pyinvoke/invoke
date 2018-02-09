@@ -46,7 +46,7 @@ class Context_:
 
             def honors_runner_config_setting(self):
                 runner_class = Mock()
-                config = Config({'runners': {'local': runner_class}})
+                config = Config({'runner': runner_class})
                 c = Context(config)
                 c.run('foo')
                 assert runner_class.mock_calls == [
@@ -308,7 +308,7 @@ class Context_:
             Local = Mock()
             runner = Local.return_value
             context = Context(config=config) if config else Context()
-            context.config.runners.local = Local
+            context.config.runner = Local
             context.sudo('whoami', **kwargs)
             # Tease out the interesting bits - pattern/response - ignoring the
             # sentinel, etc for now.

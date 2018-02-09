@@ -89,13 +89,7 @@ class Context(DataProxy):
 
         .. versionadded:: 1.0
         """
-        runner = self.config.runners.local(self)
-        return self._run(runner, command, **kwargs)
-
-    # NOTE: broken out of run() to allow for runner class injection in
-    # Fabric/etc, which needs to juggle multiple runner class types (local and
-    # remote).
-    def _run(self, runner, command, **kwargs):
+        runner = self.config.runner(self)
         command = self._prefix_commands(command)
         return runner.run(command, **kwargs)
 
@@ -163,11 +157,7 @@ class Context(DataProxy):
 
         .. versionadded:: 1.0
         """
-        runner = self.config.runners.local(self)
-        return self._sudo(runner, command, **kwargs)
-
-    # NOTE: this is for runner injection; see NOTE above _run().
-    def _sudo(self, runner, command, **kwargs):
+        runner = self.config.runner(self)
         prompt = self.config.sudo.prompt
         password = kwargs.pop('password', self.config.sudo.password)
         user = kwargs.pop('user', self.config.sudo.user)

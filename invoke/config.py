@@ -479,9 +479,7 @@ class Config(DataProxy):
             # This doesn't live inside the 'run' tree; otherwise it'd make it
             # somewhat harder to extend/override in Fabric 2 which has a split
             # local/remote runner situation.
-            'runners': {
-                'local': Local,
-            },
+            'runner': Local,
             'sudo': {
                 'prompt': "[sudo] password: ",
                 'password': None,
