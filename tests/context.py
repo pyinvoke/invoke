@@ -11,11 +11,26 @@ from invoke import (
     AuthFailure, Context, Config, FailingResponder, ResponseNotAccepted,
     StreamWatcher, MockContext, Result,
 )
+from invoke.context import BaseContext
 
 from _util import mock_subprocess, _Dummy
 
 
 local_path = 'invoke.config.Local'
+
+
+class BaseContext_:
+    class init:
+        "__init__"
+        def takes_required_config_arg(self):
+            # Meh-tastic doesn't-barf tests. MEH.
+            BaseContext(config={'foo': 'bar'})
+            try:
+                BaseContext()
+            except TypeError:
+                pass
+            else:
+                assert False, "Did not raise TypeError!"
 
 
 class Context_:

@@ -13,7 +13,7 @@ from .runners import Result
 from .watchers import FailingResponder
 
 
-class Context(DataProxy):
+class BaseContext(DataProxy):
     """
     Context-aware API wrapper & state-passing object.
 
@@ -32,12 +32,10 @@ class Context(DataProxy):
 
     .. versionadded:: 1.0
     """
-    def __init__(self, config=None):
+    def __init__(self, config):
         """
         :param config:
             `.Config` object to use as the base configuration.
-
-            Defaults to an anonymous/default `.Config` instance.
         """
         #: The fully merged `.Config` object appropriate for this context.
         #:
@@ -351,6 +349,18 @@ class Context(DataProxy):
         self.command_cwds.append(path)
         yield
         self.command_cwds.pop()
+
+
+class Context(BaseContext):
+    def __init__(self, config=None):
+        """
+        :param config:
+            `.Config` object to use as the base configuration.
+
+            Defaults to an anonymous/default `.Config` instance.
+        """
+        config = config if config is not None else Config()
+        super(Context, self).__init__(config)
 
 
 class MockContext(Context):
