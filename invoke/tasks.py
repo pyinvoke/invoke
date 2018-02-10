@@ -26,8 +26,6 @@ class Task(object):
     """
     Core object representing an executable task & its argument specification.
     """
-    # TODO: store these kwarg defaults central, refer to those values both here
-    # and in @task.
     # TODO: allow central per-session / per-taskmodule control over some of
     # them, e.g. (auto_)positional, auto_shortflags.
     # NOTE: we shadow __builtins__.help here on purpose - obfuscating to avoid
@@ -60,7 +58,7 @@ class Task(object):
         self.is_default = default
         # Arg/flag/parser hints
         self.positional = self.fill_implicit_positionals(positional)
-        self.optional = optional
+        self.optional = tuple(optional)
         self.iterable = iterable or []
         self.incrementable = incrementable or []
         self.auto_shortflags = auto_shortflags
@@ -287,50 +285,14 @@ def task(*args, **kwargs):
     # @task -- no options were (probably) given.
     if len(args) == 1 and callable(args[0]) and not isinstance(args[0], Task):
         return Task(args[0], **kwargs)
-    # @task(pre, tasks, here)
-    if args:
-        if 'pre' in kwargs:
-            raise TypeError(
-                "May not give *args and 'pre' kwarg simultaneously!"
-            )
-        kwargs['pre'] = args
-    # @task(options)
-    # TODO: pull in centrally defined defaults here (see Task)
-    # TODO: clean up all of the values which are iterables, some are tuple and
-    # some are None->list, ugh
-    name = kwargs.pop('name', None)
-    aliases = kwargs.pop('aliases', ())
-    positional = kwargs.pop('positional', None)
-    optional = tuple(kwargs.pop('optional', ()))
-    iterable = kwargs.pop('iterable', None)
-    incrementable = kwargs.pop('incrementable', None)
-    default = kwargs.pop('default', False)
-    auto_shortflags = kwargs.pop('auto_shortflags', True)
-    help = kwargs.pop('help', {})
-    pre = kwargs.pop('pre', [])
-    post = kwargs.pop('post', [])
-    autoprint = kwargs.pop('autoprint', False)
-    # Handle unknown kwargs
-    if kwargs:
-        kwarg = (" unknown kwargs {!r}".format(kwargs)) if kwargs else ""
-        raise TypeError("@task was called with" + kwarg)
+
     def inner(obj):
-        obj = Task(
-            obj,
-            name=name,
-            aliases=aliases,
-            positional=positional,
-            optional=optional,
-            iterable=iterable,
-            incrementable=incrementable,
-            default=default,
-            auto_shortflags=auto_shortflags,
-            help=help,
-            pre=pre,
-            post=post,
-            autoprint=autoprint,
-        )
-        return obj
+        # @task(pre, tasks, here)
+        if args:
+            return Task(obj, pre=args, **kwargs)
+        # @task(options)
+        else:
+            return Task(obj, **kwargs)
     return inner
 
 
