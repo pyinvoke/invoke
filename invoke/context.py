@@ -9,7 +9,7 @@ except ImportError:
 
 from .config import Config, DataProxy
 from .exceptions import Failure, AuthFailure, ResponseNotAccepted
-from .runners import Result
+from .runners import Local, Result
 from .watchers import FailingResponder
 
 
@@ -87,7 +87,7 @@ class BaseContext(DataProxy):
 
         .. versionadded:: 1.0
         """
-        runner = self.config.runner(self)
+        runner = self.runner(self)
         command = self._prefix_commands(command)
         return runner.run(command, **kwargs)
 
@@ -155,7 +155,7 @@ class BaseContext(DataProxy):
 
         .. versionadded:: 1.0
         """
-        runner = self.config.runner(self)
+        runner = self.runner(self)
         prompt = self.config.sudo.prompt
         password = kwargs.pop('password', self.config.sudo.password)
         user = kwargs.pop('user', self.config.sudo.user)
@@ -361,6 +361,7 @@ class Context(BaseContext):
         """
         config = config if config is not None else Config()
         super(Context, self).__init__(config)
+        self._set(runner=Local)
 
 
 class MockContext(Context):

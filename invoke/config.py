@@ -23,7 +23,6 @@ else:
 
 from .env import Environment
 from .exceptions import UnknownFileType
-from .runners import Local
 from .terminals import WINDOWS
 from .util import debug
 
@@ -476,10 +475,6 @@ class Config(DataProxy):
                 'watchers': [],
                 'echo_stdin': None,
             },
-            # This doesn't live inside the 'run' tree; otherwise it'd make it
-            # somewhat harder to extend/override in Fabric 2 which has a split
-            # local/remote runner situation.
-            'runner': Local,
             'sudo': {
                 'prompt': "[sudo] password: ",
                 'password': None,

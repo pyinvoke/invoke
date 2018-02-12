@@ -16,7 +16,7 @@ from invoke.context import BaseContext
 from _util import mock_subprocess, _Dummy
 
 
-local_path = 'invoke.config.Local'
+local_path = 'invoke.context.Local'
 
 
 class BaseContext_:
@@ -57,15 +57,6 @@ class Context_:
                 c.run('foo')
                 assert Local.mock_calls == [
                     call(c), call().run('foo')
-                ]
-
-            def honors_runner_config_setting(self):
-                runner_class = Mock()
-                config = Config({'runner': runner_class})
-                c = Context(config)
-                c.run('foo')
-                assert runner_class.mock_calls == [
-                    call(c), call().run('foo'),
                 ]
 
         def sudo(self):
@@ -289,8 +280,9 @@ class Context_:
         @mock_subprocess()
         def echo_hides_extra_sudo_flags(self):
             skip() # see TODO in sudo() re: clean output display
-            config = Config(overrides={'runner': _Dummy})
-            Context(config=config).sudo('nope', echo=True)
+            context = Context(config=Config())
+            context.runner = _Dummy
+            context.sudo('nope', echo=True)
             output = sys.stdout.getvalue()
             sys.__stderr__.write(repr(output) + "\n")
             assert "-S" not in output
@@ -323,7 +315,7 @@ class Context_:
             Local = Mock()
             runner = Local.return_value
             context = Context(config=config) if config else Context()
-            context.config.runner = Local
+            context.runner = Local
             context.sudo('whoami', **kwargs)
             # Tease out the interesting bits - pattern/response - ignoring the
             # sentinel, etc for now.
