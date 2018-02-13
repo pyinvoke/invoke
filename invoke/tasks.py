@@ -416,14 +416,6 @@ class Call(object):
                 return False
         return True
 
-    def make_context(self, config):
-        """
-        Generate a `.Context` appropriate for this call, with given config.
-
-        .. versionadded:: 1.0
-        """
-        return Context(config=config)
-
     def clone(self, into=None):
         """
         Return a standalone copy of this Call.

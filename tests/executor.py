@@ -92,6 +92,13 @@ class Executor_:
             assert isinstance(args[0], Context)
             assert len(args) == 1
 
+    class make_context:
+        def creates_a_new_Context_from_given_config(self):
+            conf = Config(defaults={'foo': 'bar'})
+            ctx = self.executor.make_context(object(), conf)
+            assert isinstance(ctx, Context)
+            assert ctx.foo == 'bar'
+
     class basic_pre_post:
         "basic pre/post task functionality"
 

@@ -1,7 +1,7 @@
 from mock import Mock
 from pytest import raises, skip
 
-from invoke import Context, Config, task, Task, Call, Collection
+from invoke import Context, task, Task, Call, Collection
 from invoke import FilesystemLoader as Loader
 
 from _util import support
@@ -368,17 +368,6 @@ class Call_:
         def skips_aka_if_explicit_name_same_as_task_name(self):
             call = Call(self.task, called_as='mytask')
             assert str(call) == "<Call 'mytask', args: (), kwargs: {}>"
-
-    class make_context:
-        def requires_config_argument(self):
-            with raises(TypeError):
-                Call(_).make_context()
-
-        def creates_a_new_Context_from_given_config(self):
-            conf = Config(defaults={'foo': 'bar'})
-            c = Call(_).make_context(conf)
-            assert isinstance(c, Context)
-            assert c.foo == 'bar'
 
     class clone:
         def returns_new_but_equivalent_object(self):

@@ -1,6 +1,7 @@
 from .util import six
 
 from .config import Config
+from .context import Context
 from .parser import ParserContext
 from .util import debug
 from .tasks import Call, Task
@@ -128,7 +129,7 @@ class Executor(object):
             # Get final context from the Call (which will know how to generate
             # an appropriate one; e.g. subclasses might use extra data from
             # being parameterized), handing in this config for use there.
-            context = call.make_context(config)
+            context = self.make_context(call, config)
             args = (context,) + args
             result = call.task(*args, **call.kwargs)
             if autoprint:
@@ -137,6 +138,12 @@ class Executor(object):
             # case, wherein one task obj maps to >1 result.
             results[call.task] = result
         return results
+
+    def make_context(self, call, config):
+        """
+        Generate a `.Context` appropriate for the call, with given config.
+        """
+        return Context(config=config)
 
     def normalize(self, tasks):
         """
