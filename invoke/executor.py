@@ -112,7 +112,7 @@ class Executor(object):
         # especially given Executor is not designed to execute() >1 time at the
         # moment...
         for call in calls:
-            autoprint = call in direct and call.autoprint
+            autoprint = call in direct and call.task.autoprint
             args = call.args
             debug("Executing {!r}".format(call))
             # Hand in reference to our config, which will preserve user
@@ -217,7 +217,7 @@ class Executor(object):
             # TODO: we _probably_ don't even want the config in here anymore,
             # we want this to _just_ be about the recursion across pre/post
             # tasks or parameterization...?
-            ret.extend(self.expand_calls(call.pre))
+            ret.extend(self.expand_calls(call.task.pre))
             ret.append(call)
-            ret.extend(self.expand_calls(call.post))
+            ret.extend(self.expand_calls(call.task.post))
         return ret

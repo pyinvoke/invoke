@@ -391,10 +391,6 @@ class Call(object):
         self.args = args or tuple()
         self.kwargs = kwargs or dict()
 
-    # TODO: just how useful is this? feels like maybe overkill magic
-    def __getattr__(self, name):
-        return getattr(self.task, name)
-
     def __deepcopy__(self, memo):
         return self.clone()
 
