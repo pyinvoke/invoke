@@ -22,21 +22,7 @@ from .parser import Argument, translate_underscores
 NO_DEFAULT = object()
 
 
-class Task(object):
-    """
-    Core object representing an executable task & its argument specification.
-
-    For the most part, this object is a clearinghouse for all of the data that
-    may be supplied to the `@task <invoke.tasks.task>` decorator, such as
-    ``name``, ``aliases``, ``positional`` etc, which appear as attributes.
-
-    In addition, instantiation copies some introspection/documentation friendly
-    metadata off of the supplied ``body`` object, such as ``__doc__``,
-    ``__name__`` and ``__module__``, allowing it to "appear as" ``body`` for
-    most intents and purposes.
-
-    .. versionadded:: 1.0
-    """
+class BaseTask(object):
     # TODO: store these kwarg defaults central, refer to those values both here
     # and in @task.
     # TODO: allow central per-session / per-taskmodule control over some of
@@ -120,10 +106,10 @@ class Task(object):
 
     def __call__(self, *args, **kwargs):
         # Guard against calling tasks with no context.
-        if not isinstance(args[0], Context):
-            err = "Task expected a Context as its first arg, got {} instead!"
+        if not isinstance(args[0], self.context_class):
+            err = "Task expected a {} as its first arg, got {} instead!"
             # TODO: raise a custom subclass _of_ TypeError instead
-            raise TypeError(err.format(type(args[0])))
+            raise TypeError(err.format(self.context_class, type(args[0])))
         result = self.body(*args, **kwargs)
         self.times_called += 1
         return result
@@ -252,6 +238,24 @@ class Task(object):
                     args.insert(0, args.pop(i))
                     break
         return args
+
+
+class Task(BaseTask):
+    """
+    Core object representing an executable task & its argument specification.
+
+    For the most part, this object is a clearinghouse for all of the data that
+    may be supplied to the `@task <invoke.tasks.task>` decorator, such as
+    ``name``, ``aliases``, ``positional`` etc, which appear as attributes.
+
+    In addition, instantiation copies some introspection/documentation friendly
+    metadata off of the supplied ``body`` object, such as ``__doc__``,
+    ``__name__`` and ``__module__``, allowing it to "appear as" ``body`` for
+    most intents and purposes.
+
+    .. versionadded:: 1.0
+    """
+    context_class = Context
 
 
 def task(*args, **kwargs):

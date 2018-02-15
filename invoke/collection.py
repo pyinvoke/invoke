@@ -5,7 +5,7 @@ from .util import six, Lexicon, helpline
 
 from .config import merge_dicts, copy_dict
 from .parser import Context as ParserContext
-from .tasks import Task
+from .tasks import BaseTask
 
 
 class Collection(object):
@@ -112,7 +112,7 @@ class Collection(object):
             self._add_object(obj, name)
 
     def _add_object(self, obj, name=None):
-        if isinstance(obj, Task):
+        if isinstance(obj, BaseTask):
             method = self.add_task
         elif isinstance(obj, (Collection, types.ModuleType)):
             method = self.add_collection
@@ -226,7 +226,7 @@ class Collection(object):
                 return ret
         # Failing that, make our own collection from the module's tasks.
         tasks = filter(
-            lambda x: isinstance(x, Task),
+            lambda x: isinstance(x, BaseTask),
             vars(module).values()
         )
         # Again, explicit name wins over implicit one from module path
