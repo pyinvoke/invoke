@@ -11,3 +11,6 @@ readme_renderer==17.2
 coverage==3.7.1
 # Technically only needed for Travis, but might as well add it here
 codecov==1.6.3
+# Gotta limit Sphinx to <1.7 for now, or releases blows up. (has to be done in
+# here since this file gets run by itself sometimes.)
+Sphinx>=1.4,<1.7
