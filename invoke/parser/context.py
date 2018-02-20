@@ -139,8 +139,8 @@ class ParserContext(object):
             self.inverse_flags[inverse_name] = to_flag(main)
 
     @property
-    def needs_positional_arg(self):
-        return any(x.value is None for x in self.positional_args)
+    def missing_positional_args(self):
+        return [x for x in self.positional_args if x.value is None]
 
     @property
     def as_kwargs(self):

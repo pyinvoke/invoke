@@ -199,7 +199,18 @@ class Parser_(Spec):
                 try:
                     self._basic().parse_argv(['mytask'])
                 except ParseError as e:
-                    assert str(e) == "'mytask' did not receive all required positional arguments!" # noqa
+                    assert str(e) == "'mytask' did not receive required positional arguments: 'pos'" # noqa
+                else:
+                    assert False, "Did not raise ParseError!"
+
+            def omitted_positional_args_raises_ParseError(self):
+                try:
+                    arg = Argument('pos', positional=True)
+                    arg2 = Argument('morepos', positional=True)
+                    mytask = Context(name='mytask', args=[arg, arg2])
+                    Parser(contexts=[mytask]).parse_argv(['mytask'])
+                except ParseError as e:
+                    assert str(e) == "'mytask' did not receive required positional arguments: 'pos', 'morepos'" # noqa
                 else:
                     assert False, "Did not raise ParseError!"
 

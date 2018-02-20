@@ -2,6 +2,11 @@
 Changelog
 =========
 
+* :bug:`-` (partially re: :issue:`449`) Update error message around missing
+  positional arguments so it actually lists them. Includes a minor tweak to the
+  API of `~invoke.parser.context.ParserContext`, namely changing
+  ``needs_positional_arguments`` (bool) to ``missing_positional_arguments``
+  (list).
 * :release:`0.22.1 <2018-01-29>`
 * :bug:`342` Accidentally hardcoded ``Collection`` instead of ``cls`` in
   `Collection.from_module <invoke.collection.Collection.from_module>` (an

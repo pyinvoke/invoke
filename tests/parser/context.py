@@ -305,18 +305,17 @@ class Context_(Spec):
                 ['-c', '-h', '-l', '-r', '-V']
             )
 
-    class needs_positional_arg:
-        def represents_whether_all_positional_args_have_values(self):
-            c = Context(name='foo', args=(
-                Argument('arg1', positional=True),
-                Argument('arg2', positional=False),
-                Argument('arg3', positional=True),
-            ))
-            eq_(c.needs_positional_arg, True)
+    class missing_positional_args:
+        def represents_positional_args_missing_values(self):
+            arg1 = Argument('arg1', positional=True)
+            arg2 = Argument('arg2', positional=False)
+            arg3 = Argument('arg3', positional=True)
+            c = Context(name='foo', args=(arg1, arg2, arg3))
+            eq_(c.missing_positional_args, [arg1, arg3])
             c.positional_args[0].value = 'wat'
-            eq_(c.needs_positional_arg, True)
+            eq_(c.missing_positional_args, [arg3])
             c.positional_args[1].value = 'hrm'
-            eq_(c.needs_positional_arg, False)
+            eq_(c.missing_positional_args, [])
 
     class str:
         "__str__"

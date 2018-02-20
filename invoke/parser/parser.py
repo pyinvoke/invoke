@@ -222,7 +222,7 @@ class ParseMachine(StateMachine):
         # Positional args (must come above context-name check in case we still
         # need a posarg and the user legitimately wants to give it a value that
         # just happens to be a valid context name.)
-        elif self.context and self.context.needs_positional_arg:
+        elif self.context and self.context.missing_positional_args:
             msg = "Context {!r} requires positional args, eating {!r}"
             debug(msg.format(self.context, token))
             self.see_positional_arg(token)
@@ -266,9 +266,13 @@ class ParseMachine(StateMachine):
             self.context.name if self.context else self.context
         ))
         # Ensure all of context's positional args have been given.
-        if self.context and self.context.needs_positional_arg:
-            err = "'{}' did not receive all required positional arguments!"
-            self.error(err.format(self.context.name))
+        if self.context and self.context.missing_positional_args:
+            err = "'{}' did not receive required positional arguments: {}"
+            names = ', '.join(
+                "'{}'".format(x.name)
+                for x in self.context.missing_positional_args
+            )
+            self.error(err.format(self.context.name, names))
         if self.context and self.context not in self.result:
             self.result.append(self.context)
 
@@ -316,7 +320,7 @@ class ParseMachine(StateMachine):
         # fail.
         tests = []
         # Unfilled posargs still exist?
-        tests.append(self.context and self.context.needs_positional_arg)
+        tests.append(self.context and self.context.missing_positional_args)
         # Value looks like it's supposed to be a flag itself?
         # (Doesn't have to even actually be valid - chances are if it looks
         # like a flag, the user was trying to give one.)
