@@ -195,9 +195,13 @@ class Parser_(Spec):
                 r = self._basic().parse_argv(['mytask', 'posval'])
                 eq_(r[0].args['pos'].value, 'posval')
 
-            @raises(ParseError)
             def omitted_positional_arg_raises_ParseError(self):
-                self._basic().parse_argv(['mytask'])
+                try:
+                    self._basic().parse_argv(['mytask'])
+                except ParseError as e:
+                    assert str(e) == "'mytask' did not receive all required positional arguments!" # noqa
+                else:
+                    assert False, "Did not raise ParseError!"
 
             def positional_args_eat_otherwise_valid_context_names(self):
                 mytask = Context('mytask', args=[
