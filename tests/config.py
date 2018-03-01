@@ -907,6 +907,9 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
 
         def yaml_prevents_yml_json_or_python(self):
             c = Config(system_prefix=join(CONFIGS_PATH, 'all-four/'))
+            ok_(c._system_found)
+            eq_(c._system_path, join(c._system_prefix, 'invoke.yaml'))
+            ok_(c._system != {})
             ok_('json-only' not in c)
             ok_('python_only' not in c)
             ok_('yml-only' not in c)
@@ -915,6 +918,9 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
 
         def yml_prevents_json_or_python(self):
             c = Config(system_prefix=join(CONFIGS_PATH, 'three-of-em/'))
+            ok_(c._system_found)
+            eq_(c._system_path, join(c._system_prefix, 'invoke.yml'))
+            ok_(c._system != {})
             ok_('json-only' not in c)
             ok_('python_only' not in c)
             ok_('yml-only' in c)
@@ -922,10 +928,18 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
 
         def json_prevents_python(self):
             c = Config(system_prefix=join(CONFIGS_PATH, 'json-and-python/'))
+            ok_(c._system_found)
+            eq_(c._system_path, join(c._system_prefix, 'invoke.json'))
+            ok_(c._system != {})
             ok_('python_only' not in c)
             ok_('json-only' in c)
             eq_(c.shared, 'json-value')
 
+        def missing_file_not_found(self):
+            c = Config(system_prefix=join(CONFIGS_PATH, 'missing/'))
+            ok_(not c._system_found)
+            eq_(c._system_path, None)
+            eq_(c._system, {})
 
     class clone:
         def preserves_basic_members(self):
