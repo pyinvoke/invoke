@@ -57,8 +57,8 @@ Both the sought collection name and the search root can be specified via
 </cli>`:
 
 - **Change the collection name**: Set the ``tasks.collection_name``
-  configuration option, or use the ``-c``/``--collection`` CLI flag. It should
-  be a Python module name and not a file name (so ``mytasks``, not
-  ``mytasks.py`` or ``mytasks/``.)
+  configuration option, or use :option:`--collection`. It should be a Python
+  module name and not a file name (so ``mytasks``, not ``mytasks.py`` or
+  ``mytasks/``.)
 - **Change the root search path**: Configure ``tasks.search_root`` or use
-  ``-r``/``--root``. This value may be any valid directory path.
+  :option:`--root`. This value may be any valid directory path.
