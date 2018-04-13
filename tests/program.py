@@ -246,6 +246,12 @@ class Program_:
         def handles_task_arguments(self):
             expect("-c integration print-name --name inigo", out="inigo\n")
 
+        def can_change_collection_search_root(self):
+            expect("-r branch/ alt-root", out="Down with the alt-root!\n")
+
+        def can_change_collection_search_root_with_explicit_module_name(self):
+            expect("-r branch/ -c explicit lyrics", out="Don't swear!\n")
+
         @trap
         @patch('invoke.program.sys.exit')
         def ParseErrors_display_message_and_exit_1(self, mock_exit):
