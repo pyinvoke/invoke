@@ -89,7 +89,7 @@ The core options (which must be given before any task names) are as follows:
 
     Use a pty when executing shell commands.
 
-.. option:: -r STRING, --root=STRING
+.. option:: -r STRING, --search-root=STRING
 
     Change root directory used for finding task modules.
 

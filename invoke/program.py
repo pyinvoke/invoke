@@ -119,7 +119,7 @@ class Program(object):
                 help="Disable task deduplication."
             ),
             Argument(
-                names=('root', 'r'),
+                names=('search-root', 'r'),
                 help="Change root directory used for finding task modules."
             ),
         ]
@@ -501,7 +501,7 @@ class Program(object):
         """
         # NOTE: start, coll_name both fall back to configuration values within
         # Loader (which may, however, get them from our config.)
-        start = self.args.root.value
+        start = self.args['search-root'].value
         loader = self.loader_class(config=self.config, start=start)
         coll_name = self.args.collection.value
         try:

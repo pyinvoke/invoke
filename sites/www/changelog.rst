@@ -2,6 +2,15 @@
 Changelog
 =========
 
+* :support:`-` (partially re: :issue:`33`) Renamed the ``--root`` CLI flag to
+  ``--search-root``, partly for clarity (:issue:`33` will be adding namespace
+  display-root related flags, which would make ``--root`` ambiguous) and partly
+  for consistency with the config option, which was already named
+  ``search_root``. (The short version of the flag, ``-r``, is unchanged.)
+
+  .. warning::
+    This is a backwards incompatible change. To fix, simply use
+    ``--search-root`` anywhere you were previously using ``--root``.
 * :bug:`516 major` Remove the CLI parser ambiguity rule regarding flag-like
   tokens which are seen after an optional-value flag (e.g. ``inv task
   --optionally-takes-a-value --some-other-flag``.) Previously, any flag-like

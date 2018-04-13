@@ -61,4 +61,4 @@ Both the sought collection name and the search root can be specified via
   module name and not a file name (so ``mytasks``, not ``mytasks.py`` or
   ``mytasks/``.)
 - **Change the root search path**: Configure ``tasks.search_root`` or use
-  :option:`--root`. This value may be any valid directory path.
+  :option:`--search-root`. This value may be any valid directory path.

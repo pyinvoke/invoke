@@ -247,10 +247,18 @@ class Program_:
             expect("-c integration print-name --name inigo", out="inigo\n")
 
         def can_change_collection_search_root(self):
-            expect("-r branch/ alt-root", out="Down with the alt-root!\n")
+            for flag in ('-r', '--search-root'):
+                expect(
+                    "{} branch/ alt-root".format(flag),
+                    out="Down with the alt-root!\n",
+                )
 
         def can_change_collection_search_root_with_explicit_module_name(self):
-            expect("-r branch/ -c explicit lyrics", out="Don't swear!\n")
+            for flag in ('-r', '--search-root'):
+                expect(
+                    "{} branch/ -c explicit lyrics".format(flag),
+                    out="Don't swear!\n",
+                )
 
         @trap
         @patch('invoke.program.sys.exit')
@@ -400,23 +408,23 @@ Usage: inv[oke] [--core-opts] task1 [--task1-opts] ... taskN [--taskN-opts]
 
 Core options:
 
-  --complete                       Print tab-completion candidates for given
-                                   parse remainder.
-  --hide=STRING                    Set default value of run()'s 'hide' kwarg.
-  --no-dedupe                      Disable task deduplication.
-  --write-pyc                      Enable creation of .pyc files.
-  -c STRING, --collection=STRING   Specify collection name to load.
-  -d, --debug                      Enable debug output.
-  -e, --echo                       Echo executed commands before running.
-  -f STRING, --config=STRING       Runtime configuration file to use.
-  -h [STRING], --help[=STRING]     Show core or per-task help and exit.
-  -l, --list                       List available tasks.
-  -p, --pty                        Use a pty when executing shell commands.
-  -r STRING, --root=STRING         Change root directory used for finding task
-                                   modules.
-  -V, --version                    Show version and exit.
-  -w, --warn-only                  Warn, instead of failing, when shell
-                                   commands fail.
+  --complete                        Print tab-completion candidates for given
+                                    parse remainder.
+  --hide=STRING                     Set default value of run()'s 'hide' kwarg.
+  --no-dedupe                       Disable task deduplication.
+  --write-pyc                       Enable creation of .pyc files.
+  -c STRING, --collection=STRING    Specify collection name to load.
+  -d, --debug                       Enable debug output.
+  -e, --echo                        Echo executed commands before running.
+  -f STRING, --config=STRING        Runtime configuration file to use.
+  -h [STRING], --help[=STRING]      Show core or per-task help and exit.
+  -l, --list                        List available tasks.
+  -p, --pty                         Use a pty when executing shell commands.
+  -r STRING, --search-root=STRING   Change root directory used for finding task
+                                    modules.
+  -V, --version                     Show version and exit.
+  -w, --warn-only                   Warn, instead of failing, when shell
+                                    commands fail.
 
 """.lstrip()
                 for flag in ['-h', '--help']:
