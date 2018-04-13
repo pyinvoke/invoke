@@ -2,6 +2,9 @@
 Changelog
 =========
 
+* :bug:`-` Integer-type CLI arguments were not displaying placeholder text in
+  ``--help`` output (i.e. they appeared as ``--myint`` instead of
+  ``--myint=INT``.) This has been fixed.
 * :feature:`33` Overhaul task listing (formerly just a simple,
   boolean ``--list``) to make life a lot easier for users with nontrivial task
   trees:

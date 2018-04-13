@@ -163,7 +163,7 @@ class Context_:
             # Task/Collection generated Context
             # (will expose flags n such)
             @task(help={'otherarg': 'other help'}, optional=['optval'])
-            def mytask(ctx, myarg, otherarg, optval):
+            def mytask(ctx, myarg, otherarg, optval, intval=5):
                 pass
             col = Collection(mytask)
             self.tasked = col.to_contexts()[0]
@@ -198,8 +198,17 @@ class Context_:
             assert result == ("-m STRING, --myarg=STRING", "")
 
         def kind_to_placeholder_map(self):
-            # str=STRING, int=INT, etc etc
-            skip()
+            # Strings
+            eq_(
+                self.tasked.help_for('--myarg'),
+                ("-m STRING, --myarg=STRING", "")
+            )
+            # Ints
+            eq_(
+                self.tasked.help_for('--intval'),
+                ("-i INT, --intval=INT", ""),
+            )
+            # TODO: others
 
         def shortflag_inputs_work_too(self):
             m = self.tasked.help_for('-m')

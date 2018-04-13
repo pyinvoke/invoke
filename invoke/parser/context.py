@@ -171,6 +171,7 @@ class ParserContext(object):
         # Determine expected value type, if any
         value = {
             str: 'STRING',
+            int: 'INT',
         }.get(arg.kind)
         # Format & go
         full_names = []
