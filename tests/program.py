@@ -415,10 +415,15 @@ Core options:
   --write-pyc                       Enable creation of .pyc files.
   -c STRING, --collection=STRING    Specify collection name to load.
   -d, --debug                       Enable debug output.
+  -D INT, --list-depth=INT          When listing tasks, only show the first INT
+                                    levels.
   -e, --echo                        Echo executed commands before running.
   -f STRING, --config=STRING        Runtime configuration file to use.
+  -F STRING, --list-format=STRING   Change the display format used when listing
+                                    tasks.
   -h [STRING], --help[=STRING]      Show core or per-task help and exit.
-  -l, --list                        List available tasks.
+  -l [STRING], --list[=STRING]      List available tasks, optionally limited to
+                                    a namespace.
   -p, --pty                         Use a pty when executing shell commands.
   -r STRING, --search-root=STRING   Change root directory used for finding task
                                     modules.

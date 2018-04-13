@@ -73,9 +73,18 @@ class Program(object):
             ),
             Argument(
                 names=('list', 'l'),
-                kind=bool,
-                default=False,
-                help="List available tasks."
+                optional=True,
+                help="List available tasks, optionally limited to a namespace."
+            ),
+            Argument(
+                names=('list-depth', 'D'),
+                kind=int,
+                default=0,
+                help="When listing tasks, only show the first INT levels.",
+            ),
+            Argument(
+                names=('list-format', 'F'),
+                help="Change the display format used when listing tasks.",
             ),
             Argument(
                 names=('pty', 'p'),
