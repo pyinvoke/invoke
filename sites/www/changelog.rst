@@ -2,6 +2,22 @@
 Changelog
 =========
 
+* :feature:`33` Overhaul task listing (formerly just a simple,
+  boolean ``--list``) to make life a lot easier for users with nontrivial task
+  trees:
+
+  - Limit display to a specific namespace by giving an optional argument to
+    ``--list``, e.g. ``--list build``;
+  - Limit listing depth, allowing for things like listing just top-level
+    namespaces but not their contents, e.g. ``--list --list-depth 1``;
+  - Additional output formats besides the default flat list, such as a nested
+    view with ``--list-format nested`` or script-friendly output with
+    ``--list-format json``.
+
+  Thanks to the many users who submitted various requests under this ticket's
+  umbrella, and to Dave Burkholder in particular for detailed use case analysis
+  & feedback.
+
 * :support:`-` (partially re: :issue:`33`) Renamed the ``--root`` CLI flag to
   ``--search-root``, partly for clarity (:issue:`33` will be adding namespace
   display-root related flags, which would make ``--root`` ambiguous) and partly

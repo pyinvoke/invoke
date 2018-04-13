@@ -644,6 +644,74 @@ Available tasks:
                 out="No tasks found in collection 'empty'!\n"
             )
 
+        class namespace_limiting:
+            def argument_limits_display_to_given_namespace(self):
+                # --list toplevel
+                skip()
+
+            def argument_may_be_a_nested_namespace(self):
+                # --list toplevel.sublevel
+                skip()
+
+        class depth_limiting:
+            def limits_display_to_given_depth(self):
+                # --list --list-depth 1 shows just top level tasks/NS
+                skip()
+
+            def non_base_case(self):
+                # --list --list-depth 3 shows 3 levels
+                skip()
+
+            def works_with_explicit_namespace(self):
+                # --list namespace --list-depth 1
+                skip()
+
+            def short_flag_is_D(self):
+                # --list -D 1
+                skip()
+
+        class format:
+            def flat_is_default_format(self):
+                # quick sanity test that --list --list-format=flat works as
+                # normal
+                skip()
+
+            class nested:
+                def base_case(self):
+                    # --list --list-format nested
+                    # (with say 3 levels of shit)
+                    skip()
+
+                def honors_namespace_arg_to_list(self):
+                    # --list foobar --list-format nested
+                    skip()
+
+                def honors_depth_arg(self):
+                    # --list --list-format nested --list-depth 2
+                    skip()
+
+                def all_possible_options(self):
+                    # --list namespace --list-format nested --list-depth 2
+                    skip()
+
+            class json:
+                def base_case(self):
+                    # --list --list-format json
+                    # (with say 2 levels of shit)
+                    skip()
+
+                def honors_namespace_arg_to_list(self):
+                    # --list foobar --list-format json
+                    skip()
+
+                def honors_depth_arg(self):
+                    # --list --list-format json --list-depth 2
+                    skip()
+
+                def all_possible_options(self):
+                    # --list namespace --list-format json --list-depth 2
+                    skip()
+
 
     class run_options:
         "run() related CLI flags affect 'run' config values"

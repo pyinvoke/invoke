@@ -81,9 +81,45 @@ The core options (which must be given before any task names) are as follows:
 
     Show core or per-task help and exit.
 
-.. option:: -l, --list
+.. option:: -l, --list=STRING
 
-    List available tasks.
+    List available tasks. Shows all tasks by default; may give an explicit
+    namespace to 'root' the displayed task tree to only that namespace. (This
+    argument may contain periods, as with task names.)
+
+.. option:: -D, --list-depth=INT
+
+    Limit :option:`--list` display to the specified number of levels, e.g.
+    ``--list-depth 1`` to show only top-level tasks and namespaces.
+
+    If an argument is given to ``--list``, then this depth is relative; so
+    ``--list build --list-depth 1`` shows everything at the top level of the
+    ``build`` subtree.
+
+    Default behavior if this is not given is to show all levels of the entire
+    task tree.
+
+.. option:: -F, --list-format=STRING
+
+    Change the format used to display the output of :option:`--list`; may be
+    one of:
+
+    - ``flat`` (the default): single, flat vertical list with dotted task
+      names, and docstrings in a second column.
+    - ``nested``: a nested (4-space indented) vertical list without dotted task
+      names. No docstrings are displayed.
+    - ``json``: intended for consumption by scripts or other programs, this
+      format emits (non-pretty-printed) JSON data representing the task tree,
+      with each 'node' in the tree consisting of the following keys:
+
+      - ``collection``: String name of collection; the root collection's "name"
+        is null.
+      - ``docstring``: Docstring of collection, if it came from a module; null
+        otherwise.
+      - ``tasks``: Immediate children of this collection; an array of string
+        names.
+      - ``collections``: Any sub-collections within this collection, of the
+        same format.
 
 .. option:: -p, --pty
 
