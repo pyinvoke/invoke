@@ -24,7 +24,7 @@ from _util import (
 )
 
 
-class RaisingWatcher(StreamWatcher):
+class _RaisingWatcher(StreamWatcher):
     def submit(self, stream):
         raise WatcherError("meh")
 
@@ -105,7 +105,7 @@ class Runner_(Spec):
         def does_not_apply_to_watcher_errors(self):
             runner = self._runner(out="stuff")
             try:
-                watcher = RaisingWatcher()
+                watcher = _RaisingWatcher()
                 runner.run(_, watchers=[watcher], warn=True, hide=True)
             except Failure as e:
                 ok_(isinstance(e.reason, WatcherError))
@@ -659,7 +659,7 @@ stderr 25
             # Exited=None because real procs will have no useful .returncode()
             # result if they're aborted partway via an exception.
             runner = self._runner(klass=klass, out="stuff", exits=None)
-            runner.run(_, watchers=[RaisingWatcher()], hide=True)
+            runner.run(_, watchers=[_RaisingWatcher()], hide=True)
 
         # TODO: may eventually turn into having Runner raise distinct Failure
         # subclasses itself, at which point `reason` would probably go away.
