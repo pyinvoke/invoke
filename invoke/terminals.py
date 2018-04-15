@@ -1,5 +1,7 @@
 """
-Platform-specific code lives here.
+Utility functions surrounding terminal devices & I/O.
+
+Much of this code performs platform-sensitive branching, e.g. Windows support.
 
 This is its own module to abstract away what would otherwise be distracting
 logic-flow interruptions.

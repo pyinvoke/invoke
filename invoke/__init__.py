@@ -10,12 +10,12 @@ from .exceptions import ( # noqa
 from .executor import Executor # noqa
 from .loader import FilesystemLoader # noqa
 from .parser import Argument # noqa
-from .platform import pty_size # noqa
 from .program import Program # noqa
 from .runners import ( # noqa
     Runner, Local, Failure, Result, # noqa
 ) # noqa
 from .tasks import task, call, Call, Task # noqa
+from .terminals import pty_size # noqa
 from .watchers import ( # noqa
     StreamWatcher, Responder, FailingResponder, # noqa
 ) # noqa

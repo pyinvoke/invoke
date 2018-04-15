@@ -2,6 +2,14 @@
 Changelog
 =========
 
+* :support:`-` Rename ``invoke.platform`` to ``invoke.terminals``; it was
+  inadvertently shadowing the ``platform`` standard library builtin module.
+  This was not causing any bugs we are aware of, but it is still poor hygiene.
+
+  .. warning::
+    This change is technically backwards incompatible. We don't expect many
+    users import ``invoke.platform`` directly, but if you are, take note.
+
 * :bug:`-` (partially re: :issue:`449`) Update error message around missing
   positional arguments so it actually lists them. Includes a minor tweak to the
   API of `~invoke.parser.context.ParserContext`, namely changing

@@ -13,7 +13,7 @@ from mock import patch, Mock
 from spec import trap, Spec, eq_, ok_, skip
 
 from invoke import Program, Runner
-from invoke.platform import WINDOWS
+from invoke.terminals import WINDOWS
 
 
 support = os.path.join(os.path.dirname(__file__), '_support')

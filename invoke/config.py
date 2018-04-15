@@ -24,8 +24,8 @@ else:
 
 from .env import Environment
 from .exceptions import UnknownFileType
-from .platform import WINDOWS
 from .runners import Local
+from .terminals import WINDOWS
 from .util import debug
 
 

@@ -13,8 +13,8 @@ from .parser import Parser, ParserContext, Argument
 from .exceptions import (
     UnexpectedExit, CollectionNotFound, ParseError, Exit,
 )
+from .terminals import pty_size
 from .util import debug, enable_logging, sort_names
-from .platform import pty_size
 
 
 class Program(object):

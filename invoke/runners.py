@@ -28,7 +28,7 @@ except ImportError:
 from .exceptions import (
     UnexpectedExit, Failure, ThreadException, WatcherError,
 )
-from .platform import (
+from .terminals import (
     WINDOWS, pty_size, character_buffered, ready_for_reading, bytes_to_read,
 )
 from .util import has_fileno, isatty, ExceptionHandlingThread, encode_output

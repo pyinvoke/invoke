@@ -50,7 +50,7 @@ class Init(Spec):
             assert invoke.Config is invoke.config.Config
 
         def pty_size_function(self):
-            assert invoke.pty_size is invoke.platform.pty_size
+            assert invoke.pty_size is invoke.terminals.pty_size
 
         def local_class(self):
             assert invoke.Local is invoke.runners.Local

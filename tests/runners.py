@@ -16,7 +16,7 @@ from invoke import (
     Runner, Local, Context, Config, Failure, ThreadException, Responder,
     WatcherError, UnexpectedExit, StreamWatcher, Result,
 )
-from invoke.platform import WINDOWS
+from invoke.terminals import WINDOWS
 
 from _util import (
     mock_subprocess, mock_pty, skip_if_windows, _Dummy,
@@ -1049,11 +1049,11 @@ stderr 25
         @trap
         @skip_if_windows
         @patch('invoke.runners.sys.stdin')
-        @patch('invoke.platform.fcntl.ioctl')
-        @patch('invoke.platform.os')
-        @patch('invoke.platform.termios')
-        @patch('invoke.platform.tty')
-        @patch('invoke.platform.select')
+        @patch('invoke.terminals.fcntl.ioctl')
+        @patch('invoke.terminals.os')
+        @patch('invoke.terminals.termios')
+        @patch('invoke.terminals.tty')
+        @patch('invoke.terminals.select')
         # NOTE: the no-fileno edition is handled at top of this local test
         # class, in the base case test.
         def reads_FIONREAD_bytes_from_stdin_when_fileno(
@@ -1094,21 +1094,21 @@ stderr 25
 
     class character_buffered_stdin:
         @skip_if_windows
-        @patch('invoke.platform.tty')
-        @patch('invoke.platform.termios') # stub
+        @patch('invoke.terminals.tty')
+        @patch('invoke.terminals.termios') # stub
         def setcbreak_called_on_tty_stdins(self, mock_termios, mock_tty):
             self._run(_)
             mock_tty.setcbreak.assert_called_with(sys.stdin)
 
         @skip_if_windows
-        @patch('invoke.platform.tty')
+        @patch('invoke.terminals.tty')
         def setcbreak_not_called_on_non_tty_stdins(self, mock_tty):
             self._run(_, in_stream=StringIO())
             ok_(not mock_tty.setcbreak.called)
 
         @skip_if_windows
-        @patch('invoke.platform.tty')
-        @patch('invoke.platform.os')
+        @patch('invoke.terminals.tty')
+        @patch('invoke.terminals.os')
         def setcbreak_not_called_if_process_not_foregrounded(
             self, mock_os, mock_tty,
         ):
@@ -1121,8 +1121,8 @@ stderr 25
             mock_os.tcgetpgrp.assert_called_once_with(sys.stdin.fileno())
 
         @skip_if_windows
-        @patch('invoke.platform.tty') # stub
-        @patch('invoke.platform.termios')
+        @patch('invoke.terminals.tty') # stub
+        @patch('invoke.terminals.termios')
         def tty_stdins_have_settings_restored_by_default(
             self, mock_termios, mock_tty
         ):
@@ -1134,8 +1134,8 @@ stderr 25
             )
 
         @skip_if_windows
-        @patch('invoke.platform.tty') # stub
-        @patch('invoke.platform.termios')
+        @patch('invoke.terminals.tty') # stub
+        @patch('invoke.terminals.termios')
         def tty_stdins_have_settings_restored_on_KeyboardInterrupt(
             self, mock_termios, mock_tty
         ):

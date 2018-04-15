@@ -1,5 +1,5 @@
 # Skip on Windows CI, it may blow up on one of these
-from invoke.platform import WINDOWS
+from invoke.terminals import WINDOWS
 if not WINDOWS:
 
     import fcntl
@@ -8,7 +8,7 @@ if not WINDOWS:
     from mock import Mock, patch
     from spec import Spec, eq_, skip
 
-    from invoke.platform import pty_size, bytes_to_read
+    from invoke.terminals import pty_size, bytes_to_read
 
 
     class platform(Spec):
@@ -47,14 +47,14 @@ if not WINDOWS:
                 eq_(pty_size(), (80, 24))
 
         class bytes_to_read_:
-            @patch('invoke.platform.fcntl')
+            @patch('invoke.terminals.fcntl')
             def returns_1_when_stream_lacks_fileno(self, fcntl):
                 # A fileno() that exists but returns a non-int is a quick way
                 # to fail util.has_fileno().
                 eq_(bytes_to_read(Mock(fileno=lambda: None)), 1)
                 assert not fcntl.ioctl.called
 
-            @patch('invoke.platform.fcntl')
+            @patch('invoke.terminals.fcntl')
             def returns_1_when_stream_has_fileno_but_is_not_a_tty(self, fcntl):
                 # It blows up otherwise anyways (struct.unpack gets mad because
                 # result isn't a string of the right length) but let's make
