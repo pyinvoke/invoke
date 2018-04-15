@@ -65,10 +65,9 @@ class Program_(IntegrationSpec):
     class miscellaneous:
         "miscellaneous behaviors"
         def debug_flag_activates_logging(self):
-            # Have to patch our logger to get in before Nose logcapture kicks
-            # in.
+            # Have to patch our logger to get in before logcapture kicks in.
             with patch('invoke.util.debug') as debug:
-                expect('-d -c debugging foo')
+                Program().run("invoke -d -c debugging foo")
                 debug.assert_called_with('my-sentinel')
 
         def bytecode_skipped_by_default(self):
