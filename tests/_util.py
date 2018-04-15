@@ -138,12 +138,20 @@ class MockSubprocess(object):
 def mock_subprocess(out='', err='', exit=0, isatty=None, insert_Popen=False):
     def decorator(f):
         @wraps(f)
+        # We have to include a @patch here to trick pytest into ignoring
+        # the wrapped test's sometimes-there, sometimes-not mock_Popen arg. (It
+        # explicitly "skips ahead" past what it perceives as patch args, even
+        # though in our case those are not applying to the test function!)
+        # Doesn't matter what we patch as long as it doesn't
+        # actually get in our way.
+        @patch('invoke.runners.pty')
         def wrapper(*args, **kwargs):
             proc = MockSubprocess(
                 out=out, err=err, exit=exit, isatty=isatty, autostart=False,
             )
             Popen = proc.start()
             args = list(args)
+            args.pop() # Pop the dummy patch
             if insert_Popen:
                 args.append(Popen)
             try:
