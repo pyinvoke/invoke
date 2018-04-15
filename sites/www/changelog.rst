@@ -2,6 +2,12 @@
 Changelog
 =========
 
+* :support:`515` Ported the test suite from `spec
+  <https://github.com/bitprophet/spec>`_ (`nose
+  <https://nose.readthedocs.io>`_) to `pytest-relaxed
+  <https://github.com/bitprophet/pytest-relaxed>`_ (`pytest
+  <https://pytest.org>`_) as pytest basically won the test-runner war against
+  nose & has greater mindshare, more shiny toys, etc.
 * :support:`-` Rename ``invoke.platform`` to ``invoke.terminals``; it was
   inadvertently shadowing the ``platform`` standard library builtin module.
   This was not causing any bugs we are aware of, but it is still poor hygiene.

@@ -8,3 +8,4 @@ dist/
 src/
 htmlcov
 coverage.xml
+.cache
