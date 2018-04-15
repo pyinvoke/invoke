@@ -477,7 +477,7 @@ Options:
 
 """.lstrip()
                 for flag in ['-h', '--help']:
-                    expect('-c decorator {} punch'.format(flag), out=expected)
+                    expect('-c decorators {} punch'.format(flag), out=expected)
 
             def works_for_unparameterized_tasks(self):
                 expected = """
@@ -490,11 +490,11 @@ Options:
   none
 
 """.lstrip()
-                expect('-c decorator -h biz', out=expected)
+                expect('-c decorators -h biz', out=expected)
 
             def honors_program_binary(self):
                 expect(
-                    '-c decorator -h biz',
+                    '-c decorators -h biz',
                     out="Usage: notinvoke",
                     test=assert_contains,
                     program=Program(binary='notinvoke')
@@ -511,7 +511,7 @@ Options:
   none
 
 """.lstrip()
-                expect('-c decorator -h foo', out=expected)
+                expect('-c decorators -h foo', out=expected)
 
             def dedents_correctly(self):
                 expected = """
@@ -528,7 +528,7 @@ Options:
   none
 
 """.lstrip()
-                expect('-c decorator -h foo2', out=expected)
+                expect('-c decorators -h foo2', out=expected)
 
             def dedents_correctly_for_alt_docstring_style(self):
                 expected = """
@@ -545,7 +545,7 @@ Options:
   none
 
 """.lstrip()
-                expect('-c decorator -h foo3', out=expected)
+                expect('-c decorators -h foo3', out=expected)
 
             def exits_after_printing(self):
                 # TODO: find & test the other variants of this error case, such
@@ -561,7 +561,7 @@ Options:
   -w STRING, --who=STRING   Who to punch
 
 """.lstrip()
-                expect("-c decorator -h punch --list", out=expected)
+                expect("-c decorators -h punch --list", out=expected)
 
             def complains_if_given_invalid_task_name(self):
                 expect("-h this", err="No idea what 'this' is!\n")

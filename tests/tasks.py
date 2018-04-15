@@ -25,7 +25,7 @@ class task_(Spec):
 
     def setup(self):
         self.loader = Loader(start=support)
-        self.vanilla = self._load('decorator')
+        self.vanilla = self._load('decorators')
 
     def allows_access_to_wrapped_object(self):
         def lolcats(ctx):

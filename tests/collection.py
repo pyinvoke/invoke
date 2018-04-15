@@ -333,8 +333,8 @@ class Collection_(Spec):
             eq_(self.c['bar'], t)
 
         def honors_subcollection_task_aliases(self):
-            self.c.add_collection(load('decorator'))
-            assert 'decorator.bar' in self.c
+            self.c.add_collection(load('decorators'))
+            assert 'decorators.bar' in self.c
 
         def honors_own_default_task_with_no_args(self):
             t = Task(_func, default=True)
@@ -342,12 +342,12 @@ class Collection_(Spec):
             eq_(self.c[''], t)
 
         def honors_subcollection_default_tasks_on_subcollection_name(self):
-            sub = Collection.from_module(load('decorator'))
+            sub = Collection.from_module(load('decorators'))
             self.c.add_collection(sub)
             # Sanity
-            assert self.c['decorator.biz'] is sub['biz']
+            assert self.c['decorators.biz'] is sub['biz']
             # Real test
-            assert self.c['decorator'] is self.c['decorator.biz']
+            assert self.c['decorators'] is self.c['decorators.biz']
 
         @raises(ValueError)
         def raises_ValueError_for_no_name_and_no_default(self):
