@@ -17,7 +17,7 @@ from _util import mock_subprocess, _Dummy
 local_path = 'invoke.config.Local'
 
 
-class Context_(Spec):
+class Context_:
     class init:
         "__init__"
         def takes_optional_config_arg(self):

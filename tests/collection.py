@@ -18,7 +18,7 @@ def _func(ctx):
     pass
 
 
-class Collection_(Spec):
+class Collection_:
     class init:
         "__init__"
         def can_accept_task_varargs(self):

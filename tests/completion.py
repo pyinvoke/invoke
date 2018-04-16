@@ -4,9 +4,7 @@ from invoke import Program
 
 from spec import assert_contains, assert_not_contains, eq_
 
-from _util import (
-    expect, IntegrationSpec, trap
-)
+from _util import  expect, IntegrationSpec, trap
 
 
 @trap
@@ -97,7 +95,5 @@ class ShellCompletion(IntegrationSpec):
     def per_task_partial_or_invalid_flags_print_all_flags(self):
         for flag in ('--arg1', '--otherarg'):
             for given in ('--ar', '--nope'):
-                assert_contains(
-                    _complete('multiple-args {}'.format(given), 'foo'),
-                    flag
-                )
+                completion = _complete('multiple-args {}'.format(given), 'foo')
+                assert flag in completion

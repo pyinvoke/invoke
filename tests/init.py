@@ -10,7 +10,7 @@ import invoke.tasks
 import invoke.program
 
 
-class Init(Spec):
+class Init:
     "__init__"
     def dunder_version_info(self):
         assert hasattr(invoke, '__version_info__')

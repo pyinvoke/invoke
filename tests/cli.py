@@ -5,7 +5,7 @@ from invoke.parser import Parser
 from invoke.tasks import task
 
 
-class CLIParsing(Spec):
+class CLIParsing:
     """
     High level parsing tests
     """

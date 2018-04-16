@@ -1,5 +1,6 @@
 from spec import eq_, ok_
 from mock import Mock
+import pytest
 
 from invoke import Collection, Config, Context, Executor, Task, call, task
 from invoke.parser import ParserContext
@@ -7,10 +8,13 @@ from invoke.parser import ParserContext
 from _util import expect, IntegrationSpec
 
 
-class Executor_(IntegrationSpec):
+# TODO: why does this not work as a decorator? probably relaxed's fault - but
+# how?
+pytestmark = pytest.mark.usefixtures("environ", "chdir_support")
+
+
+class Executor_:
     def setup(self):
-        s = super(Executor_, self)
-        s.setup()
         self.task1 = Task(Mock(return_value=7))
         self.task2 = Task(Mock(return_value=10), pre=[self.task1])
         self.task3 = Task(Mock(), pre=[self.task1])
@@ -23,6 +27,19 @@ class Executor_(IntegrationSpec):
         coll.add_task(self.task4, name='task4')
         coll.add_task(self.contextualized, name='contextualized')
         self.executor = Executor(collection=coll)
+
+    # TODO: replace with fixture
+    def teardown(self):
+        import sys
+        from invoke.vendor.six import iteritems
+        from _util import support
+        # Strip any test-support task collections from sys.modules to prevent
+        # state bleed between tests; otherwise tests can incorrectly pass
+        # despite not explicitly loading/cd'ing to get the tasks they call
+        # loaded.
+        for name, module in iteritems(sys.modules.copy()):
+            if module and support in getattr(module, '__file__', ''):
+                del sys.modules[name]
 
     class init:
         "__init__"
