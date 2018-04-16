@@ -7,9 +7,8 @@ from itertools import chain, repeat
 
 from invoke.vendor.six import StringIO, b, PY2, iteritems
 
-from spec import (
-    Spec, trap, eq_, skip, ok_, raises, assert_contains, assert_not_contains
-)
+from pytest import raises, skip
+from pytest_relaxed import trap
 from mock import patch, Mock, call
 
 from invoke import (
@@ -53,7 +52,7 @@ def _expect_platform_shell(shell):
         assert shell == '/bin/bash'
 
 
-class Runner_(Spec):
+class Runner_:
     # NOTE: these copies of _run and _runner form the base case of "test Runner
     # subclasses via self._run/_runner helpers" functionality. See how e.g.
     # Local_ uses the same approach but bakes in the dummy class used.
@@ -76,18 +75,18 @@ class Runner_(Spec):
         "__init__"
         def takes_a_context_instance(self):
             c = Context()
-            eq_(Runner(c).context, c)
+            assert Runner(c).context == c
 
-        @raises(TypeError)
         def context_instance_is_required(self):
-            Runner()
+            with raises(TypeError):
+                Runner()
 
     class run:
         def handles_invalid_kwargs_like_any_other_function(self):
             try:
                 self._run(_, nope_noway_nohow='as if')
             except TypeError as e:
-                ok_('got an unexpected keyword argument' in str(e))
+                assert 'got an unexpected keyword argument' in str(e)
             else:
                 assert False, "Invalid run() kwarg didn't raise TypeError"
 
@@ -108,7 +107,7 @@ class Runner_(Spec):
                 watcher = _RaisingWatcher()
                 runner.run(_, watchers=[watcher], warn=True, hide=True)
             except Failure as e:
-                ok_(isinstance(e.reason, WatcherError))
+                assert isinstance(e.reason, WatcherError)
             else:
                 assert False, "Did not raise Failure for WatcherError!"
 
@@ -117,27 +116,27 @@ class Runner_(Spec):
         def honors_config(self):
             runner = self._runner(out='stuff', run={'hide': True})
             r = runner.run(_)
-            eq_(r.stdout, 'stuff')
-            eq_(sys.stdout.getvalue(), '')
+            assert r.stdout == 'stuff'
+            assert sys.stdout.getvalue() == ''
 
         @trap
         def kwarg_beats_config(self):
             runner = self._runner(out='stuff')
             r = runner.run(_, hide=True)
-            eq_(r.stdout, 'stuff')
-            eq_(sys.stdout.getvalue(), '')
+            assert r.stdout == 'stuff'
+            assert sys.stdout.getvalue() == ''
 
     class pty:
         def pty_defaults_to_off(self):
-            eq_(self._run(_).pty, False)
+            assert self._run(_).pty == False
 
         def honors_config(self):
             runner = self._runner(run={'pty': True})
-            eq_(runner.run(_).pty, True)
+            assert runner.run(_).pty == True
 
         def kwarg_beats_config(self):
             runner = self._runner(run={'pty': False})
-            eq_(runner.run(_, pty=True).pty, True)
+            assert runner.run(_, pty=True).pty == True
 
     class shell:
         def defaults_to_bash_or_cmdexe_when_pty_True(self):
@@ -147,43 +146,37 @@ class Runner_(Spec):
             _expect_platform_shell(self._run(_, pty=False).shell)
 
         def may_be_overridden(self):
-            eq_(self._run(_, shell='/bin/zsh').shell, '/bin/zsh')
+            assert self._run(_, shell='/bin/zsh').shell == '/bin/zsh'
 
         def may_be_configured(self):
             runner = self._runner(run={'shell': '/bin/tcsh'})
-            eq_(runner.run(_).shell, '/bin/tcsh')
+            assert runner.run(_).shell == '/bin/tcsh'
 
         def kwarg_beats_config(self):
             runner = self._runner(run={'shell': '/bin/tcsh'})
-            eq_(runner.run(_, shell='/bin/zsh').shell, '/bin/zsh')
+            assert runner.run(_, shell='/bin/zsh').shell == '/bin/zsh'
 
     class env:
         def defaults_to_os_environ(self):
-            eq_(self._run(_).env, os.environ)
+            assert self._run(_).env == os.environ
 
         def updates_when_dict_given(self):
             expected = dict(os.environ, FOO='BAR')
-            eq_(self._run(_, env={'FOO': 'BAR'}).env, expected)
+            assert self._run(_, env={'FOO': 'BAR'}).env == expected
 
         def replaces_when_replace_env_True(self):
-            eq_(
-                self._run(_, env={'JUST': 'ME'}, replace_env=True).env,
-                {'JUST': 'ME'}
-            )
+            env = self._run(_, env={'JUST': 'ME'}, replace_env=True).env
+            assert env == {'JUST': 'ME'}
 
         def config_can_be_used(self):
-            eq_(
-                self._run(_, settings={'run': {'env': {'FOO': 'BAR'}}}).env,
-                dict(os.environ, FOO='BAR'),
-            )
+            env = self._run(_, settings={'run': {'env': {'FOO': 'BAR'}}}).env
+            assert env == dict(os.environ, FOO='BAR')
 
         def kwarg_wins_over_config(self):
             settings = {'run': {'env': {'FOO': 'BAR'}}}
             kwarg = {'FOO': 'NOTBAR'}
-            eq_(
-                self._run(_, settings=settings, env=kwarg).env['FOO'],
-                'NOTBAR'
-            )
+            foo = self._run(_, settings=settings, env=kwarg).env['FOO']
+            assert foo == 'NOTBAR'
 
     class return_value:
         def return_code(self):
@@ -192,78 +185,78 @@ class Runner_(Spec):
             """
             runner = self._runner(exits=17)
             r = runner.run(_, warn=True)
-            eq_(r.return_code, 17)
-            eq_(r.exited, 17)
+            assert r.return_code == 17
+            assert r.exited == 17
 
         def ok_attr_indicates_success(self):
             runner = self._runner()
-            eq_(runner.run(_).ok, True) # default dummy retval is 0
+            assert runner.run(_).ok == True # default dummy retval is 0
 
         def ok_attr_indicates_failure(self):
             runner = self._runner(exits=1)
-            eq_(runner.run(_, warn=True).ok, False)
+            assert runner.run(_, warn=True).ok == False
 
         def failed_attr_indicates_success(self):
             runner = self._runner()
-            eq_(runner.run(_).failed, False) # default dummy retval is 0
+            assert runner.run(_).failed == False # default dummy retval is 0
 
         def failed_attr_indicates_failure(self):
             runner = self._runner(exits=1)
-            eq_(runner.run(_, warn=True).failed, True)
+            assert runner.run(_, warn=True).failed == True
 
         @trap
         def stdout_attribute_contains_stdout(self):
             runner = self._runner(out='foo')
-            eq_(runner.run(_).stdout, "foo")
-            eq_(sys.stdout.getvalue(), "foo")
+            assert runner.run(_).stdout == "foo"
+            assert sys.stdout.getvalue() == "foo"
 
         @trap
         def stderr_attribute_contains_stderr(self):
             runner = self._runner(err='foo')
-            eq_(runner.run(_).stderr, "foo")
-            eq_(sys.stderr.getvalue(), "foo")
+            assert runner.run(_).stderr == "foo"
+            assert sys.stderr.getvalue() == "foo"
 
         def whether_pty_was_used(self):
-            eq_(self._run(_).pty, False)
-            eq_(self._run(_, pty=True).pty, True)
+            assert self._run(_).pty == False
+            assert self._run(_, pty=True).pty == True
 
         def command_executed(self):
-            eq_(self._run(_).command, _)
+            assert self._run(_).command == _
 
         def shell_used(self):
             _expect_platform_shell(self._run(_).shell)
 
         def hide_param_exposed_and_normalized(self):
-            eq_(self._run(_, hide=True).hide, ('stdout', 'stderr'))
-            eq_(self._run(_, hide=False).hide, tuple())
-            eq_(self._run(_, hide='stderr').hide, ('stderr',))
+            assert self._run(_, hide=True).hide, ('stdout' == 'stderr')
+            assert self._run(_, hide=False).hide == tuple()
+            assert self._run(_, hide='stderr').hide == ('stderr',)
 
     class command_echoing:
         @trap
         def off_by_default(self):
             self._run("my command")
-            eq_(sys.stdout.getvalue(), "")
+            assert sys.stdout.getvalue() == ""
 
         @trap
         def enabled_via_kwarg(self):
             self._run("my command", echo=True)
-            assert_contains(sys.stdout.getvalue(), "my command")
+            assert "my command" in sys.stdout.getvalue()
 
         @trap
         def enabled_via_config(self):
             self._run("yup", settings={'run': {'echo': True}})
-            assert_contains(sys.stdout.getvalue(), "yup")
+            assert "yup" in sys.stdout.getvalue()
 
         @trap
         def kwarg_beats_config(self):
             self._run("yup", echo=True, settings={'run': {'echo': False}})
-            assert_contains(sys.stdout.getvalue(), "yup")
+            assert "yup" in sys.stdout.getvalue()
 
         @trap
         def uses_ansi_bold(self):
             self._run("my command", echo=True)
             # TODO: vendor & use a color module
-            eq_(sys.stdout.getvalue(), "\x1b[1;37mmy command\x1b[0m\n")
+            assert sys.stdout.getvalue() == "\x1b[1;37mmy command\x1b[0m\n"
 
     class encoding:
         # NOTE: these tests just check what Runner.encoding ends up as; it's
@@ -285,14 +278,14 @@ class Runner_(Spec):
             # Execution & assertion
             runner.run(_)
             runner.default_encoding.assert_called_with()
-            eq_(runner.encoding, 'UTF-7')
+            assert runner.encoding == 'UTF-7'
 
         def honors_config(self):
             c = Context(Config(overrides={'run': {'encoding': 'UTF-7'}}))
             runner = _Dummy(c)
             runner.default_encoding = Mock(return_value='UTF-not-7')
             runner.run(_)
-            eq_(runner.encoding, 'UTF-7')
+            assert runner.encoding == 'UTF-7'
 
         def honors_kwarg(self):
             skip()
@@ -305,7 +298,7 @@ class Runner_(Spec):
                 fake_locale.getdefaultlocale.return_value = ('meh', 'UHF-8')
                 fake_locale.getpreferredencoding.return_value = 'FALLBACK'
                 expected = 'UHF-8' if (PY2 and not WINDOWS) else 'FALLBACK'
-                eq_(self._runner().default_encoding(), expected)
+                assert self._runner().default_encoding() == expected
 
         def falls_back_to_defaultlocale_when_preferredencoding_is_None(self):
             if PY2:
@@ -313,14 +306,14 @@ class Runner_(Spec):
             with patch('invoke.runners.locale') as fake_locale:
                 fake_locale.getdefaultlocale.return_value = (None, None)
                 fake_locale.getpreferredencoding.return_value = 'FALLBACK'
-                eq_(self._runner().default_encoding(), 'FALLBACK')
+                assert self._runner().default_encoding() == 'FALLBACK'
 
     class output_hiding:
         @trap
         def _expect_hidden(self, hide, expect_out="", expect_err=""):
             self._runner(out='foo', err='bar').run(_, hide=hide)
-            eq_(sys.stdout.getvalue(), expect_out)
-            eq_(sys.stderr.getvalue(), expect_err)
+            assert sys.stdout.getvalue() == expect_out
+            assert sys.stderr.getvalue() == expect_err
 
         def both_hides_everything(self):
             self._expect_hidden('both')
@@ -346,9 +339,9 @@ class Runner_(Spec):
         def False_hides_nothing(self):
             self._expect_hidden(False, expect_out="foo", expect_err="bar")
 
-        @raises(ValueError)
         def unknown_vals_raises_ValueError(self):
-            self._run(_, hide="wat?")
+            with raises(ValueError):
+                self._run(_, hide="wat?")
 
         def unknown_vals_mention_value_given_in_error(self):
             value = "penguinmints"
@@ -357,58 +350,58 @@ class Runner_(Spec):
             except ValueError as e:
                 msg = "Error from run(hide=xxx) did not tell user what the bad value was!" # noqa
                 msg += "\nException msg: {}".format(e)
-                ok_(value in str(e), msg)
+                assert value in str(e), msg
             else:
                 assert False, "run() did not raise ValueError for bad hide= value" # noqa
 
         def does_not_affect_capturing(self):
-            eq_(self._runner(out='foo').run(_, hide=True).stdout, 'foo')
+            assert self._runner(out='foo').run(_, hide=True).stdout == 'foo'
 
         @trap
         def overrides_echoing(self):
             self._runner().run('invisible', hide=True, echo=True)
-            assert_not_contains(sys.stdout.getvalue(), 'invisible')
+            assert 'invisible' not in sys.stdout.getvalue()
 
     class output_stream_overrides:
         @trap
         def out_defaults_to_sys_stdout(self):
             "out_stream defaults to sys.stdout"
             self._runner(out="sup").run(_)
-            eq_(sys.stdout.getvalue(), "sup")
+            assert sys.stdout.getvalue() == "sup"
 
         @trap
         def err_defaults_to_sys_stderr(self):
             "err_stream defaults to sys.stderr"
             self._runner(err="sup").run(_)
-            eq_(sys.stderr.getvalue(), "sup")
+            assert sys.stderr.getvalue() == "sup"
 
         @trap
         def out_can_be_overridden(self):
             "out_stream can be overridden"
             out = StringIO()
             self._runner(out="sup").run(_, out_stream=out)
-            eq_(out.getvalue(), "sup")
-            eq_(sys.stdout.getvalue(), "")
+            assert out.getvalue() == "sup"
+            assert sys.stdout.getvalue() == ""
 
         @trap
         def err_can_be_overridden(self):
             "err_stream can be overridden"
             err = StringIO()
             self._runner(err="sup").run(_, err_stream=err)
-            eq_(err.getvalue(), "sup")
-            eq_(sys.stderr.getvalue(), "")
+            assert err.getvalue() == "sup"
+            assert sys.stderr.getvalue() == ""
 
         @trap
         def pty_defaults_to_sys(self):
             self._runner(out="sup").run(_, pty=True)
-            eq_(sys.stdout.getvalue(), "sup")
+            assert sys.stdout.getvalue() == "sup"
 
         @trap
         def pty_out_can_be_overridden(self):
             out = StringIO()
             self._runner(out="yo").run(_, pty=True, out_stream=out)
-            eq_(out.getvalue(), "yo")
-            eq_(sys.stdout.getvalue(), "")
+            assert out.getvalue() == "yo"
+            assert sys.stdout.getvalue() == ""
 
     class output_stream_handling:
         # Mostly corner cases, generic behavior's covered above
@@ -482,13 +475,13 @@ class Runner_(Spec):
             mock_debug.assert_called_with("Encountered exception OhNoz('oh god why',) in thread for 'handle_stdin'") # noqa
 
     class failure_handling:
-        @raises(UnexpectedExit)
         def fast_failures(self):
-            self._runner(exits=1).run(_)
+            with raises(UnexpectedExit):
+                self._runner(exits=1).run(_)
 
         def non_1_return_codes_still_act_as_failure(self):
             r = self._runner(exits=17).run(_, warn=True)
-            eq_(r.failed, True)
+            assert r.failed == True
 
         class UnexpectedExit_repr:
             def similar_to_just_the_result_repr(self):
@@ -496,10 +489,7 @@ class Runner_(Spec):
                     self._runner(exits=23).run(_)
                 except UnexpectedExit as e:
                     expected = "<UnexpectedExit: cmd='{}' exited=23>"
-                    eq_(
-                        repr(e),
-                        expected.format(_),
-                    )
+                    assert repr(e) == expected.format(_)
 
         class UnexpectedExit_str:
             def setup(self):
@@ -519,7 +509,7 @@ class Runner_(Spec):
                         err=self._stderr,
                     ).run(_)
                 except UnexpectedExit as e:
-                    eq_(str(e), """Encountered a bad command exit code!
+                    expected = """Encountered a bad command exit code!
 
 Command: '{}'
 
@@ -529,7 +519,8 @@ Stdout: already printed
 
 Stderr: already printed
 
-""".format(_))
+""".format(_)
+                    assert str(e) == expected
                 else:
                     assert False, "Failed to raise UnexpectedExit!"
 
@@ -540,7 +531,7 @@ Stderr: already printed
                         exits=13, out=self._stdout, err=self._stderr
                     ).run(_, pty=True)
                 except UnexpectedExit as e:
-                    eq_(str(e), """Encountered a bad command exit code!
+                    expected = """Encountered a bad command exit code!
 
 Command: '{}'
 
@@ -550,7 +541,8 @@ Stdout: already printed
 
 Stderr: n/a (PTYs have no stderr)
 
-""".format(_))
+""".format(_)
+                    assert str(e) == expected
 
             @trap
             def pty_stderr_message_wins_over_hidden_stderr(self):
@@ -560,8 +552,8 @@ Stderr: n/a (PTYs have no stderr)
                     ).run(_, pty=True, hide=True)
                 except UnexpectedExit as e:
                     r = str(e)
-                    ok_("Stderr: n/a (PTYs have no stderr)" in r)
-                    ok_("Stderr: already printed" not in r)
+                    assert "Stderr: n/a (PTYs have no stderr)" in r
+                    assert "Stderr: already printed" not in r
 
             @trap
             def explicit_hidden_stream_tail_display(self):
@@ -574,7 +566,7 @@ Stderr: n/a (PTYs have no stderr)
                         exits=77, out=self._stdout, err=self._stderr
                     ).run(_, hide=True)
                 except UnexpectedExit as e:
-                    eq_(str(e), """Encountered a bad command exit code!
+                    expected = """Encountered a bad command exit code!
 
 Command: '{}'
 
@@ -606,7 +598,8 @@ stderr 23
 stderr 24
 stderr 25
 
-""".format(_))
+""".format(_)
+                    assert str(e) == expected
 
             @trap
             def displays_tails_of_streams_only_when_hidden(self):
@@ -628,26 +621,18 @@ stderr 25
                     except UnexpectedExit as e:
                         r = str(e)
                         # Expect that the top of output is never displayed
-                        ok_(
-                            "stdout 15" not in r,
-                            oops("Too much stdout found", r, hide)
-                        )
-                        ok_(
-                            "stderr 15" not in r,
-                            oops("Too much stderr found", r, hide)
-                        )
+                        err = oops("Too much stdout found", r, hide)
+                        assert "stdout 15" not in r, err
+                        err = oops("Too much stderr found", r, hide)
+                        assert "stderr 15" not in r, err
                         # Expect to see tail of stdout if we expected it
                         if expect_out:
-                            ok_(
-                                "stdout 16" in r,
-                                oops("Didn't see stdout", r, hide)
-                            )
+                            err = oops("Didn't see stdout", r, hide)
+                            assert "stdout 16" in r, err
                         # Expect to see tail of stderr if we expected it
                         if expect_err:
-                            ok_(
-                                "stderr 16" in r,
-                                oops("Didn't see stderr", r, hide)
-                            )
+                            err = oops("Didn't see stderr", r, hide)
+                            assert "stderr 16" in r, err
                     else:
                         assert False, "Failed to raise UnexpectedExit!"
 
@@ -668,7 +653,7 @@ stderr 25
                 try:
                     self._regular_error()
                 except Failure as e:
-                    eq_(e.reason, None)
+                    assert e.reason == None
                 else:
                     assert False, "Failed to raise Failure!"
 
@@ -680,7 +665,7 @@ stderr 25
                 try:
                     self._watcher_error()
                 except Failure as e:
-                    ok_(isinstance(e.reason, WatcherError))
+                    assert isinstance(e.reason, WatcherError)
                 else:
                     assert False, "Failed to raise Failure!"
 
@@ -699,7 +684,7 @@ stderr 25
                         method()
                     except Failure as e:
                         for attr in attrs:
-                            ok_(getattr(e.result, attr) is not None)
+                            assert getattr(e.result, attr) is not None
                     else:
                         assert False, "Did not raise Failure!"
 
@@ -708,7 +693,7 @@ stderr 25
                     try:
                         self._regular_error()
                     except Failure as e:
-                        ok_(isinstance(e.result.exited, int))
+                        assert isinstance(e.result.exited, int)
                     else:
                         assert False, "Did not raise Failure!"
 
@@ -716,10 +701,10 @@ stderr 25
                     try:
                         self._regular_error()
                     except Failure as e:
-                        eq_(e.result.ok, False)
-                        eq_(e.result.failed, True)
-                        ok_(not bool(e.result))
-                        ok_(not e.result)
+                        assert e.result.ok == False
+                        assert e.result.failed == True
+                        assert not bool(e.result)
+                        assert not e.result
                     else:
                         assert False, "Did not raise Failure!"
 
@@ -727,7 +712,7 @@ stderr 25
                     try:
                         self._regular_error()
                     except Failure as e:
-                        ok_("exited with status 1" in str(e.result))
+                        assert "exited with status 1" in str(e.result)
                     else:
                         assert False, "Did not raise Failure!"
 
@@ -738,16 +723,16 @@ stderr 25
                     except Failure as e:
                         exited = e.result.exited
                         err = "Expected None, got {!r}".format(exited)
-                        ok_(exited is None, err)
+                        assert exited is None, err
 
                 def ok_and_bool_still_are_falsey(self):
                     try:
                         self._watcher_error()
                     except Failure as e:
-                        eq_(e.result.ok, False)
-                        eq_(e.result.failed, True)
-                        ok_(not bool(e.result))
-                        ok_(not e.result)
+                        assert e.result.ok == False
+                        assert e.result.failed == True
+                        assert not bool(e.result)
+                        assert not e.result
                     else:
                         assert False, "Did not raise Failure!"
 
@@ -755,9 +740,9 @@ stderr 25
                     try:
                         self._watcher_error()
                     except Failure as e:
-                        ok_("exited with status" not in str(e.result))
+                        assert "exited with status" not in str(e.result)
                         expected = "not fully executed due to watcher error"
-                        ok_(expected in str(e.result))
+                        assert expected in str(e.result)
                     else:
                         assert False, "Did not raise Failure!"
 
@@ -775,11 +760,11 @@ stderr 25
                 runner.run("nah")
             except ThreadException as e:
                 # Expect two separate OhNoz objects on 'e'
-                eq_(len(e.exceptions), 2)
+                assert len(e.exceptions) == 2
                 for tup in e.exceptions:
-                    ok_(isinstance(tup.value, OhNoz))
-                    ok_(isinstance(tup.traceback, types.TracebackType))
-                    eq_(tup.type, OhNoz)
+                    assert isinstance(tup.value, OhNoz)
+                    assert isinstance(tup.traceback, types.TracebackType)
+                    assert tup.type == OhNoz
                 # TODO: test the arguments part of the tuple too. It's pretty
                 # implementation-specific, though, so possibly not worthwhile.
             else:
@@ -796,10 +781,10 @@ stderr 25
                 message = str(e)
                 # Just make sure salient bits appear present, vs e.g. default
                 # representation happening instead.
-                ok_("Saw 1 exceptions within threads" in message)
-                ok_("{'kwargs': " in message)
-                ok_("Traceback (most recent call last):\n\n" in message)
-                ok_("OhNoz" in message)
+                assert "Saw 1 exceptions within threads" in message
+                assert "{'kwargs': " in message
+                assert "Traceback (most recent call last):\n\n" in message
+                assert "OhNoz" in message
             else:
                 assert False, "Did not raise ThreadException as expected!"
 
@@ -820,7 +805,7 @@ stderr 25
             # responds to "" or "\n" or etc.
             klass = self._mock_stdin_writer()
             self._runner(klass=klass).run(_)
-            ok_(not klass.write_proc_stdin.called)
+            assert not klass.write_proc_stdin.called
 
         def _expect_response(self, **kwargs):
             """
@@ -862,7 +847,7 @@ stderr 25
             # Responses happened, period.
             klass.write_proc_stdin.assert_has_calls([holla, holla])
             # And there weren't duplicates!
-            eq_(len(klass.write_proc_stdin.call_args_list), 2)
+            assert len(klass.write_proc_stdin.call_args_list) == 2
 
         def both_out_and_err_are_scanned(self):
             bye = call("goodbye")
@@ -940,7 +925,7 @@ stderr 25
         # around the sleep functionality (ensuring they are visible and can be
         # altered as needed).
         def input_sleep_attribute_defaults_to_hundredth_of_second(self):
-            eq_(Runner(Context()).input_sleep, 0.01)
+            assert Runner(Context()).input_sleep == 0.01
 
         @mock_subprocess()
         def subclasses_can_override_input_sleep(self):
@@ -952,7 +937,7 @@ stderr 25
                     in_stream=StringIO("foo"),
                     out_stream=StringIO(), # null output to not pollute tests
                 )
-            eq_(mock_time.sleep.call_args_list, [call(0.007)] * 3)
+            assert mock_time.sleep.call_args_list == [call(0.007)] * 3
 
     class stdin_mirroring:
         def _test_mirroring(
@@ -986,14 +971,12 @@ stderr 25
             )
             # Examine mocked output stream to see if it was mirrored to
             if expect_mirroring:
-                eq_(
-                    output.write.call_args_list,
-                    list(map(lambda x: call(x), fake_in))
-                )
-                eq_(len(output.flush.call_args_list), len(fake_in))
+                calls = output.write.call_args_list
+                assert calls == list(map(lambda x: call(x), fake_in))
+                assert len(output.flush.call_args_list) == len(fake_in)
             # Or not mirrored to
             else:
-                eq_(output.write.call_args_list, [])
+                assert output.write.call_args_list == []
 
         def when_pty_is_True_no_mirroring_occurs(self):
             self._test_mirroring(
@@ -1104,7 +1087,7 @@ stderr 25
         @patch('invoke.terminals.tty')
         def setcbreak_not_called_on_non_tty_stdins(self, mock_tty):
             self._run(_, in_stream=StringIO())
-            ok_(not mock_tty.setcbreak.called)
+            assert not mock_tty.setcbreak.called
 
         @skip_if_windows
         @patch('invoke.terminals.tty')
@@ -1116,7 +1099,7 @@ stderr 25
             mock_os.getpgrp.return_value = 1337
             mock_os.tcgetpgrp.return_value = 1338
             self._run(_)
-            ok_(not mock_tty.setcbreak.called)
+            assert not mock_tty.setcbreak.called
             # Sanity
             mock_os.tcgetpgrp.assert_called_once_with(sys.stdin.fileno())
 
@@ -1205,7 +1188,7 @@ class _FastLocal(Local):
     input_sleep = 0
 
 
-class Local_(Spec):
+class Local_:
     def _run(self, *args, **kwargs):
         return _run(*args, **dict(kwargs, klass=_FastLocal))
 
@@ -1236,7 +1219,7 @@ class Local_(Spec):
             self._run(_, pty=True)
             exitstatus = mock_os.waitpid.return_value[1]
             expected_get.assert_called_once_with(exitstatus)
-            ok_(not unexpected_get.called)
+            assert not unexpected_get.called
 
         def pty_uses_WEXITSTATUS_if_WIFEXITED(self):
             self._expect_exit_check(True)
@@ -1249,7 +1232,7 @@ class Local_(Spec):
             mock_os.WIFEXITED.return_value = False
             mock_os.WIFSIGNALED.return_value = True
             mock_os.WTERMSIG.return_value = 2
-            eq_(self._run(_, pty=True, warn=True).exited, -2)
+            assert self._run(_, pty=True, warn=True).exited == -2
 
         @mock_pty()
         def pty_is_set_to_controlling_terminal_size(self):
@@ -1268,7 +1251,7 @@ class Local_(Spec):
             mock_sys.stdin = object()
             # Test. If bug is present, this will error.
             runner = Local(Context())
-            eq_(runner.should_use_pty(pty=True, fallback=True), False)
+            assert runner.should_use_pty(pty=True, fallback=True) == False
 
         @mock_pty(trailing_error=OSError("Input/output error"))
         def spurious_OSErrors_handled_gracefully(self):
@@ -1286,8 +1269,8 @@ class Local_(Spec):
                 self._run(_, pty=True)
             except ThreadException as e:
                 e = e.exceptions[0]
-                eq_(e.type, OSError)
-                eq_(str(e.value), "wat")
+                assert e.type == OSError
+                assert str(e.value) == "wat"
 
         class fallback:
             @mock_pty(isatty=False)
@@ -1305,11 +1288,11 @@ class Local_(Spec):
             @trap
             @mock_subprocess(isatty=False)
             def affects_result_pty_value(self, *mocks):
-                eq_(self._run(_, pty=True).pty, False)
+                assert self._run(_, pty=True).pty == False
 
             @mock_pty(isatty=False)
             def overridden_fallback_affects_result_pty_value(self):
-                eq_(self._run(_, pty=True, fallback=False).pty, True)
+                assert self._run(_, pty=True, fallback=False).pty == True
 
     class shell:
         @mock_pty(insert_os=True)
@@ -1329,12 +1312,12 @@ class Local_(Spec):
         @mock_pty(insert_os=True)
         def may_be_overridden_when_pty_True(self, mock_os):
             self._run(_, pty=True, shell='/bin/zsh')
-            eq_(mock_os.execve.call_args_list[0][0][0], '/bin/zsh')
+            assert mock_os.execve.call_args_list[0][0][0] == '/bin/zsh'
 
         @mock_subprocess(insert_Popen=True)
         def may_be_overridden_when_pty_False(self, mock_Popen):
             self._run(_, pty=False, shell='/bin/zsh')
-            eq_(mock_Popen.call_args_list[0][1]['executable'], '/bin/zsh')
+            assert mock_Popen.call_args_list[0][1]['executable'] == '/bin/zsh'
 
     class env:
         # NOTE: update-vs-replace semantics are tested 'purely' up above in
@@ -1344,49 +1327,45 @@ class Local_(Spec):
         def uses_Popen_kwarg_for_pty_False(self, mock_Popen):
             self._run(_, pty=False, env={'FOO': 'BAR'})
             expected = dict(os.environ, FOO='BAR')
-            eq_(
-                mock_Popen.call_args_list[0][1]['env'],
-                expected
-            )
+            env = mock_Popen.call_args_list[0][1]['env']
+            assert env == expected
 
         @mock_pty(insert_os=True)
         def uses_execve_for_pty_True(self, mock_os):
             type(mock_os).environ = {'OTHERVAR': 'OTHERVAL'}
             self._run(_, pty=True, env={'FOO': 'BAR'})
             expected = {'OTHERVAR': 'OTHERVAL', 'FOO': 'BAR'}
-            eq_(
-                mock_os.execve.call_args_list[0][0][2],
-                expected
-            )
+            env = mock_os.execve.call_args_list[0][0][2]
+            assert env == expected
 
 
-class Result_(Spec):
+class Result_:
     def nothing_is_required(self):
         Result()
 
     def first_posarg_is_stdout(self):
-        eq_(Result("foo").stdout, "foo")
+        assert Result("foo").stdout == "foo"
 
     def command_defaults_to_empty_string(self):
-        eq_(Result().command, "")
+        assert Result().command == ""
 
     def shell_defaults_to_empty_string(self):
-        eq_(Result().shell, "")
+        assert Result().shell == ""
 
     def env_defaults_to_empty_dict(self):
-        eq_(Result().env, {})
+        assert Result().env == {}
 
     def stdout_defaults_to_empty_string(self):
-        eq_(Result().stdout, u"")
+        assert Result().stdout == u""
 
     def stderr_defaults_to_empty_string(self):
-        eq_(Result().stderr, u"")
+        assert Result().stderr == u""
 
     def exited_defaults_to_zero(self):
-        eq_(Result().exited, 0)
+        assert Result().exited == 0
 
     def pty_defaults_to_False(self):
-        eq_(Result().pty, False)
+        assert Result().pty == False
 
     def repr_contains_useful_info(self):
-        eq_(repr(Result(command="foo")), "<Result cmd='foo' exited=0>")
+        assert repr(Result(command="foo")) == "<Result cmd='foo' exited=0>"

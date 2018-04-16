@@ -2,8 +2,6 @@ from invoke.vendor.six.moves.queue import Queue
 
 from invoke.util import ExceptionWrapper, ExceptionHandlingThread as EHThread
 
-from spec import ok_, eq_
-
 
 # TODO: rename
 class ExceptionHandlingThread_:
@@ -18,8 +16,8 @@ class ExceptionHandlingThread_:
             t = EHThread(target=self.worker, args=[queue])
             t.start()
             t.join()
-            eq_(queue.get(block=False), 7)
-            ok_(queue.empty())
+            assert queue.get(block=False) == 7
+            assert queue.empty()
 
         def catches_exceptions(self):
             # Induce exception by submitting a bad queue obj
@@ -27,20 +25,20 @@ class ExceptionHandlingThread_:
             t.start()
             t.join()
             wrapper = t.exception()
-            ok_(isinstance(wrapper, ExceptionWrapper))
-            eq_(wrapper.kwargs, {'args': [None], 'target': self.worker})
-            eq_(wrapper.type, AttributeError)
-            ok_(isinstance(wrapper.value, AttributeError))
+            assert isinstance(wrapper, ExceptionWrapper)
+            assert wrapper.kwargs == {'args': [None], 'target': self.worker}
+            assert wrapper.type == AttributeError
+            assert isinstance(wrapper.value, AttributeError)
 
         def exhibits_is_dead_flag(self):
             t = EHThread(target=self.worker, args=[None])
             t.start()
             t.join()
-            ok_(t.is_dead)
+            assert t.is_dead
             t = EHThread(target=self.worker, args=[Queue()])
             t.start()
             t.join()
-            ok_(not t.is_dead)
+            assert not t.is_dead
 
     class via_subclassing:
         def setup(self):
@@ -58,8 +56,8 @@ class ExceptionHandlingThread_:
             t = self.klass(queue=queue)
             t.start()
             t.join()
-            eq_(queue.get(block=False), 7)
-            ok_(queue.empty())
+            assert queue.get(block=False) == 7
+            assert queue.empty()
 
         def catches_exceptions(self):
             # Induce exception by submitting a bad queue obj
@@ -67,17 +65,17 @@ class ExceptionHandlingThread_:
             t.start()
             t.join()
             wrapper = t.exception()
-            ok_(isinstance(wrapper, ExceptionWrapper))
-            eq_(wrapper.kwargs, {})
-            eq_(wrapper.type, AttributeError)
-            ok_(isinstance(wrapper.value, AttributeError))
+            assert isinstance(wrapper, ExceptionWrapper)
+            assert wrapper.kwargs == {}
+            assert wrapper.type == AttributeError
+            assert isinstance(wrapper.value, AttributeError)
 
         def exhibits_is_dead_flag(self):
             t = self.klass(queue=None)
             t.start()
             t.join()
-            ok_(t.is_dead)
+            assert t.is_dead
             t = self.klass(queue=Queue())
             t.start()
             t.join()
-            ok_(not t.is_dead)
+            assert not t.is_dead

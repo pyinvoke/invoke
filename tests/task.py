@@ -1,5 +1,5 @@
-from spec import Spec, skip, eq_, raises, ok_
 from mock import Mock
+from pytest import raises, skip
 
 from invoke import Context, Config, task, Task, Call, Collection
 from invoke import FilesystemLoader as Loader
@@ -16,7 +16,7 @@ from _util import support
 def _func(ctx):
     pass
 
-class task_(Spec):
+class task_:
     "@task"
 
     def _load(self, name):
@@ -30,53 +30,53 @@ class task_(Spec):
     def allows_access_to_wrapped_object(self):
         def lolcats(ctx):
             pass
-        eq_(task(lolcats).body, lolcats)
+        assert task(lolcats).body == lolcats
 
     def allows_alias_specification(self):
-        eq_(self.vanilla['foo'], self.vanilla['bar'])
+        assert self.vanilla['foo'] == self.vanilla['bar']
 
     def allows_multiple_aliases(self):
-        eq_(self.vanilla['foo'], self.vanilla['otherbar'])
+        assert self.vanilla['foo'] == self.vanilla['otherbar']
 
     def allows_default_specification(self):
-        eq_(self.vanilla[''], self.vanilla['biz'])
+        assert self.vanilla[''] == self.vanilla['biz']
 
     def has_autoprint_option(self):
         ap = self._load('autoprint')
-        eq_(ap['nope'].autoprint, False)
-        eq_(ap['yup'].autoprint, True)
+        assert ap['nope'].autoprint == False
+        assert ap['yup'].autoprint == True
 
-    @raises(ValueError)
     def raises_ValueError_on_multiple_defaults(self):
-        self._load('decorator_multi_default')
+        with raises(ValueError):
+            self._load('decorator_multi_default')
 
     def sets_arg_help(self):
-        eq_(self.vanilla['punch'].help['why'], 'Motive')
+        assert self.vanilla['punch'].help['why'] == 'Motive'
 
     def sets_arg_kind(self):
         skip()
 
     def sets_which_args_are_optional(self):
-        eq_(self.vanilla['optional_values'].optional, ('myopt',))
+        assert self.vanilla['optional_values'].optional == ('myopt',)
 
     def allows_annotating_args_as_positional(self):
-        eq_(self.vanilla['one_positional'].positional, ['pos'])
-        eq_(self.vanilla['two_positionals'].positional, ['pos1', 'pos2'])
+        assert self.vanilla['one_positional'].positional == ['pos']
+        assert self.vanilla['two_positionals'].positional == ['pos1', 'pos2']
 
     def allows_annotating_args_as_iterable(self):
-        eq_(self.vanilla['iterable_values'].iterable, ['mylist'])
+        assert self.vanilla['iterable_values'].iterable == ['mylist']
 
     def allows_annotating_args_as_incrementable(self):
-        eq_(self.vanilla['incrementable_values'].incrementable, ['verbose'])
+        assert self.vanilla['incrementable_values'].incrementable == ['verbose']
 
     def when_positional_arg_missing_all_non_default_args_are_positional(self):
-        eq_(self.vanilla['implicit_positionals'].positional, ['pos1', 'pos2'])
+        assert self.vanilla['implicit_positionals'].positional == ['pos1', 'pos2']
 
     def context_arguments_should_not_appear_in_implicit_positional_list(self):
         @task
         def mytask(ctx):
             pass
-        eq_(len(mytask.positional), 0)
+        assert len(mytask.positional) == 0
 
     def pre_tasks_stored_directly(self):
         @task
@@ -85,7 +85,7 @@ class task_(Spec):
         @task(pre=[whatever])
         def func(ctx):
             pass
-        eq_(func.pre, [whatever])
+        assert func.pre == [whatever]
 
     def allows_star_args_as_shortcut_for_pre(self):
         @task
@@ -97,9 +97,8 @@ class task_(Spec):
         @task(pre1, pre2)
         def func(ctx):
             pass
-        eq_(func.pre, (pre1, pre2))
+        assert func.pre == (pre1, pre2)
 
-    @raises(TypeError)
     def disallows_ambiguity_between_star_args_and_pre_kwarg(self):
         @task
         def pre1(ctx):
@@ -107,18 +106,19 @@ class task_(Spec):
         @task
         def pre2(ctx):
             pass
-        @task(pre1, pre=[pre2])
-        def func(ctx):
-            pass
+        with raises(TypeError):
+            @task(pre1, pre=[pre2])
+            def func(ctx):
+                pass
 
     def sets_name(self):
         @task(name='foo')
         def bar(ctx):
             pass
-        eq_(bar.name, 'foo')
+        assert bar.name == 'foo'
 
 
-class Task_(Spec):
+class Task_:
     def has_useful_repr(self):
         i = repr(Task(_func))
         assert '_func' in i, "'func' not found in {!r}".format(i)
@@ -129,19 +129,19 @@ class Task_(Spec):
     def equality_testing(self):
         t1 = Task(_func, name='foo')
         t2 = Task(_func, name='foo')
-        eq_(t1, t2)
+        assert t1 == t2
         t3 = Task(_func, name='bar')
         assert t1 != t3
 
     class attributes:
         def has_default_flag(self):
-            eq_(Task(_func).is_default, False)
+            assert Task(_func).is_default == False
 
         def name_defaults_to_body_name(self):
-            eq_(Task(_func).name, '_func')
+            assert Task(_func).name == '_func'
 
         def can_override_name(self):
-            eq_(Task(_func, name='foo').name, 'foo')
+            assert Task(_func, name='foo').name == 'foo'
 
     class callability:
         def setup(self):
@@ -153,35 +153,35 @@ class Task_(Spec):
 
         def dunder_call_wraps_body_call(self):
             context = Context()
-            eq_(self.task(context), 5)
+            assert self.task(context) == 5
 
-        @raises(TypeError)
         def errors_if_first_arg_not_Context(self):
             @task
             def mytask(ctx):
                 pass
-            mytask(5)
+            with raises(TypeError):
+                mytask(5)
 
-        @raises(TypeError)
         def errors_if_no_first_arg_at_all(self):
-            @task
-            def mytask():
-                pass
+            with raises(TypeError):
+                @task
+                def mytask():
+                    pass
 
         def tracks_times_called(self):
             context = Context()
-            eq_(self.task.called, False)
+            assert self.task.called == False
             self.task(context)
-            eq_(self.task.called, True)
-            eq_(self.task.times_called, 1)
+            assert self.task.called == True
+            assert self.task.times_called == 1
             self.task(context)
-            eq_(self.task.times_called, 2)
+            assert self.task.times_called == 2
 
         def wraps_body_docstring(self):
-            eq_(self.task.__doc__, "My docstring")
+            assert self.task.__doc__ == "My docstring"
 
         def wraps_body_name(self):
-            eq_(self.task.__name__, "foo")
+            assert self.task.__name__ == "foo"
 
     class get_arguments:
         def setup(self):
@@ -204,28 +204,19 @@ class Task_(Spec):
             return self._arglist_to_dict(task.get_arguments())
 
         def positional_args_come_first(self):
-            eq_(self.args[0].name, 'arg_3')
-            eq_(self.args[1].name, 'arg1')
-            eq_(self.args[2].name, 'arg2')
+            assert self.args[0].name == 'arg_3'
+            assert self.args[1].name == 'arg1'
+            assert self.args[2].name == 'arg2'
 
         def kinds_are_preserved(self):
-            eq_(
-                [x.kind for x in self.args],
-                # Remember that the default 'kind' is a string.
-                [int, str, bool]
-            )
+            # Remember that the default 'kind' is a string.
+            assert [x.kind for x in self.args] == [int, str, bool]
 
         def positional_flag_is_preserved(self):
-            eq_(
-                [x.positional for x in self.args],
-                [True, True, False]
-            )
+            assert [x.positional for x in self.args] == [True, True, False]
 
         def optional_flag_is_preserved(self):
-            eq_(
-                [x.optional for x in self.args],
-                [False, True, False]
-            )
+            assert [x.optional for x in self.args] == [False, True, False]
 
         def optional_prevents_bool_defaults_from_affecting_kind(self):
             # Re #416. See notes in the function under test for rationale.
@@ -233,17 +224,17 @@ class Task_(Spec):
             def mytask(c, myarg=False):
                 pass
             arg = mytask.get_arguments()[0]
-            ok_(arg.kind is str) # not bool!
+            assert arg.kind is str # not bool!
 
         def optional_plus_nonbool_default_does_not_override_kind(self):
             @task(optional=['myarg'])
             def mytask(c, myarg=17):
                 pass
             arg = mytask.get_arguments()[0]
-            ok_(arg.kind is int) # not str!
+            assert arg.kind is int # not str!
 
         def turns_function_signature_into_Arguments(self):
-            eq_(len(self.args), 3, str(self.args))
+            assert len(self.args), 3 == str(self.args)
             assert 'arg2' in self.argdict
 
         def shortflags_created_by_default(self):
@@ -296,62 +287,62 @@ class Task_(Spec):
             @task
             def mytask(ctx):
                 pass
-            eq_(len(mytask.get_arguments()), 0)
+            assert len(mytask.get_arguments()) == 0
 
         def underscores_become_dashes(self):
             @task
             def mytask(ctx, longer_arg):
                 pass
             arg = mytask.get_arguments()[0]
-            eq_(arg.names, ('longer-arg', 'l'))
-            eq_(arg.attr_name, 'longer_arg')
-            eq_(arg.name, 'longer_arg')
+            assert arg.names == ('longer-arg', 'l')
+            assert arg.attr_name == 'longer_arg'
+            assert arg.name == 'longer_arg'
 
 
 # Dummy task for Call tests
 _ = object()
 
 
-class Call_(Spec):
+class Call_:
     def setup(self):
         self.task = Task(Mock(__name__='mytask'))
 
     class init:
         class task:
-            @raises(TypeError)
             def is_required(self):
-                Call()
+                with raises(TypeError):
+                    Call()
 
             def is_first_posarg(self):
-                ok_(Call(_).task is _)
+                assert Call(_).task is _
 
         class called_as:
             def defaults_to_None(self):
-                eq_(Call(_).called_as, None)
+                assert Call(_).called_as == None
 
             def may_be_given(self):
-                eq_(Call(_, called_as='foo').called_as, 'foo')
+                assert Call(_, called_as='foo').called_as == 'foo'
 
         class args:
             def defaults_to_empty_tuple(self):
-                eq_(Call(_).args, tuple())
+                assert Call(_).args == tuple()
 
             def may_be_given(self):
-                eq_(Call(_, args=(1, 2, 3)).args, (1, 2, 3))
+                assert Call(_, args=(1, 2, 3)).args == (1, 2, 3)
 
         class kwargs:
             def defaults_to_empty_dict(self):
-                eq_(Call(_).kwargs, dict())
+                assert Call(_).kwargs == dict()
 
             def may_be_given(self):
-                eq_(Call(_, kwargs={'foo': 'bar'}).kwargs, {'foo': 'bar'})
+                assert Call(_, kwargs={'foo': 'bar'}).kwargs == {'foo': 'bar'}
 
     class stringrep:
         "__str__"
 
         def includes_task_name(self):
             call = Call(self.task)
-            eq_(str(call), "<Call 'mytask', args: (), kwargs: {}>")
+            assert str(call) == "<Call 'mytask', args: (), kwargs: {}>"
 
         def includes_args_and_kwargs(self):
             call = Call(
@@ -360,38 +351,38 @@ class Call_(Spec):
                 # Single-key dict to avoid dict ordering issues
                 kwargs={'kwarg1': 'val1'},
             )
-            eq_(str(call), "<Call 'mytask', args: ('posarg1', 'posarg2'), kwargs: {'kwarg1': 'val1'}>") # noqa
+            assert str(call) == "<Call 'mytask', args: ('posarg1', 'posarg2'), kwargs: {'kwarg1': 'val1'}>" # noqa
 
         def includes_aka_if_explicit_name_given(self):
             call = Call(self.task, called_as='notmytask')
-            eq_(str(call), "<Call 'mytask' (called as: 'notmytask'), args: (), kwargs: {}>") # noqa
+            assert str(call) == "<Call 'mytask' (called as: 'notmytask'), args: (), kwargs: {}>" # noqa
 
         def skips_aka_if_explicit_name_same_as_task_name(self):
             call = Call(self.task, called_as='mytask')
-            eq_(str(call), "<Call 'mytask', args: (), kwargs: {}>")
+            assert str(call) == "<Call 'mytask', args: (), kwargs: {}>"
 
     class make_context:
-        @raises(TypeError)
         def requires_config_argument(self):
-            Call(_).make_context()
+            with raises(TypeError):
+                Call(_).make_context()
 
         def creates_a_new_Context_from_given_config(self):
             conf = Config(defaults={'foo': 'bar'})
             ctx = Call(_).make_context(conf)
-            ok_(isinstance(ctx, Context))
-            eq_(ctx.foo, 'bar')
+            assert isinstance(ctx, Context)
+            assert ctx.foo == 'bar'
 
     class clone:
         def returns_new_but_equivalent_object(self):
             orig = Call(self.task)
             clone = orig.clone()
-            ok_(clone is not orig)
-            ok_(clone == orig)
+            assert clone is not orig
+            assert clone == orig
 
         def can_clone_into_a_subclass(self):
             orig = Call(self.task)
             class MyCall(Call):
                 pass
             clone = orig.clone(into=MyCall)
-            eq_(clone, orig)
-            ok_(isinstance(clone, MyCall))
+            assert clone == orig
+            assert isinstance(clone, MyCall)

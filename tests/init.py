@@ -1,7 +1,6 @@
 import re
 
 import six
-from spec import Spec, eq_
 
 import invoke
 import invoke.collection
@@ -28,7 +27,7 @@ class Init:
         # Meh.
         ver_part = invoke.__version__.split('.')[0]
         ver_info_part = invoke.__version_info__[0]
-        eq_(ver_part, str(ver_info_part))
+        assert ver_part == str(ver_info_part)
 
     class exposes_bindings:
         def task_decorator(self):

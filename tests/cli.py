@@ -1,5 +1,3 @@
-from spec import eq_, Spec
-
 from invoke.collection import Collection
 from invoke.parser import Parser
 from invoke.tasks import task
@@ -39,10 +37,10 @@ class CLIParsing:
     def _compare(self, invoke, flagname, value):
         invoke = "my-task " + invoke
         result = self._parse(invoke)
-        eq_(result[0].args[flagname].value, value)
+        assert result[0].args[flagname].value == value
 
     def _compare_names(self, given, real):
-        eq_(self._parse(given)[0].name, real)
+        assert self._parse(given)[0].name == real
 
     def underscored_flags_can_be_given_as_dashed(self):
         self._compare('--long-name', 'long_name', True)
@@ -95,14 +93,14 @@ class CLIParsing:
     def short_flag_with_adjacent_value(self):
         "my-task -svalue"
         r = self._parse("my-task -svalue")
-        eq_(r[0].args.s.value, 'value')
+        assert r[0].args.s.value == 'value'
 
     def _flag_value_task(self, value):
         r = self._parse("my-task -s {} my-task2".format(value))
-        eq_(len(r), 2)
-        eq_(r[0].name, 'my-task')
-        eq_(r[0].args.s.value, value)
-        eq_(r[1].name, 'my-task2')
+        assert len(r) == 2
+        assert r[0].name == 'my-task'
+        assert r[0].args.s.value == value
+        assert r[1].name == 'my-task2'
 
     def flag_value_then_task(self):
         "my-task -s value my-task2"
@@ -115,26 +113,26 @@ class CLIParsing:
     def three_tasks_with_args(self):
         "my-task --boolean my-task3 --mystring foo my-task2"
         r = self._parse("my-task --boolean my-task3 --mystring foo my-task2")
-        eq_(len(r), 3)
-        eq_([x.name for x in r], ['my-task', 'my-task3', 'my-task2'])
-        eq_(r[0].args.boolean.value, True)
-        eq_(r[1].args.mystring.value, 'foo')
+        assert len(r) == 3
+        assert [x.name for x in r] == ['my-task', 'my-task3', 'my-task2']
+        assert r[0].args.boolean.value
+        assert r[1].args.mystring.value == 'foo'
 
     def tasks_with_duplicately_named_kwargs(self):
         "my-task --mystring foo my-task3 --mystring bar"
         r = self._parse("my-task --mystring foo my-task3 --mystring bar")
-        eq_(r[0].name, 'my-task')
-        eq_(r[0].args.mystring.value, 'foo')
-        eq_(r[1].name, 'my-task3')
-        eq_(r[1].args.mystring.value, 'bar')
+        assert r[0].name == 'my-task'
+        assert r[0].args.mystring.value == 'foo'
+        assert r[1].name == 'my-task3'
+        assert r[1].args.mystring.value == 'bar'
 
     def multiple_short_flags_adjacent(self):
         "my-task -bv (and inverse)"
         for args in ('-bv', '-vb'):
             r = self._parse("my-task {}".format(args))
             a = r[0].args
-            eq_(a.b.value, True)
-            eq_(a.v.value, True)
+            assert a.b.value
+            assert a.v.value
 
     def list_type_flag_can_be_given_N_times_building_a_list(self):
         "my-task --my-list foo --my-list bar"

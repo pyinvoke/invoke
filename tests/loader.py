@@ -3,7 +3,7 @@ import os
 import sys
 import types
 
-from spec import Spec, eq_, raises
+from pytest import raises
 
 from invoke import Config
 from invoke.loader import Loader, FilesystemLoader as FSLoader
@@ -24,7 +24,7 @@ class _BasicLoader(Loader):
         return t
 
 
-class Loader_(Spec):
+class Loader_:
     def exhibits_default_config_object(self):
         loader = _BasicLoader()
         assert isinstance(loader.config, Config)
@@ -49,7 +49,7 @@ class Loader_(Spec):
         _BasicLoader().load('namespacing')
         # If the bug is present, this will be 2 at least (and often more, since
         # other tests will pollute it (!).
-        eq_(sys.path.count(support), 1)
+        assert sys.path.count(support) == 1
 
     def closes_opened_file_object(self):
         loader = _BasicLoader()
@@ -75,32 +75,32 @@ class Loader_(Spec):
         assert mod.__file__ == os.path.join(support, 'simple_ns_list.py')
 
 
-class FilesystemLoader_(Spec):
+class FilesystemLoader_:
     def setup(self):
         self.l = FSLoader(start=support)
 
     def discovery_start_point_defaults_to_cwd(self):
-        eq_(FSLoader().start, os.getcwd())
+        assert FSLoader().start == os.getcwd()
 
     def exposes_start_point_as_attribute(self):
-        eq_(FSLoader().start, os.getcwd())
+        assert FSLoader().start == os.getcwd()
 
     def start_point_is_configurable_via_kwarg(self):
         start = '/tmp/'
-        eq_(FSLoader(start=start).start, start)
+        assert FSLoader(start=start).start == start
 
     def start_point_is_configurable_via_config(self):
         config = Config({'tasks': {'search_root': 'nowhere'}})
-        eq_(FSLoader(config=config).start, 'nowhere')
+        assert FSLoader(config=config).start == 'nowhere'
 
-    @raises(CollectionNotFound)
     def raises_CollectionNotFound_if_not_found(self):
-        self.l.load('nope')
+        with raises(CollectionNotFound):
+            self.l.load('nope')
 
-    @raises(ImportError)
     def raises_ImportError_if_found_collection_cannot_be_imported(self):
         # Instead of masking with a CollectionNotFound
-        self.l.load('oops')
+        with raises(ImportError):
+            self.l.load('oops')
 
     def searches_towards_root_of_filesystem(self):
         # Loaded while root is in same dir as .py
@@ -108,4 +108,4 @@ class FilesystemLoader_(Spec):
         # Loaded while root is multiple dirs deeper than the .py
         deep = os.path.join(support, 'ignoreme', 'ignoremetoo')
         indirectly = FSLoader(start=deep).load('foo')
-        eq_(directly, indirectly)
+        assert directly == indirectly

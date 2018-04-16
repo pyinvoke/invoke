@@ -2,7 +2,7 @@ import operator
 
 from invoke.util import six, reduce
 
-from spec import Spec, eq_, ok_, raises, assert_raises
+from pytest import raises
 
 from invoke.collection import Collection
 from invoke.tasks import task, Task
@@ -36,7 +36,7 @@ class Collection_:
         def can_accept_collections_as_varargs_too(self):
             sub = Collection('sub')
             ns = Collection(sub)
-            eq_(ns.collections['sub'], sub)
+            assert ns.collections['sub'] == sub
 
         def kwargs_act_as_name_args_for_given_objects(self):
             sub = Collection()
@@ -44,13 +44,13 @@ class Collection_:
             def task1(ctx):
                 pass
             ns = Collection(loltask=task1, notsub=sub)
-            eq_(ns['loltask'], task1)
-            eq_(ns.collections['notsub'], sub)
+            assert ns['loltask'] == task1
+            assert ns.collections['notsub'] == sub
 
         def initial_string_arg_acts_as_name(self):
             sub = Collection('sub')
             ns = Collection(sub)
-            eq_(ns.collections['sub'], sub)
+            assert ns.collections['sub'] == sub
 
         def initial_string_arg_meshes_with_varargs_and_kwargs(self):
             @task
@@ -67,11 +67,11 @@ class Collection_:
                 (ns.collections['sub'], sub),
                 (ns['sometask'], task2),
             ):
-                eq_(x, y)
+                assert x == y
 
         def accepts_load_path_kwarg(self):
-            eq_(Collection().loaded_from, None)
-            eq_(Collection(loaded_from='a/path').loaded_from, 'a/path')
+            assert Collection().loaded_from is None
+            assert Collection(loaded_from='a/path').loaded_from == 'a/path'
 
         def accepts_auto_dash_names_kwarg(self):
             assert Collection().auto_dash_names is True
@@ -92,10 +92,10 @@ class Collection_:
 
         def repr_(self):
             "__repr__"
-            eq_(repr(self.c), "<Collection 'meh': task1, task2>")
+            assert repr(self.c) == "<Collection 'meh': task1, task2>"
 
         def equality_should_be_useful(self):
-            eq_(self.c, self._meh())
+            assert self.c == self._meh()
 
     class from_module:
         def setup(self):
@@ -107,15 +107,13 @@ class Collection_:
                 self.from_module = Collection.from_module
 
             def name_override(self):
-                eq_(self.from_module(self.mod).name, 'integration')
-                eq_(
-                    self.from_module(self.mod, name='not-integration').name,
-                    'not-integration'
-                )
+                assert self.from_module(self.mod).name == 'integration'
+                override = self.from_module(self.mod, name='not-integration')
+                assert override.name == 'not-integration'
 
             def inline_configuration(self):
                 # No configuration given, none gotten
-                eq_(self.from_module(self.mod).configuration(), {})
+                assert self.from_module(self.mod).configuration() == {}
                 # Config kwarg given is reflected when config obtained
                 coll = self.from_module(self.mod, config={'foo': 'bar'})
                 assert coll.configuration() == {'foo': 'bar'}
@@ -123,8 +121,8 @@ class Collection_:
             def name_and_config_simultaneously(self):
                 # Test w/ posargs to enforce ordering, just for safety.
                 c = self.from_module(self.mod, 'the name', {'the': 'config'})
-                eq_(c.name, 'the name')
-                eq_(c.configuration(), {'the': 'config'})
+                assert c.name == 'the name'
+                assert c.configuration() == {'the': 'config'}
 
             def auto_dash_names_passed_to_constructor(self):
                 # Sanity
@@ -137,7 +135,7 @@ class Collection_:
             assert 'print-foo' in self.c
 
         def derives_collection_name_from_module_name(self):
-            eq_(self.c.name, 'integration')
+            assert self.c.name == 'integration'
 
         def works_great_with_subclassing(self):
             class MyCollection(Collection):
@@ -149,8 +147,8 @@ class Collection_:
             with support_path():
                 from package import module
             c = Collection.from_module(module)
-            eq_(module.__name__, 'package.module')
-            eq_(c.name, 'module')
+            assert module.__name__ == 'package.module'
+            assert c.name == 'module'
             assert 'mytask' in c # Sanity
 
         def honors_explicit_collections(self):
@@ -197,26 +195,24 @@ class Collection_:
                 )
 
             def inline_config_with_root_namespaces_overrides_builtin(self):
-                eq_(self.unchanged.configuration()['key'], 'builtin')
-                eq_(self.changed.configuration()['key'], 'override')
+                assert self.unchanged.configuration()['key'] == 'builtin'
+                assert self.changed.configuration()['key'] == 'override'
 
             def inline_config_overrides_via_merge_not_replacement(self):
-                ok_('otherkey' in self.changed.configuration())
+                assert 'otherkey' in self.changed.configuration()
 
             def config_override_merges_recursively(self):
-                eq_(
-                    self.changed.configuration()['subconfig']['mykey'],
-                    'myvalue'
-                )
+                subconfig = self.changed.configuration()['subconfig']
+                assert subconfig['mykey'] == 'myvalue'
 
             def inline_name_overrides_root_namespace_object_name(self):
-                eq_(self.unchanged.name, 'builtin-name')
-                eq_(self.changed.name, 'override-name')
+                assert self.unchanged.name == 'builtin-name'
+                assert self.changed.name == 'override-name'
 
             def root_namespace_object_name_overrides_module_name(self):
                 # Duplicates part of previous test for explicitness' sake.
                 # I.e. proves that the name doesn't end up 'explicit_root'.
-                eq_(self.unchanged.name, 'builtin-name')
+                assert self.unchanged.name == 'builtin-name'
 
     class add_task:
         def setup(self):
@@ -224,7 +220,7 @@ class Collection_:
 
         def associates_given_callable_with_given_name(self):
             self.c.add_task(_mytask, 'foo')
-            eq_(self.c['foo'], _mytask)
+            assert self.c['foo'] == _mytask
 
         def uses_function_name_as_implicit_name(self):
             self.c.add_task(_mytask)
@@ -240,36 +236,36 @@ class Collection_:
             assert 'notfunc' in self.c
             assert '_func' not in self.c
 
-        @raises(ValueError)
         def raises_ValueError_if_no_name_found(self):
             # Can't use a lambda here as they are technically real functions.
             class Callable(object):
                 def __call__(self):
                     pass
-            self.c.add_task(Task(Callable()))
+            with raises(ValueError):
+                self.c.add_task(Task(Callable()))
 
-        @raises(ValueError)
         def raises_ValueError_on_multiple_defaults(self):
             t1 = Task(_func, default=True)
             t2 = Task(_func, default=True)
             self.c.add_task(t1, 'foo')
-            self.c.add_task(t2, 'bar')
+            with raises(ValueError):
+                self.c.add_task(t2, 'bar')
 
-        @raises(ValueError)
         def raises_ValueError_if_task_added_mirrors_subcollection_name(self):
             self.c.add_collection(Collection('sub'))
-            self.c.add_task(_mytask, 'sub')
+            with raises(ValueError):
+                self.c.add_task(_mytask, 'sub')
 
         def allows_specifying_task_defaultness(self):
             self.c.add_task(_mytask, default=True)
-            eq_(self.c.default, '_mytask')
+            assert self.c.default == '_mytask'
 
         def specifying_default_False_overrides_task_setting(self):
             @task(default=True)
             def its_me(ctx):
                 pass
             self.c.add_task(its_me, default=False)
-            eq_(self.c.default, None)
+            assert self.c.default is None
 
         def allows_specifying_aliases(self):
             self.c.add_task(_mytask, aliases=('task1', 'task2'))
@@ -297,19 +293,19 @@ class Collection_:
             self.c.add_collection(load('integration'))
             assert 'integration' in self.c.collections
 
-        @raises(ValueError)
         def raises_ValueError_if_collection_without_name(self):
             # Aka non-root collections must either have an explicit name given
             # via kwarg, have a name attribute set, or be a module with
             # __name__ defined.
             root = Collection()
             sub = Collection()
-            root.add_collection(sub)
+            with raises(ValueError):
+                root.add_collection(sub)
 
-        @raises(ValueError)
         def raises_ValueError_if_collection_named_same_as_task(self):
             self.c.add_task(_mytask, 'sub')
-            self.c.add_collection(Collection('sub'))
+            with raises(ValueError):
+                self.c.add_collection(Collection('sub'))
 
     class getitem:
         "__getitem__"
@@ -319,18 +315,18 @@ class Collection_:
         def finds_own_tasks_by_name(self):
             # TODO: duplicates an add_task test above, fix?
             self.c.add_task(_mytask, 'foo')
-            eq_(self.c['foo'], _mytask)
+            assert self.c['foo'] == _mytask
 
         def finds_subcollection_tasks_by_dotted_name(self):
             sub = Collection('sub')
             sub.add_task(_mytask)
             self.c.add_collection(sub)
-            eq_(self.c['sub._mytask'], _mytask)
+            assert self.c['sub._mytask'] == _mytask
 
         def honors_aliases_in_own_tasks(self):
             t = Task(_func, aliases=['bar'])
             self.c.add_task(t, 'foo')
-            eq_(self.c['bar'], t)
+            assert self.c['bar'] == t
 
         def honors_subcollection_task_aliases(self):
             self.c.add_collection(load('decorators'))
@@ -339,7 +335,7 @@ class Collection_:
         def honors_own_default_task_with_no_args(self):
             t = Task(_func, default=True)
             self.c.add_task(t)
-            eq_(self.c[''], t)
+            assert self.c[''] == t
 
         def honors_subcollection_default_tasks_on_subcollection_name(self):
             sub = Collection.from_module(load('decorators'))
@@ -349,14 +345,14 @@ class Collection_:
             # Real test
             assert self.c['decorators'] is self.c['decorators.biz']
 
-        @raises(ValueError)
         def raises_ValueError_for_no_name_and_no_default(self):
-            self.c['']
+            with raises(ValueError):
+                self.c['']
 
-        @raises(ValueError)
         def ValueError_for_empty_subcol_task_name_and_no_default(self):
             self.c.add_collection(Collection('whatever'))
-            self.c['whatever']
+            with raises(ValueError):
+                self.c['whatever']
 
     class to_contexts:
         def setup(self):
@@ -378,8 +374,8 @@ class Collection_:
             self.context = [x for x in self.contexts if x.name == 'mytask'][0]
 
         def returns_iterable_of_Contexts_corresponding_to_tasks(self):
-            eq_(self.context.name, 'mytask')
-            eq_(len(self.contexts), 3)
+            assert self.context.name == 'mytask'
+            assert len(self.contexts) == 3
 
         class auto_dash_names:
             def context_names_automatically_become_dashed(self):
@@ -479,7 +475,7 @@ class Collection_:
             c = Collection()
             c.add_task(mytask)
             ctx = c.to_contexts()[0]
-            eq_(ctx.positional_args, [ctx.args['second'], ctx.args['first']])
+            assert ctx.positional_args, [ctx.args['second'] == ctx.args['first']]
 
         def exposes_namespaced_task_names(self):
             assert 'sub.subtask' in [x.name for x in self.contexts]
@@ -498,18 +494,14 @@ class Collection_:
             self.c = Collection.from_module(load('explicit_root'))
 
         def returns_all_task_names_including_subtasks(self):
-            eq_(
-                set(self.c.task_names.keys()),
-                {'top-level', 'sub-level.sub-task'}
-            )
+            names = set(self.c.task_names.keys())
+            assert names == {'top-level', 'sub-level.sub-task'}
 
         def includes_aliases_and_defaults_as_values(self):
             names = self.c.task_names
-            eq_(names['top-level'], ['other-top'])
-            eq_(
-                names['sub-level.sub-task'],
-                ['sub-level.other-sub', 'sub-level']
-            )
+            assert names['top-level'] == ['other-top']
+            subtask_names = names['sub-level.sub-task']
+            assert subtask_names == ['sub-level.other-sub', 'sub-level']
 
     class configuration:
         "Configuration methods"
@@ -519,54 +511,52 @@ class Collection_:
 
         def basic_set_and_get(self):
             self.root.configure({'foo': 'bar'})
-            eq_(self.root.configuration(), {'foo': 'bar'})
+            assert self.root.configuration() == {'foo': 'bar'}
 
         def configure_performs_merging(self):
             self.root.configure({'foo': 'bar'})
-            eq_(self.root.configuration()['foo'], 'bar')
+            assert self.root.configuration()['foo'] == 'bar'
             self.root.configure({'biz': 'baz'})
-            eq_(set(self.root.configuration().keys()), {'foo', 'biz'})
+            assert set(self.root.configuration().keys()), {'foo' == 'biz'}
 
         def configure_merging_is_recursive_for_nested_dicts(self):
             self.root.configure({'foo': 'bar', 'biz': {'baz': 'boz'}})
             self.root.configure({'biz': {'otherbaz': 'otherboz'}})
             c = self.root.configuration()
-            eq_(c['biz']['baz'], 'boz')
-            eq_(c['biz']['otherbaz'], 'otherboz')
+            assert c['biz']['baz'] == 'boz'
+            assert c['biz']['otherbaz'] == 'otherboz'
 
         def configure_allows_overwriting(self):
             self.root.configure({'foo': 'one'})
-            eq_(self.root.configuration()['foo'], 'one')
+            assert self.root.configuration()['foo'] == 'one'
             self.root.configure({'foo': 'two'})
-            eq_(self.root.configuration()['foo'], 'two')
+            assert self.root.configuration()['foo'] == 'two'
 
         def call_returns_dict(self):
-            eq_(self.root.configuration(), {})
+            assert self.root.configuration() == {}
             self.root.configure({'foo': 'bar'})
-            eq_(self.root.configuration(), {'foo': 'bar'})
+            assert self.root.configuration() == {'foo': 'bar'}
 
         def access_merges_from_subcollections(self):
             inner = Collection('inner', self.task)
             inner.configure({'foo': 'bar'})
             self.root.configure({'biz': 'baz'})
             # With no inner collection
-            eq_(set(self.root.configuration().keys()), {'biz'})
+            assert set(self.root.configuration().keys()) == {'biz'}
             # With inner collection
             self.root.add_collection(inner)
-            eq_(
-                set(self.root.configuration('inner.task').keys()),
-                {'foo', 'biz'}
-            )
+            keys = set(self.root.configuration('inner.task').keys())
+            assert keys == {'foo', 'biz'}
 
         def parents_overwrite_children_in_path(self):
             inner = Collection('inner', self.task)
             inner.configure({'foo': 'inner'})
             self.root.add_collection(inner)
             # Before updating root collection's config, reflects inner
-            eq_(self.root.configuration('inner.task')['foo'], 'inner')
+            assert self.root.configuration('inner.task')['foo'] == 'inner'
             self.root.configure({'foo': 'outer'})
             # After, reflects outer (since that now overrides)
-            eq_(self.root.configuration('inner.task')['foo'], 'outer')
+            assert self.root.configuration('inner.task')['foo'] == 'outer'
 
         def sibling_subcollections_ignored(self):
             inner = Collection('inner', self.task)
@@ -574,27 +564,25 @@ class Collection_:
             inner2 = Collection('inner2', Task(_func, name='task2'))
             inner2.configure({'foo': 'nope'})
             root = Collection(inner, inner2)
-            eq_(root.configuration('inner.task')['foo'], 'hi there')
-            eq_(root.configuration('inner2.task2')['foo'], 'nope')
+            assert root.configuration('inner.task')['foo'] == 'hi there'
+            assert root.configuration('inner2.task2')['foo'] == 'nope'
 
         def subcollection_paths_may_be_dotted(self):
             leaf = Collection('leaf', self.task)
             leaf.configure({'key': 'leaf-value'})
             middle = Collection('middle', leaf)
             root = Collection('root', middle)
-            eq_(root.configuration('middle.leaf.task'), {'key': 'leaf-value'})
+            assert root.configuration('middle.leaf.task') == {'key': 'leaf-value'}
 
         def invalid_subcollection_paths_result_in_KeyError(self):
             # Straight up invalid
-            assert_raises(KeyError,
-                Collection('meh').configuration,
-                'nope.task'
-            )
+            with raises(KeyError):
+                Collection('meh').configuration('nope.task')
             # Exists but wrong level (should be 'root.task', not just
             # 'task')
             inner = Collection('inner', self.task)
-            assert_raises(KeyError,
-                Collection('root', inner).configuration, 'task')
+            with raises(KeyError):
+                Collection('root', inner).configuration('task')
 
         def keys_dont_have_to_exist_in_full_path(self):
             # Kinda duplicates earlier stuff; meh
@@ -603,7 +591,7 @@ class Collection_:
             leaf.configure({'key': 'leaf-value'})
             middle = Collection('middle', leaf)
             root = Collection('root', middle)
-            eq_(root.configuration('middle.leaf.task'), {'key': 'leaf-value'})
+            assert root.configuration('middle.leaf.task') == {'key': 'leaf-value'}
             # Key stored on mid + leaf but not root
             middle.configure({'key': 'whoa'})
-            eq_(root.configuration('middle.leaf.task'), {'key': 'whoa'})
+            assert root.configuration('middle.leaf.task') == {'key': 'whoa'}

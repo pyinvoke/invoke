@@ -3,9 +3,9 @@ import os
 from os.path import join, expanduser
 
 from invoke.util import six
-from spec import eq_, ok_, raises
 from mock import patch, call
 import pytest
+from pytest import raises
 
 from invoke.runners import Local
 from invoke.config import Config
@@ -33,7 +33,7 @@ class Config_:
         # TODO: move all other non-data-bearing kwargs to this mode
         class prefix:
             def defaults_to_invoke(self):
-                eq_(Config().prefix, 'invoke')
+                assert Config().prefix == 'invoke'
 
             @patch.object(Config, '_load_yaml')
             def informs_config_filenames(self, load_yaml):
@@ -48,11 +48,11 @@ class Config_:
                     prefix = 'other'
                 c = MyConf(defaults={'foo': 'notbar'})
                 c.load_shell_env()
-                eq_(c.foo, 'bar')
+                assert c.foo == 'bar'
 
         class file_prefix:
             def defaults_to_None(self):
-                eq_(Config().file_prefix, None)
+                assert Config().file_prefix == None
 
             @patch.object(Config, '_load_yaml')
             def informs_config_filenames(self, load_yaml):
@@ -63,7 +63,7 @@ class Config_:
 
         class env_prefix:
             def defaults_to_None(self):
-                eq_(Config().env_prefix, None)
+                assert Config().env_prefix == None
 
             def informs_env_vars_loaded(self):
                 os.environ['OTHER_FOO'] = 'bar'
@@ -71,7 +71,7 @@ class Config_:
                     env_prefix = 'other'
                 c = MyConf(defaults={'foo': 'notbar'})
                 c.load_shell_env()
-                eq_(c.foo, 'bar')
+                assert c.foo == 'bar'
 
     class global_defaults:
         @skip_if_windows
@@ -80,46 +80,45 @@ class Config_:
             # be...for some reason we're not actually capturing all of these
             # reliably (even if their defaults are often implied by the tests
             # which override them, e.g. runner tests around warn=True, etc).
-            eq_(
-                Config.global_defaults(), {
-                    'run': {
-                        'echo': False,
-                        'echo_stdin': None,
-                        'encoding': None,
-                        'env': {},
-                        'err_stream': None,
-                        'fallback': True,
-                        'hide': None,
-                        'in_stream': None,
-                        'out_stream': None,
-                        'pty': False,
-                        'replace_env': False,
-                        'shell': '/bin/bash',
-                        'warn': False,
-                        'watchers': [],
-                    },
-                    'runners': {
-                        'local': Local,
-                    },
-                    'sudo': {
-                        'password': None,
-                        'prompt': '[sudo] password: ',
-                        'user': None,
-                    },
-                    'tasks': {
-                        'dedupe': True,
-                        'auto_dash_names': True,
-                        'collection_name': 'tasks',
-                        'search_root': None,
-                    },
+            expected = {
+                'run': {
+                    'echo': False,
+                    'echo_stdin': None,
+                    'encoding': None,
+                    'env': {},
+                    'err_stream': None,
+                    'fallback': True,
+                    'hide': None,
+                    'in_stream': None,
+                    'out_stream': None,
+                    'pty': False,
+                    'replace_env': False,
+                    'shell': '/bin/bash',
+                    'warn': False,
+                    'watchers': [],
                 },
-            )
+                'runners': {
+                    'local': Local,
+                },
+                'sudo': {
+                    'password': None,
+                    'prompt': '[sudo] password: ',
+                    'user': None,
+                },
+                'tasks': {
+                    'dedupe': True,
+                    'auto_dash_names': True,
+                    'collection_name': 'tasks',
+                    'search_root': None,
+                },
+            }
+            assert Config.global_defaults() == expected
 
     class init:
         "__init__"
 
         def can_be_empty(self):
-            eq_(Config().__class__, Config) # derp
+            assert Config().__class__ == Config # derp
 
         @patch.object(Config, '_load_yaml')
         def configure_global_location_prefix(self, load_yaml):
@@ -158,17 +157,17 @@ class Config_:
 
         def accepts_defaults_dict_kwarg(self):
             c = Config(defaults={'super': 'low level'})
-            eq_(c.super, 'low level')
+            assert c.super == 'low level'
 
         def overrides_dict_is_first_posarg(self):
             c = Config({'new': 'data', 'run': {'hide': True}})
-            eq_(c.run.hide, True) # default is False
-            eq_(c.run.warn, False) # in global defaults, untouched
-            eq_(c.new, 'data') # data only present at overrides layer
+            assert c.run.hide == True # default is False
+            assert c.run.warn == False # in global defaults, untouched
+            assert c.new == 'data' # data only present at overrides layer
 
         def overrides_dict_is_also_a_kwarg(self):
             c = Config(overrides={'run': {'hide': True}})
-            eq_(c.run.hide, True)
+            assert c.run.hide == True
 
         @patch.object(Config, 'load_system')
         @patch.object(Config, 'load_user')
@@ -197,25 +196,25 @@ class Config_:
         def can_be_used_directly_after_init(self):
             # No load() here...
             c = Config({'lots of these': 'tests look similar'})
-            eq_(c['lots of these'], 'tests look similar')
+            assert c['lots of these'] == 'tests look similar'
 
         def allows_dict_and_attr_access(self):
             # TODO: combine with tests for Context probably
             c = Config({'foo': 'bar'})
-            eq_(c.foo, 'bar')
-            eq_(c['foo'], 'bar')
+            assert c.foo == 'bar'
+            assert c['foo'] == 'bar'
 
         def nested_dict_values_also_allow_dual_access(self):
             # TODO: ditto
             c = Config({'foo': 'bar', 'biz': {'baz': 'boz'}})
             # Sanity check - nested doesn't somehow kill simple top level
-            eq_(c.foo, 'bar')
-            eq_(c['foo'], 'bar')
+            assert c.foo == 'bar'
+            assert c['foo'] == 'bar'
             # Actual check
-            eq_(c.biz.baz, 'boz')
-            eq_(c['biz']['baz'], 'boz')
-            eq_(c.biz['baz'], 'boz')
-            eq_(c['biz'].baz, 'boz')
+            assert c.biz.baz == 'boz'
+            assert c['biz']['baz'] == 'boz'
+            assert c.biz['baz'] == 'boz'
+            assert c['biz'].baz == 'boz'
 
         def attr_access_has_useful_error_msg(self):
             c = Config()
@@ -229,7 +228,7 @@ Valid keys: ['run', 'runners', 'sudo', 'tasks']
 
 Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_data', 'global_defaults', 'load_base_conf_files', 'load_collection', 'load_defaults', 'load_overrides', 'load_project', 'load_runtime', 'load_shell_env', 'load_system', 'load_user', 'merge', 'paths', 'pop', 'popitem', 'prefix', 'set_project_location', 'set_runtime_path', 'setdefault', 'update']
 """.strip() # noqa
-                eq_(str(e), expected)
+                assert str(e) == expected
             else:
                 assert False, "Didn't get an AttributeError on bad key!"
 
@@ -238,31 +237,31 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
             defaults = {'foo': {'bar': 'baz'}}
             overrides = {'foo': {'notbar': 'notbaz'}}
             c = Config(defaults=defaults, overrides=overrides)
-            eq_(c.foo.notbar, 'notbaz')
-            eq_(c.foo.bar, 'baz')
+            assert c.foo.notbar == 'notbaz'
+            assert c.foo.bar == 'baz'
 
         def is_iterable_like_dict(self):
             c = Config(defaults={'a': 1, 'b': 2})
-            eq_(set(c.keys()), {'a', 'b'})
-            eq_(set(list(c)), {'a', 'b'})
+            assert set(c.keys()) == {'a', 'b'}
+            assert set(list(c)) == {'a', 'b'}
 
         def supports_readonly_dict_protocols(self):
             # Use single-keypair dict to avoid sorting problems in tests.
             c = Config(defaults={'foo': 'bar'})
             c2 = Config(defaults={'foo': 'bar'})
-            ok_('foo' in c)
-            ok_('foo' in c2) # mostly just to trigger loading :x
-            eq_(c, c2)
-            eq_(len(c), 1)
-            eq_(c.get('foo'), 'bar')
+            assert 'foo' in c
+            assert 'foo' in c2 # mostly just to trigger loading :x
+            assert c == c2
+            assert len(c) == 1
+            assert c.get('foo') == 'bar'
             if six.PY2:
-                eq_(c.has_key('foo'), True)  # noqa
-                eq_(list(c.iterkeys()), ['foo'])
-                eq_(list(c.itervalues()), ['bar'])
-            eq_(list(c.items()), [('foo', 'bar')])
-            eq_(list(six.iteritems(c)), [('foo', 'bar')])
-            eq_(list(c.keys()), ['foo'])
-            eq_(list(c.values()), ['bar'])
+                assert c.has_key('foo') == True  # noqa
+                assert list(c.iterkeys()) == ['foo']
+                assert list(c.itervalues()) == ['bar']
+            assert list(c.items()) == [('foo', 'bar')]
+            assert list(six.iteritems(c)) == [('foo', 'bar')]
+            assert list(c.keys()) == ['foo']
+            assert list(c.values()) == ['bar']
 
         class runtime_loading_of_defaults_and_overrides:
             def defaults_can_be_given_via_method(self):
@@ -295,66 +294,66 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
             def pop(self):
                 # Root
                 c = Config(defaults={'foo': 'bar'})
-                eq_(c.pop('foo'), 'bar')
-                eq_(c, {})
+                assert c.pop('foo') == 'bar'
+                assert c == {}
                 # With the default arg
-                eq_(c.pop('wut', 'fine then'), 'fine then')
+                assert c.pop('wut', 'fine then') == 'fine then'
                 # Leaf (different key to avoid AmbiguousMergeError)
                 c.nested = {'leafkey': 'leafval'}
-                eq_(c.nested.pop('leafkey'), 'leafval')
-                eq_(c, {'nested': {}})
+                assert c.nested.pop('leafkey') == 'leafval'
+                assert c == {'nested': {}}
 
             def delitem(self):
                 "__delitem__"
                 c = Config(defaults={'foo': 'bar'})
                 del c['foo']
-                eq_(c, {})
+                assert c == {}
                 c.nested = {'leafkey': 'leafval'}
                 del c.nested['leafkey']
-                eq_(c, {'nested': {}})
+                assert c == {'nested': {}}
 
             def delattr(self):
                 "__delattr__"
                 c = Config(defaults={'foo': 'bar'})
                 del c.foo
-                eq_(c, {})
+                assert c == {}
                 c.nested = {'leafkey': 'leafval'}
                 del c.nested.leafkey
-                eq_(c, {'nested': {}})
+                assert c == {'nested': {}}
 
             def clear(self):
                 c = Config(defaults={'foo': 'bar'})
                 c.clear()
-                eq_(c, {})
+                assert c == {}
                 c.nested = {'leafkey': 'leafval'}
                 c.nested.clear()
-                eq_(c, {'nested': {}})
+                assert c == {'nested': {}}
 
             def popitem(self):
                 c = Config(defaults={'foo': 'bar'})
-                eq_(c.popitem(), ('foo', 'bar'))
-                eq_(c, {})
+                assert c.popitem() == ('foo', 'bar')
+                assert c == {}
                 c.nested = {'leafkey': 'leafval'}
-                eq_(c.nested.popitem(), ('leafkey', 'leafval'))
-                eq_(c, {'nested': {}})
+                assert c.nested.popitem() == ('leafkey', 'leafval')
+                assert c == {'nested': {}}
 
         class modification_methods:
             def setitem(self):
                 c = Config(defaults={'foo': 'bar'})
                 c['foo'] = 'notbar'
-                eq_(c.foo, 'notbar')
+                assert c.foo == 'notbar'
                 del c['foo']
                 c['nested'] = {'leafkey': 'leafval'}
-                eq_(c, {'nested': {'leafkey': 'leafval'}})
+                assert c == {'nested': {'leafkey': 'leafval'}}
 
             def setdefault(self):
                 c = Config({'foo': 'bar', 'nested': {'leafkey': 'leafval'}})
-                eq_(c.setdefault('foo'), 'bar')
-                eq_(c.nested.setdefault('leafkey'), 'leafval')
-                eq_(c.setdefault('notfoo', 'notbar'), 'notbar')
-                eq_(c.notfoo, 'notbar')
-                eq_(c.nested.setdefault('otherleaf', 'otherval'), 'otherval')
-                eq_(c.nested.otherleaf, 'otherval')
+                assert c.setdefault('foo') == 'bar'
+                assert c.nested.setdefault('leafkey') == 'leafval'
+                assert c.setdefault('notfoo', 'notbar') == 'notbar'
+                assert c.notfoo == 'notbar'
+                assert c.nested.setdefault('otherleaf', 'otherval') == 'otherval'
+                assert c.nested.otherleaf == 'otherval'
 
             def update(self):
                 c = Config(defaults={
@@ -365,36 +364,36 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
                 })
                 # Regular update(dict)
                 c.update({'foo': 'notbar'})
-                eq_(c.foo, 'notbar')
+                assert c.foo == 'notbar'
                 c.nested.update({'leafkey': 'otherval'})
-                eq_(c.nested.leafkey, 'otherval')
+                assert c.nested.leafkey == 'otherval'
                 # Apparently allowed but wholly useless
                 c.update()
-                eq_(c, {'foo': 'notbar', 'nested': {'leafkey': 'otherval'}})
+                assert c == {'foo': 'notbar', 'nested': {'leafkey': 'otherval'}}
                 # Kwarg edition
                 c.update(foo='otherbar')
-                eq_(c.foo, 'otherbar')
+                assert c.foo == 'otherbar'
                 # Iterator of 2-tuples edition
                 c.nested.update([
                     ('leafkey', 'yetanotherval'),
                     ('newleaf', 'turnt'),
                 ])
-                eq_(c.nested.leafkey, 'yetanotherval')
-                eq_(c.nested.newleaf, 'turnt')
+                assert c.nested.leafkey == 'yetanotherval'
+                assert c.nested.newleaf == 'turnt'
 
         def reinstatement_of_deleted_values_works_ok(self):
             # Sounds like a stupid thing to test, but when we have to track
             # deletions and mutations manually...it's an easy thing to overlook
             c = Config(defaults={'foo': 'bar'})
-            eq_(c.foo, 'bar')
+            assert c.foo == 'bar'
             del c['foo']
             # Sanity checks
-            ok_('foo' not in c)
-            eq_(len(c), 0)
+            assert 'foo' not in c
+            assert len(c) == 0
             # Put it back again...as a different value, for funsies
             c.foo = 'formerly bar'
             # And make sure it stuck
-            eq_(c.foo, 'formerly bar')
+            assert c.foo == 'formerly bar'
 
         def deleting_parent_keys_of_deleted_keys_subsumes_them(self):
             c = Config({'foo': {'bar': 'biz'}})
@@ -402,21 +401,21 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
             del c.foo
             # Make sure we didn't somehow still end up with {'foo': {'bar':
             # None}}
-            eq_(c._deletions, {'foo': None})
+            assert c._deletions == {'foo': None}
 
         def supports_mutation_via_attribute_access(self):
             c = Config({'foo': 'bar'})
-            eq_(c.foo, 'bar')
+            assert c.foo == 'bar'
             c.foo = 'notbar'
-            eq_(c.foo, 'notbar')
-            eq_(c['foo'], 'notbar')
+            assert c.foo == 'notbar'
+            assert c['foo'] == 'notbar'
 
         def supports_nested_mutation_via_attribute_access(self):
             c = Config({'foo': {'bar': 'biz'}})
-            eq_(c.foo.bar, 'biz')
+            assert c.foo.bar == 'biz'
             c.foo.bar = 'notbiz'
-            eq_(c.foo.bar, 'notbiz')
-            eq_(c['foo']['bar'], 'notbiz')
+            assert c.foo.bar == 'notbiz'
+            assert c['foo']['bar'] == 'notbiz'
 
         def real_attrs_and_methods_win_over_attr_proxying(self):
             # Setup
@@ -426,22 +425,22 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
                     return 7
             c = MyConfig({'myattr': 'foo', 'mymethod': 'bar'})
             # By default, attr and config value separate
-            eq_(c.myattr, None)
-            eq_(c['myattr'], 'foo')
+            assert c.myattr == None
+            assert c['myattr'] == 'foo'
             # After a setattr, same holds true
             c.myattr = 'notfoo'
-            eq_(c.myattr, 'notfoo')
-            eq_(c['myattr'], 'foo')
+            assert c.myattr == 'notfoo'
+            assert c['myattr'] == 'foo'
             # Method and config value separate
-            ok_(callable(c.mymethod))
-            eq_(c.mymethod(), 7)
-            eq_(c['mymethod'], 'bar')
+            assert callable(c.mymethod)
+            assert c.mymethod() == 7
+            assert c['mymethod'] == 'bar'
             # And same after setattr
             def monkeys():
                 return 13
             c.mymethod = monkeys
-            eq_(c.mymethod(), 13)
-            eq_(c['mymethod'], 'bar')
+            assert c.mymethod() == 13
+            assert c['mymethod'] == 'bar'
 
         def config_itself_stored_as_private_name(self):
             # I.e. one can refer to a key called 'config', which is relatively
@@ -450,8 +449,8 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
             c = Config()
             c['foo'] = {'bar': 'baz'}
             c['whatever'] = {'config': 'myconfig'}
-            eq_(c.foo.bar, 'baz')
-            eq_(c.whatever.config, 'myconfig')
+            assert c.foo.bar == 'baz'
+            assert c.whatever.config == 'myconfig'
 
         def inherited_real_attrs_also_win_over_config_keys(self):
             class MyConfigParent(Config):
@@ -459,14 +458,14 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
             class MyConfig(MyConfigParent):
                 pass
             c = MyConfig()
-            eq_(c.parent_attr, 17)
+            assert c.parent_attr == 17
             c.parent_attr = 33
             oops = "Oops! Looks like config won over real attr!"
-            ok_('parent_attr' not in c, oops)
-            eq_(c.parent_attr, 33)
+            assert 'parent_attr' not in c, oops
+            assert c.parent_attr == 33
             c['parent_attr'] = 'fifteen'
-            eq_(c.parent_attr, 33)
-            eq_(c['parent_attr'], 'fifteen')
+            assert c.parent_attr == 33
+            assert c['parent_attr'] == 'fifteen'
 
         def nonexistent_attrs_can_be_set_to_create_new_top_level_configs(self):
             # I.e. some_config.foo = 'bar' is like some_config['foo'] = 'bar'.
@@ -475,33 +474,33 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
             # touched!
             c = Config()
             c.some_setting = 'some_value'
-            eq_(c['some_setting'], 'some_value')
+            assert c['some_setting'] == 'some_value'
 
         def nonexistent_attr_setting_works_nested_too(self):
             c = Config()
             c.a_nest = {}
-            eq_(c['a_nest'], {})
+            assert c['a_nest'] == {}
             c.a_nest.an_egg = True
-            ok_(c['a_nest']['an_egg'] is True)
+            assert c['a_nest']['an_egg']
 
         def string_display(self):
             "__str__ and friends"
             config = Config(defaults={'foo': 'bar'})
-            eq_(repr(config), "<Config: {'foo': 'bar'}>")
+            assert repr(config) == "<Config: {'foo': 'bar'}>"
 
         def merging_does_not_wipe_user_modifications_or_deletions(self):
             c = Config({'foo': {'bar': 'biz'}, 'error': True})
             c.foo.bar = 'notbiz'
             del c['error']
-            eq_(c['foo']['bar'], 'notbiz')
-            ok_('error' not in c)
+            assert c['foo']['bar'] == 'notbiz'
+            assert 'error' not in c
             c.merge()
             # Will be back to 'biz' if user changes don't get saved on their
             # own (previously they are just mutations on the cached central
             # config)
-            eq_(c['foo']['bar'], 'notbiz')
+            assert c['foo']['bar'] == 'notbiz'
             # And this would still be here, too
-            ok_('error' not in c)
+            assert 'error' not in c
 
     class config_file_loading:
         "Configuration file loading"
@@ -568,11 +567,11 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
 
         def loads_no_project_specific_file_if_no_project_location_given(self):
             c = Config()
-            eq_(c._project_path, None)
+            assert c._project_path == None
             c.load_project()
-            eq_(list(c._project.keys()), [])
+            assert list(c._project.keys()) == []
             defaults = ['tasks', 'run', 'runners', 'sudo']
-            eq_(set(c.keys()), set(defaults))
+            assert set(c.keys()) == set(defaults)
 
         def project_location_can_be_set_after_init(self):
             c = Config()
@@ -584,7 +583,7 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
         def runtime_conf_via_cli_flag(self):
             c = Config(runtime_path=join(CONFIGS_PATH, 'yaml', 'invoke.yaml'))
             c.load_runtime()
-            eq_(c.outer.inner.hooray, 'yaml')
+            assert c.outer.inner.hooray == 'yaml'
 
         def runtime_can_skip_merging(self):
             path = join(CONFIGS_PATH, 'yaml', 'invoke.yaml')
@@ -597,21 +596,20 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
             assert 'outer' in config._runtime
             assert 'outer' not in config
 
-        @raises(UnknownFileType)
         def unknown_suffix_in_runtime_path_raises_useful_error(self):
             c = Config(runtime_path=join(CONFIGS_PATH, 'screw.ini'))
-            c.load_runtime()
-            eq_(c.boo, 'ini') # Should raise exception
+            with raises(UnknownFileType):
+                c.load_runtime()
 
         def python_modules_dont_load_special_vars(self):
             "Python modules don't load special vars"
             # Borrow another test's Python module.
             c = _load('system_prefix', 'python')
             # Sanity test that lowercase works
-            eq_(c.outer.inner.hooray, 'python')
+            assert c.outer.inner.hooray == 'python'
             # Real test that builtins, etc are stripped out
             for special in ('builtins', 'file', 'package', 'name', 'doc'):
-                ok_('__{}__'.format(special) not in c)
+                assert '__{}__'.format(special) not in c
 
 
     class collection_level_config_loading:
@@ -637,17 +635,17 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
             c1 = Config(defaults={'foo': {'bar': 'biz'}})
             # Empty defaults to suppress global_defaults
             c2 = Config(defaults={}, overrides={'foo': {'bar': 'biz'}})
-            ok_(c1 is not c2)
-            ok_(c1._defaults != c2._defaults)
-            eq_(c1, c2)
+            assert c1 is not c2
+            assert c1._defaults != c2._defaults
+            assert c1 == c2
 
         def allows_comparison_with_real_dicts(self):
             c = Config({'foo': {'bar': 'biz'}})
-            eq_(c['foo'], {'bar': 'biz'})
+            assert c['foo'] == {'bar': 'biz'}
 
-        @raises(TypeError)
         def is_explicitly_not_hashable(self):
-            hash(Config())
+            with raises(TypeError):
+                hash(Config())
 
 
     class env_vars:
@@ -656,38 +654,38 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
             os.environ['INVOKE_FOO'] = 'bar'
             c = Config(defaults={'foo': 'notbar'})
             c.load_shell_env()
-            eq_(c.foo, 'bar')
+            assert c.foo == 'bar'
 
         def non_predeclared_settings_do_not_get_consumed(self):
             os.environ['INVOKE_HELLO'] = "is it me you're looking for?"
             c = Config()
             c.load_shell_env()
-            ok_('HELLO' not in c)
-            ok_('hello' not in c)
+            assert 'HELLO' not in c
+            assert 'hello' not in c
 
         def underscores_top_level(self):
             os.environ['INVOKE_FOO_BAR'] = 'biz'
             c = Config(defaults={'foo_bar': 'notbiz'})
             c.load_shell_env()
-            eq_(c.foo_bar, 'biz')
+            assert c.foo_bar == 'biz'
 
         def underscores_nested(self):
             os.environ['INVOKE_FOO_BAR'] = 'biz'
             c = Config(defaults={'foo': {'bar': 'notbiz'}})
             c.load_shell_env()
-            eq_(c.foo.bar, 'biz')
+            assert c.foo.bar == 'biz'
 
         def both_types_of_underscores_mixed(self):
             os.environ['INVOKE_FOO_BAR_BIZ'] = 'baz'
             c = Config(defaults={'foo_bar': {'biz': 'notbaz'}})
             c.load_shell_env()
-            eq_(c.foo_bar.biz, 'baz')
+            assert c.foo_bar.biz == 'baz'
 
-        @raises(AmbiguousEnvVar)
         def ambiguous_underscores_dont_guess(self):
             os.environ['INVOKE_FOO_BAR'] = 'biz'
             c = Config(defaults={'foo_bar': 'wat', 'foo': {'bar': 'huh'}})
-            c.load_shell_env()
+            with raises(AmbiguousEnvVar):
+                c.load_shell_env()
 
 
         class type_casting:
@@ -695,8 +693,8 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
                 os.environ['INVOKE_FOO'] = u'myvalue'
                 c = Config(defaults={'foo': 'myoldvalue'})
                 c.load_shell_env()
-                eq_(c.foo, u'myvalue')
-                ok_(isinstance(c.foo, six.text_type))
+                assert c.foo == u'myvalue'
+                assert isinstance(c.foo, six.text_type)
 
             def unicode_replaced_with_env_value(self):
                 # Python 3 doesn't allow you to put 'bytes' objects into
@@ -706,14 +704,14 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
                 os.environ['INVOKE_FOO'] = 'myunicode'
                 c = Config(defaults={'foo': u'myoldvalue'})
                 c.load_shell_env()
-                eq_(c.foo, 'myunicode')
-                ok_(isinstance(c.foo, str))
+                assert c.foo == 'myunicode'
+                assert isinstance(c.foo, str)
 
             def None_replaced(self):
                 os.environ['INVOKE_FOO'] = 'something'
                 c = Config(defaults={'foo': None})
                 c.load_shell_env()
-                eq_(c.foo, 'something')
+                assert c.foo == 'something'
 
             def booleans(self):
                 for input_, result in (
@@ -726,14 +724,14 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
                     os.environ['INVOKE_FOO'] = input_
                     c = Config(defaults={'foo': bool()})
                     c.load_shell_env()
-                    eq_(c.foo, result)
+                    assert c.foo == result
 
             def boolean_type_inputs_with_non_boolean_defaults(self):
                 for input_ in ('0', '1', '', 'meh', 'false'):
                     os.environ['INVOKE_FOO'] = input_
                     c = Config(defaults={'foo': 'bar'})
                     c.load_shell_env()
-                    eq_(c.foo, input_)
+                    assert c.foo == input_
 
             def numeric_types_become_casted(self):
                 tests = [
@@ -749,7 +747,7 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
                     os.environ['INVOKE_FOO'] = new_
                     c = Config(defaults={'foo': old()})
                     c.load_shell_env()
-                    eq_(c.foo, result)
+                    assert c.foo == result
 
             def arbitrary_types_work_too(self):
                 os.environ['INVOKE_FOO'] = 'whatever'
@@ -759,16 +757,16 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
                 old_obj = Meh()
                 c = Config(defaults={'foo': old_obj})
                 c.load_shell_env()
-                ok_(isinstance(c.foo, Meh))
-                ok_(c.foo is not old_obj)
+                assert isinstance(c.foo, Meh)
+                assert c.foo is not old_obj
 
 
             class uncastable_types:
-                @raises(UncastableEnvVar)
                 def _uncastable_type(self, default):
                     os.environ['INVOKE_FOO'] = 'stuff'
                     c = Config(defaults={'foo': default})
-                    c.load_shell_env()
+                    with raises(UncastableEnvVar):
+                        c.load_shell_env()
 
                 def lists(self):
                     self._uncastable_type(['a', 'list'])
@@ -790,24 +788,24 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
         def collection_overrides_defaults(self):
             c = Config(defaults={'nested': {'setting': 'default'}})
             c.load_collection({'nested': {'setting': 'collection'}})
-            eq_(c.nested.setting, 'collection')
+            assert c.nested.setting == 'collection'
 
         def systemwide_overrides_collection(self):
             c = Config(system_prefix=join(CONFIGS_PATH, 'yaml/'))
             c.load_collection({'outer': {'inner': {'hooray': 'defaults'}}})
-            eq_(c.outer.inner.hooray, 'yaml')
+            assert c.outer.inner.hooray == 'yaml'
 
         def user_overrides_systemwide(self):
             c = Config(
                 system_prefix=join(CONFIGS_PATH, 'yaml/'),
                 user_prefix=join(CONFIGS_PATH, 'json/'),
             )
-            eq_(c.outer.inner.hooray, 'json')
+            assert c.outer.inner.hooray == 'json'
 
         def user_overrides_collection(self):
             c = Config(user_prefix=join(CONFIGS_PATH, 'json/'))
             c.load_collection({'outer': {'inner': {'hooray': 'defaults'}}})
-            eq_(c.outer.inner.hooray, 'json')
+            assert c.outer.inner.hooray == 'json'
 
         def project_overrides_user(self):
             c = Config(
@@ -815,7 +813,7 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
                 project_location=join(CONFIGS_PATH, 'yaml'),
             )
             c.load_project()
-            eq_(c.outer.inner.hooray, 'yaml')
+            assert c.outer.inner.hooray == 'yaml'
 
         def project_overrides_systemwide(self):
             c = Config(
@@ -823,20 +821,20 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
                 project_location=join(CONFIGS_PATH, 'yaml'),
             )
             c.load_project()
-            eq_(c.outer.inner.hooray, 'yaml')
+            assert c.outer.inner.hooray == 'yaml'
 
         def project_overrides_collection(self):
             c = Config(project_location=join(CONFIGS_PATH, 'yaml'))
             c.load_project()
             c.load_collection({'outer': {'inner': {'hooray': 'defaults'}}})
-            eq_(c.outer.inner.hooray, 'yaml')
+            assert c.outer.inner.hooray == 'yaml'
 
         def env_vars_override_project(self):
             os.environ['INVOKE_OUTER_INNER_HOORAY'] = 'env'
             c = Config(project_location=join(CONFIGS_PATH, 'yaml'))
             c.load_project()
             c.load_shell_env()
-            eq_(c.outer.inner.hooray, 'env')
+            assert c.outer.inner.hooray == 'env'
 
         def env_vars_override_user(self):
             os.environ['INVOKE_OUTER_INNER_HOORAY'] = 'env'
@@ -844,7 +842,7 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
                 user_prefix=join(CONFIGS_PATH, 'yaml/'),
             )
             c.load_shell_env()
-            eq_(c.outer.inner.hooray, 'env')
+            assert c.outer.inner.hooray == 'env'
 
         def env_vars_override_systemwide(self):
             os.environ['INVOKE_OUTER_INNER_HOORAY'] = 'env'
@@ -852,21 +850,21 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
                 system_prefix=join(CONFIGS_PATH, 'yaml/'),
             )
             c.load_shell_env()
-            eq_(c.outer.inner.hooray, 'env')
+            assert c.outer.inner.hooray == 'env'
 
         def env_vars_override_collection(self):
             os.environ['INVOKE_OUTER_INNER_HOORAY'] = 'env'
             c = Config()
             c.load_collection({'outer': {'inner': {'hooray': 'defaults'}}})
             c.load_shell_env()
-            eq_(c.outer.inner.hooray, 'env')
+            assert c.outer.inner.hooray == 'env'
 
         def runtime_overrides_env_vars(self):
             os.environ['INVOKE_OUTER_INNER_HOORAY'] = 'env'
             c = Config(runtime_path=join(CONFIGS_PATH, 'json', 'invoke.json'))
             c.load_runtime()
             c.load_shell_env()
-            eq_(c.outer.inner.hooray, 'json')
+            assert c.outer.inner.hooray == 'json'
 
         def runtime_overrides_project(self):
             c = Config(
@@ -875,7 +873,7 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
             )
             c.load_runtime()
             c.load_project()
-            eq_(c.outer.inner.hooray, 'json')
+            assert c.outer.inner.hooray == 'json'
 
         def runtime_overrides_user(self):
             c = Config(
@@ -883,7 +881,7 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
                 user_prefix=join(CONFIGS_PATH, 'yaml/'),
             )
             c.load_runtime()
-            eq_(c.outer.inner.hooray, 'json')
+            assert c.outer.inner.hooray == 'json'
 
         def runtime_overrides_systemwide(self):
             c = Config(
@@ -891,13 +889,13 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
                 system_prefix=join(CONFIGS_PATH, 'yaml/'),
             )
             c.load_runtime()
-            eq_(c.outer.inner.hooray, 'json')
+            assert c.outer.inner.hooray == 'json'
 
         def runtime_overrides_collection(self):
             c = Config(runtime_path=join(CONFIGS_PATH, 'json', 'invoke.json'))
             c.load_collection({'outer': {'inner': {'hooray': 'defaults'}}})
             c.load_runtime()
-            eq_(c.outer.inner.hooray, 'json')
+            assert c.outer.inner.hooray == 'json'
 
         def cli_overrides_override_all(self):
             "CLI-driven overrides win vs all other layers"
@@ -907,28 +905,28 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
                 runtime_path=join(CONFIGS_PATH, 'json', 'invoke.json')
             )
             c.load_runtime()
-            eq_(c.outer.inner.hooray, 'overrides')
+            assert c.outer.inner.hooray == 'overrides'
 
         def yaml_prevents_yml_json_or_python(self):
             c = Config(system_prefix=join(CONFIGS_PATH, 'all-four/'))
-            ok_('json-only' not in c)
-            ok_('python_only' not in c)
-            ok_('yml-only' not in c)
-            ok_('yaml-only' in c)
-            eq_(c.shared, 'yaml-value')
+            assert 'json-only' not in c
+            assert 'python_only' not in c
+            assert 'yml-only' not in c
+            assert 'yaml-only' in c
+            assert c.shared == 'yaml-value'
 
         def yml_prevents_json_or_python(self):
             c = Config(system_prefix=join(CONFIGS_PATH, 'three-of-em/'))
-            ok_('json-only' not in c)
-            ok_('python_only' not in c)
-            ok_('yml-only' in c)
-            eq_(c.shared, 'yml-value')
+            assert 'json-only' not in c
+            assert 'python_only' not in c
+            assert 'yml-only' in c
+            assert c.shared == 'yml-value'
 
         def json_prevents_python(self):
             c = Config(system_prefix=join(CONFIGS_PATH, 'json-and-python/'))
-            ok_('python_only' not in c)
-            ok_('json-only' in c)
-            eq_(c.shared, 'json-value')
+            assert 'python_only' not in c
+            assert 'json-only' in c
+            assert c.shared == 'json-value'
 
 
     class clone:
@@ -946,36 +944,36 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
             # clone() passes in defaults= instead of doing an empty init +
             # copy. (When that is not the case, we end up with
             # global_defaults() being rerun and re-added to _defaults...)
-            eq_(c2._defaults, c1._defaults)
-            ok_(c2._defaults is not c1._defaults)
-            eq_(c2._overrides, c1._overrides)
-            ok_(c2._overrides is not c1._overrides)
-            eq_(c2._system_prefix, c1._system_prefix)
-            eq_(c2._user_prefix, c1._user_prefix)
-            eq_(c2._project_prefix, c1._project_prefix)
-            eq_(c2.prefix, c1.prefix)
-            eq_(c2.file_prefix, c1.file_prefix)
-            eq_(c2.env_prefix, c1.env_prefix)
-            eq_(c2._runtime_path, c1._runtime_path)
+            assert c2._defaults == c1._defaults
+            assert c2._defaults is not c1._defaults
+            assert c2._overrides == c1._overrides
+            assert c2._overrides is not c1._overrides
+            assert c2._system_prefix == c1._system_prefix
+            assert c2._user_prefix == c1._user_prefix
+            assert c2._project_prefix == c1._project_prefix
+            assert c2.prefix == c1.prefix
+            assert c2.file_prefix == c1.file_prefix
+            assert c2.env_prefix == c1.env_prefix
+            assert c2._runtime_path == c1._runtime_path
 
         def preserves_merged_config(self):
             c = Config(
                 defaults={'key': 'default'},
                 overrides={'key': 'override'},
             )
-            eq_(c.key, 'override')
-            eq_(c._defaults['key'], 'default')
+            assert c.key == 'override'
+            assert c._defaults['key'] == 'default'
             c2 = c.clone()
-            eq_(c2.key, 'override')
-            eq_(c2._defaults['key'], 'default')
-            eq_(c2._overrides['key'], 'override')
+            assert c2.key == 'override'
+            assert c2._defaults['key'] == 'default'
+            assert c2._overrides['key'] == 'override'
 
         def preserves_file_data(self):
             c = Config(system_prefix=join(CONFIGS_PATH, 'yaml/'))
-            eq_(c.outer.inner.hooray, 'yaml')
+            assert c.outer.inner.hooray == 'yaml'
             c2 = c.clone()
-            eq_(c2.outer.inner.hooray, 'yaml')
-            eq_(c2._system, {'outer': {'inner': {'hooray': 'yaml'}}})
+            assert c2.outer.inner.hooray == 'yaml'
+            assert c2._system == {'outer': {'inner': {'hooray': 'yaml'}}}
 
         @patch.object(Config, '_load_yaml', return_value={
             'outer': {'inner': {'hooray': 'yaml'}}
@@ -984,7 +982,7 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
             path = join(CONFIGS_PATH, 'yaml/')
             c = Config(system_prefix=path)
             c2 = c.clone()
-            eq_(c2.outer.inner.hooray, 'yaml')
+            assert c2.outer.inner.hooray == 'yaml'
             # Crummy way to say "only got called with this specific invocation
             # one time" (since assert_calls_with gets mad about other
             # invocations w/ different args)
@@ -992,7 +990,7 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
             my_call = call("{}invoke.yaml".format(path))
             try:
                 calls.remove(my_call)
-                ok_(my_call not in calls)
+                assert my_call not in calls
             except ValueError:
                 err = "{} not found in {} even once!"
                 assert False, err.format(my_call, calls)
@@ -1002,23 +1000,23 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
             c = Config(defaults={'foo': 'notbar'})
             c.load_shell_env()
             c2 = c.clone()
-            eq_(c2.foo, 'bar')
+            assert c2.foo == 'bar'
 
         def works_correctly_when_subclassed(self):
             # Because sometimes, implementation #1 is really naive!
             class MyConfig(Config):
                 pass
             c = MyConfig()
-            ok_(isinstance(c, MyConfig)) # sanity
+            assert isinstance(c, MyConfig) # sanity
             c2 = c.clone()
-            ok_(isinstance(c2, MyConfig)) # actual test
+            assert isinstance(c2, MyConfig) # actual test
 
         class into_kwarg:
             "'into' kwarg"
             def is_not_required(self):
                 c = Config(defaults={'meh': 'okay'})
                 c2 = c.clone()
-                eq_(c2.meh, 'okay')
+                assert c2.meh == 'okay'
 
             def raises_TypeError_if_value_is_not_Config_subclass(self):
                 try:
@@ -1043,7 +1041,7 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
                     pass
                 c = Config()
                 c2 = c.clone(into=MyConfig)
-                ok_(type(c2) is MyConfig)
+                assert type(c2) is MyConfig
 
             def non_conflicting_values_are_merged(self):
                 # NOTE: this is really just basic clone behavior.
@@ -1057,11 +1055,11 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
                 c['runtime'] = {'modification': 'sup'}
                 c2 = c.clone(into=MyConfig)
                 # New default data from MyConfig present
-                eq_(c2.new.data, 'ohai')
+                assert c2.new.data == 'ohai'
                 # As well as old default data from the cloned instance
-                eq_(c2.other.data, 'hello')
+                assert c2.other.data == 'hello'
                 # And runtime user mods from the cloned instance
-                eq_(c2.runtime.modification, 'sup')
+                assert c2.runtime.modification == 'sup'
 
         def does_not_deepcopy(self):
             c = Config(defaults={
@@ -1076,37 +1074,29 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
             })
             c2 = c.clone()
             # Basic identity
-            ok_(c is not c2, "Clone had same identity as original!")
+            assert c is not c2, "Clone had same identity as original!"
             # Dicts get recreated
-            ok_(c.oh is not c2.oh, "Top level key had same identity!")
-            ok_(c.oh.dear is not c2.oh.dear, "Midlevel key had same identity!")
+            assert c.oh is not c2.oh, "Top level key had same identity!"
+            assert c.oh.dear is not c2.oh.dear, "Midlevel key had same identity!"
             # Basic values get copied
-            ok_(
-                c.oh.dear.god is not c2.oh.dear.god,
-                "Leaf object() had same identity!"
-            )
-            eq_(c.shallow.objects, c2.shallow.objects)
-            ok_(
-                c.shallow.objects is not c2.shallow.objects,
-                "Shallow list had same identity!"
-            )
+            err = "Leaf object() had same identity!"
+            assert c.oh.dear.god is not c2.oh.dear.god, err
+            assert c.shallow.objects == c2.shallow.objects
+            err = "Shallow list had same identity!"
+            assert c.shallow.objects is not c2.shallow.objects, err
             # Deeply nested non-dict objects are stil problematic, oh well
-            ok_(
-                c.welp.cannot[1] is c2.welp.cannot[1],
-                "Huh, a deeply nested dict-in-a-list had different identity?"
-            )
-            ok_(
-                c.welp.cannot[1]['everything'] is c2.welp.cannot[1]['everything'], # noqa
-                "Huh, a deeply nested dict-in-a-list value had different identity?" # noqa
-            )
+            err = "Huh, a deeply nested dict-in-a-list had different identity?"
+            assert c.welp.cannot[1] is c2.welp.cannot[1], err
+            err = "Huh, a deeply nested dict-in-a-list value had different identity?" # noqa
+            assert c.welp.cannot[1]['everything'] is c2.welp.cannot[1]['everything'], err # noqa
 
 
     def can_be_pickled(self):
         c = Config(overrides={'foo': {'bar': {'biz': ['baz', 'buzz']}}})
         c2 = pickle.loads(pickle.dumps(c))
-        eq_(c, c2)
-        ok_(c is not c2)
-        ok_(c.foo.bar.biz is not c2.foo.bar.biz)
+        assert c == c2
+        assert c is not c2
+        assert c.foo.bar.biz is not c2.foo.bar.biz
 
 
 # NOTE: merge_dicts has its own very low level unit tests in its own file

@@ -3,9 +3,8 @@ import sys
 from invoke import Program
 
 import pytest
-from spec import assert_contains, assert_not_contains, eq_
 
-from _util import  expect, trap
+from _util import expect, trap
 
 
 pytestmark = pytest.mark.usefixtures("integration")
@@ -37,64 +36,64 @@ class ShellCompletion:
 
     def task_name_completion_includes_aliases(self):
         for name in ('z\n', 'toplevel'):
-            assert_contains(_complete('', 'alias_sorting'), name)
+            assert name in _complete('', 'alias_sorting')
 
     def top_level_with_dash_means_core_options(self):
         output = _complete('-')
         # No point mirroring all core options, just spot check a few
         for flag in ('--no-dedupe', '-d', '--debug', '-V', '--version'):
-            assert_contains(output, "{}\n".format(flag))
+            assert "{}\n".format(flag) in output
 
     def bare_double_dash_shows_only_long_core_options(self):
         output = _complete('--')
-        assert_contains(output, '--no-dedupe')
-        assert_not_contains(output, '-V')
+        assert '--no-dedupe' in output
+        assert '-V' not in output
 
     def task_names_only_complete_other_task_names(self):
         # Because only tokens starting with a dash should result in options.
-        assert_contains(_complete('print-foo', 'integration'), 'print-name')
+        assert 'print-name' in _complete('print-foo', 'integration')
 
     def task_name_completion_includes_tasks_already_seen(self):
         # Because it's valid to call the same task >1 time.
-        assert_contains(_complete('print-foo', 'integration'), 'print-foo')
+        assert 'print-foo' in _complete('print-foo', 'integration')
 
     def per_task_flags_complete_with_single_dashes(self):
         for flag in ('--name', '-n'):
-            assert_contains(_complete('print-name -', 'integration'), flag)
+            assert flag in _complete('print-name -', 'integration')
 
     def per_task_flags_complete_with_double_dashes(self):
         output = _complete('print-name --', 'integration')
-        assert_contains(output, '--name')
-        assert_not_contains(output, '-n\n') # newline because -n is in --name
+        assert '--name' in output
+        assert '-n\n' not in output # newline because -n is in --name
 
     def flag_completion_includes_inverse_booleans(self):
         output = _complete('basic-bool -', 'foo')
-        assert_contains(output, '--no-mybool')
+        assert '--no-mybool' in output
 
     def tasks_with_positional_args_complete_with_flags(self):
         # Because otherwise completing them is invalid anyways.
         # NOTE: this currently duplicates another test because this test cares
         # about a specific detail.
         output = _complete('print-name --', 'integration')
-        assert_contains(output, '--name')
+        assert '--name' in output
 
     def core_flags_taking_values_have_no_completion_output(self):
         # So the shell's default completion is available.
-        eq_(_complete('-f'), '')
+        assert _complete('-f') == ''
 
     def per_task_flags_taking_values_have_no_completion_output(self):
-        eq_(_complete('basic-arg --arg', 'foo'), '')
+        assert _complete('basic-arg --arg', 'foo') == ''
 
     def core_bool_flags_have_task_name_completion(self):
-        assert_contains(_complete('--echo', 'foo'), 'mytask')
+        assert 'mytask' in _complete('--echo', 'foo')
 
     def per_task_bool_flags_have_task_name_completion(self):
-        assert_contains(_complete('basic-bool --mybool', 'foo'), 'mytask')
+        assert 'mytask' in _complete('basic-bool --mybool', 'foo')
 
     def core_partial_or_invalid_flags_print_all_flags(self):
         for flag in ('--echo', '--complete'):
             for given in ('--e', '--nope'):
-                assert_contains(_complete(given), flag)
+                assert flag in _complete(given)
 
     def per_task_partial_or_invalid_flags_print_all_flags(self):
         for flag in ('--arg1', '--otherarg'):
