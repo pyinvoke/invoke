@@ -4,9 +4,7 @@ from invoke import Collection, task
 from invoke.util import LOG_FORMAT
 
 from invocations.docs import docs, www, sites, watch_docs
-from invocations.pytest import (
-    coverage as coverage_, integration, test as test_,
-)
+from invocations.pytest import coverage as coverage_, test as test_
 from invocations.packaging import vendorize, release
 
 

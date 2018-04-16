@@ -1,6 +1,5 @@
 import os
 import sys
-from functools import partial
 
 from invoke.util import six
 from mock import patch, Mock, ANY

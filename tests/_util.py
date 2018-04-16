@@ -7,10 +7,9 @@ except ImportError:
     termios = None
 from contextlib import contextmanager
 
-from invoke.vendor.six import BytesIO, b, iteritems, wraps
+from invoke.vendor.six import BytesIO, b, wraps
 
 from mock import patch, Mock
-import pytest
 from pytest import skip
 from pytest_relaxed import trap
 

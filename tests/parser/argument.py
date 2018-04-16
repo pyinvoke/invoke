@@ -24,10 +24,10 @@ class Argument_:
             assert 'b' in Argument('b').names
 
         def can_declare_positional(self):
-            assert Argument(name='foo', positional=True).positional == True
+            assert Argument(name='foo', positional=True).positional is True
 
         def positional_is_False_by_default(self):
-            assert Argument(name='foo').positional == False
+            assert Argument(name='foo').positional is False
 
         def can_set_attr_name_to_control_name_attr(self):
             a = Argument('foo', attr_name='bar')
@@ -178,7 +178,7 @@ class Argument_:
     class raw_value:
         def is_None_when_no_value_was_actually_seen(self):
             a = Argument('a', kind=int)
-            assert a.raw_value == None
+            assert a.raw_value is None
 
     class set_value:
         def casts_by_default(self):

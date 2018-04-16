@@ -43,8 +43,8 @@ class task_:
 
     def has_autoprint_option(self):
         ap = self._load('autoprint')
-        assert ap['nope'].autoprint == False
-        assert ap['yup'].autoprint == True
+        assert ap['nope'].autoprint is False
+        assert ap['yup'].autoprint is True
 
     def raises_ValueError_on_multiple_defaults(self):
         with raises(ValueError):
@@ -67,10 +67,12 @@ class task_:
         assert self.vanilla['iterable_values'].iterable == ['mylist']
 
     def allows_annotating_args_as_incrementable(self):
-        assert self.vanilla['incrementable_values'].incrementable == ['verbose']
+        arg = self.vanilla['incrementable_values']
+        assert arg.incrementable == ['verbose']
 
     def when_positional_arg_missing_all_non_default_args_are_positional(self):
-        assert self.vanilla['implicit_positionals'].positional == ['pos1', 'pos2']
+        arg = self.vanilla['implicit_positionals']
+        assert arg.positional == ['pos1', 'pos2']
 
     def context_arguments_should_not_appear_in_implicit_positional_list(self):
         @task
@@ -135,7 +137,7 @@ class Task_:
 
     class attributes:
         def has_default_flag(self):
-            assert Task(_func).is_default == False
+            assert Task(_func).is_default is False
 
         def name_defaults_to_body_name(self):
             assert Task(_func).name == '_func'
@@ -170,9 +172,9 @@ class Task_:
 
         def tracks_times_called(self):
             context = Context()
-            assert self.task.called == False
+            assert self.task.called is False
             self.task(context)
-            assert self.task.called == True
+            assert self.task.called is True
             assert self.task.times_called == 1
             self.task(context)
             assert self.task.times_called == 2
@@ -318,7 +320,7 @@ class Call_:
 
         class called_as:
             def defaults_to_None(self):
-                assert Call(_).called_as == None
+                assert Call(_).called_as is None
 
             def may_be_given(self):
                 assert Call(_, called_as='foo').called_as == 'foo'

@@ -47,7 +47,7 @@ class Parser_:
         Parser(ignore_unknown=True)
 
     def ignore_unknown_defaults_to_False(self):
-        assert Parser().ignore_unknown == False
+        assert Parser().ignore_unknown is False
 
     class parse_argv:
         def parses_sys_argv_style_list_of_strings(self):
@@ -91,7 +91,7 @@ class Parser_:
             t1 = Context('t1')
             init = Context()
             result = Parser((t1,), initial=init).parse_argv(['t1'])
-            assert result[0].name == None
+            assert result[0].name is None
             assert result[1].name == 't1'
 
         def returned_contexts_are_in_order_given(self):
@@ -102,13 +102,13 @@ class Parser_:
         def returned_context_member_arguments_contain_given_values(self):
             c = Context('mytask', args=(Argument('boolean', kind=bool),))
             result = Parser((c,)).parse_argv(['mytask', '--boolean'])
-            assert result[0].args['boolean'].value == True
+            assert result[0].args['boolean'].value is True
 
         def inverse_bools_get_set_correctly(self):
             arg = Argument('myarg', kind=bool, default=True)
             c = Context('mytask', args=(arg,))
             r = Parser((c,)).parse_argv(['mytask', '--no-myarg'])
-            assert r[0].args['myarg'].value == False
+            assert r[0].args['myarg'].value is False
 
         def arguments_which_take_values_get_defaults_overridden_correctly(self): # noqa
             args = (Argument('arg', kind=str), Argument('arg2', kind=int))
@@ -137,7 +137,7 @@ class Parser_:
 
         def clones_initial_context(self):
             a = Argument('foo', kind=bool)
-            assert a.value == None
+            assert a.value is None
             c = Context(args=(a,))
             p = Parser(initial=c)
             assert p.initial is c
@@ -147,12 +147,12 @@ class Parser_:
             assert c2 is not c
             a2 = c2.args['foo']
             assert a2 is not a
-            assert a.value == None
-            assert a2.value == True
+            assert a.value is None
+            assert a2.value is True
 
         def clones_noninitial_contexts(self):
             a = Argument('foo')
-            assert a.value == None
+            assert a.value is None
             c = Context(name='mytask', args=(a,))
             p = Parser(contexts=(c,))
             assert p.contexts['mytask'] is c
@@ -162,7 +162,7 @@ class Parser_:
             assert c2 is not c
             a2 = c2.args['foo']
             assert a2 is not a
-            assert a.value == None
+            assert a.value is None
             assert a2.value == 'val'
 
         class parsing_errors:
@@ -264,8 +264,8 @@ class Parser_:
             ))
             r = Parser([c]).parse_argv(['mytask', '--foo', '--bar'])
             a = r[0].args
-            assert a.foo.value == True
-            assert a.bar.value == True
+            assert a.foo.value is True
+            assert a.bar.value is True
 
     class optional_arg_values:
         def setup(self):
@@ -338,7 +338,7 @@ class Parser_:
                 # This should NOT raise a ParseError.
                 result = self._parse("--foo hello --bar", p)
                 assert result[0].args['foo'].value == 'hello'
-                assert result[0].args['bar'].value == True
+                assert result[0].args['bar'].value is True
 
             def actual_other_flag(self):
                 self._parser((

@@ -128,15 +128,15 @@ class Runner_:
 
     class pty:
         def pty_defaults_to_off(self):
-            assert self._run(_).pty == False
+            assert self._run(_).pty is False
 
         def honors_config(self):
             runner = self._runner(run={'pty': True})
-            assert runner.run(_).pty == True
+            assert runner.run(_).pty is True
 
         def kwarg_beats_config(self):
             runner = self._runner(run={'pty': False})
-            assert runner.run(_, pty=True).pty == True
+            assert runner.run(_, pty=True).pty is True
 
     class shell:
         def defaults_to_bash_or_cmdexe_when_pty_True(self):
@@ -190,19 +190,19 @@ class Runner_:
 
         def ok_attr_indicates_success(self):
             runner = self._runner()
-            assert runner.run(_).ok == True # default dummy retval is 0
+            assert runner.run(_).ok is True # default dummy retval is 0
 
         def ok_attr_indicates_failure(self):
             runner = self._runner(exits=1)
-            assert runner.run(_, warn=True).ok == False
+            assert runner.run(_, warn=True).ok is False
 
         def failed_attr_indicates_success(self):
             runner = self._runner()
-            assert runner.run(_).failed == False # default dummy retval is 0
+            assert runner.run(_).failed is False # default dummy retval is 0
 
         def failed_attr_indicates_failure(self):
             runner = self._runner(exits=1)
-            assert runner.run(_, warn=True).failed == True
+            assert runner.run(_, warn=True).failed is True
 
         @trap
         def stdout_attribute_contains_stdout(self):
@@ -217,8 +217,8 @@ class Runner_:
             assert sys.stderr.getvalue() == "foo"
 
         def whether_pty_was_used(self):
-            assert self._run(_).pty == False
-            assert self._run(_, pty=True).pty == True
+            assert self._run(_).pty is False
+            assert self._run(_, pty=True).pty is True
 
         def command_executed(self):
             assert self._run(_).command == _
@@ -481,7 +481,7 @@ class Runner_:
 
         def non_1_return_codes_still_act_as_failure(self):
             r = self._runner(exits=17).run(_, warn=True)
-            assert r.failed == True
+            assert r.failed is True
 
         class UnexpectedExit_repr:
             def similar_to_just_the_result_repr(self):
@@ -653,7 +653,7 @@ stderr 25
                 try:
                     self._regular_error()
                 except Failure as e:
-                    assert e.reason == None
+                    assert e.reason is None
                 else:
                     assert False, "Failed to raise Failure!"
 
@@ -701,8 +701,8 @@ stderr 25
                     try:
                         self._regular_error()
                     except Failure as e:
-                        assert e.result.ok == False
-                        assert e.result.failed == True
+                        assert e.result.ok is False
+                        assert e.result.failed is True
                         assert not bool(e.result)
                         assert not e.result
                     else:
@@ -729,8 +729,8 @@ stderr 25
                     try:
                         self._watcher_error()
                     except Failure as e:
-                        assert e.result.ok == False
-                        assert e.result.failed == True
+                        assert e.result.ok is False
+                        assert e.result.failed is True
                         assert not bool(e.result)
                         assert not e.result
                     else:
@@ -1251,7 +1251,7 @@ class Local_:
             mock_sys.stdin = object()
             # Test. If bug is present, this will error.
             runner = Local(Context())
-            assert runner.should_use_pty(pty=True, fallback=True) == False
+            assert runner.should_use_pty(pty=True, fallback=True) is False
 
         @mock_pty(trailing_error=OSError("Input/output error"))
         def spurious_OSErrors_handled_gracefully(self):
@@ -1288,16 +1288,16 @@ class Local_:
             @trap
             @mock_subprocess(isatty=False)
             def affects_result_pty_value(self, *mocks):
-                assert self._run(_, pty=True).pty == False
+                assert self._run(_, pty=True).pty is False
 
             @mock_pty(isatty=False)
             def overridden_fallback_affects_result_pty_value(self):
-                assert self._run(_, pty=True, fallback=False).pty == True
+                assert self._run(_, pty=True, fallback=False).pty is True
 
     class shell:
         @mock_pty(insert_os=True)
         def defaults_to_bash_or_cmdexe_when_pty_True(self, mock_os):
-            # NOTE: yea, windows can't run pty == true, but this is really
+            # NOTE: yea, windows can't run pty is true, but this is really
             # testing config behavior, so...meh
             self._run(_, pty=True)
             _expect_platform_shell(mock_os.execve.call_args_list[0][0][0])
@@ -1365,7 +1365,7 @@ class Result_:
         assert Result().exited == 0
 
     def pty_defaults_to_False(self):
-        assert Result().pty == False
+        assert Result().pty is False
 
     def repr_contains_useful_info(self):
         assert repr(Result(command="foo")) == "<Result cmd='foo' exited=0>"

@@ -47,7 +47,7 @@ class Runner_:
                 run("python -u respond_fail.py", watchers=[watcher], hide=True)
             except Failure as e:
                 assert isinstance(e.reason, WatcherError)
-                assert e.result.exited == None
+                assert e.result.exited is None
             else:
                 assert False, "Did not raise Failure!"
 

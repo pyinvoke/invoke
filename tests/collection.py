@@ -475,7 +475,8 @@ class Collection_:
             c = Collection()
             c.add_task(mytask)
             ctx = c.to_contexts()[0]
-            assert ctx.positional_args, [ctx.args['second'] == ctx.args['first']]
+            expected = [ctx.args['second'], ctx.args['first']]
+            assert ctx.positional_args == expected
 
         def exposes_namespaced_task_names(self):
             assert 'sub.subtask' in [x.name for x in self.contexts]
@@ -572,7 +573,8 @@ class Collection_:
             leaf.configure({'key': 'leaf-value'})
             middle = Collection('middle', leaf)
             root = Collection('root', middle)
-            assert root.configuration('middle.leaf.task') == {'key': 'leaf-value'}
+            config = root.configuration('middle.leaf.task')
+            assert config == {'key': 'leaf-value'}
 
         def invalid_subcollection_paths_result_in_KeyError(self):
             # Straight up invalid
@@ -591,7 +593,8 @@ class Collection_:
             leaf.configure({'key': 'leaf-value'})
             middle = Collection('middle', leaf)
             root = Collection('root', middle)
-            assert root.configuration('middle.leaf.task') == {'key': 'leaf-value'}
+            config = root.configuration('middle.leaf.task')
+            assert config == {'key': 'leaf-value'}
             # Key stored on mid + leaf but not root
             middle.configure({'key': 'whoa'})
             assert root.configuration('middle.leaf.task') == {'key': 'whoa'}

@@ -52,7 +52,7 @@ class Config_:
 
         class file_prefix:
             def defaults_to_None(self):
-                assert Config().file_prefix == None
+                assert Config().file_prefix is None
 
             @patch.object(Config, '_load_yaml')
             def informs_config_filenames(self, load_yaml):
@@ -63,7 +63,7 @@ class Config_:
 
         class env_prefix:
             def defaults_to_None(self):
-                assert Config().env_prefix == None
+                assert Config().env_prefix is None
 
             def informs_env_vars_loaded(self):
                 os.environ['OTHER_FOO'] = 'bar'
@@ -161,13 +161,13 @@ class Config_:
 
         def overrides_dict_is_first_posarg(self):
             c = Config({'new': 'data', 'run': {'hide': True}})
-            assert c.run.hide == True # default is False
-            assert c.run.warn == False # in global defaults, untouched
+            assert c.run.hide is True # default is False
+            assert c.run.warn is False # in global defaults, untouched
             assert c.new == 'data' # data only present at overrides layer
 
         def overrides_dict_is_also_a_kwarg(self):
             c = Config(overrides={'run': {'hide': True}})
-            assert c.run.hide == True
+            assert c.run.hide is True
 
         @patch.object(Config, 'load_system')
         @patch.object(Config, 'load_user')
@@ -255,7 +255,7 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
             assert len(c) == 1
             assert c.get('foo') == 'bar'
             if six.PY2:
-                assert c.has_key('foo') == True  # noqa
+                assert c.has_key('foo') is True  # noqa
                 assert list(c.iterkeys()) == ['foo']
                 assert list(c.itervalues()) == ['bar']
             assert list(c.items()) == [('foo', 'bar')]
@@ -352,7 +352,8 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
                 assert c.nested.setdefault('leafkey') == 'leafval'
                 assert c.setdefault('notfoo', 'notbar') == 'notbar'
                 assert c.notfoo == 'notbar'
-                assert c.nested.setdefault('otherleaf', 'otherval') == 'otherval'
+                nested = c.nested.setdefault('otherleaf', 'otherval')
+                assert nested == 'otherval'
                 assert c.nested.otherleaf == 'otherval'
 
             def update(self):
@@ -369,7 +370,8 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
                 assert c.nested.leafkey == 'otherval'
                 # Apparently allowed but wholly useless
                 c.update()
-                assert c == {'foo': 'notbar', 'nested': {'leafkey': 'otherval'}}
+                expected = {'foo': 'notbar', 'nested': {'leafkey': 'otherval'}}
+                assert c == expected
                 # Kwarg edition
                 c.update(foo='otherbar')
                 assert c.foo == 'otherbar'
@@ -425,7 +427,7 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
                     return 7
             c = MyConfig({'myattr': 'foo', 'mymethod': 'bar'})
             # By default, attr and config value separate
-            assert c.myattr == None
+            assert c.myattr is None
             assert c['myattr'] == 'foo'
             # After a setattr, same holds true
             c.myattr = 'notfoo'
@@ -567,7 +569,7 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
 
         def loads_no_project_specific_file_if_no_project_location_given(self):
             c = Config()
-            assert c._project_path == None
+            assert c._project_path is None
             c.load_project()
             assert list(c._project.keys()) == []
             defaults = ['tasks', 'run', 'runners', 'sudo']
@@ -1077,7 +1079,7 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
             assert c is not c2, "Clone had same identity as original!"
             # Dicts get recreated
             assert c.oh is not c2.oh, "Top level key had same identity!"
-            assert c.oh.dear is not c2.oh.dear, "Midlevel key had same identity!"
+            assert c.oh.dear is not c2.oh.dear, "Midlevel key had same identity!" # noqa
             # Basic values get copied
             err = "Leaf object() had same identity!"
             assert c.oh.dear.god is not c2.oh.dear.god, err

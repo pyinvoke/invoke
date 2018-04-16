@@ -57,7 +57,12 @@ class merge_dicts_:
         d1 = {'foo': {'bar': {'biz': 'baz'}}, 'meh': 17, 'myown': 'ok'}
         d2 = {'foo': {'bar': {'biz': 'notbaz'}}, 'meh': 25}
         merge_dicts(d1, d2)
-        assert d1 == {'foo': {'bar': {'biz': 'notbaz'}}, 'meh': 25, 'myown': 'ok'}
+        expected = {
+            'foo': {'bar': {'biz': 'notbaz'}},
+            'meh': 25,
+            'myown': 'ok',
+        }
+        assert d1 == expected
 
     def dict_value_merges_are_not_references(self):
         core = {}
@@ -70,7 +75,7 @@ class merge_dicts_:
         assert core == {'foo': {'bar': {'biz': 'proj value'}}}
         assert proj['foo']['bar']['biz'] == 'proj value'
         # Identity tests can also prove the bug early
-        assert core['foo'] is not proj['foo'], "Core foo is literally proj foo!"
+        assert core['foo'] is not proj['foo'], "Core foo is literally proj foo!" # noqa
         # Subsequent merge - just overwrites leaf values this time (thus no
         # real change, but this is what real config merge code does, so why
         # not)
@@ -90,7 +95,7 @@ class merge_dicts_:
         d1 = {}
         d2 = {'foo': open(__file__)}
         merge_dicts(d1, d2)
-        assert d1['foo'].closed == False
+        assert d1['foo'].closed is False
 
 class copy_dict_:
     def returns_deep_copy_of_given_dict(self):

@@ -153,7 +153,7 @@ class Main:
             result = run('stty -a', hide=True, pty=True)
             # PTYs use \r\n, not \n, line separation
             assert "\r\n" in result.stdout
-            assert result.pty == True
+            assert result.pty is True
 
         def pty_size_is_realistic(self):
             # When we don't explicitly set pty size, 'stty size' sees it as

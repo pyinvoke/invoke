@@ -8,12 +8,12 @@ def go(ctx):
 @task
 def check_warn(c):
     # default: False
-    assert c.config.run.warn == True
+    assert c.config.run.warn is True
 
 @task
 def check_pty(c):
     # default: False
-    assert c.config.run.pty == True
+    assert c.config.run.pty is True
 
 @task
 def check_hide(c):
@@ -23,4 +23,4 @@ def check_hide(c):
 @task
 def check_echo(c):
     # default: False
-    assert c.config.run.echo == True
+    assert c.config.run.echo is True

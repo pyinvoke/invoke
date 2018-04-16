@@ -202,7 +202,9 @@ class Context_:
             skip()
 
         def shortflag_inputs_work_too(self):
-            assert self.tasked.help_for('-m') == self.tasked.help_for('--myarg')
+            m = self.tasked.help_for('-m')
+            myarg = self.tasked.help_for('--myarg')
+            assert m == myarg
 
         def optional_values_use_brackets(self):
             result = self.tasked.help_for('--optval')

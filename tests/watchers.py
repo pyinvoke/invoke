@@ -58,7 +58,8 @@ class Responder_:
 
     def yields_response_when_regex_seen(self):
         r = Responder(pattern=r'tech.*debt', response='pay it down')
-        assert list(r.submit("technically, it's still debt")) == ['pay it down']
+        response = r.submit("technically, it's still debt")
+        assert list(response) == ['pay it down']
 
     def multiple_hits_within_stream_yield_multiple_responses(self):
         r = Responder(pattern='jump', response='how high?')

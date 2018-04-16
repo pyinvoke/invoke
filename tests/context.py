@@ -219,7 +219,7 @@ class Context_:
                 with ctx.prefix('cd bar'):
                     ctx.run('whoami')
                     cmd = "cd foo && cd bar && whoami"
-                    assert runner.run.called, "run() never called runner.run()!"
+                    assert runner.run.called, "run() never called runner.run()!" # noqa
                     assert runner.run.call_args[0][0] == cmd
 
                 ctx.run('whoami')
