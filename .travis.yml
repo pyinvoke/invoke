@@ -65,7 +65,7 @@ script:
   # sudo-related integration tests work as expected. (Otherwise, sudo prompt
   # response will not be properly tested!)
   # NOTE: This command will fail if the tests fail.
-  - "sudo -u sudouser bash -c \"source $VIRTUAL_ENV/bin/activate && inv coverage --no-html\""
+  - "sudo -u sudouser bash -c \"source $VIRTUAL_ENV/bin/activate && inv coverage --report=xml\""
   # Websites build OK? (Not on PyPy3, Sphinx is all "who the hell are you?" =/
   - "[[ $TRAVIS_PYTHON_VERSION != 'pypy3' ]] && inv sites"
   # Doctests in websites OK?
