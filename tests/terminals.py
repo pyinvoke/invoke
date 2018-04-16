@@ -2,7 +2,7 @@
 from invoke.terminals import WINDOWS
 import pytest
 pytestmark = pytest.mark.skipif(
-    WINDOWS, "Low level terminal tests only work well on POSIX"
+    WINDOWS, reason="Low level terminal tests only work well on POSIX"
 )
 
 import fcntl
