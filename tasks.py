@@ -1,16 +1,53 @@
 import os
 
+from invoke import Collection, task
+from invoke.util import LOG_FORMAT
+
 from invocations.docs import docs, www, sites, watch_docs
-from invocations.pytest import coverage, integration, test
+from invocations.pytest import (
+    coverage as coverage_, integration, test as test_,
+)
 from invocations.packaging import vendorize, release
 
-from invoke import Collection
-from invoke.util import LOG_FORMAT
+
+@task
+def test(
+    c, verbose=False, color=True, capture='no', module=None, k=None,
+    x=False, opts='', pty=True,
+):
+    """
+    Run pytest. See `invocations.pytest.test` for details.
+
+    This is a simple wrapper around the abovementioned task, which makes a
+    couple minor defaults changes appropriate for this particular test suite,
+    such as:
+
+    - setting ``capture=no`` instead of ``capture=sys``, as we do a very large
+      amount of subprocess IO testing that even the ``sys``  capture screws up
+    - setting ``verbose=False`` because we have a large number of tests and
+      skipping verbose output by default is a ~20% time savings.)
+    """
+    return test_(
+        c, verbose=verbose, color=color, capture=capture, module=module, k=k,
+        x=x, opts=opts, pty=pty,
+    )
+
+
+@task
+def coverage(c, report='term', opts=''):
+    """
+    Run pytest in coverage mode. See `invocations.pytest.coverage` for details.
+    """
+    # Use our own test() instead of theirs.
+    # TODO: allow coverage() to just look up the nearby-by-namespace-attachment
+    # test() instead of hardcoding its own test or doing it this way with an
+    # arg.
+    return coverage_(c, report=report, opts=opts, tester=test)
 
 
 ns = Collection(
     test, coverage, integration, vendorize, release, www, docs, sites,
-    watch_docs
+    watch_docs,
 )
 ns.configure({
     'tests': {
