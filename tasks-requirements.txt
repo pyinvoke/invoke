@@ -8,9 +8,10 @@ wheel==0.24
 twine==1.11.0
 readme_renderer==17.2
 # And this is required for the coverage task
-coverage==3.7.1
+coverage==4.5.1
 # Technically only needed for Travis, but might as well add it here
-codecov==1.6.3
+codecov==2.0.15
+certifi==2018.4.16
 # Gotta limit Sphinx to <1.7 for now, or releases blows up. (has to be done in
 # here since this file gets run by itself sometimes.)
 Sphinx>=1.4,<1.7
