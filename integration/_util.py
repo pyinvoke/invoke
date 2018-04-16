@@ -5,7 +5,7 @@ import time
 
 from invoke.vendor.six import wraps
 
-from spec import skip
+from pytest import skip
 
 
 def current_cpu_usage():

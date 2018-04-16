@@ -1,11 +1,11 @@
 import os
 
-from spec import Spec, eq_, skip
+from pytest import skip
 
 from invoke import Context, Config
 
 
-class Context_(Spec):
+class Context_:
     class sudo:
         def base_case(self):
             # NOTE: Assumes a user whose password is 'mypass' has been created
@@ -16,4 +16,4 @@ class Context_(Spec):
                 skip()
             config = Config({'sudo': {'password': 'mypass'}})
             result = Context(config=config).sudo('whoami', hide=True)
-            eq_(result.stdout.strip(), 'root')
+            assert result.stdout.strip() == 'root'

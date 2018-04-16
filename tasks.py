@@ -33,6 +33,18 @@ def test(
     )
 
 
+# TODO: replace with invocations' once the "call truly local tester" problem is
+# solved (see other TODOs). For now this is just a copy/paste/modify.
+@task(help=test.help)
+def integration(c, opts=None, pty=True):
+    """
+    Run the integration test suite. May be slow!
+    """
+    opts = opts or ""
+    opts += " integration/"
+    test(c, opts=opts, pty=pty)
+
+
 @task
 def coverage(c, report='term', opts=''):
     """

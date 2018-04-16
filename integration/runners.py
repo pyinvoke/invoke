@@ -2,7 +2,7 @@ import os
 import platform
 
 from mock import Mock
-from spec import Spec, eq_, ok_, skip
+from pytest import skip
 
 from invoke import (
     run, Local, Context, ThreadException, Responder, FailingResponder,
@@ -14,7 +14,7 @@ from _util import assert_cpu_usage
 
 PYPY = platform.python_implementation() == 'PyPy'
 
-class Runner_(Spec):
+class Runner_:
     def setup(self):
         os.chdir(os.path.join(os.path.dirname(__file__), '_support'))
 
@@ -46,8 +46,8 @@ class Runner_(Spec):
             try:
                 run("python -u respond_fail.py", watchers=[watcher], hide=True)
             except Failure as e:
-                ok_(isinstance(e.reason, WatcherError))
-                eq_(e.result.exited, None)
+                assert isinstance(e.reason, WatcherError)
+                assert e.result.exited == None
             else:
                 assert False, "Did not raise Failure!"
 
@@ -90,8 +90,8 @@ class Runner_(Spec):
             try:
                 runner.run("cat /usr/share/dict/words", pty=pty)
             except ThreadException as e:
-                eq_(len(e.exceptions), 1)
-                ok_(e.exceptions[0].type is Whoops)
+                assert len(e.exceptions) == 1
+                assert e.exceptions[0].type is Whoops
             else:
                 assert False, "Did not receive expected ThreadException!"
 

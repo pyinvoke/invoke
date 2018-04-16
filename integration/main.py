@@ -2,19 +2,20 @@ import io
 import os
 import sys
 
-from spec import Spec, trap, eq_, ok_, skip
+from pytest import skip
+from pytest_relaxed import trap
 
 from invoke.util import six
 
 from invoke import run
 from invoke._version import __version__
-from invoke.platform import WINDOWS
+from invoke.terminals import WINDOWS
 
 from _util import only_utf8
 
 
 def _output_eq(cmd, expected):
-    return eq_(run(cmd, hide=True).stdout, expected)
+    assert run(cmd, hide=True).stdout == expected
 
 def _setup(self):
     self.cwd = os.getcwd()
@@ -22,7 +23,7 @@ def _setup(self):
     os.chdir(os.path.dirname(__file__))
 
 
-class Main(Spec):
+class Main:
     def setup(self):
         # MEH
         _setup(self)
@@ -41,11 +42,11 @@ class Main(Spec):
 
         @trap
         def help_output(self):
-            ok_("Usage: inv[oke] " in run("invoke --help").stdout)
+            assert "Usage: inv[oke] " in run("invoke --help").stdout
 
         @trap
         def per_task_help(self):
-            ok_("Frobazz" in run("invoke -c _explicit foo --help").stdout)
+            assert "Frobazz" in run("invoke -c _explicit foo --help").stdout
 
         @trap
         def shorthand_binary_name(self):
@@ -65,7 +66,7 @@ class Main(Spec):
         @trap
         def bad_collection_exits_nonzero(self):
             result = run("inv -c nope -l", warn=True)
-            eq_(result.exited, 1)
+            assert result.exited == 1
             assert not result.stdout
             assert result.stderr
 
@@ -131,7 +132,7 @@ class Main(Spec):
             substr = "      hello\t\t\nworld with spaces"
             cmd = """ eval 'echo "{}" ' """.format(substr)
             expected = '      hello\t\t\r\nworld with spaces\r\n'
-            eq_(run(cmd, pty=True, hide='both').stdout, expected)
+            assert run(cmd, pty=True, hide='both').stdout == expected
 
         def pty_puts_both_streams_in_stdout(self):
             if WINDOWS:
@@ -140,8 +141,8 @@ class Main(Spec):
             err_echo = "{} err.py".format(sys.executable)
             command = "echo foo && {} bar".format(err_echo)
             r = run(command, hide='both', pty=True)
-            eq_(r.stdout, 'foo\r\nbar\r\n')
-            eq_(r.stderr, '')
+            assert r.stdout == 'foo\r\nbar\r\n'
+            assert r.stderr == ''
 
         def simple_command_with_pty(self):
             """
@@ -151,8 +152,8 @@ class Main(Spec):
             # under a pty, and prints useful info otherwise
             result = run('stty -a', hide=True, pty=True)
             # PTYs use \r\n, not \n, line separation
-            ok_("\r\n" in result.stdout)
-            eq_(result.pty, True)
+            assert "\r\n" in result.stdout
+            assert result.pty == True
 
         def pty_size_is_realistic(self):
             # When we don't explicitly set pty size, 'stty size' sees it as
