@@ -10,8 +10,8 @@ from contextlib import contextmanager
 from invoke.vendor.six import BytesIO, b, iteritems, wraps
 
 from mock import patch, Mock
-from spec import Spec, eq_, ok_, skip
 import pytest
+from pytest import skip
 from pytest_relaxed import trap
 
 from invoke import Program, Runner
@@ -45,31 +45,26 @@ def load(name):
         return imported
 
 
-# TODO: replace with use of conftest.py's fixtures instead
-
-class IntegrationSpec(Spec):
-    def setup(self):
-        # Preserve environment for later restore
-        self.old_environ = os.environ.copy()
-        # Always do things relative to tests/_support
-        os.chdir(support)
-
-    def teardown(self):
-        # Chdir back to project root to avoid problems
-        os.chdir(os.path.join(os.path.dirname(__file__), '..'))
-        # Nuke changes to environ
-        os.environ.clear()
-        os.environ.update(self.old_environ)
-        # Strip any test-support task collections from sys.modules to prevent
-        # state bleed between tests; otherwise tests can incorrectly pass
-        # despite not explicitly loading/cd'ing to get the tasks they call
-        # loaded.
-        for name, module in iteritems(sys.modules.copy()):
-            if module and support in getattr(module, '__file__', ''):
-                del sys.modules[name]
-
-
 @trap
+def run(invocation, program=None, invoke=True):
+    """
+    Run ``invocation`` via ``program``, returning output stream captures.
+
+    ``program`` defaults to ``Program()``.
+
+    To skip automatically assuming the argv under test starts with ``"invoke
+    "``, say ``invoke=False``.
+
+    :returns: Two-tuple of ``stdout, stderr`` strings.
+    """
+    if program is None:
+        program = Program()
+    if invoke:
+        invocation = "invoke {}".format(invocation)
+    program.run(invocation, exit=False)
+    return sys.stdout.getvalue(), sys.stderr.getvalue()
+
+
 def expect(invocation, out=None, err=None, program=None, invoke=True,
     test=None):
     """
@@ -85,18 +80,18 @@ def expect(invocation, out=None, err=None, program=None, invoke=True,
     To customize the operator used for testing (default: equality), use
     ``test`` (which should be an assertion wrapper of some kind).
     """
-    if program is None:
-        program = Program()
-    if invoke:
-        invocation = "invoke {}".format(invocation)
-    program.run(invocation, exit=False)
+    stdout, stderr = run(invocation, program, invoke)
     # Perform tests
-    stdout = sys.stdout.getvalue()
-    stderr = sys.stderr.getvalue()
     if out is not None:
-        (test or eq_)(stdout, out)
+        if test:
+            test(stdout, out)
+        else:
+            assert stdout == out
     if err is not None:
-        (test or eq_)(stderr, err)
+        if test:
+            test(stderr, err)
+        else:
+            assert stderr == err
     # Guard against silent failures; since we say exit=False this is the only
     # real way to tell if stuff died in a manner we didn't expect.
     elif stderr:
@@ -222,13 +217,13 @@ def mock_pty(out='', err='', exit=0, isatty=None, trailing_error=None,
             # own assertions if desired
             pty.fork.assert_called_with()
             # Expect a get, and then later set, of terminal window size
-            eq_(ioctl.call_args_list[0][0][1], termios.TIOCGWINSZ)
-            eq_(ioctl.call_args_list[1][0][1], termios.TIOCSWINSZ)
+            assert ioctl.call_args_list[0][0][1] == termios.TIOCGWINSZ
+            assert ioctl.call_args_list[1][0][1] == termios.TIOCSWINSZ
             if not skip_asserts:
                 for name in ('execve', 'waitpid'):
-                    ok_(getattr(os, name).called)
+                    assert getattr(os, name).called
                 # Ensure at least one of the exit status getters was called
-                ok_(os.WEXITSTATUS.called or os.WTERMSIG.called)
+                assert os.WEXITSTATUS.called or os.WTERMSIG.called
         return wrapper
     return decorator
 

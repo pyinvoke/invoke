@@ -5,12 +5,12 @@ import pytest
 from invoke import Collection, Config, Context, Executor, Task, call, task
 from invoke.parser import ParserContext
 
-from _util import expect, IntegrationSpec
+from _util import expect
 
 
 # TODO: why does this not work as a decorator? probably relaxed's fault - but
 # how?
-pytestmark = pytest.mark.usefixtures("environ", "chdir_support")
+pytestmark = pytest.mark.usefixtures("integration")
 
 
 class Executor_:

@@ -1,6 +1,8 @@
 import logging
 import os
+import sys
 
+from invoke.vendor.six import iteritems
 import pytest
 
 from _util import support
@@ -23,6 +25,7 @@ def environ():
     os.environ.clear()
     os.environ.update(old_environ)
 
+
 @pytest.fixture
 def chdir_support():
     # Always do things relative to tests/_support
@@ -31,3 +34,22 @@ def chdir_support():
     # Chdir back to project root to avoid problems
     os.chdir(os.path.join(os.path.dirname(__file__), '..'))
 
+
+@pytest.fixture
+def clean_sys_modules():
+    # TODO: _arguably_ it might be cleaner to register this as a 'finalizer'?
+    # it's not like the yield isn't readable here - it's a fixture that only
+    # performs teardown.
+    yield
+    # Strip any test-support task collections from sys.modules to prevent
+    # state bleed between tests; otherwise tests can incorrectly pass
+    # despite not explicitly loading/cd'ing to get the tasks they call
+    # loaded.
+    for name, module in iteritems(sys.modules.copy()):
+        if module and support in getattr(module, '__file__', ''):
+            del sys.modules[name]
+
+
+@pytest.fixture
+def integration(environ, chdir_support, clean_sys_modules):
+    yield

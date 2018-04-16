@@ -2,9 +2,13 @@ import sys
 
 from invoke import Program
 
+import pytest
 from spec import assert_contains, assert_not_contains, eq_
 
-from _util import  expect, IntegrationSpec, trap
+from _util import  expect, trap
+
+
+pytestmark = pytest.mark.usefixtures("integration")
 
 
 @trap
@@ -17,7 +21,7 @@ def _complete(invocation, collection=None):
     return sys.stdout.getvalue()
 
 
-class ShellCompletion(IntegrationSpec):
+class ShellCompletion:
     """
     Shell tab-completion behavior
     """

@@ -4,7 +4,9 @@ from functools import partial
 
 from invoke.util import six
 from mock import patch, Mock, ANY
-from spec import eq_, ok_, trap, skip, assert_contains, assert_not_contains
+import pytest
+from pytest import skip
+from pytest_relaxed import trap
 
 from invoke import (
     Program, Collection, Task, FilesystemLoader, Executor, Config,
@@ -13,53 +15,54 @@ from invoke import (
 from invoke import main
 from invoke.util import cd
 
-from _util import (
-    load, IntegrationSpec, expect, skip_if_windows,
-)
+from _util import load, expect, skip_if_windows, run
 
 
 ROOT = os.path.abspath(os.path.sep)
 
 
-class Program_(IntegrationSpec):
+pytestmark = pytest.mark.usefixtures("integration")
+
+
+class Program_:
     class init:
         "__init__"
         def may_specify_version(self):
-            eq_(Program(version='1.2.3').version, '1.2.3')
+            assert Program(version='1.2.3').version == '1.2.3'
 
         def default_version_is_unknown(self):
-            eq_(Program().version, 'unknown')
+            assert Program().version == 'unknown'
 
         def may_specify_namespace(self):
             foo = load('foo')
-            ok_(Program(namespace=foo).namespace is foo)
+            assert Program(namespace=foo).namespace is foo
 
         def may_specify_name(self):
-            eq_(Program(name='Myapp').name, 'Myapp')
+            assert Program(name='Myapp').name == 'Myapp'
 
         def may_specify_binary(self):
-            eq_(Program(binary='myapp').binary, 'myapp')
+            assert Program(binary='myapp').binary == 'myapp'
 
         def loader_class_defaults_to_FilesystemLoader(self):
-            ok_(Program().loader_class is FilesystemLoader)
+            assert Program().loader_class is FilesystemLoader
 
         def may_specify_loader_class(self):
             klass = object()
-            eq_(Program(loader_class=klass).loader_class, klass)
+            assert Program(loader_class=klass).loader_class == klass
 
         def executor_class_defaults_to_Executor(self):
-            ok_(Program().executor_class is Executor)
+            assert Program().executor_class is Executor
 
         def may_specify_executor_class(self):
             klass = object()
-            eq_(Program(executor_class=klass).executor_class, klass) # noqa
+            assert Program(executor_class=klass).executor_class == klass
 
         def config_class_defaults_to_Config(self):
-            ok_(Program().config_class is Config)
+            assert Program().config_class is Config
 
         def may_specify_config_class(self):
             klass = object()
-            eq_(Program(config_class=klass).config_class, klass) # noqa
+            assert Program(config_class=klass).config_class == klass
 
 
     class miscellaneous:
@@ -72,11 +75,11 @@ class Program_(IntegrationSpec):
 
         def bytecode_skipped_by_default(self):
             expect('-c foo mytask')
-            eq_(sys.dont_write_bytecode, True)
+            assert sys.dont_write_bytecode
 
         def write_pyc_explicitly_enables_bytecode_writing(self):
             expect('--write-pyc -c foo mytask')
-            eq_(sys.dont_write_bytecode, False)
+            assert not sys.dont_write_bytecode
 
 
     class normalize_argv:
@@ -118,28 +121,21 @@ class Program_(IntegrationSpec):
 
     class binary:
         def defaults_to_argv_when_None(self):
-            expect(
-                "myapp --help",
-                out="myapp [--core-opts]",
-                invoke=False,
-                test=assert_contains
-            )
+            stdout, _ = run("myapp --help", invoke=False)
+            assert "myapp [--core-opts]" in stdout
 
         def uses_overridden_value_when_given(self):
-            expect(
-                "myapp --help",
-                out="nope [--core-opts]",
-                program=Program(binary='nope'),
-                invoke=False,
-                test=assert_contains
+            stdout, _ = run(
+                "myapp --help", invoke=False, program=Program(binary='nope'),
             )
+            assert "nope [--core-opts]" in stdout
 
         @trap
         def use_binary_basename_when_invoked_absolutely(self):
             Program().run("/usr/local/bin/myapp --help", exit=False)
             stdout = sys.stdout.getvalue()
-            assert_contains(stdout, "myapp [--core-opts]")
-            assert_not_contains(stdout, "/usr/local/bin")
+            assert "myapp [--core-opts]" in stdout
+            assert "/usr/local/bin" not in stdout
 
 
     class print_version:
@@ -157,32 +153,20 @@ class Program_(IntegrationSpec):
             # checkup.
             for program in (Program(), Program(namespace=Collection())):
                 for arg in ('--complete', '--debug', '--warn-only', '--list'):
-                    expect(
-                        "--help",
-                        program=program,
-                        out=arg,
-                        test=assert_contains
-                    )
+                    stdout, _ = run("--help", program=program)
+                    assert arg in stdout
 
         def null_namespace_triggers_task_related_args(self):
             program = Program(namespace=None)
             for arg in program.task_args():
-                expect(
-                    "--help",
-                    program=program,
-                    out=arg.name,
-                    test=assert_contains
-                )
+                stdout, _ = run("--help", program=program)
+                assert arg.name in stdout
 
         def non_null_namespace_does_not_trigger_task_related_args(self):
             for arg in Program().task_args():
-                expect(
-                    "--help",
-                    out=arg.name,
-                    program=Program(namespace=Collection(mytask=Task(Mock()))),
-                    test=assert_not_contains,
-                )
-
+                program = Program(namespace=Collection(mytask=Task(Mock())))
+                stdout, _ = run("--help", program=program)
+                assert arg.name not in stdout
 
     class load_collection:
         def complains_when_default_collection_not_found(self):
@@ -215,8 +199,8 @@ class Program_(IntegrationSpec):
             cmd = "myapp -e foo -- myremainder"
             Program(executor_class=klass).run(cmd, exit=False)
             core = klass.call_args[0][2]
-            eq_(core[0].args['echo'].value, True)
-            eq_(core.remainder, "myremainder")
+            assert core[0].args['echo'].value
+            assert core.remainder == "myremainder"
 
 
     class core_args:
@@ -226,9 +210,9 @@ class Program_(IntegrationSpec):
             core_args = Program().core_args()
             core_arg_names = [x.names[0] for x in core_args]
             for name in ('complete', 'help', 'pty', 'version'):
-                ok_(name in core_arg_names)
+                assert name in core_arg_names
             # Also make sure it's a list for easier tweaking/appending
-            ok_(isinstance(core_args, list))
+            assert isinstance(core_args, list)
 
 
     class run:
@@ -275,7 +259,8 @@ class Program_(IntegrationSpec):
             # Expect that we did print the core body of the ParseError (e.g.
             # "no idea what foo is!") and exit 1. (Intent is to display that
             # info w/o a full traceback, basically.)
-            eq_(sys.stderr.getvalue(), "No idea what '{}' is!\n".format(nah))
+            stderr = sys.stderr.getvalue()
+            assert stderr == "No idea what '{}' is!\n".format(nah)
             mock_exit.assert_called_with(1)
 
         @trap
@@ -292,7 +277,7 @@ class Program_(IntegrationSpec):
             # Expect NO repr printed, because stdout/err were not hidden, so we
             # don't want to add extra annoying verbosity - we want to be more
             # Make-like here.
-            eq_(sys.stderr.getvalue(), "")
+            assert sys.stderr.getvalue() == ""
             # But we still exit with expected code (vs e.g. 1 or 0)
             mock_exit.assert_called_with(17)
 
@@ -312,7 +297,8 @@ class Program_(IntegrationSpec):
             p.run("myapp foo")
             # Expect repr() of exception prints to stderr
             # NOTE: this partially duplicates a test in runners.py; whatever.
-            eq_(sys.stderr.getvalue(), """Encountered a bad command exit code!
+            stderr = sys.stderr.getvalue()
+            assert stderr == """Encountered a bad command exit code!
 
 Command: 'meh'
 
@@ -326,7 +312,7 @@ Stderr:
 
 ohnoz!
 
-""")
+"""
             # And exit with expected code (vs e.g. 1 or 0)
             mock_exit.assert_called_with(54)
 
@@ -386,7 +372,8 @@ this is also not ascii: \xe4\x8c\xa1
 
         class core:
             def empty_invocation_with_no_default_task_prints_help(self):
-                expect("-c foo", out="Core options:", test=assert_contains)
+                stdout, _ = run("-c foo")
+                assert "Core options:" in stdout
 
             # TODO: On Windows, we don't get a pty, so we don't get a
             # guaranteed terminal size of 80x24. Skip for now, but maybe
@@ -447,18 +434,14 @@ Core options:
                     "  task1",
                     "  task2",
                 ):
-                    expect(
-                        "myapp --help",
-                        program=p,
-                        invoke=False,
-                        out=expected,
-                        test=partial(assert_contains, escape=True)
-                    )
+                    stdout, _ = run("myapp --help", program=p, invoke=False)
+                    assert expected in stdout
 
             def core_help_doesnt_get_mad_if_loading_fails(self):
                 # Expects no tasks.py in root of FS
                 with cd(ROOT):
-                    expect("--help", out="Usage: ", test=assert_contains)
+                    stdout, _ = run("--help")
+                    assert "Usage: " in stdout
 
 
         class per_task:
@@ -493,12 +476,10 @@ Options:
                 expect('-c decorators -h biz', out=expected)
 
             def honors_program_binary(self):
-                expect(
-                    '-c decorators -h biz',
-                    out="Usage: notinvoke",
-                    test=assert_contains,
-                    program=Program(binary='notinvoke')
+                stdout, _ = run(
+                    "-c decorators -h biz", program=Program(binary='notinvoke')
                 )
+                assert "Usage: notinvoke" in stdout
 
             def displays_docstrings_if_given(self):
                 expected = """
@@ -657,7 +638,7 @@ Available tasks:
             p = Program()
             p.execute = Mock() # neuter
             p.run('inv {} foo'.format(flag))
-            eq_(p.config.run[key], value)
+            assert p.config.run[key] == value
 
         def warn_only(self):
             self._test_flag('-w', 'warn')
@@ -688,7 +669,8 @@ Available tasks:
         def config_class_init_kwarg_is_honored(self):
             klass = self._klass()
             Program(config_class=klass).run("myapp foo", exit=False)
-            eq_(len(klass.call_args_list), 1) # don't care about actual args
+            # Don't care about actual args...
+            assert len(klass.call_args_list) == 1
 
         @trap
         def config_attribute_is_memoized(self):
@@ -696,10 +678,10 @@ Available tasks:
             # Can't .config without .run (meh); .run calls .config once.
             p = Program(config_class=klass)
             p.run("myapp foo", exit=False)
-            eq_(klass.call_count, 1)
+            assert klass.call_count == 1
             # Second access should use cached value
             p.config
-            eq_(klass.call_count, 1)
+            assert klass.call_count == 1
 
         # NOTE: these tests all rely on the invoked tasks to perform the
         # necessary asserts.
@@ -756,12 +738,12 @@ post2
         # * pty (run.pty)
         # * warn (run.warn)
 
-        def env_vars_load_with_prefix(self):
-            os.environ['INVOKE_RUN_ECHO'] = "1"
+        def env_vars_load_with_prefix(self, monkeypatch):
+            monkeypatch.setenv('INVOKE_RUN_ECHO', '1')
             expect('-c contextualized check-echo')
 
-        def env_var_prefix_can_be_overridden(self):
-            os.environ['MYAPP_RUN_HIDE'] = "both"
+        def env_var_prefix_can_be_overridden(self, monkeypatch):
+            monkeypatch.setenv('MYAPP_RUN_HIDE', 'both')
             # This forces the execution stuff, including Executor, to run
             # NOTE: it's not really possible to rework the impl so this test is
             # cleaner - tasks require per-task/per-collection config, which can

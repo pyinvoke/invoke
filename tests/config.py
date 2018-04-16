@@ -5,6 +5,7 @@ from os.path import join, expanduser
 from invoke.util import six
 from spec import eq_, ok_, raises
 from mock import patch, call
+import pytest
 
 from invoke.runners import Local
 from invoke.config import Config
@@ -12,7 +13,10 @@ from invoke.exceptions import (
     AmbiguousEnvVar, UncastableEnvVar, UnknownFileType
 )
 
-from _util import IntegrationSpec, skip_if_windows
+from _util import skip_if_windows
+
+
+pytestmark = pytest.mark.usefixtures("integration")
 
 
 CONFIGS_PATH = 'configs'
@@ -24,7 +28,7 @@ def _load(kwarg, type_, **kwargs):
     return Config(**kwargs)
 
 
-class Config_(IntegrationSpec):
+class Config_:
     class class_attrs:
         # TODO: move all other non-data-bearing kwargs to this mode
         class prefix:
