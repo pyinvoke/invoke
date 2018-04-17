@@ -681,14 +681,22 @@ Available tasks:
                 # old "just --list".
                 expected = """Available tasks:
 
-  second-toplevel           This is second-toplevel's docstring.
-  tip-toplevel              This is tip-toplevel's docstring.
-  a.nother-subtask          This is nother-subtask's docstring.
-  a.subtask                 This is subtask's docstring.
-  less-cutesy.business      Bzns
-  less-cutesy.serious       Srs
-  a.deeper.sub-subtask      This is sub-subtask's docstring.
-  a.deeper.yellow-subtask   We all live in an etc
+  shell                              Load a REPL with project state already set
+                                     up.
+  test                               Run the test suite with baked-in args.
+  build.all_ (build)                 Build all necessary artifacts.
+  build.ext                          Build our internal C extension.
+  deploy.db                          Deploy to our database servers.
+  deploy.everywhere (deploy)         Deploy to all targets.
+  deploy.web                         Update and bounce the webservers.
+  provision.db                       Stand up one or more DB servers.
+  provision.web                      Stand up a Web server.
+  build.docs.all_ (build.docs)       Build all doc formats.
+  build.docs.html                    Build HTML output only.
+  build.docs.pdf                     Build PDF output only.
+  build.python.all_ (build.python)   Build all Python packages.
+  build.python.sdist                 Build classic style tar.gz.
+  build.python.wheel                 Build a wheel.
 
 """
                 stdout, _ = expect("-c tree --list --list-format=flat")
