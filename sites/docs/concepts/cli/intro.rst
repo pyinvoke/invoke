@@ -154,10 +154,28 @@ takes an optional value:
   or
 * When that token has the same name as another task.
 
-In any of these situations, Invoke's parser will `refuse the temptation to
+In most of these situations, Invoke's parser will `refuse the temptation to
 guess
 <http://zen-of-python.info/in-the-face-of-ambiguity-refuse-the-temptation-to-guess.html#12>`_
 and raise an error.
+
+However, in the case where the ambiguous token is flag-like, the current parse
+context is checked to resolve the ambiguity:
+
+- If the token is an otherwise legitimate argument, it is assumed that the user
+  meant to give that argument immediately after the current one, and no
+  optional value is set.
+    - E.g. in ``invoke compile --log --verbose`` (assuming ``--verbose`` is
+      another legit argument for ``compile``) the parser decides the user meant
+      to give ``--log`` without a value, and followed it up with the
+      ``--verbose`` flag.
+- Otherwise, the token is interpreted literally and stored as the value for
+  the current flag.
+    - E.g. if ``--verbose`` is *not* a legitimate argument for ``compile``,
+      then ``invoke compile --log --verbose`` causes the parser to assign
+      ``"--verbose"`` as the value given to ``--log``. (This will probably
+      cause other problems in our contrived use case, but it illustrates our
+      point.)
 
 .. _iterable-flag-values:
 

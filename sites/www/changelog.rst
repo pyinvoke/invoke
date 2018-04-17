@@ -2,6 +2,20 @@
 Changelog
 =========
 
+* :bug:`516 major` Remove the CLI parser ambiguity rule regarding flag-like
+  tokens which are seen after an optional-value flag (e.g. ``inv task
+  --optionally-takes-a-value --some-other-flag``.) Previously, any flag-like
+  value in such a spot was considered ambiguous and raised a
+  `~invoke.exceptions.ParseError`. Now, the surrounding parse context is used
+  to resolve the ambiguity, and no error is raised.
+
+  .. warning::
+    This behavior is backwards incompatible, but only if you had the minority
+    case where users frequently *and erroneously* give otherwise-legitimate
+    flag-like values to optional-value arguments, and you rely on the parse
+    errors to notify them of their mistake. (If you don't understand what this
+    means, don't worry, you almost certainly don't need to care!)
+
 * :support:`515` Ported the test suite from `spec
   <https://github.com/bitprophet/spec>`_ (`nose
   <https://nose.readthedocs.io>`_) to `pytest-relaxed

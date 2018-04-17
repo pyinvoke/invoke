@@ -281,7 +281,8 @@ class Parser_:
                     ),
                 )
             self.context = Context('mytask', args=arguments)
-            return Parser([self.context])
+            self.parser = Parser([self.context])
+            return self.parser
 
         def _parse(self, argstr, parser=None):
             parser = parser or self.parser
@@ -327,10 +328,7 @@ class Parser_:
                 ))
                 self._test_for_ambiguity("--foo uhoh", p)
 
-            def flaglike_value(self):
-                self._test_for_ambiguity("--foo --bar")
-
-            def no_ambiguity_with_flaglike_value_if_option_val_was_given(self):
+            def no_ambiguity_if_option_val_already_given(self):
                 p = self._parser((
                     Argument('foo', optional=True),
                     Argument('bar', kind=bool)
@@ -340,12 +338,34 @@ class Parser_:
                 assert result[0].args['foo'].value == 'hello'
                 assert result[0].args['bar'].value is True
 
-            def actual_other_flag(self):
+            def valid_argument_is_NOT_ambiguous(self):
+                # The one exception that proves the rule?
                 self._parser((
                     Argument('foo', optional=True),
-                    Argument('bar')
+                    Argument('bar'),
                 ))
-                self._test_for_ambiguity("--foo --bar")
+                result = self._parse("--foo --bar barval")
+                assert len(result) == 1
+                args = result[0].args
+                assert args['foo'].value is True
+                assert args['bar'].value == "barval"
+
+            def valid_flaglike_argument_is_NOT_ambiguous(self):
+                # The OTHER exception that proves the rule?
+                self._parser((
+                    Argument('foo', optional=True),
+                    Argument('bar', kind=bool),
+                ))
+                result = self._parse("--foo --bar")
+                assert len(result) == 1
+                args = result[0].args
+                assert args['foo'].value is True
+                assert args['bar'].value is True
+
+            def invalid_flaglike_value_is_stored_as_value(self):
+                self._parser((Argument('foo', optional=True),))
+                result = self._parse("--foo --bar")
+                assert result[0].args['foo'].value == "--bar"
 
             def task_name(self):
                 # mytask --foo myothertask
