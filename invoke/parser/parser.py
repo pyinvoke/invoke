@@ -286,6 +286,9 @@ class ParseMachine(StateMachine):
         ))
 
     def complete_flag(self):
+        if self.flag:
+            msg = "Completing current flag {} before moving on"
+            debug(msg.format(self.flag))
         # Barf if we needed a value and didn't get one
         if (
             self.flag
@@ -321,10 +324,6 @@ class ParseMachine(StateMachine):
         tests = []
         # Unfilled posargs still exist?
         tests.append(self.context and self.context.missing_positional_args)
-        # Value looks like it's supposed to be a flag itself?
-        # (Doesn't have to even actually be valid - chances are if it looks
-        # like a flag, the user was trying to give one.)
-        tests.append(is_flag(value))
         # Value matches another valid task/context name?
         tests.append(value in self.contexts)
         if any(tests):
@@ -334,6 +333,12 @@ class ParseMachine(StateMachine):
     def switch_to_flag(self, flag, inverse=False):
         # Sanity check for ambiguity w/ prior optional-value flag
         self.check_ambiguity(flag)
+        # Also tie it off, in case prior had optional value or etc. Seems to be
+        # harmless for other kinds of flags. (TODO: this is a serious indicator
+        # that we need to move some of this flag-by-flag bookkeeping into the
+        # state machine bits, if possible - as-is it was REAL confusing re: why
+        # this was manually required!)
+        self.complete_flag()
         # Set flag/arg obj
         flag = self.context.inverse_flags[flag] if inverse else flag
         # Update state
