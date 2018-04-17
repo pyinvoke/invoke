@@ -676,10 +676,23 @@ Available tasks:
                 skip()
 
         class format:
-            def flat_is_default_format(self):
-                # quick sanity test that --list --list-format=flat works as
-                # normal
-                skip()
+            def flat_is_legacy_default_format(self):
+                # Sanity test that --list --list-format=flat is the same as the
+                # old "just --list".
+                expected = """Available tasks:
+
+  second-toplevel           This is second-toplevel's docstring.
+  tip-toplevel              This is tip-toplevel's docstring.
+  a.nother-subtask          This is nother-subtask's docstring.
+  a.subtask                 This is subtask's docstring.
+  less-cutesy.business      Bzns
+  less-cutesy.serious       Srs
+  a.deeper.sub-subtask      This is sub-subtask's docstring.
+  a.deeper.yellow-subtask   We all live in an etc
+
+"""
+                stdout, _ = expect("-c tree --list --list-format=flat")
+                assert expected == stdout
 
             class nested:
                 def base_case(self):
