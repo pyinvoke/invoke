@@ -1,3 +1,5 @@
+"System setup code."
+
 from invoke import task, Collection
 
 @task

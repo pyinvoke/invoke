@@ -1,3 +1,5 @@
+"How to deploy our code and configs."
+
 from invoke import task, Collection
 
 @task(default=True)
