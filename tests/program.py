@@ -704,32 +704,28 @@ Available tasks:
 
             class nested:
                 def base_case(self):
-                    # TODO: make sure depth-vs-breadth feels solid, doesn't
-                    # HAVE to be same as flat but probably ought to be for now,
-                    # at least re: always displaying singleton tasks before
-                    # others even if that breaks alpha.
                     expected = """Available tasks:
 
-  shell             Load a REPL with project state already set up.
-  test              Run the test suite with baked-in args.
-  build             Tasks for compiling static code and assets.
-      .all*         Build all necessary artifacts.
-      .ext          Build our internal C extension.
-      .docs         Tasks for managing Sphinx docs.
-          .all*     Build all doc formats.
-          .html     Build HTML output only.
-          .pdf      Build PDF output only.
-      .python       PyPI/etc distribution artifacts.
-          .all*     Build all Python packages.
-          .sdist    Build classic style tar.gz.
-          .wheel    Build a wheel.
-  deploy            How to deploy our code and configs.
-      .everywhere*  Deploy to all targets.
-      .db           Deploy to our database servers.
-      .web          Update and bounce the webservers.
-  provision         System setup code.
-      .db           Stand up one or more DB servers.
-      .web          Stand up a Web server.
+  shell                     Load a REPL with project state already set up.
+  test                      Run the test suite with baked-in args.
+  build                     Tasks for compiling static code and assets.
+      .all* (.everything)   Build all necessary artifacts.
+      .ext (.extension)     Build our internal C extension.
+      .docs                 Tasks for managing Sphinx docs.
+          .all*             Build all doc formats.
+          .html             Build HTML output only.
+          .pdf              Build PDF output only.
+      .python               PyPI/etc distribution artifacts.
+          .all*             Build all Python packages.
+          .sdist            Build classic style tar.gz.
+          .wheel            Build a wheel.
+  deploy                    How to deploy our code and configs.
+      .everywhere*          Deploy to all targets.
+      .db                   Deploy to our database servers.
+      .web                  Update and bounce the webservers.
+  provision                 System setup code.
+      .db                   Stand up one or more DB servers.
+      .web                  Stand up a Web server.
 
 """
                     stdout, _ = expect("-c tree -l -F nested")
