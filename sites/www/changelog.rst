@@ -16,9 +16,9 @@ Changelog
     This change is technically backwards incompatible. We don't expect many
     users import ``invoke.platform`` directly, but if you are, take note.
 
-* :bug:`-` (partially re: :issue:`449`) Update error message around missing
-  positional arguments so it actually lists them. Includes a minor tweak to the
-  API of `~invoke.parser.context.ParserContext`, namely changing
+* :bug:`- major` (partially re: :issue:`449`) Update error message around
+  missing positional arguments so it actually lists them. Includes a minor
+  tweak to the API of `~invoke.parser.context.ParserContext`, namely changing
   ``needs_positional_arguments`` (bool) to ``missing_positional_arguments``
   (list).
 * :release:`0.22.1 <2018-01-29>`
