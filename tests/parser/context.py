@@ -199,15 +199,11 @@ class Context_:
 
         def kind_to_placeholder_map(self):
             # Strings
-            eq_(
-                self.tasked.help_for('--myarg'),
-                ("-m STRING, --myarg=STRING", "")
-            )
+            helpfor = self.tasked.help_for('--myarg')
+            assert helpfor == ("-m STRING, --myarg=STRING", "")
             # Ints
-            eq_(
-                self.tasked.help_for('--intval'),
-                ("-i INT, --intval=INT", ""),
-            )
+            helpfor = self.tasked.help_for('--intval')
+            assert helpfor == ("-i INT, --intval=INT", "")
             # TODO: others
 
         def shortflag_inputs_work_too(self):
