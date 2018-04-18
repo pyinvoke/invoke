@@ -704,7 +704,7 @@ Available tasks:
 
             class nested:
                 def base_case(self):
-                    expected = """Available tasks:
+                    expected = """Available tasks ('*' denotes collection defaults):
 
   shell                     Load a REPL with project state already set up.
   test                      Run the test suite with baked-in args.
