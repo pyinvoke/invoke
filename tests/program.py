@@ -659,6 +659,23 @@ Available tasks:
                 # --list toplevel.sublevel
                 skip()
 
+            def empty_namespaces_say_no_tasks_in_namespace(self):
+                # In other words, outer namespace may not be empty, but the
+                # inner one is - this should act just like when there is no
+                # namespace explicitly requested and there's no tasks.
+                # TODO: should the name in the error message be the fully
+                # qualified one instead?
+                expect(
+                    "-c empty_subcollection -l subcollection",
+                    out="No tasks found in collection 'subcollection'!\n" # noqa
+                )
+
+            def invalid_namespaces_exit_with_message(self):
+                expect(
+                    "-c empty -l nope",
+                    out="Collection 'nope' not found!\n",
+                )
+
         class depth_limiting:
             def limits_display_to_given_depth(self):
                 # --list --list-depth 1 shows just top level tasks/NS
@@ -674,6 +691,10 @@ Available tasks:
 
             def short_flag_is_D(self):
                 # --list -D 1
+                skip()
+
+            def depth_of_zero_is_same_as_max_depth(self):
+                # --list --list-depth 0
                 skip()
 
         class format:
@@ -744,6 +765,20 @@ Available tasks:
                     # --list namespace --list-format nested --list-depth 2
                     skip()
 
+                # TODO: having these in each format smells like a POSSIBLY good
+                # use for parameterized tests...
+                def empty_namespaces_say_no_tasks_in_namespace(self):
+                    expect(
+                        "-c empty_subcollection -l subcollection -F nested",
+                        out="No tasks found in collection 'subcollection'!\n" # noqa
+                    )
+
+                def invalid_namespaces_exit_with_message(self):
+                    expect(
+                        "-c empty -l nope -F nested",
+                        out="Collection 'nope' not found!\n",
+                    )
+
             class json:
                 def base_case(self):
                     # --list --list-format json
@@ -761,6 +796,23 @@ Available tasks:
                 def all_possible_options(self):
                     # --list namespace --list-format json --list-depth 2
                     skip()
+
+                # TODO: should an empty-but-valid namespace in JSON format
+                # actually just be an empty dict instead?
+                def empty_namespaces_say_no_tasks_in_namespace(self):
+                    expect(
+                        "-c empty_subcollection -l subcollection -F nested",
+                        out="No tasks found in collection 'subcollection'!\n" # noqa
+                    )
+
+                # NOTE: this should probably still exit with a message even if
+                # the previous test re: valid-but-empty is determined to want a
+                # non-error situation
+                def invalid_namespaces_exit_with_message(self):
+                    expect(
+                        "-c empty -l nope -F nested",
+                        out="Collection 'nope' not found!\n",
+                    )
 
 
     class run_options:
