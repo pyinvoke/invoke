@@ -770,7 +770,7 @@ Available tasks:
                 def empty_namespaces_say_no_tasks_in_namespace(self):
                     expect(
                         "-c empty_subcollection -l subcollection -F nested",
-                        out="No tasks found in collection 'subcollection'!\n" # noqa
+                        out="No tasks found in collection 'subcollection'!\n",
                     )
 
                 def invalid_namespaces_exit_with_message(self):
