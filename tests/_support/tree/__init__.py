@@ -2,7 +2,7 @@ from invoke import task, Collection
 
 from . import build, deploy, provision
 
-@task
+@task(aliases=['python'])
 def shell(c):
     "Load a REPL with project state already set up."
     pass

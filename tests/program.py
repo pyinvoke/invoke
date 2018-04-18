@@ -703,7 +703,7 @@ Available tasks:
                 # old "just --list".
                 expected = """Available tasks:
 
-  shell                                 Load a REPL with project state already
+  shell (python)                        Load a REPL with project state already
                                         set up.
   test                                  Run the test suite with baked-in args.
   build.all (build, build.everything)   Build all necessary artifacts.
@@ -728,7 +728,7 @@ Available tasks:
                 def base_case(self):
                     expected = """Available tasks ('*' denotes collection defaults):
 
-  shell                     Load a REPL with project state already set up.
+  shell (python)            Load a REPL with project state already set up.
   test                      Run the test suite with baked-in args.
   build                     Tasks for compiling static code and assets.
       .all* (.everything)   Build all necessary artifacts.
