@@ -421,10 +421,15 @@ class Collection(object):
     @property
     def task_names(self):
         """
-        Return all task identifiers for this collection as a dict.
+        Return all task identifiers for this collection as a one-level dict.
 
         Specifically, a dict with the primary/"real" task names as the key, and
         any aliases as a list value.
+
+        It basically collapses the namespace tree into a single
+        easily-scannable collection of invocation strings, and is thus suitable
+        for things like flat-style task listings or transformation into parser
+        contexts.
         """
         ret = {}
         # Our own tasks get no prefix, just go in as-is: {name: [aliases]}
