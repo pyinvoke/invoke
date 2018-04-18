@@ -175,6 +175,11 @@ class Collection_:
         def derives_collection_name_from_module_name(self):
             assert self.c.name == 'integration'
 
+        def copies_docstring_from_module(self):
+            expected = "A semi-integration-test style fixture spanning multiple feature examples." # noqa
+            # Checking the first line is sufficient.
+            assert self.c.__doc__.strip().split('\n')[0] == expected
+
         def works_great_with_subclassing(self):
             class MyCollection(Collection):
                 pass
@@ -251,6 +256,11 @@ class Collection_:
                 # Duplicates part of previous test for explicitness' sake.
                 # I.e. proves that the name doesn't end up 'explicit_root'.
                 assert self.unchanged.name == 'builtin-name'
+
+            def docstring_still_copied_from_module(self):
+                expected = "EXPLICIT LYRICS"
+                assert self.unchanged.__doc__.strip() == expected
+                assert self.changed.__doc__.strip() == expected
 
     class add_task:
         def setup(self):

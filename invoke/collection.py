@@ -167,6 +167,10 @@ class Collection(object):
         Explicitly given collections will only be given that module-derived
         name if they don't already have a valid ``.name`` attribute.
 
+        If the module has a docstring (``__doc__``) it is copied onto the
+        resulting `.Collection` (and used for display in help, list etc
+        output.)
+
         :param str name:
             A string, which if given will override any automatically derived
             collection name (or name set on the module's root namespace, if it
@@ -197,7 +201,9 @@ class Collection(object):
                 loaded_from=loaded_from,
                 auto_dash_names=auto_dash_names,
             )
-            return cls(*args, **kwargs)
+            instance = cls(*args, **kwargs)
+            instance.__doc__ = module.__doc__
+            return instance
         # See if the module provides a default NS to use in lieu of creating
         # our own collection.
         for candidate in ('ns', 'namespace'):
@@ -461,7 +467,7 @@ class Collection(object):
                 ))
                 # Tack on collection name to alias list if this task is the
                 # collection's default.
-                if coll.default and coll.default == task_name:
+                if coll.default == task_name:
                     aliases += (coll_name,)
                 ret[self.subtask_name(coll_name, task_name)] = aliases
         return ret
