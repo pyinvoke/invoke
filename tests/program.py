@@ -703,12 +703,12 @@ Available tasks:
                 # old "just --list".
                 expected = """Available tasks:
 
-  shell (python)                        Load a REPL with project state already
+  shell (ipython)                       Load a REPL with project state already
                                         set up.
-  test                                  Run the test suite with baked-in args.
+  test (run-tests)                      Run the test suite with baked-in args.
   build.all (build, build.everything)   Build all necessary artifacts.
   build.c-ext (build.ext)               Build our internal C extension.
-  deploy.db                             Deploy to our database servers.
+  deploy.db (deploy.db-servers)         Deploy to our database servers.
   deploy.everywhere (deploy)            Deploy to all targets.
   deploy.web                            Update and bounce the webservers.
   provision.db                          Stand up one or more DB servers.
@@ -728,8 +728,8 @@ Available tasks:
                 def base_case(self):
                     expected = """Available tasks ('*' denotes collection defaults):
 
-  shell (python)            Load a REPL with project state already set up.
-  test                      Run the test suite with baked-in args.
+  shell (ipython)           Load a REPL with project state already set up.
+  test (run-tests)          Run the test suite with baked-in args.
   build                     Tasks for compiling static code and assets.
       .all* (.everything)   Build all necessary artifacts.
       .c-ext (.ext)         Build our internal C extension.
@@ -743,7 +743,7 @@ Available tasks:
           .wheel            Build a wheel.
   deploy                    How to deploy our code and configs.
       .everywhere*          Deploy to all targets.
-      .db                   Deploy to our database servers.
+      .db (.db-servers)     Deploy to our database servers.
       .web                  Update and bounce the webservers.
   provision                 System setup code.
       .db                   Stand up one or more DB servers.

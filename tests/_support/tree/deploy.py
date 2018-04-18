@@ -7,7 +7,7 @@ def everywhere(c):
     "Deploy to all targets."
     pass
 
-@task
+@task(aliases=['db_servers'])
 def db(c):
     "Deploy to our database servers."
     pass
