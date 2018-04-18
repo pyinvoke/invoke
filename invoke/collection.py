@@ -119,13 +119,28 @@ class Collection(object):
         return method(obj, name=name)
 
     def __repr__(self):
+        task_names = list(self.tasks.keys())
+        collections = ["{}...".format(x) for x in self.collections.keys()]
         return "<Collection {!r}: {}>".format(
             self.name,
-            ", ".join(sorted(self.tasks.keys())),
+            ", ".join(sorted(task_names) + sorted(collections)),
         )
 
     def __eq__(self, other):
-        return self.name == other.name and self.tasks == other.tasks
+        return (
+            self.name == other.name and
+            self.tasks == other.tasks and
+            self.collections == other.collections
+        )
+
+    def __ne__(self, other):
+        return not self == other
+
+    def __nonzero__(self):
+        return self.__bool__()
+
+    def __bool__(self):
+        return bool(self.task_names)
 
     @classmethod
     def from_module(

@@ -2,6 +2,9 @@
 Changelog
 =========
 
+* :bug:`-` `~invoke.collection.Collection` had some minor bugs or oversights in
+  how it responds to things like ``repr()``, ``==`` and boolean behavior; these
+  have been fixed. If you're not sure whether this affects you, it does not :)
 * :bug:`-` Integer-type CLI arguments were not displaying placeholder text in
   ``--help`` output (i.e. they appeared as ``--myint`` instead of
   ``--myint=INT``.) This has been fixed.

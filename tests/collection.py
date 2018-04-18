@@ -85,17 +85,55 @@ class Collection_:
             @task
             def task2(ctx):
                 pass
-            return Collection('meh', task1=task1, task2=task2)
+            @task
+            def task3(c):
+                pass
+            submeh = Collection('submeh', task3)
+            return Collection('meh', task1, task2, submeh)
 
         def setup(self):
             self.c = self._meh()
 
         def repr_(self):
             "__repr__"
-            assert repr(self.c) == "<Collection 'meh': task1, task2>"
+            expected = "<Collection 'meh': task1, task2, submeh...>"
+            assert expected == repr(self.c)
 
-        def equality_should_be_useful(self):
+        def equality_consists_of_name_tasks_and_collections(self):
+            # Truly equal
             assert self.c == self._meh()
+            # Same contents, different name == not equal
+            diffname = self._meh()
+            diffname.name = 'notmeh'
+            assert diffname != self.c
+            # And a sanity check that we didn't forget __ne__...cuz that
+            # definitely happened at one point
+            assert not diffname == self.c
+            # Same name, same tasks, different collections == not equal
+            diffcols = self._meh()
+            del diffcols.collections['submeh']
+            assert diffcols != self.c
+            # Same name, different tasks, same collections == not equal
+            difftasks = self._meh()
+            del difftasks.tasks['task1']
+            assert difftasks != self.c
+
+        def boolean_is_equivalent_to_tasks_and_or_collections(self):
+            # No tasks or colls? Empty/false
+            assert not Collection()
+            # Tasks but no colls? True
+            @task
+            def foo(c):
+                pass
+            assert Collection(foo)
+            # Colls but no tasks: True
+            assert Collection(foo=Collection(foo))
+            # TODO: whether a tree that is not "empty" but has nothing BUT
+            # other empty collections in it, should be true or false, is kinda
+            # questionable - but since it would result in no usable task names,
+            # let's say it's False. (Plus this lets us just use .task_names as
+            # the shorthand impl...)
+            assert not Collection(foo=Collection())
 
     class from_module:
         def setup(self):
