@@ -391,8 +391,14 @@ class Program(object):
                 raise ParseError("No idea what '{}' is!".format(halp))
 
         # Print discovered tasks if necessary
-        if self.args.list.value:
-            self.list_tasks()
+        list_root = self.args.list.value # will be True or string
+        list_format = self.args['list-format'].value
+        # TODO: work in depth
+        if list_root:
+            self.list_tasks(
+                root=list_root,
+                format_=list_format,
+            )
             raise Exit
 
         # Print completion helpers if necessary
@@ -583,7 +589,14 @@ class Program(object):
             print(self.indent + "none")
             print("")
 
-    def list_tasks(self):
+    def list_tasks(self, root=None, format_='flat'):
+        # TODO: honor depth
+        strategy = getattr(self, "_list_{}".format(format_))
+        strategy(root=root)
+
+    def _list_flat(self, root):
+        # TODO: honor root
+        # TODO: honor depth
         # Sort in depth, then alpha, order
         task_names = self.collection.task_names
         # Short circuit if no tasks to show
