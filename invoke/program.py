@@ -14,7 +14,7 @@ from .exceptions import (
     UnexpectedExit, CollectionNotFound, ParseError, Exit,
 )
 from .terminals import pty_size
-from .util import debug, enable_logging, sort_names
+from .util import debug, enable_logging, sort_names, helpline
 
 
 class Program(object):
@@ -616,10 +616,7 @@ class Program(object):
                 name += " ({})".format(', '.join(aliases))
             # Add docstring 1st lines
             task = self.collection[primary]
-            help_ = ""
-            if task.__doc__:
-                help_ = task.__doc__.lstrip().splitlines()[0]
-            pairs.append((name, help_))
+            pairs.append((name, helpline(task)))
         # Print
         if self.namespace is not None:
             print("Subcommands:\n")

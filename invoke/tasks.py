@@ -18,7 +18,6 @@ from .context import Context
 from .parser import Argument, translate_underscores
 
 
-
 #: Sentinel object representing a truly blank value (vs ``None``).
 NO_DEFAULT = object()
 

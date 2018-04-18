@@ -144,6 +144,16 @@ def encode_output(string, encoding):
     return string
 
 
+def helpline(obj):
+    """
+    Yield an object's first docstring line, or an empty string.
+    """
+    docstring = obj.__doc__
+    if not docstring:
+        return ""
+    return docstring.lstrip().splitlines()[0]
+
+
 class ExceptionHandlingThread(threading.Thread):
     """
     Thread handler making it easier for parent to handle thread exceptions.
