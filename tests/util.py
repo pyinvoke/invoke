@@ -31,3 +31,22 @@ class util:
                 """
                 pass
             assert helpline(foo) == "foo?"
+
+        def is_empty_string_if_docstring_matches_object_type(self):
+            # I.e. we don't want a docstring that is coming from the class
+            # instead of the instance.
+            class Foo(object):
+                "I am Foo"
+                pass
+            foo = Foo()
+            assert helpline(foo) == ""
+
+        def instance_attached_docstring_is_still_displayed(self):
+            # This is actually a property of regular object semantics, but
+            # whatever, why not have a test for it.
+            class Foo(object):
+                "I am Foo"
+                pass
+            foo = Foo()
+            foo.__doc__ = "I am foo"
+            assert helpline(foo) == "I am foo"

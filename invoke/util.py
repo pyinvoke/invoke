@@ -149,7 +149,7 @@ def helpline(obj):
     Yield an object's first docstring line, or an empty string.
     """
     docstring = obj.__doc__
-    if not docstring:
+    if not docstring or docstring == type(obj).__doc__:
         return ""
     return docstring.lstrip().splitlines()[0]
 
