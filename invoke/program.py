@@ -136,7 +136,9 @@ class Program(object):
 
     # Other class-level global variables a subclass might override sometime
     # maybe?
-    indent_width = 2
+    leading_indent_width = 2
+    leading_indent = " " * leading_indent_width
+    indent_width = 4
     indent = " " * indent_width
     col_padding = 3
 
@@ -637,7 +639,7 @@ class Program(object):
         desc_width = (
             pty_size()[0]
             - name_width
-            - self.indent_width
+            - self.leading_indent_width
             - self.col_padding
             - 1
         )
@@ -648,7 +650,7 @@ class Program(object):
             # Print flag spec + padding
             name_padding = name_width - len(name)
             spec = ''.join((
-                self.indent,
+                self.leading_indent,
                 name,
                 name_padding * ' ',
                 self.col_padding * ' '
