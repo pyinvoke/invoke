@@ -84,7 +84,8 @@ class Program(object):
             ),
             Argument(
                 names=('list-format', 'F'),
-                help="Change the display format used when listing tasks.",
+                help="Change the display format used when listing tasks. Should be one of: flat (default), nested, json.", # noqa
+                default='flat',
             ),
             Argument(
                 names=('pty', 'p'),

@@ -420,7 +420,8 @@ Core options:
   -e, --echo                        Echo executed commands before running.
   -f STRING, --config=STRING        Runtime configuration file to use.
   -F STRING, --list-format=STRING   Change the display format used when listing
-                                    tasks.
+                                    tasks. Should be one of: flat (default),
+                                    nested, json.
   -h [STRING], --help[=STRING]      Show core or per-task help and exit.
   -l [STRING], --list[=STRING]      List available tasks, optionally limited to
                                     a namespace.
