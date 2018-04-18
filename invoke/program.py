@@ -618,7 +618,6 @@ class Program(object):
             if task.__doc__:
                 help_ = task.__doc__.lstrip().splitlines()[0]
             pairs.append((name, help_))
-
         # Print
         if self.namespace is not None:
             print("Subcommands:\n")
