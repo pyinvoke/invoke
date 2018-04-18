@@ -9,9 +9,9 @@ def all_(c):
     "Build all necessary artifacts."
     pass
 
-@task(aliases=['extension'])
-def ext(c):
+@task(aliases=['ext'])
+def c_ext(c):
     "Build our internal C extension."
     pass
 
-ns = Collection(all_, ext, docs, python) 
+ns = Collection(all_, c_ext, docs, python)

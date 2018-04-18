@@ -707,7 +707,7 @@ Available tasks:
                                         set up.
   test                                  Run the test suite with baked-in args.
   build.all (build, build.everything)   Build all necessary artifacts.
-  build.ext (build.extension)           Build our internal C extension.
+  build.c-ext (build.ext)               Build our internal C extension.
   deploy.db                             Deploy to our database servers.
   deploy.everywhere (deploy)            Deploy to all targets.
   deploy.web                            Update and bounce the webservers.
@@ -732,7 +732,7 @@ Available tasks:
   test                      Run the test suite with baked-in args.
   build                     Tasks for compiling static code and assets.
       .all* (.everything)   Build all necessary artifacts.
-      .ext (.extension)     Build our internal C extension.
+      .c-ext (.ext)         Build our internal C extension.
       .docs                 Tasks for managing Sphinx docs.
           .all*             Build all doc formats.
           .html             Build HTML output only.
