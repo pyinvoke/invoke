@@ -798,7 +798,8 @@ Available tasks:
                     skip()
 
                 # TODO: should an empty-but-valid namespace in JSON format
-                # actually just be an empty dict instead?
+                # actually just be an empty dict instead? Let's stay consistent
+                # with the other formats for now, but...
                 def empty_namespaces_say_no_tasks_in_namespace(self):
                     expect(
                         "-c empty_subcollection -l subcollection -F nested",
@@ -807,7 +808,7 @@ Available tasks:
 
                 # NOTE: this should probably still exit with a message even if
                 # the previous test re: valid-but-empty is determined to want a
-                # non-error situation
+                # non-error behavior.
                 def invalid_namespaces_exit_with_message(self):
                     expect(
                         "-c empty -l nope -F nested",
