@@ -2,6 +2,22 @@
 Changelog
 =========
 
+* :bug:`-` Previously, some error conditions (such as invalid task or
+  collection names being supplied by the user) printed to standard output,
+  instead of standard error. Standard error seems more appropriate here, so
+  this has been fixed.
+
+  .. warning::
+    This is backwards incompatible if you were explicitly checking the standard
+    output of the ``inv[oke]`` program for some of these error messages.
+
+  .. warning::
+    If your code is manually raising or introspecting instances of
+    `~invoke.exceptions.Exit`, note that its signature has changed from
+    ``Exit(code=0)`` to ``Exit(message=None, code=None)``. (Thus, this will
+    only impact you if you were calling its constructor instead of raising the
+    class object itself.)
+
 * :bug:`-` `~invoke.collection.Collection` had some minor bugs or oversights in
   how it responds to things like ``repr()``, ``==``; boolean behavior; how
   docstrings appear when created from a Python module; etc. All are now fixed.

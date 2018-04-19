@@ -647,7 +647,7 @@ Available tasks:
         def empty_collections_say_no_tasks(self):
             expect(
                 "-c empty -l",
-                out="No tasks found in collection 'empty'!\n"
+                err="No tasks found in collection 'empty'!\n"
             )
 
         class namespace_limiting:
@@ -667,13 +667,13 @@ Available tasks:
                 # qualified one instead?
                 expect(
                     "-c empty_subcollection -l subcollection",
-                    out="No tasks found in collection 'subcollection'!\n" # noqa
+                    err="No tasks found in collection 'subcollection'!\n" # noqa
                 )
 
             def invalid_namespaces_exit_with_message(self):
                 expect(
                     "-c empty -l nope",
-                    out="Collection 'nope' not found!\n",
+                    err="Sub-collection 'nope' not found!\n",
                 )
 
         class depth_limiting:
@@ -770,13 +770,13 @@ Available tasks:
                 def empty_namespaces_say_no_tasks_in_namespace(self):
                     expect(
                         "-c empty_subcollection -l subcollection -F nested",
-                        out="No tasks found in collection 'subcollection'!\n",
+                        err="No tasks found in collection 'subcollection'!\n",
                     )
 
                 def invalid_namespaces_exit_with_message(self):
                     expect(
                         "-c empty -l nope -F nested",
-                        out="Collection 'nope' not found!\n",
+                        err="Sub-collection 'nope' not found!\n",
                     )
 
             class json:
@@ -803,7 +803,7 @@ Available tasks:
                 def empty_namespaces_say_no_tasks_in_namespace(self):
                     expect(
                         "-c empty_subcollection -l subcollection -F nested",
-                        out="No tasks found in collection 'subcollection'!\n" # noqa
+                        err="No tasks found in collection 'subcollection'!\n" # noqa
                     )
 
                 # NOTE: this should probably still exit with a message even if
@@ -812,7 +812,7 @@ Available tasks:
                 def invalid_namespaces_exit_with_message(self):
                     expect(
                         "-c empty -l nope -F nested",
-                        out="Collection 'nope' not found!\n",
+                        err="Sub-collection 'nope' not found!\n",
                     )
 
 

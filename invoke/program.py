@@ -310,6 +310,8 @@ class Program(object):
             # problems.
             if isinstance(e, ParseError):
                 print(e, file=sys.stderr)
+            if isinstance(e, Exit) and e.message:
+                print(e.message, file=sys.stderr)
             if isinstance(e, UnexpectedExit) and e.result.hide:
                 print(e, file=sys.stderr, end='')
             # Terminate execution unless we were told not to.
@@ -536,11 +538,7 @@ class Program(object):
                 auto_dash_names=self.config.tasks.auto_dash_names,
             )
         except CollectionNotFound as e:
-            print(
-                "Can't find any collection named {!r}!".format(e.name),
-                file=sys.stderr
-            )
-            raise Exit(1)
+            raise Exit("Can't find any collection named {!r}!".format(e.name))
 
     def parse_tasks(self):
         """
@@ -599,8 +597,7 @@ class Program(object):
         # Short circuit if no tasks to show (Collection now implements bool)
         if not collection:
             msg = "No tasks found in collection '{}'!"
-            print(msg.format(collection.name))
-            raise Exit
+            raise Exit(msg.format(collection.name))
         strategy = getattr(self, "list_{}".format(format_))
         strategy(collection=collection, root=root)
 

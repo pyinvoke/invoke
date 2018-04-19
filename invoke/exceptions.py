@@ -140,12 +140,31 @@ class ParseError(Exception):
 
 class Exit(Exception):
     """
-    Simple stand-in for SystemExit that lets us gracefully exit.
+    Simple custom stand-in for SystemExit.
 
-    Removes lots of scattered sys.exit calls, improves testability.
+    Replaces scattered sys.exit calls, improves testability, allows one to
+    catch an exit request without intercepting real SystemExits (typically an
+    unfriendly thing to do, as most users calling `sys.exit` rather expect it
+    to truly exit.)
+
+    Defaults to a non-printing, exit-0 friendly termination behavior if the
+    exception is uncaught.
+
+    If ``code`` (an int) given, that code is used to exit.
+
+    If ``message`` (a string) given, it is printed to standard error, and the
+    program exits with code ``1`` by default (unless overridden by also giving
+    ``code`` explicitly.)
     """
-    def __init__(self, code=0):
-        self.code = code
+    def __init__(self, message=None, code=None):
+        self.message = message
+        self._code = code
+
+    @property
+    def code(self):
+        if self._code is not None:
+            return self._code
+        return 1 if self.message else 0
 
 
 class PlatformError(Exception):
