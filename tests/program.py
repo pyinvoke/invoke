@@ -736,7 +736,7 @@ Default 'build' task: .all
 
 Default task: test
 """
-                stdout, _ = expect("-c tree --list --list-format=flat")
+                stdout, _ = run("-c tree --list --list-format=flat")
                 assert expected == stdout
 
             class nested:
@@ -765,7 +765,7 @@ Default task: test
       .web                  Stand up a Web server.
 
 """
-                    stdout, _ = expect("-c tree -l -F nested")
+                    stdout, _ = run("-c tree -l -F nested")
                     assert expected == stdout
 
                 def honors_namespace_arg_to_list(self):
