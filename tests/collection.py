@@ -648,3 +648,24 @@ class Collection_:
             # Key stored on mid + leaf but not root
             middle.configure({'key': 'whoa'})
             assert root.configuration('middle.leaf.task') == {'key': 'whoa'}
+
+    class subcollection_from_path:
+        def top_level_path(self):
+            collection = Collection.from_module(load('tree'))
+            build = collection.collections['build']
+            assert collection.subcollection_from_path('build') is build
+
+        def nested_path(self):
+            collection = Collection.from_module(load('tree'))
+            docs = collection.collections['build'].collections['docs']
+            assert collection.subcollection_from_path('build.docs') is docs
+
+        def invalid_path(self):
+            # This is really just testing Lexicon/dict behavior but w/e, good
+            # to be explicit, esp if we ever want this to become Exit or
+            # another custom exception. (For now most/all callers manually
+            # catch KeyError and raise Exit just to keep most Exit use high up
+            # in the stack...)
+            with raises(KeyError):
+                collection = Collection.from_module(load('tree'))
+                collection.subcollection_from_path('lol.whatever.man')

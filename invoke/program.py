@@ -593,14 +593,13 @@ class Program(object):
     def list_tasks(self, root=None, format_='flat'):
         # TODO: honor depth
         collection = self.collection
+        # Sanity-check given root to ensure it's valid
         if root:
-            parts = root.split('.')
-            while parts:
-                try:
-                    collection = collection.collections[parts.pop(0)]
-                except KeyError:
-                    msg = "Sub-collection '{}' not found!"
-                    raise Exit(msg.format(root))
+            try:
+                collection = self.collection.subcollection_from_path(root)
+            except KeyError:
+                msg = "Sub-collection '{}' not found!"
+                raise Exit(msg.format(path))
         # Short circuit if no tasks to show (Collection now implements bool)
         if not collection:
             msg = "No tasks found in collection '{}'!"

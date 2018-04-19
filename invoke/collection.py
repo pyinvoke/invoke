@@ -311,6 +311,16 @@ class Collection(object):
         rest = '.'.join(parts)
         return coll, rest
 
+    def subcollection_from_path(self, path):
+        """
+        Given a ``path`` to a subcollection, return that subcollection.
+        """
+        parts = path.split('.')
+        collection = self
+        while parts:
+            collection = collection.collections[parts.pop(0)]
+        return collection
+
     def __getitem__(self, name=None):
         """
         Returns task named ``name``. Honors aliases and subcollections.
