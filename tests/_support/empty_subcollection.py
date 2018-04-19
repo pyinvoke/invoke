@@ -4,4 +4,4 @@ from invoke import task, Collection
 def dummy(c):
     pass
 
-ns = Collection(dummy, subcollection=Collection())
+ns = Collection(dummy, Collection('subcollection'))
