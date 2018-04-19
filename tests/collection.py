@@ -1,6 +1,8 @@
+from __future__ import print_function
+
 import operator
 
-from invoke.util import six, reduce
+from invoke.util import reduce
 
 from pytest import raises
 
@@ -12,7 +14,7 @@ from _util import load, support_path
 
 @task
 def _mytask(ctx):
-    six.print_("woo!")
+    print("woo!")
 
 def _func(ctx):
     pass
@@ -406,7 +408,7 @@ class Collection_:
         def setup(self):
             @task
             def mytask(ctx, text, boolean=False, number=5):
-                six.print_(text)
+                print(text)
             @task(aliases=['mytask27'])
             def mytask2(ctx):
                 pass

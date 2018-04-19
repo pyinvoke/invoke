@@ -536,7 +536,7 @@ class Program(object):
                 auto_dash_names=self.config.tasks.auto_dash_names,
             )
         except CollectionNotFound as e:
-            six.print_(
+            print(
                 "Can't find any collection named {!r}!".format(e.name),
                 file=sys.stderr
             )
