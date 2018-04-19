@@ -594,19 +594,28 @@ class Program(object):
 
     def list_tasks(self, root=None, format_='flat'):
         # TODO: honor depth
-        strategy = getattr(self, "_list_{}".format(format_))
+        # TODO: honor root
+        # Short circuit if no tasks to show (Collection now implements bool)
+        if not self.collection:
+            msg = "No tasks found in collection '{}'!"
+            print(msg.format(self.collection.name))
+            raise Exit
+        strategy = getattr(self, "list_{}".format(format_))
         strategy(root=root)
 
-    def _list_flat(self, root):
+    def display_with_columns(self, pairs, extra=""):
+        # Print
+        text = "Available tasks" if self.namespace is None else "Subcommands"
+        if extra:
+            text = "{} ({})".format(text, extra)
+        print("{}:\n".format(text))
+        self.print_columns(pairs)
+
+    def list_flat(self, root):
         # TODO: honor root
         # TODO: honor depth
         # Sort in depth, then alpha, order
         task_names = self.collection.task_names
-        # Short circuit if no tasks to show
-        if not task_names:
-            msg = "No tasks found in collection '{}'!"
-            print(msg.format(self.collection.name))
-            raise Exit
         pairs = []
         for primary in sort_names(task_names):
             # Add aliases
@@ -617,12 +626,42 @@ class Program(object):
             # Add docstring 1st lines
             task = self.collection[primary]
             pairs.append((name, helpline(task)))
-        # Print
-        if self.namespace is not None:
-            print("Subcommands:\n")
-        else:
-            print("Available tasks:\n")
-        self.print_columns(pairs)
+        self.display_with_columns(pairs)
+
+    def _nested_pairs(self, coll, level):
+        # TODO: this still feels like it could follow the Collection.task_names
+        # approach used by the default/flat style? But this data set is that
+        # much farther removed from anything one would truly want from
+        # Collection itself, in a vacuum. Implies we want to move that AND this
+        # into some sort of Lister class hierarchy or set of funcs...bah.
+        pairs = []
+        indent = level * self.indent
+        for name, task in sorted(six.iteritems(coll.tasks)):
+            displayname = name
+            aliases = list(map(coll.transform, task.aliases))
+            if level > 0:
+                displayname = ".{}".format(displayname)
+                aliases = [".{}".format(x) for x in aliases]
+            if coll.default == name:
+                displayname += "*"
+            alias_str = " ({})".format(", ".join(aliases)) if aliases else ""
+            full = indent + displayname + alias_str
+            pairs.append((full, helpline(task)))
+        for name, subcoll in sorted(six.iteritems(coll.collections)):
+            displayname = name
+            if level > 0:
+                displayname = ".{}".format(displayname)
+            pairs.append((indent + displayname, helpline(subcoll)))
+            pairs.extend(self._nested_pairs(subcoll, level + 1))
+        return pairs
+
+    def list_nested(self, root):
+        # TODO: honor root
+        # TODO: honor depth
+        collection = self.collection
+        pairs = self._nested_pairs(collection, level=0)
+        extra = "'*' denotes collection defaults"
+        self.display_with_columns(pairs, extra=extra)
 
     def print_columns(self, tuples):
         """

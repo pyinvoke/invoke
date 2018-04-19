@@ -742,8 +742,8 @@ Available tasks:
           .sdist            Build classic style tar.gz.
           .wheel            Build a wheel.
   deploy                    How to deploy our code and configs.
-      .everywhere*          Deploy to all targets.
       .db (.db-servers)     Deploy to our database servers.
+      .everywhere*          Deploy to all targets.
       .web                  Update and bounce the webservers.
   provision                 System setup code.
       .db                   Stand up one or more DB servers.
