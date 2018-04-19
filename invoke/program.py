@@ -595,13 +595,14 @@ class Program(object):
     def list_tasks(self, root=None, format_='flat'):
         # TODO: honor depth
         # TODO: honor root
+        collection = self.collection
         # Short circuit if no tasks to show (Collection now implements bool)
-        if not self.collection:
+        if not collection:
             msg = "No tasks found in collection '{}'!"
-            print(msg.format(self.collection.name))
+            print(msg.format(collection.name))
             raise Exit
         strategy = getattr(self, "list_{}".format(format_))
-        strategy(root=root)
+        strategy(collection=collection, root=root)
 
     def display_with_columns(self, pairs, extra=""):
         # Print
@@ -611,11 +612,11 @@ class Program(object):
         print("{}:\n".format(text))
         self.print_columns(pairs)
 
-    def list_flat(self, root):
+    def list_flat(self, collection, root):
         # TODO: honor root
         # TODO: honor depth
         # Sort in depth, then alpha, order
-        task_names = self.collection.task_names
+        task_names = collection.task_names
         pairs = []
         for primary in sort_names(task_names):
             # Add aliases
@@ -624,7 +625,7 @@ class Program(object):
             if aliases:
                 name += " ({})".format(', '.join(aliases))
             # Add docstring 1st lines
-            task = self.collection[primary]
+            task = collection[primary]
             pairs.append((name, helpline(task)))
         self.display_with_columns(pairs)
 
@@ -655,10 +656,9 @@ class Program(object):
             pairs.extend(self._nested_pairs(subcoll, level + 1))
         return pairs
 
-    def list_nested(self, root):
+    def list_nested(self, collection, root):
         # TODO: honor root
         # TODO: honor depth
-        collection = self.collection
         pairs = self._nested_pairs(collection, level=0)
         extra = "'*' denotes collection defaults"
         self.display_with_columns(pairs, extra=extra)
