@@ -594,6 +594,14 @@ class Program(object):
         # TODO: honor depth
         # TODO: honor root
         collection = self.collection
+        if isinstance(root, six.string_types):
+            parts = root.split('.')
+            while parts:
+                try:
+                    collection = collection.collections[parts.pop(0)]
+                except KeyError:
+                    msg = "Sub-collection '{}' not found!"
+                    raise Exit(msg.format(root))
         # Short circuit if no tasks to show (Collection now implements bool)
         if not collection:
             msg = "No tasks found in collection '{}'!"
