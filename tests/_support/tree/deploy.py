@@ -1,6 +1,6 @@
 "How to deploy our code and configs."
 
-from invoke import task, Collection
+from invoke import task
 
 @task(default=True)
 def everywhere(c):

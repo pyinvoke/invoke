@@ -1,6 +1,6 @@
 import copy
 
-from pytest import skip, raises
+from pytest import raises
 
 from invoke.parser import Argument, Context
 from invoke.tasks import task
