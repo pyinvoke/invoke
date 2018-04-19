@@ -344,11 +344,12 @@ class Parser_:
                     Argument('foo', optional=True),
                     Argument('bar'),
                 ))
-                result = self._parse("--foo --bar barval")
-                assert len(result) == 1
-                args = result[0].args
-                assert args['foo'].value is True
-                assert args['bar'].value == "barval"
+                for form in ("--bar barval", "--bar=barval"):
+                    result = self._parse("--foo {}".format(form))
+                    assert len(result) == 1
+                    args = result[0].args
+                    assert args['foo'].value is True
+                    assert args['bar'].value == "barval"
 
             def valid_flaglike_argument_is_NOT_ambiguous(self):
                 # The OTHER exception that proves the rule?
