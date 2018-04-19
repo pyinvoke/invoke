@@ -652,8 +652,20 @@ Available tasks:
 
         class namespace_limiting:
             def argument_limits_display_to_given_namespace(self):
-                # --list toplevel
-                skip()
+                stdout, _ = run("-c tree --list build")
+                expected = """Available 'build' tasks:
+
+  .all (.everything)      Build all necessary artifacts.
+  .c-ext (.ext)           Build our internal C extension.
+  .docs.all (.docs)       Build all doc formats.
+  .docs.html              Build HTML output only.
+  .docs.pdf               Build PDF output only.
+  .python.all (.python)   Build all Python packages.
+  .python.sdist           Build classic style tar.gz.
+  .python.wheel           Build a wheel.
+
+"""
+                assert expected == stdout
 
             def argument_may_be_a_nested_namespace(self):
                 # --list toplevel.sublevel
@@ -754,8 +766,22 @@ Available tasks:
                     assert expected == stdout
 
                 def honors_namespace_arg_to_list(self):
-                    # --list foobar --list-format nested
-                    skip()
+                    stdout, _ = run("-c tree --list build -F nested")
+                    expected = """Available 'build' tasks:
+
+  build                     Tasks for compiling static code and assets.
+      .all* (.everything)   Build all necessary artifacts.
+      .c-ext (.ext)         Build our internal C extension.
+      .docs                 Tasks for managing Sphinx docs.
+          .all*             Build all doc formats.
+          .html             Build HTML output only.
+          .pdf              Build PDF output only.
+      .python               PyPI/etc distribution artifacts.
+          .all*             Build all Python packages.
+          .sdist            Build classic style tar.gz.
+          .wheel            Build a wheel.
+"""
+                    assert expected == stdout
 
                 def honors_depth_arg(self):
                     # --list --list-format nested --list-depth 2
