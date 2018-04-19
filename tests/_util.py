@@ -85,12 +85,12 @@ def expect(invocation, out=None, err=None, program=None, invoke=True,
         if test:
             test(stdout, out)
         else:
-            assert stdout == out
+            assert out == stdout
     if err is not None:
         if test:
             test(stderr, err)
         else:
-            assert stderr == err
+            assert err == stderr
     # Guard against silent failures; since we say exit=False this is the only
     # real way to tell if stuff died in a manner we didn't expect.
     elif stderr:
