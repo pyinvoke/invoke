@@ -7,7 +7,7 @@ def shell(c):
     "Load a REPL with project state already set up."
     pass
 
-@task(aliases=['run_tests'])
+@task(aliases=['run_tests'], default=True)
 def test(c):
     "Run the test suite with baked-in args."
     pass

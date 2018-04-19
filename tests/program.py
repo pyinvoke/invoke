@@ -653,7 +653,8 @@ Available tasks:
         class namespace_limiting:
             def argument_limits_display_to_given_namespace(self):
                 stdout, _ = run("-c tree --list build")
-                expected = """Available 'build' tasks:
+                expected = """
+Available tasks in the 'build' collection:
 
   .all (.everything)      Build all necessary artifacts.
   .c-ext (.ext)           Build our internal C extension.
@@ -664,7 +665,8 @@ Available tasks:
   .python.sdist           Build classic style tar.gz.
   .python.wheel           Build a wheel.
 
-"""
+Default 'build' task: .all
+""".lstrip()
                 assert expected == stdout
 
             def argument_may_be_a_nested_namespace(self):
@@ -732,6 +734,7 @@ Available tasks:
   build.python.sdist                    Build classic style tar.gz.
   build.python.wheel                    Build a wheel.
 
+Default task: test
 """
                 stdout, _ = expect("-c tree --list --list-format=flat")
                 assert expected == stdout
