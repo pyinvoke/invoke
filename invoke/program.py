@@ -400,10 +400,10 @@ class Program(object):
         list_format = self.args['list-format'].value
         # TODO: work in depth
         if list_root:
-            self.list_tasks(
-                root=list_root,
-                format_=list_format,
-            )
+            root = None
+            if isinstance(list_root, six.string_types):
+                root = list_root
+            self.list_tasks(root=root, format_=list_format)
             raise Exit
 
         # Print completion helpers if necessary
@@ -592,9 +592,8 @@ class Program(object):
 
     def list_tasks(self, root=None, format_='flat'):
         # TODO: honor depth
-        # TODO: honor root
         collection = self.collection
-        if isinstance(root, six.string_types):
+        if root:
             parts = root.split('.')
             while parts:
                 try:
