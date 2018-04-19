@@ -578,18 +578,18 @@ class Program(object):
             # Really wish textwrap worked better for this.
             for line in docstring.splitlines():
                 if line.strip():
-                    print(self.indent + line)
+                    print(self.leading_indent + line)
                 else:
                     print("")
             print("")
         else:
-            print(self.indent + "none")
+            print(self.leading_indent + "none")
             print("")
         print("Options:")
         if tuples:
             self.print_columns(tuples)
         else:
-            print(self.indent + "none")
+            print(self.leading_indent + "none")
             print("")
 
     def list_tasks(self, root=None, format_='flat'):

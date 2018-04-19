@@ -1,4 +1,4 @@
-from invoke import Collection
+from invoke import task, Collection
 
 @task
 def dummy(c):
