@@ -89,18 +89,17 @@ class Parser(object):
             # Handle non-space-delimited forms, if not currently expecting a
             # flag value and still in valid parsing territory (i.e. not in
             # "unknown" state which implies store-only)
-            if (
-                not machine.waiting_for_flag_value
-                and is_flag(token)
-                and not machine.result.unparsed
-            ):
-                orig = token
+            # NOTE: we do this in a few steps so we can
+            # split-then-check-validity; necessary for things like when the
+            # previously seen flag optionally takes a value.
+            mutations = []
+            orig = token
+            if (is_flag(token) and not machine.result.unparsed):
                 # Equals-sign-delimited flags, eg --foo=bar or -f=bar
                 if '=' in token:
                     token, _, value = token.partition('=')
-                    debug("Splitting x=y expr {!r} into tokens {!r} and {!r}".format( # noqa
-                        orig, token, value))
-                    body.insert(index + 1, value)
+                    debug("Splitting x=y expr {!r} into tokens {!r} and {!r}".format(orig, token, value)) # noqa
+                    mutations.append((index + 1, value))
                 # Contiguous boolean short flags, e.g. -qv
                 elif not is_long_flag(token) and len(token) > 2:
                     full_token = token[:]
@@ -117,13 +116,37 @@ class Parser(object):
                     )
                     if have_flag and machine.context.flags[token].takes_value:
                         debug("{!r} is a flag for current context & it takes a value, giving it {!r}".format(token, rest)) # noqa
-                        body.insert(index + 1, rest)
+                        mutations.append((index + 1, rest))
                     else:
                         rest = ['-{}'.format(x) for x in rest]
                         debug("Splitting multi-flag glob {!r} into {!r} and {!r}".format( # noqa
                             orig, token, rest))
                         for item in reversed(rest):
-                            body.insert(index + 1, item)
+                            mutations.append((index + 1, item))
+            # Here, we've got some possible mutations queued up, and 'token'
+            # may have been overwritten as well. Whether we apply those and
+            # continue as-is, or roll it back, depends:
+            # - If the parser wasn't waiting for a flag value, we're already on
+            # the right track, so apply mutations and move along to the
+            # handle() step.
+            # - If we ARE waiting for a value, and the flag expecting it ALWAYS
+            # wants a value (it's not optional), we go back to using the
+            # original token. (TODO: could reorganize this to avoid the
+            # sub-parsing in this case, but optimizing for human-facing
+            # execution isn't critical.)
+            # - Finally, if we are waiting for a value AND it's optional, we
+            # inspect the first sub-token/mutation to see if it would otherwise
+            # have been a valid flag, and let that determine what we do (if
+            # valid, we apply the mutations; if invalid, we reinstate the
+            # original token.)
+            if machine.waiting_for_flag_value:
+                optional = machine.flag and machine.flag.optional
+                subtoken_is_valid_flag = token in machine.context.flags
+                if not (optional and subtoken_is_valid_flag):
+                    token = orig
+                    mutations = []
+            for index, value in mutations:
+                body.insert(index, value)
             machine.handle(token)
         machine.finish()
         result = machine.result
