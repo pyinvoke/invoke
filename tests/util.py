@@ -3,10 +3,10 @@ from invoke.util import helpline
 
 class util:
     class helpline:
-        def is_empty_string_if_no_docstring(self):
+        def is_None_if_no_docstring(self):
             def foo(c):
                 pass
-            assert helpline(foo) == ""
+            assert helpline(foo) is None
 
         def is_entire_thing_if_docstring_one_liner(self):
             def foo(c):
@@ -32,14 +32,14 @@ class util:
                 pass
             assert helpline(foo) == "foo?"
 
-        def is_empty_string_if_docstring_matches_object_type(self):
+        def is_None_if_docstring_matches_object_type(self):
             # I.e. we don't want a docstring that is coming from the class
             # instead of the instance.
             class Foo(object):
                 "I am Foo"
                 pass
             foo = Foo()
-            assert helpline(foo) == ""
+            assert helpline(foo) is None
 
         def instance_attached_docstring_is_still_displayed(self):
             # This is actually a property of regular object semantics, but

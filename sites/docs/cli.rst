@@ -117,15 +117,15 @@ The core options (which must be given before any task names) are as follows:
 
       - ``name``: String name of collection; the root collection's "name" is
         null.
-      - ``docstring``: Docstring of collection, if it came from a module; empty
-        string otherwise (or if module lacked a docstring.)
+      - ``docstring``: Docstring of collection, if it came from a module; null
+        otherwise (or if module lacked a docstring.)
       - ``tasks``: Immediate children of this collection; an array of objects
         of the following form:
 
         - ``name``: the task's local name within its collection (i.e. not the
           full dotted path you might see with the ``flat`` format;
           reconstructing that path is left up to the consumer.)
-        - ``docstring``: the task's docstring, or the empty string.
+        - ``docstring``: the task's docstring, or null if it had none.
         - ``aliases``: an array of string aliases for this task.
 
       - ``default``: String naming which task within this collection, if any,

@@ -150,7 +150,7 @@ def helpline(obj):
     """
     docstring = obj.__doc__
     if not docstring or docstring == type(obj).__doc__:
-        return ""
+        return None
     return docstring.lstrip().splitlines()[0]
 
 
