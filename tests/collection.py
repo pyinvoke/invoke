@@ -669,3 +669,135 @@ class Collection_:
             with raises(KeyError):
                 collection = Collection.from_module(load('tree'))
                 collection.subcollection_from_path('lol.whatever.man')
+
+    class serialized:
+        def empty_collection(self):
+            expected = dict(
+                name=None,
+                help=None,
+                tasks=[],
+                default=None,
+                collections=[],
+            )
+            assert expected == Collection().serialized()
+
+        def empty_named_collection(self):
+            expected = dict(
+                name="foo",
+                help=None,
+                tasks=[],
+                default=None,
+                collections=[],
+            )
+            assert expected == Collection("foo").serialized()
+
+        def empty_named_docstringed_collection(self):
+            expected = dict(
+                name="foo",
+                help="Hi doc",
+                tasks=[],
+                default=None,
+                collections=[],
+            )
+            coll = Collection("foo")
+            coll.__doc__ = "Hi doc"
+            assert expected == coll.serialized()
+
+        def name_docstring_default_and_tasks(self):
+            expected = dict(
+                name="deploy",
+                help="How to deploy our code and configs.",
+                tasks=[
+                    dict(
+                        name="db",
+                        help="Deploy to our database servers.",
+                        aliases=["db-servers"],
+                    ),
+                    dict(
+                        name="everywhere",
+                        help="Deploy to all targets.",
+                        aliases=[],
+                    ),
+                    dict(
+                        name="web",
+                        help="Update and bounce the webservers.",
+                        aliases=[],
+                    ),
+                ],
+                default="everywhere",
+                collections=[],
+            )
+            with support_path():
+                from tree import deploy
+                coll = Collection.from_module(deploy)
+            assert expected == coll.serialized()
+
+        def name_docstring_default_tasks_and_collections(self):
+            docs = dict(
+                name="docs",
+                help="Tasks for managing Sphinx docs.",
+                tasks=[
+                    dict(
+                        name="all",
+                        help="Build all doc formats.",
+                        aliases=[],
+                    ),
+                    dict(
+                        name="html",
+                        help="Build HTML output only.",
+                        aliases=[],
+                    ),
+                    dict(
+                        name="pdf",
+                        help="Build PDF output only.",
+                        aliases=[],
+                    ),
+                ],
+                default="all",
+                collections=[],
+            )
+            python = dict(
+                name="python",
+                help="PyPI/etc distribution artifacts.",
+                tasks=[
+                    dict(
+                        name="all",
+                        help="Build all Python packages.",
+                        aliases=[],
+                    ),
+                    dict(
+                        name="sdist",
+                        help="Build classic style tar.gz.",
+                        aliases=[],
+                    ),
+                    dict(
+                        name="wheel",
+                        help="Build a wheel.",
+                        aliases=[],
+                    ),
+                ],
+                default="all",
+                collections=[],
+            )
+            expected = dict(
+                name="build",
+                help="Tasks for compiling static code and assets.",
+                tasks=[
+                    dict(
+                        name="all",
+                        help="Build all necessary artifacts.",
+                        aliases=["everything"],
+                    ),
+                    dict(
+                        name="c-ext",
+                        help="Build our internal C extension.",
+                        aliases=["ext"],
+                    ),
+                ],
+                default="all",
+                collections=[docs, python],
+            )
+            with support_path():
+                from tree import build
+                coll = Collection.from_module(build)
+            assert expected == coll.serialized()

@@ -1,7 +1,7 @@
 import copy
 import types
 
-from .util import six, Lexicon
+from .util import six, Lexicon, helpline
 
 from .config import merge_dicts, copy_dict
 from .parser import Context as ParserContext
@@ -514,3 +514,31 @@ class Collection(object):
         :returns: ``None``.
         """
         merge_dicts(self._configuration, options)
+
+    def serialized(self):
+        """
+        Return an appropriate-for-serialization version of this object.
+
+        See the documentation for `.Program` and its ``json`` task listing
+        format; this method is the driver for that functionality.
+        """
+        return {
+            "name": self.name,
+            "help": helpline(self),
+            "default": self.default,
+            "tasks": [
+                {
+                    "name": self.transform(x.name),
+                    "help": helpline(x),
+                    "aliases": [self.transform(y) for y in x.aliases],
+                }
+                for x in sorted(self.tasks.values(), key=lambda x: x.name)
+            ],
+            "collections": [
+                x.serialized()
+                for x in sorted(
+                    self.collections.values(),
+                    key=lambda x: x.name,
+                )
+            ],
+        }
