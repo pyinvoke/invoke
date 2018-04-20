@@ -1,6 +1,7 @@
 from __future__ import unicode_literals, print_function
 
 import inspect
+import json
 import os
 import sys
 import textwrap
@@ -684,8 +685,9 @@ class Program(object):
         # TODO: consider using something more formal re: the format this emits,
         # eg json-schema or whatever. Would simplify the
         # relatively-concise-but-only-human docs that currently describe this.
-        # TODO: draw the rest of the owl
-        print("{}")
+        coll = self.scoped_collection
+        data = coll.serialized()
+        print(json.dumps(data))
 
     def task_list_opener(self, extra=""):
         root = self.list_root
