@@ -823,14 +823,15 @@ Default 'build' task: .all
                     )
 
             class json:
-                def base_case(self):
+                def setup(self):
                     # Stored expected data as an actual JSON file cuz it's big
                     # & looks like crap if inlined. Plus by round-tripping it
                     # we remove the pretty-printing. Win-win?
-                    data = json.loads(support_file('tree.json'))
-                    expected = json.dumps(data) + "\n"
+                    self.tree = json.loads(support_file('tree.json'))
+
+                def base_case(self):
                     stdout, _ = run("-c tree --list --list-format=json")
-                    assert expected == stdout
+                    assert self.tree == json.loads(stdout)
 
                 def honors_namespace_arg_to_list(self):
                     # --list foobar --list-format json
