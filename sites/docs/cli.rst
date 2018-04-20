@@ -85,7 +85,8 @@ The core options (which must be given before any task names) are as follows:
 
     List available tasks. Shows all tasks by default; may give an explicit
     namespace to 'root' the displayed task tree to only that namespace. (This
-    argument may contain periods, as with task names.)
+    argument may contain periods, as with task names, so it's possible to show
+    only a small, deep portion of the overall tree if desired.)
 
 .. option:: -D, --list-depth=INT
 
@@ -105,9 +106,10 @@ The core options (which must be given before any task names) are as follows:
     one of:
 
     - ``flat`` (the default): single, flat vertical list with dotted task
-      names, and docstrings in a second column.
-    - ``nested``: a nested (4-space indented) vertical list without dotted task
-      names. No docstrings are displayed.
+      names.
+    - ``nested``: a nested (4-space indented) vertical list, where each level
+      implicitly includes its parent (with leading dots as a strong visual clue
+      that these are still subcollection tasks.)
     - ``json``: intended for consumption by scripts or other programs, this
       format emits (non-pretty-printed) JSON data representing the task tree,
       with each 'node' in the tree consisting of the following keys:
