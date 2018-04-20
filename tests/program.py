@@ -1,3 +1,4 @@
+import json
 import os
 import sys
 
@@ -14,7 +15,7 @@ from invoke import (
 from invoke import main
 from invoke.util import cd
 
-from _util import load, expect, skip_if_windows, run
+from _util import load, expect, skip_if_windows, run, support_file
 
 
 ROOT = os.path.abspath(os.path.sep)
@@ -823,9 +824,13 @@ Default 'build' task: .all
 
             class json:
                 def base_case(self):
-                    # --list --list-format json
-                    # (with say 2 levels of shit)
-                    skip()
+                    # Stored expected data as an actual JSON file cuz it's big
+                    # & looks like crap if inlined. Plus by round-tripping it
+                    # we remove the pretty-printing. Win-win?
+                    data = json.loads(support_file('tree.json'))
+                    expected = json.dumps(data) + "\n"
+                    stdout, _ = run("-c tree --list --list-format=json")
+                    assert expected == stdout
 
                 def honors_namespace_arg_to_list(self):
                     # --list foobar --list-format json

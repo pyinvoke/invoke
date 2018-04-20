@@ -680,6 +680,12 @@ class Program(object):
             pairs.extend(self._nested_pairs(subcoll, level + 1, rerooted))
         return pairs
 
+    def list_json(self):
+        # TODO: consider using something more formal re: the format this emits,
+        # eg json-schema or whatever. Would simplify the
+        # relatively-concise-but-only-human docs that currently describe this.
+        # TODO: draw the rest of the owl
+        print("{}")
 
     def task_list_opener(self, extra=""):
         root = self.list_root

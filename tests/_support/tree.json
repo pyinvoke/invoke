@@ -1,0 +1,125 @@
+{
+    "name": null,
+    "docstring": "",
+    "tasks": [
+        {
+            "name": "shell",
+            "aliases": ["ipython"],
+            "docstring": "Load a REPL with project state already set up."
+        },
+        {
+            "name": "test",
+            "aliases": ["run-tests"],
+            "docstring": "Run the test suite with baked-in args."
+        }
+    ],
+    "default": "test",
+    "collections": [
+        {
+            "name": "build",
+            "docstring": "Tasks for compiling static code and assets.",
+            "tasks": [
+                {
+                    "name": "all",
+                    "aliases": ["everything"],
+                    "docstring": "Build all necessary artifacts."
+                },
+                {
+                    "name": "c-ext",
+                    "aliases": ["ext"],
+                    "docstring": "Build our internal C extension."
+                }
+            ],
+            "default": "all",
+            "collections": [
+                {
+                    "name": "docs",
+                    "docstring": "Tasks for managing Sphinx docs.",
+                    "tasks": [
+                        {
+                            "name": "all",
+                            "aliases": [],
+                            "docstring": "Build all doc formats."
+                        },
+                        {
+                            "name": "html",
+                            "aliases": [],
+                            "docstring": "Build HTML output only."
+                        },
+                        {
+                            "name": "pdf",
+                            "aliases": [],
+                            "docstring": "Build PDF output only."
+                        }
+                    ],
+                    "default": "all",
+                    "collections": []
+                },
+                {
+                    "name": "python",
+                    "docstring": "PyPI/etc distribution artifacts.",
+                    "tasks": [
+                        {
+                            "name": "all",
+                            "aliases": [],
+                            "docstring": "Build all Python packages."
+                        },
+                        {
+                            "name": "sdist",
+                            "aliases": [],
+                            "docstring": "Build classic style tar.gz."
+                        },
+                        {
+                            "name": "wheel",
+                            "aliases": [],
+                            "docstring": "Build a wheel."
+                        }
+                    ],
+                    "default": "all",
+                    "collections": []
+                }
+            ]
+        },
+        {
+            "name": "deploy",
+            "docstring": "How to deploy our code and configs.",
+            "tasks": [
+                {
+                    "name": "db",
+                    "aliases": ["db-servers"],
+                    "docstring": "Deploy to our database servers."
+                },
+                {
+                    "name": "everywhere",
+                    "aliases": [],
+                    "docstring": "Deploy to all targets."
+                },
+                {
+                    "name": "web",
+                    "aliases": [],
+                    "docstring": "Update and bounce the webservers."
+                }
+            ],
+            "default": "everywhere",
+            "collections": []
+        },
+        {
+            "name": "provision",
+            "docstring": "System setup code.",
+            "tasks": [
+                {
+                    "name": "db",
+                    "aliases": [],
+                    "docstring": "Stand up one or more DB servers."
+                },
+                {
+                    "name": "web",
+                    "aliases": [],
+                    "docstring": "Stand up a Web server."
+                }
+            ],
+            "default": null,
+            "collections": []
+        }
+    ]
+}
