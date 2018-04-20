@@ -44,6 +44,11 @@ def load(name):
         return imported
 
 
+def support_file(subpath):
+    with open(os.path.join(support, subpath)) as fd:
+        return fd.read()
+
+
 @trap
 def run(invocation, program=None, invoke=True):
     """
