@@ -115,8 +115,10 @@ The core options (which must be given before any task names) are as follows:
       tree (the outermost document being the root node, and thus a JSON object)
       consisting of the following keys:
 
-      - ``name``: String name of collection; the root collection's "name" is
-        null.
+      - ``name``: String name of collection; for the root collection this is
+        typically the module name, so unless you're supplying alternate
+        collection name to the load process, it's usually ``"tasks"`` (from
+        ``tasks.py``.)
       - ``help``: First line of collection's docstring, if it came from a
         module; null otherwise (or if module lacked a docstring.)
       - ``tasks``: Immediate children of this collection; an array of objects
