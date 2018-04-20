@@ -111,17 +111,31 @@ The core options (which must be given before any task names) are as follows:
       implicitly includes its parent (with leading dots as a strong visual clue
       that these are still subcollection tasks.)
     - ``json``: intended for consumption by scripts or other programs, this
-      format emits (non-pretty-printed) JSON data representing the task tree,
-      with each 'node' in the tree consisting of the following keys:
+      format emits JSON representing the task tree, with each 'node' in the
+      tree (the outermost document being the root node, and thus a JSON object)
+      consisting of the following keys:
 
-      - ``collection``: String name of collection; the root collection's "name"
-        is null.
-      - ``docstring``: Docstring of collection, if it came from a module; null
-        otherwise.
-      - ``tasks``: Immediate children of this collection; an array of string
-        names.
-      - ``collections``: Any sub-collections within this collection, of the
-        same format.
+      - ``name``: String name of collection; the root collection's "name" is
+        null.
+      - ``docstring``: Docstring of collection, if it came from a module; empty
+        string otherwise (or if module lacked a docstring.)
+      - ``tasks``: Immediate children of this collection; an array of objects
+        of the following form:
+
+        - ``name``: the task's local name within its collection (i.e. not the
+          full dotted path you might see with the ``flat`` format;
+          reconstructing that path is left up to the consumer.)
+        - ``docstring``: the task's docstring, or the empty string.
+        - ``aliases``: an array of string aliases for this task.
+
+      - ``default``: String naming which task within this collection, if any,
+        is the default task. Is null if no task is the default.
+      - ``collections``: An array of any sub-collections within this
+        collection, members of which which will have the same structure as this
+        outermost document, recursively.
+
+      The JSON emitted is not pretty-printed, but does end with a trailing
+      newline.
 
 .. option:: -p, --pty
 
