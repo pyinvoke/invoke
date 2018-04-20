@@ -637,7 +637,7 @@ class Program(object):
                 name += " ({})".format(', '.join(aliases))
             # All done, our two colums are tweaked name + 1st docstring line
             task = self.collection[primary]
-            pairs.append((name, helpline(task)))
+            pairs.append((name, helpline(task) or ""))
         self.display_with_columns(pairs=pairs)
 
     def list_nested(self):
