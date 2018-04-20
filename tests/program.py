@@ -702,8 +702,24 @@ Default 'build.docs' task: .all
 
         class depth_limiting:
             def limits_display_to_given_depth(self):
-                # --list --list-depth 1 shows just top level tasks/NS
-                skip()
+                # Base case: depth=1 aka "show me the namespaces"
+                # TODO: how to note the limitation?
+                # TODO: what happens to namespaces w/o a default task? normally
+                # they would not even show up...! ugggh
+                expected = """Available tasks:
+
+  shell (ipython)                       Load a REPL with project state already
+                                        set up.
+  test (run-tests)                      Run the test suite with baked-in args.
+  build (build.all)                     uhhh
+  deploy (deploy.everywhere)            fuck me
+  provision                             seriously
+
+Default task: test
+
+"""
+                stdout, _ = run("-c tree --list --list-format=flat")
+                assert expected == stdout
 
             def non_base_case(self):
                 # --list --list-depth 3 shows 3 levels
@@ -802,8 +818,60 @@ Default 'build' task: .all
                     assert expected == stdout
 
                 def honors_depth_arg(self):
-                    # --list --list-format nested --list-depth 2
-                    skip()
+                    expected = """Available tasks ('*' denotes collection defaults):
+
+  shell (ipython)           Load a REPL with project state already set up.
+  test* (run-tests)         Run the test suite with baked-in args.
+  build                     Tasks for compiling static code and assets.
+      .all* (.everything)   Build all necessary artifacts.
+      .c-ext (.ext)         Build our internal C extension.
+      .docs                 Tasks for managing Sphinx docs.
+          .all*             Build all doc formats.
+          .html             Build HTML output only.
+          .pdf              Build PDF output only.
+      .python               PyPI/etc distribution artifacts.
+          .all*             Build all Python packages.
+          .sdist            Build classic style tar.gz.
+          .wheel            Build a wheel.
+  deploy                    How to deploy our code and configs.
+      .db (.db-servers)     Deploy to our database servers.
+      .everywhere*          Deploy to all targets.
+      .web                  Update and bounce the webservers.
+  provision                 System setup code.
+      .db                   Stand up one or more DB servers.
+      .web                  Stand up a Web server.
+
+Default task: test
+
+"""
+                    stdout, _ = run("-c tree -l -F nested --list-depth 1")
+                    assert expected == stdout
+
+                def deeper_depth_arg(self):
+                    # TODO: how to denote collections vs tasks in this case (eg
+                    # build.docs, build.python)?
+                    expected = """Available tasks ('*' denotes collection defaults):
+
+  shell (ipython)           Load a REPL with project state already set up.
+  test* (run-tests)         Run the test suite with baked-in args.
+  build                     Tasks for compiling static code and assets.
+      .all* (.everything)   Build all necessary artifacts.
+      .c-ext (.ext)         Build our internal C extension.
+      .docs                 Tasks for managing Sphinx docs.
+      .python               PyPI/etc distribution artifacts.
+  deploy                    How to deploy our code and configs.
+      .db (.db-servers)     Deploy to our database servers.
+      .everywhere*          Deploy to all targets.
+      .web                  Update and bounce the webservers.
+  provision                 System setup code.
+      .db                   Stand up one or more DB servers.
+      .web                  Stand up a Web server.
+
+Default task: test
+
+"""
+                    stdout, _ = run("-c tree -l -F nested --list-depth 2")
+                    assert expected == stdout
 
                 def all_possible_options(self):
                     # --list namespace --list-format nested --list-depth 2
