@@ -653,8 +653,7 @@ Available tasks:
         class namespace_limiting:
             def argument_limits_display_to_given_namespace(self):
                 stdout, _ = run("-c tree --list build")
-                expected = """
-Available tasks in the 'build' collection:
+                expected = """Available 'build' tasks:
 
   .all (.everything)      Build all necessary artifacts.
   .c-ext (.ext)           Build our internal C extension.
@@ -666,7 +665,8 @@ Available tasks in the 'build' collection:
   .python.wheel           Build a wheel.
 
 Default 'build' task: .all
-""".lstrip()
+
+"""
                 assert expected == stdout
 
             def argument_may_be_a_nested_namespace(self):
@@ -735,6 +735,7 @@ Default 'build' task: .all
   build.python.wheel                    Build a wheel.
 
 Default task: test
+
 """
                 stdout, _ = run("-c tree --list --list-format=flat")
                 assert expected == stdout
@@ -744,7 +745,7 @@ Default task: test
                     expected = """Available tasks ('*' denotes collection defaults):
 
   shell (ipython)           Load a REPL with project state already set up.
-  test (run-tests)          Run the test suite with baked-in args.
+  test* (run-tests)         Run the test suite with baked-in args.
   build                     Tasks for compiling static code and assets.
       .all* (.everything)   Build all necessary artifacts.
       .c-ext (.ext)         Build our internal C extension.
@@ -764,25 +765,29 @@ Default task: test
       .db                   Stand up one or more DB servers.
       .web                  Stand up a Web server.
 
+Default task: test
+
 """
                     stdout, _ = run("-c tree -l -F nested")
                     assert expected == stdout
 
                 def honors_namespace_arg_to_list(self):
                     stdout, _ = run("-c tree --list build -F nested")
-                    expected = """Available 'build' tasks:
+                    expected = """Available 'build' tasks ('*' denotes collection defaults):
 
-  build                     Tasks for compiling static code and assets.
-      .all* (.everything)   Build all necessary artifacts.
-      .c-ext (.ext)         Build our internal C extension.
-      .docs                 Tasks for managing Sphinx docs.
-          .all*             Build all doc formats.
-          .html             Build HTML output only.
-          .pdf              Build PDF output only.
-      .python               PyPI/etc distribution artifacts.
-          .all*             Build all Python packages.
-          .sdist            Build classic style tar.gz.
-          .wheel            Build a wheel.
+  .all* (.everything)   Build all necessary artifacts.
+  .c-ext (.ext)         Build our internal C extension.
+  .docs                 Tasks for managing Sphinx docs.
+      .all*             Build all doc formats.
+      .html             Build HTML output only.
+      .pdf              Build PDF output only.
+  .python               PyPI/etc distribution artifacts.
+      .all*             Build all Python packages.
+      .sdist            Build classic style tar.gz.
+      .wheel            Build a wheel.
+
+Default 'build' task: .all
+
 """
                     assert expected == stdout
 

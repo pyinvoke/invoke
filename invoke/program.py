@@ -368,6 +368,9 @@ class Program(object):
                 self.print_help()
                 raise Exit
             self.load_collection()
+        # Set these up for potential use later when listing tasks
+        self.list_root = None
+        self.scoped_collection = self.collection
 
         # TODO: load project conf, if possible, gracefully
 
@@ -400,10 +403,16 @@ class Program(object):
         list_format = self.args['list-format'].value
         # TODO: work in depth
         if list_root:
-            root = None
+            # Not just --list, but --list some-root - do moar work
             if isinstance(list_root, six.string_types):
-                root = list_root
-            self.list_tasks(root=root, format_=list_format)
+                self.list_root = list_root
+                try:
+                    sub = self.collection.subcollection_from_path(list_root)
+                    self.scoped_collection = sub
+                except KeyError:
+                    msg = "Sub-collection '{}' not found!"
+                    raise Exit(msg.format(list_root))
+            self.list_tasks(format_=list_format)
             raise Exit
 
         # Print completion helpers if necessary
@@ -590,49 +599,61 @@ class Program(object):
             print(self.leading_indent + "none")
             print("")
 
-    def list_tasks(self, root=None, format_='flat'):
+    def list_tasks(self, format_='flat'):
         # TODO: honor depth
-        collection = self.collection
-        # Sanity-check given root to ensure it's valid
-        if root:
-            try:
-                collection = self.collection.subcollection_from_path(root)
-            except KeyError:
-                msg = "Sub-collection '{}' not found!"
-                raise Exit(msg.format(path))
         # Short circuit if no tasks to show (Collection now implements bool)
-        if not collection:
+        focus = self.scoped_collection
+        if not focus:
             msg = "No tasks found in collection '{}'!"
-            raise Exit(msg.format(collection.name))
-        strategy = getattr(self, "list_{}".format(format_))
-        strategy(collection=collection, root=root)
+            raise Exit(msg.format(focus.name))
+        getattr(self, "list_{}".format(format_))()
 
-    def display_with_columns(self, pairs, extra=""):
-        # Print
-        text = "Available tasks" if self.namespace is None else "Subcommands"
-        if extra:
-            text = "{} ({})".format(text, extra)
-        print("{}:\n".format(text))
-        self.print_columns(pairs)
-
-    def list_flat(self, collection, root):
-        # TODO: honor root
+    def list_flat(self):
         # TODO: honor depth
         # Sort in depth, then alpha, order
-        task_names = collection.task_names
+        task_names = self.collection.task_names
+        root = self.list_root
         pairs = []
         for primary in sort_names(task_names):
-            # Add aliases
+            # Skip past anything that doesn't appear to belong to given root.
+            # TODO: this feels kinda naive but it should always just-work given
+            # the nature of these paths...?
+            if root and not primary.startswith(root):
+                continue
+            # Add aliases to name column
             aliases = sort_names(task_names[primary])
             name = primary
+            # Strip out root if it was given, for a bit cleaner display (while
+            # still being pretty 'flat'.)
+            # TODO: almost feels like we want to be building off what we do for
+            # the nested view here (i.e. go with that but then just trim
+            # indents)...meh...
+            if root:
+                name = name.replace(root, '', 1)
+                aliases = [x.replace(root, '', 1) for x in aliases]
+                aliases = [x for x in aliases if x] # Strip empty strings
             if aliases:
                 name += " ({})".format(', '.join(aliases))
-            # Add docstring 1st lines
-            task = collection[primary]
+            # All done, our two colums are tweaked name + 1st docstring line
+            task = self.collection[primary]
             pairs.append((name, helpline(task)))
-        self.display_with_columns(pairs)
+        self.display_with_columns(pairs=pairs)
 
-    def _nested_pairs(self, coll, level):
+    def list_nested(self):
+        # TODO: honor root
+        # TODO: honor depth
+        pairs = self._nested_pairs(
+            self.scoped_collection,
+            level=0,
+            rerooted=self.list_root,
+        )
+        extra = "'*' denotes collection defaults"
+        # TODO: feels like we should invert how display_with_columns is called,
+        # most of the time the pairs, root, etc are the same and it's only
+        # stuff like 'extra' that differs?
+        self.display_with_columns(pairs=pairs, extra=extra)
+
+    def _nested_pairs(self, coll, level, rerooted):
         # TODO: this still feels like it could follow the Collection.task_names
         # approach used by the default/flat style? But this data set is that
         # much farther removed from anything one would truly want from
@@ -643,7 +664,7 @@ class Program(object):
         for name, task in sorted(six.iteritems(coll.tasks)):
             displayname = name
             aliases = list(map(coll.transform, task.aliases))
-            if level > 0:
+            if level > 0 or rerooted:
                 displayname = ".{}".format(displayname)
                 aliases = [".{}".format(x) for x in aliases]
             if coll.default == name:
@@ -653,18 +674,38 @@ class Program(object):
             pairs.append((full, helpline(task)))
         for name, subcoll in sorted(six.iteritems(coll.collections)):
             displayname = name
-            if level > 0:
+            if level > 0 or rerooted:
                 displayname = ".{}".format(displayname)
             pairs.append((indent + displayname, helpline(subcoll)))
-            pairs.extend(self._nested_pairs(subcoll, level + 1))
+            pairs.extend(self._nested_pairs(subcoll, level + 1, rerooted))
         return pairs
 
-    def list_nested(self, collection, root):
-        # TODO: honor root
-        # TODO: honor depth
-        pairs = self._nested_pairs(collection, level=0)
-        extra = "'*' denotes collection defaults"
-        self.display_with_columns(pairs, extra=extra)
+
+    def task_list_opener(self, extra=""):
+        root = self.list_root
+        specifier = " '{}'".format(root) if root else ""
+        tail = " ({})".format(extra) if extra else ""
+        text = "Available{} tasks{}".format(specifier, tail)
+        # TODO: do use cases w/ bundled namespace want to display things like
+        # root and depth too? Leaving off for now...
+        if self.namespace is not None:
+            text = "Subcommands"
+        return text
+
+    def display_with_columns(self, pairs, extra=""):
+        root = self.list_root
+        print("{}:\n".format(self.task_list_opener(extra=extra)))
+        self.print_columns(pairs)
+        # TODO: worth stripping this out for nested? since it's signified with
+        # asterisk there? ugggh
+        default = self.scoped_collection.default
+        if default:
+            specific = ""
+            if root:
+                specific = " '{}'".format(root)
+                default = ".{}".format(default)
+            # TODO: trim/prefix dots
+            print("Default{} task: {}\n".format(specific, default))
 
     def print_columns(self, tuples):
         """
