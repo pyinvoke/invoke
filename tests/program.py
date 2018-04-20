@@ -670,8 +670,16 @@ Default 'build' task: .all
                 assert expected == stdout
 
             def argument_may_be_a_nested_namespace(self):
-                # --list toplevel.sublevel
-                skip()
+                stdout, _ = run("-c tree --list build.docs")
+                expected = """Available 'build.docs' tasks:
+
+  .all (.docs)   Build all doc formats.
+  .html          Build HTML output only.
+  .pdf           Build PDF output only.
+
+Default 'build.docs' task: .all
+
+"""
 
             def empty_namespaces_say_no_tasks_in_namespace(self):
                 # In other words, outer namespace may not be empty, but the
