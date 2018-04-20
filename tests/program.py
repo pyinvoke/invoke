@@ -828,14 +828,19 @@ Default 'build' task: .all
                     # & looks like crap if inlined. Plus by round-tripping it
                     # we remove the pretty-printing. Win-win?
                     self.tree = json.loads(support_file('tree.json'))
+                    self.by_name = {
+                        x["name"]: x
+                        for x in self.tree["collections"]
+                    }
 
                 def base_case(self):
                     stdout, _ = run("-c tree --list --list-format=json")
                     assert self.tree == json.loads(stdout)
 
                 def honors_namespace_arg_to_list(self):
-                    # --list foobar --list-format json
-                    skip()
+                    stdout, _ = run("-c tree --list build --list-format=json")
+                    expected = self.by_name['build']
+                    assert expected == json.loads(stdout)
 
                 def honors_depth_arg(self):
                     # --list --list-format json --list-depth 2
