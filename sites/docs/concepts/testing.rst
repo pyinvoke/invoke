@@ -88,7 +88,8 @@ An iteration on the previous example::
             return "Year of Linux on the desktop!"
 
 Now the bulk of the actual logic is testable with fewer lines of code and fewer
-assumptions about the "real world" the code runs within::
+assumptions about the "real world" the code runs within (e.g. no need to care
+about ``sys.stdout`` at all)::
 
     from invoke import Result
     from mytasks import platform_response
