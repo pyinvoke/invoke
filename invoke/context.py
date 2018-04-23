@@ -330,10 +330,10 @@ class Context(DataProxy):
 
         Finally, a demonstration (see inline comments) of nesting::
 
-            with cd('/var/www'):
-                run('ls') # cd /var/www && ls
-                with cd('website1'):
-                    run('ls')  # cd /var/www/website1 && ls
+            with ctx.cd('/var/www'):
+                ctx.run('ls') # cd /var/www && ls
+                with ctx.cd('website1'):
+                    ctx.run('ls')  # cd /var/www/website1 && ls
 
         .. note::
             Space characters will be escaped automatically to make dealing with
