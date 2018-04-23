@@ -10,7 +10,7 @@ from .tasks import Task
 
 class Collection(object):
     """
-    A collection of executable tasks.
+    A collection of executable tasks. See :doc:`/concepts/namespaces`.
     """
     def __init__(self, *args, **kwargs):
         """
