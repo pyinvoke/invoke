@@ -37,7 +37,6 @@ class Context(DataProxy):
 
             Defaults to an anonymous/default `.Config` instance.
         """
-
         #: The fully merged `.Config` object appropriate for this context.
         #:
         #: `.Config` settings (see their documentation for details) may be
@@ -49,8 +48,16 @@ class Context(DataProxy):
         #: ``ctx.foo`` returns the same value as ``ctx.config['foo']``.
         config = config if config is not None else Config()
         self._set(_config=config)
-        self._set(command_prefixes=list())
-        self._set(command_cwds=list())
+        #: A list of commands to run (via "&&") before the main argument to any
+        #: `run` or `sudo` calls. Note that the primary API for manipulating
+        #: this list is `prefix`; see its docs for details.
+        command_prefixes = list()
+        self._set(command_prefixes=command_prefixes)
+        #: A list of directories to 'cd' into before running commands with
+        #: `run` or `sudo`; intended for management via `cd`, please see its
+        #: docs for details.
+        command_cwds = list()
+        self._set(command_cwds=command_cwds)
 
     @property
     def config(self):
