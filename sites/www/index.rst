@@ -9,8 +9,6 @@ site, `docs.pyinvoke.org <http://docs.pyinvoke.org>`_.
 Please see below for our README, or the navigation on the left for the rest of
 the site content.
 
-.. include:: ../alpha.rst
-
 ----
 
 .. include:: ../../README.rst

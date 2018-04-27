@@ -1,3 +1,5 @@
+.. _cli-args:
+
 =================
 Invocation basics
 =================
@@ -126,7 +128,7 @@ type inside ``@task``::
         if log:
             log_file = '/var/log/my.log'
             # Value was given, vs just-True
-            if isinstance(log, unicode): 
+            if isinstance(log, unicode):
                 log_file = log
             # Replace w/ your actual log setup...
             set_log_destination(log_file)
@@ -165,12 +167,15 @@ context is checked to resolve the ambiguity:
 - If the token is an otherwise legitimate argument, it is assumed that the user
   meant to give that argument immediately after the current one, and no
   optional value is set.
+
     - E.g. in ``invoke compile --log --verbose`` (assuming ``--verbose`` is
       another legit argument for ``compile``) the parser decides the user meant
       to give ``--log`` without a value, and followed it up with the
       ``--verbose`` flag.
+
 - Otherwise, the token is interpreted literally and stored as the value for
   the current flag.
+
     - E.g. if ``--verbose`` is *not* a legitimate argument for ``compile``,
       then ``invoke compile --log --verbose`` causes the parser to assign
       ``"--verbose"`` as the value given to ``--log``. (This will probably

@@ -1,3 +1,5 @@
+.. _loading-collections:
+
 ===================
 Loading collections
 ===================
