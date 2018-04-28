@@ -15,7 +15,7 @@ from .exceptions import (
     UnexpectedExit, CollectionNotFound, ParseError, Exit,
 )
 from .terminals import pty_size
-from .util import debug, enable_logging, sort_names, helpline
+from .util import debug, enable_logging, task_name_sort_key, helpline
 
 
 class Program(object):
@@ -615,14 +615,15 @@ class Program(object):
         task_names = self.collection.task_names
         root = self.list_root
         pairs = []
-        for primary in sort_names(task_names):
+        sorted_names = sorted(task_names, key=task_name_sort_key)
+        for primary in sorted_names:
             # Skip past anything that doesn't appear to belong to given root.
             # TODO: this feels kinda naive but it should always just-work given
             # the nature of these paths...?
             if root and not primary.startswith(root):
                 continue
             # Add aliases to name column
-            aliases = sort_names(task_names[primary])
+            aliases = sorted(task_names[primary])
             name = primary
             # Strip out root if it was given, for a bit cleaner display (while
             # still being pretty 'flat'.)

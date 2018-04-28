@@ -28,6 +28,11 @@
                     "name": "c-ext",
                     "aliases": ["ext"],
                     "help": "Build our internal C extension."
+                },
+                {
+                    "name": "zap",
+                    "aliases": [],
+                    "help": "A silly way to clean."
                 }
             ],
             "default": "all",

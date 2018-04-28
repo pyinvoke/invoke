@@ -793,6 +793,11 @@ class Collection_:
                         help="Build our internal C extension.",
                         aliases=["ext"],
                     ),
+                    dict(
+                        name="zap",
+                        help="A silly way to clean.",
+                        aliases=[],
+                    ),
                 ],
                 default="all",
                 collections=[docs, python],

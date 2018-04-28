@@ -610,13 +610,6 @@ Available tasks:
                 'a.b.subtask'
             ))
 
-        def subcollections_sorted_in_depth_order(self):
-            self._list_eq('deeper_ns_list', (
-                'toplevel',
-                'a.subtask',
-                'a.nother.subtask',
-            ))
-
         def aliases_sorted_alphabetically(self):
             self._list_eq('alias_sorting', (
                 'toplevel (a, z)',
@@ -651,6 +644,40 @@ Available tasks:
                 err="No tasks found in collection 'empty'!\n"
             )
 
+        def nontrivial_trees_are_sorted_by_namespace_and_depth(self):
+            # By using a larger sample, we can guard against unintuitive
+            # behaviors arising from the above simple unit style tests. E.g.
+            # earlier implementations 'broke up' collections that had more than
+            # 2 levels of depth, because they displayed all 2nd-level tasks
+            # before any 3rd-level ones.
+            # The code must square that concern against "show shallow tasks
+            # before deep ones" (vs straight up alpha sorting)
+            expected = """Available tasks:
+
+  shell (ipython)                       Load a REPL with project state already
+                                        set up.
+  test (run-tests)                      Run the test suite with baked-in args.
+  build.all (build, build.everything)   Build all necessary artifacts.
+  build.c-ext (build.ext)               Build our internal C extension.
+  build.zap                             A silly way to clean.
+  build.docs.all (build.docs)           Build all doc formats.
+  build.docs.html                       Build HTML output only.
+  build.docs.pdf                        Build PDF output only.
+  build.python.all (build.python)       Build all Python packages.
+  build.python.sdist                    Build classic style tar.gz.
+  build.python.wheel                    Build a wheel.
+  deploy.db (deploy.db-servers)         Deploy to our database servers.
+  deploy.everywhere (deploy)            Deploy to all targets.
+  deploy.web                            Update and bounce the webservers.
+  provision.db                          Stand up one or more DB servers.
+  provision.web                         Stand up a Web server.
+
+Default task: test
+
+"""
+            stdout, _ = run("-c tree --list")
+            assert expected == stdout
+
         class namespace_limiting:
             def argument_limits_display_to_given_namespace(self):
                 stdout, _ = run("-c tree --list build")
@@ -658,6 +685,7 @@ Available tasks:
 
   .all (.everything)      Build all necessary artifacts.
   .c-ext (.ext)           Build our internal C extension.
+  .zap                    A silly way to clean.
   .docs.all (.docs)       Build all doc formats.
   .docs.html              Build HTML output only.
   .docs.pdf               Build PDF output only.
@@ -748,17 +776,18 @@ Default task: test
   test (run-tests)                      Run the test suite with baked-in args.
   build.all (build, build.everything)   Build all necessary artifacts.
   build.c-ext (build.ext)               Build our internal C extension.
-  deploy.db (deploy.db-servers)         Deploy to our database servers.
-  deploy.everywhere (deploy)            Deploy to all targets.
-  deploy.web                            Update and bounce the webservers.
-  provision.db                          Stand up one or more DB servers.
-  provision.web                         Stand up a Web server.
+  build.zap                             A silly way to clean.
   build.docs.all (build.docs)           Build all doc formats.
   build.docs.html                       Build HTML output only.
   build.docs.pdf                        Build PDF output only.
   build.python.all (build.python)       Build all Python packages.
   build.python.sdist                    Build classic style tar.gz.
   build.python.wheel                    Build a wheel.
+  deploy.db (deploy.db-servers)         Deploy to our database servers.
+  deploy.everywhere (deploy)            Deploy to all targets.
+  deploy.web                            Update and bounce the webservers.
+  provision.db                          Stand up one or more DB servers.
+  provision.web                         Stand up a Web server.
 
 Default task: test
 
@@ -775,6 +804,7 @@ Default task: test
   build                     Tasks for compiling static code and assets.
       .all* (.everything)   Build all necessary artifacts.
       .c-ext (.ext)         Build our internal C extension.
+      .zap                  A silly way to clean.
       .docs                 Tasks for managing Sphinx docs.
           .all*             Build all doc formats.
           .html             Build HTML output only.
@@ -803,6 +833,7 @@ Default task: test
 
   .all* (.everything)   Build all necessary artifacts.
   .c-ext (.ext)         Build our internal C extension.
+  .zap                  A silly way to clean.
   .docs                 Tasks for managing Sphinx docs.
       .all*             Build all doc formats.
       .html             Build HTML output only.
@@ -825,6 +856,7 @@ Default 'build' task: .all
   build                     Tasks for compiling static code and assets.
       .all* (.everything)   Build all necessary artifacts.
       .c-ext (.ext)         Build our internal C extension.
+      .zap                  A silly way to clean.
       .docs                 Tasks for managing Sphinx docs.
           .all*             Build all doc formats.
           .html             Build HTML output only.
@@ -857,6 +889,7 @@ Default task: test
   build                     Tasks for compiling static code and assets.
       .all* (.everything)   Build all necessary artifacts.
       .c-ext (.ext)         Build our internal C extension.
+      .zap                  A silly way to clean.
       .docs                 Tasks for managing Sphinx docs.
       .python               PyPI/etc distribution artifacts.
   deploy                    How to deploy our code and configs.

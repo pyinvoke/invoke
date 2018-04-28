@@ -7,7 +7,7 @@ import shlex
 
 from .exceptions import Exit, ParseError
 from .parser import Parser
-from .util import debug, sort_names
+from .util import debug, task_name_sort_key
 
 
 def complete(core, initial_context, collection):
@@ -85,7 +85,7 @@ def complete(core, initial_context, collection):
 
 
 def print_task_names(collection):
-    for name in sort_names(collection.task_names):
+    for name in sorted(collection.task_names, key=task_name_sort_key):
         print(name)
         # Just stick aliases after the thing they're aliased to. Sorting isn't
         # so important that it's worth bending over backwards here.

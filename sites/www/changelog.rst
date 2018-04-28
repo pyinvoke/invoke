@@ -25,17 +25,19 @@ Changelog
 * :bug:`-` Integer-type CLI arguments were not displaying placeholder text in
   ``--help`` output (i.e. they appeared as ``--myint`` instead of
   ``--myint=INT``.) This has been fixed.
-* :feature:`33` Overhaul task listing (formerly just a simple,
-  boolean ``--list``) to make life a lot easier for users with nontrivial task
-  trees:
+* :feature:`33` Overhaul task listing (formerly just a simple, boolean
+  ``--list``) to make life easier for users with nontrivial task trees:
 
   - Limit display to a specific namespace by giving an optional argument to
     ``--list``, e.g. ``--list build``;
-  - Limit listing depth, allowing for things like listing just top-level
-    namespaces but not their contents, e.g. ``--list --list-depth 1``;
-  - Additional output formats besides the default flat list, such as a nested
-    view with ``--list-format nested`` or script-friendly output with
-    ``--list-format json``.
+  - Additional output formats besides the default (now known as ``flat``) such
+    as a nested view with ``--list-format nested`` or script-friendly output
+    with ``--list-format json``.
+  - The default ``flat`` format now sorts a bit differently - the previous
+    algorithm would break up trees of tasks.
+  - Limit listing depth, so it's easier to view only the first level or two
+    (i.e. the overall namespaces) of a large tree, e.g. ``--list --list-depth
+    1``;
 
   Thanks to the many users who submitted various requests under this ticket's
   umbrella, and to Dave Burkholder in particular for detailed use case analysis

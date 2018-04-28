@@ -14,4 +14,9 @@ def c_ext(c):
     "Build our internal C extension."
     pass
 
-ns = Collection(all_, c_ext, docs, python)
+@task
+def zap(c):
+    "A silly way to clean."
+    pass
+
+ns = Collection(all_, c_ext, zap, docs, python)

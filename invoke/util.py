@@ -52,11 +52,19 @@ for x in ('debug',):
     globals()[x] = getattr(log, x)
 
 
-def sort_names(names):
+def task_name_sort_key(name):
     """
-    Sort task ``names`` by nesting depth & then as regular strings.
+    Return key tuple for use sorting dotted task names, via e.g. `sorted`.
     """
-    return sorted(names, key=lambda x: (x.count('.'), x))
+    parts = name.split('.')
+    return (
+        # First group/sort by non-leaf path components. This keeps everything
+        # grouped in its hierarchy, and incidentally puts top-level tasks
+        # (whose non-leaf path set is the empty list) first, where we want them
+        parts[:-1],
+        # Then we sort lexicographically by the actual task name
+        parts[-1],
+    )
 
 
 # TODO: Make part of public API sometime
