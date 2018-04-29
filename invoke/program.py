@@ -627,16 +627,25 @@ class Program(object):
         pairs = []
         indent = len(ancestors) * self.indent
         for name, task in sorted(six.iteritems(coll.tasks)):
-            displayname = name
             is_default = name == coll.default
+            # Start with just the name and just the aliases, no prefixes or
+            # dots.
+            displayname = name
             aliases = list(map(coll.transform, task.aliases))
+            # If displaying a sub-collection (or if we are displaying a given
+            # namespace/root), tack on some dots to make it clear these names
+            # require dotted paths to invoke.
             if ancestors or self.list_root:
                 displayname = ".{}".format(displayname)
                 aliases = [".{}".format(x) for x in aliases]
+            # Nested? Indent, and add asterisks to default-tasks.
             if self.list_format == 'nested':
                 prefix = indent
                 if is_default:
                     displayname += "*"
+            # Flat? Prefix names and aliases with ancestor names to get full
+            # dotted path; and give default-tasks their collection name as the
+            # first alias.
             if self.list_format == 'flat':
                 # NOTE: skip 1st ancestor as it's always the root & thus
                 # implicit/unnamed; and also remember to loop in current coll
@@ -645,11 +654,14 @@ class Program(object):
                 if ancestors:
                     display_ancestors.append(coll)
                 prefix = '.'.join(x.name for x in display_ancestors)
-                # Reinstate prefix for aliases too, as well as
-                # collection-as-alias for default tasks
+                # Make sure leading dots are present for subcollections if
+                # scoped display
+                if prefix and self.list_root:
+                    prefix = '.' + prefix
                 aliases = [prefix + alias for alias in aliases]
                 if is_default and ancestors:
                     aliases.insert(0, prefix)
+            # Generate full name and help columns and add to pairs.
             alias_str = " ({})".format(", ".join(aliases)) if aliases else ""
             full = prefix + displayname + alias_str
             pairs.append((full, helpline(task)))
