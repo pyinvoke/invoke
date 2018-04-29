@@ -15,7 +15,7 @@ from .exceptions import (
     UnexpectedExit, CollectionNotFound, ParseError, Exit,
 )
 from .terminals import pty_size
-from .util import debug, enable_logging, task_name_sort_key, helpline
+from .util import debug, enable_logging, helpline
 
 
 class Program(object):
