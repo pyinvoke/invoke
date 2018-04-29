@@ -631,7 +631,7 @@ class Program(object):
             # Start with just the name and just the aliases, no prefixes or
             # dots.
             displayname = name
-            aliases = list(map(coll.transform, task.aliases))
+            aliases = list(map(coll.transform, sorted(task.aliases)))
             # If displaying a sub-collection (or if we are displaying a given
             # namespace/root), tack on some dots to make it clear these names
             # require dotted paths to invoke.
@@ -684,7 +684,7 @@ class Program(object):
         # changing the data schema or otherwise acting strangely; and it also
         # doesn't make a ton of sense to limit depth when the output is for a
         # script to handle. So we just refuse, for now. TODO: find better way
-        if self.list_depth is not None:
+        if self.list_depth:
             raise Exit("The --list-depth option is not supported with JSON format!") # noqa
         # TODO: consider using something more formal re: the format this emits,
         # eg json-schema or whatever. Would simplify the
