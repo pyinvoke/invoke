@@ -743,7 +743,7 @@ Default 'build.docs' task: .all
 Default task: test
 
 """
-                stdout, _ = run("-c tree --list --list-format=flat")
+                stdout, _ = run("-c tree --list -F flat --list-depth 1")
                 assert expected == stdout
 
             def non_base_case(self):
@@ -799,16 +799,62 @@ Default task: test
                 assert expected == stdout
 
             def works_with_explicit_namespace(self):
-                # --list namespace --list-depth 1
-                skip()
+                expected = """Available 'build' tasks (depth=1):
+
+  .all (build, build.everything)   Build all necessary artifacts.
+  .c-ext (build.ext)               Build our internal C extension.
+  .zap                             A silly way to clean.
+  .docs [3 tasks]                  Tasks for managing Sphinx docs.
+  .python [3 tasks]                PyPI/etc distribution artifacts.
+
+Default 'build' task: .all
+
+"""
+                stdout, _ = run("-c tree --list build --list-depth=1")
+                assert expected == stdout
 
             def short_flag_is_D(self):
-                # --list -D 1
-                skip()
+                expected = """Available tasks (depth=1):
+
+  shell (ipython)                  Load a REPL with project state already set
+                                   up.
+  test (run-tests)                 Run the test suite with baked-in args.
+  build [3 tasks, 2 collections]   Tasks for compiling static code and assets.
+  deploy [3 tasks]                 How to deploy our code and configs.
+  provision [2 tasks]              System setup code.
+
+Default task: test
+
+"""
+                stdout, _ = run("-c tree --list --list-format=flat -D 1")
+                assert expected == stdout
 
             def depth_of_zero_is_same_as_max_depth(self):
-                # --list --list-depth 0
-                skip()
+                expected = """Available tasks:
+
+  shell (ipython)                       Load a REPL with project state already
+                                        set up.
+  test (run-tests)                      Run the test suite with baked-in args.
+  build.all (build, build.everything)   Build all necessary artifacts.
+  build.c-ext (build.ext)               Build our internal C extension.
+  build.zap                             A silly way to clean.
+  build.docs.all (build.docs)           Build all doc formats.
+  build.docs.html                       Build HTML output only.
+  build.docs.pdf                        Build PDF output only.
+  build.python.all (build.python)       Build all Python packages.
+  build.python.sdist                    Build classic style tar.gz.
+  build.python.wheel                    Build a wheel.
+  deploy.db (deploy.db-servers)         Deploy to our database servers.
+  deploy.everywhere (deploy)            Deploy to all targets.
+  deploy.web                            Update and bounce the webservers.
+  provision.db                          Stand up one or more DB servers.
+  provision.web                         Stand up a Web server.
+
+Default task: test
+
+"""
+                stdout, _ = run("-c tree --list --list-format=flat -D 0")
+                assert expected == stdout
 
         class format:
             def flat_is_legacy_default_format(self):
@@ -894,7 +940,32 @@ Default 'build' task: .all
                     assert expected == stdout
 
                 def honors_depth_arg(self):
-                    expected = """Available tasks ('*' denotes collection defaults):
+                    expected = """Available tasks (depth=2; '*' denotes collection defaults):
+
+  shell (ipython)           Load a REPL with project state already set up.
+  test* (run-tests)         Run the test suite with baked-in args.
+  build                     Tasks for compiling static code and assets.
+      .all* (.everything)   Build all necessary artifacts.
+      .c-ext (.ext)         Build our internal C extension.
+      .zap                  A silly way to clean.
+      .docs [3 tasks]       Tasks for managing Sphinx docs.
+      .python [3 tasks]     PyPI/etc distribution artifacts.
+  deploy                    How to deploy our code and configs.
+      .db (.db-servers)     Deploy to our database servers.
+      .everywhere*          Deploy to all targets.
+      .web                  Update and bounce the webservers.
+  provision                 System setup code.
+      .db                   Stand up one or more DB servers.
+      .web                  Stand up a Web server.
+
+Default task: test
+
+"""
+                    stdout, _ = run("-c tree -l -F nested --list-depth 2")
+                    assert expected == stdout
+
+                def depth_arg_deeper_than_depth(self):
+                    expected = """Available tasks (depth=5; '*' denotes collection defaults):
 
   shell (ipython)           Load a REPL with project state already set up.
   test* (run-tests)         Run the test suite with baked-in args.
@@ -921,39 +992,23 @@ Default 'build' task: .all
 Default task: test
 
 """
-                    stdout, _ = run("-c tree -l -F nested --list-depth 1")
-                    assert expected == stdout
-
-                def deeper_depth_arg(self):
-                    # TODO: how to denote collections vs tasks in this case (eg
-                    # build.docs, build.python)?
-                    expected = """Available tasks ('*' denotes collection defaults):
-
-  shell (ipython)           Load a REPL with project state already set up.
-  test* (run-tests)         Run the test suite with baked-in args.
-  build                     Tasks for compiling static code and assets.
-      .all* (.everything)   Build all necessary artifacts.
-      .c-ext (.ext)         Build our internal C extension.
-      .zap                  A silly way to clean.
-      .docs                 Tasks for managing Sphinx docs.
-      .python               PyPI/etc distribution artifacts.
-  deploy                    How to deploy our code and configs.
-      .db (.db-servers)     Deploy to our database servers.
-      .everywhere*          Deploy to all targets.
-      .web                  Update and bounce the webservers.
-  provision                 System setup code.
-      .db                   Stand up one or more DB servers.
-      .web                  Stand up a Web server.
-
-Default task: test
-
-"""
-                    stdout, _ = run("-c tree -l -F nested --list-depth 2")
+                    stdout, _ = run("-c tree -l -F nested --list-depth 5")
                     assert expected == stdout
 
                 def all_possible_options(self):
-                    # --list namespace --list-format nested --list-depth 2
-                    skip()
+                    expected = """Available 'build' tasks (depth=1; '*' denotes collection defaults):
+
+      .all* (.everything)   Build all necessary artifacts.
+      .c-ext (.ext)         Build our internal C extension.
+      .zap                  A silly way to clean.
+      .docs [3 tasks]       Tasks for managing Sphinx docs.
+      .python [3 tasks]     PyPI/etc distribution artifacts.
+
+Default 'build' task: .all
+
+"""
+                    stdout, _ = run("-c tree -l build -F nested -D1")
+                    assert expected == stdout
 
                 # TODO: having these in each format smells like a POSSIBLY good
                 # use for parameterized tests...
