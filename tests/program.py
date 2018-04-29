@@ -801,11 +801,11 @@ Default task: test
             def works_with_explicit_namespace(self):
                 expected = """Available 'build' tasks (depth=1):
 
-  .all (build, build.everything)   Build all necessary artifacts.
-  .c-ext (build.ext)               Build our internal C extension.
-  .zap                             A silly way to clean.
-  .docs [3 tasks]                  Tasks for managing Sphinx docs.
-  .python [3 tasks]                PyPI/etc distribution artifacts.
+  .all (.everything)   Build all necessary artifacts.
+  .c-ext (.ext)        Build our internal C extension.
+  .zap                 A silly way to clean.
+  .docs [3 tasks]      Tasks for managing Sphinx docs.
+  .python [3 tasks]    PyPI/etc distribution artifacts.
 
 Default 'build' task: .all
 
@@ -998,11 +998,11 @@ Default task: test
                 def all_possible_options(self):
                     expected = """Available 'build' tasks (depth=1; '*' denotes collection defaults):
 
-      .all* (.everything)   Build all necessary artifacts.
-      .c-ext (.ext)         Build our internal C extension.
-      .zap                  A silly way to clean.
-      .docs [3 tasks]       Tasks for managing Sphinx docs.
-      .python [3 tasks]     PyPI/etc distribution artifacts.
+  .all* (.everything)   Build all necessary artifacts.
+  .c-ext (.ext)         Build our internal C extension.
+  .zap                  A silly way to clean.
+  .docs [3 tasks]       Tasks for managing Sphinx docs.
+  .python [3 tasks]     PyPI/etc distribution artifacts.
 
 Default 'build' task: .all
 
