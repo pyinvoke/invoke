@@ -731,17 +731,14 @@ Default 'build.docs' task: .all
         class depth_limiting:
             def limits_display_to_given_depth(self):
                 # Base case: depth=1 aka "show me the namespaces"
-                # TODO: how to note the limitation?
-                # TODO: what happens to namespaces w/o a default task? normally
-                # they would not even show up...! ugggh
-                expected = """Available tasks:
+                expected = """Available tasks (depth=1):
 
-  shell (ipython)                       Load a REPL with project state already
-                                        set up.
-  test (run-tests)                      Run the test suite with baked-in args.
-  build (build.all)                     uhhh
-  deploy (deploy.everywhere)            fuck me
-  provision                             seriously
+  shell (ipython)                  Load a REPL with project state already set
+                                   up.
+  test (run-tests)                 Run the test suite with baked-in args.
+  build [3 tasks, 2 collections]   Tasks for compiling static code and assets.
+  deploy [3 tasks]                 How to deploy our code and configs.
+  provision [2 tasks]              System setup code.
 
 Default task: test
 
@@ -750,8 +747,56 @@ Default task: test
                 assert expected == stdout
 
             def non_base_case(self):
-                # --list --list-depth 3 shows 3 levels
-                skip()
+                # Middle case: depth=2
+                expected = """Available tasks (depth=2):
+
+  shell (ipython)                       Load a REPL with project state already
+                                        set up.
+  test (run-tests)                      Run the test suite with baked-in args.
+  build.all (build, build.everything)   Build all necessary artifacts.
+  build.c-ext (build.ext)               Build our internal C extension.
+  build.zap                             A silly way to clean.
+  build.docs [3 tasks]                  Tasks for managing Sphinx docs.
+  build.python [3 tasks]                PyPI/etc distribution artifacts.
+  deploy.db (deploy.db-servers)         Deploy to our database servers.
+  deploy.everywhere (deploy)            Deploy to all targets.
+  deploy.web                            Update and bounce the webservers.
+  provision.db                          Stand up one or more DB servers.
+  provision.web                         Stand up a Web server.
+
+Default task: test
+
+"""
+                stdout, _ = run("-c tree --list --list-depth=2")
+                assert expected == stdout
+
+            def depth_can_be_deeper_than_real_depth(self):
+                # Edge case: depth > actual depth = same as no depth arg
+                expected = """Available tasks (depth=5):
+
+  shell (ipython)                       Load a REPL with project state already
+                                        set up.
+  test (run-tests)                      Run the test suite with baked-in args.
+  build.all (build, build.everything)   Build all necessary artifacts.
+  build.c-ext (build.ext)               Build our internal C extension.
+  build.zap                             A silly way to clean.
+  build.docs.all (build.docs)           Build all doc formats.
+  build.docs.html                       Build HTML output only.
+  build.docs.pdf                        Build PDF output only.
+  build.python.all (build.python)       Build all Python packages.
+  build.python.sdist                    Build classic style tar.gz.
+  build.python.wheel                    Build a wheel.
+  deploy.db (deploy.db-servers)         Deploy to our database servers.
+  deploy.everywhere (deploy)            Deploy to all targets.
+  deploy.web                            Update and bounce the webservers.
+  provision.db                          Stand up one or more DB servers.
+  provision.web                         Stand up a Web server.
+
+Default task: test
+
+"""
+                stdout, _ = run("-c tree --list --list-depth=5")
+                assert expected == stdout
 
             def works_with_explicit_namespace(self):
                 # --list namespace --list-depth 1
