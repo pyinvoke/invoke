@@ -370,7 +370,11 @@ class Program(object):
                 raise Exit
             self.load_collection()
         # Set these up for potential use later when listing tasks
+        # TODO: be nice if these came from the config...! Users would love to
+        # say they default to nested for example. Easy 2.x feature-add.
         self.list_root = None
+        self.list_depth = None
+        self.list_format = 'flat'
         self.scoped_collection = self.collection
 
         # TODO: load project conf, if possible, gracefully
@@ -401,8 +405,8 @@ class Program(object):
 
         # Print discovered tasks if necessary
         list_root = self.args.list.value # will be True or string
-        list_format = self.args['list-format'].value
-        # TODO: work in depth
+        self.list_format = self.args['list-format'].value
+        self.list_depth = self.args['list-depth'].value
         if list_root:
             # Not just --list, but --list some-root - do moar work
             if isinstance(list_root, six.string_types):
@@ -413,7 +417,7 @@ class Program(object):
                 except KeyError:
                     msg = "Sub-collection '{}' not found!"
                     raise Exit(msg.format(list_root))
-            self.list_tasks(format_=list_format)
+            self.list_tasks()
             raise Exit
 
         # Print completion helpers if necessary
@@ -600,14 +604,13 @@ class Program(object):
             print(self.leading_indent + "none")
             print("")
 
-    def list_tasks(self, format_='flat'):
-        # TODO: honor depth
+    def list_tasks(self):
         # Short circuit if no tasks to show (Collection now implements bool)
         focus = self.scoped_collection
         if not focus:
             msg = "No tasks found in collection '{}'!"
             raise Exit(msg.format(focus.name))
-        getattr(self, "list_{}".format(format_))()
+        getattr(self, "list_{}".format(self.list_format))()
 
     def list_flat(self):
         # TODO: honor depth
