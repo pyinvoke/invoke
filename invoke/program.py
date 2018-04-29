@@ -271,13 +271,13 @@ class Program(object):
             strings, or a string. See `.normalize_argv` for details.
 
         :param bool exit:
-            When ``True`` (default: ``False``), will ignore `.ParseError`,
+            When ``False`` (default: ``True``), will ignore `.ParseError`,
             `.Exit` and `.Failure` exceptions, which otherwise trigger calls to
             `sys.exit`.
 
             .. note::
                 This is mostly a concession to testing. If you're setting this
-                to ``True`` in a production setting, you should probably be
+                to ``False`` in a production setting, you should probably be
                 using `.Executor` and friends directly instead!
         """
         try:
