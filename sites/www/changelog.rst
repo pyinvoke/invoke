@@ -2,7 +2,7 @@
 Changelog
 =========
 
-* :bug:`-` Previously, some error conditions (such as invalid task or
+* :bug:`- major` Previously, some error conditions (such as invalid task or
   collection names being supplied by the user) printed to standard output,
   instead of standard error. Standard error seems more appropriate here, so
   this has been fixed.
@@ -18,12 +18,12 @@ Changelog
     only impact you if you were calling its constructor instead of raising the
     class object itself.)
 
-* :bug:`-` `~invoke.collection.Collection` had some minor bugs or oversights in
-  how it responds to things like ``repr()``, ``==``; boolean behavior; how
-  docstrings appear when created from a Python module; etc. All are now fixed.
-  If you're not sure whether this affects you, it does not :)
-* :bug:`-` Integer-type CLI arguments were not displaying placeholder text in
-  ``--help`` output (i.e. they appeared as ``--myint`` instead of
+* :bug:`- major` `~invoke.collection.Collection` had some minor bugs or
+  oversights in how it responds to things like ``repr()``, ``==``; boolean
+  behavior; how docstrings appear when created from a Python module; etc. All
+  are now fixed. If you're not sure whether this affects you, it does not :)
+* :bug:`- major` Integer-type CLI arguments were not displaying placeholder
+  text in ``--help`` output (i.e. they appeared as ``--myint`` instead of
   ``--myint=INT``.) This has been fixed.
 * :feature:`33` Overhaul task listing (formerly just a simple, boolean
   ``--list``) to make life easier for users with nontrivial task trees:
