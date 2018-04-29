@@ -989,13 +989,15 @@ Default task: test
                     expected = self.by_name['build']
                     assert expected == json.loads(stdout)
 
-                def honors_depth_arg(self):
-                    # --list --list-format json --list-depth 2
-                    skip()
+                def does_not_honor_depth_arg(self):
+                    _, stderr = run("-c tree -l --list-format json -D 2")
+                    expected = "The --list-depth option is not supported with JSON format!\n" # noqa
+                    assert expected == stderr
 
-                def all_possible_options(self):
-                    # --list namespace --list-format json --list-depth 2
-                    skip()
+                def does_not_honor_depth_arg_even_with_namespace(self):
+                    _, stderr = run("-c tree -l build -F json -D 2")
+                    expected = "The --list-depth option is not supported with JSON format!\n" # noqa
+                    assert expected == stderr
 
                 # TODO: should an empty-but-valid namespace in JSON format
                 # actually just be an empty dict instead? Let's stay consistent

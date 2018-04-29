@@ -669,6 +669,12 @@ class Program(object):
         return pairs
 
     def list_json(self):
+        # Sanity: we can't cleanly honor the --list-depth argument without
+        # changing the data schema or otherwise acting strangely; and it also
+        # doesn't make a ton of sense to limit depth when the output is for a
+        # script to handle. So we just refuse, for now. TODO: find better way
+        if self.list_depth is not None:
+            raise Exit("The --list-depth option is not supported with JSON format!") # noqa
         # TODO: consider using something more formal re: the format this emits,
         # eg json-schema or whatever. Would simplify the
         # relatively-concise-but-only-human docs that currently describe this.
