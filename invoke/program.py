@@ -610,61 +610,60 @@ class Program(object):
         if not focus:
             msg = "No tasks found in collection '{}'!"
             raise Exit(msg.format(focus.name))
+        # TODO: now that flat/nested are almost 100% unified, maybe rethink
+        # this a bit?
         getattr(self, "list_{}".format(self.list_format))()
 
     def list_flat(self):
-        pairs = self._make_pairs(
-            self.scoped_collection,
-            ancestors=[],
-            rerooted=self.list_root,
-        )
-            # TODO: no. that's dumb. we really should be able to merge the
-            # implementations of this and nested a bit more:
-            # - go with nested's main loop instead of this one
-            # - if flat mode, don't show empty collections unless they would be
-            # hidden by list_depth
-            # - if flat mode, don't show any asterisk bits
-            # - if flat mode, show entire path instead of indentation (requires
-            # deriving that from just-the-task though, since nested is going
-            # coll-to-task. should be relatively easy as long as we ensure to
-            # preserve the contexts re: collections traversed
+        pairs = self._make_pairs(self.scoped_collection, ancestors=[])
+        self.display_with_columns(pairs=pairs)
 
     def list_nested(self):
-        # TODO: honor depth
-        pairs = self._make_pairs(
-            self.scoped_collection,
-            ancestors=[],
-            rerooted=self.list_root,
-        )
+        pairs = self._make_pairs(self.scoped_collection, ancestors=[])
         extra = "'*' denotes collection defaults"
-        # TODO: feels like we should invert how display_with_columns is called,
-        # most of the time the pairs, root, etc are the same and it's only
-        # stuff like 'extra' that differs?
         self.display_with_columns(pairs=pairs, extra=extra)
 
-    def _make_pairs(self, coll, ancestors, rerooted):
+    def _make_pairs(self, coll, ancestors):
         pairs = []
-        level = len(ancestors)
-        indent = level * self.indent
+        indent = len(ancestors) * self.indent
         for name, task in sorted(six.iteritems(coll.tasks)):
             displayname = name
+            is_default = name == coll.default
             aliases = list(map(coll.transform, task.aliases))
-            if level > 0 or rerooted:
+            if ancestors or self.list_root:
                 displayname = ".{}".format(displayname)
                 aliases = [".{}".format(x) for x in aliases]
-            if coll.default == name:
-                displayname += "*"
+            if self.list_format == 'nested':
+                prefix = indent
+                if is_default:
+                    displayname += "*"
+            if self.list_format == 'flat':
+                # NOTE: skip 1st ancestor as it's always the root & thus
+                # implicit/unnamed; and also remember to loop in current coll
+                # (again unless it's itself the root)
+                display_ancestors = ancestors[1:]
+                if ancestors:
+                    display_ancestors.append(coll)
+                prefix = '.'.join(x.name for x in display_ancestors)
+                # Reinstate prefix for aliases too, as well as
+                # collection-as-alias for default tasks
+                aliases = [prefix + alias for alias in aliases]
+                if is_default and ancestors:
+                    aliases.insert(0, prefix)
             alias_str = " ({})".format(", ".join(aliases)) if aliases else ""
-            full = indent + displayname + alias_str
+            full = prefix + displayname + alias_str
             pairs.append((full, helpline(task)))
         for name, subcoll in sorted(six.iteritems(coll.collections)):
             displayname = name
-            if level > 0 or rerooted:
+            if ancestors or self.list_root:
                 displayname = ".{}".format(displayname)
-            pairs.append((indent + displayname, helpline(subcoll)))
-            recursed_pairs = self._make_pairs(
-                subcoll, ancestors + [coll], rerooted,
-            )
+            if self.list_format == 'nested':
+                pairs.append((indent + displayname, helpline(subcoll)))
+            elif self.list_format == 'flat':
+                # TODO: do no append unless this would be a truncated coll
+                # TODO: in that case tho, append with prefix as above
+                pass
+            recursed_pairs = self._make_pairs(subcoll, ancestors + [coll])
             pairs.extend(recursed_pairs)
         return pairs
 
