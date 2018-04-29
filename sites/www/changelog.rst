@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :release:`0.23.0 <2018-04-29>`
 * :bug:`- major` Previously, some error conditions (such as invalid task or
   collection names being supplied by the user) printed to standard output,
   instead of standard error. Standard error seems more appropriate here, so
