@@ -964,7 +964,7 @@ Default task: test
                     stdout, _ = run("-c tree -l -F nested --list-depth 2")
                     assert expected == stdout
 
-                def depth_arg_deeper_than_depth(self):
+                def depth_arg_deeper_than_real_depth(self):
                     expected = """Available tasks (depth=5; '*' denotes collection defaults):
 
   shell (ipython)           Load a REPL with project state already set up.

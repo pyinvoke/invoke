@@ -626,6 +626,13 @@ class Program(object):
     def _make_pairs(self, coll, ancestors):
         pairs = []
         indent = len(ancestors) * self.indent
+        # NOTE: skip 1st ancestor as it's always the root & thus
+        # implicit/unnamed; and also remember to loop in current coll
+        # (again unless it's itself the root)
+        display_ancestors = ancestors[1:]
+        if ancestors:
+            display_ancestors.append(coll)
+        ancestor_path = '.'.join(x.name for x in display_ancestors)
         for name, task in sorted(six.iteritems(coll.tasks)):
             is_default = name == coll.default
             # Start with just the name and just the aliases, no prefixes or
@@ -647,13 +654,7 @@ class Program(object):
             # dotted path; and give default-tasks their collection name as the
             # first alias.
             if self.list_format == 'flat':
-                # NOTE: skip 1st ancestor as it's always the root & thus
-                # implicit/unnamed; and also remember to loop in current coll
-                # (again unless it's itself the root)
-                display_ancestors = ancestors[1:]
-                if ancestors:
-                    display_ancestors.append(coll)
-                prefix = '.'.join(x.name for x in display_ancestors)
+                prefix = ancestor_path
                 # Make sure leading dots are present for subcollections if
                 # scoped display
                 if prefix and self.list_root:
@@ -665,18 +666,28 @@ class Program(object):
             alias_str = " ({})".format(", ".join(aliases)) if aliases else ""
             full = prefix + displayname + alias_str
             pairs.append((full, helpline(task)))
+        # Determine whether we're at max-depth or not
+        truncate = self.list_depth and (len(ancestors) + 1) >= self.list_depth
         for name, subcoll in sorted(six.iteritems(coll.collections)):
             displayname = name
             if ancestors or self.list_root:
                 displayname = ".{}".format(displayname)
+            if truncate:
+                tallies = [
+                    "{} {}".format(len(getattr(subcoll, attr)), attr)
+                    for attr in ('tasks', 'collections')
+                    if getattr(subcoll, attr)
+                ]
+                displayname += " [{}]".format(", ".join(tallies))
             if self.list_format == 'nested':
                 pairs.append((indent + displayname, helpline(subcoll)))
-            elif self.list_format == 'flat':
-                # TODO: do no append unless this would be a truncated coll
-                # TODO: in that case tho, append with prefix as above
-                pass
-            recursed_pairs = self._make_pairs(subcoll, ancestors + [coll])
-            pairs.extend(recursed_pairs)
+            elif self.list_format == 'flat' and truncate:
+                # NOTE: only adding coll-oriented pair if limiting by depth
+                pairs.append((ancestor_path + displayname, helpline(subcoll)))
+            # Recurse, if not already at max depth
+            if not truncate:
+                recursed_pairs = self._make_pairs(subcoll, ancestors + [coll])
+                pairs.extend(recursed_pairs)
         return pairs
 
     def list_json(self):
@@ -695,8 +706,13 @@ class Program(object):
 
     def task_list_opener(self, extra=""):
         root = self.list_root
+        depth = self.list_depth
         specifier = " '{}'".format(root) if root else ""
-        tail = " ({})".format(extra) if extra else ""
+        tail = ""
+        if depth or extra:
+            depthstr = "depth={}".format(depth) if depth else ""
+            joiner = "; " if (depth and extra) else ""
+            tail = " ({}{}{})".format(depthstr, joiner, extra)
         text = "Available{} tasks{}".format(specifier, tail)
         # TODO: do use cases w/ bundled namespace want to display things like
         # root and depth too? Leaving off for now...
