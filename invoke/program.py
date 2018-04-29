@@ -737,6 +737,8 @@ class Program(object):
         )
         wrapper = textwrap.TextWrapper(width=desc_width)
         for name, help_str in tuples:
+            if help_str is None:
+                help_str = ""
             # Wrap descriptions/help text
             help_chunks = wrapper.wrap(help_str)
             # Print flag spec + padding
