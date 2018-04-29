@@ -613,43 +613,27 @@ class Program(object):
         getattr(self, "list_{}".format(self.list_format))()
 
     def list_flat(self):
-        # TODO: honor depth
-        # Sort in depth, then alpha, order
-        task_names = self.collection.task_names
-        root = self.list_root
-        pairs = []
-        sorted_names = sorted(task_names, key=task_name_sort_key)
-        for primary in sorted_names:
-            # Skip past anything that doesn't appear to belong to given root.
-            # TODO: this feels kinda naive but it should always just-work given
-            # the nature of these paths...?
-            if root and not primary.startswith(root):
-                continue
-            # Add aliases to name column
-            aliases = sorted(task_names[primary])
-            name = primary
-            # Strip out root if it was given, for a bit cleaner display (while
-            # still being pretty 'flat'.)
-            # TODO: almost feels like we want to be building off what we do for
-            # the nested view here (i.e. go with that but then just trim
-            # indents)...meh...
-            if root:
-                name = name.replace(root, '', 1)
-                aliases = [x.replace(root, '', 1) for x in aliases]
-                aliases = [x for x in aliases if x] # Strip empty strings
-            if aliases:
-                name += " ({})".format(', '.join(aliases))
-            # All done, our two colums are tweaked name + 1st docstring line
-            task = self.collection[primary]
-            pairs.append((name, helpline(task) or ""))
-        self.display_with_columns(pairs=pairs)
+        pairs = self._make_pairs(
+            self.scoped_collection,
+            ancestors=[],
+            rerooted=self.list_root,
+        )
+            # TODO: no. that's dumb. we really should be able to merge the
+            # implementations of this and nested a bit more:
+            # - go with nested's main loop instead of this one
+            # - if flat mode, don't show empty collections unless they would be
+            # hidden by list_depth
+            # - if flat mode, don't show any asterisk bits
+            # - if flat mode, show entire path instead of indentation (requires
+            # deriving that from just-the-task though, since nested is going
+            # coll-to-task. should be relatively easy as long as we ensure to
+            # preserve the contexts re: collections traversed
 
     def list_nested(self):
-        # TODO: honor root
         # TODO: honor depth
-        pairs = self._nested_pairs(
+        pairs = self._make_pairs(
             self.scoped_collection,
-            level=0,
+            ancestors=[],
             rerooted=self.list_root,
         )
         extra = "'*' denotes collection defaults"
@@ -658,13 +642,9 @@ class Program(object):
         # stuff like 'extra' that differs?
         self.display_with_columns(pairs=pairs, extra=extra)
 
-    def _nested_pairs(self, coll, level, rerooted):
-        # TODO: this still feels like it could follow the Collection.task_names
-        # approach used by the default/flat style? But this data set is that
-        # much farther removed from anything one would truly want from
-        # Collection itself, in a vacuum. Implies we want to move that AND this
-        # into some sort of Lister class hierarchy or set of funcs...bah.
+    def _make_pairs(self, coll, ancestors, rerooted):
         pairs = []
+        level = len(ancestors)
         indent = level * self.indent
         for name, task in sorted(six.iteritems(coll.tasks)):
             displayname = name
@@ -682,7 +662,10 @@ class Program(object):
             if level > 0 or rerooted:
                 displayname = ".{}".format(displayname)
             pairs.append((indent + displayname, helpline(subcoll)))
-            pairs.extend(self._nested_pairs(subcoll, level + 1, rerooted))
+            recursed_pairs = self._make_pairs(
+                subcoll, ancestors + [coll], rerooted,
+            )
+            pairs.extend(recursed_pairs)
         return pairs
 
     def list_json(self):
