@@ -56,7 +56,7 @@ of reasons.
 
 Both the sought collection name and the search root can be specified via
 :ref:`configuration file options <config-files>` or as :doc:`runtime CLI flags
-</cli>`:
+</invoke>`:
 
 - **Change the collection name**: Set the ``tasks.collection_name``
   configuration option, or use :option:`--collection`. It should be a Python

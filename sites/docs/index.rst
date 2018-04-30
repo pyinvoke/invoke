@@ -35,7 +35,7 @@ Details on the CLI interface to Invoke, available core flags, and tab
 completion options.
 
 .. toctree::
-    cli
+    invoke
 
 .. _api:
 

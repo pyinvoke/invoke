@@ -1,8 +1,8 @@
 .. _inv:
 
-======================
-Command-line interface
-======================
+=====================
+``inv[oke]`` CLI tool
+=====================
 
 .. seealso::
     This page documents the ``invoke`` command-line program itself. For
@@ -10,7 +10,7 @@ Command-line interface
     For details on task execution, see :doc:`/concepts/execution`.
 
 
-``inv[oke]`` command-line program
+Options, flags and invoking tasks
 =================================
 
 One of the main ways to use Invoke is via its command-line program, ``invoke``

@@ -69,8 +69,8 @@ starters::
     program = Program(version='0.1.0')
 
 At this point, installing ``tester`` would give you the same functionality as
-Invoke's :doc:`built-in CLI tool </cli>`, except named ``tester`` and exposing
-its own version number::
+Invoke's :doc:`built-in CLI tool </invoke>`, except named ``tester`` and
+exposing its own version number::
 
     $ tester --version
     Tester 0.1.0
