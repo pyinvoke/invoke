@@ -318,8 +318,8 @@ Another example with no parameterizing::
 Mixing things up
 ================
 
-Core options are similar to task options, in that they must be specified before any
-tasks are given. This invoke says to load the ``mytasks`` collection and call
-that collection's ``foo`` task::
+Core options are similar to task options, in that they must be specified before
+any tasks are given. This invoke says to load the ``mytasks`` collection and
+call that collection's ``foo`` task::
 
     $ invoke --collection mytasks foo --foo-args
