@@ -28,10 +28,14 @@ class Program(object):
     .. seealso::
         :ref:`reusing-as-a-binary` for a tutorial/walkthrough of this
         functionality.
+
+    .. versionadded:: 1.0
     """
     def core_args(self):
         """
         Return default core `.Argument` objects, as a list.
+
+        .. versionadded:: 1.0
         """
         # Arguments present always, even when wrapped as a different binary
         return [
@@ -115,6 +119,8 @@ class Program(object):
         These are only added to the core args in "task runner" mode (the
         default for ``invoke`` itself) - they are omitted when the constructor
         is given a non-empty ``namespace`` argument ("bundled namespace" mode).
+
+        .. versionadded:: 1.0
         """
         # Arguments pertaining specifically to invocation as 'invoke' itself
         # (or as other arbitrary-task-executing programs, like 'fab')
@@ -224,6 +230,8 @@ class Program(object):
         details.
 
         :returns: ``None``; sets ``self.config`` instead.
+
+        .. versionadded:: 1.0
         """
         self.config = self.config_class()
 
@@ -237,6 +245,8 @@ class Program(object):
         :param bool merge:
             Whether to merge at the end, or defer. Primarily useful for
             subclassers. Default: ``True``.
+
+        .. versionadded:: 1.0
         """
         # Now that we have parse results handy, we can grab the remaining
         # config bits:
@@ -279,6 +289,8 @@ class Program(object):
                 This is mostly a concession to testing. If you're setting this
                 to ``False`` in a production setting, you should probably be
                 using `.Executor` and friends directly instead!
+
+        .. versionadded:: 1.0
         """
         try:
             # Create an initial config, which will hold defaults & values from
@@ -354,6 +366,8 @@ class Program(object):
     def parse_collection(self):
         """
         Load a tasks collection & project-level config.
+
+        .. versionadded:: 1.0
         """
         # Load a collection of tasks unless one was already set.
         if self.namespace is not None:
@@ -382,6 +396,8 @@ class Program(object):
     def parse_cleanup(self):
         """
         Post-parsing, pre-execution steps such as --help, --list, etc.
+
+        .. versionadded:: 1.0
         """
         halp = self.args.help.value or self.core_via_tasks.args.help.value
 
@@ -443,6 +459,8 @@ class Program(object):
         .. note::
             Client code just wanting a different `.Executor` subclass can just
             set ``executor_class`` in `.__init__`.
+
+        .. versionadded:: 1.0
         """
         executor = self.executor_class(self.collection, self.config, self.core)
         executor.execute(*self.tasks)
@@ -459,6 +477,8 @@ class Program(object):
         result. (This is mostly a convenience; when in doubt, use a list.)
 
         Sets ``self.argv`` to the result.
+
+        .. versionadded:: 1.0
         """
         if argv is None:
             argv = sys.argv
@@ -472,6 +492,8 @@ class Program(object):
     def name(self):
         """
         Derive program's human-readable name based on `.binary`.
+
+        .. versionadded:: 1.0
         """
         return self._name or self.binary.capitalize()
 
@@ -479,6 +501,8 @@ class Program(object):
     def binary(self):
         """
         Derive program's help-oriented binary name(s) from init args & argv.
+
+        .. versionadded:: 1.0
         """
         return self._binary or os.path.basename(self.argv[0])
 
@@ -486,6 +510,8 @@ class Program(object):
     def args(self):
         """
         Obtain core program args from ``self.core`` parse result.
+
+        .. versionadded:: 1.0
         """
         return self.core[0].args
 
@@ -496,6 +522,8 @@ class Program(object):
 
         The specific arguments contained therein will differ depending on
         whether a bundled namespace was specified in `.__init__`.
+
+        .. versionadded:: 1.0
         """
         args = self.core_args()
         if self.namespace is None:
@@ -522,6 +550,8 @@ class Program(object):
         Filter out core args, leaving any tasks or their args for later.
 
         Sets ``self.core`` to the `.ParseResult` from this step.
+
+        .. versionadded:: 1.0
         """
         debug("Parsing initial context (core args)")
         parser = Parser(initial=self.initial_context, ignore_unknown=True)
@@ -532,6 +562,8 @@ class Program(object):
     def load_collection(self):
         """
         Load a task collection based on parsed core args, or die trying.
+
+        .. versionadded:: 1.0
         """
         # NOTE: start, coll_name both fall back to configuration values within
         # Loader (which may, however, get them from our config.)
@@ -561,6 +593,8 @@ class Program(object):
         Sets ``self.parser`` to the parser used, ``self.tasks`` to the
         parsed per-task contexts, and ``self.core_via_tasks`` to a context
         holding any core flags seen within the task contexts.
+
+        .. versionadded:: 1.0
         """
         self.parser = Parser(
             initial=self.initial_context,
@@ -576,6 +610,8 @@ class Program(object):
     def print_task_help(self, name):
         """
         Print help for a specific task, e.g. ``inv --help <taskname>``.
+
+        .. versionadded:: 1.0
         """
         # Setup
         ctx = self.parser.contexts[name]
@@ -740,6 +776,8 @@ class Program(object):
         Print tabbed columns from (name, help) ``tuples``.
 
         Useful for listing tasks + docstrings, flags + help strings, etc.
+
+        .. versionadded:: 1.0
         """
         # Calculate column sizes: don't wrap flag specs, give what's left over
         # to the descriptions.

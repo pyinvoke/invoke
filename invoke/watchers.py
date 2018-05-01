@@ -30,6 +30,8 @@ class StreamWatcher(threading.local):
         `StreamWatcher` subclasses `threading.local` so that its instances can
         be used to 'watch' both subprocess stdout and stderr in separate
         threads.
+
+    .. versionadded:: 1.0
     """
     def submit(self, stream):
         """
@@ -40,6 +42,8 @@ class StreamWatcher(threading.local):
 
         :returns:
             An iterable of Unicode strings (which may be empty).
+
+        .. versionadded:: 1.0
         """
         raise NotImplementedError
 
@@ -49,6 +53,8 @@ class Responder(StreamWatcher):
     A parameterizable object that submits responses to specific patterns.
 
     Commonly used to implement password auto-responds for things like ``sudo``.
+
+    .. versionadded:: 1.0
     """
 
     def __init__(self, pattern, response):
@@ -79,6 +85,8 @@ class Responder(StreamWatcher):
         :param unicode pattern: The pattern to search for.
         :param unicode index_attr: The name of the index attribute to use.
         :returns: An iterable of string matches.
+
+        .. versionadded:: 1.0
         """
         # NOTE: generifies scanning so it can be used to scan for >1 pattern at
         # once, e.g. in FailingResponder.
@@ -105,6 +113,8 @@ class FailingResponder(Responder):
     This class adds a ``sentinel`` parameter to ``__init__``, and its
     ``submit`` will raise `.ResponseNotAccepted` if it detects that sentinel
     value in the stream.
+
+    .. versionadded:: 1.0
     """
     def __init__(self, pattern, response, sentinel):
         super(FailingResponder, self).__init__(pattern, response)

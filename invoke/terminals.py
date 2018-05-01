@@ -23,6 +23,8 @@ Whether or not the current platform appears to be Windows in nature.
 Note that Cygwin's Python is actually close enough to "real" UNIXes that it
 doesn't need (or want!) to use PyWin32 -- so we only test for literal Win32
 setups (vanilla Python, ActiveState etc) here.
+
+.. versionadded:: 1.0
 """
 
 if WINDOWS:
@@ -43,6 +45,8 @@ def pty_size():
     :returns:
         A ``(num_cols, num_rows)`` two-tuple describing PTY size. Defaults to
         ``(80, 24)`` if unable to get a sensible result dynamically.
+
+    .. versionadded:: 1.0
     """
     cols, rows = _pty_size() if not WINDOWS else _win_pty_size()
     # TODO: make defaults configurable?
@@ -52,6 +56,8 @@ def pty_size():
 def _pty_size():
     """
     Suitable for most POSIX platforms.
+
+    .. versionadded:: 1.0
     """
     # Sentinel values to be replaced w/ defaults by caller
     size = (None, None)
@@ -124,6 +130,8 @@ def stdin_is_foregrounded_tty(stream):
     .. note::
         Processes that aren't attached to a terminal to begin with, will always
         fail this test, as it starts with "do you have a real ``fileno``?".
+
+    .. versionadded:: 1.0
     """
     if not has_fileno(stream):
         return False
@@ -136,6 +144,8 @@ def character_buffered(stream):
     Force local terminal ``stream`` be character, not line, buffered.
 
     Only applies to Unix-based systems; on Windows this is a no-op.
+
+    .. versionadded:: 1.0
     """
     if WINDOWS or not isatty(stream) or not stdin_is_foregrounded_tty(stream):
         yield
@@ -155,6 +165,8 @@ def ready_for_reading(input_):
     :param input_: Input stream object (file-like).
 
     :returns: ``True`` if a read should succeed, ``False`` otherwise.
+
+    .. versionadded:: 1.0
     """
     # A "real" terminal stdin needs select/kbhit to tell us when it's ready for
     # a nonblocking read().
@@ -181,6 +193,8 @@ def bytes_to_read(input_):
     :param input: Input stream object (file-like).
 
     :returns: `int` number of bytes to read.
+
+    .. versionadded:: 1.0
     """
     # NOTE: we have to check both possibilities here; situations exist where
     # it's not a tty but has a fileno, or vice versa; neither is typically

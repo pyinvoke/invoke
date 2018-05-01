@@ -41,6 +41,8 @@ class Runner(object):
     This class is not usable by itself and must be subclassed, implementing a
     number of methods such as `start`, `wait` and `returncode`. For a subclass
     implementation example, see the source code for `.Local`.
+
+    .. versionadded:: 1.0
     """
     read_chunk_size = 1000
     input_sleep = 0.01
@@ -259,6 +261,8 @@ class Runner(object):
         :raises:
             `.ThreadException` (if the background I/O threads encountered
             exceptions other than `.WatcherError`).
+
+        .. versionadded:: 1.0
         """
         try:
             return self._run_body(command, **kwargs)
@@ -459,6 +463,8 @@ class Runner(object):
         Subclasses may wish to override this in order to manipulate things or
         generate a `Result` subclass (e.g. ones containing additional metadata
         besides the default).
+
+        .. versionadded:: 1.0
         """
         return Result(**kwargs)
 
@@ -481,6 +487,8 @@ class Runner(object):
 
             Specifically, each resulting string is the result of decoding
             `read_chunk_size` bytes read from the subprocess' out/err stream.
+
+        .. versionadded:: 1.0
         """
         # NOTE: Typically, reading from any stdout/err (local, remote or
         # otherwise) can be thought of as "read until you get nothing back".
@@ -508,6 +516,8 @@ class Runner(object):
         :param string: A Unicode string object.
 
         :returns: ``None``.
+
+        .. versionadded:: 1.0
         """
         stream.write(encode_output(string, self.encoding))
         stream.flush()
@@ -544,6 +554,8 @@ class Runner(object):
             hiding.
 
         :returns: ``None``.
+
+        .. versionadded:: 1.0
         """
         self._handle_output(
             buffer_,
@@ -558,6 +570,8 @@ class Runner(object):
 
         Identical to `handle_stdout` except for the stream read from; see its
         docstring for API details.
+
+        .. versionadded:: 1.0
         """
         self._handle_output(
             buffer_,
@@ -579,6 +593,8 @@ class Runner(object):
             A Unicode string, the result of decoding the read bytes (this might
             be the empty string if the pipe has closed/reached EOF); or
             ``None`` if stdin wasn't ready for reading yet.
+
+        .. versionadded:: 1.0
         """
         # TODO: consider moving the character_buffered contextmanager call in
         # here? Downside is it would be flipping those switches for every byte
@@ -615,6 +631,8 @@ class Runner(object):
         :param bool echo: User override option for stdin-stdout echoing.
 
         :returns: ``None``.
+
+        .. versionadded:: 1.0
         """
         # TODO: reinstate lock/whatever thread logic from fab v1 which prevents
         # reading from stdin while other parts of the code are prompting for
@@ -660,6 +678,8 @@ class Runner(object):
         :param input_: Input stream (file-like object).
         :param output: Output stream (file-like object).
         :returns: A ``bool``.
+
+        .. versionadded:: 1.0
         """
         return (not self.using_pty) and isatty(input_)
 
@@ -675,6 +695,8 @@ class Runner(object):
             The capture buffer for this thread's particular IO stream.
 
         :returns: ``None``.
+
+        .. versionadded:: 1.0
         """
         # Join buffer contents into a single string; without this,
         # StreamWatcher subclasses can't do things like iteratively scan for
@@ -698,6 +720,8 @@ class Runner(object):
             `os.environ`.
 
         :returns: A dictionary of shell environment vars.
+
+        .. versionadded:: 1.0
         """
         return env if replace_env else dict(os.environ, **env)
 
@@ -710,6 +734,8 @@ class Runner(object):
         :param bool fallback:
             Whether falling back to non-pty execution should be allowed, in
             situations where ``pty=True`` but a pty could not be allocated.
+
+        .. versionadded:: 1.0
         """
         # NOTE: fallback not used: no falling back implemented by default.
         return pty
@@ -726,6 +752,8 @@ class Runner(object):
         :returns:
             ``True`` if any threads appear to have terminated with an
             exception, ``False`` otherwise.
+
+        .. versionadded:: 1.0
         """
         return any(x.is_dead for x in self.threads.values())
 
@@ -734,6 +762,8 @@ class Runner(object):
         Block until the running command appears to have exited.
 
         :returns: ``None``.
+
+        .. versionadded:: 1.0
         """
         while True:
             proc_finished = self.process_is_finished
@@ -749,6 +779,8 @@ class Runner(object):
         :param data: A Unicode string.
 
         :returns: ``None``.
+
+        .. versionadded:: 1.0
         """
         # Encode always, then request implementing subclass to perform the
         # actual write to subprocess' stdin.
@@ -757,6 +789,8 @@ class Runner(object):
     def decode(self, data):
         """
         Decode some ``data`` bytes, returning Unicode.
+
+        .. versionadded:: 1.0
         """
         # NOTE: yes, this is a 1-liner. The point is to make it much harder to
         # forget to use 'replace' when decoding :)
@@ -774,6 +808,8 @@ class Runner(object):
         :returns:
             ``True`` if the subprocess has finished running, ``False``
             otherwise.
+
+        .. versionadded:: 1.0
         """
         raise NotImplementedError
 
@@ -786,6 +822,8 @@ class Runner(object):
 
         In most cases, this method will also set subclass-specific member
         variables used in other methods such as `wait` and/or `returncode`.
+
+        .. versionadded:: 1.0
         """
         raise NotImplementedError
 
@@ -796,6 +834,8 @@ class Runner(object):
         :param int num_bytes: Number of bytes to read at maximum.
 
         :returns: A string/bytes object.
+
+        .. versionadded:: 1.0
         """
         raise NotImplementedError
 
@@ -806,6 +846,8 @@ class Runner(object):
         :param int num_bytes: Number of bytes to read at maximum.
 
         :returns: A string/bytes object.
+
+        .. versionadded:: 1.0
         """
         raise NotImplementedError
 
@@ -819,6 +861,8 @@ class Runner(object):
         :param data: Already-encoded byte data suitable for writing.
 
         :returns: ``None``.
+
+        .. versionadded:: 1.0
         """
         raise NotImplementedError
 
@@ -827,6 +871,8 @@ class Runner(object):
         Return a string naming the expected encoding of subprocess streams.
 
         This return value should be suitable for use by encode/decode methods.
+
+        .. versionadded:: 1.0
         """
         # TODO: probably wants to be 2 methods, one for local and one for
         # subprocess. For now, good enough to assume both are the same.
@@ -855,6 +901,8 @@ class Runner(object):
             The locally-sourced ``KeyboardInterrupt`` causing the method call.
 
         :returns: ``None``.
+
+        .. versionadded:: 1.0
         """
         self.write_proc_stdin(u'\x03')
 
@@ -863,6 +911,8 @@ class Runner(object):
         Return the numeric return/exit code resulting from command execution.
 
         :returns: `int`
+
+        .. versionadded:: 1.0
         """
         raise NotImplementedError
 
@@ -875,6 +925,8 @@ class Runner(object):
         things such as close network connections or open files.
 
         :returns: ``None``
+
+        .. versionadded:: 1.0
         """
         raise NotImplementedError
 
@@ -892,6 +944,8 @@ class Local(Runner):
         a warning to stderr.
 
         To disable this behavior, say ``fallback=False``.
+
+    .. versionadded:: 1.0
     """
     def __init__(self, context):
         super(Local, self).__init__(context)
@@ -1088,6 +1142,8 @@ class Result(object):
 
         However, remember `Zen of Python #2
         <http://zen-of-python.info/explicit-is-better-than-implicit.html#2>`_.
+
+    .. versionadded:: 1.0
     """
     # TODO: inherit from namedtuple instead? heh (or: use attrs from pypi)
     def __init__(
@@ -1116,6 +1172,8 @@ class Result(object):
     def return_code(self):
         """
         An alias for ``.exited``.
+
+        .. versionadded:: 1.0
         """
         return self.exited
 
@@ -1153,6 +1211,8 @@ class Result(object):
     def ok(self):
         """
         A boolean equivalent to ``exited == 0``.
+
+        .. versionadded:: 1.0
         """
         return self.exited == 0
 
@@ -1163,6 +1223,8 @@ class Result(object):
 
         I.e., ``True`` if the program exited with a nonzero return code, and
         ``False`` otherwise.
+
+        .. versionadded:: 1.0
         """
         return not self.ok
 

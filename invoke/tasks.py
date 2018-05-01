@@ -25,6 +25,8 @@ NO_DEFAULT = object()
 class Task(object):
     """
     Core object representing an executable task & its argument specification.
+
+    .. versionadded:: 1.0
     """
     # TODO: store these kwarg defaults central, refer to those values both here
     # and in @task.
@@ -130,6 +132,8 @@ class Task(object):
         * Second item is dict mapping arg names to default values or
           `.NO_DEFAULT` (an 'empty' value distinct from None, since None
           is a valid value on its own).
+
+        .. versionadded:: 1.0
         """
         # Handle callable-but-not-function objects
         # TODO: __call__ exhibits the 'self' arg; do we manually nix 1st result
@@ -207,6 +211,8 @@ class Task(object):
     def get_arguments(self):
         """
         Return a list of Argument objects representing this task's signature.
+
+        .. versionadded:: 1.0
         """
         # Core argspec
         arg_names, spec_dict = self.argspec(self.body)
@@ -283,6 +289,8 @@ def task(*args, **kwargs):
     If any non-keyword arguments are given, they are taken as the value of the
     ``pre`` kwarg for convenience's sake. (It is an error to give both
     ``*args`` and ``pre`` at the same time.)
+
+    .. versionadded:: 1.0
     """
     # @task -- no options were (probably) given.
     if len(args) == 1 and callable(args[0]) and not isinstance(args[0], Task):
@@ -341,6 +349,8 @@ class Call(object):
     Similar to `~functools.partial` with some added functionality (such as the
     delegation to the inner task, and optional tracking of the name it's being
     called by.)
+
+    .. versionadded:: 1.0
     """
     def __init__(
         self,
@@ -398,6 +408,8 @@ class Call(object):
     def make_context(self, config):
         """
         Generate a `.Context` appropriate for this call, with given config.
+
+        .. versionadded:: 1.0
         """
         return Context(config=config)
 
@@ -408,6 +420,8 @@ class Call(object):
         Useful when parameterizing task executions.
 
         :param into: A subclass to generate instead of the current class.
+
+        .. versionadded:: 1.0
         """
         return (into if into is not None else self.__class__)(
             task=self.task,
@@ -447,5 +461,7 @@ def call(task, *args, **kwargs):
     Please see the constructor docs for `.Call` for details - this function's
     ``args`` and ``kwargs`` map directly to the same arguments as in that
     method.
+
+    .. versionadded:: 1.0
     """
     return Call(task=task, args=args, kwargs=kwargs)

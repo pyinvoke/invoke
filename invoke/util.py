@@ -55,6 +55,8 @@ for x in ('debug',):
 def task_name_sort_key(name):
     """
     Return key tuple for use sorting dotted task names, via e.g. `sorted`.
+
+    .. versionadded:: 1.0
     """
     parts = name.split('.')
     return (
@@ -93,6 +95,8 @@ def has_fileno(stream):
     :returns:
         ``True`` if ``stream.fileno()`` returns an integer, ``False`` otherwise
         (this includes when ``stream`` lacks a ``fileno`` method).
+
+    .. versionadded:: 1.0
     """
     try:
         return isinstance(stream.fileno(), int)
@@ -119,6 +123,8 @@ def isatty(stream):
     :returns:
         A boolean depending on the result of calling ``.isatty()`` and/or
         `os.isatty`.
+
+    .. versionadded:: 1.0
     """
     # If there *is* an .isatty, ask it.
     if hasattr(stream, 'isatty') and callable(stream.isatty):
@@ -136,6 +142,8 @@ def encode_output(string, encoding):
     Transform string-like object ``string`` into bytes via ``encoding``.
 
     :returns: A byte-string (``str`` on Python 2, ``bytes`` on Python 3.)
+
+    .. versionadded:: 1.0
     """
     # Encode under Python 2 only, because of the common problem where
     # sys.stdout/err on Python 2 end up using sys.getdefaultencoding(), which
@@ -155,6 +163,8 @@ def encode_output(string, encoding):
 def helpline(obj):
     """
     Yield an object's first docstring line, or an empty string.
+
+    .. versionadded:: 1.0
     """
     docstring = obj.__doc__
     if not docstring or docstring == type(obj).__doc__:
@@ -177,6 +187,8 @@ class ExceptionHandlingThread(threading.Thread):
     This is because this thread's entire point is to wrap behavior around the
     thread's execution; subclasses could not redefine ``run()`` without
     breaking that functionality.
+
+    .. versionadded:: 1.0
     """
     def __init__(self, **kwargs):
         """
@@ -239,6 +251,8 @@ class ExceptionHandlingThread(threading.Thread):
             An `.ExceptionWrapper` managing the result of `sys.exc_info`, if an
             exception was raised during thread execution. If no exception
             occurred, returns ``None`` instead.
+
+        .. versionadded:: 1.0
         """
         if self.exc_info is None:
             return None
@@ -250,6 +264,8 @@ class ExceptionHandlingThread(threading.Thread):
         Returns ``True`` if not alive and has a stored exception.
 
         Used to detect threads that have excepted & shut down.
+
+        .. versionadded:: 1.0
         """
         # NOTE: it seems highly unlikely that a thread could still be
         # is_alive() but also have encountered an exception. But hey. Why not
