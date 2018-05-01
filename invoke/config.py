@@ -109,7 +109,7 @@ class DataProxy(object):
     def __setattr__(self, key, value):
         # Turn attribute-sets into config updates anytime we don't have a real
         # attribute with the given name/key.
-        has_real_attr = key in (x[0] for x in inspect.getmembers(self))
+        has_real_attr = key in dir(self)
         if not has_real_attr:
             # Make sure to trigger our own __setitem__ instead of going direct
             # to our internal dict/cache
@@ -846,9 +846,9 @@ class Config(DataProxy):
                         type_, filepath, self._file_suffixes))
                 # Store data, the path it was found at, and fact that it was
                 # found
-                setattr(self, data, loader(filepath))
-                setattr(self, path, filepath)
-                setattr(self, found, True)
+                self._set(data, loader(filepath))
+                self._set(path, filepath)
+                self._set(found, True)
                 break
             # Typically means 'no such file', so just note & skip past.
             except IOError as e:
@@ -860,7 +860,7 @@ class Config(DataProxy):
                     raise
         # Still None -> no suffixed paths were found, record this fact
         if getattr(self, path) is None:
-            setattr(self, found, False)
+            self._set(found, False)
         # Merge loaded data in if any was found
         elif merge:
             self.merge()
@@ -901,9 +901,11 @@ class Config(DataProxy):
     def merge(self):
         """
         Merge all config sources, in order.
+
+        .. versionadded:: 1.0
         """
         debug("Merging config sources in order onto new empty _config...")
-        self._config = {}
+        self._set(_config={})
         debug("Defaults: {!r}".format(self._defaults))
         merge_dicts(self._config, self._defaults)
         debug("Collection-driven: {!r}".format(self._collection))
@@ -1021,7 +1023,7 @@ class Config(DataProxy):
             # NOTE: presumably someone could really screw up and change these
             # values' types, but at that point it's on them...
             if not isinstance(my_data, dict):
-                setattr(new, name, copy.copy(my_data))
+                new._set(name, copy.copy(my_data))
             # Dict data gets merged (which also involves a copy.copy
             # eventually)
             else:

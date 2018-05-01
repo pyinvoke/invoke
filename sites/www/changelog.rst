@@ -2,6 +2,12 @@
 Changelog
 =========
 
+* :bug:`-` Tweaked the innards of
+  `~invoke.config.Config`/`~invoke.config.DataProxy` to prevent accessing
+  properties & other attributes' values during ``__setattr__`` (the code in
+  question only needed the names). This should have no noticeable effect on
+  user code (besides a marginal speed increase) but fixed some minor test
+  coverage issues.
 * :release:`0.23.0 <2018-04-29>`
 * :bug:`- major` Previously, some error conditions (such as invalid task or
   collection names being supplied by the user) printed to standard output,
