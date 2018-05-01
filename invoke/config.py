@@ -40,6 +40,8 @@ class DataProxy(object):
         All methods (of this object or in subclasses) must take care to
         initialize new attributes via ``self._set(name='value')``, or they'll
         run into recursion errors!
+
+    .. versionadded:: 1.0
     """
     # Attributes which get proxied through to inner merged-dict config obj.
     _proxies = tuple("""
@@ -79,6 +81,8 @@ class DataProxy(object):
             Optional tuple describing the path of keys leading to this
             DataProxy's location inside the ``root`` structure. Required if
             ``root`` was given (and vice versa.)
+
+        .. versionadded:: 1.0
         """
         obj = cls()
         obj._set(_config=data)
@@ -407,6 +411,8 @@ class Config(DataProxy):
       default.
 
       Defaults to ``None``, meaning to use the value of ``prefix``.
+
+    .. versionadded:: 1.0
     """
     prefix = 'invoke'
     file_prefix = None
@@ -423,6 +429,8 @@ class Config(DataProxy):
         Subclasses may choose to override this method, calling
         ``Config.global_defaults`` and applying `.merge_dicts` to the result,
         to add to or modify these values.
+
+        .. versionadded:: 1.0
         """
         # On Windows, which won't have /bin/bash, check for a set COMSPEC env
         # var (https://en.wikipedia.org/wiki/COMSPEC) or fallback to an
@@ -649,6 +657,8 @@ class Config(DataProxy):
             ``True``.
 
         :returns: ``None``.
+
+        .. versionadded:: 1.0
         """
         self._set(_defaults=data)
         if merge:
@@ -665,6 +675,8 @@ class Config(DataProxy):
             ``True``.
 
         :returns: ``None``.
+
+        .. versionadded:: 1.0
         """
         self._set(_overrides=data)
         if merge:
@@ -682,6 +694,8 @@ class Config(DataProxy):
             ``True``.
 
         :returns: ``None``.
+
+        .. versionadded:: 1.0
         """
         self._load_file(prefix='system', merge=merge)
 
@@ -697,6 +711,8 @@ class Config(DataProxy):
             ``True``.
 
         :returns: ``None``.
+
+        .. versionadded:: 1.0
         """
         self._load_file(prefix='user', merge=merge)
 
@@ -717,12 +733,16 @@ class Config(DataProxy):
             ``True``.
 
         :returns: ``None``.
+
+        .. versionadded:: 1.0
         """
         self._load_file(prefix='project', merge=merge)
 
     def set_runtime_path(self, path):
         """
         Set the runtime config file path.
+
+        .. versionadded:: 1.0
         """
         # Path to the user-specified runtime config file.
         self._set(_runtime_path=path)
@@ -745,6 +765,8 @@ class Config(DataProxy):
             ``True``.
 
         :returns: ``None``.
+
+        .. versionadded:: 1.0
         """
         self._load_file(prefix='runtime', absolute=True, merge=merge)
 
@@ -761,6 +783,8 @@ class Config(DataProxy):
 
         See :ref:`env-vars` for details on this design decision and other info
         re: how environment variables are scanned and loaded.
+
+        .. versionadded:: 1.0
         """
         # Force merge of existing data to ensure we have an up to date picture
         debug("Running pre-merge for shell env loading...")
@@ -778,6 +802,8 @@ class Config(DataProxy):
         `.load_collection` is intended for use by the core task execution
         machinery, which is responsible for obtaining collection-driven data.
         See :ref:`collection-configuration` for details.
+
+        .. versionadded:: 1.0
         """
         debug("Loading collection configuration")
         self._set(_collection=data)
@@ -789,6 +815,8 @@ class Config(DataProxy):
         Set the directory path where a project-level config file may be found.
 
         Does not do any file loading on its own; for that, see `load_project`.
+
+        .. versionadded:: 1.0
         """
         # 'Prefix' to match the other sets of attrs
         project_prefix = None
@@ -963,6 +991,8 @@ class Config(DataProxy):
         :raises:
             ``TypeError``, if ``into`` is given a value and that value is not a
             `.Config` subclass.
+
+        .. versionadded:: 1.0
         """
         # Sanity check for 'into'
         if into is not None and not issubclass(into, self.__class__):
@@ -1134,6 +1164,8 @@ def merge_dicts(base, updates):
     :returns:
         The value of ``base``, which is mostly useful for wrapper functions
         like `copy_dict`.
+
+    .. versionadded:: 1.0
     """
     # TODO: for chrissakes just make it return instead of mutating?
     for key, value in updates.items():
@@ -1184,6 +1216,8 @@ def copy_dict(source):
 
     Uses `merge_dicts` under the hood, with an empty ``base`` dict; see its
     documentation for details on behavior.
+
+    .. versionadded:: 1.0
     """
     return merge_dicts({}, source)
 
@@ -1191,6 +1225,8 @@ def copy_dict(source):
 def excise(dict_, keypath):
     """
     Remove key pointed at by ``keypath`` from nested dict ``dict_``, if exists.
+
+    .. versionadded:: 1.0
     """
     data = dict_
     keypath = list(keypath)
@@ -1208,6 +1244,8 @@ def excise(dict_, keypath):
 def obliterate(base, deletions):
     """
     Remove all (nested) keys mentioned in ``deletions``, from ``base``.
+
+    .. versionadded:: 1.0
     """
     for key, value in six.iteritems(deletions):
         if isinstance(value, dict):
