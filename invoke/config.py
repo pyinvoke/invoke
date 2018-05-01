@@ -1,5 +1,4 @@
 import copy
-import inspect
 import json
 import os
 from os.path import join, splitext, expanduser
