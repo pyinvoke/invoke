@@ -23,7 +23,7 @@ from .watchers import ( # noqa
 
 def run(command, **kwargs):
     """
-    Invoke ``command`` in a local subprocess and return a `.Result` object.
+    Run ``command`` in a local subprocess and return a `.Result` object.
 
     See `.Runner.run` for API details.
 
@@ -34,5 +34,7 @@ def run(command, **kwargs):
         Specifically, it creates an anonymous `.Context` instance and calls its
         `~.Context.run` method, which in turn defaults to using a `.Local`
         runner subclass for command execution.
+
+    .. versionadded:: 1.0
     """
     return Context().run(command, **kwargs)

@@ -11,6 +11,8 @@ from .tasks import Task
 class Collection(object):
     """
     A collection of executable tasks. See :doc:`/concepts/namespaces`.
+
+    .. versionadded:: 1.0
     """
     def __init__(self, *args, **kwargs):
         """
@@ -191,6 +193,8 @@ class Collection(object):
         :param bool auto_dash_names:
             Identical to the same-named kwarg from the regular class
             constructor - determines whether emitted names are auto-dashed.
+
+        .. versionadded:: 1.0
         """
         module_name = module.__name__.split('.')[-1]
         def instantiate(obj_name=None):
@@ -211,8 +215,8 @@ class Collection(object):
             if obj and isinstance(obj, Collection):
                 # TODO: make this into Collection.clone() or similar?
                 ret = instantiate(obj_name=obj.name)
-                ret.tasks = ret.transform_lexicon(obj.tasks)
-                ret.collections = ret.transform_lexicon(obj.collections)
+                ret.tasks = ret._transform_lexicon(obj.tasks)
+                ret.collections = ret._transform_lexicon(obj.collections)
                 ret.default = ret.transform(obj.default)
                 # Explicitly given config wins over root ns config
                 obj_config = copy_dict(obj._configuration)
@@ -250,6 +254,8 @@ class Collection(object):
             the task itself declares internally.
 
         :param default: Whether this task should be the collection default.
+
+        .. versionadded:: 1.0
         """
         if name is None:
             if task.name:
@@ -281,6 +287,8 @@ class Collection(object):
         :param str name:
             The name to attach the collection as. Defaults to the collection's
             own internal name.
+
+        .. versionadded:: 1.0
         """
         # Handle module-as-collection
         if isinstance(coll, types.ModuleType):
@@ -296,7 +304,7 @@ class Collection(object):
         # Insert
         self.collections[name] = coll
 
-    def split_path(self, path):
+    def _split_path(self, path):
         """
         Obtain first collection + remainder, of a task path.
 
@@ -314,6 +322,8 @@ class Collection(object):
     def subcollection_from_path(self, path):
         """
         Given a ``path`` to a subcollection, return that subcollection.
+
+        .. versionadded:: 1.0
         """
         parts = path.split('.')
         collection = self
@@ -332,6 +342,8 @@ class Collection(object):
         Tasks within subcollections should be given in dotted form, e.g.
         'foo.bar'. Subcollection default tasks will be returned on the
         subcollection's name.
+
+        .. versionadded:: 1.0
         """
         return self.task_with_config(name)[0]
 
@@ -351,6 +363,8 @@ class Collection(object):
         See `~.Collection.__getitem__` for semantics of the ``name`` argument.
 
         :returns: Two-tuple of (`.Task`, `dict`).
+
+        .. versionadded:: 1.0
         """
         # Our top level configuration
         ours = self.configuration()
@@ -364,7 +378,7 @@ class Collection(object):
         name = self.transform(name)
         # Non-default tasks within subcollections -> recurse (sorta)
         if '.' in name:
-            coll, rest = self.split_path(name)
+            coll, rest = self._split_path(name)
             return self._task_with_merged_config(coll, rest, ours)
         # Default task for subcollections (via empty-name lookup)
         if name in self.collections:
@@ -382,6 +396,8 @@ class Collection(object):
     def to_contexts(self):
         """
         Returns all contained tasks and subtasks as a list of parser contexts.
+
+        .. versionadded:: 1.0
         """
         result = []
         for primary, aliases in six.iteritems(self.task_names):
@@ -406,6 +422,8 @@ class Collection(object):
 
         If it is ``False``, the inverse is applied - all dashes are turned into
         underscores.
+
+        .. versionadded:: 1.0
         """
         # Short-circuit on anything non-applicable, e.g. empty strings, bools,
         # None, etc.
@@ -432,7 +450,7 @@ class Collection(object):
             replaced.append(char)
         return ''.join(replaced)
 
-    def transform_lexicon(self, old):
+    def _transform_lexicon(self, old):
         """
         Take a Lexicon and apply `.transform` to its keys and aliases.
 
@@ -461,6 +479,8 @@ class Collection(object):
         easily-scannable collection of invocation strings, and is thus suitable
         for things like flat-style task listings or transformation into parser
         contexts.
+
+        .. versionadded:: 1.0
         """
         ret = {}
         # Our own tasks get no prefix, just go in as-is: {name: [aliases]}
@@ -493,6 +513,8 @@ class Collection(object):
             when merging config values.
 
         :returns: A `dict` containing configuration values.
+
+        .. versionadded:: 1.0
         """
         if taskpath is None:
             return copy_dict(self._configuration)
@@ -512,6 +534,8 @@ class Collection(object):
 
         :param options: An object implementing the dictionary protocol.
         :returns: ``None``.
+
+        .. versionadded:: 1.0
         """
         merge_dicts(self._configuration, options)
 
@@ -521,6 +545,8 @@ class Collection(object):
 
         See the documentation for `.Program` and its ``json`` task listing
         format; this method is the driver for that functionality.
+
+        .. versionadded:: 1.0
         """
         return {
             "name": self.name,
