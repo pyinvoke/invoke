@@ -17,6 +17,17 @@ document:
 
     getting_started
 
+
+The ``invoke`` CLI tool
+-----------------------
+
+Details on the CLI interface to Invoke, available core flags, and tab
+completion options.
+
+.. toctree::
+    invoke
+
+
 Concepts
 --------
 
@@ -27,15 +38,6 @@ Dig deeper into specific topics:
     :glob:
 
     concepts/*
-
-The ``invoke`` CLI tool
------------------------
-
-Details on the CLI interface to Invoke, available core flags, and tab
-completion options.
-
-.. toctree::
-    invoke
 
 .. _api:
 

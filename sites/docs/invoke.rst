@@ -1,21 +1,17 @@
 .. _inv:
 
-=====================
-``inv[oke]`` CLI tool
-=====================
+========================
+``inv[oke]`` core usage 
+========================
 
 .. seealso::
-    This page documents the ``invoke`` command-line program itself. For
-    background on how argument parsing works, please see :doc:`/concepts/cli`.
-    For details on task execution, see :doc:`/concepts/execution`.
+    This page documents ``invoke``'s core arguments, options and behavior. For
+    details on invoking user-specified tasks, see
+    :doc:`/concepts/invoking-tasks`.
 
 
-Options, flags and invoking tasks
-=================================
-
-One of the main ways to use Invoke is via its command-line program, ``invoke``
-(also available as the shorter name ``inv``), which can load task modules and
-execute their tasks, optionally with flags for parameterization.
+Core options and flags
+======================
 
 .. TODO: autodoc-like ext that spits out option nodes automatically
 
@@ -23,7 +19,9 @@ execute their tasks, optionally with flags for parameterization.
 
     $ inv[oke] [--core-opts] task1 [--task1-opts] ... taskN [--taskN-opts]
 
-The core options (which must be given before any task names) are as follows:
+All core options & flags are below; almost all of them must be given *before*
+any task names, with a few (such as :option:`--help`) being specially looked
+for anywhere in the command line.
 
 .. option:: --complete
 
@@ -79,7 +77,9 @@ The core options (which must be given before any task names) are as follows:
 
 .. option:: -h STRING, --help=STRING
 
-    Show core or per-task help and exit.
+    When given without any task names, displays core help; when given with a
+    task name (may come before *or* after the task name) displays help for that
+    particular task.
 
 .. option:: -l, --list=STRING
 

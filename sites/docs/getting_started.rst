@@ -40,8 +40,8 @@ Task parameters
 
 Functions can have arguments, and thus so can tasks. By default, your task
 functions' args/kwargs are mapped automatically to both long and short CLI
-flags, as per :doc:`the CLI docs <concepts/cli/intro>`. For example, if we add
-a ``clean`` argument and give it a boolean default, it will show up as a set of
+flags, as per :ref:`the CLI docs <task-arguments>`. For example, if we add a
+``clean`` argument and give it a boolean default, it will show up as a set of
 toggle flags, ``--clean`` and ``-c``::
 
     @task
@@ -99,9 +99,9 @@ This description will show up when invoking ``--help``::
     Options:
       -n STRING, --name=STRING   Name of the person to say hi to.
 
-More details on task parameterization and metadata can be found in the
-:doc:`CLI concepts <concepts/cli>` (for the command-line & parsing side of
-things) and the `.task` API documentation (for the declaration side).
+More details on task parameterization and metadata can be found in
+:doc:`/concepts/invoking-tasks` (for the command-line & parsing side of things)
+and in the `.task` API documentation (for the declaration side).
 
 
 Listing tasks
@@ -192,8 +192,7 @@ Now when you ``invoke build``, it will automatically run ``clean`` first.
     names" API, you can simply give the ``pre`` kwarg:
     ``@task(pre=[clean])``.
 
-Details can be found in the :doc:`execution conceptual docs
-<concepts/execution>`.
+Details can be found in :ref:`how-tasks-run`.
 
 
 Creating namespaces

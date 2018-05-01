@@ -1,52 +1,62 @@
-.. _cli-args:
+.. _invoking-tasks:
 
-=================
-Invocation basics
-=================
+==============
+Invoking tasks
+==============
 
-Invoke's command line invocation utilizes traditional style command-line flags
-and task name arguments. The most basic form is just Invoke by itself (which
-behaves the same as ``-h``/``--help``)::
+This page explains how to invoke your tasks on the CLI, both in terms of parser
+mechanics (how your tasks' arguments are exposed as command-line options) and
+execution strategies (which tasks actually get run, and in what order).
 
-    $ invoke
-    Usage: invoke [core options] [task [task-options], ...]
-    ...
+(For details on Invoke's core flags and options, see :doc:`/invoke`.)
 
-    $ invoke -h
-    [same as above]
+.. contents::
+    :local:
 
-Core options with no tasks can either cause administrative actions, like
-listing available tasks::
 
-    $ invoke --list
-    Available tasks:
+Basic command line layout
+=========================
 
-      foo
-      bar
-      ...
+Invoke may be executed as ``invoke`` (or ``inv`` for short) and its command
+line layout looks like this::
 
-Or they can modify behavior, such as overriding the default task collection
-name Invoke looks for::
+    $ inv [--core-opts] task1 [--task1-opts] ... taskN [--taskN-opts]
 
-    $ invoke --collection mytasks --list
-    Available tasks:
+Put plainly, Invoke's `CLI parser <.Parser>` splits your command line up into
+multiple "`parser contexts <.ParserContext>`" which allows it to reason about
+the args and options it will accept:
 
-      mytask1
-      ...
+- Before any task names are given, the parser is in the "core" parse context,
+  and looks for core options and flags such as :option:`--echo`,
+  :option:`--list` or :option:`--help`.
+- Any non-argument-like token (such as ``mytask``) causes a switch into a
+  per-task context (or an error, if no task matching that name seems to exist
+  in the :doc:`loaded collection </concepts/loading>`).
+- At this point, argument-like tokens are expected to correspond to the
+  arguments for the previously named task (see :ref:`task-arguments`).
+- Then this cycle repeats infinitely, allowing chained execution of arbitrary
+  numbers of tasks. (In practice, most users only execute one or two at a
+  time.)
 
-Tasks and task options
-======================
+For the core arguments and flags, see :doc:`/invoke`; for details on how your
+tasks affect the CLI, read onwards.
+
+
+.. _task-arguments:
+
+Task command-line arguments
+===========================
 
 The simplest task invocation, for a task requiring no parameterization::
 
-    $ invoke mytask
+    $ inv mytask
 
 Tasks may take parameters in the form of flag arguments::
 
-    $ invoke build --format=html
-    $ invoke build --format html
-    $ invoke build -f pdf
-    $ invoke build -f=pdf
+    $ inv build --format=html
+    $ inv build --format html
+    $ inv build -f pdf
+    $ inv build -f=pdf
 
 Note that both long and short style flags are supported, and that equals signs
 are optional in both cases.
@@ -54,11 +64,11 @@ are optional in both cases.
 Boolean options are simple flags with no arguments, which turn the Python level
 values from ``False`` to ``True``::
 
-    $ invoke build --progress-bar
+    $ inv build --progress-bar
 
 Naturally, more than one flag may be given at a time::
 
-    $ invoke build --progress-bar -f pdf
+    $ inv build --progress-bar -f pdf
 
 Per-task help / printing available flags
 ----------------------------------------
@@ -69,7 +79,7 @@ the core ``--help``/``-h`` option, or give ``--help``/``-h`` after the task
 requested, you'll see the task's docstring (if any) and per-argument/flag help
 output::
 
-    $ invoke --help build  # or invoke build --help
+    $ inv --help build  # or invoke build --help
 
     Docstring:
       none
@@ -83,24 +93,24 @@ Globbed short flags
 
 Boolean short flags may be combined into one flag expression, so that e.g.::
 
-    $ invoke build -qv
+    $ inv build -qv
 
 is equivalent to (and expanded into, during parsing)::
 
-    $ invoke build -q -v
+    $ inv build -q -v
 
 If the first flag in a globbed short flag token is not a boolean but takes a
 value, the rest of the glob is taken to be the value instead. E.g.::
 
-    $ invoke build -fpdf
+    $ inv build -fpdf
 
 is expanded into::
 
-    $ invoke build -f pdf
+    $ inv build -f pdf
 
 and **not**::
 
-    $ invoke build -f -p -d -f
+    $ inv build -f -p -d -f
 
 .. _optional-values:
 
@@ -111,11 +121,11 @@ You saw a hint of this with ``--help`` specifically, but non-core options may
 also take optional values, if declared as ``optional``. For example, say your
 task has a ``--log`` flag that activates logging::
 
-    $ invoke compile --log
+    $ inv compile --log
 
 but you also want it to be configurable regarding *where* to log::
 
-    $ invoke compile --log=foo.log
+    $ inv compile --log=foo.log
 
 You could implement this with an additional argument (e.g. ``--log`` and
 ``--log-location``) but sometimes the concise API is the more useful one.
@@ -267,7 +277,7 @@ e.g.::
 However, the typical convention for command-line flags is dashes, which aren't
 valid in Python identifiers::
 
-    $ invoke mytask --my-option
+    $ inv mytask --my-option
 
 Invoke works around this by automatically generating dashed versions of
 underscored names, when it turns your task function signatures into
@@ -286,7 +296,7 @@ Automatic Boolean inverse flags
 Boolean flags tend to work best when setting something that is normally
 ``False``, to ``True``::
 
-    $ invoke mytask --yes-please-do-x
+    $ inv mytask --yes-please-do-x
 
 However, in some cases, you want the opposite - a default of ``True``, which
 can be easily disabled. For example, colored output::
@@ -300,26 +310,188 @@ sets ``color=False``. Invoke handles this for you: when setting up CLI flags,
 booleans which default to ``True`` generate a ``--no-<name>`` flag instead.
 
 
-Multiple tasks
-==============
+.. _how-tasks-run:
 
-More than one task may be given at the same time, and they will be executed in
-order. When a new task is encountered, option processing for the previous task
-stops, so there is no ambiguity about which option/flag belongs to which task.
-For example, this invocation specifies two tasks, ``clean`` and ``build``, both
-parameterized::
+How tasks run
+=============
 
-    $ invoke clean -t all build -f pdf
+Base case
+---------
 
-Another example with no parameterizing::
+In the simplest case, a task with no pre- or post-tasks runs one time.
+Example::
 
-    $ invoke clean build
+    @task
+    def hello(ctx):
+        print("Hello, world!")
 
-Mixing things up
-================
+Execution::
 
-Core options are similar to task options, in that they must be specified before
-any tasks are given. This invoke says to load the ``mytasks`` collection and
-call that collection's ``foo`` task::
+    $ inv hello
+    Hello, world!
 
-    $ invoke --collection mytasks foo --foo-args
+.. _pre-post-tasks:
+
+Pre- and post-tasks
+-------------------
+
+Tasks that should always have another task executed before or after them, may
+use the ``@task`` deocator's ``pre`` and/or ``post`` kwargs, like so::
+
+    @task
+    def clean(ctx):
+        print("Cleaning")
+
+    @task
+    def publish(ctx):
+        print("Publishing")
+
+    @task(pre=[clean], post=[publish])
+    def build(ctx):
+        print("Building")
+
+Execution::
+
+    $ inv build
+    Cleaning
+    Building
+    Publishing
+
+These keyword arguments always take iterables. As a convenience, pre-tasks (and
+pre-tasks only) may be given as positional arguments, in a manner similar to
+build systems like ``make``. E.g. we could present part of the above example
+as::
+
+    @task
+    def clean(ctx):
+        print("Cleaning")
+
+    @task(clean)
+    def build(ctx):
+        print("Building")
+
+As before, ``invoke build`` would cause ``clean`` to run, then ``build``.
+
+Recursive/chained pre/post-tasks
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Pre-tasks of pre-tasks will also be invoked (as will post-tasks of pre-tasks,
+pre-tasks of post-tasks, etc) in a depth-first manner, recursively. Here's a
+more complex (if slightly contrived) tasks file::
+
+    @task
+    def clean_html(ctx):
+        print("Cleaning HTML")
+
+    @task
+    def clean_tgz(ctx):
+        print("Cleaning .tar.gz files")
+
+    @task(clean_html, clean_tgz)
+    def clean(ctx):
+        print("Cleaned everything")
+
+    @task
+    def makedirs(ctx):
+        print("Making directories")
+
+    @task(clean, makedirs)
+    def build(ctx):
+        print("Building")
+
+    @task(build)
+    def deploy(ctx):
+        print("Deploying")
+
+With a depth-first behavior, the below is hopefully intuitive to most users::
+
+    $ inv deploy
+    Cleaning HTML
+    Cleaning .tar.gz files
+    Cleaned everything
+    Making directories
+    Building
+    Deploying
+
+        
+.. _parameterizing-pre-post-tasks:
+
+Parameterizing pre/post-tasks
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+By default, pre- and post-tasks are executed with no arguments, even if the
+task triggering their execution was given some. When this is not suitable, you
+can wrap the task objects with `~.tasks.call` objects which allow you to
+specify a call signature::
+
+    @task
+    def clean(ctx, which=None):
+        which = which or 'pyc'
+        print("Cleaning {}".format(which))
+
+    @task(pre=[call(clean, which='all')]) # or call(clean, 'all')
+    def build(ctx):
+        print("Building")
+
+Example output::
+
+    $ inv build
+    Cleaning all
+    Building
+
+
+.. _deduping:
+
+Task deduplication
+------------------
+
+By default, any task that would run more than once during a session (due e.g.
+to inclusion in pre/post tasks), will only be run once. Example task file::
+
+    @task
+    def clean(ctx):
+        print("Cleaning")
+
+    @task(clean)
+    def build(ctx):
+        print("Building")
+
+    @task(build)
+    def package(ctx):
+        print("Packaging")
+
+With deduplication turned off (see below), the above would execute ``clean`` ->
+``build`` -> ``build`` again -> ``package``. With deduplication, the double
+``build`` does not occur::
+
+    $ inv build package
+    Cleaning
+    Building
+    Packaging
+
+.. note::
+    Parameterized pre-tasks (using `~.tasks.call`) are deduped based on their
+    argument lists. For example, if ``clean`` was parameterized and hooked up
+    as a pre-task in two different ways - e.g. ``call(clean, 'html')`` and
+    ``call(clean, 'all')`` - they would not get deduped should both end up
+    running in the same session.
+    
+    However, two separate references to ``call(clean, 'html')`` *would* become
+    deduplicated.
+
+Disabling deduplication
+~~~~~~~~~~~~~~~~~~~~~~~
+
+If you prefer your tasks to run every time no matter what, you can give the
+``--no-dedupe`` core CLI option at runtime, or set the ``tasks.dedupe``
+:doc:`config setting </concepts/configuration>` to ``False``. While it
+doesn't make a ton of real-world sense, let's imagine we wanted to apply
+``--no-dedupe`` to the above example; we'd see the following output::
+
+    $ inv --no-dedupe build package
+    Cleaning
+    Building
+    Building
+    Packaging
+
+The build step is now running twice.
