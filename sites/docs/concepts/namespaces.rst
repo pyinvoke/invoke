@@ -4,7 +4,7 @@
 Constructing namespaces
 =======================
 
-The :doc:`base case </getting_started>` of loading a single module of tasks
+The :doc:`base case </getting-started>` of loading a single module of tasks
 works fine initially, but advanced users typically need more organization, such
 as separating tasks into a tree of nested namespaces.
 

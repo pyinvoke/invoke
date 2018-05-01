@@ -15,7 +15,7 @@ document:
 .. toctree::
     :maxdepth: 2
 
-    getting_started
+    getting-started
 
 
 The ``invoke`` CLI tool
