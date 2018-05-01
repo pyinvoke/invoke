@@ -134,7 +134,7 @@ To enable this, specify which arguments are of this 'hybrid' optional-value
 type inside ``@task``::
 
     @task(optional=['log'])
-    def compile(ctx, log=None):
+    def compile(c, log=None):
         if log:
             log_file = '/var/log/my.log'
             # Value was given, vs just-True
@@ -271,7 +271,7 @@ In Python, it's common to use ``underscored_names`` for keyword arguments,
 e.g.::
 
     @task
-    def mytask(ctx, my_option=False):
+    def mytask(c, my_option=False):
         pass
 
 However, the typical convention for command-line flags is dashes, which aren't
@@ -302,7 +302,7 @@ However, in some cases, you want the opposite - a default of ``True``, which
 can be easily disabled. For example, colored output::
 
     @task
-    def run_tests(ctx, color=True):
+    def run_tests(c, color=True):
         # ...
 
 Here, what we really want on the command line is a ``--no-color`` flag that
@@ -322,7 +322,7 @@ In the simplest case, a task with no pre- or post-tasks runs one time.
 Example::
 
     @task
-    def hello(ctx):
+    def hello(c):
         print("Hello, world!")
 
 Execution::
@@ -339,15 +339,15 @@ Tasks that should always have another task executed before or after them, may
 use the ``@task`` deocator's ``pre`` and/or ``post`` kwargs, like so::
 
     @task
-    def clean(ctx):
+    def clean(c):
         print("Cleaning")
 
     @task
-    def publish(ctx):
+    def publish(c):
         print("Publishing")
 
     @task(pre=[clean], post=[publish])
-    def build(ctx):
+    def build(c):
         print("Building")
 
 Execution::
@@ -363,11 +363,11 @@ build systems like ``make``. E.g. we could present part of the above example
 as::
 
     @task
-    def clean(ctx):
+    def clean(c):
         print("Cleaning")
 
     @task(clean)
-    def build(ctx):
+    def build(c):
         print("Building")
 
 As before, ``invoke build`` would cause ``clean`` to run, then ``build``.
@@ -380,27 +380,27 @@ pre-tasks of post-tasks, etc) in a depth-first manner, recursively. Here's a
 more complex (if slightly contrived) tasks file::
 
     @task
-    def clean_html(ctx):
+    def clean_html(c):
         print("Cleaning HTML")
 
     @task
-    def clean_tgz(ctx):
+    def clean_tgz(c):
         print("Cleaning .tar.gz files")
 
     @task(clean_html, clean_tgz)
-    def clean(ctx):
+    def clean(c):
         print("Cleaned everything")
 
     @task
-    def makedirs(ctx):
+    def makedirs(c):
         print("Making directories")
 
     @task(clean, makedirs)
-    def build(ctx):
+    def build(c):
         print("Building")
 
     @task(build)
-    def deploy(ctx):
+    def deploy(c):
         print("Deploying")
 
 With a depth-first behavior, the below is hopefully intuitive to most users::
@@ -425,12 +425,12 @@ can wrap the task objects with `~.tasks.call` objects which allow you to
 specify a call signature::
 
     @task
-    def clean(ctx, which=None):
+    def clean(c, which=None):
         which = which or 'pyc'
         print("Cleaning {}".format(which))
 
     @task(pre=[call(clean, which='all')]) # or call(clean, 'all')
-    def build(ctx):
+    def build(c):
         print("Building")
 
 Example output::
@@ -449,15 +449,15 @@ By default, any task that would run more than once during a session (due e.g.
 to inclusion in pre/post tasks), will only be run once. Example task file::
 
     @task
-    def clean(ctx):
+    def clean(c):
         print("Cleaning")
 
     @task(clean)
-    def build(ctx):
+    def build(c):
         print("Building")
 
     @task(build)
-    def package(ctx):
+    def package(c):
         print("Packaging")
 
 With deduplication turned off (see below), the above would execute ``clean`` ->

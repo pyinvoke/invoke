@@ -9,21 +9,21 @@ class CLIParsing:
     """
     def setup(self):
         @task(positional=[], iterable=['my_list'], incrementable=['verbose'])
-        def my_task(ctx, mystring, s, boolean=False, b=False, v=False,
+        def my_task(c, mystring, s, boolean=False, b=False, v=False,
             long_name=False, true_bool=True, _leading_underscore=False,
             trailing_underscore_=False, my_list=None, verbose=0):
             pass
         @task(aliases=['my_task27'])
-        def my_task2(ctx):
+        def my_task2(c):
             pass
         @task(default=True)
-        def my_task3(ctx, mystring):
+        def my_task3(c, mystring):
             pass
         @task
-        def my_task4(ctx, clean=False, browse=False):
+        def my_task4(c, clean=False, browse=False):
             pass
         @task(aliases=['other'], default=True)
-        def sub_task(ctx):
+        def sub_task(c):
             pass
         sub_coll = Collection('sub_coll', sub_task)
         self.c = Collection(my_task, my_task2, my_task3, my_task4, sub_coll)

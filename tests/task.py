@@ -13,7 +13,7 @@ from _util import support
 # both Task and @task. Meh :)
 #
 
-def _func(ctx):
+def _func(c):
     pass
 
 class task_:
@@ -28,7 +28,7 @@ class task_:
         self.vanilla = self._load('decorators')
 
     def allows_access_to_wrapped_object(self):
-        def lolcats(ctx):
+        def lolcats(c):
             pass
         assert task(lolcats).body == lolcats
 
@@ -76,46 +76,46 @@ class task_:
 
     def context_arguments_should_not_appear_in_implicit_positional_list(self):
         @task
-        def mytask(ctx):
+        def mytask(c):
             pass
         assert len(mytask.positional) == 0
 
     def pre_tasks_stored_directly(self):
         @task
-        def whatever(ctx):
+        def whatever(c):
             pass
         @task(pre=[whatever])
-        def func(ctx):
+        def func(c):
             pass
         assert func.pre == [whatever]
 
     def allows_star_args_as_shortcut_for_pre(self):
         @task
-        def pre1(ctx):
+        def pre1(c):
             pass
         @task
-        def pre2(ctx):
+        def pre2(c):
             pass
         @task(pre1, pre2)
-        def func(ctx):
+        def func(c):
             pass
         assert func.pre == (pre1, pre2)
 
     def disallows_ambiguity_between_star_args_and_pre_kwarg(self):
         @task
-        def pre1(ctx):
+        def pre1(c):
             pass
         @task
-        def pre2(ctx):
+        def pre2(c):
             pass
         with raises(TypeError):
             @task(pre1, pre=[pre2])
-            def func(ctx):
+            def func(c):
                 pass
 
     def sets_name(self):
         @task(name='foo')
-        def bar(ctx):
+        def bar(c):
             pass
         assert bar.name == 'foo'
 
@@ -148,7 +148,7 @@ class Task_:
     class callability:
         def setup(self):
             @task
-            def foo(ctx):
+            def foo(c):
                 "My docstring"
                 return 5
             self.task = foo
@@ -159,7 +159,7 @@ class Task_:
 
         def errors_if_first_arg_not_Context(self):
             @task
-            def mytask(ctx):
+            def mytask(c):
                 pass
             with raises(TypeError):
                 mytask(5)
@@ -188,7 +188,7 @@ class Task_:
     class get_arguments:
         def setup(self):
             @task(positional=['arg_3', 'arg1'], optional=['arg1'])
-            def mytask(ctx, arg1, arg2=False, arg_3=5):
+            def mytask(c, arg1, arg2=False, arg_3=5):
                 pass
             self.task = mytask
             self.args = self.task.get_arguments()
@@ -254,7 +254,7 @@ class Task_:
 
         def autocreated_short_flags_can_be_disabled(self):
             @task(auto_shortflags=False)
-            def mytask(ctx, arg):
+            def mytask(c, arg):
                 pass
             args = self._task_to_dict(mytask)
             assert 'a' not in args
@@ -263,7 +263,7 @@ class Task_:
         def autocreated_shortflags_dont_collide(self):
             "auto-created short flags don't collide"
             @task
-            def mytask(ctx, arg1, arg2, barg):
+            def mytask(c, arg1, arg2, barg):
                 pass
             args = self._task_to_dict(mytask)
             assert 'a' in args
@@ -277,7 +277,7 @@ class Task_:
             # I.e. "task --foo -f" => --foo should NOT get to pick '-f' for its
             # shortflag or '-f' is totally fucked.
             @task
-            def mytask(ctx, longarg, l):
+            def mytask(c, longarg, l):
                 pass
             args = self._task_to_dict(mytask)
             assert 'longarg' in args
@@ -287,13 +287,13 @@ class Task_:
 
         def context_arguments_are_not_returned(self):
             @task
-            def mytask(ctx):
+            def mytask(c):
                 pass
             assert len(mytask.get_arguments()) == 0
 
         def underscores_become_dashes(self):
             @task
-            def mytask(ctx, longer_arg):
+            def mytask(c, longer_arg):
                 pass
             arg = mytask.get_arguments()[0]
             assert arg.names == ('longer-arg', 'l')
@@ -370,9 +370,9 @@ class Call_:
 
         def creates_a_new_Context_from_given_config(self):
             conf = Config(defaults={'foo': 'bar'})
-            ctx = Call(_).make_context(conf)
-            assert isinstance(ctx, Context)
-            assert ctx.foo == 'bar'
+            c = Call(_).make_context(conf)
+            assert isinstance(c, Context)
+            assert c.foo == 'bar'
 
     class clone:
         def returns_new_but_equivalent_object(self):

@@ -43,8 +43,13 @@ prompt::
 You *could* call ``run("excitable-program")``, manually watch for the
 prompt, and mash Y by hand. But if you instead supply a `.Responder` like so::
 
-    responder = Responder(pattern=r"Are you ready? \[Y/n\] ", response="y\n")
-    ctx.run("excitable-program", watchers=[responder])
+    @task
+    def always_ready(c):
+        responder = Responder(
+            pattern=r"Are you ready? \[Y/n\] ",
+            response="y\n",
+        )
+        c.run("excitable-program", watchers=[responder])
 
 Then `.Runner` passes the program's ``stdout`` and ``stderr`` through
 ``responder``, which watches for ``"Are you ready? [Y/n] "`` and automatically

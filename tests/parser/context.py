@@ -97,7 +97,7 @@ class Context_:
             # here. Yes that makes this an integration test, but it's nice to
             # test it here at this level & not just in cli tests.
             @task
-            def mytask(ctx, underscored_option=True):
+            def mytask(c, underscored_option=True):
                 pass
             self.c.add_arg(mytask.get_arguments()[0])
             flags = self.c.inverse_flags['--no-underscored-option']
@@ -163,7 +163,7 @@ class Context_:
             # Task/Collection generated Context
             # (will expose flags n such)
             @task(help={'otherarg': 'other help'}, optional=['optval'])
-            def mytask(ctx, myarg, otherarg, optval, intval=5):
+            def mytask(c, myarg, otherarg, optval, intval=5):
                 pass
             col = Collection(mytask)
             self.tasked = col.to_contexts()[0]
@@ -230,16 +230,16 @@ class Context_:
             # TODO: consider redoing help_for to be more flexible on input --
             # arg value or flag; or even Argument objects. ?
             @task(help={'otherarg': 'other help'})
-            def mytask(ctx, myarg, otherarg):
+            def mytask(c, myarg, otherarg):
                 pass
             c = Collection(mytask).to_contexts()[0]
             expected = [c.help_for('--myarg'), c.help_for('--otherarg')]
             assert c.help_tuples() == expected
 
         def _assert_order(self, name_tuples, expected_flag_order):
-            ctx = Context(args=[Argument(names=x) for x in name_tuples])
-            expected = [ctx.help_for(x) for x in expected_flag_order]
-            assert ctx.help_tuples() == expected
+            c = Context(args=[Argument(names=x) for x in name_tuples])
+            expected = [c.help_for(x) for x in expected_flag_order]
+            assert c.help_tuples() == expected
 
         def sorts_alphabetically_by_shortflag_first(self):
             # Where shortflags exist, they take precedence

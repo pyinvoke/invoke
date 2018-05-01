@@ -52,7 +52,7 @@ For example, can you spot the problem in this sample task file?
     from invoke import task
 
     @task
-    def build(ctx, where, clean=False):
+    def build(c, where, clean=False):
         pass
 
     @task

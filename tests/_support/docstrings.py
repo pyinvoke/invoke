@@ -2,26 +2,26 @@ from invoke import task
 
 
 @task
-def no_docstring(ctx):
+def no_docstring(c):
     pass
 
 @task
-def one_line(ctx):
+def one_line(c):
     """foo
     """
 @task
-def two_lines(ctx):
+def two_lines(c):
     """foo
     bar
     """
 
 @task
-def leading_whitespace(ctx):
+def leading_whitespace(c):
     """
     foo
     """
 
 @task(aliases=('a', 'b'))
-def with_aliases(ctx):
+def with_aliases(c):
     """foo
     """

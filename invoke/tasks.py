@@ -430,19 +430,19 @@ def call(task, *args, **kwargs):
     `.call`), and one that toggles a boolean flag::
 
         @task
-        def setup(ctx, clean=False):
+        def setup(c, clean=False):
             if clean:
-                ctx.run("rm -rf target")
+                c.run("rm -rf target")
             # ... setup things here ...
-            ctx.run("tar czvf target.tgz target")
+            c.run("tar czvf target.tgz target")
 
         @task(pre=[setup])
-        def build(ctx):
-            ctx.run("build, accounting for leftover files...")
+        def build(c):
+            c.run("build, accounting for leftover files...")
 
         @task(pre=[call(setup, clean=True)])
-        def clean_build(ctx):
-            ctx.run("build, assuming clean slate...")
+        def clean_build(c):
+            c.run("build, assuming clean slate...")
 
     Please see the constructor docs for `.Call` for details - this function's
     ``args`` and ``kwargs`` map directly to the same arguments as in that

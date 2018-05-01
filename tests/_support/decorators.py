@@ -2,14 +2,14 @@ from invoke.tasks import task
 
 
 @task(aliases=('bar', 'otherbar'))
-def foo(ctx):
+def foo(c):
     """
     Foo the bar.
     """
     pass
 
 @task
-def foo2(ctx):
+def foo2(c):
     """
     Foo the bar:
 
@@ -20,7 +20,7 @@ def foo2(ctx):
     pass
 
 @task
-def foo3(ctx):
+def foo3(c):
     """Foo the other bar:
 
       example code
@@ -30,27 +30,27 @@ def foo3(ctx):
     pass
 
 @task(default=True)
-def biz(ctx):
+def biz(c):
     pass
 
 @task(help={'why': 'Motive', 'who': 'Who to punch'})
-def punch(ctx, who, why):
+def punch(c, who, why):
     pass
 
 @task(positional=['pos'])
-def one_positional(ctx, pos, nonpos):
+def one_positional(c, pos, nonpos):
     pass
 
 @task(positional=['pos1', 'pos2'])
-def two_positionals(ctx, pos1, pos2, nonpos):
+def two_positionals(c, pos1, pos2, nonpos):
     pass
 
 @task
-def implicit_positionals(ctx, pos1, pos2, nonpos=None):
+def implicit_positionals(c, pos1, pos2, nonpos=None):
     pass
 
 @task(optional=['myopt'])
-def optional_values(ctx, myopt):
+def optional_values(c, myopt):
     pass
 
 @task(iterable=['mylist'])

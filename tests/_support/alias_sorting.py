@@ -1,5 +1,5 @@
 from invoke import task
 
 @task(aliases=('z', 'a'))
-def toplevel(ctx):
+def toplevel(c):
     pass

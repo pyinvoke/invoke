@@ -13,10 +13,10 @@ from _util import load, support_path
 
 
 @task
-def _mytask(ctx):
+def _mytask(c):
     print("woo!")
 
-def _func(ctx):
+def _func(c):
     pass
 
 
@@ -26,10 +26,10 @@ class Collection_:
         def can_accept_task_varargs(self):
             "can accept tasks as *args"
             @task
-            def task1(ctx):
+            def task1(c):
                 pass
             @task
-            def task2(ctx):
+            def task2(c):
                 pass
             c = Collection(task1, task2)
             assert 'task1' in c
@@ -43,7 +43,7 @@ class Collection_:
         def kwargs_act_as_name_args_for_given_objects(self):
             sub = Collection()
             @task
-            def task1(ctx):
+            def task1(c):
                 pass
             ns = Collection(loltask=task1, notsub=sub)
             assert ns['loltask'] == task1
@@ -56,10 +56,10 @@ class Collection_:
 
         def initial_string_arg_meshes_with_varargs_and_kwargs(self):
             @task
-            def task1(ctx):
+            def task1(c):
                 pass
             @task
-            def task2(ctx):
+            def task2(c):
                 pass
             sub = Collection('sub')
             ns = Collection('root', task1, sub, sometask=task2)
@@ -82,10 +82,10 @@ class Collection_:
     class useful_special_methods:
         def _meh(self):
             @task
-            def task1(ctx):
+            def task1(c):
                 pass
             @task
-            def task2(ctx):
+            def task2(c):
                 pass
             @task
             def task3(c):
@@ -312,7 +312,7 @@ class Collection_:
 
         def specifying_default_False_overrides_task_setting(self):
             @task(default=True)
-            def its_me(ctx):
+            def its_me(c):
                 pass
             self.c.add_task(its_me, default=False)
             assert self.c.default is None
@@ -407,13 +407,13 @@ class Collection_:
     class to_contexts:
         def setup(self):
             @task
-            def mytask(ctx, text, boolean=False, number=5):
+            def mytask(c, text, boolean=False, number=5):
                 print(text)
             @task(aliases=['mytask27'])
-            def mytask2(ctx):
+            def mytask2(c):
                 pass
             @task(aliases=['othertask'], default=True)
-            def subtask(ctx):
+            def subtask(c):
                 pass
             sub = Collection('sub', subtask)
             self.c = Collection(mytask, mytask2, sub)
@@ -520,13 +520,13 @@ class Collection_:
 
         def positional_arglist_preserves_order_given(self):
             @task(positional=('second', 'first'))
-            def mytask(ctx, first, second, third):
+            def mytask(c, first, second, third):
                 pass
-            c = Collection()
-            c.add_task(mytask)
-            ctx = c.to_contexts()[0]
-            expected = [ctx.args['second'], ctx.args['first']]
-            assert ctx.positional_args == expected
+            coll = Collection()
+            coll.add_task(mytask)
+            c = coll.to_contexts()[0]
+            expected = [c.args['second'], c.args['first']]
+            assert c.positional_args == expected
 
         def exposes_namespaced_task_names(self):
             assert 'sub.subtask' in [x.name for x in self.contexts]

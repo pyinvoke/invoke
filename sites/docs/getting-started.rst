@@ -23,7 +23,7 @@ Let's start with a dummy Sphinx docs building task::
     from invoke import task
 
     @task
-    def build(ctx):
+    def build(c):
         print("Building!")
 
 You can then execute that new task by telling Invoke's command line runner,
@@ -45,7 +45,7 @@ flags, as per :ref:`the CLI docs <task-arguments>`. For example, if we add a
 toggle flags, ``--clean`` and ``-c``::
 
     @task
-    def build(ctx, clean=False):
+    def build(c, clean=False):
         if clean:
             print("Cleaning!")
         print("Building!")
@@ -61,7 +61,7 @@ also be given as positional arguments. Take this incredibly contrived snippet
 for example::
 
     @task
-    def hi(ctx, name):
+    def hi(c, name):
         print("Hi {}!".format(name))
 
 It can be invoked in the following ways, all resulting in "Hi Jeff!"::
@@ -82,7 +82,7 @@ parameter (in addition to optionally giving task-level help via the
 docstring)::
 
     @task(help={'name': "Name of the person to say hi to."})
-    def hi(ctx, name):
+    def hi(c, name):
         """
         Say hi to someone.
         """
@@ -129,8 +129,8 @@ programs like Make or Rake. This is done via the `~.Context.run` function::
     from invoke import task
 
     @task
-    def build(ctx):
-        ctx.run("sphinx-build docs docs/_build")
+    def build(c):
+        c.run("sphinx-build docs docs/_build")
 
 You'll see the command's output in your terminal as it runs::
 
@@ -178,12 +178,12 @@ build (but which, of course, can still be executed on its own)::
     from invoke import task
 
     @task
-    def clean(ctx):
-        ctx.run("rm -rf docs/_build")
+    def clean(c):
+        c.run("rm -rf docs/_build")
 
     @task(clean)
-    def build(ctx):
-        ctx.run("sphinx-build docs docs/_build")
+    def build(c):
+        c.run("sphinx-build docs docs/_build")
 
 Now when you ``invoke build``, it will automatically run ``clean`` first.
 
@@ -216,8 +216,8 @@ loads your task module, if a `.Collection` object bound as ``ns`` or
     import docs
 
     @task
-    def deploy(ctx):
-        ctx.run("python setup.py sdist register upload")
+    def deploy(c):
+        c.run("python setup.py sdist register upload")
 
     namespace = Collection(docs, deploy)
 

@@ -40,12 +40,12 @@ class Context(DataProxy):
         #: The fully merged `.Config` object appropriate for this context.
         #:
         #: `.Config` settings (see their documentation for details) may be
-        #: accessed like dictionary keys (``ctx.config['foo']``) or object
-        #: attributes (``ctx.config.foo``).
+        #: accessed like dictionary keys (``c.config['foo']``) or object
+        #: attributes (``c.config.foo``).
         #:
         #: As a convenience shorthand, the `.Context` object proxies to its
-        #: ``config`` attribute in the same way - e.g. ``ctx['foo']`` or
-        #: ``ctx.foo`` returns the same value as ``ctx.config['foo']``.
+        #: ``config`` attribute in the same way - e.g. ``c['foo']`` or
+        #: ``c.foo`` returns the same value as ``c.config['foo']``.
         config = config if config is not None else Config()
         self._set(_config=config)
         #: A list of commands to run (via "&&") before the main argument to any
@@ -246,8 +246,8 @@ class Context(DataProxy):
         ``workon`` command from `virtualenvwrapper
         <https://virtualenvwrapper.readthedocs.io/en/latest/>`_::
 
-            with ctx.prefix('workon myvenv'):
-                ctx.run('./manage.py migrate')
+            with c.prefix('workon myvenv'):
+                c.run('./manage.py migrate')
 
         In the above snippet, the actual shell command run would be this::
 
@@ -257,10 +257,10 @@ class Context(DataProxy):
         doesn't ``cd`` in its ``postactivate`` script, you could do the
         following::
 
-            with ctx.cd('/path/to/app'):
-                with ctx.prefix('workon myvenv'):
-                    ctx.run('./manage.py migrate')
-                    ctx.run('./manage.py loaddata fixture')
+            with c.cd('/path/to/app'):
+                with c.prefix('workon myvenv'):
+                    c.run('./manage.py migrate')
+                    c.run('./manage.py loaddata fixture')
 
         Which would result in executions like so::
 
@@ -269,10 +269,10 @@ class Context(DataProxy):
 
         Finally, as alluded to above, `prefix` may be nested if desired, e.g.::
 
-            with ctx.prefix('workon myenv'):
-                ctx.run('ls')
-                with ctx.prefix('source /some/script'):
-                    ctx.run('touch a_file')
+            with c.prefix('workon myenv'):
+                c.run('ls')
+                with c.prefix('source /some/script'):
+                    c.run('touch a_file')
 
         The result::
 
@@ -326,21 +326,21 @@ class Context(DataProxy):
         since all commands are executed in individual subprocesses -- state is
         **not** kept between invocations of `run` or `sudo`::
 
-            ctx.run('cd /var/www')
-            ctx.run('ls')
+            c.run('cd /var/www')
+            c.run('ls')
 
         The above snippet will list the contents of the user's ``$HOME``
         instead of ``/var/www``. With `cd`, however, it will work as expected::
 
-            with ctx.cd('/var/www'):
-                ctx.run('ls')  # Turns into "cd /var/www && ls"
+            with c.cd('/var/www'):
+                c.run('ls')  # Turns into "cd /var/www && ls"
 
         Finally, a demonstration (see inline comments) of nesting::
 
-            with ctx.cd('/var/www'):
-                ctx.run('ls') # cd /var/www && ls
-                with ctx.cd('website1'):
-                    ctx.run('ls')  # cd /var/www/website1 && ls
+            with c.cd('/var/www'):
+                c.run('ls') # cd /var/www && ls
+                with c.cd('website1'):
+                    c.run('ls')  # cd /var/www/website1 && ls
 
         .. note::
             Space characters will be escaped automatically to make dealing with

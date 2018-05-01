@@ -129,23 +129,23 @@ class Context_:
 
     class cwd:
         def setup(self):
-            self.ctx = Context()
+            self.c = Context()
 
         def simple(self):
-            self.ctx.command_cwds = ['a', 'b']
-            assert self.ctx.cwd == os.path.join('a', 'b')
+            self.c.command_cwds = ['a', 'b']
+            assert self.c.cwd == os.path.join('a', 'b')
 
         def nested_absolute_path(self):
-            self.ctx.command_cwds = ['a', '/b', 'c']
-            assert self.ctx.cwd == os.path.join('/b', 'c')
+            self.c.command_cwds = ['a', '/b', 'c']
+            assert self.c.cwd == os.path.join('/b', 'c')
 
         def multiple_absolute_paths(self):
-            self.ctx.command_cwds = ['a', '/b', 'c', '/d', 'e']
-            assert self.ctx.cwd == os.path.join('/d', 'e')
+            self.c.command_cwds = ['a', '/b', 'c', '/d', 'e']
+            assert self.c.cwd == os.path.join('/d', 'e')
 
         def home(self):
-            self.ctx.command_cwds = ['a', '~b', 'c']
-            assert self.ctx.cwd == os.path.join('~b', 'c')
+            self.c.command_cwds = ['a', '~b', 'c']
+            assert self.c.cwd == os.path.join('~b', 'c')
 
     class cd:
         def setup(self):
@@ -154,9 +154,9 @@ class Context_:
         @patch(local_path)
         def cd_should_apply_to_run(self, Local):
             runner = Local.return_value
-            ctx = Context()
-            with ctx.cd('foo'):
-                ctx.run('whoami')
+            c = Context()
+            with c.cd('foo'):
+                c.run('whoami')
 
             cmd = "cd foo && whoami"
             assert runner.run.called, "run() never called runner.run()!"
@@ -165,9 +165,9 @@ class Context_:
         @patch(local_path)
         def cd_should_apply_to_sudo(self, Local):
             runner = Local.return_value
-            ctx = Context()
-            with ctx.cd('foo'):
-                ctx.sudo('whoami')
+            c = Context()
+            with c.cd('foo'):
+                c.sudo('whoami')
 
             cmd = "sudo -S -p '[sudo] password: ' cd foo && whoami"
             assert runner.run.called, "sudo() never called runner.run()!"
@@ -176,10 +176,10 @@ class Context_:
         @patch(local_path)
         def cd_should_occur_before_prefixes(self, Local):
             runner = Local.return_value
-            ctx = Context()
-            with ctx.prefix('source venv'):
-                with ctx.cd('foo'):
-                    ctx.run('whoami')
+            c = Context()
+            with c.prefix('source venv'):
+                with c.cd('foo'):
+                    c.run('whoami')
 
             cmd = "cd foo && source venv && whoami"
             assert runner.run.called, "run() never called runner.run()!"
@@ -192,9 +192,9 @@ class Context_:
         @patch(local_path)
         def prefixes_should_apply_to_run(self, Local):
             runner = Local.return_value
-            ctx = Context()
-            with ctx.prefix('cd foo'):
-                ctx.run('whoami')
+            c = Context()
+            with c.prefix('cd foo'):
+                c.run('whoami')
 
             cmd = "cd foo && whoami"
             assert runner.run.called, "run() never called runner.run()!"
@@ -203,9 +203,9 @@ class Context_:
         @patch(local_path)
         def prefixes_should_apply_to_sudo(self, Local):
             runner = Local.return_value
-            ctx = Context()
-            with ctx.prefix('cd foo'):
-                ctx.sudo('whoami')
+            c = Context()
+            with c.prefix('cd foo'):
+                c.sudo('whoami')
 
             cmd = "sudo -S -p '[sudo] password: ' cd foo && whoami"
             assert runner.run.called, "sudo() never called runner.run()!"
@@ -214,21 +214,21 @@ class Context_:
         @patch(local_path)
         def nesting_should_retain_order(self, Local):
             runner = Local.return_value
-            ctx = Context()
-            with ctx.prefix('cd foo'):
-                with ctx.prefix('cd bar'):
-                    ctx.run('whoami')
+            c = Context()
+            with c.prefix('cd foo'):
+                with c.prefix('cd bar'):
+                    c.run('whoami')
                     cmd = "cd foo && cd bar && whoami"
                     assert runner.run.called, "run() never called runner.run()!" # noqa
                     assert runner.run.call_args[0][0] == cmd
 
-                ctx.run('whoami')
+                c.run('whoami')
                 cmd = "cd foo && whoami"
                 assert runner.run.called, "run() never called runner.run()!"
                 assert runner.run.call_args[0][0] == cmd
 
             # also test that prefixes do not persist
-            ctx.run('whoami')
+            c.run('whoami')
             cmd = "whoami"
             assert runner.run.called, "run() never called runner.run()!"
             assert runner.run.call_args[0][0] == cmd

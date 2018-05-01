@@ -2,8 +2,8 @@ from invoke import task
 
 
 @task
-def go(ctx):
-    return ctx
+def go(c):
+    return c
 
 @task
 def check_warn(c):

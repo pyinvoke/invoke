@@ -75,7 +75,7 @@ For convenience, we refer to nested setting names with a dotted syntax, so e.g.
 ``foo.bar`` refers to what would be (in a Python config context) ``{'foo':
 {'bar': <value here>}}``. Typically, these can be read or set on `.Config` and
 `.Context` objects using attribute syntax, which looks nearly identical:
-``ctx.foo.bar``.
+``c.foo.bar``.
 
 - The ``tasks`` config tree holds settings relating to task execution.
 
@@ -288,8 +288,8 @@ A quick example of what this means::
     # This task & collection could just as easily come from
     # another module somewhere.
     @task
-    def mytask(ctx):
-        print(ctx['conflicted'])
+    def mytask(c):
+        print(c['conflicted'])
     inner = Collection('inner', mytask)
     inner.configure({'conflicted': 'default value'})
 
@@ -319,36 +319,36 @@ up to using the various configuration mechanisms. A small module for building
     from invoke import task
 
     @task
-    def clean(ctx):
-        ctx.run("rm -rf docs/_build")
+    def clean(c):
+        c.run("rm -rf docs/_build")
 
     @task
-    def build(ctx):
-        ctx.run("sphinx-build docs docs/_build")
+    def build(c):
+        c.run("sphinx-build docs docs/_build")
 
 Then maybe you refactor the build target::
 
     target = "docs/_build"
 
     @task
-    def clean(ctx):
-        ctx.run("rm -rf {}".format(target))
+    def clean(c):
+        c.run("rm -rf {}".format(target))
 
     @task
-    def build(ctx):
-        ctx.run("sphinx-build docs {}".format(target))
+    def build(c):
+        c.run("sphinx-build docs {}".format(target))
 
 We can also allow runtime parameterization::
 
     default_target = "docs/_build"
 
     @task
-    def clean(ctx, target=default_target):
-        ctx.run("rm -rf {}".format(target))
+    def clean(c, target=default_target):
+        c.run("rm -rf {}".format(target))
 
     @task
-    def build(ctx, target=default_target):
-        ctx.run("sphinx-build docs {}".format(target))
+    def build(c, target=default_target):
+        c.run("sphinx-build docs {}".format(target))
 
 This task module works for a single set of users, but what if we want to allow
 reuse? Somebody may want to use this module with a different default target.
@@ -368,12 +368,12 @@ Let's apply this to our example. First we add an explicit namespace object::
     default_target = "docs/_build"
 
     @task
-    def clean(ctx, target=default_target):
-        ctx.run("rm -rf {}".format(target))
+    def clean(c, target=default_target):
+        c.run("rm -rf {}".format(target))
 
     @task
-    def build(ctx, target=default_target):
-        ctx.run("sphinx-build docs {}".format(target))
+    def build(c, target=default_target):
+        c.run("sphinx-build docs {}".format(target))
 
     ns = Collection(clean, build)
 
@@ -383,16 +383,16 @@ our kwarg default value to be ``None`` so we can determine whether or not a
 runtime value was given.  The result::
 
     @task
-    def clean(ctx, target=None):
+    def clean(c, target=None):
         if target is None:
-            target = ctx.sphinx.target
-        ctx.run("rm -rf {}".format(target))
+            target = c.sphinx.target
+        c.run("rm -rf {}".format(target))
 
     @task
-    def build(ctx, target=None):
+    def build(c, target=None):
         if target is None:
-            target = ctx.sphinx.target
-        ctx.run("sphinx-build docs {}".format(target))
+            target = c.sphinx.target
+        c.run("sphinx-build docs {}".format(target))
 
     ns = Collection(clean, build)
     ns.configure({'sphinx': {'target': "docs/_build"}})
@@ -413,7 +413,7 @@ that does this::
     from myproject import docs
 
     @task
-    def mylocaltask(ctx):
+    def mylocaltask(c):
         # Some local stuff goes here
         pass
 
