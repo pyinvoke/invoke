@@ -27,6 +27,8 @@ def sort_candidate(arg):
 def flag_key(x):
     """
     Obtain useful key list-of-ints for sorting CLI flags.
+
+    .. versionadded:: 1.0
     """
     # Setup
     ret = []
@@ -58,6 +60,8 @@ class ParserContext(object):
 
     When run through a parser, will also hold runtime values filled in by the
     parser.
+
+    .. versionadded:: 1.0
     """
     def __init__(self, name=None, aliases=(), args=()):
         """
@@ -105,6 +109,8 @@ class ParserContext(object):
           "inverse" versions of boolean flags which default to True. This
           allows the parser to track e.g. ``--no-myflag`` and turn it into a
           False value for the ``myflag`` Argument.
+
+        .. versionadded:: 1.0
         """
         # Normalize
         if len(args) == 1 and isinstance(args[0], Argument):
@@ -149,6 +155,8 @@ class ParserContext(object):
 
         Results in a dict suitable for use in Python contexts, where e.g. an
         arg named ``foo-bar`` becomes accessible as ``foo_bar``.
+
+        .. versionadded:: 1.0
         """
         ret = {}
         for arg in self.args.values():
@@ -162,6 +170,8 @@ class ParserContext(object):
     def help_for(self, flag):
         """
         Return 2-tuple of ``(flag-spec, help-string)`` for given ``flag``.
+
+        .. versionadded:: 1.0
         """
         # Obtain arg obj
         if flag not in self.flags:
@@ -219,6 +229,8 @@ class ParserContext(object):
             -a, --query # short flag wins
             -b, --argh
             -c
+
+        .. versionadded:: 1.0
         """
         # TODO: argument/flag API must change :(
         # having to call to_flag on 1st name of an Argument is just dumb.
@@ -235,6 +247,8 @@ class ParserContext(object):
         Similar to `help_tuples` but returns flag names only, no helpstrs.
 
         Specifically, all flag names, flattened, in rough order.
+
+        .. versionadded:: 1.0
         """
         # Regular flag names
         flags = sorted(self.flags.values(), key=flag_key)

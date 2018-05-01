@@ -39,6 +39,8 @@ class Failure(Exception):
     This class is only rarely raised by itself; most of the time `.Runner.run`
     (or a wrapper of same, such as `.Context.sudo`) will raise a specific
     subclass like `UnexpectedExit` or `AuthFailure`.
+
+    .. versionadded:: 1.0
     """
     def __init__(self, result, reason=None):
         self.result = result
@@ -64,6 +66,8 @@ class UnexpectedExit(Failure):
     - The last 10 lines of stdout, if it was hidden;
     - The last 10 lines of stderr, if it was hidden and non-empty (e.g.
       pty=False; when pty=True, stderr never happens.)
+
+    .. versionadded:: 1.0
     """
     def __str__(self):
         already_printed = ' already printed'
@@ -117,6 +121,8 @@ class AuthFailure(Failure):
         `.Result` objects attached to these exceptions typically lack exit code
         information, since the command was never fully executed - the exception
         was raised instead.
+
+    .. versionadded:: 1.0
     """
     def __init__(self, result, prompt):
         self.result = result
@@ -132,6 +138,8 @@ class ParseError(Exception):
     An error arising from the parsing of command-line flags/arguments.
 
     Ambiguous input, invalid task names, invalid flags, etc.
+
+    .. versionadded:: 1.0
     """
     def __init__(self, msg, context=None):
         super(ParseError, self).__init__(msg)
@@ -155,6 +163,8 @@ class Exit(Exception):
     If ``message`` (a string) given, it is printed to standard error, and the
     program exits with code ``1`` by default (unless overridden by also giving
     ``code`` explicitly.)
+
+    .. versionadded:: 1.0
     """
     def __init__(self, message=None, code=None):
         self.message = message
@@ -175,6 +185,8 @@ class PlatformError(Exception):
     module.
 
     Typically used to present a clearer error message to the user.
+
+    .. versionadded:: 1.0
     """
     pass
 
@@ -182,6 +194,8 @@ class PlatformError(Exception):
 class AmbiguousEnvVar(Exception):
     """
     Raised when loading env var config keys has an ambiguous target.
+
+    .. versionadded:: 1.0
     """
     pass
 
@@ -192,6 +206,8 @@ class UncastableEnvVar(Exception):
 
     E.g. trying to stuff ``MY_VAR="foo"`` into ``{'my_var': ['uh', 'oh']}``
     doesn't make any sense until/if we implement some sort of transform option.
+
+    .. versionadded:: 1.0
     """
     pass
 
@@ -199,6 +215,8 @@ class UncastableEnvVar(Exception):
 class UnknownFileType(Exception):
     """
     A config file of an unknown type was specified and cannot be loaded.
+
+    .. versionadded:: 1.0
     """
     pass
 
@@ -234,6 +252,8 @@ class ThreadException(Exception):
     .. note::
         Threads which did not encounter an exception, do not contribute to this
         exception object and thus are not present inside `exceptions`.
+
+    .. versionadded:: 1.0
     """
     #: A tuple of `ExceptionWrappers <invoke.util.ExceptionWrapper>` containing
     #: the initial thread constructor kwargs (because `threading.Thread`
@@ -285,6 +305,8 @@ class WatcherError(Exception):
     `.Runner` catches these and attaches them to `.Failure` exceptions so they
     can be referenced by intermediate code and/or act as extra info for end
     users.
+
+    .. versionadded:: 1.0
     """
     pass
 
@@ -295,5 +317,7 @@ class ResponseNotAccepted(WatcherError):
 
     Mostly used by `.FailingResponder` and subclasses, e.g. "oh dear I
     autosubmitted a sudo password and it was incorrect."
+
+    .. versionadded:: 1.0
     """
     pass

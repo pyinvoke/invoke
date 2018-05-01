@@ -29,6 +29,8 @@ class Context(DataProxy):
     Instances of `.Context` may be shared between tasks when executing
     sub-tasks - either the same context the caller was given, or an altered
     copy thereof (or, theoretically, a brand new one).
+
+    .. versionadded:: 1.0
     """
     def __init__(self, config=None):
         """
@@ -84,6 +86,8 @@ class Context(DataProxy):
 
         See `.Runner.run` for details on ``command`` and the available keyword
         arguments.
+
+        .. versionadded:: 1.0
         """
         runner = self.config.runners.local(self)
         return self._run(runner, command, **kwargs)
@@ -156,6 +160,8 @@ class Context(DataProxy):
 
         :param str password: Runtime override for ``sudo.password``.
         :param str user: Runtime override for ``sudo.user``.
+
+        .. versionadded:: 1.0
         """
         runner = self.config.runners.local(self)
         return self._sudo(runner, command, **kwargs)
@@ -280,6 +286,8 @@ class Context(DataProxy):
             $ workon myenv && source /some/script && touch a_file
 
         Contrived, but hopefully illustrative.
+
+        .. versionadded:: 1.0
         """
         self.command_prefixes.append(command)
         yield
@@ -289,6 +297,8 @@ class Context(DataProxy):
     def cwd(self):
         """
         Return the current working directory, accounting for uses of `cd`.
+
+        .. versionadded:: 1.0
         """
         if not self.command_cwds:
             # TODO: should this be None? Feels cleaner, though there may be
@@ -345,6 +355,8 @@ class Context(DataProxy):
         .. note::
             Space characters will be escaped automatically to make dealing with
             such directory names easier.
+
+        .. versionadded:: 1.0
         """
         self.command_cwds.append(path)
         yield
@@ -361,6 +373,8 @@ class MockContext(Context):
         Methods not given `Results <.Result>` to yield will raise
         ``NotImplementedError`` if called (since the alternative is to call the
         real underlying method - typically undesirable when mocking.)
+
+        .. versionadded:: 1.0
     """
     def __init__(self, config=None, **kwargs):
         """
@@ -463,6 +477,8 @@ class MockContext(Context):
 
         `set_result_for` is mostly useful for modifying an already-instantiated
         `MockContext`, such as one created by test setup or helper methods.
+
+        .. versionadded:: 1.0
         """
         attname = '__{}'.format(attname)
         heck = TypeError(

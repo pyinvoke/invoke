@@ -35,6 +35,8 @@ class Parser(object):
     any unknown contexts result in a parse error exception. If ``True``,
     encountering an unknown context halts parsing and populates the return
     value's ``.unparsed`` attribute with the remaining parse tokens.
+
+    .. versionadded:: 1.0
     """
     def __init__(self, contexts=(), initial=None, ignore_unknown=False):
         self.initial = initial
@@ -68,6 +70,8 @@ class Parser(object):
         Bad::
 
             Parser(...).parse_argv(['invoke', '--core-opt', ...])
+
+        .. versionadded:: 1.0
         """
         machine = ParseMachine(initial=self.initial, contexts=self.contexts,
             ignore_unknown=self.ignore_unknown)
@@ -333,6 +337,8 @@ class ParseMachine(StateMachine):
     def check_ambiguity(self, value):
         """
         Guard against ambiguity when current flag takes an optional value.
+
+        .. versionadded:: 1.0
         """
         # No flag is currently being examined, or one is but it doesn't take an
         # optional value? Ambiguity isn't possible.
@@ -403,6 +409,8 @@ class ParseResult(list):
     Specifically, a ``.remainder`` attribute, which is the string found after a
     ``--`` in any parsed argv list; and an ``.unparsed`` attribute, a list of
     tokens that were unable to be parsed.
+
+    .. versionadded:: 1.0
     """
     def __init__(self, *args, **kwargs):
         super(ParseResult, self).__init__(*args, **kwargs)

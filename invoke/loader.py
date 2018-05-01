@@ -10,6 +10,8 @@ from .util import debug
 class Loader(object):
     """
     Abstract class defining how to find/import a session's base `.Collection`.
+
+    .. versionadded:: 1.0
     """
     def __init__(self, config=None):
         """
@@ -34,6 +36,8 @@ class Loader(object):
         ``description``.)
 
         For a sample implementation, see `.FilesystemLoader`.
+
+        .. versionadded:: 1.0
         """
         raise NotImplementedError
 
@@ -53,6 +57,8 @@ class Loader(object):
             Two-tuple of ``(module, directory)`` where ``module`` is the
             collection-containing Python module object, and ``directory`` is
             the string path to the directory the module was found in.
+
+        .. versionadded:: 1.0
         """
         if name is None:
             name = self.config.tasks.collection_name
@@ -84,6 +90,8 @@ class FilesystemLoader(Loader):
     Loads Python files from the filesystem (e.g. ``tasks.py``.)
 
     Searches recursively towards filesystem root from a given start point.
+
+    .. versionadded:: 1.0
     """
     # TODO: could introduce config obj here for transmission to Collection
     # TODO: otherwise Loader has to know about specific bits to transmit, such

@@ -29,6 +29,8 @@ class Argument(object):
     :param attr_name:
         A Python identifier/attribute friendly name, typically filled in with
         the underscored version when ``name``/``names`` contain dashes.
+
+    .. versionadded:: 1.0
     """
     def __init__(
         self,
@@ -95,6 +97,8 @@ class Argument(object):
 
         Will be ``attr_name`` (if given to constructor) or the first name in
         ``names`` otherwise.
+
+        .. versionadded:: 1.0
         """
         return self.attr_name or self.names[0]
 
@@ -131,6 +135,8 @@ class Argument(object):
           ``self.value`` instead of cast & overwritten.
         - ``self.incrementable==True``, in which case the value is ignored and
           the current (assumed int) value is simply incremented.
+
+        .. versionadded:: 1.0
         """
         self.raw_value = value
         # Default to do-nothing/identity function

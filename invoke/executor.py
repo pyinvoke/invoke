@@ -12,6 +12,8 @@ class Executor(object):
 
     Subclasses may override various extension points to change, add or remove
     behavior.
+
+    .. versionadded:: 1.0
     """
     def __init__(self, collection, config=None, core=None):
         """
@@ -82,6 +84,8 @@ class Executor(object):
             example, in a collection with a ``build`` task depending on another
             task named ``setup``, executing ``build`` will result in a dict
             with two keys, one for ``build`` and one for ``setup``.
+
+        .. versionadded:: 1.0
         """
         # Normalize input
         debug("Examining top level tasks {!r}".format([x for x in tasks]))
@@ -139,6 +143,8 @@ class Executor(object):
         Transform arbitrary task list w/ various types, into `.Call` objects.
 
         See docstring for `~.Executor.execute` for details.
+
+        .. versionadded:: 1.0
         """
         calls = []
         for task in tasks:
@@ -163,6 +169,8 @@ class Executor(object):
         :param calls: An iterable of `.Call` objects representing tasks.
 
         :returns: A list of `.Call` objects.
+
+        .. versionadded:: 1.0
         """
         deduped = []
         debug("Deduplicating tasks...")
@@ -184,6 +192,8 @@ class Executor(object):
         Subclasses may wish to do other things in addition (or instead of) the
         above, such as multiplying the `calls <.Call>` by argument vectors or
         similar.
+
+        .. versionadded:: 1.0
         """
         ret = []
         for call in calls:
