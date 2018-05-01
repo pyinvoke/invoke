@@ -2,6 +2,13 @@
 Changelog
 =========
 
+* :bug:`-` Removed an old, unused and untested (but, regrettably, documented
+  and public) method that doesn't seem to be much use:
+  `invoke.config.Config.paths`. Please reach out if you were actually using it
+  and we may consider adding some form of it back.
+
+  .. warning:: This is a backwards incompatible change.
+
 * :bug:`-` Tweaked the innards of
   `~invoke.config.Config`/`~invoke.config.DataProxy` to prevent accessing
   properties & other attributes' values during ``__setattr__`` (the code in

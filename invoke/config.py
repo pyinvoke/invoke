@@ -884,20 +884,6 @@ class Config(DataProxy):
             data[key] = value
         return data
 
-    @property
-    def paths(self):
-        """
-        An iterable of all successfully loaded config file paths.
-
-        No specific order.
-        """
-        paths = []
-        for prefix in "system user project runtime".split():
-            value = getattr(self, "_{}_path".format(prefix))
-            if value is not None:
-                paths.append(value)
-        return paths
-
     def merge(self):
         """
         Merge all config sources, in order.
