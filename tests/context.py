@@ -56,6 +56,9 @@ class Context_:
         def sudo(self):
             self._expect_attr('sudo')
 
+        def local_environ(self):
+            self._expect_attr('local_environ')
+
     class configuration_proxy:
         "Dict-like proxy for self.config"
         def setup(self):
@@ -184,6 +187,41 @@ class Context_:
             cmd = "cd foo && source venv && whoami"
             assert runner.run.called, "run() never called runner.run()!"
             assert runner.run.call_args[0][0] == cmd
+
+    class local_environ:
+
+        @patch.dict(os.environ, clear=True)
+        def local_environ_should_restore_all(self, environ):
+            c = Context()
+
+            assert 'foo' not in os.environ
+            os.environ['foo2'] = 'bar2'
+
+            with c.local_environ():
+                os.environ['foo'] = 'bar'
+                os.environ['foo2'] = 'baz'
+
+                assert os.environ['foo'] == 'bar'
+                assert os.environ['foo2'] == 'baz'
+
+            assert 'foo' not in os.environ
+            assert os.environ['foo2'] == 'bar2'
+
+        @patch.dict(os.environ, clear=True)
+        def local_environ_should_not_restore_all(self, environ):
+            c = Context()
+
+            os.environ['stays'] = 'here'
+            os.environ['foo'] = 'bar'
+            with c.local_environ(restore_all=False, foo='baz', foo2='bar2'):
+                assert os.environ['stays'] == 'here'
+                assert os.environ['foo'] == 'baz'
+                assert os.environ['foo2'] == 'bar2'
+
+            assert os.environ['stays'] == 'here'
+            assert os.environ['foo'] == 'bar'
+            assert 'foo2' not in os.environ
+
 
     class prefix:
         def setup(self):
