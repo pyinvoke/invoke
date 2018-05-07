@@ -135,6 +135,12 @@ class Task_:
         t3 = Task(_func, name='bar')
         assert t1 != t3
 
+    class function_like_behavior:
+        # Things that help them eg show up in autodoc easier
+        def inherits_module_from_body(self):
+            mytask = Task(_func, name='funky')
+            assert mytask.__module__ is _func.__module__
+
     class attributes:
         def has_default_flag(self):
             assert Task(_func).is_default is False

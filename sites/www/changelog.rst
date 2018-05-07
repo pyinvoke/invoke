@@ -2,6 +2,9 @@
 Changelog
 =========
 
+* :feature:`-` Updated `~invoke.task.Task` to mimic the wrapped function's
+  ``__module__`` attribute, allowing for better interaction with things like
+  Sphinx autodoc that attempt to filter out imported objects from a module.
 * :bug:`-` Removed an old, unused and untested (but, regrettably, documented
   and public) method that doesn't seem to be much use:
   `invoke.config.Config.paths`. Please reach out if you were actually using it

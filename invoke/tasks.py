@@ -26,6 +26,15 @@ class Task(object):
     """
     Core object representing an executable task & its argument specification.
 
+    For the most part, this object is a clearinghouse for all of the data that
+    may be supplied to the `@task <invoke.tasks.task>` decorator, such as
+    ``name``, ``aliases``, ``positional`` etc, which appear as attributes.
+
+    In addition, instantiation copies some introspection/documentation friendly
+    metadata off of the supplied ``body`` object, such as ``__doc__``,
+    ``__name__`` and ``__module__``, allowing it to "appear as" ``body`` for
+    most intents and purposes.
+
     .. versionadded:: 1.0
     """
     # TODO: store these kwarg defaults central, refer to those values both here
@@ -52,9 +61,11 @@ class Task(object):
     ):
         # Real callable
         self.body = body
-        # Must copy doc/name here because Sphinx is stupid about properties.
+        # Copy a bunch of special properties from the body for the benefit of
+        # Sphinx autodoc or other introspectors.
         self.__doc__ = getattr(body, '__doc__', '')
         self.__name__ = getattr(body, '__name__', '')
+        self.__module__ = getattr(body, '__module__', '')
         # Default name, alternate names, and whether it should act as the
         # default for its parent collection
         self._name = name
