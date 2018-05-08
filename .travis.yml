@@ -65,7 +65,7 @@ script:
   # I have this in my git pre-push hook, but contributors probably don't
   - flake8
   # Test distribution builds.
-  - inv travis.test-packaging --package=invoke --sanity="inv --list"
+  - inv travis.test-packaging --package=invoke --sanity="inv --list" --alt-python=alt_env/bin/python
 after_success:
   # Upload coverage data to codecov
   - codecov
