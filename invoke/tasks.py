@@ -465,3 +465,12 @@ def call(task, *args, **kwargs):
     .. versionadded:: 1.0
     """
     return Call(task=task, args=args, kwargs=kwargs)
+
+
+def satisfies_minversion(version):
+    """
+    Returns True when invoke's version is greater than or equal to `version`.
+    """
+    from pkg_resources import parse_version
+    from ._version import __version__ as invoke_version
+    return parse_version(invoke_version) >= parse_version(version)
