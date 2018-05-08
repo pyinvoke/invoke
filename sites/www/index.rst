@@ -21,5 +21,5 @@ the site content.
     FAQs <faq>
     installing
     development
-    prior_art
+    prior-art
     contact
