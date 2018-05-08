@@ -117,7 +117,7 @@ not the one Invoke is running under - performing unwanted buffering of its
 output streams. It does this when it thinks it's being called in a
 non-interactive fashion.
 
-The fix is simple - force Invoke to run the command in a pseudoterminal by
+The fix is to force Invoke to run the command in a pseudoterminal by
 saying ``pty=True`` (e.g. ``run("python foo", pty=True)``).
 
 Alternately, since both Invoke and the inner command are Python, you could try
@@ -144,7 +144,7 @@ at the end of a `~invoke.run` call will result in Invoke halting execution &
 exiting with that same code. Some programs (pylint, Nagios check scripts,
 etc) use exit codes to indicate non-fatal status, which can be confusing.
 
-The solution here is simple: add ``warn=True`` to your `~invoke.run` call,
+The solution here is to add ``warn=True`` to your `~invoke.run` call,
 which disables the automatic exit behavior. Then you can check the result's
 ``.exited`` attribute by hand to determine if it truly succeeded.
 

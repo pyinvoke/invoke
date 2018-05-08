@@ -252,7 +252,7 @@ However, ambiguity is introduced when the settings names themselves contain
 underscores: is ``INVOKE_FOO_BAR=baz`` equivalent to ``{'foo': {'bar':
 'baz'}}``, or to ``{'foo_bar': 'baz'}``? Thankfully, because env vars can only
 be used to modify settings declared at the Python level or in config files, we
-simply look at the current state of the config to determine the answer.
+look at the current state of the config to determine the answer.
 
 There is still a corner case where *both* possible interpretations exist as
 valid config paths (e.g. ``{'foo': {'bar': 'default'}, 'foo_bar':
@@ -357,9 +357,9 @@ Configuring via task collection
 -------------------------------
 
 The configuration `setting <.Collection.configure>` and `getting
-<.Context.config>` APIs make it easy to move otherwise 'hardcoded' default
-values into a config structure which downstream users are free to redefine.
-Let's apply this to our example. First we add an explicit namespace object::
+<.Context.config>` APIs enable moving otherwise 'hardcoded' default values into
+a config structure which downstream users are free to redefine. Let's apply
+this to our example. First we add an explicit namespace object::
 
     from invoke import Collection, task
 
@@ -418,7 +418,7 @@ that does this::
     # Add 'docs' to our local root namespace, plus our own task
     ns = Collection(mylocaltask, docs)
 
-And then they can simply add this to the bottom::
+And then they can add this to the bottom::
 
     # Our docs live in 'built_docs', not 'docs/_build'
     ns.configure({'sphinx': {'target': "built_docs"}})

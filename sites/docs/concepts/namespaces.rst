@@ -83,7 +83,7 @@ The result::
 
 .. note::
     The ``name`` kwarg is the 2nd argument to `~.Collection.add_task`, so those
-    in a hurry can simply say::
+    in a hurry can phrase it as::
 
         ns.add_task(release, 'deploy')
 
@@ -310,8 +310,8 @@ best fits your needs.
 For example, let's say you wanted to keep things organized into submodules, but
 wanted to "promote" ``release.release`` back to the top level for convenience's
 sake. Just because it's stored in a module doesn't mean we must use
-``add_collection`` -- simply import the task itself and use ``add_task``
-directly::
+``add_collection`` -- we could instead import the task itself and use
+``add_task`` directly::
 
     from invoke import Collection
 

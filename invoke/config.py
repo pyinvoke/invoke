@@ -375,8 +375,8 @@ class Config(DataProxy):
     part of its execution `.Context`.
 
     Any modifications made directly to the `.Config` itself after this point
-    end up stored in their own (topmost) config level, making it easy to debug
-    final values.
+    end up stored in their own (topmost) config level, making it easier to
+    debug final values.
 
     Finally, any *deletions* made to the `.Config` (e.g. applications of
     dict-style mutators like ``pop``, ``clear`` etc) are also tracked in their
