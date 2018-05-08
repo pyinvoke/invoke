@@ -73,7 +73,7 @@ notifications:
   irc:
     channels: "irc.freenode.org#invoke"
     template:
-      - "%{repository}@%{branch}: %{message} (%{build_url})"
+      - "%{repository_name}@%{branch}: %{message} (%{build_url})"
     on_success: change
     on_failure: change
   email: false
