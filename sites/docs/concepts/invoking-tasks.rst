@@ -61,14 +61,39 @@ Tasks may take parameters in the form of flag arguments::
 Note that both long and short style flags are supported, and that equals signs
 are optional in both cases.
 
-Boolean options are simple flags with no arguments, which turn the Python level
-values from ``False`` to ``True``::
+Boolean options are simple flags with no arguments::
 
     $ inv build --progress-bar
 
 Naturally, more than one flag may be given at a time::
 
     $ inv build --progress-bar -f pdf
+
+Type casting
+------------
+
+Natively, a command-line string is just that -- a string -- requiring some
+leaps of logic to arrive at any non-string values on the Python end. Invoke has
+a number of these tricks already at hand, and more will be implemented in the
+future. Currently:
+
+- Arguments with default values use those default values as a type hint, so
+  ``def mytask(c, count=1)`` will see ``inv mytask --count=5`` and result in
+  the Python integer value ``5`` instead of the string ``"5"``.
+
+    - Default values of ``None`` are effectively the same as having no default
+      value at all - no type casting occurs and you're left with a string.
+
+- The primary exception to the previous rule is booleans: default values of
+  ``True`` or ``False`` cause those arguments to show up as actual
+  non-value-taking flags (``--argname`` to set the value to ``True`` if the
+  default was ``False``, or ``--no-argment`` in the opposite case).
+- List values (which you wouldn't want to set as an argument's default value
+  anyways -- it's a common Python misstep) are served by a special ``@task``
+  flag - see :ref:`iterable-flag-values` below.
+- There's currently no way to set other compound values (such as dicts) on
+  the command-line; solving this more complex problem is left as an exercise to
+  the reader (though we may add helpers for such things in the future).
 
 Per-task help / printing available flags
 ----------------------------------------

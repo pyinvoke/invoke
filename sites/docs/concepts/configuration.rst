@@ -207,8 +207,6 @@ more on this.
 Type casting
 ------------
 
-.. TODO: Dedupe this with the CLI type casting stuff once it is matured.
-
 Since env vars can only be used to override existing settings, the previous
 value of a given setting is used as a guide in casting the strings we get back
 from the shell:
