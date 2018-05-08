@@ -469,7 +469,7 @@ def call(task, *args, **kwargs):
 
 def satisfies_minversion(version):
     """
-    Returns True when invoke's version is greater than or equal to `version`.
+    Returns True when invoke's version is greater than or equal to version.
     """
     from pkg_resources import parse_version
     from ._version import __version__ as invoke_version
