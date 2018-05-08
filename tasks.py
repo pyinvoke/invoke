@@ -65,6 +65,12 @@ ns.configure({
         'logformat': LOG_FORMAT,
         'package': 'invoke',
     },
+    'travis': {
+        'sudo': {
+            'user': 'sudouser',
+            'password': 'mypass',
+        },
+    },
     'packaging': {
         'sign': True,
         'wheel': True,
