@@ -140,15 +140,18 @@ You'll see the command's output in your terminal as it runs::
     ...
     build succeeded, 2 warnings.
 
-`~.Context.run` returns a useful `.Result` object providing access to the
-captured output, exit code, and so forth; it also allows you to activate a PTY,
-hide output (so it is captured only), and more. See `its API docs
-<.Context.run>` for details.
+`~.Context.run` has a number of arguments controlling its behavior, such as
+activation of pseudo-terminals for complex programs requiring them, suppression
+of exit-on-error behavior, hiding of subprocess' output (while still capturing
+it for later review), and more. See `its API docs <.Context.run>` for details.
+
+`~.Context.run` always returns a useful `.Result` object providing access to
+the captured output, exit code, and other information.
 
 .. _why-context:
 
-Aside: what exactly is this 'context' anyway?
----------------------------------------------
+Aside: what exactly is this 'context' arg anyway?
+-------------------------------------------------
 
 A common problem task runners face is transmission of "global" data - values
 loaded from :doc:`configuration files </concepts/configuration>` or :ref:`other
@@ -207,7 +210,7 @@ Let's first rename our ``tasks.py`` to be ``docs.py``; no other changes are
 needed there. Then we create a new ``tasks.py``, and for the sake of brevity
 populate it with a new, truly top level task called ``deploy``.
 
-Finally, we can use a new API member, the `.Collection` class, to bind this new
+Finally, we can use a new API member, the `.Collection` class, to bind this
 task and the ``docs`` module into a single explicit namespace.  When Invoke
 loads your task module, if a `.Collection` object bound as ``ns`` or
 ``namespace`` exists it will get used for the root namespace::
@@ -217,7 +220,8 @@ loads your task module, if a `.Collection` object bound as ``ns`` or
 
     @task
     def deploy(c):
-        c.run("python setup.py sdist register upload")
+        c.run("python setup.py sdist")
+        c.run("twine upload dist/*")
 
     namespace = Collection(docs, deploy)
 
