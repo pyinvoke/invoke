@@ -13,8 +13,6 @@
 Core options and flags
 ======================
 
-.. TODO: autodoc-like ext that spits out option nodes automatically
-
 ``invoke``'s usage looks like::
 
     $ inv[oke] [--core-opts] task1 [--task1-opts] ... taskN [--taskN-opts]
