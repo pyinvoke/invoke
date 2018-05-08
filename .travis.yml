@@ -29,7 +29,8 @@ matrix:
     - python: "pypy3"
     - python: "3.7-dev"
     - python: "nightly"
-  fast_finish: true
+  # Disabled per https://github.com/travis-ci/travis-ci/issues/1696
+  # fast_finish: true
 install:
   # For some reason Travis' build envs have wildly different pip/setuptools
   # versions between minor Python versions, and this can cause many hilarious
