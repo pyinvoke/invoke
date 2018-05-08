@@ -8,7 +8,9 @@ following ways:
   <http://contribution-guide.org>`_, then check out our `GitHub page
   <https://github.com/pyinvoke/invoke>`_.
 * IRC: ``#invoke`` on Freenode
-* Twitter: `@pyinvoke <https://twitter.com/pyinvoke>`_
+* Twitter: `@pyinvoke <https://twitter.com/pyinvoke>`_ (unfortunately not
+  updated as frequently as we'd like - you might also want to follow
+  `@bitprophet <https://twitter.com/bitprophet>`_.
 * Mailing list: ``invoke@librelist.com`` (see `the LibreList homepage
   <http://librelist.com>`_ for usage details).
 * Blog: TK
