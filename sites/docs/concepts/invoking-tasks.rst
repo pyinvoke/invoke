@@ -87,7 +87,8 @@ future. Currently:
 - The primary exception to the previous rule is booleans: default values of
   ``True`` or ``False`` cause those arguments to show up as actual
   non-value-taking flags (``--argname`` to set the value to ``True`` if the
-  default was ``False``, or ``--no-argment`` in the opposite case).
+  default was ``False``, or ``--no-argment`` in the opposite case). See
+  :ref:`boolean-flags` for more examples.
 - List values (which you wouldn't want to set as an argument's default value
   anyways -- it's a common Python misstep) are served by a special ``@task``
   flag - see :ref:`iterable-flag-values` below.
@@ -314,6 +315,8 @@ ends up mapping to ``--my-option``.
 In addition, leading (``_myopt``) and trailing (``myopt_``) underscores are
 ignored, since ``invoke ---myopt`` and ``invoke --myopt-`` don't make much
 sense.
+
+.. _boolean-flags:
 
 Automatic Boolean inverse flags
 -------------------------------

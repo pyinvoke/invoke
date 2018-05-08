@@ -2,7 +2,7 @@
 Using Invoke as a library
 =========================
 
-While most of its documentation involves the user/CLI facing use cases of task
+While most of our documentation involves the user/CLI facing use cases of task
 management and command execution, Invoke was designed for its constituent parts
 to be usable independently by advanced users - either out of the box or with a
 minimum of extra work. CLI parsing, subprocess command execution, task

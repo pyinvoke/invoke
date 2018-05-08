@@ -416,9 +416,10 @@ class Collection(object):
         """
         Transform ``name`` with the configured auto-dashes behavior.
 
-        If ``auto_dash_names`` is ``True`` (default), all non leading/trailing
-        underscores are turned into dashes. (Leading/trailing underscores tend
-        to get stripped elsewhere in the stack.)
+        If the collection's ``auto_dash_names`` attribute is ``True``
+        (default), all non leading/trailing underscores are turned into dashes.
+        (Leading/trailing underscores tend to get stripped elsewhere in the
+        stack.)
 
         If it is ``False``, the inverse is applied - all dashes are turned into
         underscores.
