@@ -64,13 +64,13 @@ for example::
     def hi(c, name):
         print("Hi {}!".format(name))
 
-It can be invoked in the following ways, all resulting in "Hi Jeff!"::
+It can be invoked in the following ways, all resulting in "Hi Name!"::
 
-    $ invoke hi Jeff
-    $ invoke hi --name Jeff
-    $ invoke hi --name=Jeff
-    $ invoke hi -n Jeff
-    $ invoke hi -nJeff
+    $ invoke hi Name
+    $ invoke hi --name Name
+    $ invoke hi --name=Name
+    $ invoke hi -n Name
+    $ invoke hi -nName
 
 Adding metadata via `@task <.task>`
 -----------------------------------
