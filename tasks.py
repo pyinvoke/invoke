@@ -3,6 +3,7 @@ import os
 from invoke import Collection, task
 from invoke.util import LOG_FORMAT
 
+from invocations import travis
 from invocations.docs import docs, www, sites, watch_docs
 from invocations.pytest import coverage as coverage_, test as test_
 from invocations.packaging import vendorize, release
@@ -57,7 +58,7 @@ def coverage(c, report='term', opts=''):
 
 ns = Collection(
     test, coverage, integration, vendorize, release, www, docs, sites,
-    watch_docs,
+    watch_docs, travis,
 )
 ns.configure({
     'tests': {
