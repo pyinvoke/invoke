@@ -25,7 +25,7 @@ for anywhere in the command line.
 
     Print (line-separated) valid tab-completion options for an Invoke command
     line given as the 'remainder' (i.e. after a ``--``). Used for building
-    shell completion scripts.
+    :ref:`shell completion scripts <tab-completion>`.
 
     For example, when the local tasks tree contains tasks named ``foo`` and
     ``bar``, and when ``foo`` takes flags ``--foo-arg`` and ``--foo-arg-2``,
@@ -46,7 +46,7 @@ for anywhere in the command line.
         --foo-arg
         --foo-arg-2
 
-    For more details on how to use this option, see the bundled completion
+    For detailed examples of how to use this option, see the bundled completion
     scripts stored in ``completion/`` in the source distribution.
 
 .. option:: --hide=STRING
@@ -154,12 +154,17 @@ for anywhere in the command line.
     Warn, instead of failing, when shell commands fail.
 
 
+.. _tab-completion:
+
 Shell tab completion
 ====================
 
-Invoke ships with some shell completion scripts, which leverage a core CLI
-mechanism suitable for use in custom completion scripts as well. If you're
-using Bash or Zsh, simply do the following:
+Invoke's philosophy is to implement generic APIs and then "bake in" a few
+common use cases built on top of those APIs, and tab completion is no
+different. Generic tab completion functionality is provided by the
+:option:`--complete` core CLI option described above, and we distribute a
+handful of ready-made wrapper scripts aimed at the most common shells such as
+``bash`` and ``zsh`` (plus others). To use one of these scripts:
 
 * Obtain the source distribution, or visit the ``/completion/`` folder `on Github
   <https://github.com/pyinvoke/invoke/blob/master/completion/>`_, and place a
