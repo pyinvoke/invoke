@@ -15,7 +15,9 @@ from invoke import (
 from invoke import main
 from invoke.util import cd
 
-from _util import load, expect, skip_if_windows, run, support_file
+from _util import (
+    load, expect, skip_if_windows, run, support_file, support_path,
+)
 
 
 ROOT = os.path.abspath(os.path.sep)
@@ -413,6 +415,8 @@ Core options:
                                     parse remainder.
   --hide=STRING                     Set default value of run()'s 'hide' kwarg.
   --no-dedupe                       Disable task deduplication.
+  --prompt-for-sudo-password        Prompt user at start of session for the
+                                    sudo.password config value.
   --write-pyc                       Enable creation of .pyc files.
   -c STRING, --collection=STRING    Specify collection name to load.
   -d, --debug                       Enable debug output.
@@ -1197,3 +1201,20 @@ post2
                 env_prefix = 'MYAPP'
             p = Program(config_class=MyConf)
             p.run('inv -c contextualized check-hide')
+
+
+    class other_behavior:
+        @patch('invoke.program.getpass.getpass')
+        def sudo_prompt_up_front(self, getpass):
+            # Task under test makes expectations re: sudo config (doesn't
+            # actually even sudo, sudo's use of config is tested in Config
+            # tests)
+            with support_path():
+                try:
+                    Program().run("inv --prompt-for-sudo-password -c sudo_prompt expect-config") # noqa
+                except SystemExit as e:
+                    # If inner call failed, we'll already have seen its output,
+                    # and this will just ensure we ourselves are marked failed
+                    assert e.code == 0
+            # Sanity check that getpass spat out desired prompt
+            getpass.assert_called_once_with("Desired 'sudo.password' config value: ")

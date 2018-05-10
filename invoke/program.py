@@ -1,5 +1,6 @@
 from __future__ import unicode_literals, print_function
 
+import getpass
 import inspect
 import json
 import os
@@ -50,6 +51,12 @@ class Program(object):
                 kind=bool,
                 default=False,
                 help="Enable debug output.",
+            ),
+            Argument(
+                names=('prompt-for-sudo-password',),
+                kind=bool,
+                default=False,
+                help="Prompt user at start of session for the sudo.password config value.", # noqa
             ),
             Argument(
                 names=('write-pyc',),
