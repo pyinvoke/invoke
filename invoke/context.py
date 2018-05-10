@@ -362,6 +362,63 @@ class Context(DataProxy):
         yield
         self.command_cwds.pop()
 
+    @contextmanager
+    def local_environ(self, restore_all=True, **kwargs):
+        """
+        Context manager that saves and restores local environ state.
+
+        A copy of ``os.environ`` is made and then restored once the block has
+        completed.
+
+        :param bool restore_all: If ``False``, only save and restore environ
+            values that were passed in as keyword arguments. Default: ``True``
+
+        Keyword arguments can be passed in as a convenience to immediately
+        modify specific environ values.
+
+        Typical usage::
+
+            os.environ['MY_ENVVAR'] = 'my value'
+            os.environ['YOUR_ENVVAR'] = 'your value'
+
+            with local_environ(YOUR_ENVVAR='other value'):
+                os.environ['MY_ENVVAR'] = 'other value'
+
+            # All environ values are restored
+            assert os.environ['MY_ENVVAR'] == 'my value'
+            assert os.environ['YOUR_ENVVAR'] == 'your value'
+
+        Alternatively, ``local_envvar`` can modify and restore just specific
+        environ values by setting ``restore_all`` to ``False``::
+
+            os.environ['MY_ENVVAR'] = 'my value'
+            os.environ['YOUR_ENVVAR'] = 'your value'
+
+            with local_environ(restore_all=False, YOUR_ENVVAR='other value'):
+                os.environ['MY_ENVVAR'] = 'other value'
+
+            # Only environ values in keyword args are restore
+            assert os.environ['MY_ENVVAR'] == 'other value'
+            assert os.environ['YOUR_ENVVAR'] == 'your value'
+
+        .. versionadded:: 1.0
+        """
+        previous = os.environ.copy()
+        os.environ.update(kwargs)
+
+        yield
+
+        if restore_all:
+            os.environ.clear()
+            os.environ.update(previous)
+        else:
+            for name in kwargs.keys():
+                if name not in previous:
+                    del os.environ[name]
+                else:
+                    os.environ[name] = previous[name]
+
+
 
 class MockContext(Context):
     """

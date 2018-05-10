@@ -19,14 +19,6 @@ logging.basicConfig(level=logging.INFO)
 
 
 @pytest.fixture
-def environ():
-    old_environ = os.environ.copy()
-    yield
-    os.environ.clear()
-    os.environ.update(old_environ)
-
-
-@pytest.fixture
 def chdir_support():
     # Always do things relative to tests/_support
     os.chdir(support)
