@@ -1218,4 +1218,5 @@ post2
                     # and this will just ensure we ourselves are marked failed
                     assert e.code == 0
             # Sanity check that getpass spat out desired prompt
-            getpass.assert_called_once_with("Desired 'sudo.password' config value: ")
+            prompt = "Desired 'sudo.password' config value: "
+            getpass.assert_called_once_with(prompt)
