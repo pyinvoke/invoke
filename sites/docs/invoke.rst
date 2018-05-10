@@ -57,6 +57,13 @@ for anywhere in the command line.
 
     Disable task deduplication.
 
+.. option:: --write-pyc
+
+    By default, Invoke disables bytecode caching as it can cause hard-to-debug
+    problems with task files and (for the kinds of things Invoke is typically
+    used for) offers no noticeable speed benefit. If you really want your
+    ``.pyc`` files back, give this option.
+
 .. option:: -c STRING, --collection=STRING
 
     Specify collection name to load.
