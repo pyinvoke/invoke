@@ -8,14 +8,15 @@ Changelog
 * :feature:`-` Updated `~invoke.task.Task` to mimic the wrapped function's
   ``__module__`` attribute, allowing for better interaction with things like
   Sphinx autodoc that attempt to filter out imported objects from a module.
-* :bug:`-` Removed an old, unused and untested (but, regrettably, documented
-  and public) method that doesn't seem to be much use:
+* :bug:`- major` Removed an old, unused and untested (but, regrettably,
+  documented and public) method that doesn't seem to be much use:
   `invoke.config.Config.paths`. Please reach out if you were actually using it
   and we may consider adding some form of it back.
 
-  .. warning:: This is a backwards incompatible change.
+  .. warning::
+    This is a backwards incompatible change if you were using ``Config.paths``.
 
-* :bug:`-` Tweaked the innards of
+* :bug:`- major` Tweaked the innards of
   `~invoke.config.Config`/`~invoke.config.DataProxy` to prevent accessing
   properties & other attributes' values during ``__setattr__`` (the code in
   question only needed the names). This should have no noticeable effect on
