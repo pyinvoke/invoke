@@ -57,6 +57,15 @@ for anywhere in the command line.
 
     Disable task deduplication.
 
+.. _prompt-for-sudo-password:
+
+.. option:: --prompt-for-sudo-password
+
+    Prompt at the start of the session (before executing any tasks) for the
+    ``sudo.password`` configuration value. This allows users who don't want to
+    keep sensitive material in the config system or their shell environment to
+    rely on user input, without otherwise interrupting the flow of the program.
+
 .. option:: --write-pyc
 
     By default, Invoke disables bytecode caching as it can cause hard-to-debug

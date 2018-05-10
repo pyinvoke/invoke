@@ -2,8 +2,9 @@
 Changelog
 =========
 
-* :feature:`-` Added the ``--prompt-for-sudo-password`` CLI option for
-  getpass-based up-front prompting of a sensitive configuration value.
+* :feature:`-` Added the :ref:`--prompt-for-sudo-password
+  <prompt-for-sudo-password>` CLI option for getpass-based up-front prompting
+  of a sensitive configuration value.
 * :feature:`-` Updated `~invoke.task.Task` to mimic the wrapped function's
   ``__module__`` attribute, allowing for better interaction with things like
   Sphinx autodoc that attempt to filter out imported objects from a module.
