@@ -1206,6 +1206,7 @@ post2
     class other_behavior:
         @patch('invoke.program.getpass.getpass')
         def sudo_prompt_up_front(self, getpass):
+            getpass.return_value = 'mypassword'
             # Task under test makes expectations re: sudo config (doesn't
             # actually even sudo, sudo's use of config is tested in Config
             # tests)

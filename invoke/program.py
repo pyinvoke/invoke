@@ -273,7 +273,14 @@ class Program(object):
         tasks = {}
         if 'no-dedupe' in self.args and self.args['no-dedupe'].value:
             tasks['dedupe'] = False
-        self.config.load_overrides({'run': run, 'tasks': tasks}, merge=False)
+        # Handle "fill in config values at start of runtime", which for now is
+        # just sudo password
+        sudo = {}
+        if self.args['prompt-for-sudo-password'].value:
+            prompt = "Desired 'sudo.password' config value: "
+            sudo['password'] = getpass.getpass(prompt)
+        overrides = dict(run=run, tasks=tasks, sudo=sudo)
+        self.config.load_overrides(overrides, merge=False)
         self.config.set_runtime_path(self.args.config.value)
         self.config.load_runtime(merge=False)
         if merge:
