@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :release:`1.0.0 <2018-05-09>`
 * :feature:`-` Added the :ref:`--prompt-for-sudo-password
   <prompt-for-sudo-password>` CLI option for getpass-based up-front prompting
   of a sensitive configuration value.
