@@ -17,4 +17,4 @@ install:
 build: off
 
 test_script:
-  - "%PYTHON%\\Scripts\\spec.exe"
+  - "%PYTHON%\\Scripts\\inv.exe test"
