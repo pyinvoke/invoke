@@ -540,6 +540,35 @@ class Collection_:
         def exposes_aliases(self):
             assert 'mytask27' in self.aliases
 
+    class task_decorator:
+        def setup(self):
+            self.c = Collection()
+            @self.c.task
+            def atask(c, text, boolean=False, number=5):
+                pass
+
+            @self.c.task(name='arf', aliases=['alias1', 'alias2'])
+            def anothertask(c):
+                pass
+            self.anothertask = anothertask
+
+            @self.c.task(default=True)
+            def c_default(c):
+                pass
+
+        def task_added_to_collection(self):
+            assert 'atask' in self.c
+        
+        def honors_aliases(self):
+            aliases = set(reduce(operator.add, [list(x.aliases) for x in self.c.to_contexts()], []))
+            assert {'alias1', 'alias2'} == aliases
+
+        def default_param_works(self):
+            assert self.c.default == 'c-default'
+        
+        def default_name_works(self):
+            assert self.anothertask.name == 'arf'
+
     class task_names:
         def setup(self):
             self.c = Collection.from_module(load('explicit_root'))

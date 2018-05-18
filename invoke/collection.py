@@ -5,7 +5,7 @@ from .util import six, Lexicon, helpline
 
 from .config import merge_dicts, copy_dict
 from .parser import Context as ParserContext
-from .tasks import Task
+from .tasks import Task, task
 
 
 class Collection(object):
@@ -277,6 +277,69 @@ class Collection(object):
                 msg = "'{}' cannot be the default because '{}' already is!"
                 raise ValueError(msg.format(name, self.default))
             self.default = name
+    
+    def task(self, *args, **kwargs):
+        """
+        This decorator marks wrapped callable object as a valid Invoke task, and
+        adds it to the Collection instance.
+
+        May be called without any parentheses if no extra options need to be
+        specified. Otherwise, the following keyword arguments are allowed in the
+        parenthese'd form:
+
+        * ``name``: Default name to use when binding to the `Collection`. Useful for
+        avoiding Python namespace issues (i.e. when the desired CLI level name
+        can't or shouldn't be used as the Python level name.)
+        * ``aliases``: Specify one or more aliases for this task, allowing it to be
+        invoked as multiple different names. For example, a task named ``mytask``
+        with a simple ``@task`` wrapper may only be invoked as ``"mytask"``.
+        Changing the decorator to be ``@task(aliases=['myothertask'])`` allows
+        invocation as ``"mytask"`` *or* ``"myothertask"``.
+        * ``positional``: Iterable overriding the parser's automatic "args with no
+        default value are considered positional" behavior. If a list of arg
+        names, no args besides those named in this iterable will be considered
+        positional. (This means that an empty list will force all arguments to be
+        given as explicit flags.)
+        * ``optional``: Iterable of argument names, declaring those args to
+        have :ref:`optional values <optional-values>`. Such arguments may be
+        given as value-taking options (e.g. ``--my-arg=myvalue``, wherein the
+        task is given ``"myvalue"``) or as Boolean flags (``--my-arg``, resulting
+        in ``True``).
+        * ``iterable``: Iterable of argument names, declaring them to :ref:`build
+        iterable values <iterable-flag-values>`.
+        * ``incrementable``: Iterable of argument names, declaring them to
+        :ref:`increment their values <incrementable-flag-values>`.
+        * ``default``: Boolean option specifying whether this task should be the
+        collection's default task (i.e. called if the collection's own name is
+        given.)
+        * ``auto_shortflags``: Whether or not to automatically create short
+        flags from task options; defaults to True.
+        * ``help``: Dict mapping argument names to their help strings. Will be
+        displayed in ``--help`` output.
+        * ``pre``, ``post``: Lists of task objects to execute prior to, or after,
+        the wrapped task whenever it is executed.
+        * ``autoprint``: Boolean determining whether to automatically print this
+        task's return value to standard output when invoked directly via the CLI.
+        Defaults to False.
+
+        If any non-keyword arguments are given, they are taken as the value of the
+        ``pre`` kwarg for convenience's sake. (It is an error to give both
+        ``*args`` and ``pre`` at the same time.)
+
+        .. versionadded:: TODO
+        """
+        # @task -- no options were (probably) given.
+        if len(args) == 1 and callable(args[0]) and not isinstance(args[0], Task):
+            t = task(args[0])
+            self.add_task(t)
+            return t
+        # All other invocations are just task arguments, without the function to wrap:
+        def inner(f):
+            t = task(f, *args, **kwargs)
+            self.add_task(t)
+            return t
+        return inner
+        
 
     def add_collection(self, coll, name=None):
         """
