@@ -546,6 +546,7 @@ class Collection_:
             @self.c.task
             def atask(c, text, boolean=False, number=5):
                 pass
+            self.atask = atask
 
             @self.c.task(name='arf', aliases=['alias1', 'alias2'])
             def anothertask(c):
@@ -556,11 +557,16 @@ class Collection_:
             def c_default(c):
                 pass
 
+        def decorator_returns_Task(self):
+            assert isinstance(self.atask, Task)
+            assert isinstance(self.anothertask, Task)
+
         def task_added_to_collection(self):
             assert 'atask' in self.c
         
         def honors_aliases(self):
-            aliases = set(reduce(operator.add, [list(x.aliases) for x in self.c.to_contexts()], []))
+            aliases_tup = [x.aliases for x in self.c.to_contexts()]
+            aliases = set(reduce(operator.add, aliases_tup, []))
             assert {'alias1', 'alias2'} == aliases
 
         def default_param_works(self):
