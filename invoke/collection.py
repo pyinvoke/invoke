@@ -5,7 +5,7 @@ from .util import six, Lexicon, helpline
 
 from .config import merge_dicts, copy_dict
 from .parser import Context as ParserContext
-from .tasks import Task
+from .tasks import Task, Call
 
 
 class Collection(object):
@@ -112,7 +112,7 @@ class Collection(object):
             self._add_object(obj, name)
 
     def _add_object(self, obj, name=None):
-        if isinstance(obj, Task):
+        if isinstance(obj, (Task, Call)):
             method = self.add_task
         elif isinstance(obj, (Collection, types.ModuleType)):
             method = self.add_collection

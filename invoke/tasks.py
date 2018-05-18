@@ -391,9 +391,27 @@ class Call(object):
         self.args = args or tuple()
         self.kwargs = kwargs or dict()
 
-    # TODO: just how useful is this? feels like maybe overkill magic
     def __getattr__(self, name):
         return getattr(self.task, name)
+
+    # TODO: make 100% sure we truly want this and not something else:
+    # - Add it to the docs somewhere appropriate, with examples, then make sure
+    # it "looks nice" and doesn't set off alarm bells
+    # - Make sure there's no other even better way to do it, tho I suspect not
+    # - Update docs of Call itself to make clear it's kinda serving two
+    # purposes:
+    #   - Metadata-only parameterization and handing around inside Executor
+    #   (does not use __call__(), but instead references the guts independently)
+    #   - Actual straight up "pretend it is a callable Task", e.g. for
+    #   attaching things to a collection like you might with functools.partial
+    # - Is it worth solving #170 first instead? How does that (calling from
+    # inside a task) square with this (lazy evaluation/binding for later
+    # execution)?
+    def __call__(self, *args, **kwargs):
+        # TODO: this MAY want to hook into how we solve #170, instead, later?
+        # TODO: this seems like an overly naive way to merge args and kwargs;
+        # any chance we can crib from or reuse what functools.partial does?
+        return self.task(*(args + self.args), **dict(kwargs, **self.kwargs))
 
     def __deepcopy__(self, memo):
         return self.clone()
