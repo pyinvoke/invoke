@@ -262,6 +262,7 @@ def task(*args, **kwargs):
     specified. Otherwise, the following keyword arguments are allowed in the
     parenthese'd form:
 
+    * ``klass``: Determines the class to instantiate; defaults to `.Task`, and may be overridden by any subclass thereof.
     * ``name``: Default name to use when binding to a `.Collection`. Useful for
       avoiding Python namespace issues (i.e. when the desired CLI level name
       can't or shouldn't be used as the Python level name.)
@@ -301,11 +302,15 @@ def task(*args, **kwargs):
     ``pre`` kwarg for convenience's sake. (It is an error to give both
     ``*args`` and ``pre`` at the same time.)
 
+    :returns:
+        An instance of `.Task` (or the class given as ``klass``, if supplied).
+
     .. versionadded:: 1.0
     """
+    klass = kwargs.pop('klass', Task)
     # @task -- no options were (probably) given.
-    if len(args) == 1 and callable(args[0]) and not isinstance(args[0], Task):
-        return Task(args[0], **kwargs)
+    if len(args) == 1 and callable(args[0]) and not isinstance(args[0], klass):
+        return klass(args[0], **kwargs)
     # @task(pre, tasks, here)
     if args:
         if 'pre' in kwargs:
@@ -317,6 +322,7 @@ def task(*args, **kwargs):
     # TODO: pull in centrally defined defaults here (see Task)
     # TODO: clean up all of the values which are iterables, some are tuple and
     # some are None->list, ugh
+    # TODO: jesus fuck why not just use **kwargs here wtf
     name = kwargs.pop('name', None)
     aliases = kwargs.pop('aliases', ())
     positional = kwargs.pop('positional', None)
@@ -334,7 +340,7 @@ def task(*args, **kwargs):
         kwarg = (" unknown kwargs {!r}".format(kwargs)) if kwargs else ""
         raise TypeError("@task was called with" + kwarg)
     def inner(obj):
-        obj = Task(
+        obj = klass(
             obj,
             name=name,
             aliases=aliases,
