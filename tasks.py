@@ -26,6 +26,8 @@ def test(
     - setting ``verbose=False`` because we have a large number of tests and
       skipping verbose output by default is a ~20% time savings.)
     """
+    # TODO: update test suite to use c.config.run.in_stream = False globally.
+    # somehow.
     return test_(
         c, verbose=verbose, color=color, capture=capture, module=module, k=k,
         x=x, opts=opts, pty=pty,
