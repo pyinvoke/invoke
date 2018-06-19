@@ -2,6 +2,10 @@
 Changelog
 =========
 
+* :bug:`528` Around Invoke 0.23 we broke the ability to weave in subcollections
+  via keyword arguments to `~invoke.collection.Collection`, though it primarily
+  manifests as ``NoneType`` related errors during ``inv --list``. This was
+  unintentional and has been fixed. Report submitted by Tuukka Mustonen.
 * :release:`1.0.0 <2018-05-09>`
 * :feature:`-` Added the :ref:`--prompt-for-sudo-password
   <prompt-for-sudo-password>` CLI option for getpass-based up-front prompting
