@@ -665,15 +665,17 @@ class Program(object):
         getattr(self, "list_{}".format(self.list_format))()
 
     def list_flat(self):
-        pairs = self._make_pairs(self.scoped_collection, ancestors=[])
+        pairs = self._make_pairs(self.scoped_collection)
         self.display_with_columns(pairs=pairs)
 
     def list_nested(self):
-        pairs = self._make_pairs(self.scoped_collection, ancestors=[])
+        pairs = self._make_pairs(self.scoped_collection)
         extra = "'*' denotes collection defaults"
         self.display_with_columns(pairs=pairs, extra=extra)
 
-    def _make_pairs(self, coll, ancestors):
+    def _make_pairs(self, coll, ancestors=None):
+        if ancestors is None:
+            ancestors = []
         pairs = []
         indent = len(ancestors) * self.indent
         # NOTE: skip 1st ancestor as it's always the root & thus
