@@ -565,7 +565,7 @@ class Collection(object):
                 x.serialized()
                 for x in sorted(
                     self.collections.values(),
-                    key=lambda x: x.name,
+                    key=lambda x: x.name or '',
                 )
             ],
         }
