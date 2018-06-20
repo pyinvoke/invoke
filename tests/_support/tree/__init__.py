@@ -14,4 +14,8 @@ def test(c):
 
 # NOTE: using build's internal collection directly as a way of ensuring a
 # corner case (collection 'named' via local kwarg) gets tested for --list.
-ns = Collection(shell, test, deploy, provision, build=build.ns)
+# NOTE: Docstring cloning in effect to preserve the final organic looking
+# result...
+localbuild = build.ns
+localbuild.__doc__ = build.__doc__
+ns = Collection(shell, test, deploy, provision, build=localbuild)
