@@ -806,3 +806,37 @@ class Collection_:
                 from tree import build
                 coll = Collection.from_module(build)
             assert expected == coll.serialized()
+
+        def unnamed_subcollections(self):
+            subcoll = Collection()
+            named_subcoll = Collection("hello")
+            # We're binding to name 'subcoll', but subcoll itself has no .name
+            # attribute/value, which is what's being tested. When bug present,
+            # that fact will cause serialized() to die on sorted() when
+            # comparing to named_subcoll (which has a string name).
+            root = Collection(named_subcoll, subcoll=subcoll)
+            expected = dict(
+                name=None,
+                default=None,
+                help=None,
+                tasks=[],
+                collections=[
+                    # Expect anonymous first since we sort them as if their
+                    # name was the empty string.
+                    dict(
+                        tasks=[],
+                        collections=[],
+                        name=None,
+                        default=None,
+                        help=None,
+                    ),
+                    dict(
+                        tasks=[],
+                        collections=[],
+                        name="hello",
+                        default=None,
+                        help=None,
+                    ),
+                ],
+            )
+            assert expected == root.serialized()

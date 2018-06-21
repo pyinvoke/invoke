@@ -16,7 +16,7 @@
     "default": "test",
     "collections": [
         {
-            "name": "build",
+            "name": null,
             "help": "Tasks for compiling static code and assets.",
             "tasks": [
                 {

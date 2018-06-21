@@ -1044,8 +1044,8 @@ Default 'build' task: .all
                     assert self.tree == json.loads(stdout)
 
                 def honors_namespace_arg_to_list(self):
-                    stdout, _ = run("-c tree --list build --list-format=json")
-                    expected = self.by_name['build']
+                    stdout, _ = run("-c tree --list deploy --list-format=json")
+                    expected = self.by_name['deploy']
                     assert expected == json.loads(stdout)
 
                 def does_not_honor_depth_arg(self):

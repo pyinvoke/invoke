@@ -2,6 +2,15 @@
 Changelog
 =========
 
+* :bug:`528` Around Invoke 0.23 we broke the ability to weave in subcollections
+  via keyword arguments to `~invoke.collection.Collection`, though it primarily
+  manifests as ``NoneType`` related errors during ``inv --list``. This was
+  unintentional and has been fixed. Report submitted by Tuukka Mustonen.
+* :bug:`-` As part of solving :issue:`528` we found a related bug, where
+  unnamed subcollections also caused issues with ``inv --list
+  --list-format=json``. Specifically, `Collection.serialized
+  <invoke.collection.Collection.serialized>` sorts subcollections by name,
+  which is problematic when that name is ``None``. This is now fixed.
 * :release:`1.0.0 <2018-05-09>`
 * :feature:`-` Added the :ref:`--prompt-for-sudo-password
   <prompt-for-sudo-password>` CLI option for getpass-based up-front prompting
