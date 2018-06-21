@@ -678,13 +678,7 @@ class Program(object):
             ancestors = []
         pairs = []
         indent = len(ancestors) * self.indent
-        # NOTE: skip 1st ancestor as it's always the root & thus
-        # implicit/unnamed; and also remember to loop in current coll
-        # (again unless it's itself the root)
-        display_ancestors = ancestors[1:]
-        if ancestors:
-            display_ancestors.append(coll)
-        ancestor_path = '.'.join(x.name for x in display_ancestors)
+        ancestor_path = '.'.join(x for x in ancestors)
         for name, task in sorted(six.iteritems(coll.tasks)):
             is_default = name == coll.default
             # Start with just the name and just the aliases, no prefixes or
@@ -738,7 +732,7 @@ class Program(object):
                 pairs.append((ancestor_path + displayname, helpline(subcoll)))
             # Recurse, if not already at max depth
             if not truncate:
-                recursed_pairs = self._make_pairs(subcoll, ancestors + [coll])
+                recursed_pairs = self._make_pairs(coll=subcoll, ancestors=ancestors + [name])
                 pairs.extend(recursed_pairs)
         return pairs
 
