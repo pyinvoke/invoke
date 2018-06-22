@@ -732,7 +732,9 @@ class Program(object):
                 pairs.append((ancestor_path + displayname, helpline(subcoll)))
             # Recurse, if not already at max depth
             if not truncate:
-                recursed_pairs = self._make_pairs(coll=subcoll, ancestors=ancestors + [name])
+                recursed_pairs = self._make_pairs(
+                    coll=subcoll, ancestors=ancestors + [name]
+                )
                 pairs.extend(recursed_pairs)
         return pairs
 
