@@ -101,14 +101,19 @@ class Context(DataProxy):
 
     def sudo(self, command, **kwargs):
         """
-        Execute a shell command, via ``sudo``.
+        Execute a shell command via ``sudo`` with password auto-response.
 
         **Basics**
 
-        In general, this method is identical to `run`, but adds a handful of
+        This method is identical to `run` but adds a handful of
         convenient behaviors around invoking the ``sudo`` program. It doesn't
         do anything users could not do themselves by wrapping `run`, but the
         use case is too common to make users reinvent these wheels themselves.
+
+        .. note::
+            If you intend to respond to sudo's password prompt by hand, just
+            use ``run("sudo command")`` instead! The autoresponding features in
+            this method will just get in your way.
 
         Specifically, `sudo`:
 
