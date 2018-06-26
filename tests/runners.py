@@ -242,6 +242,14 @@ class Runner_:
             self._run("my command", echo=True)
             assert "my command" in sys.stdout.getvalue()
 
+            sys.stdout.seek(0)
+            self._run(['my', 'command', 'list'], echo=True)
+            assert_contains(sys.stdout.getvalue(), "my command list")
+
+            sys.stdout.seek(0)
+            self._run(['my', 'command list'], echo=True)
+            assert_contains(sys.stdout.getvalue(), "my 'command list'")
+
         @trap
         def enabled_via_config(self):
             self._run("yup", settings={'run': {'echo': True}})

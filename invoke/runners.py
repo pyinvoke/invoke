@@ -100,7 +100,10 @@ class Runner(object):
             the ``echo`` keyword, etc). The base default values are described
             in the parameter list below.
 
-        :param str command: The shell command to execute.
+        :param command:
+            The shell command to execute as a single string or a list of
+            arguments.
+        :type command: str or list
 
         :param str shell:
             Which shell binary to use. Default: ``/bin/bash`` (on Unix;
@@ -275,6 +278,11 @@ class Runner(object):
         shell = opts['shell']
         # Environment setup
         env = self.generate_env(opts['env'], opts['replace_env'])
+
+        # Quote and join all arguments into a string.
+        if isinstance(command, (list, tuple)):
+            command = shlex_join(command)
+
         # Echo running command
         if opts['echo']:
             print("\033[1;37m{}\033[0m".format(command))
@@ -1245,3 +1253,8 @@ def normalize_hide(val):
     else:
         hide = (val,)
     return hide
+
+
+def shlex_join(iterable):
+    '''Join elements into a shell-safe string.'''
+    return ' '.join(six.moves.shlex_quote(i) for i in iterable)
