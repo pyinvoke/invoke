@@ -55,6 +55,9 @@ before_script:
   # Create 'sudouser' w/ sudo password & perms on Travis' homedir
   - inv travis.make-sudouser
 script:
+  # Blacken and flake8 before running any tests, it's a faster fail
+  - inv travis.blacken
+  - flake8
   # Execute full test suite + coverage, as the new sudo-capable user
   - inv travis.sudo-coverage
   # Websites build OK? (Not on PyPy3, Sphinx is all "who the hell are you?" =/
@@ -63,8 +66,6 @@ script:
   - inv www.doctest
   # Did we break setup.py?
   - inv travis.test-installation --package=invoke --sanity="inv --list"
-  # I have this in my git pre-push hook, but contributors probably don't
-  - flake8
   # Test distribution builds.
   - inv travis.test-packaging --package=invoke --sanity="inv --list" --alt-python=alt_env/bin/python
 after_success:

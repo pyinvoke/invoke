@@ -20,7 +20,7 @@ class Environment(object):
     def __init__(self, config, prefix):
         self._config = config
         self._prefix = prefix
-        self.data = {} # Accumulator
+        self.data = {}  # Accumulator
 
     def load(self):
         """
@@ -61,9 +61,9 @@ class Environment(object):
         obj = self._path_get(key_path)
         # Sub-dict -> recurse
         if (
-            hasattr(obj, 'keys')
+            hasattr(obj, "keys")
             and callable(obj.keys)
-            and hasattr(obj, '__getitem__')
+            and hasattr(obj, "__getitem__")
         ):
             for key in obj.keys():
                 merged_vars = dict(env_vars, **new_vars)
@@ -82,7 +82,7 @@ class Environment(object):
         return new_vars
 
     def _to_env_var(self, key_path):
-        return '_'.join(key_path).upper()
+        return "_".join(key_path).upper()
 
     def _path_get(self, key_path):
         # Gets are from self._config because that's what determines valid env
@@ -106,7 +106,7 @@ class Environment(object):
 
     def _cast(self, old, new_):
         if isinstance(old, bool):
-            return new_ not in ('0', '')
+            return new_ not in ("0", "")
         elif isinstance(old, six.string_types):
             return new_
         elif old is None:

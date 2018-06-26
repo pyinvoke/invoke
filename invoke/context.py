@@ -32,6 +32,7 @@ class Context(DataProxy):
 
     .. versionadded:: 1.0
     """
+
     def __init__(self, config=None):
         """
         :param config:
@@ -174,8 +175,8 @@ class Context(DataProxy):
     # NOTE: this is for runner injection; see NOTE above _run().
     def _sudo(self, runner, command, **kwargs):
         prompt = self.config.sudo.prompt
-        password = kwargs.pop('password', self.config.sudo.password)
-        user = kwargs.pop('user', self.config.sudo.user)
+        password = kwargs.pop("password", self.config.sudo.password)
+        user = kwargs.pop("user", self.config.sudo.user)
         # TODO: allow subclassing for 'get the password' so users who REALLY
         # want lazy runtime prompting can have it easily implemented.
         # TODO: want to print a "cleaner" echo with just 'sudo <command>'; but
@@ -205,7 +206,7 @@ class Context(DataProxy):
         # TODO: if/when those semantics are implemented, use them instead.
         # NOTE: config value for watchers defaults to an empty list; and we
         # want to clone it to avoid actually mutating the config.
-        watchers = kwargs.pop('watchers', list(self.config.run.watchers))
+        watchers = kwargs.pop("watchers", list(self.config.run.watchers))
         watchers.append(watcher)
         try:
             return runner.run(cmd_str, watchers=watchers, **kwargs)
@@ -240,9 +241,9 @@ class Context(DataProxy):
         prefixes = list(self.command_prefixes)
         current_directory = self.cwd
         if current_directory:
-            prefixes.insert(0, 'cd {}'.format(current_directory))
+            prefixes.insert(0, "cd {}".format(current_directory))
 
-        return ' && '.join(prefixes + [command])
+        return " && ".join(prefixes + [command])
 
     @contextmanager
     def prefix(self, command):
@@ -309,16 +310,16 @@ class Context(DataProxy):
             # TODO: should this be None? Feels cleaner, though there may be
             # benefits to it being an empty string, such as relying on a no-arg
             # `cd` typically being shorthand for "go to user's $HOME".
-            return ''
+            return ""
 
         # get the index for the subset of paths starting with the last / or ~
         for i, path in reversed(list(enumerate(self.command_cwds))):
-            if path.startswith('~') or path.startswith('/'):
+            if path.startswith("~") or path.startswith("/"):
                 break
 
         # TODO: see if there's a stronger "escape this path" function somewhere
         # we can reuse. e.g., escaping tildes or slashes in filenames.
-        paths = [path.replace(' ', '\ ') for path in self.command_cwds[i:]]
+        paths = [path.replace(" ", "\ ") for path in self.command_cwds[i:]]
         return os.path.join(*paths)
 
     @contextmanager
@@ -381,6 +382,7 @@ class MockContext(Context):
 
         .. versionadded:: 1.0
     """
+
     def __init__(self, config=None, **kwargs):
         """
         Create a ``Context``-like object whose methods yield `.Result` objects.
@@ -415,7 +417,7 @@ class MockContext(Context):
         for method, results in iteritems(kwargs):
             # Special convenience case: individual Result -> one-item list
             if (
-                not hasattr(results, '__iter__')
+                not hasattr(results, "__iter__")
                 and not isinstance(results, Result)
                 # No need for explicit dict test; they have __iter__
             ):
@@ -437,11 +439,11 @@ class MockContext(Context):
             # TODO: thought there's a 'better' 2x3 DictType or w/e, but can't
             # find one offhand
             if isinstance(value, dict):
-                if hasattr(value[command], '__iter__'):
+                if hasattr(value[command], "__iter__"):
                     result = value[command].pop(0)
                 elif isinstance(value[command], Result):
                     result = value.pop(command)
-            elif hasattr(value, '__iter__'):
+            elif hasattr(value, "__iter__"):
                 result = value.pop(0)
             elif isinstance(value, Result):
                 result = value
@@ -455,14 +457,14 @@ class MockContext(Context):
         # result? E.g. filling in .command, etc? Possibly useful for debugging
         # if one hits unexpected-order problems with what they passed in to
         # __init__.
-        return self._yield_result('__run', command)
+        return self._yield_result("__run", command)
 
     def sudo(self, command, *args, **kwargs):
         # TODO: this completely nukes the top-level behavior of sudo(), which
         # could be good or bad, depending. Most of the time I think it's good.
         # No need to supply dummy password config, etc.
         # TODO: see the TODO from run() re: injecting arg/kwarg values
-        return self._yield_result('__sudo', command)
+        return self._yield_result("__sudo", command)
 
     def set_result_for(self, attname, command, result):
         """
@@ -485,7 +487,7 @@ class MockContext(Context):
 
         .. versionadded:: 1.0
         """
-        attname = '__{}'.format(attname)
+        attname = "__{}".format(attname)
         heck = TypeError(
             "Can't update results for non-dict or nonexistent mock results!"
         )

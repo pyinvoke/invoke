@@ -22,5 +22,5 @@ def post_check(c):
     pass
 
 
-sub = Collection('sub', yup)
+sub = Collection("sub", yup)
 ns = Collection(nope, yup, pre_check, post_check, sub)

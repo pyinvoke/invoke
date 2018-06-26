@@ -19,36 +19,36 @@ import sys
 # to worry about it (they can't rely on the imported 'six' directly via
 # attribute access, since six.moves does import shenanigans.)
 try:
-    from .vendor.lexicon import Lexicon # noqa
+    from .vendor.lexicon import Lexicon  # noqa
     from .vendor import six
-    from .vendor.six.moves import reduce # noqa
+    from .vendor.six.moves import reduce  # noqa
+
     if six.PY3:
-        from .vendor import yaml3 as yaml # noqa
+        from .vendor import yaml3 as yaml  # noqa
     else:
-        from .vendor import yaml2 as yaml # noqa
+        from .vendor import yaml2 as yaml  # noqa
 except ImportError:
-    from lexicon import Lexicon # noqa
+    from lexicon import Lexicon  # noqa
     import six
-    from six.moves import reduce # noqa
-    import yaml # noqa
+    from six.moves import reduce  # noqa
+    import yaml  # noqa
 
 
 LOG_FORMAT = "%(name)s.%(module)s.%(funcName)s: %(message)s"
 
+
 def enable_logging():
-    logging.basicConfig(
-        level=logging.DEBUG,
-        format=LOG_FORMAT,
-    )
+    logging.basicConfig(level=logging.DEBUG, format=LOG_FORMAT)
+
 
 # Allow from-the-start debugging (vs toggled during load of tasks module) via
 # shell env var.
-if os.environ.get('INVOKE_DEBUG'):
+if os.environ.get("INVOKE_DEBUG"):
     enable_logging()
 
 # Add top level logger functions to global namespace. Meh.
-log = logging.getLogger('invoke')
-for x in ('debug',):
+log = logging.getLogger("invoke")
+for x in ("debug",):
     globals()[x] = getattr(log, x)
 
 
@@ -58,7 +58,7 @@ def task_name_sort_key(name):
 
     .. versionadded:: 1.0
     """
-    parts = name.split('.')
+    parts = name.split(".")
     return (
         # First group/sort by non-leaf path components. This keeps everything
         # grouped in its hierarchy, and incidentally puts top-level tasks
@@ -127,7 +127,7 @@ def isatty(stream):
     .. versionadded:: 1.0
     """
     # If there *is* an .isatty, ask it.
-    if hasattr(stream, 'isatty') and callable(stream.isatty):
+    if hasattr(stream, "isatty") and callable(stream.isatty):
         return stream.isatty()
     # If there wasn't, see if it has a fileno, and if so, ask os.isatty
     elif has_fileno(stream):
@@ -190,6 +190,7 @@ class ExceptionHandlingThread(threading.Thread):
 
     .. versionadded:: 1.0
     """
+
     def __init__(self, **kwargs):
         """
         Create a new exception-handling thread instance.
@@ -212,7 +213,7 @@ class ExceptionHandlingThread(threading.Thread):
             # approach to work, by using _run() instead of run(). If that
             # doesn't appear to be the case, then assume we're being used
             # directly and just use super() ourselves.
-            if hasattr(self, '_run') and callable(self._run):
+            if hasattr(self, "_run") and callable(self._run):
                 # TODO: this could be:
                 # - io worker with no 'result' (always local)
                 # - tunnel worker, also with no 'result' (also always local)
@@ -238,10 +239,10 @@ class ExceptionHandlingThread(threading.Thread):
             msg = "Encountered exception {!r} in thread for {!r}"
             # Name is either target function's dunder-name, or just "_run" if
             # we were run subclass-wise.
-            name = '_run'
-            if 'target' in self.kwargs:
-                name = self.kwargs['target'].__name__
-            debug(msg.format(self.exc_info[1], name)) # noqa
+            name = "_run"
+            if "target" in self.kwargs:
+                name = self.kwargs["target"].__name__
+            debug(msg.format(self.exc_info[1], name))  # noqa
 
     def exception(self):
         """
@@ -274,7 +275,7 @@ class ExceptionHandlingThread(threading.Thread):
 
     def __repr__(self):
         # TODO: beef this up more
-        return self.kwargs['target'].__name__
+        return self.kwargs["target"].__name__
 
 
 # NOTE: ExceptionWrapper defined here, not in exceptions.py, to avoid circular
@@ -285,6 +286,5 @@ class ExceptionHandlingThread(threading.Thread):
 #: preserves initial exceptions) and `.ThreadException` (which holds 1..N such
 #: exceptions, as typically multiple threads are involved.)
 ExceptionWrapper = namedtuple(
-    'ExceptionWrapper',
-    'kwargs type value traceback'
+    "ExceptionWrapper", "kwargs type value traceback"
 )

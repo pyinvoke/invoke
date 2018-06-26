@@ -12,8 +12,8 @@ class Context_:
             # & added to passworded (not passwordless) sudo configuration; and
             # that this user is the one running the test suite. Only for
             # running on Travis, basically.
-            if not os.environ.get('TRAVIS', False):
+            if not os.environ.get("TRAVIS", False):
                 skip()
-            config = Config({'sudo': {'password': 'mypass'}})
-            result = Context(config=config).sudo('whoami', hide=True)
-            assert result.stdout.strip() == 'root'
+            config = Config({"sudo": {"password": "mypass"}})
+            result = Context(config=config).sudo("whoami", hide=True)
+            assert result.stdout.strip() == "root"

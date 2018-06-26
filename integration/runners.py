@@ -5,18 +5,25 @@ from mock import Mock
 from pytest import skip
 
 from invoke import (
-    run, Local, Context, ThreadException, Responder, FailingResponder,
-    WatcherError, Failure
+    run,
+    Local,
+    Context,
+    ThreadException,
+    Responder,
+    FailingResponder,
+    WatcherError,
+    Failure,
 )
 
 from _util import assert_cpu_usage
 
 
-PYPY = platform.python_implementation() == 'PyPy'
+PYPY = platform.python_implementation() == "PyPy"
+
 
 class Runner_:
     def setup(self):
-        os.chdir(os.path.join(os.path.dirname(__file__), '_support'))
+        os.chdir(os.path.join(os.path.dirname(__file__), "_support"))
 
     class responding:
         # TODO: update respond_*.py so they timeout instead of hanging forever
@@ -76,14 +83,16 @@ class Runner_:
 
     class IO_hangs:
         "IO hangs"
+
         def _hang_on_full_pipe(self, pty):
             class Whoops(Exception):
                 pass
+
             runner = Local(Context())
             # Force runner IO thread-body method to raise an exception to mimic
             # real world encoding explosions/etc. When bug is present, this
             # will make the test hang until forcibly terminated.
-            runner.handle_stdout = Mock(side_effect=Whoops, __name__='sigh')
+            runner.handle_stdout = Mock(side_effect=Whoops, __name__="sigh")
             # NOTE: both Darwin (10.10) and Linux (Travis' docker image) have
             # this file. It's plenty large enough to fill most pipe buffers,
             # which is the triggering behavior.

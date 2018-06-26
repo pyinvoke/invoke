@@ -9,20 +9,23 @@ from .argument import Argument
 
 
 def translate_underscores(name):
-    return name.lstrip('_').rstrip('_').replace('_', '-')
+    return name.lstrip("_").rstrip("_").replace("_", "-")
+
 
 def to_flag(name):
     name = translate_underscores(name)
     if len(name) == 1:
-        return '-' + name
-    return '--' + name
+        return "-" + name
+    return "--" + name
+
 
 def sort_candidate(arg):
     names = arg.names
     # TODO: is there no "split into two buckets on predicate" builtin?
-    shorts = {x for x in names if len(x.strip('-')) == 1}
+    shorts = {x for x in names if len(x.strip("-")) == 1}
     longs = {x for x in names if x not in shorts}
     return sorted(shorts if shorts else longs)[0]
+
 
 def flag_key(x):
     """
@@ -43,7 +46,7 @@ def flag_key(x):
     ret.append(x.lower())
     # Finally, if the case-insensitive test also matched, compare
     # case-sensitive, but inverse (with lowercase letters coming first)
-    inversed = ''
+    inversed = ""
     for char in x:
         inversed += char.lower() if char.isupper() else char.upper()
     ret.append(inversed)
@@ -63,6 +66,7 @@ class ParserContext(object):
 
     .. versionadded:: 1.0
     """
+
     def __init__(self, name=None, aliases=(), args=()):
         """
         Create a new ``ParserContext`` named ``name``, with ``aliases``.
@@ -81,7 +85,7 @@ class ParserContext(object):
         self.args = Lexicon()
         self.positional_args = []
         self.flags = Lexicon()
-        self.inverse_flags = {} # No need for Lexicon here
+        self.inverse_flags = {}  # No need for Lexicon here
         self.name = name
         self.aliases = aliases
         for arg in args:
@@ -90,7 +94,7 @@ class ParserContext(object):
     def __repr__(self):
         aliases = ""
         if self.aliases:
-            aliases = " ({})".format(', '.join(self.aliases))
+            aliases = " ({})".format(", ".join(self.aliases))
         name = (" {!r}{}".format(self.name, aliases)) if self.name else ""
         args = (": {!r}".format(self.args)) if self.args else ""
         return "<parser/Context{}{}>".format(name, args)
@@ -120,10 +124,10 @@ class ParserContext(object):
         # Uniqueness constraint: no name collisions
         for name in arg.names:
             if name in self.args:
-                msg = "Tried to add an argument named {!r} but one already exists!" # noqa
+                msg = "Tried to add an argument named {!r} but one already exists!"  # noqa
                 raise ValueError(msg.format(name))
         # First name used as "main" name for purposes of aliasing
-        main = arg.names[0] # NOT arg.name
+        main = arg.names[0]  # NOT arg.name
         self.args[main] = arg
         # Note positionals in distinct, ordered list attribute
         if arg.positional:
@@ -175,21 +179,18 @@ class ParserContext(object):
         """
         # Obtain arg obj
         if flag not in self.flags:
-            err = "{!r} is not a valid flag for this context! Valid flags are: {!r}" # noqa
+            err = "{!r} is not a valid flag for this context! Valid flags are: {!r}"  # noqa
             raise ValueError(err.format(flag, self.flags.keys()))
         arg = self.flags[flag]
         # Determine expected value type, if any
-        value = {
-            str: 'STRING',
-            int: 'INT',
-        }.get(arg.kind)
+        value = {str: "STRING", int: "INT"}.get(arg.kind)
         # Format & go
         full_names = []
         for name in self.names_for(flag):
             if value:
                 # Short flags are -f VAL, long are --foo=VAL
                 # When optional, also, -f [VAL] and --foo[=VAL]
-                if len(name.strip('-')) == 1:
+                if len(name.strip("-")) == 1:
                     value_ = ("[{}]".format(value)) if arg.optional else value
                     valuestr = " {}".format(value_)
                 else:
@@ -237,10 +238,12 @@ class ParserContext(object):
         # To pass in an Argument object to help_for may require moderate
         # changes?
         # Cast to list to ensure non-generator on Python 3.
-        return list(map(
-            lambda x: self.help_for(to_flag(x.name)),
-            sorted(self.flags.values(), key=flag_key)
-        ))
+        return list(
+            map(
+                lambda x: self.help_for(to_flag(x.name)),
+                sorted(self.flags.values(), key=flag_key),
+            )
+        )
 
     def flag_names(self):
         """

@@ -33,6 +33,7 @@ class StreamWatcher(threading.local):
 
     .. versionadded:: 1.0
     """
+
     def submit(self, stream):
         """
         Act on ``stream`` data, potentially returning responses.
@@ -102,7 +103,7 @@ class Responder(StreamWatcher):
 
     def submit(self, stream):
         # Iterate over findall() response in case >1 match occurred.
-        for _ in self.pattern_matches(stream, self.pattern, 'index'):
+        for _ in self.pattern_matches(stream, self.pattern, "index"):
             yield self.response
 
 
@@ -116,6 +117,7 @@ class FailingResponder(Responder):
 
     .. versionadded:: 1.0
     """
+
     def __init__(self, pattern, response, sentinel):
         super(FailingResponder, self).__init__(pattern, response)
         self.sentinel = sentinel
@@ -126,13 +128,12 @@ class FailingResponder(Responder):
         # Behave like regular Responder initially
         response = super(FailingResponder, self).submit(stream)
         # Also check stream for our failure sentinel
-        failed = self.pattern_matches(
-            stream, self.sentinel, 'failure_index'
-        )
+        failed = self.pattern_matches(stream, self.sentinel, "failure_index")
         # Error out if we seem to have failed after a previous response.
         if self.tried and failed:
-            err = "Auto-response to r\"{}\" failed with {!r}!".format(
-                self.pattern, self.sentinel)
+            err = 'Auto-response to r"{}" failed with {!r}!'.format(
+                self.pattern, self.sentinel
+            )
             raise ResponseNotAccepted(err)
         # Once we see that we had a response, take note
         if response:

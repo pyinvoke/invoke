@@ -8,18 +8,23 @@ from .util import six, yaml
 if six.PY3:
     try:
         from importlib.machinery import SourceFileLoader
-    except ImportError: # PyPy3
+    except ImportError:  # PyPy3
         from importlib._bootstrap import _SourceFileLoader as SourceFileLoader
+
     def load_source(name, path):
         if not os.path.exists(path):
             return {}
-        return vars(SourceFileLoader('mod', path).load_module())
+        return vars(SourceFileLoader("mod", path).load_module())
+
+
 else:
     import imp
+
     def load_source(name, path):
         if not os.path.exists(path):
             return {}
-        return vars(imp.load_source('mod', path))
+        return vars(imp.load_source("mod", path))
+
 
 from .env import Environment
 from .exceptions import UnknownFileType
@@ -42,8 +47,11 @@ class DataProxy(object):
 
     .. versionadded:: 1.0
     """
+
     # Attributes which get proxied through to inner merged-dict config obj.
-    _proxies = tuple("""
+    _proxies = (
+        tuple(
+            """
         get
         has_key
         items
@@ -52,12 +60,18 @@ class DataProxy(object):
         itervalues
         keys
         values
-    """.split()) + tuple("__{}__".format(x) for x in """
+    """.split()
+        )
+        + tuple(
+            "__{}__".format(x)
+            for x in """
         cmp
         contains
         iter
         sizeof
-    """.split())
+    """.split()
+        )
+    )
 
     @classmethod
     def from_data(cls, data, root=None, keypath=tuple()):
@@ -102,7 +116,7 @@ class DataProxy(object):
                 return getattr(self._config, key)
             # Otherwise, raise useful AttributeError to follow getattr proto.
             err = "No attribute or config key found for {!r}".format(key)
-            attrs = [x for x in dir(self.__class__) if not x.startswith('_')]
+            attrs = [x for x in dir(self.__class__) if not x.startswith("_")]
             err += "\n\nValid keys: {!r}".format(
                 sorted(list(self._config.keys()))
             )
@@ -131,7 +145,7 @@ class DataProxy(object):
         # NotImplemented.
         # Try comparing to other objects like ourselves, falling back to a not
         # very comparable value (None) so comparison fails.
-        other_val = getattr(other, '_config', None)
+        other_val = getattr(other, "_config", None)
         # But we can compare to vanilla dicts just fine, since our _config is
         # itself just a dict.
         if isinstance(other, dict):
@@ -157,9 +171,7 @@ class DataProxy(object):
         # Short-circuit if pickling/copying mechanisms are asking if we've got
         # __setstate__ etc; they'll ask this w/o calling our __init__ first, so
         # we'd be in a RecursionError-causing catch-22 otherwise.
-        if key in (
-            '__setstate__',
-        ):
+        if key in ("__setstate__",):
             raise AttributeError(key)
         # At this point we should be able to assume a self._config...
         value = self._config[key]
@@ -167,16 +179,12 @@ class DataProxy(object):
             # New object's keypath is simply the key, prepended with our own
             # keypath if we've got one.
             keypath = (key,)
-            if hasattr(self, '_keypath'):
+            if hasattr(self, "_keypath"):
                 keypath = self._keypath + keypath
             # If we have no _root, we must be the root, so it's us. Otherwise,
             # pass along our handle on the root.
-            root = getattr(self, '_root', self)
-            value = DataProxy.from_data(
-                data=value,
-                root=root,
-                keypath=keypath,
-            )
+            root = getattr(self, "_root", self)
+            value = DataProxy.from_data(data=value, root=root, keypath=keypath)
         return value
 
     def _set(self, *args, **kwargs):
@@ -204,11 +212,11 @@ class DataProxy(object):
 
     @property
     def _is_leaf(self):
-        return hasattr(self, '_root')
+        return hasattr(self, "_root")
 
     @property
     def _is_root(self):
-        return hasattr(self, '_modify')
+        return hasattr(self, "_modify")
 
     def _track_removal_of(self, key):
         # Grab the root object responsible for tracking removals; either the
@@ -221,7 +229,7 @@ class DataProxy(object):
         elif self._is_root:
             target = self
         if target is not None:
-            target._remove(getattr(self, '_keypath', tuple()), key)
+            target._remove(getattr(self, "_keypath", tuple()), key)
 
     def _track_modification_of(self, key, value):
         target = None
@@ -230,7 +238,7 @@ class DataProxy(object):
         elif self._is_root:
             target = self
         if target is not None:
-            target._modify(getattr(self, '_keypath', tuple()), key, value)
+            target._modify(getattr(self, "_keypath", tuple()), key, value)
 
     def __delitem__(self, key):
         del self._config[key]
@@ -413,7 +421,8 @@ class Config(DataProxy):
 
     .. versionadded:: 1.0
     """
-    prefix = 'invoke'
+
+    prefix = "invoke"
     file_prefix = None
     env_prefix = None
 
@@ -435,12 +444,12 @@ class Config(DataProxy):
         # var (https://en.wikipedia.org/wiki/COMSPEC) or fallback to an
         # unqualified cmd.exe otherwise.
         if WINDOWS:
-            shell = os.environ.get('COMSPEC', 'cmd.exe')
+            shell = os.environ.get("COMSPEC", "cmd.exe")
         # Else, assume Unix, most distros of which have /bin/bash available.
         # TODO: consider an automatic fallback to /bin/sh for systems lacking
         # /bin/bash; however users may configure run.shell quite easily, so...
         else:
-            shell = '/bin/bash'
+            shell = "/bin/bash"
 
         return {
             # TODO: we document 'debug' but it's not truly implemented outside
@@ -460,38 +469,36 @@ class Config(DataProxy):
             # referenced, there are probably some bits that are all "if None ->
             # default" that could go here. Alternately, make _more_ of these
             # default to None?
-            'run': {
-                'warn': False,
-                'hide': None,
-                'shell': shell,
-                'pty': False,
-                'fallback': True,
-                'env': {},
-                'replace_env': False,
-                'echo': False,
-                'encoding': None,
-                'out_stream': None,
-                'err_stream': None,
-                'in_stream': None,
-                'watchers': [],
-                'echo_stdin': None,
+            "run": {
+                "warn": False,
+                "hide": None,
+                "shell": shell,
+                "pty": False,
+                "fallback": True,
+                "env": {},
+                "replace_env": False,
+                "echo": False,
+                "encoding": None,
+                "out_stream": None,
+                "err_stream": None,
+                "in_stream": None,
+                "watchers": [],
+                "echo_stdin": None,
             },
             # This doesn't live inside the 'run' tree; otherwise it'd make it
             # somewhat harder to extend/override in Fabric 2 which has a split
             # local/remote runner situation.
-            'runners': {
-                'local': Local,
+            "runners": {"local": Local},
+            "sudo": {
+                "prompt": "[sudo] password: ",
+                "password": None,
+                "user": None,
             },
-            'sudo': {
-                'prompt': "[sudo] password: ",
-                'password': None,
-                'user': None,
-            },
-            'tasks': {
-                'dedupe': True,
-                'auto_dash_names': True,
-                'collection_name': 'tasks',
-                'search_root': None,
+            "tasks": {
+                "dedupe": True,
+                "auto_dash_names": True,
+                "collection_name": "tasks",
+                "search_root": None,
             },
         }
 
@@ -564,7 +571,7 @@ class Config(DataProxy):
         self._set(_config={})
 
         # Config file suffixes to search, in preference order.
-        self._set(_file_suffixes=('yaml', 'yml', 'json', 'py'))
+        self._set(_file_suffixes=("yaml", "yml", "json", "py"))
 
         # Default configuration values, typically a copy of `global_defaults`.
         if defaults is None:
@@ -578,7 +585,7 @@ class Config(DataProxy):
         # Path prefix searched for the system config file.
         # NOTE: There is no default system prefix on Windows.
         if system_prefix is None and not WINDOWS:
-            system_prefix = '/etc/'
+            system_prefix = "/etc/"
         self._set(_system_prefix=system_prefix)
         # Path to loaded system config file, if any.
         self._set(_system_path=None)
@@ -590,7 +597,7 @@ class Config(DataProxy):
 
         # Path prefix searched for per-user config files.
         if user_prefix is None:
-            user_prefix = '~/.'
+            user_prefix = "~/."
         self._set(_user_prefix=user_prefix)
         # Path to loaded user config file, if any.
         self._set(_user_path=None)
@@ -696,7 +703,7 @@ class Config(DataProxy):
 
         .. versionadded:: 1.0
         """
-        self._load_file(prefix='system', merge=merge)
+        self._load_file(prefix="system", merge=merge)
 
     def load_user(self, merge=True):
         """
@@ -713,7 +720,7 @@ class Config(DataProxy):
 
         .. versionadded:: 1.0
         """
-        self._load_file(prefix='user', merge=merge)
+        self._load_file(prefix="user", merge=merge)
 
     def load_project(self, merge=True):
         """
@@ -735,7 +742,7 @@ class Config(DataProxy):
 
         .. versionadded:: 1.0
         """
-        self._load_file(prefix='project', merge=merge)
+        self._load_file(prefix="project", merge=merge)
 
     def set_runtime_path(self, path):
         """
@@ -767,7 +774,7 @@ class Config(DataProxy):
 
         .. versionadded:: 1.0
         """
-        self._load_file(prefix='runtime', absolute=True, merge=merge)
+        self._load_file(prefix="runtime", absolute=True, merge=merge)
 
     def load_shell_env(self):
         """
@@ -821,7 +828,7 @@ class Config(DataProxy):
         project_prefix = None
         if path is not None:
             # Ensure the prefix is normalized to a directory-like path string
-            project_prefix = join(path, '')
+            project_prefix = join(path, "")
         self._set(_project_prefix=project_prefix)
         # Path to loaded per-project config file, if any.
         self._set(_project_path=None)
@@ -856,7 +863,7 @@ class Config(DataProxy):
             if path_prefix is None:
                 return
             paths = [
-                '.'.join((path_prefix + midfix, x))
+                ".".join((path_prefix + midfix, x))
                 for x in self._file_suffixes
             ]
         # Poke 'em
@@ -865,12 +872,13 @@ class Config(DataProxy):
             filepath = expanduser(filepath)
             try:
                 try:
-                    type_ = splitext(filepath)[1].lstrip('.')
+                    type_ = splitext(filepath)[1].lstrip(".")
                     loader = getattr(self, "_load_{}".format(type_))
                 except AttributeError as e:
-                    msg = "Config files of type {!r} (from file {!r}) are not supported! Please use one of: {!r}" # noqa
-                    raise UnknownFileType(msg.format(
-                        type_, filepath, self._file_suffixes))
+                    msg = "Config files of type {!r} (from file {!r}) are not supported! Please use one of: {!r}"  # noqa
+                    raise UnknownFileType(
+                        msg.format(type_, filepath, self._file_suffixes)
+                    )
                 # Store data, the path it was found at, and fact that it was
                 # found
                 self._set(data, loader(filepath))
@@ -905,8 +913,8 @@ class Config(DataProxy):
 
     def _load_py(self, path):
         data = {}
-        for key, value in six.iteritems(load_source('mod', path)):
-            if key.startswith('__'):
+        for key, value in six.iteritems(load_source("mod", path)):
+            if key.startswith("__"):
                 continue
             data[key] = value
         return data
@@ -923,12 +931,12 @@ class Config(DataProxy):
         merge_dicts(self._config, self._defaults)
         debug("Collection-driven: {!r}".format(self._collection))
         merge_dicts(self._config, self._collection)
-        self._merge_file('system', "System-wide")
-        self._merge_file('user', "Per-user")
-        self._merge_file('project', "Per-project")
+        self._merge_file("system", "System-wide")
+        self._merge_file("user", "Per-user")
+        self._merge_file("project", "Per-project")
         debug("Environment variable config: {!r}".format(self._env))
         merge_dicts(self._config, self._env)
-        self._merge_file('runtime', "Runtime")
+        self._merge_file("runtime", "Runtime")
         debug("Overrides: {!r}".format(self._overrides))
         merge_dicts(self._config, self._overrides)
         debug("Modifications: {!r}".format(self._modifications))
@@ -938,7 +946,7 @@ class Config(DataProxy):
 
     def _merge_file(self, name, desc):
         # Setup
-        desc += " config file" # yup
+        desc += " config file"  # yup
         found = getattr(self, "_{}_found".format(name))
         path = getattr(self, "_{}_path".format(name))
         data = getattr(self, "_{}".format(name))
@@ -1181,7 +1189,7 @@ def merge_dicts(base, updates):
                     raise _merge_error(base[key], value)
                 # Fileno-bearing objects are probably 'real' files which do not
                 # copy well & must be passed by reference. Meh.
-                elif hasattr(value, 'fileno'):
+                elif hasattr(value, "fileno"):
                     base[key] = value
                 else:
                     base[key] = copy.copy(value)
@@ -1193,17 +1201,21 @@ def merge_dicts(base, updates):
                 base[key] = copy_dict(value)
             # Fileno-bearing objects are probably 'real' files which do not
             # copy well & must be passed by reference. Meh.
-            elif hasattr(value, 'fileno'):
+            elif hasattr(value, "fileno"):
                 base[key] = value
             # Non-dict values just get set straight
             else:
                 base[key] = copy.copy(value)
     return base
 
+
 def _merge_error(orig, new_):
-    return AmbiguousMergeError("Can't cleanly merge {} with {}".format(
-        _format_mismatch(orig), _format_mismatch(new_)
-    ))
+    return AmbiguousMergeError(
+        "Can't cleanly merge {} with {}".format(
+            _format_mismatch(orig), _format_mismatch(new_)
+        )
+    )
+
 
 def _format_mismatch(x):
     return "{} ({!r})".format(type(x), x)
@@ -1252,5 +1264,5 @@ def obliterate(base, deletions):
             # listed in a deletions structure, it must exist in some source
             # somewhere, and thus also in the cache being obliterated.
             obliterate(base[key], deletions[key])
-        else: # implicitly None
+        else:  # implicitly None
             del base[key]

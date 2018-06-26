@@ -5,6 +5,7 @@ from invoke.tasks import task
 def foo(c):
     pass
 
+
 @task(default=True)
 def biz(c):
     pass

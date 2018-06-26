@@ -11,8 +11,15 @@ from invocations.packaging import vendorize, release
 
 @task
 def test(
-    c, verbose=False, color=True, capture='no', module=None, k=None,
-    x=False, opts='', pty=True,
+    c,
+    verbose=False,
+    color=True,
+    capture="no",
+    module=None,
+    k=None,
+    x=False,
+    opts="",
+    pty=True,
 ):
     """
     Run pytest. See `invocations.pytest.test` for details.
@@ -29,8 +36,15 @@ def test(
     # TODO: update test suite to use c.config.run.in_stream = False globally.
     # somehow.
     return test_(
-        c, verbose=verbose, color=color, capture=capture, module=module, k=k,
-        x=x, opts=opts, pty=pty,
+        c,
+        verbose=verbose,
+        color=color,
+        capture=capture,
+        module=module,
+        k=k,
+        x=x,
+        opts=opts,
+        pty=pty,
     )
 
 
@@ -47,7 +61,7 @@ def integration(c, opts=None, pty=True):
 
 
 @task
-def coverage(c, report='term', opts=''):
+def coverage(c, report="term", opts=""):
     """
     Run pytest in coverage mode. See `invocations.pytest.coverage` for details.
     """
@@ -59,29 +73,35 @@ def coverage(c, report='term', opts=''):
 
 
 ns = Collection(
-    test, coverage, integration, vendorize, release, www, docs, sites,
-    watch_docs, travis, checks.blacken,
+    test,
+    coverage,
+    integration,
+    vendorize,
+    release,
+    www,
+    docs,
+    sites,
+    watch_docs,
+    travis,
+    checks.blacken,
 )
-ns.configure({
-    'tests': {
-        'logformat': LOG_FORMAT,
-        'package': 'invoke',
-    },
-    'travis': {
-        'sudo': {
-            'user': 'sudouser',
-            'password': 'mypass',
+ns.configure(
+    {
+        "blacken": {
+            # Skip the vendor directory when blackening.
+            "find_opts": "-and -not -path './invoke/vendor*'"
         },
-    },
-    'packaging': {
-        'sign': True,
-        'wheel': True,
-        'check_desc': True,
-        # Because of PyYAML's dual source nonsense =/
-        'dual_wheels': True,
-        'changelog_file': os.path.join(
-            www.configuration()['sphinx']['source'],
-            'changelog.rst',
-        ),
-    },
-})
+        "tests": {"logformat": LOG_FORMAT, "package": "invoke"},
+        "travis": {"sudo": {"user": "sudouser", "password": "mypass"}},
+        "packaging": {
+            "sign": True,
+            "wheel": True,
+            "check_desc": True,
+            # Because of PyYAML's dual source nonsense =/
+            "dual_wheels": True,
+            "changelog_file": os.path.join(
+                www.configuration()["sphinx"]["source"], "changelog.rst"
+            ),
+        },
+    }
+)

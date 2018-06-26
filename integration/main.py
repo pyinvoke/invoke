@@ -17,6 +17,7 @@ from _util import only_utf8
 def _output_eq(cmd, expected):
     assert run(cmd, hide=True).stdout == expected
 
+
 def _setup(self):
     self.cwd = os.getcwd()
     # Enter integration/ so Invoke loads its local tasks.py
@@ -58,10 +59,7 @@ class Main:
 
         @trap
         def invocation_with_args(self):
-            _output_eq(
-                "inv print-name --name whatevs",
-                "whatevs\n"
-            )
+            _output_eq("inv print-name --name whatevs", "whatevs\n")
 
         @trap
         def bad_collection_exits_nonzero(self):
@@ -73,7 +71,7 @@ class Main:
         def loads_real_user_config(self):
             path = os.path.expanduser("~/.invoke.yaml")
             try:
-                with open(path, 'w') as fd:
+                with open(path, "w") as fd:
                     fd.write("foo: bar")
                 _output_eq("inv print-config", "bar\n")
             finally:
@@ -88,61 +86,64 @@ class Main:
             if sys.version_info < (2, 7):
                 skip()
             _output_eq(
-                "python -m invoke print-name --name mainline",
-                "mainline\n",
+                "python -m invoke print-name --name mainline", "mainline\n"
             )
-
 
     class funky_characters_in_stdout:
         def setup(self):
             class BadlyBehavedStdout(io.TextIOBase):
                 def write(self, data):
                     if six.PY2 and not isinstance(data, six.binary_type):
-                        data.encode('ascii')
+                        data.encode("ascii")
+
             self.bad_stdout = BadlyBehavedStdout()
             # Mehhh at 'subclassing' via inner classes =/
             _setup(self)
 
         @only_utf8
         def basic_nonstandard_characters(self):
-            os.chdir('_support')
+            os.chdir("_support")
             # Crummy "doesn't explode with decode errors" test
             cmd = ("type" if WINDOWS else "cat") + " tree.out"
-            run(cmd, hide='stderr', out_stream=self.bad_stdout)
+            run(cmd, hide="stderr", out_stream=self.bad_stdout)
 
         @only_utf8
         def nonprinting_bytes(self):
             # Seriously non-printing characters (i.e. non UTF8) also don't
             # asplode (they would print as escapes normally, but still)
-            run("echo '\xff'", hide='stderr', out_stream=self.bad_stdout)
+            run("echo '\xff'", hide="stderr", out_stream=self.bad_stdout)
 
         @only_utf8
         def nonprinting_bytes_pty(self):
             if WINDOWS:
                 return
             # PTY use adds another utf-8 decode spot which can also fail.
-            run("echo '\xff'", pty=True, hide='stderr',
-                out_stream=self.bad_stdout)
+            run(
+                "echo '\xff'",
+                pty=True,
+                hide="stderr",
+                out_stream=self.bad_stdout,
+            )
 
     class ptys:
         def complex_nesting_under_ptys_doesnt_break(self):
-            if WINDOWS: # Not sure how to make this work on Windows
+            if WINDOWS:  # Not sure how to make this work on Windows
                 return
             # GH issue 191
             substr = "      hello\t\t\nworld with spaces"
             cmd = """ eval 'echo "{}" ' """.format(substr)
-            expected = '      hello\t\t\r\nworld with spaces\r\n'
-            assert run(cmd, pty=True, hide='both').stdout == expected
+            expected = "      hello\t\t\r\nworld with spaces\r\n"
+            assert run(cmd, pty=True, hide="both").stdout == expected
 
         def pty_puts_both_streams_in_stdout(self):
             if WINDOWS:
                 return
-            os.chdir('_support')
+            os.chdir("_support")
             err_echo = "{} err.py".format(sys.executable)
             command = "echo foo && {} bar".format(err_echo)
-            r = run(command, hide='both', pty=True)
-            assert r.stdout == 'foo\r\nbar\r\n'
-            assert r.stderr == ''
+            r = run(command, hide="both", pty=True)
+            assert r.stdout == "foo\r\nbar\r\n"
+            assert r.stderr == ""
 
         def simple_command_with_pty(self):
             """
@@ -150,7 +151,7 @@ class Main:
             """
             # Most Unix systems should have stty, which asplodes when not run
             # under a pty, and prints useful info otherwise
-            result = run('stty -a', hide=True, pty=True)
+            result = run("stty -a", hide=True, pty=True)
             # PTYs use \r\n, not \n, line separation
             assert "\r\n" in result.stdout
             assert result.pty is True
@@ -161,7 +162,7 @@ class Main:
             # When we do set it, it should be some non 0x0, non 80x24 (the
             # default) value. (yes, this means it fails if you really do have
             # an 80x24 terminal. but who does that?)
-            size = run('stty size', hide=True, pty=True).stdout.strip()
+            size = run("stty size", hide=True, pty=True).stdout.strip()
             assert size != ""
             assert size != "0 0"
             assert size != "24 80"
@@ -171,13 +172,12 @@ class Main:
             # (Dis)proves #416. When bug present, parser gets very confused,
             # asks "what the hell is 'whee'?". See also a unit test for
             # Task.get_arguments.
-            os.chdir('_support')
+            os.chdir("_support")
             for argstr, expected in (
-                ('', 'False'),
-                ('--meh', 'True'),
-                ('--meh=whee', 'whee'),
+                ("", "False"),
+                ("--meh", "True"),
+                ("--meh=whee", "whee"),
             ):
                 _output_eq(
-                    "inv -c parsing foo {}".format(argstr),
-                    expected + "\n",
+                    "inv -c parsing foo {}".format(argstr), expected + "\n"
                 )

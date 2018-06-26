@@ -15,6 +15,7 @@ class Executor(object):
 
     .. versionadded:: 1.0
     """
+
     def __init__(self, collection, config=None, core=None):
         """
         Initialize executor with handles to necessary data structures.

@@ -32,6 +32,7 @@ class Argument(object):
 
     .. versionadded:: 1.0
     """
+
     def __init__(
         self,
         name=None,
@@ -83,11 +84,7 @@ class Argument(object):
         if self.kind != str:
             kind = " [{}]".format(self.kind.__name__)
         return "<{}: {}{}{}{}>".format(
-            self.__class__.__name__,
-            self.name,
-            nicks,
-            kind,
-            flags,
+            self.__class__.__name__, self.name, nicks, kind, flags
         )
 
     @property
