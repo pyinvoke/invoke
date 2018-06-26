@@ -107,11 +107,8 @@ class Parser(object):
                 # Equals-sign-delimited flags, eg --foo=bar or -f=bar
                 if "=" in token:
                     token, _, value = token.partition("=")
-                    debug(
-                        "Splitting x=y expr {!r} into tokens {!r} and {!r}".format(
-                            orig, token, value
-                        )
-                    )  # noqa
+                    msg = "Splitting x=y expr {!r} into tokens {!r} and {!r}"
+                    debug(msg.format(orig, token, value))
                     mutations.append((index + 1, value))
                 # Contiguous boolean short flags, e.g. -qv
                 elif not is_long_flag(token) and len(token) > 2:
@@ -128,19 +125,15 @@ class Parser(object):
                         and machine.current_state != "unknown"
                     )
                     if have_flag and machine.context.flags[token].takes_value:
-                        debug(
-                            "{!r} is a flag for current context & it takes a value, giving it {!r}".format(
-                                token, rest
-                            )
-                        )  # noqa
+                        msg = "{!r} is a flag for current context & it takes a value, giving it {!r}"  # noqa
+                        debug(msg.format(token, rest))
                         mutations.append((index + 1, rest))
                     else:
                         rest = ["-{}".format(x) for x in rest]
-                        debug(
-                            "Splitting multi-flag glob {!r} into {!r} and {!r}".format(  # noqa
-                                orig, token, rest
-                            )
-                        )
+                        msg = (
+                            "Splitting multi-flag glob {!r} into {!r} and {!r}"
+                        )  # noqa
+                        debug(msg.format(orig, token, rest))
                         for item in reversed(rest):
                             mutations.append((index + 1, item))
             # Here, we've got some possible mutations queued up, and 'token'

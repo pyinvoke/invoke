@@ -266,11 +266,8 @@ class Collection(object):
                 raise ValueError("Could not obtain a name for this task!")
         name = self.transform(name)
         if name in self.collections:
-            raise ValueError(
-                "Name conflict: this collection has a sub-collection named {!r} already".format(
-                    name
-                )
-            )  # noqa
+            err = "Name conflict: this collection has a sub-collection named {!r} already"  # noqa
+            raise ValueError(err.format(name))
         self.tasks[name] = task
         for alias in list(task.aliases) + list(aliases or []):
             self.tasks.alias(self.transform(alias), to=name)
@@ -302,11 +299,10 @@ class Collection(object):
         name = self.transform(name)
         # Test for conflict
         if name in self.tasks:
-            raise ValueError(
-                "Name conflict: this collection has a task named {!r} already".format(
-                    name
-                )
+            err = (
+                "Name conflict: this collection has a task named {!r} already"
             )  # noqa
+            raise ValueError(err.format(name))
         # Insert
         self.collections[name] = coll
 

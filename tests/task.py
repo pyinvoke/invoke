@@ -380,17 +380,13 @@ class Call_:
                 # Single-key dict to avoid dict ordering issues
                 kwargs={"kwarg1": "val1"},
             )
-            assert (
-                str(call)
-                == "<Call 'mytask', args: ('posarg1', 'posarg2'), kwargs: {'kwarg1': 'val1'}>"
-            )  # noqa
+            expected = "<Call 'mytask', args: ('posarg1', 'posarg2'), kwargs: {'kwarg1': 'val1'}>"  # noqa
+            assert str(call) == expected
 
         def includes_aka_if_explicit_name_given(self):
             call = Call(self.task, called_as="notmytask")
-            assert (
-                str(call)
-                == "<Call 'mytask' (called as: 'notmytask'), args: (), kwargs: {}>"
-            )  # noqa
+            expected = "<Call 'mytask' (called as: 'notmytask'), args: (), kwargs: {}>"  # noqa
+            assert str(call) == expected
 
         def skips_aka_if_explicit_name_same_as_task_name(self):
             call = Call(self.task, called_as="mytask")

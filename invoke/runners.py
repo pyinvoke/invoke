@@ -957,9 +957,8 @@ class Local(Runner):
             # TODO: pass in & test in_stream, not sys.stdin
             if not has_fileno(sys.stdin) and fallback:
                 if not self.warned_about_pty_fallback:
-                    sys.stderr.write(
-                        "WARNING: stdin has no fileno; falling back to non-pty execution!\n"
-                    )  # noqa
+                    err = "WARNING: stdin has no fileno; falling back to non-pty execution!\n"  # noqa
+                    sys.stderr.write(err)
                     self.warned_about_pty_fallback = True
                 use_pty = False
         return use_pty
@@ -1010,9 +1009,8 @@ class Local(Runner):
     def start(self, command, shell, env):
         if self.using_pty:
             if pty is None:  # Encountered ImportError
-                sys.exit(
-                    "You indicated pty=True, but your platform doesn't support the 'pty' module!"
-                )  # noqa
+                err = "You indicated pty=True, but your platform doesn't support the 'pty' module!"  # noqa
+                sys.exit(err)
             cols, rows = pty_size()
             self.pid, self.parent_fd = pty.fork()
             # If we're the child process, load up the actual command in a
