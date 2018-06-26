@@ -12,10 +12,11 @@ from ..exceptions import ParseError
 
 
 def is_flag(value):
-    return value.startswith('-')
+    return value.startswith("-")
+
 
 def is_long_flag(value):
-    return value.startswith('--')
+    return value.startswith("--")
 
 
 class Parser(object):
@@ -38,6 +39,7 @@ class Parser(object):
 
     .. versionadded:: 1.0
     """
+
     def __init__(self, contexts=(), initial=None, ignore_unknown=False):
         self.initial = initial
         self.contexts = Lexicon()
@@ -73,22 +75,25 @@ class Parser(object):
 
         .. versionadded:: 1.0
         """
-        machine = ParseMachine(initial=self.initial, contexts=self.contexts,
-            ignore_unknown=self.ignore_unknown)
+        machine = ParseMachine(
+            initial=self.initial,
+            contexts=self.contexts,
+            ignore_unknown=self.ignore_unknown,
+        )
         # FIXME: Why isn't there str.partition for lists? There must be a
         # better way to do this. Split argv around the double-dash remainder
         # sentinel.
-        debug("Starting argv: {!r}".format(argv,))
+        debug("Starting argv: {!r}".format(argv))
         try:
-            ddash = argv.index('--')
+            ddash = argv.index("--")
         except ValueError:
-            ddash = len(argv) # No remainder == body gets all
+            ddash = len(argv)  # No remainder == body gets all
         body = argv[:ddash]
-        remainder = argv[ddash:][1:] # [1:] to strip off remainder itself
+        remainder = argv[ddash:][1:]  # [1:] to strip off remainder itself
         if remainder:
-            debug("Remainder: argv[{!r}:][1:] => {!r}".format(
-                ddash, remainder
-            ))
+            debug(
+                "Remainder: argv[{!r}:][1:] => {!r}".format(ddash, remainder)
+            )
         for index, token in enumerate(body):
             # Handle non-space-delimited forms, if not currently expecting a
             # flag value and still in valid parsing territory (i.e. not in
@@ -98,11 +103,15 @@ class Parser(object):
             # previously seen flag optionally takes a value.
             mutations = []
             orig = token
-            if (is_flag(token) and not machine.result.unparsed):
+            if is_flag(token) and not machine.result.unparsed:
                 # Equals-sign-delimited flags, eg --foo=bar or -f=bar
-                if '=' in token:
-                    token, _, value = token.partition('=')
-                    debug("Splitting x=y expr {!r} into tokens {!r} and {!r}".format(orig, token, value)) # noqa
+                if "=" in token:
+                    token, _, value = token.partition("=")
+                    debug(
+                        "Splitting x=y expr {!r} into tokens {!r} and {!r}".format(
+                            orig, token, value
+                        )
+                    )  # noqa
                     mutations.append((index + 1, value))
                 # Contiguous boolean short flags, e.g. -qv
                 elif not is_long_flag(token) and len(token) > 2:
@@ -116,15 +125,22 @@ class Parser(object):
                     # core-args pass, handling what are going to be task args)
                     have_flag = (
                         token in machine.context.flags
-                        and machine.current_state != 'unknown'
+                        and machine.current_state != "unknown"
                     )
                     if have_flag and machine.context.flags[token].takes_value:
-                        debug("{!r} is a flag for current context & it takes a value, giving it {!r}".format(token, rest)) # noqa
+                        debug(
+                            "{!r} is a flag for current context & it takes a value, giving it {!r}".format(
+                                token, rest
+                            )
+                        )  # noqa
                         mutations.append((index + 1, rest))
                     else:
-                        rest = ['-{}'.format(x) for x in rest]
-                        debug("Splitting multi-flag glob {!r} into {!r} and {!r}".format( # noqa
-                            orig, token, rest))
+                        rest = ["-{}".format(x) for x in rest]
+                        debug(
+                            "Splitting multi-flag glob {!r} into {!r} and {!r}".format(  # noqa
+                                orig, token, rest
+                            )
+                        )
                         for item in reversed(rest):
                             mutations.append((index + 1, item))
             # Here, we've got some possible mutations queued up, and 'token'
@@ -154,33 +170,29 @@ class Parser(object):
             machine.handle(token)
         machine.finish()
         result = machine.result
-        result.remainder = ' '.join(remainder)
+        result.remainder = " ".join(remainder)
         return result
 
 
 class ParseMachine(StateMachine):
-    initial_state = 'context'
+    initial_state = "context"
 
-    state('context', enter=['complete_flag', 'complete_context'])
-    state('unknown', enter=['complete_flag', 'complete_context'])
-    state('end', enter=['complete_flag', 'complete_context'])
+    state("context", enter=["complete_flag", "complete_context"])
+    state("unknown", enter=["complete_flag", "complete_context"])
+    state("end", enter=["complete_flag", "complete_context"])
 
+    transition(from_=("context", "unknown"), event="finish", to="end")
     transition(
-        from_=('context', 'unknown'),
-        event='finish',
-        to='end',
+        from_="context",
+        event="see_context",
+        action="switch_to_context",
+        to="context",
     )
     transition(
-        from_='context',
-        event='see_context',
-        action='switch_to_context',
-        to='context',
-    )
-    transition(
-        from_=('context', 'unknown'),
-        event='see_unknown',
-        action='store_only',
-        to='unknown',
+        from_=("context", "unknown"),
+        event="see_unknown",
+        action="store_only",
+        to="unknown",
     )
 
     def changing_state(self, from_, to):
@@ -203,10 +215,7 @@ class ParseMachine(StateMachine):
     def waiting_for_flag_value(self):
         # Do we have a current flag, and does it expect a value (vs being a
         # bool/toggle)?
-        takes_value = (
-            self.flag and
-            self.flag.takes_value
-        )
+        takes_value = self.flag and self.flag.takes_value
         if not takes_value:
             return False
         # OK, this flag is one that takes values.
@@ -231,7 +240,7 @@ class ParseMachine(StateMachine):
         debug("Handling token: {!r}".format(token))
         # Handle unknown state at the top: we don't care about even
         # possibly-valid input if we've encountered unknown input.
-        if self.current_state == 'unknown':
+        if self.current_state == "unknown":
             debug("Top-of-handle() see_unknown({!r})".format(token))
             self.see_unknown(token)
             return
@@ -244,7 +253,11 @@ class ParseMachine(StateMachine):
             self.switch_to_flag(token, inverse=True)
         # Value for current flag
         elif self.waiting_for_flag_value:
-            debug("We're waiting for a flag value so {!r} must be it?".format(token)) # noqa
+            debug(
+                "We're waiting for a flag value so {!r} must be it?".format(
+                    token
+                )
+            )  # noqa
             self.see_value(token)
         # Positional args (must come above context-name check in case we still
         # need a posarg and the user legitimately wants to give it a value that
@@ -289,13 +302,15 @@ class ParseMachine(StateMachine):
         self.result.unparsed.append(token)
 
     def complete_context(self):
-        debug("Wrapping up context {!r}".format(
-            self.context.name if self.context else self.context
-        ))
+        debug(
+            "Wrapping up context {!r}".format(
+                self.context.name if self.context else self.context
+            )
+        )
         # Ensure all of context's positional args have been given.
         if self.context and self.context.missing_positional_args:
             err = "'{}' did not receive required positional arguments: {}"
-            names = ', '.join(
+            names = ", ".join(
                 "'{}'".format(x.name)
                 for x in self.context.missing_positional_args
             )
@@ -308,9 +323,7 @@ class ParseMachine(StateMachine):
         debug("Moving to context {!r}".format(name))
         debug("Context args: {!r}".format(self.context.args))
         debug("Context flags: {!r}".format(self.context.flags))
-        debug("Context inverse_flags: {!r}".format(
-            self.context.inverse_flags
-        ))
+        debug("Context inverse_flags: {!r}".format(self.context.inverse_flags))
 
     def complete_flag(self):
         if self.flag:
@@ -412,6 +425,7 @@ class ParseResult(list):
 
     .. versionadded:: 1.0
     """
+
     def __init__(self, *args, **kwargs):
         super(ParseResult, self).__init__(*args, **kwargs)
         self.remainder = ""

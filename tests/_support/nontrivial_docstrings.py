@@ -5,6 +5,7 @@ from invoke import task
 def no_docstring(c):
     pass
 
+
 @task
 def task_one(c):
     """
@@ -12,6 +13,7 @@ def task_one(c):
 
     risus. Nulla lorem justo, sagittis in volutpat eget
     """
+
 
 @task
 def task_two(c):

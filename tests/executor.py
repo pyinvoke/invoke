@@ -20,11 +20,11 @@ class Executor_:
         self.task4 = Task(Mock(return_value=15), post=[self.task1])
         self.contextualized = Task(Mock())
         coll = Collection()
-        coll.add_task(self.task1, name='task1')
-        coll.add_task(self.task2, name='task2')
-        coll.add_task(self.task3, name='task3')
-        coll.add_task(self.task4, name='task4')
-        coll.add_task(self.contextualized, name='contextualized')
+        coll.add_task(self.task1, name="task1")
+        coll.add_task(self.task2, name="task2")
+        coll.add_task(self.task3, name="task3")
+        coll.add_task(self.task4, name="task4")
+        coll.add_task(self.contextualized, name="contextualized")
         self.executor = Executor(collection=coll)
 
     # TODO: replace with fixture
@@ -32,16 +32,18 @@ class Executor_:
         import sys
         from invoke.vendor.six import iteritems
         from _util import support
+
         # Strip any test-support task collections from sys.modules to prevent
         # state bleed between tests; otherwise tests can incorrectly pass
         # despite not explicitly loading/cd'ing to get the tasks they call
         # loaded.
         for name, module in iteritems(sys.modules.copy()):
-            if module and support in getattr(module, '__file__', ''):
+            if module and support in getattr(module, "__file__", ""):
                 del sys.modules[name]
 
     class init:
         "__init__"
+
         def allows_collection_and_config(self):
             coll = Collection()
             conf = Config()
@@ -62,20 +64,20 @@ class Executor_:
 
     class execute:
         def base_case(self):
-            self.executor.execute('task1')
+            self.executor.execute("task1")
             assert self.task1.body.called
 
         def kwargs(self):
-            k = {'foo': 'bar'}
-            self.executor.execute(('task1', k))
+            k = {"foo": "bar"}
+            self.executor.execute(("task1", k))
             args = self.task1.body.call_args[0]
             kwargs = self.task1.body.call_args[1]
             assert isinstance(args[0], Context)
             assert len(args) == 1
-            assert kwargs['foo'] == 'bar'
+            assert kwargs["foo"] == "bar"
 
         def contextualized_tasks_are_given_parser_context_arg(self):
-            self.executor.execute('contextualized')
+            self.executor.execute("contextualized")
             args = self.contextualized.body.call_args[0]
             assert len(args) == 1
             assert isinstance(args[0], Context)
@@ -83,9 +85,9 @@ class Executor_:
         def default_tasks_called_when_no_tasks_specified(self):
             # NOTE: when no tasks AND no default, Program will print global
             # help. We just won't do anything at all, which is fine for now.
-            task = Task(Mock('default-task'))
+            task = Task(Mock("default-task"))
             coll = Collection()
-            coll.add_task(task, name='mytask', default=True)
+            coll.add_task(task, name="mytask", default=True)
             executor = Executor(collection=coll)
             executor.execute()
             args = task.body.call_args[0]
@@ -96,11 +98,11 @@ class Executor_:
         "basic pre/post task functionality"
 
         def pre_tasks(self):
-            self.executor.execute('task2')
+            self.executor.execute("task2")
             assert self.task1.body.call_count == 1
 
         def post_tasks(self):
-            self.executor.execute('task4')
+            self.executor.execute("task4")
             assert self.task1.body.call_count == 1
 
         def calls_default_to_empty_args_always(self):
@@ -109,7 +111,7 @@ class Executor_:
             t2 = Task(post_body)
             t3 = Task(Mock(), pre=[t1], post=[t2])
             e = Executor(collection=Collection(t1=t1, t2=t2, t3=t3))
-            e.execute(('t3', {'something': 'meh'}))
+            e.execute(("t3", {"something": "meh"}))
             for body in (pre_body, post_body):
                 args = body.call_args[0]
                 assert len(args) == 1
@@ -120,21 +122,22 @@ class Executor_:
             pre_body, post_body = Mock(), Mock()
             t1 = Task(pre_body)
             t2 = Task(post_body)
-            t3 = Task(Mock(),
-                pre=[call(t1, 5, foo='bar')],
-                post=[call(t2, 7, biz='baz')],
+            t3 = Task(
+                Mock(),
+                pre=[call(t1, 5, foo="bar")],
+                post=[call(t2, 7, biz="baz")],
             )
             c = Collection(t1=t1, t2=t2, t3=t3)
             e = Executor(collection=c)
-            e.execute('t3')
+            e.execute("t3")
             # Pre-task asserts
             args, kwargs = pre_body.call_args
-            assert kwargs == {'foo': 'bar'}
+            assert kwargs == {"foo": "bar"}
             assert isinstance(args[0], Context)
             assert args[1] == 5
             # Post-task asserts
             args, kwargs = post_body.call_args
-            assert kwargs == {'biz': 'baz'}
+            assert kwargs == {"biz": "baz"}
             assert isinstance(args[0], Context)
             assert args[1] == 7
 
@@ -143,7 +146,9 @@ class Executor_:
 
     class deduping_and_chaining:
         def chaining_is_depth_first(self):
-            expect('-c depth_first deploy', out="""
+            expect(
+                "-c depth_first deploy",
+                out="""
 Cleaning HTML
 Cleaning .tar.gz files
 Cleaned everything
@@ -152,23 +157,29 @@ Building
 Deploying
 Preparing for testing
 Testing
-""".lstrip())
+""".lstrip(),
+            )
 
         def _expect(self, args, expected):
-            expect('-c integration {}'.format(args), out=expected.lstrip())
+            expect("-c integration {}".format(args), out=expected.lstrip())
 
         class adjacent_hooks:
             def deduping(self):
-                self._expect('biz', """
+                self._expect(
+                    "biz",
+                    """
 foo
 bar
 biz
 post1
 post2
-""")
+""",
+                )
 
             def no_deduping(self):
-                self._expect('--no-dedupe biz', """
+                self._expect(
+                    "--no-dedupe biz",
+                    """
 foo
 foo
 bar
@@ -176,20 +187,26 @@ biz
 post1
 post2
 post2
-""")
+""",
+                )
 
         class non_adjacent_hooks:
             def deduping(self):
-                self._expect('boz', """
+                self._expect(
+                    "boz",
+                    """
 foo
 bar
 boz
 post2
 post1
-""")
+""",
+                )
 
             def no_deduping(self):
-                self._expect('--no-dedupe boz', """
+                self._expect(
+                    "--no-dedupe boz",
+                    """
 foo
 bar
 foo
@@ -197,37 +214,50 @@ boz
 post2
 post1
 post2
-""")
+""",
+                )
 
         # AKA, a (foo) (foo -> bar) scenario arising from foo + bar
         class adjacent_top_level_tasks:
             def deduping(self):
-                self._expect('foo bar', """
+                self._expect(
+                    "foo bar",
+                    """
 foo
 bar
-""")
+""",
+                )
 
             def no_deduping(self):
-                self._expect('--no-dedupe foo bar', """
+                self._expect(
+                    "--no-dedupe foo bar",
+                    """
 foo
 foo
 bar
-""")
+""",
+                )
 
         # AKA (foo -> bar) (foo)
         class non_adjacent_top_level_tasks:
             def deduping(self):
-                self._expect('foo bar', """
+                self._expect(
+                    "foo bar",
+                    """
 foo
 bar
-""")
+""",
+                )
 
             def no_deduping(self):
-                self._expect('--no-dedupe foo bar', """
+                self._expect(
+                    "--no-dedupe foo bar",
+                    """
 foo
 foo
 bar
-""")
+""",
+                )
 
         def deduping_treats_different_calls_to_same_task_differently(self):
             body = Mock()
@@ -236,7 +266,7 @@ bar
             t2 = Task(Mock(), pre=pre)
             c = Collection(t1=t1, t2=t2)
             e = Executor(collection=c)
-            e.execute('t2')
+            e.execute("t2")
             # Does not call the second t1(5)
             param_list = []
             for body_call in body.call_args_list:
@@ -246,51 +276,56 @@ bar
 
     class collection_driven_config:
         "Collection-driven config concerns"
+
         def hands_collection_configuration_to_context(self):
             @task
             def mytask(c):
-                assert c.my_key == 'value'
+                assert c.my_key == "value"
+
             c = Collection(mytask)
-            c.configure({'my_key': 'value'})
-            Executor(collection=c).execute('mytask')
+            c.configure({"my_key": "value"})
+            Executor(collection=c).execute("mytask")
 
         def hands_task_specific_configuration_to_context(self):
             @task
             def mytask(c):
-                assert c.my_key == 'value'
+                assert c.my_key == "value"
+
             @task
             def othertask(c):
-                assert c.my_key == 'othervalue'
-            inner1 = Collection('inner1', mytask)
-            inner1.configure({'my_key': 'value'})
-            inner2 = Collection('inner2', othertask)
-            inner2.configure({'my_key': 'othervalue'})
+                assert c.my_key == "othervalue"
+
+            inner1 = Collection("inner1", mytask)
+            inner1.configure({"my_key": "value"})
+            inner2 = Collection("inner2", othertask)
+            inner2.configure({"my_key": "othervalue"})
             c = Collection(inner1, inner2)
             e = Executor(collection=c)
-            e.execute('inner1.mytask', 'inner2.othertask')
+            e.execute("inner1.mytask", "inner2.othertask")
 
         def subcollection_config_works_with_default_tasks(self):
             @task(default=True)
             def mytask(c):
-                assert c.my_key == 'value'
+                assert c.my_key == "value"
+
             # Sets up a task "known as" sub.mytask which may be called as
             # just 'sub' due to being default.
-            sub = Collection('sub', mytask=mytask)
-            sub.configure({'my_key': 'value'})
+            sub = Collection("sub", mytask=mytask)
+            sub.configure({"my_key": "value"})
             main = Collection(sub=sub)
             # Execute via collection default 'task' name.
-            Executor(collection=main).execute('sub')
+            Executor(collection=main).execute("sub")
 
     class returns_return_value_of_specified_task:
         def base_case(self):
-            assert self.executor.execute('task1') == {self.task1: 7}
+            assert self.executor.execute("task1") == {self.task1: 7}
 
         def with_pre_tasks(self):
-            result = self.executor.execute('task2')
+            result = self.executor.execute("task2")
             assert result == {self.task1: 7, self.task2: 10}
 
         def with_post_tasks(self):
-            result = self.executor.execute('task4')
+            result = self.executor.execute("task4")
             assert result == {self.task1: 7, self.task4: 15}
 
     class autoprinting:
@@ -314,11 +349,13 @@ bar
             @task
             def task1(c):
                 return c
+
             @task
             def task2(c):
                 return c
+
             coll = Collection(task1, task2)
-            ret = Executor(collection=coll).execute('task1', 'task2')
+            ret = Executor(collection=coll).execute("task1", "task2")
             c1 = ret[task1]
             c2 = ret[task2]
             assert c1 is not c2
@@ -329,18 +366,20 @@ bar
         def new_config_data_is_preserved_between_tasks(self):
             @task
             def task1(c):
-                c.foo = 'bar'
+                c.foo = "bar"
                 # NOTE: returned for test inspection, not as mechanism of
                 # sharing data!
                 return c
+
             @task
             def task2(c):
                 return c
+
             coll = Collection(task1, task2)
-            ret = Executor(collection=coll).execute('task1', 'task2')
+            ret = Executor(collection=coll).execute("task1", "task2")
             c2 = ret[task2]
-            assert 'foo' in c2.config
-            assert c2.foo == 'bar'
+            assert "foo" in c2.config
+            assert c2.foo == "bar"
 
         def config_mutation_is_preserved_between_tasks(self):
             @task
@@ -349,11 +388,13 @@ bar
                 # NOTE: returned for test inspection, not as mechanism of
                 # sharing data!
                 return c
+
             @task
             def task2(c):
                 return c
+
             coll = Collection(task1, task2)
-            ret = Executor(collection=coll).execute('task1', 'task2')
+            ret = Executor(collection=coll).execute("task1", "task2")
             c2 = ret[task2]
             assert c2.config.run.echo is True
 
@@ -364,10 +405,12 @@ bar
                 # NOTE: returned for test inspection, not as mechanism of
                 # sharing data!
                 return c
+
             @task
             def task2(c):
                 return c
+
             coll = Collection(task1, task2)
-            ret = Executor(collection=coll).execute('task1', 'task2')
+            ret = Executor(collection=coll).execute("task1", "task2")
             c2 = ret[task2]
-            assert 'echo' not in c2.config.run
+            assert "echo" not in c2.config.run

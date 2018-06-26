@@ -12,18 +12,15 @@ from .util import debug, task_name_sort_key
 
 def complete(core, initial_context, collection):
     # Strip out program name (scripts give us full command line)
-    invocation = re.sub(r'^(inv|invoke) ', '', core.remainder)
+    invocation = re.sub(r"^(inv|invoke) ", "", core.remainder)
     debug("Completing for invocation: {!r}".format(invocation))
     # Tokenize (shlex will have to do)
     tokens = shlex.split(invocation)
     # Make ourselves a parser (can't just reuse original one as it's mutated /
     # been overwritten)
-    parser = Parser(
-        initial=initial_context,
-        contexts=collection.to_contexts()
-    )
+    parser = Parser(initial=initial_context, contexts=collection.to_contexts())
     # Handle flags (partial or otherwise)
-    if tokens and tokens[-1].startswith('-'):
+    if tokens and tokens[-1].startswith("-"):
         tail = tokens[-1]
         debug("Invocation's tail {!r} is flag-like".format(tail))
         # Gently parse invocation to obtain 'current' context.
@@ -33,7 +30,11 @@ def complete(core, initial_context, collection):
             debug("Seeking context name in tokens: {!r}".format(tokens))
             contexts = parser.parse_argv(tokens)
         except ParseError as e:
-            debug("Got parser error ({!r}), grabbing its last-seen context {!r}".format(e, e.context)) # noqa
+            debug(
+                "Got parser error ({!r}), grabbing its last-seen context {!r}".format(
+                    e, e.context
+                )
+            )  # noqa
             contexts = [e.context]
         # Fall back to core context if no context seen.
         debug("Parsed invocation, contexts: {!r}".format(contexts))
@@ -48,14 +49,13 @@ def complete(core, initial_context, collection):
         if tail not in context.flags:
             debug("Not found, completing with flag names")
             # Long flags - partial or just the dashes - complete w/ long flags
-            if tail.startswith('--'):
+            if tail.startswith("--"):
                 for name in filter(
-                    lambda x: x.startswith('--'),
-                    context.flag_names()
+                    lambda x: x.startswith("--"), context.flag_names()
                 ):
                     print(name)
             # Just a dash, completes with all flags
-            elif tail == '-':
+            elif tail == "-":
                 for name in context.flag_names():
                     print(name)
             # Otherwise, it's something entirely invalid (a shortflag not

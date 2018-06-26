@@ -1,5 +1,6 @@
 import os
 import sys
+
 try:
     import termios
 except ImportError:
@@ -17,7 +18,7 @@ from invoke import Program, Runner
 from invoke.terminals import WINDOWS
 
 
-support = os.path.join(os.path.dirname(__file__), '_support')
+support = os.path.join(os.path.dirname(__file__), "_support")
 
 
 def skip_if_windows(fn):
@@ -26,6 +27,7 @@ def skip_if_windows(fn):
         if WINDOWS:
             skip()
         return fn(*args, **kwargs)
+
     return wrapper
 
 
@@ -69,8 +71,9 @@ def run(invocation, program=None, invoke=True):
     return sys.stdout.getvalue(), sys.stderr.getvalue()
 
 
-def expect(invocation, out=None, err=None, program=None, invoke=True,
-    test=None):
+def expect(
+    invocation, out=None, err=None, program=None, invoke=True, test=None
+):
     """
     Run ``invocation`` via ``program`` and expect resulting output to match.
 
@@ -104,7 +107,7 @@ def expect(invocation, out=None, err=None, program=None, invoke=True,
 
 
 class MockSubprocess(object):
-    def __init__(self, out='', err='', exit=0, isatty=None, autostart=True):
+    def __init__(self, out="", err="", exit=0, isatty=None, autostart=True):
         self.out_file = BytesIO(b(out))
         self.err_file = BytesIO(b(err))
         self.exit = exit
@@ -114,11 +117,11 @@ class MockSubprocess(object):
 
     def start(self):
         # Start patchin'
-        self.popen = patch('invoke.runners.Popen')
+        self.popen = patch("invoke.runners.Popen")
         Popen = self.popen.start()
-        self.read = patch('os.read')
+        self.read = patch("os.read")
         read = self.read.start()
-        self.sys_stdin = patch('sys.stdin', new_callable=BytesIO)
+        self.sys_stdin = patch("sys.stdin", new_callable=BytesIO)
         sys_stdin = self.sys_stdin.start()
         # Setup mocks
         process = Popen.return_value
@@ -128,9 +131,11 @@ class MockSubprocess(object):
         # If requested, mock isatty to fake out pty detection
         if self.isatty is not None:
             sys_stdin.isatty = Mock(return_value=self.isatty)
+
         def fakeread(fileno, count):
             fd = {1: self.out_file, 2: self.err_file}[fileno]
             return fd.read(count)
+
         read.side_effect = fakeread
         # Return the Popen mock as it's sometimes wanted inside tests
         return Popen
@@ -141,7 +146,7 @@ class MockSubprocess(object):
         self.sys_stdin.stop()
 
 
-def mock_subprocess(out='', err='', exit=0, isatty=None, insert_Popen=False):
+def mock_subprocess(out="", err="", exit=0, isatty=None, insert_Popen=False):
     def decorator(f):
         @wraps(f)
         # We have to include a @patch here to trick pytest into ignoring
@@ -150,26 +155,35 @@ def mock_subprocess(out='', err='', exit=0, isatty=None, insert_Popen=False):
         # though in our case those are not applying to the test function!)
         # Doesn't matter what we patch as long as it doesn't
         # actually get in our way.
-        @patch('invoke.runners.pty')
+        @patch("invoke.runners.pty")
         def wrapper(*args, **kwargs):
             proc = MockSubprocess(
-                out=out, err=err, exit=exit, isatty=isatty, autostart=False,
+                out=out, err=err, exit=exit, isatty=isatty, autostart=False
             )
             Popen = proc.start()
             args = list(args)
-            args.pop() # Pop the dummy patch
+            args.pop()  # Pop the dummy patch
             if insert_Popen:
                 args.append(Popen)
             try:
                 f(*args, **kwargs)
             finally:
                 proc.stop()
+
         return wrapper
+
     return decorator
 
 
-def mock_pty(out='', err='', exit=0, isatty=None, trailing_error=None,
-    skip_asserts=False, insert_os=False):
+def mock_pty(
+    out="",
+    err="",
+    exit=0,
+    isatty=None,
+    trailing_error=None,
+    skip_asserts=False,
+    insert_os=False,
+):
     # Windows doesn't have ptys, so all the pty tests should be
     # skipped anyway...
     if WINDOWS:
@@ -177,11 +191,12 @@ def mock_pty(out='', err='', exit=0, isatty=None, trailing_error=None,
 
     def decorator(f):
         import fcntl
-        ioctl_patch = patch('invoke.runners.fcntl.ioctl', wraps=fcntl.ioctl)
+
+        ioctl_patch = patch("invoke.runners.fcntl.ioctl", wraps=fcntl.ioctl)
 
         @wraps(f)
-        @patch('invoke.runners.pty')
-        @patch('invoke.runners.os')
+        @patch("invoke.runners.pty")
+        @patch("invoke.runners.os")
         @ioctl_patch
         def wrapper(*args, **kwargs):
             args = list(args)
@@ -193,7 +208,7 @@ def mock_pty(out='', err='', exit=0, isatty=None, trailing_error=None,
             # We don't really need to care about waiting since not truly
             # forking/etc, so here we just return a nonzero "pid" + sentinel
             # wait-status value (used in some tests about WIFEXITED etc)
-            os.waitpid.return_value = None, Mock(name='exitstatus')
+            os.waitpid.return_value = None, Mock(name="exitstatus")
             # Either or both of these may get called, depending...
             os.WEXITSTATUS.return_value = exit
             os.WTERMSIG.return_value = exit
@@ -202,6 +217,7 @@ def mock_pty(out='', err='', exit=0, isatty=None, trailing_error=None,
                 os.isatty.return_value = isatty
             out_file = BytesIO(b(out))
             err_file = BytesIO(b(err))
+
             def fakeread(fileno, count):
                 fd = {1: out_file, 2: err_file}[fileno]
                 ret = fd.read(count)
@@ -209,6 +225,7 @@ def mock_pty(out='', err='', exit=0, isatty=None, trailing_error=None,
                 if not ret and trailing_error:
                     raise trailing_error
                 return ret
+
             os.read.side_effect = fakeread
             if insert_os:
                 args.append(os)
@@ -224,11 +241,13 @@ def mock_pty(out='', err='', exit=0, isatty=None, trailing_error=None,
             assert ioctl.call_args_list[0][0][1] == termios.TIOCGWINSZ
             assert ioctl.call_args_list[1][0][1] == termios.TIOCSWINSZ
             if not skip_asserts:
-                for name in ('execve', 'waitpid'):
+                for name in ("execve", "waitpid"):
                     assert getattr(os, name).called
                 # Ensure at least one of the exit status getters was called
                 assert os.WEXITSTATUS.called or os.WTERMSIG.called
+
         return wrapper
+
     return decorator
 
 
@@ -240,6 +259,7 @@ class _Dummy(Runner):
     match the current Runner API will cause TypeErrors, NotImplementedErrors,
     and similar.
     """
+
     # Neuter the input loop sleep, so tests aren't slow (at the expense of CPU,
     # which isn't a problem for testing).
     input_sleep = 0

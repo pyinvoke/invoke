@@ -25,11 +25,13 @@ try:
 except ImportError:
     termios = None
 
-from .exceptions import (
-    UnexpectedExit, Failure, ThreadException, WatcherError,
-)
+from .exceptions import UnexpectedExit, Failure, ThreadException, WatcherError
 from .terminals import (
-    WINDOWS, pty_size, character_buffered, ready_for_reading, bytes_to_read,
+    WINDOWS,
+    pty_size,
+    character_buffered,
+    ready_for_reading,
+    bytes_to_read,
 )
 from .util import has_fileno, isatty, ExceptionHandlingThread, encode_output
 
@@ -44,6 +46,7 @@ class Runner(object):
 
     .. versionadded:: 1.0
     """
+
     read_chunk_size = 1000
     input_sleep = 0.01
 
@@ -272,24 +275,24 @@ class Runner(object):
     def _run_body(self, command, **kwargs):
         # Normalize kwargs w/ config
         opts, out_stream, err_stream, in_stream = self._run_opts(kwargs)
-        shell = opts['shell']
+        shell = opts["shell"]
         # Environment setup
-        env = self.generate_env(opts['env'], opts['replace_env'])
+        env = self.generate_env(opts["env"], opts["replace_env"])
         # Echo running command
-        if opts['echo']:
+        if opts["echo"]:
             print("\033[1;37m{}\033[0m".format(command))
         # Start executing the actual command (runs in background)
         self.start(command, shell, env)
         # Arrive at final encoding if neither config nor kwargs had one
-        self.encoding = opts['encoding'] or self.default_encoding()
+        self.encoding = opts["encoding"] or self.default_encoding()
         # Set up IO thread parameters (format - body_func: {kwargs})
         stdout, stderr = [], []
         thread_args = {
             self.handle_stdout: {
-                'buffer_': stdout,
-                'hide': 'stdout' in opts['hide'],
-                'output': out_stream,
-            },
+                "buffer_": stdout,
+                "hide": "stdout" in opts["hide"],
+                "output": out_stream,
+            }
         }
         # After opt processing above, in_stream will be a real stream obj or
         # False, so we can truth-test it. We don't even create a stdin-handling
@@ -297,15 +300,15 @@ class Runner(object):
         # problematic.
         if in_stream:
             thread_args[self.handle_stdin] = {
-                'input_': in_stream,
-                'output': out_stream,
-                'echo': opts['echo_stdin'],
+                "input_": in_stream,
+                "output": out_stream,
+                "echo": opts["echo_stdin"],
             }
         if not self.using_pty:
             thread_args[self.handle_stderr] = {
-                'buffer_': stderr,
-                'hide': 'stderr' in opts['hide'],
-                'output': err_stream,
+                "buffer_": stderr,
+                "hide": "stderr" in opts["hide"],
+                "output": err_stream,
             }
         # Kick off IO threads
         self.threads = {}
@@ -320,7 +323,7 @@ class Runner(object):
         while True:
             try:
                 self.wait()
-                break # done waiting!
+                break  # done waiting!
             # NOTE: we handle all this now instead of at
             # actual-exception-handling time because otherwise the stdout/err
             # reader threads may block until the subprocess exits.
@@ -329,7 +332,7 @@ class Runner(object):
             except KeyboardInterrupt as e:
                 self.send_interrupt(e)
                 # NOTE: no break; we want to return to self.wait()
-            except BaseException as e: # Want to handle SystemExit etc still
+            except BaseException as e:  # Want to handle SystemExit etc still
                 # Store exception for post-shutdown reraise
                 exception = e
                 # Break out of return-to-wait() loop - we want to shut down
@@ -362,8 +365,8 @@ class Runner(object):
             raise ThreadException(thread_exceptions)
         # At this point, we had enough success that we want to be returning or
         # raising detailed info about our execution; so we generate a Result.
-        stdout = ''.join(stdout)
-        stderr = ''.join(stderr)
+        stdout = "".join(stdout)
+        stderr = "".join(stderr)
         if WINDOWS:
             # "Universal newlines" - replace all standard forms of
             # newline with \n. This is not technically Windows related
@@ -387,7 +390,7 @@ class Runner(object):
             stderr=stderr,
             exited=exited,
             pty=self.using_pty,
-            hide=opts['hide'],
+            hide=opts["hide"],
             encoding=self.encoding,
         )
         # Any presence of WatcherError from the threads indicates a watcher was
@@ -397,7 +400,7 @@ class Runner(object):
             # TODO: ambiguity exists if we somehow get WatcherError in *both*
             # threads...as unlikely as that would normally be.
             raise Failure(result, reason=watcher_errors[0])
-        if not (result or opts['warn']):
+        if not (result or opts["warn"]):
             raise UnexpectedExit(result)
         return result
 
@@ -419,25 +422,25 @@ class Runner(object):
             err = "run() got an unexpected keyword argument '{}'"
             raise TypeError(err.format(list(kwargs.keys())[0]))
         # If hide was True, turn off echoing
-        if opts['hide'] is True:
-            opts['echo'] = False
+        if opts["hide"] is True:
+            opts["echo"] = False
         # Then normalize 'hide' from one of the various valid input values,
         # into a stream-names tuple.
-        opts['hide'] = normalize_hide(opts['hide'])
+        opts["hide"] = normalize_hide(opts["hide"])
         # Derive stream objects
-        out_stream = opts['out_stream']
+        out_stream = opts["out_stream"]
         if out_stream is None:
             out_stream = sys.stdout
-        err_stream = opts['err_stream']
+        err_stream = opts["err_stream"]
         if err_stream is None:
             err_stream = sys.stderr
-        in_stream = opts['in_stream']
+        in_stream = opts["in_stream"]
         if in_stream is None:
             in_stream = sys.stdin
         # Determine pty or no
-        self.using_pty = self.should_use_pty(opts['pty'], opts['fallback'])
-        if opts['watchers']:
-            self.watchers = opts['watchers']
+        self.using_pty = self.should_use_pty(opts["pty"], opts["fallback"])
+        if opts["watchers"]:
+            self.watchers = opts["watchers"]
         return opts, out_stream, err_stream, in_stream
 
     def _thread_timeout(self, target):
@@ -558,10 +561,7 @@ class Runner(object):
         .. versionadded:: 1.0
         """
         self._handle_output(
-            buffer_,
-            hide,
-            output,
-            reader=self.read_proc_stdout,
+            buffer_, hide, output, reader=self.read_proc_stdout
         )
 
     def handle_stderr(self, buffer_, hide, output):
@@ -574,10 +574,7 @@ class Runner(object):
         .. versionadded:: 1.0
         """
         self._handle_output(
-            buffer_,
-            hide,
-            output,
-            reader=self.read_proc_stderr,
+            buffer_, hide, output, reader=self.read_proc_stderr
         )
 
     def read_our_stdin(self, input_):
@@ -705,7 +702,7 @@ class Runner(object):
         # speed and memory use. Should that become false, consider using
         # StringIO or cStringIO (tho the latter doesn't do Unicode well?) which
         # is apparently even more efficient.
-        stream = u''.join(buffer_)
+        stream = u"".join(buffer_)
         for watcher in self.watchers:
             for response in watcher.submit(stream):
                 self.write_proc_stdin(response)
@@ -794,7 +791,7 @@ class Runner(object):
         """
         # NOTE: yes, this is a 1-liner. The point is to make it much harder to
         # forget to use 'replace' when decoding :)
-        return data.decode(self.encoding, 'replace')
+        return data.decode(self.encoding, "replace")
 
     @property
     def process_is_finished(self):
@@ -904,7 +901,7 @@ class Runner(object):
 
         .. versionadded:: 1.0
         """
-        self.write_proc_stdin(u'\x03')
+        self.write_proc_stdin(u"\x03")
 
     def returncode(self):
         """
@@ -947,6 +944,7 @@ class Local(Runner):
 
     .. versionadded:: 1.0
     """
+
     def __init__(self, context):
         super(Local, self).__init__(context)
         # Bookkeeping var for pty use case
@@ -959,7 +957,9 @@ class Local(Runner):
             # TODO: pass in & test in_stream, not sys.stdin
             if not has_fileno(sys.stdin) and fallback:
                 if not self.warned_about_pty_fallback:
-                    sys.stderr.write("WARNING: stdin has no fileno; falling back to non-pty execution!\n") # noqa
+                    sys.stderr.write(
+                        "WARNING: stdin has no fileno; falling back to non-pty execution!\n"
+                    )  # noqa
                     self.warned_about_pty_fallback = True
                 use_pty = False
         return use_pty
@@ -1004,13 +1004,15 @@ class Local(Runner):
         try:
             return os.write(fd, data)
         except OSError as e:
-            if 'Broken pipe' not in str(e):
+            if "Broken pipe" not in str(e):
                 raise
 
     def start(self, command, shell, env):
         if self.using_pty:
-            if pty is None: # Encountered ImportError
-                sys.exit("You indicated pty=True, but your platform doesn't support the 'pty' module!") # noqa
+            if pty is None:  # Encountered ImportError
+                sys.exit(
+                    "You indicated pty=True, but your platform doesn't support the 'pty' module!"
+                )  # noqa
             cols, rows = pty_size()
             self.pid, self.parent_fd = pty.fork()
             # If we're the child process, load up the actual command in a
@@ -1026,13 +1028,13 @@ class Local(Runner):
                 # Set pty window size based on what our own controlling
                 # terminal's window size appears to be.
                 # TODO: make subroutine?
-                winsize = struct.pack('HHHH', rows, cols, 0, 0)
+                winsize = struct.pack("HHHH", rows, cols, 0, 0)
                 fcntl.ioctl(sys.stdout.fileno(), termios.TIOCSWINSZ, winsize)
                 # Use execve for bare-minimum "exec w/ variable # args + env"
                 # behavior. No need for the 'p' (use PATH to find executable)
                 # for now.
                 # TODO: see if subprocess is using equivalent of execvp...
-                os.execve(shell, [shell, '-c', command], env)
+                os.execve(shell, [shell, "-c", command], env)
         else:
             self.process = Popen(
                 command,
@@ -1145,6 +1147,7 @@ class Result(object):
 
     .. versionadded:: 1.0
     """
+
     # TODO: inherit from namedtuple instead? heh (or: use attrs from pypi)
     def __init__(
         self,
@@ -1193,11 +1196,17 @@ class Result(object):
         else:
             desc = "Command was not fully executed due to watcher error."
         ret = [desc]
-        for x in ('stdout', 'stderr'):
+        for x in ("stdout", "stderr"):
             val = getattr(self, x)
-            ret.append(u"""=== {} ===
+            ret.append(
+                u"""=== {} ===
 {}
-""".format(x, val.rstrip()) if val else u"(no {})".format(x))
+""".format(
+                    x, val.rstrip()
+                )
+                if val
+                else u"(no {})".format(x)
+            )
         return u"\n".join(ret)
 
     def __repr__(self):
@@ -1230,18 +1239,18 @@ class Result(object):
 
 
 def normalize_hide(val):
-    hide_vals = (None, False, 'out', 'stdout', 'err', 'stderr', 'both', True)
+    hide_vals = (None, False, "out", "stdout", "err", "stderr", "both", True)
     if val not in hide_vals:
         err = "'hide' got {!r} which is not in {!r}"
         raise ValueError(err.format(val, hide_vals))
     if val in (None, False):
         hide = ()
-    elif val in ('both', True):
-        hide = ('stdout', 'stderr')
-    elif val == 'out':
-        hide = ('stdout',)
-    elif val == 'err':
-        hide = ('stderr',)
+    elif val in ("both", True):
+        hide = ("stdout", "stderr")
+    elif val == "out":
+        hide = ("stdout",)
+    elif val == "err":
+        hide = ("stderr",)
     else:
         hide = (val,)
     return hide

@@ -37,6 +37,7 @@ class Task(object):
 
     .. versionadded:: 1.0
     """
+
     # TODO: store these kwarg defaults central, refer to those values both here
     # and in @task.
     # TODO: allow central per-session / per-taskmodule control over some of
@@ -44,7 +45,8 @@ class Task(object):
     # NOTE: we shadow __builtins__.help here on purpose - obfuscating to avoid
     # it feels bad, given the builtin will never actually be in play anywhere
     # except a debug shell whose frame is exactly inside this class.
-    def __init__(self,
+    def __init__(
+        self,
         body,
         name=None,
         aliases=(),
@@ -63,9 +65,9 @@ class Task(object):
         self.body = body
         # Copy a bunch of special properties from the body for the benefit of
         # Sphinx autodoc or other introspectors.
-        self.__doc__ = getattr(body, '__doc__', '')
-        self.__name__ = getattr(body, '__name__', '')
-        self.__module__ = getattr(body, '__module__', '')
+        self.__doc__ = getattr(body, "__doc__", "")
+        self.__name__ = getattr(body, "__name__", "")
+        self.__module__ = getattr(body, "__module__", "")
         # Default name, alternate names, and whether it should act as the
         # default for its parent collection
         self._name = name
@@ -92,7 +94,7 @@ class Task(object):
     def __repr__(self):
         aliases = ""
         if self.aliases:
-            aliases = " ({})".format(', '.join(self.aliases))
+            aliases = " ({})".format(", ".join(self.aliases))
         return "<Task {!r}{}>".format(self.name, aliases)
 
     def __eq__(self, other):
@@ -105,10 +107,9 @@ class Task(object):
             return True
         else:
             try:
-                return (
-                    six.get_function_code(self.body) ==
-                    six.get_function_code(other.body)
-                )
+                return six.get_function_code(
+                    self.body
+                ) == six.get_function_code(other.body)
             except AttributeError:
                 return False
 
@@ -169,7 +170,7 @@ class Task(object):
         # value will be automatically considered positional.
         if positional is None:
             positional = []
-            for name in args: # Go in defined order, not dict "order"
+            for name in args:  # Go in defined order, not dict "order"
                 default = spec_dict[name]
                 if default is NO_DEFAULT:
                     positional.append(name)
@@ -178,23 +179,23 @@ class Task(object):
     def arg_opts(self, name, default, taken_names):
         opts = {}
         # Whether it's positional or not
-        opts['positional'] = name in self.positional
+        opts["positional"] = name in self.positional
         # Whether it is a value-optional flag
-        opts['optional'] = name in self.optional
+        opts["optional"] = name in self.optional
         # Whether it should be of an iterable (list) kind
         if name in self.iterable:
-            opts['kind'] = list
+            opts["kind"] = list
             # If user gave a non-None default, hopefully they know better
             # than us what they want here (and hopefully it offers the list
             # protocol...) - otherwise supply useful default
-            opts['default'] = default if default is not None else []
+            opts["default"] = default if default is not None else []
         # Whether it should increment its value or not
         if name in self.incrementable:
-            opts['incrementable'] = True
+            opts["incrementable"] = True
         # Argument name(s) (replace w/ dashed version if underscores present,
         # and move the underscored version to be the attr_name instead.)
-        if '_' in name:
-            opts['attr_name'] = name
+        if "_" in name:
+            opts["attr_name"] = name
             name = translate_underscores(name)
         names = [name]
         if self.auto_shortflags:
@@ -203,7 +204,7 @@ class Task(object):
                 if not (char == name or char in taken_names):
                     names.append(char)
                     break
-        opts['names'] = names
+        opts["names"] = names
         # Handle default value & kind if possible
         if default not in (None, NO_DEFAULT):
             # TODO: allow setting 'kind' explicitly.
@@ -211,12 +212,12 @@ class Task(object):
             # bool; that results in a nonsensical Argument which gives the
             # parser grief in a few ways.
             kind = type(default)
-            if not (opts['optional'] and kind is bool):
-                opts['kind'] = kind
-            opts['default'] = default
+            if not (opts["optional"] and kind is bool):
+                opts["kind"] = kind
+            opts["default"] = default
         # Help
         if name in self.help:
-            opts['help'] = self.help[name]
+            opts["help"] = self.help[name]
         return opts
 
     def get_arguments(self):
@@ -308,31 +309,32 @@ def task(*args, **kwargs):
         return Task(args[0], **kwargs)
     # @task(pre, tasks, here)
     if args:
-        if 'pre' in kwargs:
+        if "pre" in kwargs:
             raise TypeError(
                 "May not give *args and 'pre' kwarg simultaneously!"
             )
-        kwargs['pre'] = args
+        kwargs["pre"] = args
     # @task(options)
     # TODO: pull in centrally defined defaults here (see Task)
     # TODO: clean up all of the values which are iterables, some are tuple and
     # some are None->list, ugh
-    name = kwargs.pop('name', None)
-    aliases = kwargs.pop('aliases', ())
-    positional = kwargs.pop('positional', None)
-    optional = tuple(kwargs.pop('optional', ()))
-    iterable = kwargs.pop('iterable', None)
-    incrementable = kwargs.pop('incrementable', None)
-    default = kwargs.pop('default', False)
-    auto_shortflags = kwargs.pop('auto_shortflags', True)
-    help = kwargs.pop('help', {})
-    pre = kwargs.pop('pre', [])
-    post = kwargs.pop('post', [])
-    autoprint = kwargs.pop('autoprint', False)
+    name = kwargs.pop("name", None)
+    aliases = kwargs.pop("aliases", ())
+    positional = kwargs.pop("positional", None)
+    optional = tuple(kwargs.pop("optional", ()))
+    iterable = kwargs.pop("iterable", None)
+    incrementable = kwargs.pop("incrementable", None)
+    default = kwargs.pop("default", False)
+    auto_shortflags = kwargs.pop("auto_shortflags", True)
+    help = kwargs.pop("help", {})
+    pre = kwargs.pop("pre", [])
+    post = kwargs.pop("post", [])
+    autoprint = kwargs.pop("autoprint", False)
     # Handle unknown kwargs
     if kwargs:
         kwarg = (" unknown kwargs {!r}".format(kwargs)) if kwargs else ""
         raise TypeError("@task was called with" + kwarg)
+
     def inner(obj):
         obj = Task(
             obj,
@@ -350,6 +352,7 @@ def task(*args, **kwargs):
             autoprint=autoprint,
         )
         return obj
+
     return inner
 
 
@@ -363,13 +366,8 @@ class Call(object):
 
     .. versionadded:: 1.0
     """
-    def __init__(
-        self,
-        task,
-        called_as=None,
-        args=None,
-        kwargs=None,
-    ):
+
+    def __init__(self, task, called_as=None, args=None, kwargs=None):
         """
         Create a new `.Call` object.
 

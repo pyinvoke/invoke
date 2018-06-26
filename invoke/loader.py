@@ -13,6 +13,7 @@ class Loader(object):
 
     .. versionadded:: 1.0
     """
+
     def __init__(self, config=None):
         """
         Set up a new loader with some `.Config`.
@@ -93,6 +94,7 @@ class FilesystemLoader(Loader):
 
     .. versionadded:: 1.0
     """
+
     # TODO: could introduce config obj here for transmission to Collection
     # TODO: otherwise Loader has to know about specific bits to transmit, such
     # as auto-dashes, and has to grow one of those for every bit Collection

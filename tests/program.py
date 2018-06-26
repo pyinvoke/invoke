@@ -9,14 +9,25 @@ from pytest import skip
 from pytest_relaxed import trap
 
 from invoke import (
-    Program, Collection, Task, FilesystemLoader, Executor, Config,
-    UnexpectedExit, Result,
+    Program,
+    Collection,
+    Task,
+    FilesystemLoader,
+    Executor,
+    Config,
+    UnexpectedExit,
+    Result,
 )
 from invoke import main
 from invoke.util import cd
 
 from _util import (
-    load, expect, skip_if_windows, run, support_file, support_path,
+    load,
+    expect,
+    skip_if_windows,
+    run,
+    support_file,
+    support_path,
 )
 
 
@@ -29,21 +40,22 @@ pytestmark = pytest.mark.usefixtures("integration")
 class Program_:
     class init:
         "__init__"
+
         def may_specify_version(self):
-            assert Program(version='1.2.3').version == '1.2.3'
+            assert Program(version="1.2.3").version == "1.2.3"
 
         def default_version_is_unknown(self):
-            assert Program().version == 'unknown'
+            assert Program().version == "unknown"
 
         def may_specify_namespace(self):
-            foo = load('foo')
+            foo = load("foo")
             assert Program(namespace=foo).namespace is foo
 
         def may_specify_name(self):
-            assert Program(name='Myapp').name == 'Myapp'
+            assert Program(name="Myapp").name == "Myapp"
 
         def may_specify_binary(self):
-            assert Program(binary='myapp').binary == 'myapp'
+            assert Program(binary="myapp").binary == "myapp"
 
         def loader_class_defaults_to_FilesystemLoader(self):
             assert Program().loader_class is FilesystemLoader
@@ -66,28 +78,27 @@ class Program_:
             klass = object()
             assert Program(config_class=klass).config_class == klass
 
-
     class miscellaneous:
         "miscellaneous behaviors"
+
         def debug_flag_activates_logging(self):
             # Have to patch our logger to get in before logcapture kicks in.
-            with patch('invoke.util.debug') as debug:
+            with patch("invoke.util.debug") as debug:
                 Program().run("invoke -d -c debugging foo")
-                debug.assert_called_with('my-sentinel')
+                debug.assert_called_with("my-sentinel")
 
         def bytecode_skipped_by_default(self):
-            expect('-c foo mytask')
+            expect("-c foo mytask")
             assert sys.dont_write_bytecode
 
         def write_pyc_explicitly_enables_bytecode_writing(self):
-            expect('--write-pyc -c foo mytask')
+            expect("--write-pyc -c foo mytask")
             assert not sys.dont_write_bytecode
 
-
     class normalize_argv:
-        @patch('invoke.program.sys')
+        @patch("invoke.program.sys")
         def defaults_to_sys_argv(self, mock_sys):
-            argv = ['inv', '--version']
+            argv = ["inv", "--version"]
             mock_sys.argv = argv
             p = Program()
             p.print_version = Mock()
@@ -97,7 +108,7 @@ class Program_:
         def uses_a_list_unaltered(self):
             p = Program()
             p.print_version = Mock()
-            p.run(['inv', '--version'], exit=False)
+            p.run(["inv", "--version"], exit=False)
             p.print_version.assert_called()
 
         def splits_a_string(self):
@@ -106,20 +117,21 @@ class Program_:
             p.run("inv --version", exit=False)
             p.print_version.assert_called()
 
-
     class name:
         def defaults_to_capitalized_binary_when_None(self):
             expect("myapp --version", out="Myapp unknown\n", invoke=False)
 
         def benefits_from_binary_absolute_behavior(self):
             "benefits from binary()'s absolute path behavior"
-            expect("/usr/local/bin/myapp --version", out="Myapp unknown\n",
-                invoke=False)
+            expect(
+                "/usr/local/bin/myapp --version",
+                out="Myapp unknown\n",
+                invoke=False,
+            )
 
         def uses_overridden_value_when_given(self):
-            p = Program(name='NotInvoke')
+            p = Program(name="NotInvoke")
             expect("--version", out="NotInvoke unknown\n", program=p)
-
 
     class binary:
         def defaults_to_argv_when_None(self):
@@ -128,7 +140,7 @@ class Program_:
 
         def uses_overridden_value_when_given(self):
             stdout, _ = run(
-                "myapp --help", invoke=False, program=Program(binary='nope'),
+                "myapp --help", invoke=False, program=Program(binary="nope")
             )
             assert "nope [--core-opts]" in stdout
 
@@ -139,22 +151,20 @@ class Program_:
             assert "myapp [--core-opts]" in stdout
             assert "/usr/local/bin" not in stdout
 
-
     class print_version:
         def displays_name_and_version(self):
             expect(
                 "--version",
-                program=Program(name="MyProgram", version='0.1.0'),
-                out="MyProgram 0.1.0\n"
+                program=Program(name="MyProgram", version="0.1.0"),
+                out="MyProgram 0.1.0\n",
             )
-
 
     class initial_context:
         def contains_truly_core_arguments_regardless_of_namespace_value(self):
             # Spot check. See integration-style --help tests for full argument
             # checkup.
             for program in (Program(), Program(namespace=Collection())):
-                for arg in ('--complete', '--debug', '--warn-only', '--list'):
+                for arg in ("--complete", "--debug", "--warn-only", "--list"):
                     stdout, _ = run("--help", program=program)
                     assert arg in stdout
 
@@ -188,7 +198,6 @@ class Program_:
             Program(loader_class=klass).run("myapp --help foo", exit=False)
             klass.assert_called_with(start=ANY, config=ANY)
 
-
     class execute:
         def uses_executor_class_given(self):
             klass = Mock()
@@ -201,9 +210,8 @@ class Program_:
             cmd = "myapp -e foo -- myremainder"
             Program(executor_class=klass).run(cmd, exit=False)
             core = klass.call_args[0][2]
-            assert core[0].args['echo'].value
+            assert core[0].args["echo"].value
             assert core.remainder == "myremainder"
-
 
     class core_args:
         def returns_core_args_list(self):
@@ -211,11 +219,10 @@ class Program_:
             # Spot checks good enough, --help tests include the full deal.
             core_args = Program().core_args()
             core_arg_names = [x.names[0] for x in core_args]
-            for name in ('complete', 'help', 'pty', 'version'):
+            for name in ("complete", "help", "pty", "version"):
                 assert name in core_arg_names
             # Also make sure it's a list for easier tweaking/appending
             assert isinstance(core_args, list)
-
 
     class run:
         # NOTE: some of these are integration-style tests, but they are still
@@ -225,23 +232,19 @@ class Program_:
         # for the parser's own unit tests).
 
         def seeks_and_loads_tasks_module_by_default(self):
-            expect('foo', out="Hm\n")
+            expect("foo", out="Hm\n")
 
         def does_not_seek_tasks_module_if_namespace_was_given(self):
             expect(
-                'foo',
+                "foo",
                 err="No idea what 'foo' is!\n",
-                program=Program(namespace=Collection('blank'))
+                program=Program(namespace=Collection("blank")),
             )
 
         def explicit_namespace_works_correctly(self):
             # Regression-ish test re #288
-            ns = Collection.from_module(load('integration'))
-            expect(
-                'print-foo',
-                out='foo\n',
-                program=Program(namespace=ns),
-            )
+            ns = Collection.from_module(load("integration"))
+            expect("print-foo", out="foo\n", program=Program(namespace=ns))
 
         def allows_explicit_task_module_specification(self):
             expect("-c integration print-foo", out="foo\n")
@@ -250,27 +253,27 @@ class Program_:
             expect("-c integration print-name --name inigo", out="inigo\n")
 
         def can_change_collection_search_root(self):
-            for flag in ('-r', '--search-root'):
+            for flag in ("-r", "--search-root"):
                 expect(
                     "{} branch/ alt-root".format(flag),
                     out="Down with the alt-root!\n",
                 )
 
         def can_change_collection_search_root_with_explicit_module_name(self):
-            for flag in ('-r', '--search-root'):
+            for flag in ("-r", "--search-root"):
                 expect(
                     "{} branch/ -c explicit lyrics".format(flag),
                     out="Don't swear!\n",
                 )
 
         @trap
-        @patch('invoke.program.sys.exit')
+        @patch("invoke.program.sys.exit")
         def ParseErrors_display_message_and_exit_1(self, mock_exit):
             p = Program()
             # Run with a definitely-parser-angering incorrect input; the fact
             # that this line doesn't raise an exception and thus fail the
             # test, is what we're testing...
-            nah = 'nopenotvalidsorry'
+            nah = "nopenotvalidsorry"
             p.run("myapp {}".format(nah))
             # Expect that we did print the core body of the ParseError (e.g.
             # "no idea what foo is!") and exit 1. (Intent is to display that
@@ -280,14 +283,12 @@ class Program_:
             mock_exit.assert_called_with(1)
 
         @trap
-        @patch('invoke.program.sys.exit')
+        @patch("invoke.program.sys.exit")
         def UnexpectedExit_exits_with_code_when_no_hiding(self, mock_exit):
             p = Program()
-            oops = UnexpectedExit(Result(
-                command='meh',
-                exited=17,
-                hide=tuple(),
-            ))
+            oops = UnexpectedExit(
+                Result(command="meh", exited=17, hide=tuple())
+            )
             p.execute = Mock(side_effect=oops)
             p.run("myapp foo")
             # Expect NO repr printed, because stdout/err were not hidden, so we
@@ -298,23 +299,27 @@ class Program_:
             mock_exit.assert_called_with(17)
 
         @trap
-        @patch('invoke.program.sys.exit')
+        @patch("invoke.program.sys.exit")
         def shows_UnexpectedExit_str_when_streams_hidden(self, mock_exit):
             p = Program()
-            oops = UnexpectedExit(Result(
-                command='meh',
-                exited=54,
-                stdout='things!',
-                stderr='ohnoz!',
-                encoding='utf-8',
-                hide=('stdout', 'stderr'),
-            ))
+            oops = UnexpectedExit(
+                Result(
+                    command="meh",
+                    exited=54,
+                    stdout="things!",
+                    stderr="ohnoz!",
+                    encoding="utf-8",
+                    hide=("stdout", "stderr"),
+                )
+            )
             p.execute = Mock(side_effect=oops)
             p.run("myapp foo")
             # Expect repr() of exception prints to stderr
             # NOTE: this partially duplicates a test in runners.py; whatever.
             stderr = sys.stderr.getvalue()
-            assert stderr == """Encountered a bad command exit code!
+            assert (
+                stderr
+                == """Encountered a bad command exit code!
 
 Command: 'meh'
 
@@ -329,21 +334,24 @@ Stderr:
 ohnoz!
 
 """
+            )
             # And exit with expected code (vs e.g. 1 or 0)
             mock_exit.assert_called_with(54)
 
         @trap
-        @patch('invoke.program.sys.exit')
+        @patch("invoke.program.sys.exit")
         def UnexpectedExit_str_encodes_stdout_and_err(self, mock_exit):
             p = Program()
-            oops = UnexpectedExit(Result(
-                command='meh',
-                exited=54,
-                stdout=u'this is not ascii: \u1234',
-                stderr=u'this is also not ascii: \u4321',
-                encoding='utf-8',
-                hide=('stdout', 'stderr'),
-            ))
+            oops = UnexpectedExit(
+                Result(
+                    command="meh",
+                    exited=54,
+                    stdout=u"this is not ascii: \u1234",
+                    stderr=u"this is also not ascii: \u4321",
+                    encoding="utf-8",
+                    hide=("stdout", "stderr"),
+                )
+            )
             p.execute = Mock(side_effect=oops)
             p.run("myapp foo")
             # NOTE: using explicit binary ASCII here, & accessing raw
@@ -375,13 +383,12 @@ this is also not ascii: \xe4\x8c\xa1
             skip()
 
         @trap
-        @patch('invoke.program.sys.exit')
+        @patch("invoke.program.sys.exit")
         def turns_KeyboardInterrupt_into_exit_code_1(self, mock_exit):
             p = Program()
             p.execute = Mock(side_effect=KeyboardInterrupt)
             p.run("myapp -c foo mytask")
             mock_exit.assert_called_with(1)
-
 
     class help_:
         "--help"
@@ -438,7 +445,7 @@ Core options:
                                     commands fail.
 
 """.lstrip()
-                for flag in ['-h', '--help']:
+                for flag in ["-h", "--help"]:
                     expect(flag, out=expected, program=main.program)
 
             def bundled_namespace_help_includes_subcommand_listing(self):
@@ -449,7 +456,7 @@ Core options:
                 # this every time core args change.
                 for expected in (
                     # Usage line changes somewhat
-                    "Usage: myapp [--core-opts] <subcommand> [--subcommand-opts] ...\n", # noqa
+                    "Usage: myapp [--core-opts] <subcommand> [--subcommand-opts] ...\n",  # noqa
                     # Core options are still present
                     "Core options:\n",
                     "--echo",
@@ -467,7 +474,6 @@ Core options:
                     stdout, _ = run("--help")
                     assert "Usage: " in stdout
 
-
         class per_task:
             "per-task"
 
@@ -483,8 +489,8 @@ Options:
   -w STRING, --who=STRING   Who to punch
 
 """.lstrip()
-                for flag in ['-h', '--help']:
-                    expect('-c decorators {} punch'.format(flag), out=expected)
+                for flag in ["-h", "--help"]:
+                    expect("-c decorators {} punch".format(flag), out=expected)
 
             def works_for_unparameterized_tasks(self):
                 expected = """
@@ -497,11 +503,11 @@ Options:
   none
 
 """.lstrip()
-                expect('-c decorators -h biz', out=expected)
+                expect("-c decorators -h biz", out=expected)
 
             def honors_program_binary(self):
                 stdout, _ = run(
-                    "-c decorators -h biz", program=Program(binary='notinvoke')
+                    "-c decorators -h biz", program=Program(binary="notinvoke")
                 )
                 assert "Usage: notinvoke" in stdout
 
@@ -516,7 +522,7 @@ Options:
   none
 
 """.lstrip()
-                expect('-c decorators -h foo', out=expected)
+                expect("-c decorators -h foo", out=expected)
 
             def dedents_correctly(self):
                 expected = """
@@ -533,7 +539,7 @@ Options:
   none
 
 """.lstrip()
-                expect('-c decorators -h foo2', out=expected)
+                expect("-c decorators -h foo2", out=expected)
 
             def dedents_correctly_for_alt_docstring_style(self):
                 expected = """
@@ -550,7 +556,7 @@ Options:
   none
 
 """.lstrip()
-                expect('-c decorators -h foo3', out=expected)
+                expect("-c decorators -h foo3", out=expected)
 
             def exits_after_printing(self):
                 # TODO: find & test the other variants of this error case, such
@@ -571,7 +577,6 @@ Options:
             def complains_if_given_invalid_task_name(self):
                 expect("-h this", err="No idea what 'this' is!\n")
 
-
     class task_list:
         "--list"
 
@@ -581,71 +586,75 @@ Available tasks:
 
 {}
 
-""".format('\n'.join("  " + x for x in lines)).lstrip()
+""".format(
+                "\n".join("  " + x for x in lines)
+            ).lstrip()
 
         def _list_eq(self, collection, listing):
-            cmd = '-c {} --list'.format(collection)
+            cmd = "-c {} --list".format(collection)
             expect(cmd, out=self._listing(listing))
 
         def simple_output(self):
-            expected = self._listing((
-                'bar',
-                'biz',
-                'boz',
-                'foo',
-                'post1',
-                'post2',
-                'print-foo',
-                'print-name',
-                'print-underscored-arg',
-            ))
-            for flag in ('-l', '--list'):
-                expect('-c integration {}'.format(flag), out=expected)
+            expected = self._listing(
+                (
+                    "bar",
+                    "biz",
+                    "boz",
+                    "foo",
+                    "post1",
+                    "post2",
+                    "print-foo",
+                    "print-name",
+                    "print-underscored-arg",
+                )
+            )
+            for flag in ("-l", "--list"):
+                expect("-c integration {}".format(flag), out=expected)
 
         def namespacing(self):
-            self._list_eq('namespacing', (
-                'toplevel',
-                'module.mytask',
-            ))
+            self._list_eq("namespacing", ("toplevel", "module.mytask"))
 
         def top_level_tasks_listed_first(self):
-            self._list_eq('simple_ns_list', (
-                'z-toplevel',
-                'a.b.subtask'
-            ))
+            self._list_eq("simple_ns_list", ("z-toplevel", "a.b.subtask"))
 
         def aliases_sorted_alphabetically(self):
-            self._list_eq('alias_sorting', (
-                'toplevel (a, z)',
-            ))
+            self._list_eq("alias_sorting", ("toplevel (a, z)",))
 
         def default_tasks(self):
             # sub-ns default task display as "real.name (collection name)"
-            self._list_eq('explicit_root', (
-                'top-level (other-top)',
-                'sub-level.sub-task (sub-level, sub-level.other-sub)',
-            ))
+            self._list_eq(
+                "explicit_root",
+                (
+                    "top-level (other-top)",
+                    "sub-level.sub-task (sub-level, sub-level.other-sub)",
+                ),
+            )
 
         def docstrings_shown_alongside(self):
-            self._list_eq('docstrings', (
-                'leading-whitespace    foo',
-                'no-docstring',
-                'one-line              foo',
-                'two-lines             foo',
-                'with-aliases (a, b)   foo',
-            ))
+            self._list_eq(
+                "docstrings",
+                (
+                    "leading-whitespace    foo",
+                    "no-docstring",
+                    "one-line              foo",
+                    "two-lines             foo",
+                    "with-aliases (a, b)   foo",
+                ),
+            )
 
         def docstrings_are_wrapped_to_terminal_width(self):
-            self._list_eq('nontrivial_docstrings', (
-                'no-docstring',
-                'task-one       Lorem ipsum dolor sit amet, consectetur adipiscing elit.\n                 Nullam id dictum', # noqa
-                'task-two       Nulla eget ultrices ante. Curabitur sagittis commodo posuere.\n                 Duis dapibus', # noqa
-            ))
+            self._list_eq(
+                "nontrivial_docstrings",
+                (
+                    "no-docstring",
+                    "task-one       Lorem ipsum dolor sit amet, consectetur adipiscing elit.\n                 Nullam id dictum",  # noqa
+                    "task-two       Nulla eget ultrices ante. Curabitur sagittis commodo posuere.\n                 Duis dapibus",  # noqa
+                ),
+            )
 
         def empty_collections_say_no_tasks(self):
             expect(
-                "-c empty -l",
-                err="No tasks found in collection 'empty'!\n"
+                "-c empty -l", err="No tasks found in collection 'empty'!\n"
             )
 
         def nontrivial_trees_are_sorted_by_namespace_and_depth(self):
@@ -723,7 +732,7 @@ Default 'build.docs' task: .all
                 # qualified one instead?
                 expect(
                     "-c empty_subcollection -l subcollection",
-                    err="No tasks found in collection 'subcollection'!\n" # noqa
+                    err="No tasks found in collection 'subcollection'!\n",  # noqa
                 )
 
             def invalid_namespaces_exit_with_message(self):
@@ -1033,10 +1042,9 @@ Default 'build' task: .all
                     # Stored expected data as an actual JSON file cuz it's big
                     # & looks like crap if inlined. Plus by round-tripping it
                     # we remove the pretty-printing. Win-win?
-                    self.tree = json.loads(support_file('tree.json'))
+                    self.tree = json.loads(support_file("tree.json"))
                     self.by_name = {
-                        x["name"]: x
-                        for x in self.tree["collections"]
+                        x["name"]: x for x in self.tree["collections"]
                     }
 
                 def base_case(self):
@@ -1045,17 +1053,17 @@ Default 'build' task: .all
 
                 def honors_namespace_arg_to_list(self):
                     stdout, _ = run("-c tree --list deploy --list-format=json")
-                    expected = self.by_name['deploy']
+                    expected = self.by_name["deploy"]
                     assert expected == json.loads(stdout)
 
                 def does_not_honor_depth_arg(self):
                     _, stderr = run("-c tree -l --list-format json -D 2")
-                    expected = "The --list-depth option is not supported with JSON format!\n" # noqa
+                    expected = "The --list-depth option is not supported with JSON format!\n"  # noqa
                     assert expected == stderr
 
                 def does_not_honor_depth_arg_even_with_namespace(self):
                     _, stderr = run("-c tree -l build -F json -D 2")
-                    expected = "The --list-depth option is not supported with JSON format!\n" # noqa
+                    expected = "The --list-depth option is not supported with JSON format!\n"  # noqa
                     assert expected == stderr
 
                 # TODO: should an empty-but-valid namespace in JSON format
@@ -1064,7 +1072,7 @@ Default 'build' task: .all
                 def empty_namespaces_say_no_tasks_in_namespace(self):
                     expect(
                         "-c empty_subcollection -l subcollection -F nested",
-                        err="No tasks found in collection 'subcollection'!\n" # noqa
+                        err="No tasks found in collection 'subcollection'!\n",  # noqa
                     )
 
                 # NOTE: this should probably still exit with a message even if
@@ -1076,27 +1084,26 @@ Default 'build' task: .all
                         err="Sub-collection 'nope' not found!\n",
                     )
 
-
     class run_options:
         "run() related CLI flags affect 'run' config values"
+
         def _test_flag(self, flag, key, value=True):
             p = Program()
-            p.execute = Mock() # neuter
-            p.run('inv {} foo'.format(flag))
+            p.execute = Mock()  # neuter
+            p.run("inv {} foo".format(flag))
             assert p.config.run[key] == value
 
         def warn_only(self):
-            self._test_flag('-w', 'warn')
+            self._test_flag("-w", "warn")
 
         def pty(self):
-            self._test_flag('-p', 'pty')
+            self._test_flag("-p", "pty")
 
         def hide(self):
-            self._test_flag('--hide both', 'hide', value='both')
+            self._test_flag("--hide both", "hide", value="both")
 
         def echo(self):
-            self._test_flag('-e', 'echo')
-
+            self._test_flag("-e", "echo")
 
     class configuration:
         "Configuration-related concerns"
@@ -1104,10 +1111,9 @@ Default 'build' task: .all
         def _klass(self):
             # Pauper's mock that can honor .tasks.collection_name (Loader
             # looks in the config for this by default.)
-            instance_mock = Mock(tasks=Mock(
-                collection_name='whatever',
-                search_root='meh',
-            ))
+            instance_mock = Mock(
+                tasks=Mock(collection_name="whatever", search_root="meh")
+            )
             return Mock(return_value=instance_mock)
 
         @trap
@@ -1138,21 +1144,21 @@ Default 'build' task: .all
             # fixes #467; when bug present, project conf is loaded _after_
             # attempt to parse tasks, causing explosion when i_have_underscores
             # is only sent to parser as i-have-underscores.
-            with cd(os.path.join('configs', 'underscores')):
+            with cd(os.path.join("configs", "underscores")):
                 expect("i_have_underscores")
 
         def per_project_config_files_load_with_explicit_ns(self):
             # Re: #234
-            with cd(os.path.join('configs', 'yaml')):
+            with cd(os.path.join("configs", "yaml")):
                 expect("-c explicit mytask")
 
         def runtime_config_file_honored(self):
-            with cd('configs'):
+            with cd("configs"):
                 expect("-c runtime -f yaml/invoke.yaml mytask")
 
         def tasks_dedupe_honors_configuration(self):
             # Kinda-sorta duplicates some tests in executor.py, but eh.
-            with cd('configs'):
+            with cd("configs"):
                 # Runtime conf file
                 expect(
                     "-c integration -f no-dedupe.yaml biz",
@@ -1164,7 +1170,8 @@ biz
 post1
 post2
 post2
-""".lstrip())
+""".lstrip(),
+                )
                 # Flag beats runtime
                 expect(
                     "-c integration -f dedupe.yaml --no-dedupe biz",
@@ -1176,7 +1183,8 @@ biz
 post1
 post2
 post2
-""".lstrip())
+""".lstrip(),
+                )
 
         # * debug (top level?)
         # * hide (run.hide...lol)
@@ -1184,11 +1192,11 @@ post2
         # * warn (run.warn)
 
         def env_vars_load_with_prefix(self, monkeypatch):
-            monkeypatch.setenv('INVOKE_RUN_ECHO', '1')
-            expect('-c contextualized check-echo')
+            monkeypatch.setenv("INVOKE_RUN_ECHO", "1")
+            expect("-c contextualized check-echo")
 
         def env_var_prefix_can_be_overridden(self, monkeypatch):
-            monkeypatch.setenv('MYAPP_RUN_HIDE', 'both')
+            monkeypatch.setenv("MYAPP_RUN_HIDE", "both")
             # This forces the execution stuff, including Executor, to run
             # NOTE: it's not really possible to rework the impl so this test is
             # cleaner - tasks require per-task/per-collection config, which can
@@ -1198,21 +1206,23 @@ post2
             # NOTE: check-hide will kaboom if its context's run.hide is not set
             # to True (default False).
             class MyConf(Config):
-                env_prefix = 'MYAPP'
-            p = Program(config_class=MyConf)
-            p.run('inv -c contextualized check-hide')
+                env_prefix = "MYAPP"
 
+            p = Program(config_class=MyConf)
+            p.run("inv -c contextualized check-hide")
 
     class other_behavior:
-        @patch('invoke.program.getpass.getpass')
+        @patch("invoke.program.getpass.getpass")
         def sudo_prompt_up_front(self, getpass):
-            getpass.return_value = 'mypassword'
+            getpass.return_value = "mypassword"
             # Task under test makes expectations re: sudo config (doesn't
             # actually even sudo, sudo's use of config is tested in Config
             # tests)
             with support_path():
                 try:
-                    Program().run("inv --prompt-for-sudo-password -c sudo_prompt expect-config") # noqa
+                    Program().run(
+                        "inv --prompt-for-sudo-password -c sudo_prompt expect-config"
+                    )  # noqa
                 except SystemExit as e:
                     # If inner call failed, we'll already have seen its output,
                     # and this will just ensure we ourselves are marked failed

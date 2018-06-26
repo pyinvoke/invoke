@@ -14,6 +14,7 @@ class Collection(object):
 
     .. versionadded:: 1.0
     """
+
     def __init__(self, *args, **kwargs):
         """
         Create a new task collection/namespace.
@@ -95,8 +96,8 @@ class Collection(object):
         self.name = None
         self._configuration = {}
         # Specific kwargs if applicable
-        self.loaded_from = kwargs.pop('loaded_from', None)
-        self.auto_dash_names = kwargs.pop('auto_dash_names', None)
+        self.loaded_from = kwargs.pop("loaded_from", None)
+        self.auto_dash_names = kwargs.pop("auto_dash_names", None)
         # splat-kwargs version of default value (auto_dash_names=True)
         if self.auto_dash_names is None:
             self.auto_dash_names = True
@@ -124,15 +125,14 @@ class Collection(object):
         task_names = list(self.tasks.keys())
         collections = ["{}...".format(x) for x in self.collections.keys()]
         return "<Collection {!r}: {}>".format(
-            self.name,
-            ", ".join(sorted(task_names) + sorted(collections)),
+            self.name, ", ".join(sorted(task_names) + sorted(collections))
         )
 
     def __eq__(self, other):
         return (
-            self.name == other.name and
-            self.tasks == other.tasks and
-            self.collections == other.collections
+            self.name == other.name
+            and self.tasks == other.tasks
+            and self.collections == other.collections
         )
 
     def __ne__(self, other):
@@ -196,21 +196,22 @@ class Collection(object):
 
         .. versionadded:: 1.0
         """
-        module_name = module.__name__.split('.')[-1]
+        module_name = module.__name__.split(".")[-1]
+
         def instantiate(obj_name=None):
             # Explicitly given name wins over root ns name (if applicable),
             # which wins over actual module name.
             args = [name or obj_name or module_name]
             kwargs = dict(
-                loaded_from=loaded_from,
-                auto_dash_names=auto_dash_names,
+                loaded_from=loaded_from, auto_dash_names=auto_dash_names
             )
             instance = cls(*args, **kwargs)
             instance.__doc__ = module.__doc__
             return instance
+
         # See if the module provides a default NS to use in lieu of creating
         # our own collection.
-        for candidate in ('ns', 'namespace'):
+        for candidate in ("ns", "namespace"):
             obj = getattr(module, candidate, None)
             if obj and isinstance(obj, Collection):
                 # TODO: make this into Collection.clone() or similar?
@@ -225,10 +226,7 @@ class Collection(object):
                 ret._configuration = obj_config
                 return ret
         # Failing that, make our own collection from the module's tasks.
-        tasks = filter(
-            lambda x: isinstance(x, Task),
-            vars(module).values()
-        )
+        tasks = filter(lambda x: isinstance(x, Task), vars(module).values())
         # Again, explicit name wins over implicit one from module path
         collection = instantiate()
         for task in tasks:
@@ -260,15 +258,19 @@ class Collection(object):
         if name is None:
             if task.name:
                 name = task.name
-            elif hasattr(task.body, 'func_name'):
+            elif hasattr(task.body, "func_name"):
                 name = task.body.func_name
-            elif hasattr(task.body, '__name__'):
+            elif hasattr(task.body, "__name__"):
                 name = task.__name__
             else:
                 raise ValueError("Could not obtain a name for this task!")
         name = self.transform(name)
         if name in self.collections:
-            raise ValueError("Name conflict: this collection has a sub-collection named {!r} already".format(name)) # noqa
+            raise ValueError(
+                "Name conflict: this collection has a sub-collection named {!r} already".format(
+                    name
+                )
+            )  # noqa
         self.tasks[name] = task
         for alias in list(task.aliases) + list(aliases or []):
             self.tasks.alias(self.transform(alias), to=name)
@@ -300,7 +302,11 @@ class Collection(object):
         name = self.transform(name)
         # Test for conflict
         if name in self.tasks:
-            raise ValueError("Name conflict: this collection has a task named {!r} already".format(name)) # noqa
+            raise ValueError(
+                "Name conflict: this collection has a task named {!r} already".format(
+                    name
+                )
+            )  # noqa
         # Insert
         self.collections[name] = coll
 
@@ -314,9 +320,9 @@ class Collection(object):
 
         An empty path becomes simply ``('', '')``.
         """
-        parts = path.split('.')
+        parts = path.split(".")
         coll = parts.pop(0)
-        rest = '.'.join(parts)
+        rest = ".".join(parts)
         return coll, rest
 
     def subcollection_from_path(self, path):
@@ -325,7 +331,7 @@ class Collection(object):
 
         .. versionadded:: 1.0
         """
-        parts = path.split('.')
+        parts = path.split(".")
         collection = self
         while parts:
             collection = collection.collections[parts.pop(0)]
@@ -377,12 +383,12 @@ class Collection(object):
         # Normalize name to the format we're expecting
         name = self.transform(name)
         # Non-default tasks within subcollections -> recurse (sorta)
-        if '.' in name:
+        if "." in name:
             coll, rest = self._split_path(name)
             return self._task_with_merged_config(coll, rest, ours)
         # Default task for subcollections (via empty-name lookup)
         if name in self.collections:
-            return self._task_with_merged_config(name, '', ours)
+            return self._task_with_merged_config(name, "", ours)
         # Regular task lookup
         return self.tasks[name], ours
 
@@ -402,15 +408,17 @@ class Collection(object):
         result = []
         for primary, aliases in six.iteritems(self.task_names):
             task = self[primary]
-            result.append(ParserContext(
-                name=primary, aliases=aliases, args=task.get_arguments()
-            ))
+            result.append(
+                ParserContext(
+                    name=primary, aliases=aliases, args=task.get_arguments()
+                )
+            )
         return result
 
     def subtask_name(self, collection_name, task_name):
-        return '.'.join([
-            self.transform(collection_name), self.transform(task_name)
-        ])
+        return ".".join(
+            [self.transform(collection_name), self.transform(task_name)]
+        )
 
     def transform(self, name):
         """
@@ -430,9 +438,9 @@ class Collection(object):
         # None, etc.
         if not name:
             return name
-        from_, to = '_', '-'
+        from_, to = "_", "-"
         if not self.auto_dash_names:
-            from_, to = '-', '_'
+            from_, to = "-", "_"
         replaced = []
         end = len(name) - 1
         for i, char in enumerate(name):
@@ -442,14 +450,14 @@ class Collection(object):
             # discrepancy between this level & higher levels which tend to
             # strip out leading/trailing underscores entirely.
             if (
-                i not in (0, end) and
-                char == from_ and
-                name[i - 1] != '.' and
-                name[i + 1] != '.'
+                i not in (0, end)
+                and char == from_
+                and name[i - 1] != "."
+                and name[i + 1] != "."
             ):
                 char = to
             replaced.append(char)
-        return ''.join(replaced)
+        return "".join(replaced)
 
     def _transform_lexicon(self, old):
         """
@@ -492,10 +500,9 @@ class Collection(object):
             for task_name, aliases in six.iteritems(coll.task_names):
                 # Cast to list to handle Py3 map() 'map' return value,
                 # so we can add to it down below if necessary.
-                aliases = list(map(
-                    lambda x: self.subtask_name(coll_name, x),
-                    aliases
-                ))
+                aliases = list(
+                    map(lambda x: self.subtask_name(coll_name, x), aliases)
+                )
                 # Tack on collection name to alias list if this task is the
                 # collection's default.
                 if coll.default == task_name:
@@ -564,8 +571,7 @@ class Collection(object):
             "collections": [
                 x.serialized()
                 for x in sorted(
-                    self.collections.values(),
-                    key=lambda x: x.name or '',
+                    self.collections.values(), key=lambda x: x.name or ""
                 )
             ],
         }

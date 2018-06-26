@@ -9,6 +9,7 @@ class ExceptionHandlingThread_:
         def setup(self):
             def worker(q):
                 q.put(7)
+
             self.worker = worker
 
         def base_case(self):
@@ -26,7 +27,7 @@ class ExceptionHandlingThread_:
             t.join()
             wrapper = t.exception()
             assert isinstance(wrapper, ExceptionWrapper)
-            assert wrapper.kwargs == {'args': [None], 'target': self.worker}
+            assert wrapper.kwargs == {"args": [None], "target": self.worker}
             assert wrapper.type == AttributeError
             assert isinstance(wrapper.value, AttributeError)
 
@@ -44,11 +45,12 @@ class ExceptionHandlingThread_:
         def setup(self):
             class MyThread(EHThread):
                 def __init__(self, *args, **kwargs):
-                    self.queue = kwargs.pop('queue')
+                    self.queue = kwargs.pop("queue")
                     super(MyThread, self).__init__(*args, **kwargs)
 
                 def _run(self):
                     self.queue.put(7)
+
             self.klass = MyThread
 
         def base_case(self):

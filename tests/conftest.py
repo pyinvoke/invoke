@@ -32,7 +32,7 @@ def chdir_support():
     os.chdir(support)
     yield
     # Chdir back to project root to avoid problems
-    os.chdir(os.path.join(os.path.dirname(__file__), '..'))
+    os.chdir(os.path.join(os.path.dirname(__file__), ".."))
 
 
 @pytest.fixture
@@ -46,7 +46,7 @@ def clean_sys_modules():
     # despite not explicitly loading/cd'ing to get the tasks they call
     # loaded.
     for name, module in iteritems(sys.modules.copy()):
-        if module and support in getattr(module, '__file__', ''):
+        if module and support in getattr(module, "__file__", ""):
             del sys.modules[name]
 
 

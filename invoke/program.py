@@ -12,9 +12,7 @@ from .util import six
 from . import Collection, Config, Executor, FilesystemLoader
 from .complete import complete
 from .parser import Parser, ParserContext, Argument
-from .exceptions import (
-    UnexpectedExit, CollectionNotFound, ParseError, Exit,
-)
+from .exceptions import UnexpectedExit, CollectionNotFound, ParseError, Exit
 from .terminals import pty_size
 from .util import debug, enable_logging, helpline
 
@@ -32,6 +30,7 @@ class Program(object):
 
     .. versionadded:: 1.0
     """
+
     def core_args(self):
         """
         Return default core `.Argument` objects, as a list.
@@ -41,78 +40,78 @@ class Program(object):
         # Arguments present always, even when wrapped as a different binary
         return [
             Argument(
-                names=('complete',),
+                names=("complete",),
                 kind=bool,
                 default=False,
-                help="Print tab-completion candidates for given parse remainder.", # noqa
+                help="Print tab-completion candidates for given parse remainder.",  # noqa
             ),
             Argument(
-                names=('debug', 'd'),
+                names=("debug", "d"),
                 kind=bool,
                 default=False,
                 help="Enable debug output.",
             ),
             Argument(
-                names=('prompt-for-sudo-password',),
+                names=("prompt-for-sudo-password",),
                 kind=bool,
                 default=False,
-                help="Prompt user at start of session for the sudo.password config value.", # noqa
+                help="Prompt user at start of session for the sudo.password config value.",  # noqa
             ),
             Argument(
-                names=('write-pyc',),
+                names=("write-pyc",),
                 kind=bool,
                 default=False,
                 help="Enable creation of .pyc files.",
             ),
             Argument(
-                names=('echo', 'e'),
+                names=("echo", "e"),
                 kind=bool,
                 default=False,
                 help="Echo executed commands before running.",
             ),
             Argument(
-                names=('config', 'f'),
+                names=("config", "f"),
                 help="Runtime configuration file to use.",
             ),
             Argument(
-                names=('help', 'h'),
+                names=("help", "h"),
                 optional=True,
-                help="Show core or per-task help and exit."
+                help="Show core or per-task help and exit.",
             ),
             Argument(
-                names=('hide',),
+                names=("hide",),
                 help="Set default value of run()'s 'hide' kwarg.",
             ),
             Argument(
-                names=('list', 'l'),
+                names=("list", "l"),
                 optional=True,
-                help="List available tasks, optionally limited to a namespace."
+                help="List available tasks, optionally limited to a namespace.",
             ),
             Argument(
-                names=('list-depth', 'D'),
+                names=("list-depth", "D"),
                 kind=int,
                 default=0,
                 help="When listing tasks, only show the first INT levels.",
             ),
             Argument(
-                names=('list-format', 'F'),
-                help="Change the display format used when listing tasks. Should be one of: flat (default), nested, json.", # noqa
-                default='flat',
+                names=("list-format", "F"),
+                help="Change the display format used when listing tasks. Should be one of: flat (default), nested, json.",  # noqa
+                default="flat",
             ),
             Argument(
-                names=('pty', 'p'),
+                names=("pty", "p"),
                 kind=bool,
                 default=False,
                 help="Use a pty when executing shell commands.",
             ),
             Argument(
-                names=('version', 'V'),
+                names=("version", "V"),
                 kind=bool,
                 default=False,
-                help="Show version and exit."
+                help="Show version and exit.",
             ),
             Argument(
-                names=('warn-only', 'w'),
+                names=("warn-only", "w"),
                 kind=bool,
                 default=False,
                 help="Warn, instead of failing, when shell commands fail.",
@@ -133,18 +132,18 @@ class Program(object):
         # (or as other arbitrary-task-executing programs, like 'fab')
         return [
             Argument(
-                names=('collection', 'c'),
-                help="Specify collection name to load."
+                names=("collection", "c"),
+                help="Specify collection name to load.",
             ),
             Argument(
-                names=('no-dedupe',),
+                names=("no-dedupe",),
                 kind=bool,
                 default=False,
-                help="Disable task deduplication."
+                help="Disable task deduplication.",
             ),
             Argument(
-                names=('search-root', 'r'),
-                help="Change root directory used for finding task modules."
+                names=("search-root", "r"),
+                help="Change root directory used for finding task modules.",
             ),
         ]
 
@@ -156,7 +155,8 @@ class Program(object):
     indent = " " * indent_width
     col_padding = 3
 
-    def __init__(self,
+    def __init__(
+        self,
         version=None,
         namespace=None,
         name=None,
@@ -262,23 +262,23 @@ class Program(object):
         # NOTE: only fill in values that would alter behavior, otherwise we
         # want the defaults to come through.
         run = {}
-        if self.args['warn-only'].value:
-            run['warn'] = True
+        if self.args["warn-only"].value:
+            run["warn"] = True
         if self.args.pty.value:
-            run['pty'] = True
+            run["pty"] = True
         if self.args.hide.value:
-            run['hide'] = self.args.hide.value
+            run["hide"] = self.args.hide.value
         if self.args.echo.value:
-            run['echo'] = True
+            run["echo"] = True
         tasks = {}
-        if 'no-dedupe' in self.args and self.args['no-dedupe'].value:
-            tasks['dedupe'] = False
+        if "no-dedupe" in self.args and self.args["no-dedupe"].value:
+            tasks["dedupe"] = False
         # Handle "fill in config values at start of runtime", which for now is
         # just sudo password
         sudo = {}
-        if self.args['prompt-for-sudo-password'].value:
+        if self.args["prompt-for-sudo-password"].value:
             prompt = "Desired 'sudo.password' config value: "
-            sudo['password'] = getpass.getpass(prompt)
+            sudo["password"] = getpass.getpass(prompt)
         overrides = dict(run=run, tasks=tasks, sudo=sudo)
         self.config.load_overrides(overrides, merge=False)
         self.config.set_runtime_path(self.args.config.value)
@@ -340,7 +340,7 @@ class Program(object):
             if isinstance(e, Exit) and e.message:
                 print(e.message, file=sys.stderr)
             if isinstance(e, UnexpectedExit) and e.result.hide:
-                print(e, file=sys.stderr, end='')
+                print(e, file=sys.stderr, end="")
             # Terminate execution unless we were told not to.
             if exit:
                 if isinstance(e, UnexpectedExit):
@@ -353,7 +353,7 @@ class Program(object):
             else:
                 debug("Invoked as run(..., exit=False), ignoring exception")
         except KeyboardInterrupt:
-            sys.exit(1) # Same behavior as Python itself outside of REPL
+            sys.exit(1)  # Same behavior as Python itself outside of REPL
 
     def parse_core(self, argv):
         debug("argv given to Program.run: {!r}".format(argv))
@@ -364,7 +364,7 @@ class Program(object):
         debug("Finished parsing core args")
 
         # Set interpreter bytecode-writing flag
-        sys.dont_write_bytecode = not self.args['write-pyc'].value
+        sys.dont_write_bytecode = not self.args["write-pyc"].value
 
         # Enable debugging from here on out, if debug flag was given.
         # (Prior to this point, debugging requires setting INVOKE_DEBUG).
@@ -385,15 +385,21 @@ class Program(object):
         """
         # Load a collection of tasks unless one was already set.
         if self.namespace is not None:
-            debug("Program was given a default namespace, skipping collection loading") # noqa
+            debug(
+                "Program was given a default namespace, skipping collection loading"
+            )  # noqa
             self.collection = self.namespace
         else:
-            debug("No default namespace provided, trying to load one from disk") # noqa
+            debug(
+                "No default namespace provided, trying to load one from disk"
+            )  # noqa
             # If no bundled namespace & --help was given, just print it and
             # exit. (If we did have a bundled namespace, core --help will be
             # handled *after* the collection is loaded & parsing is done.)
             if self.args.help.value is True:
-                debug("No bundled namespace & bare --help given; printing help and exiting.") # noqa
+                debug(
+                    "No bundled namespace & bare --help given; printing help and exiting."
+                )  # noqa
                 self.print_help()
                 raise Exit
             self.load_collection()
@@ -402,7 +408,7 @@ class Program(object):
         # say they default to nested for example. Easy 2.x feature-add.
         self.list_root = None
         self.list_depth = None
-        self.list_format = 'flat'
+        self.list_format = "flat"
         self.scoped_collection = self.collection
 
         # TODO: load project conf, if possible, gracefully
@@ -434,9 +440,9 @@ class Program(object):
                 raise ParseError("No idea what '{}' is!".format(halp))
 
         # Print discovered tasks if necessary
-        list_root = self.args.list.value # will be True or string
-        self.list_format = self.args['list-format'].value
-        self.list_depth = self.args['list-depth'].value
+        list_root = self.args.list.value  # will be True or string
+        self.list_format = self.args["list-format"].value
+        self.list_depth = self.args["list-depth"].value
         if list_root:
             # Not just --list, but --list some-root - do moar work
             if isinstance(list_root, six.string_types):
@@ -462,7 +468,9 @@ class Program(object):
             self.no_tasks_given()
 
     def no_tasks_given(self):
-        debug("No tasks specified for execution and no default task; printing global help as fallback") # noqa
+        debug(
+            "No tasks specified for execution and no default task; printing global help as fallback"
+        )  # noqa
         self.print_help()
         raise Exit
 
@@ -581,7 +589,7 @@ class Program(object):
         """
         # NOTE: start, coll_name both fall back to configuration values within
         # Loader (which may, however, get them from our config.)
-        start = self.args['search-root'].value
+        start = self.args["search-root"].value
         loader = self.loader_class(config=self.config, start=start)
         coll_name = self.args.collection.value
         try:
@@ -678,7 +686,7 @@ class Program(object):
             ancestors = []
         pairs = []
         indent = len(ancestors) * self.indent
-        ancestor_path = '.'.join(x for x in ancestors)
+        ancestor_path = ".".join(x for x in ancestors)
         for name, task in sorted(six.iteritems(coll.tasks)):
             is_default = name == coll.default
             # Start with just the name and just the aliases, no prefixes or
@@ -692,19 +700,19 @@ class Program(object):
                 displayname = ".{}".format(displayname)
                 aliases = [".{}".format(x) for x in aliases]
             # Nested? Indent, and add asterisks to default-tasks.
-            if self.list_format == 'nested':
+            if self.list_format == "nested":
                 prefix = indent
                 if is_default:
                     displayname += "*"
             # Flat? Prefix names and aliases with ancestor names to get full
             # dotted path; and give default-tasks their collection name as the
             # first alias.
-            if self.list_format == 'flat':
+            if self.list_format == "flat":
                 prefix = ancestor_path
                 # Make sure leading dots are present for subcollections if
                 # scoped display
                 if prefix and self.list_root:
-                    prefix = '.' + prefix
+                    prefix = "." + prefix
                 aliases = [prefix + alias for alias in aliases]
                 if is_default and ancestors:
                     aliases.insert(0, prefix)
@@ -721,13 +729,13 @@ class Program(object):
             if truncate:
                 tallies = [
                     "{} {}".format(len(getattr(subcoll, attr)), attr)
-                    for attr in ('tasks', 'collections')
+                    for attr in ("tasks", "collections")
                     if getattr(subcoll, attr)
                 ]
                 displayname += " [{}]".format(", ".join(tallies))
-            if self.list_format == 'nested':
+            if self.list_format == "nested":
                 pairs.append((indent + displayname, helpline(subcoll)))
-            elif self.list_format == 'flat' and truncate:
+            elif self.list_format == "flat" and truncate:
                 # NOTE: only adding coll-oriented pair if limiting by depth
                 pairs.append((ancestor_path + displayname, helpline(subcoll)))
             # Recurse, if not already at max depth
@@ -744,7 +752,9 @@ class Program(object):
         # doesn't make a ton of sense to limit depth when the output is for a
         # script to handle. So we just refuse, for now. TODO: find better way
         if self.list_depth:
-            raise Exit("The --list-depth option is not supported with JSON format!") # noqa
+            raise Exit(
+                "The --list-depth option is not supported with JSON format!"
+            )  # noqa
         # TODO: consider using something more formal re: the format this emits,
         # eg json-schema or whatever. Would simplify the
         # relatively-concise-but-only-human docs that currently describe this.
@@ -809,17 +819,19 @@ class Program(object):
             help_chunks = wrapper.wrap(help_str)
             # Print flag spec + padding
             name_padding = name_width - len(name)
-            spec = ''.join((
-                self.leading_indent,
-                name,
-                name_padding * ' ',
-                self.col_padding * ' '
-            ))
+            spec = "".join(
+                (
+                    self.leading_indent,
+                    name,
+                    name_padding * " ",
+                    self.col_padding * " ",
+                )
+            )
             # Print help text as needed
             if help_chunks:
                 print(spec + help_chunks[0])
                 for chunk in help_chunks[1:]:
-                    print((' ' * len(spec)) + chunk)
+                    print((" " * len(spec)) + chunk)
             else:
                 print(spec.rstrip())
-        print('')
+        print("")

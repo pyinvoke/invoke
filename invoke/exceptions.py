@@ -42,6 +42,7 @@ class Failure(Exception):
 
     .. versionadded:: 1.0
     """
+
     def __init__(self, result, reason=None):
         self.result = result
         self.reason = reason
@@ -69,24 +70,23 @@ class UnexpectedExit(Failure):
 
     .. versionadded:: 1.0
     """
+
     def __str__(self):
-        already_printed = ' already printed'
-        if 'stdout' not in self.result.hide:
+        already_printed = " already printed"
+        if "stdout" not in self.result.hide:
             stdout = already_printed
         else:
             stdout = encode_output(
-                _tail(self.result.stdout),
-                self.result.encoding,
+                _tail(self.result.stdout), self.result.encoding
             )
         if self.result.pty:
             stderr = " n/a (PTYs have no stderr)"
         else:
-            if 'stderr' not in self.result.hide:
+            if "stderr" not in self.result.hide:
                 stderr = already_printed
             else:
                 stderr = encode_output(
-                    _tail(self.result.stderr),
-                    self.result.encoding,
+                    _tail(self.result.stderr), self.result.encoding
                 )
         command = self.result.command
         exited = self.result.exited
@@ -107,9 +107,7 @@ Stderr:{}
         # TODO: expand?
         template = "<{}: cmd={!r} exited={}>"
         return template.format(
-            self.__class__.__name__,
-            self.result.command,
-            self.result.exited,
+            self.__class__.__name__, self.result.command, self.result.exited
         )
 
 
@@ -124,6 +122,7 @@ class AuthFailure(Failure):
 
     .. versionadded:: 1.0
     """
+
     def __init__(self, result, prompt):
         self.result = result
         self.prompt = prompt
@@ -141,6 +140,7 @@ class ParseError(Exception):
 
     .. versionadded:: 1.0
     """
+
     def __init__(self, msg, context=None):
         super(ParseError, self).__init__(msg)
         self.context = context
@@ -166,6 +166,7 @@ class Exit(Exception):
 
     .. versionadded:: 1.0
     """
+
     def __init__(self, message=None, code=None):
         self.message = message
         self._code = code
@@ -188,6 +189,7 @@ class PlatformError(Exception):
 
     .. versionadded:: 1.0
     """
+
     pass
 
 
@@ -197,6 +199,7 @@ class AmbiguousEnvVar(Exception):
 
     .. versionadded:: 1.0
     """
+
     pass
 
 
@@ -209,6 +212,7 @@ class UncastableEnvVar(Exception):
 
     .. versionadded:: 1.0
     """
+
     pass
 
 
@@ -218,6 +222,7 @@ class UnknownFileType(Exception):
 
     .. versionadded:: 1.0
     """
+
     pass
 
 
@@ -231,16 +236,17 @@ def _printable_kwargs(kwargs):
     printable = {}
     for key, value in six.iteritems(kwargs):
         item = value
-        if key == 'args':
+        if key == "args":
             item = []
             for arg in value:
                 new_arg = arg
-                if hasattr(arg, '__len__') and len(arg) > 10:
+                if hasattr(arg, "__len__") and len(arg) > 10:
                     msg = "<... remainder truncated during error display ...>"
                     new_arg = arg[:10] + [msg]
                 item.append(new_arg)
         printable[key] = item
     return printable
+
 
 class ThreadException(Exception):
     """
@@ -255,6 +261,7 @@ class ThreadException(Exception):
 
     .. versionadded:: 1.0
     """
+
     #: A tuple of `ExceptionWrappers <invoke.util.ExceptionWrapper>` containing
     #: the initial thread constructor kwargs (because `threading.Thread`
     #: subclasses should always be called with kwargs) and the caught exception
@@ -277,10 +284,12 @@ class ThreadException(Exception):
         for x in self.exceptions:
             # Build useful display
             detail = "Thread args: {}\n\n{}"
-            details.append(detail.format(
-                pformat(_printable_kwargs(x.kwargs)),
-                "\n".join(format_exception(x.type, x.value, x.traceback)),
-            ))
+            details.append(
+                detail.format(
+                    pformat(_printable_kwargs(x.kwargs)),
+                    "\n".join(format_exception(x.type, x.value, x.traceback)),
+                )
+            )
         args = (
             len(self.exceptions),
             ", ".join(x.type.__name__ for x in self.exceptions),
@@ -291,7 +300,9 @@ Saw {} exceptions within threads ({}):
 
 
 {}
-""".format(*args)
+""".format(
+            *args
+        )
 
 
 class WatcherError(Exception):
@@ -308,6 +319,7 @@ class WatcherError(Exception):
 
     .. versionadded:: 1.0
     """
+
     pass
 
 
@@ -320,4 +332,5 @@ class ResponseNotAccepted(WatcherError):
 
     .. versionadded:: 1.0
     """
+
     pass

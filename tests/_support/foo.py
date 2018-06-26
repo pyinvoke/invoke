@@ -1,17 +1,18 @@
 from invoke.tasks import task
 
+
 @task
 def mytask(c):
     pass
 
 
 @task
-def basic_arg(c, arg='val'):
+def basic_arg(c, arg="val"):
     pass
 
 
 @task
-def multiple_args(c, arg1='val1', otherarg='val2'):
+def multiple_args(c, arg1="val1", otherarg="val2"):
     pass
 
 

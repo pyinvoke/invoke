@@ -16,7 +16,7 @@ import sys
 from .util import has_fileno, isatty
 
 
-WINDOWS = (sys.platform == 'win32')
+WINDOWS = sys.platform == "win32"
 """
 Whether or not the current platform appears to be Windows in nature.
 
@@ -62,7 +62,7 @@ def _pty_size():
     # Sentinel values to be replaced w/ defaults by caller
     size = (None, None)
     # We want two short unsigned integers (rows, cols)
-    fmt = 'HH'
+    fmt = "HH"
     # Create an empty (zeroed) buffer for ioctl to map onto. Yay for C!
     buf = struct.pack(fmt, 0, 0)
     # Call TIOCGWINSZ to get window size of stdout, returns our filled
@@ -88,21 +88,22 @@ def _pty_size():
 def _win_pty_size():
     class CONSOLE_SCREEN_BUFFER_INFO(Structure):
         _fields_ = [
-            ('dwSize', _COORD),
-            ('dwCursorPosition', _COORD),
-            ('wAttributes', c_ushort),
-            ('srWindow', _SMALL_RECT),
-            ('dwMaximumWindowSize', _COORD)
+            ("dwSize", _COORD),
+            ("dwCursorPosition", _COORD),
+            ("wAttributes", c_ushort),
+            ("srWindow", _SMALL_RECT),
+            ("dwMaximumWindowSize", _COORD),
         ]
 
     GetStdHandle = windll.kernel32.GetStdHandle
     GetConsoleScreenBufferInfo = windll.kernel32.GetConsoleScreenBufferInfo
     GetStdHandle.restype = HANDLE
     GetConsoleScreenBufferInfo.argtypes = [
-        HANDLE, POINTER(CONSOLE_SCREEN_BUFFER_INFO)
+        HANDLE,
+        POINTER(CONSOLE_SCREEN_BUFFER_INFO),
     ]
 
-    hstd = GetStdHandle(-11) # STD_OUTPUT_HANDLE = -11
+    hstd = GetStdHandle(-11)  # STD_OUTPUT_HANDLE = -11
     csbi = CONSOLE_SCREEN_BUFFER_INFO()
     ret = GetConsoleScreenBufferInfo(hstd, byref(csbi))
 
@@ -201,5 +202,5 @@ def bytes_to_read(input_):
     # going to work re: ioctl().
     if not WINDOWS and isatty(input_) and has_fileno(input_):
         fionread = fcntl.ioctl(input_, termios.FIONREAD, "  ")
-        return struct.unpack('h', fionread)[0]
+        return struct.unpack("h", fionread)[0]
     return 1

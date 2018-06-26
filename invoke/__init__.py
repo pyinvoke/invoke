@@ -1,24 +1,33 @@
 from ._version import __version_info__, __version__  # noqa
 from .collection import Collection  # noqa
-from .config import Config # noqa
+from .config import Config  # noqa
 from .context import Context, MockContext  # noqa
-from .exceptions import ( # noqa
-    AmbiguousEnvVar, ThreadException, ParseError, CollectionNotFound, # noqa
-    UnknownFileType, Exit, UncastableEnvVar, PlatformError, # noqa
-    ResponseNotAccepted, UnexpectedExit, AuthFailure, WatcherError, # noqa
-) # noqa
-from .executor import Executor # noqa
-from .loader import FilesystemLoader # noqa
-from .parser import Argument # noqa
-from .program import Program # noqa
-from .runners import ( # noqa
-    Runner, Local, Failure, Result, # noqa
-) # noqa
-from .tasks import task, call, Call, Task # noqa
-from .terminals import pty_size # noqa
-from .watchers import ( # noqa
-    StreamWatcher, Responder, FailingResponder, # noqa
-) # noqa
+from .exceptions import (  # noqa
+    AmbiguousEnvVar,
+    ThreadException,
+    ParseError,
+    CollectionNotFound,  # noqa
+    UnknownFileType,
+    Exit,
+    UncastableEnvVar,
+    PlatformError,  # noqa
+    ResponseNotAccepted,
+    UnexpectedExit,
+    AuthFailure,
+    WatcherError,  # noqa
+)  # noqa
+from .executor import Executor  # noqa
+from .loader import FilesystemLoader  # noqa
+from .parser import Argument  # noqa
+from .program import Program  # noqa
+from .runners import Runner, Local, Failure, Result  # noqa  # noqa  # noqa
+from .tasks import task, call, Call, Task  # noqa
+from .terminals import pty_size  # noqa
+from .watchers import (  # noqa
+    StreamWatcher,
+    Responder,
+    FailingResponder,  # noqa
+)  # noqa
 
 
 def run(command, **kwargs):
