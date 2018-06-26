@@ -61,6 +61,10 @@ ns = Collection(
     watch_docs, travis, checks.blacken,
 )
 ns.configure({
+    'blacken': {
+        # Skip the vendor directory when blackening.
+        'find_opts': "-and -not -path './invoke/vendor*'",
+    },
     'tests': {
         'logformat': LOG_FORMAT,
         'package': 'invoke',
