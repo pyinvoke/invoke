@@ -492,8 +492,8 @@ class Runner_:
             # in a customized ExceptionHandlingThread that has a Mock for that
             # method?
             mock_debug.assert_called_with(
-                "Encountered exception OhNoz('oh god why',) in thread for 'handle_stdin'"
-            )  # noqa
+                "Encountered exception OhNoz('oh god why',) in thread for 'handle_stdin'"  # noqa
+            )
 
     class failure_handling:
         def fast_failures(self):

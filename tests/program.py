@@ -1221,8 +1221,8 @@ post2
             with support_path():
                 try:
                     Program().run(
-                        "inv --prompt-for-sudo-password -c sudo_prompt expect-config"
-                    )  # noqa
+                        "inv --prompt-for-sudo-password -c sudo_prompt expect-config"  # noqa
+                    )
                 except SystemExit as e:
                     # If inner call failed, we'll already have seen its output,
                     # and this will just ensure we ourselves are marked failed

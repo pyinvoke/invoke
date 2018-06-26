@@ -201,10 +201,8 @@ class Parser_:
                 try:
                     self._basic().parse_argv(["mytask"])
                 except ParseError as e:
-                    assert (
-                        str(e)
-                        == "'mytask' did not receive required positional arguments: 'pos'"
-                    )  # noqa
+                    expected = "'mytask' did not receive required positional arguments: 'pos'"  # noqa
+                    assert str(e) == expected
                 else:
                     assert False, "Did not raise ParseError!"
 
@@ -215,10 +213,8 @@ class Parser_:
                     mytask = Context(name="mytask", args=[arg, arg2])
                     Parser(contexts=[mytask]).parse_argv(["mytask"])
                 except ParseError as e:
-                    assert (
-                        str(e)
-                        == "'mytask' did not receive required positional arguments: 'pos', 'morepos'"
-                    )  # noqa
+                    expected = "'mytask' did not receive required positional arguments: 'pos', 'morepos'"  # noqa
+                    assert str(e) == expected
                 else:
                     assert False, "Did not raise ParseError!"
 

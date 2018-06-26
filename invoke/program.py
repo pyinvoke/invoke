@@ -85,7 +85,7 @@ class Program(object):
             Argument(
                 names=("list", "l"),
                 optional=True,
-                help="List available tasks, optionally limited to a namespace.",
+                help="List available tasks, optionally limited to a namespace.",  # noqa
             ),
             Argument(
                 names=("list-depth", "D"),
@@ -386,8 +386,8 @@ class Program(object):
         # Load a collection of tasks unless one was already set.
         if self.namespace is not None:
             debug(
-                "Program was given a default namespace, skipping collection loading"
-            )  # noqa
+                "Program was given default namespace, not loading collection"
+            )
             self.collection = self.namespace
         else:
             debug(
@@ -398,8 +398,8 @@ class Program(object):
             # handled *after* the collection is loaded & parsing is done.)
             if self.args.help.value is True:
                 debug(
-                    "No bundled namespace & bare --help given; printing help and exiting."
-                )  # noqa
+                    "No bundled namespace & bare --help given; printing help."
+                )
                 self.print_help()
                 raise Exit
             self.load_collection()
@@ -469,8 +469,8 @@ class Program(object):
 
     def no_tasks_given(self):
         debug(
-            "No tasks specified for execution and no default task; printing global help as fallback"
-        )  # noqa
+            "No tasks specified for execution and no default task; printing global help as fallback"  # noqa
+        )
         self.print_help()
         raise Exit
 
