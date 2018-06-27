@@ -2,6 +2,10 @@
 Changelog
 =========
 
+* :feature:`543` Implemented support for using ``INVOKE_RUNTIME_CONFIG`` env
+  var as an alternate method of supplying a runtime configuration file path
+  (effectively, an env var based version of using the ``-f``/``--config``
+  option). Feature request via Kevin J. Qiu.
 * :bug:`528` Around Invoke 0.23 we broke the ability to weave in subcollections
   via keyword arguments to `~invoke.collection.Collection`, though it primarily
   manifests as ``NoneType`` related errors during ``inv --list``. This was
