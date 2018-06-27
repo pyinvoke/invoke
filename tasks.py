@@ -86,8 +86,8 @@ ns = Collection(
 ns.configure(
     {
         "blacken": {
-            # Skip the vendor directory when blackening.
-            "find_opts": "-and -not -path './invoke/vendor*'"
+            # Skip the vendor directory and the (Travis-only) alt venv when blackening.
+            "find_opts": "-and -not \( -path './invoke/vendor*' -or -path './alt_env*' \)"
         },
         "tests": {"logformat": LOG_FORMAT, "package": "invoke"},
         "travis": {
