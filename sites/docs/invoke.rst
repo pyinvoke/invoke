@@ -89,6 +89,10 @@ for anywhere in the command line.
 
     Specify a :ref:`runtime configuration file <config-hierarchy>` to load.
 
+    Note that you may instead use the ``INVOKE_RUNTIME_CONFIG`` environment
+    variable in place of this option. If both are given, the CLI option will
+    win out.
+
 .. option:: -h STRING, --help=STRING
 
     When given without any task names, displays core help; when given with a
