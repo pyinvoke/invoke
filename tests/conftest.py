@@ -46,7 +46,9 @@ def clean_sys_modules():
     # despite not explicitly loading/cd'ing to get the tasks they call
     # loaded.
     for name, module in iteritems(sys.modules.copy()):
-        if module and support in getattr(module, "__file__", ""):
+        # Get some comparable __file__ path value, including handling cases
+        # where it is None instead of undefined (seems new in Python 3.7?)
+        if module and support in (getattr(module, "__file__", "") or ""):
             del sys.modules[name]
 
 
