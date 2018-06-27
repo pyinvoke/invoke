@@ -491,9 +491,13 @@ class Runner_:
             # then make thread class configurable somewhere in Runner, and pass
             # in a customized ExceptionHandlingThread that has a Mock for that
             # method?
-            mock_debug.assert_called_with(
-                "Encountered exception OhNoz('oh god why',) in thread for 'handle_stdin'"  # noqa
-            )
+            # NOTE: splitting into a few asserts to work around python 3.7
+            # change re: trailing comma, which kills ability to just statically
+            # assert the entire string. Sigh. Also I'm too lazy to regex.
+            msg = mock_debug.call_args[0][0]
+            assert "Encountered exception OhNoz" in msg
+            assert "'oh god why'" in msg
+            assert "in thread for 'handle_stdin'" in msg
 
     class failure_handling:
         def fast_failures(self):
