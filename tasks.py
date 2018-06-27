@@ -90,7 +90,10 @@ ns.configure(
             "find_opts": "-and -not -path './invoke/vendor*'"
         },
         "tests": {"logformat": LOG_FORMAT, "package": "invoke"},
-        "travis": {"sudo": {"user": "sudouser", "password": "mypass"}},
+        "travis": {
+            "sudo": {"user": "sudouser", "password": "mypass"},
+            "black": {"version": "18.6b4"},
+        },
         "packaging": {
             "sign": True,
             "wheel": True,
