@@ -14,16 +14,10 @@ python:
   - "pypy"
   - "pypy3"
 matrix:
-  # pypy3 (as of 2.4.0) has a wacky arity issue in its source loader. Allow it
-  # to fail until we can test on, and require, PyPy3.3+. See #358.
-  # Additionally, -dev/-nightly builds may be unstable; we do not want them
-  # marking our own tests as outright failures.
-  allow_failures:
-    - python: "pypy3"
-    - python: "3.7-dev"
-    - python: "nightly"
-  # Disabled per https://github.com/travis-ci/travis-ci/issues/1696
-  # fast_finish: true
+  # NOTE: comment this out if we have to reinstate any allow_failures, because
+  # of https://github.com/travis-ci/travis-ci/issues/1696 (multiple
+  # notifications)
+  fast_finish: true
 install:
   # For some reason Travis' build envs have wildly different pip/setuptools
   # versions between minor Python versions, and this can cause many hilarious
