@@ -27,20 +27,6 @@ class Executor_:
         coll.add_task(self.contextualized, name="contextualized")
         self.executor = Executor(collection=coll)
 
-    # TODO: replace with fixture
-    def teardown(self):
-        import sys
-        from invoke.vendor.six import iteritems
-        from _util import support
-
-        # Strip any test-support task collections from sys.modules to prevent
-        # state bleed between tests; otherwise tests can incorrectly pass
-        # despite not explicitly loading/cd'ing to get the tasks they call
-        # loaded.
-        for name, module in iteritems(sys.modules.copy()):
-            if module and support in getattr(module, "__file__", ""):
-                del sys.modules[name]
-
     class init:
         "__init__"
 

@@ -1,12 +1,5 @@
 language: python
 sudo: required
-# travis changes on 2017.06.21 appear to have broken pypy, causing attemtped
-# downloads of "-.tar.bz2" (resulting in 'bzip2: (stdin) is not a bzip2 file.')
-# (same changes MIGHT also have gotten a version of CPython 3.6 exhibiting
-# https://bugs.python.org/issue29167; at least, that bug is definitely
-# appearing.)
-# Pinning to previous travis image for now.
-group: deprecated-2017Q2
 dist: trusty
 cache:
   directories:
