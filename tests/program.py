@@ -87,6 +87,13 @@ class Program_:
                 Program().run("invoke -d -c debugging foo")
                 debug.assert_called_with("my-sentinel")
 
+        def debug_honored_as_env_var_too(self, reset_environ):
+            os.environ['INVOKE_DEBUG'] = '1'
+            with patch("invoke.util.debug") as debug:
+                # NOTE: no use of -d/--debug
+                Program().run("invoke -c debugging foo")
+                debug.assert_called_with("my-sentinel")
+
         def bytecode_skipped_by_default(self):
             expect("-c foo mytask")
             assert sys.dont_write_bytecode
