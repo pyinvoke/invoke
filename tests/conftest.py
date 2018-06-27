@@ -19,7 +19,10 @@ logging.basicConfig(level=logging.INFO)
 
 
 @pytest.fixture
-def environ():
+def reset_environ():
+    """
+    Resets `os.environ` to its prior state after the fixtured test finishes.
+    """
     old_environ = os.environ.copy()
     yield
     os.environ.clear()
@@ -53,5 +56,5 @@ def clean_sys_modules():
 
 
 @pytest.fixture
-def integration(environ, chdir_support, clean_sys_modules):
+def integration(reset_environ, chdir_support, clean_sys_modules):
     yield
