@@ -1163,6 +1163,11 @@ Default 'build' task: .all
             with cd("configs"):
                 expect("-c runtime -f yaml/invoke.yaml mytask")
 
+        def runtime_config_file_can_be_set_via_env(self, reset_environ):
+            os.environ['INVOKE_RUNTIME_CONFIG'] = "yaml/invoke.yaml"
+            with cd("configs"):
+                expect("-c runtime mytask")
+
         def tasks_dedupe_honors_configuration(self):
             # Kinda-sorta duplicates some tests in executor.py, but eh.
             with cd("configs"):
