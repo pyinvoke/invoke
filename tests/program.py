@@ -1159,14 +1159,24 @@ Default 'build' task: .all
             with cd(os.path.join("configs", "yaml")):
                 expect("-c explicit mytask")
 
-        def runtime_config_file_honored(self):
-            with cd("configs"):
-                expect("-c runtime -f yaml/invoke.yaml mytask")
+        class runtime_config_file:
+            def can_be_set_via_cli_option(self):
+                with cd("configs"):
+                    expect("-c runtime -f yaml/invoke.yaml mytask")
 
-        def runtime_config_file_can_be_set_via_env(self, reset_environ):
-            os.environ['INVOKE_RUNTIME_CONFIG'] = "yaml/invoke.yaml"
-            with cd("configs"):
-                expect("-c runtime mytask")
+            def can_be_set_via_env(self, reset_environ):
+                os.environ['INVOKE_RUNTIME_CONFIG'] = "yaml/invoke.yaml"
+                with cd("configs"):
+                    expect("-c runtime mytask")
+
+            def cli_option_wins_over_env(self, reset_environ):
+                # Set env var to load the JSON config instead of the YAML one,
+                # which contains a "json" string internally.
+                os.environ['INVOKE_RUNTIME_CONFIG'] = "json/invoke.json"
+                with cd("configs"):
+                    # But run the default test task, which expects a "yaml"
+                    # string. If the env var won, this would explode.
+                    expect("-c runtime -f yaml/invoke.yaml mytask")
 
         def tasks_dedupe_honors_configuration(self):
             # Kinda-sorta duplicates some tests in executor.py, but eh.
