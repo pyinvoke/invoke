@@ -2,6 +2,13 @@
 Changelog
 =========
 
+* :support:`- backported` Apply the `black <https://black.readthedocs.io/>`_
+  code formatter to our codebase and our CI configuration.
+* :support:`- backported` Fix some test-suite-only failures preventing
+  successful testing on Python 3.7 and PyPy3, and move them out of the 'allowed
+  failures' test matrix quarantine now that they pass.
+* :support:`- backported` Implemented some minor missing tests, such as testing
+  the ``INVOKE_DEBUG`` low-level env var.
 * :feature:`543` Implemented support for using ``INVOKE_RUNTIME_CONFIG`` env
   var as an alternate method of supplying a runtime configuration file path
   (effectively, an env var based version of using the ``-f``/``--config``
