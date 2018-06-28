@@ -88,7 +88,7 @@ class Program_:
                 debug.assert_called_with("my-sentinel")
 
         def debug_honored_as_env_var_too(self, reset_environ):
-            os.environ['INVOKE_DEBUG'] = '1'
+            os.environ["INVOKE_DEBUG"] = "1"
             with patch("invoke.util.debug") as debug:
                 # NOTE: no use of -d/--debug
                 Program().run("invoke -c debugging foo")
