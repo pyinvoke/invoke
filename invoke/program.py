@@ -283,7 +283,7 @@ class Program(object):
         self.config.load_overrides(overrides, merge=False)
         runtime_path = self.args.config.value
         if runtime_path is None:
-            runtime_path = os.environ.get('INVOKE_RUNTIME_CONFIG', None)
+            runtime_path = os.environ.get("INVOKE_RUNTIME_CONFIG", None)
         self.config.set_runtime_path(runtime_path)
         self.config.load_runtime(merge=False)
         if merge:
