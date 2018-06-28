@@ -257,7 +257,7 @@ class Program(object):
         """
         # Now that we have parse results handy, we can grab the remaining
         # config bits:
-        # - runtime config, as it is dependent on the runtime flag
+        # - runtime config, as it is dependent on the runtime flag/env var
         # - the overrides config level, as it is composed of runtime flag data
         # NOTE: only fill in values that would alter behavior, otherwise we
         # want the defaults to come through.
@@ -281,7 +281,10 @@ class Program(object):
             sudo["password"] = getpass.getpass(prompt)
         overrides = dict(run=run, tasks=tasks, sudo=sudo)
         self.config.load_overrides(overrides, merge=False)
-        self.config.set_runtime_path(self.args.config.value)
+        runtime_path = self.args.config.value
+        if runtime_path is None:
+            runtime_path = os.environ.get('INVOKE_RUNTIME_CONFIG', None)
+        self.config.set_runtime_path(runtime_path)
         self.config.load_runtime(merge=False)
         if merge:
             self.config.merge()
