@@ -53,8 +53,7 @@ follows:
 
 #. **Runtime configuration file** whose path is given to :option:`-f`, e.g.
    ``inv -f /random/path/to/config_file.yaml``. This path may also be set via the
-   ``INVOKE_RUNTIME_CONFIG`` env var. (Note that this particular env var is
-   then omitted from the environment variable config level.)
+   ``INVOKE_RUNTIME_CONFIG`` env var.
 #. **Command-line flags** for certain core settings, such as :option:`-e`.
 #. **Modifications made by user code** at runtime.
 
@@ -205,12 +204,6 @@ Nesting is performed via underscore separation, so a setting that looks like
 e.g. ``{'run': {'echo': True}}`` at the Python level becomes
 ``INVOKE_RUN_ECHO=1`` in a typical shell. See :ref:`env-var-nesting` below for
 more on this.
-
-.. note::
-    Some environment variables used by the CLI machinery, such as
-    ``INVOKE_RUNTIME_CONFIG`` (an alternate way of supplying a value to
-    :option:`--config`), are explicitly filtered out so they do not pollute
-    this configuration level's data.
 
 Type casting
 ------------
