@@ -2,6 +2,13 @@
 Changelog
 =========
 
+* :support:`- backported` Apply the `black <https://black.readthedocs.io/>`_
+  code formatter to our codebase and our CI configuration.
+* :support:`- backported` Fix some test-suite-only failures preventing
+  successful testing on Python 3.7 and PyPy3, and move them out of the 'allowed
+  failures' test matrix quarantine now that they pass.
+* :support:`- backported` Implemented some minor missing tests, such as testing
+  the ``INVOKE_DEBUG`` low-level env var.
 * :bug:`528` Around Invoke 0.23 we broke the ability to weave in subcollections
   via keyword arguments to `~invoke.collection.Collection`, though it primarily
   manifests as ``NoneType`` related errors during ``inv --list``. This was
