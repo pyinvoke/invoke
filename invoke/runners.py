@@ -656,6 +656,8 @@ class Runner(object):
                 elif data is not None:
                     # When reading from file-like objects that aren't "real"
                     # terminal streams, an empty byte signals EOF.
+                    if not self.using_pty:
+                        self._close_proc_stdin()
                     break
                 # Dual all-done signals: program being executed is done
                 # running, *and* we don't seem to be reading anything out of
@@ -863,6 +865,18 @@ class Runner(object):
         """
         raise NotImplementedError
 
+    def _close_proc_stdin(self):
+        """
+        Close running process' stdin.
+
+        This should never be called directly; it's for subclasses to implement.
+
+        :returns: ``None``.
+
+        .. versionadded:: 1.1
+        """
+        raise NotImplementedError
+
     def default_encoding(self):
         """
         Return a string naming the expected encoding of subprocess streams.
@@ -1005,6 +1019,13 @@ class Local(Runner):
         except OSError as e:
             if "Broken pipe" not in str(e):
                 raise
+
+    def _close_proc_stdin(self):
+        if self.using_pty:
+            # there is no working scenario to tell the process that stdin
+            # closed when using pty
+            raise Exception("Cannot close stdin when pty=True")
+        self.process.stdin.close()
 
     def start(self, command, shell, env):
         if self.using_pty:

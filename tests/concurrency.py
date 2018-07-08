@@ -39,7 +39,7 @@ class ExceptionHandlingThread_:
             t = EHThread(target=self.worker, args=[Queue()])
             t.start()
             t.join()
-            assert not t.is_dead
+            assert t.is_dead
 
     class via_subclassing:
         def setup(self):
@@ -80,4 +80,4 @@ class ExceptionHandlingThread_:
             t = self.klass(queue=Queue())
             t.start()
             t.join()
-            assert not t.is_dead
+            assert t.is_dead
