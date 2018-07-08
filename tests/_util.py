@@ -276,6 +276,9 @@ class _Dummy(Runner):
     def _write_proc_stdin(self, data):
         pass
 
+    def _close_proc_stdin(self):
+        pass
+
     @property
     def process_is_finished(self):
         return True
