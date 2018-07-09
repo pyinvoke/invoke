@@ -297,12 +297,15 @@ def task(*args, **kwargs):
     * ``autoprint``: Boolean determining whether to automatically print this
       task's return value to standard output when invoked directly via the CLI.
       Defaults to False.
+    * ``klass``: Class to instantiate/return. Defaults to `.Task`.
 
     If any non-keyword arguments are given, they are taken as the value of the
     ``pre`` kwarg for convenience's sake. (It is an error to give both
     ``*args`` and ``pre`` at the same time.)
 
     .. versionadded:: 1.0
+    .. versionchanged:: 1.1
+        Added the ``klass`` keyword argument.
     """
     # @task -- no options were (probably) given.
     if len(args) == 1 and callable(args[0]) and not isinstance(args[0], Task):

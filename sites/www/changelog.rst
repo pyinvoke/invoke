@@ -2,6 +2,9 @@
 Changelog
 =========
 
+* :feature:`-` Add a ``klass`` kwarg to `@task <invoke.tasks.task>` to allow
+  extending codebases the ability to create their own variants on
+  ``@task``/``Task``.
 * :bug:`-` Fix up the ``__repr__`` of `~invoke.tasks.Call` to reference dynamic
   class name instead of hardcoding ``"Call"``; this allows subclasses'
   ``__repr__`` output to be correct instead of confusing.

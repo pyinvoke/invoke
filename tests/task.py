@@ -132,12 +132,22 @@ class task_:
 
         assert bar.name == "foo"
 
-    def returns_Task_instances(self):
+    def returns_Task_instances_by_default(self):
         @task
         def mytask(c):
             pass
 
         assert isinstance(mytask, Task)
+
+    def klass_kwarg_allows_overriding_class_used(self):
+        class MyTask(Task):
+            pass
+
+        @task(klass=MyTask)
+        def mytask(c):
+            pass
+
+        assert isinstance(mytask, MyTask)
 
 
 class Task_:
