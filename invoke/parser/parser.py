@@ -61,9 +61,10 @@ class Parser(object):
         """
         Parse an argv-style token list ``argv``.
 
-        Returns a list of ``Context`` objects matching the order they were
-        found in the ``argv`` and containing ``Argument`` objects with updated
-        values based on any flags given.
+        Returns a list (actually a subclass, `.ParseResult`) of
+        `.ParserContext` objects matching the order they were found in the
+        ``argv`` and containing `.Argument` objects with updated values based
+        on any flags given.
 
         Assumes any program name has already been stripped out. Good::
 
@@ -72,6 +73,9 @@ class Parser(object):
         Bad::
 
             Parser(...).parse_argv(['invoke', '--core-opt', ...])
+
+        :param argv: List of argument string tokens.
+        :returns: A `.ParserContext` (``list`` subclass).
 
         .. versionadded:: 1.0
         """

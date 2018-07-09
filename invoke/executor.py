@@ -29,13 +29,8 @@ class Executor(object):
             empty `.Config` if not given.
 
         :param core:
-            An optional `.ParserContext` holding core program arguments.
+            An optional `.ParseResult` holding parsed core program arguments.
             Defaults to ``None``.
-
-            .. note::
-                This is unused by the default implementation, but may be useful
-                to subclasses which care about specific core arguments re:
-                execution strategy, use of the parse remainder, etc.
         """
         self.collection = collection
         self.config = config if config is not None else Config()
