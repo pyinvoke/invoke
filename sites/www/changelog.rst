@@ -2,6 +2,9 @@
 Changelog
 =========
 
+* :bug:`-` Fix up the ``__repr__`` of `~invoke.tasks.Call` to reference dynamic
+  class name instead of hardcoding ``"Call"``; this allows subclasses'
+  ``__repr__`` output to be correct instead of confusing.
 * :support:`- backported` Fixed some inaccuracies in the API docs around
   `~invoke.executor.Executor` and its ``core`` kwarg (was erroneously referring
   to `~invoke.parser.context.ParserContext` instead of

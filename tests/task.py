@@ -132,6 +132,13 @@ class task_:
 
         assert bar.name == "foo"
 
+    def returns_Task_instances(self):
+        @task
+        def mytask(c):
+            pass
+
+        assert isinstance(mytask, Task)
+
 
 class Task_:
     def has_useful_repr(self):
@@ -372,6 +379,13 @@ class Call_:
         def includes_task_name(self):
             call = Call(self.task)
             assert str(call) == "<Call 'mytask', args: (), kwargs: {}>"
+
+        def works_for_subclasses(self):
+            class MyCall(Call):
+                pass
+
+            call = MyCall(self.task)
+            assert "<MyCall" in str(call)
 
         def includes_args_and_kwargs(self):
             call = Call(
