@@ -333,13 +333,14 @@ def task(*args, **kwargs):
     pre = kwargs.pop("pre", [])
     post = kwargs.pop("post", [])
     autoprint = kwargs.pop("autoprint", False)
+    klass = kwargs.pop("klass", Task)
     # Handle unknown kwargs
     if kwargs:
         kwarg = (" unknown kwargs {!r}".format(kwargs)) if kwargs else ""
         raise TypeError("@task was called with" + kwarg)
 
     def inner(obj):
-        obj = Task(
+        obj = klass(
             obj,
             name=name,
             aliases=aliases,
