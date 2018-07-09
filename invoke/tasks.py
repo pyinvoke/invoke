@@ -307,9 +307,10 @@ def task(*args, **kwargs):
     .. versionchanged:: 1.1
         Added the ``klass`` keyword argument.
     """
+    klass = kwargs.pop("klass", Task)
     # @task -- no options were (probably) given.
     if len(args) == 1 and callable(args[0]) and not isinstance(args[0], Task):
-        return Task(args[0], **kwargs)
+        return klass(args[0], **kwargs)
     # @task(pre, tasks, here)
     if args:
         if "pre" in kwargs:
@@ -333,7 +334,6 @@ def task(*args, **kwargs):
     pre = kwargs.pop("pre", [])
     post = kwargs.pop("post", [])
     autoprint = kwargs.pop("autoprint", False)
-    klass = kwargs.pop("klass", Task)
     # Handle unknown kwargs
     if kwargs:
         kwarg = (" unknown kwargs {!r}".format(kwargs)) if kwargs else ""

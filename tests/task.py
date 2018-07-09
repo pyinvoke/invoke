@@ -149,6 +149,21 @@ class task_:
 
         assert isinstance(mytask, MyTask)
 
+    def klass_kwarg_works_for_subclassers_without_kwargs(self):
+        # I.e. the previous test doesn't catch this particular use case
+        class MyTask(Task):
+            pass
+
+        def uses_MyTask(*args, **kwargs):
+            kwargs.setdefault("klass", MyTask)
+            return task(*args, **kwargs)
+
+        @uses_MyTask
+        def mytask(c):
+            pass
+
+        assert isinstance(mytask, MyTask)
+
 
 class Task_:
     def has_useful_repr(self):
