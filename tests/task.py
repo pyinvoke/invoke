@@ -373,6 +373,13 @@ class Call_:
             call = Call(self.task)
             assert str(call) == "<Call 'mytask', args: (), kwargs: {}>"
 
+        def works_for_subclasses(self):
+            class MyCall(Call):
+                pass
+
+            call = MyCall(self.task)
+            assert "<MyCall" in str(call)
+
         def includes_args_and_kwargs(self):
             call = Call(
                 self.task,
