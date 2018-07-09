@@ -2,7 +2,7 @@ from mock import Mock
 import pytest
 
 from invoke import Collection, Config, Context, Executor, Task, call, task
-from invoke.parser import ParserContext
+from invoke.parser import ParserContext, ParseResult
 
 from _util import expect
 
@@ -42,8 +42,13 @@ class Executor_:
             assert isinstance(e.config, Config)
 
         def can_grant_access_to_core_arg_parse_result(self):
-            c = ParserContext()
-            assert Executor(collection=Collection(), core=c).core is c
+            c = ParseResult([ParserContext(name="mytask")])
+            e = Executor(collection=Collection(), core=c)
+            assert e.core is c
+            # Sanity test of real-world access/usage
+            assert len(e.core) == 1
+            assert e.core[0].name == "mytask"
+            assert len(e.core[0].args) == 0
 
         def core_arg_parse_result_defaults_to_None(self):
             assert Executor(collection=Collection()).core is None

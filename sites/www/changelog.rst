@@ -2,6 +2,11 @@
 Changelog
 =========
 
+* :support:`- backported` Fixed some inaccuracies in the API docs around
+  `~invoke.executor.Executor` and its ``core`` kwarg (was erroneously referring
+  to `~invoke.parser.context.ParserContext` instead of
+  `~invoke.parser.parser.ParseResult`). Includes related cleaning-up of
+  docstrings and tests.
 * :support:`- backported` Apply the `black <https://black.readthedocs.io/>`_
   code formatter to our codebase and our CI configuration.
 * :support:`- backported` Fix some test-suite-only failures preventing
