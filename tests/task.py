@@ -132,6 +132,13 @@ class task_:
 
         assert bar.name == "foo"
 
+    def returns_Task_instances(self):
+        @task
+        def mytask(c):
+            pass
+
+        assert isinstance(mytask, Task)
+
 
 class Task_:
     def has_useful_repr(self):
