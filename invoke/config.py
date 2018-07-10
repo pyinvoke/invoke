@@ -1175,7 +1175,7 @@ def merge_dicts(base, updates):
     .. versionadded:: 1.0
     """
     # TODO: for chrissakes just make it return instead of mutating?
-    for key, value in updates.items():
+    for key, value in (updates or {}).items():
         # Dict values whose keys also exist in 'base' -> recurse
         # (But only if both types are dicts.)
         if key in base:

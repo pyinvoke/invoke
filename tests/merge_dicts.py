@@ -14,6 +14,13 @@ class merge_dicts_:
         merge_dicts(d1, d2)
         assert d1 == d2
 
+    def updating_with_None_acts_like_merging_empty_dict(self):
+        # When bug present, AttributeError is raised on a None.items()
+        d1 = {"my": "data"}
+        d2 = None
+        merge_dicts(d1, d2)
+        assert d1 == {"my": "data"}
+
     def orthogonal_data_merges(self):
         d1 = {"foo": "bar"}
         d2 = {"biz": "baz"}

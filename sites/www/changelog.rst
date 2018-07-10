@@ -2,6 +2,10 @@
 Changelog
 =========
 
+* :bug:`270` (also :issue:`551`) ``None`` values in config levels (most
+  commonly caused by empty configuration files) would raise ``AttributeError``
+  when `~invoke.config.merge_dicts` was used to merge config levels together.
+  This has been fixed. Thanks to Tyler Hoffman and Vlad Frolov for the reports.
 * :feature:`-` Refactor `~invoke.tasks.Call` internals slightly, exposing some
   previously internal logic as the ``clone_kwargs`` method; this is useful for
   client codebases when extending `~invoke.tasks.Call` and friends.
