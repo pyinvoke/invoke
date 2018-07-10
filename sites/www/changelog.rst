@@ -7,7 +7,7 @@ Changelog
   when `~invoke.config.merge_dicts` was used to merge config levels together.
   This has been fixed. Thanks to Tyler Hoffman and Vlad Frolov for the reports.
 * :feature:`-` Refactor `~invoke.tasks.Call` internals slightly, exposing some
-  previously internal logic as the ``clone_kwargs`` method; this is useful for
+  previously internal logic as the ``clone_data`` method; this is useful for
   client codebases when extending `~invoke.tasks.Call` and friends.
 * :feature:`-` Remove overzealous argument checking in `@task
   <invoke.tasks.task>`, instead just handing any extra kwargs into the task

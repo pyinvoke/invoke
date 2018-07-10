@@ -428,7 +428,7 @@ class Call(object):
         """
         return Context(config=config)
 
-    def clone_kwargs(self):
+    def clone_data(self):
         """
         Return keyword args suitable for cloning this call into another.
 
@@ -452,7 +452,7 @@ class Call(object):
         .. versionadded:: 1.0
         """
         klass = into if into is not None else self.__class__
-        return klass(**self.clone_kwargs())
+        return klass(**self.clone_data())
 
 
 def call(task, *args, **kwargs):
