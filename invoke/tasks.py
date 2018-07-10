@@ -428,6 +428,19 @@ class Call(object):
         """
         return Context(config=config)
 
+    def clone_kwargs(self):
+        """
+        Return keyword args suitable for cloning this call into another.
+
+        .. versionadded:: 1.1
+        """
+        return dict(
+            task=self.task,
+            called_as=self.called_as,
+            args=deepcopy(self.args),
+            kwargs=deepcopy(self.kwargs),
+        )
+
     def clone(self, into=None):
         """
         Return a standalone copy of this Call.
@@ -438,12 +451,8 @@ class Call(object):
 
         .. versionadded:: 1.0
         """
-        return (into if into is not None else self.__class__)(
-            task=self.task,
-            called_as=self.called_as,
-            args=deepcopy(self.args),
-            kwargs=deepcopy(self.kwargs),
-        )
+        klass = into if into is not None else self.__class__
+        return klass(**self.clone_kwargs())
 
 
 def call(task, *args, **kwargs):

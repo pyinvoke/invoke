@@ -2,6 +2,9 @@
 Changelog
 =========
 
+* :feature:`-` Refactor `~invoke.tasks.Call` internals slightly, exposing some
+  previously internal logic as the ``clone_kwargs`` method; this is useful for
+  client codebases when extending `~invoke.tasks.Call` and friends.
 * :feature:`-` Remove overzealous argument checking in `@task
   <invoke.tasks.task>`, instead just handing any extra kwargs into the task
   class constructor. The high level behavior for truly invalid kwargs is the
