@@ -2,6 +2,11 @@
 Changelog
 =========
 
+* :feature:`-` Remove overzealous argument checking in `@task
+  <invoke.tasks.task>`, instead just handing any extra kwargs into the task
+  class constructor. The high level behavior for truly invalid kwargs is the
+  same (``TypeError``) but now extending codebases can add kwargs to their
+  versions of ``@task`` without issue.
 * :feature:`-` Add a ``klass`` kwarg to `@task <invoke.tasks.task>` to allow
   extending codebases the ability to create their own variants on
   ``@task``/``Task``.

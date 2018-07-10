@@ -164,6 +164,17 @@ class task_:
 
         assert isinstance(mytask, MyTask)
 
+    def unknown_kwargs_get_mad_at_Task_level(self):
+        # NOTE: this was previously untested behavior. We actually just
+        # modified HOW TypeError gets raised (Task constructor, implicitly, vs
+        # explicitly in @task itself) but the end result is the same for anyone
+        # not trying to be stringly typed based on exception message.
+        with raises(TypeError):
+
+            @task(whatever="man")
+            def mytask(c):
+                pass
+
 
 class Task_:
     def has_useful_repr(self):

@@ -319,9 +319,9 @@ def task(*args, **kwargs):
             )
         kwargs["pre"] = args
     # @task(options)
-    # TODO: pull in centrally defined defaults here (see Task)
-    # TODO: clean up all of the values which are iterables, some are tuple and
-    # some are None->list, ugh
+    # TODO: why the heck did we originally do this in this manner instead of
+    # simply delegating to Task?! Let's just remove all this sometime & see
+    # what, if anything, breaks.
     name = kwargs.pop("name", None)
     aliases = kwargs.pop("aliases", ())
     positional = kwargs.pop("positional", None)
@@ -334,10 +334,6 @@ def task(*args, **kwargs):
     pre = kwargs.pop("pre", [])
     post = kwargs.pop("post", [])
     autoprint = kwargs.pop("autoprint", False)
-    # Handle unknown kwargs
-    if kwargs:
-        kwarg = (" unknown kwargs {!r}".format(kwargs)) if kwargs else ""
-        raise TypeError("@task was called with" + kwarg)
 
     def inner(obj):
         obj = klass(
@@ -354,6 +350,8 @@ def task(*args, **kwargs):
             pre=pre,
             post=post,
             autoprint=autoprint,
+            # Pass in any remaining kwargs as-is.
+            **kwargs
         )
         return obj
 
