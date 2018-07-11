@@ -656,7 +656,7 @@ class Runner(object):
                 elif data is not None:
                     # When reading from file-like objects that aren't "real"
                     # terminal streams, an empty byte signals EOF.
-                    if not self.using_pty:
+                    if not self.using_pty and hasattr(self, '_close_proc_stdin'):
                         self._close_proc_stdin()
                     break
                 # Dual all-done signals: program being executed is done
