@@ -35,10 +35,15 @@ class ExceptionHandlingThread_:
             t = EHThread(target=self.worker, args=[None])
             t.start()
             t.join()
+            assert not t.is_alive()
+            # passing in None for the queue will fail the worker
+            assert t.exception() is not None
             assert t.is_dead
             t = EHThread(target=self.worker, args=[Queue()])
             t.start()
             t.join()
+            assert not t.is_alive()
+            assert t.exception() is None
             assert t.is_dead
 
     class via_subclassing:
@@ -76,8 +81,13 @@ class ExceptionHandlingThread_:
             t = self.klass(queue=None)
             t.start()
             t.join()
+            assert not t.is_alive()
             assert t.is_dead
+            # passing in None for the queue will fail the worker
+            assert t.exception() is not None
             t = self.klass(queue=Queue())
             t.start()
             t.join()
+            assert not t.is_alive()
+            assert t.exception() is None
             assert t.is_dead
