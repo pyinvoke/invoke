@@ -469,3 +469,14 @@ class Call_:
             clone = orig.clone(into=MyCall)
             assert clone == orig
             assert isinstance(clone, MyCall)
+
+        def can_be_given_extra_kwargs_to_clone_with(self):
+            orig = Call(self.task)
+
+            class MyCall(Call):
+                def __init__(self, *args, **kwargs):
+                    self.hooray = kwargs.pop("hooray")
+                    super(MyCall, self).__init__(*args, **kwargs)
+
+            clone = orig.clone(into=MyCall, with_={"hooray": "woo"})
+            assert clone.hooray == "woo"

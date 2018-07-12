@@ -441,18 +441,34 @@ class Call(object):
             kwargs=deepcopy(self.kwargs),
         )
 
-    def clone(self, into=None):
+    def clone(self, into=None, with_=None):
         """
         Return a standalone copy of this Call.
 
         Useful when parameterizing task executions.
 
-        :param into: A subclass to generate instead of the current class.
+        :param into:
+            A subclass to generate instead of the current class. Optional.
+
+        :param dict with_:
+            A dict of additional keyword arguments to use when creating the new
+            clone; typically used when cloning ``into`` a subclass that has
+            extra args on top of the base class. Optional.
+
+            .. note::
+                This dict is used to ``.update()`` the original object's data
+                (the return value from its `clone_data`), so in the event of
+                a conflict, values in ``with_`` will win out.
 
         .. versionadded:: 1.0
+        .. versionchanged:: 1.1
+            Added the ``with_`` kwarg.
         """
         klass = into if into is not None else self.__class__
-        return klass(**self.clone_data())
+        data = self.clone_data()
+        if with_ is not None:
+            data.update(with_)
+        return klass(**data)
 
 
 def call(task, *args, **kwargs):

@@ -2,6 +2,9 @@
 Changelog
 =========
 
+* :feature:`-` Enhance `~invoke.tasks.Call` with a new method
+  (``clone_data``) and new kwarg to an existing method (``clone`` grew
+  ``with_``) to assist subclassers when extending.
 * :bug:`270` (also :issue:`551`) ``None`` values in config levels (most
   commonly caused by empty configuration files) would raise ``AttributeError``
   when `~invoke.config.merge_dicts` was used to merge config levels together.
