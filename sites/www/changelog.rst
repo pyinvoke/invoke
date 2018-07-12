@@ -2,6 +2,7 @@
 Changelog
 =========
 
+- :release:`1.0.1 <2018-07-12>`
 - :bug:`270` (also :issue:`551`) ``None`` values in config levels (most
   commonly caused by empty configuration files) would raise ``AttributeError``
   when `~invoke.config.merge_dicts` was used to merge config levels together.
