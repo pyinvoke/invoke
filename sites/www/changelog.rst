@@ -2,6 +2,7 @@
 Changelog
 =========
 
+- :release:`1.1.0 <2018-07-12>`
 - :release:`1.0.1 <2018-07-12>`
 - :feature:`-` Enhance `~invoke.tasks.Call` with a new method
   (``clone_data``) and new kwarg to an existing method (``clone`` grew
