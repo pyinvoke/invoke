@@ -145,6 +145,24 @@ class Runner_:
             assert r.stdout == "stuff"
             assert sys.stdout.getvalue() == ""
 
+    class capture_buffer_size:
+        @trap
+        def limits_capture(self):
+            runner = self._runner(out='x' * 99 + 'y' * 40,
+                                  run={'capture_buffer_size': 40})
+            assert runner.run(_).stdout == 'y' * 40
+
+        @trap
+        def fails_when_too_small(self):
+            try:
+                self._runner(out='abc',
+                             run={'capture_buffer_size': 3}).run(_)
+            except ValueError as e:
+                err_msg = 'capture_buffer_size is too short to match prompt'
+                assert str(e) == err_msg
+            else:
+                assert False, "Did not raise ValueError too small a buffer"
+
     class pty:
         def pty_defaults_to_off(self):
             assert self._run(_).pty is False

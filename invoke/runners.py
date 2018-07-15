@@ -7,6 +7,7 @@ from subprocess import Popen, PIPE
 import sys
 import threading
 import time
+from collections import deque
 
 from .util import six
 
@@ -250,6 +251,14 @@ class Runner(object):
             When not ``None``, this parameter will override that auto-detection
             and force, or disable, echoing.
 
+        :param int capture_buffer_size:
+            If set, captured stdout/stderr will be limited to the specified
+            number of characters. The last characters of stdout/stderr
+            will be returned via the ``Result`` object.
+
+            By default (when ``None``), there is no limit on the captured
+            stdout/stderr.
+
         :returns:
             `Result`, or a subclass thereof.
 
@@ -286,7 +295,8 @@ class Runner(object):
         # Arrive at final encoding if neither config nor kwargs had one
         self.encoding = opts["encoding"] or self.default_encoding()
         # Set up IO thread parameters (format - body_func: {kwargs})
-        stdout, stderr = [], []
+        stdout = deque(maxlen=opts['capture_buffer_size'])
+        stderr = deque(maxlen=opts['capture_buffer_size'])
         thread_args = {
             self.handle_stdout: {
                 "buffer_": stdout,
@@ -437,6 +447,11 @@ class Runner(object):
         in_stream = opts["in_stream"]
         if in_stream is None:
             in_stream = sys.stdin
+        if opts['capture_buffer_size']:
+            prompt_len = len(self.context.config.sudo.prompt)
+            if opts['capture_buffer_size'] < prompt_len:
+                err = 'capture_buffer_size is too short to match prompt'
+                raise ValueError(err)
         # Determine pty or no
         self.using_pty = self.should_use_pty(opts["pty"], opts["fallback"])
         if opts["watchers"]:
@@ -539,7 +554,7 @@ class Runner(object):
             # result after execution completes.
             # NOTE: this is threadsafe insofar as no reading occurs until after
             # the thread is join()'d.
-            buffer_.append(data)
+            buffer_.extend(data)
             # Run our specific buffer through the autoresponder framework
             self.respond(buffer_)
 

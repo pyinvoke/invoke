@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :feature:`344` Implement stdout/stderr capture limiting. Credit: Paul Healy.
 - :release:`1.1.0 <2018-07-12>`
 - :release:`1.0.1 <2018-07-12>`
 - :feature:`-` Enhance `~invoke.tasks.Call` with a new method

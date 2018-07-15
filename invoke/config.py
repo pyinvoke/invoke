@@ -482,6 +482,7 @@ class Config(DataProxy):
                 "out_stream": None,
                 "err_stream": None,
                 "in_stream": None,
+                "capture_buffer_size": None,
                 "watchers": [],
                 "echo_stdin": None,
             },
