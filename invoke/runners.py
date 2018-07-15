@@ -295,7 +295,8 @@ class Runner(object):
         # Arrive at final encoding if neither config nor kwargs had one
         self.encoding = opts["encoding"] or self.default_encoding()
         # Set up IO thread parameters (format - body_func: {kwargs})
-        stdout, stderr = deque(maxlen=opts['capture_buffer_size']), deque(maxlen=opts['capture_buffer_size'])
+        stdout = deque(maxlen=opts['capture_buffer_size'])
+        stderr = deque(maxlen=opts['capture_buffer_size'])
         thread_args = {
             self.handle_stdout: {
                 "buffer_": stdout,
@@ -447,8 +448,10 @@ class Runner(object):
         if in_stream is None:
             in_stream = sys.stdin
         if opts['capture_buffer_size']:
-            if opts['capture_buffer_size'] < len(self.context.config.sudo.prompt):
-                 raise ValueError('capture_buffer_size is too short to match prompt')
+            prompt_len = len(self.context.config.sudo.prompt)
+            if opts['capture_buffer_size'] < prompt_len:
+                err = 'capture_buffer_size is too short to match prompt'
+                raise ValueError(err)
         # Determine pty or no
         self.using_pty = self.should_use_pty(opts["pty"], opts["fallback"])
         if opts["watchers"]:

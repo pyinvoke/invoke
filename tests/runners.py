@@ -148,15 +148,18 @@ class Runner_:
     class capture_buffer_size:
         @trap
         def limits_capture(self):
-            runner = self._runner(out='x'*99 + 'y'*40, run={'capture_buffer_size': 40})
-            eq_(runner.run(_).stdout, 'y'*40)
+            runner = self._runner(out='x' * 99 + 'y' * 40,
+                                  run={'capture_buffer_size': 40})
+            assert runner.run(_).stdout == 'y' * 40
 
         @trap
         def fails_when_too_small(self):
             try:
-                self._runner(out='abc', run={'capture_buffer_size': 3}).run(_)
+                self._runner(out='abc',
+                             run={'capture_buffer_size': 3}).run(_)
             except ValueError as e:
-                eq_(str(e), 'capture_buffer_size is too short to match prompt')
+                err_msg = 'capture_buffer_size is too short to match prompt'
+                assert str(e) == err_msg
             else:
                 assert False, "Did not raise ValueError too small a buffer"
 
