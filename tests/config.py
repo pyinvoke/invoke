@@ -100,6 +100,7 @@ class Config_:
                     "hide": None,
                     "in_stream": None,
                     "out_stream": None,
+                    "capture_buffer_size": None,
                     "pty": False,
                     "replace_env": False,
                     "shell": "/bin/bash",
