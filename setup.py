@@ -3,7 +3,6 @@
 # Support setuptools only, distutils has a divergent and more annoying API and
 # few folks will lack setuptools.
 from setuptools import setup, find_packages
-import re
 import sys
 
 # Version info -- read without importing
@@ -18,12 +17,7 @@ version = _locals["__version__"]
 exclude = ["*.yaml3" if sys.version_info[0] == 2 else "*.yaml2"]
 
 # Frankenstein long_description: version-specific changelog note + README
-# (Have to take an axe to the README to remove all the doctest stuff, which
-# PyPI doesn't have enabled and barfs on...sob.)
 text = open("README.rst").read()
-text = re.sub(r"testsetup:: .+", "::", text)
-text = re.sub(r"testcleanup:: .+", "::", text)
-text = re.sub(r"doctest:: .+", "code-block::", text)
 long_description = """
 To find out what's new in this version of Invoke, please see `the changelog
 <http://pyinvoke.org/changelog.html#{}>`_.
