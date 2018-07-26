@@ -35,13 +35,13 @@ Changelog
 - :feature:`-` Added the :ref:`--prompt-for-sudo-password
   <prompt-for-sudo-password>` CLI option for getpass-based up-front prompting
   of a sensitive configuration value.
-- :feature:`-` Updated `~invoke.task.Task` to mimic the wrapped function's
+- :feature:`-` Updated `~invoke.tasks.Task` to mimic the wrapped function's
   ``__module__`` attribute, allowing for better interaction with things like
   Sphinx autodoc that attempt to filter out imported objects from a module.
 - :bug:`- major` Removed an old, unused and untested (but, regrettably,
   documented and public) method that doesn't seem to be much use:
-  `invoke.config.Config.paths`. Please reach out if you were actually using it
-  and we may consider adding some form of it back.
+  ``invoke.config.Config.paths``. Please reach out if you were actually using
+  it and we may consider adding some form of it back.
 
   .. warning::
     This is a backwards incompatible change if you were using ``Config.paths``.
@@ -771,7 +771,7 @@ Changelog
 - :feature:`-` Add a ``.command`` attribute to `~invoke.runners.Result` to
   preserve the command executed for post-execution introspection.
 - :feature:`-` Detect local controlling terminal size
-  (`~invoke.platform.pty_size`) and apply that information when creating
+  (`~invoke.terminals.pty_size`) and apply that information when creating
   pseudoterminals in `~invoke.run` when ``pty=True``.
 - :bug:`- major` Display stdout instead of stderr in the ``repr()`` of
   `~invoke.exceptions.Failure` objects, when a pseudo-terminal was used.
