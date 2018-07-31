@@ -69,6 +69,41 @@ def _expect_platform_shell(shell):
         assert shell == "/bin/bash"
 
 
+def setup_termios(mock_termios, cc_is_ints=True):
+    # Ensure mocked termios has 'real' values for constants...otherwise
+    # doing bit arithmetic on Mocks kinda defeats the point
+    mock_termios.ECHO = termios.ECHO
+    mock_termios.ICANON = termios.ICANON
+    mock_termios.VMIN = termios.VMIN
+    mock_termios.VTIME = termios.VTIME
+
+    # Set up the control character sub-array; it's technically platform
+    # dependent so we need to be dynamic.
+    # NOTE: setting this up so we can test both potential values for
+    # the 'cc' members...docs say ints, reality says one-byte
+    # bytestrings...
+    cc_base = [None] * (max(termios.VMIN, termios.VTIME) + 1)
+    cc_ints, cc_bytes = cc_base[:], cc_base[:]
+    cc_ints[termios.VMIN], cc_ints[termios.VTIME] = 1, 0
+    cc_bytes[termios.VMIN], cc_bytes[termios.VTIME] = b"\x01", b"\x00"
+    # Set tcgetattr to look like it's already cbroken...
+    attrs = [
+        # iflag, oflag, cflag - don't care
+        None,
+        None,
+        None,
+        # lflag needs to have ECHO and ICANON unset
+        ~(termios.ECHO | termios.ICANON),
+        # ispeed, ospeed - don't care
+        None,
+        None,
+        # cc - care about its VMIN and VTIME members.
+        cc_ints if cc_is_ints else cc_bytes,
+    ]
+    print("trying to set cbrokenness, attrs: {}".format(attrs))
+    mock_termios.tcgetattr.return_value = attrs
+
+
 class Runner_:
     # NOTE: these copies of _run and _runner form the base case of "test Runner
     # subclasses via self._run/_runner helpers" functionality. See how e.g.
@@ -1168,38 +1203,10 @@ stderr 25
             # behavior is in place. (Proving the old bug is hard as it is race
             # condition reliant; the new behavior sidesteps that entirely.)
 
-            # Ensure mocked termios has 'real' values for constants...otherwise
-            # doing bit arithmetic on Mocks kinda defeats the point
-            mock_termios.ECHO = termios.ECHO
-            mock_termios.ICANON = termios.ICANON
-            mock_termios.VMIN = termios.VMIN
-            mock_termios.VTIME = termios.VTIME
-
-            # Set up the control character sub-array; it's technically platform
-            # dependent so we need to be dynamic.
-            # NOTE: setting this up so we can test both potential values for
-            # the 'cc' members...docs say ints, reality says one-byte
-            # bytestrings...
-            cc_base = [None] * (max(termios.VMIN, termios.VTIME) + 1)
-            cc_ints, cc_bytes = cc_base[:], cc_base[:]
-            cc_ints[termios.VMIN], cc_ints[termios.VTIME] = 1, 0
-            cc_bytes[termios.VMIN], cc_bytes[termios.VTIME] = b"\x01", b"\x00"
-            for cc in [cc_ints, cc_bytes]:
-                # Set tcgetattr to look like it's already cbroken...
-                attrs = [
-                    # iflag, oflag, cflag - don't care
-                    None,
-                    None,
-                    None,
-                    # lflag needs to have ECHO and ICANON unset
-                    ~(termios.ECHO | termios.ICANON),
-                    # ispeed, ospeed - don't care
-                    None,
-                    None,
-                    # cc - care about its VMIN and VTIME members.
-                    cc,
-                ]
-                mock_termios.tcgetattr.return_value = attrs
+            # Test both bytes and ints versions of CC values, since docs
+            # disagree with at least some platforms' realities on that.
+            for is_ints in (True, False):
+                setup_termios(mock_termios, cc_is_ints=is_ints)
                 self._run(_)
                 # Ensure tcsetattr and setcbreak were never called
                 assert not mock_tty.setcbreak.called
