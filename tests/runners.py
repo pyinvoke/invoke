@@ -69,14 +69,7 @@ def _expect_platform_shell(shell):
         assert shell == "/bin/bash"
 
 
-def setup_termios(mock_termios, cc_is_ints=True):
-    # Ensure mocked termios has 'real' values for constants...otherwise
-    # doing bit arithmetic on Mocks kinda defeats the point
-    mock_termios.ECHO = termios.ECHO
-    mock_termios.ICANON = termios.ICANON
-    mock_termios.VMIN = termios.VMIN
-    mock_termios.VTIME = termios.VTIME
-
+def make_tcattrs(cc_is_ints=True, echo=False):
     # Set up the control character sub-array; it's technically platform
     # dependent so we need to be dynamic.
     # NOTE: setting this up so we can test both potential values for
@@ -100,8 +93,10 @@ def setup_termios(mock_termios, cc_is_ints=True):
         # cc - care about its VMIN and VTIME members.
         cc_ints if cc_is_ints else cc_bytes,
     ]
-    print("trying to set cbrokenness, attrs: {}".format(attrs))
-    mock_termios.tcgetattr.return_value = attrs
+    # Undo the ECHO unset if caller wants this to look like a non-cbroken term
+    if echo:
+        attrs[3] = attrs[3] | termios.ECHO
+    return attrs
 
 
 class Runner_:
@@ -1161,16 +1156,18 @@ stderr 25
             mock_os.tcgetpgrp.assert_called_once_with(sys.stdin.fileno())
 
         @skip_if_windows
-        @patch("invoke.terminals.tty")  # stub
-        @patch("invoke.terminals.termios")
+        @patch("invoke.terminals.tty")
         def tty_stdins_have_settings_restored_by_default(
-            self, mock_termios, mock_tty
+            self, mock_tty, mock_termios
         ):
-            sentinel = [1, 7, 3, 27]
-            mock_termios.tcgetattr.return_value = sentinel
+            # Get already-cbroken attrs since that's an easy way to get the
+            # right format/layout
+            attrs = make_tcattrs(echo=True)
+            mock_termios.tcgetattr.return_value = attrs
             self._run(_)
+            # Ensure those old settings are being restored
             mock_termios.tcsetattr.assert_called_once_with(
-                sys.stdin, mock_termios.TCSADRAIN, sentinel
+                sys.stdin, mock_termios.TCSADRAIN, attrs
             )
 
         @skip_if_windows
@@ -1195,9 +1192,8 @@ stderr 25
 
         @skip_if_windows
         @patch("invoke.terminals.tty")
-        @patch("invoke.terminals.termios")
         def setcbreak_not_called_if_terminal_seems_already_cbroken(
-            self, mock_termios, mock_tty
+            self, mock_tty, mock_termios
         ):
             # Proves #559, sorta, insofar as it only passes when the fixed
             # behavior is in place. (Proving the old bug is hard as it is race
@@ -1206,7 +1202,9 @@ stderr 25
             # Test both bytes and ints versions of CC values, since docs
             # disagree with at least some platforms' realities on that.
             for is_ints in (True, False):
-                setup_termios(mock_termios, cc_is_ints=is_ints)
+                mock_termios.tcgetattr.return_value = make_tcattrs(
+                    cc_is_ints=is_ints
+                )
                 self._run(_)
                 # Ensure tcsetattr and setcbreak were never called
                 assert not mock_tty.setcbreak.called
