@@ -9,23 +9,23 @@ from pytest import skip
 from pytest_relaxed import trap
 
 from invoke import (
-    Program,
     Collection,
-    Task,
-    FilesystemLoader,
-    Executor,
     Config,
-    UnexpectedExit,
+    Executor,
+    FilesystemLoader,
+    Program,
     Result,
+    Task,
+    UnexpectedExit,
 )
 from invoke import main
 from invoke.util import cd
 
 from _util import (
-    load,
     expect,
-    skip_if_windows,
+    load,
     run,
+    skip_if_windows,
     support_file,
     support_path,
 )
