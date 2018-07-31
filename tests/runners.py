@@ -1,6 +1,7 @@
 import os
 import struct
 import sys
+import termios
 import types
 from io import BytesIO
 from itertools import chain, repeat
@@ -1156,6 +1157,53 @@ stderr 25
             mock_termios.tcsetattr.assert_called_once_with(
                 sys.stdin, mock_termios.TCSADRAIN, sentinel
             )
+
+        @skip_if_windows
+        @patch("invoke.terminals.tty")
+        @patch("invoke.terminals.termios")
+        def setcbreak_not_called_if_terminal_seems_already_cbroken(
+            self, mock_termios, mock_tty
+        ):
+            # Proves #559, sorta, insofar as it only passes when the fixed
+            # behavior is in place. (Proving the old bug is hard as it is race
+            # condition reliant; the new behavior sidesteps that entirely.)
+
+            # Ensure mocked termios has 'real' values for constants...otherwise
+            # doing bit arithmetic on Mocks kinda defeats the point
+            mock_termios.ECHO = termios.ECHO
+            mock_termios.ICANON = termios.ICANON
+            mock_termios.VMIN = termios.VMIN
+            mock_termios.VTIME = termios.VTIME
+
+            # Set up the control character sub-array; it's technically platform
+            # dependent so we need to be dynamic.
+            # NOTE: setting this up so we can test both potential values for
+            # the 'cc' members...docs say ints, reality says one-byte
+            # bytestrings...
+            cc_base = [None] * (max(termios.VMIN, termios.VTIME) + 1)
+            cc_ints, cc_bytes = cc_base[:], cc_base[:]
+            cc_ints[termios.VMIN], cc_ints[termios.VTIME] = 1, 0
+            cc_bytes[termios.VMIN], cc_bytes[termios.VTIME] = b"\x01", b"\x00"
+            for cc in [cc_ints, cc_bytes]:
+                # Set tcgetattr to look like it's already cbroken...
+                attrs = [
+                    # iflag, oflag, cflag - don't care
+                    None,
+                    None,
+                    None,
+                    # lflag needs to have ECHO and ICANON unset
+                    ~(termios.ECHO | termios.ICANON),
+                    # ispeed, ospeed - don't care
+                    None,
+                    None,
+                    # cc - care about its VMIN and VTIME members.
+                    cc,
+                ]
+                mock_termios.tcgetattr.return_value = attrs
+                self._run(_)
+                # Ensure tcsetattr and setcbreak were never called
+                assert not mock_tty.setcbreak.called
+                assert not mock_termios.tcsetattr.called
 
     class send_interrupt:
         def _run_with_mocked_interrupt(self, klass):

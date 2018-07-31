@@ -139,6 +139,28 @@ def stdin_is_foregrounded_tty(stream):
     return os.getpgrp() == os.tcgetpgrp(stream.fileno())
 
 
+def cbreak_already_set(stream):
+    # Explicitly not docstringed to remain private, for now. Eh.
+    # Checks whether tty.setcbreak appears to have already been run against
+    # ``stream`` (or if it would otherwise just not do anything).
+    # Used to effect idempotency for character-buffering a stream, which also
+    # lets us avoid multiple capture-then-restore cycles.
+    attrs = termios.tcgetattr(stream)
+    lflags, cc = attrs[3], attrs[6]
+    echo = bool(lflags & termios.ECHO)
+    icanon = bool(lflags & termios.ICANON)
+    # setcbreak sets ECHO and ICANON to 0/off, CC[VMIN] to 1-ish, and CC[VTIME]
+    # to 0-ish. If any of that is not true we can reasonably assume it has not
+    # yet been executed against this stream.
+    sentinels = (
+        not echo,
+        not icanon,
+        cc[termios.VMIN] in [1, b"\x01"],
+        cc[termios.VTIME] in [0, b"\x00"],
+    )
+    return all(sentinels)
+
+
 @contextmanager
 def character_buffered(stream):
     """
@@ -148,7 +170,12 @@ def character_buffered(stream):
 
     .. versionadded:: 1.0
     """
-    if WINDOWS or not isatty(stream) or not stdin_is_foregrounded_tty(stream):
+    if (
+        WINDOWS
+        or not isatty(stream)
+        or not stdin_is_foregrounded_tty(stream)
+        or cbreak_already_set(stream)
+    ):
         yield
     else:
         old_settings = termios.tcgetattr(stream)
