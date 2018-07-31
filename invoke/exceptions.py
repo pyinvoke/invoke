@@ -226,6 +226,19 @@ class UnknownFileType(Exception):
     pass
 
 
+class UnpicklableConfigMember(Exception):
+    """
+    A config file contained module objects, which can't be pickled/copied.
+
+    We raise this more easily catchable exception instead of letting the
+    (unclearly phrased) TypeError bubble out of the pickle module. (However, to
+    avoid our own fragile catching of that error, we head it off by explicitly
+    testing for module members.)
+    """
+
+    pass
+
+
 def _printable_kwargs(kwargs):
     """
     Return print-friendly version of a thread-related ``kwargs`` dict.

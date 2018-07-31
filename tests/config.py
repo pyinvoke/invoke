@@ -13,9 +13,10 @@ from invoke.exceptions import (
     AmbiguousEnvVar,
     UncastableEnvVar,
     UnknownFileType,
+    UnpicklableConfigMember,
 )
 
-from _util import skip_if_windows
+from _util import skip_if_windows, support
 
 
 pytestmark = pytest.mark.usefixtures("integration")
@@ -620,6 +621,16 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
             # Real test that builtins, etc are stripped out
             for special in ("builtins", "file", "package", "name", "doc"):
                 assert "__{}__".format(special) not in c
+
+        def python_modules_except_usefully_on_unpicklable_modules(self):
+            # Re: #556; when bug present, a TypeError pops up instead (granted,
+            # at merge time, but we want it to raise ASAP, so we're testing the
+            # intended new behavior: raising at config load time.
+            c = Config()
+            c.set_runtime_path(join(support, "has_modules.py"))
+            expected = r"'os' is a module.*giving a tasks file.*mistake"
+            with pytest.raises(UnpicklableConfigMember, match=expected):
+                c.load_runtime(merge=False)
 
     class collection_level_config_loading:
         def performed_explicitly_and_directly(self):
