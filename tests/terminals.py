@@ -15,7 +15,12 @@ from pytest import skip
 from invoke.terminals import pty_size, bytes_to_read
 
 
-class platform:
+# NOTE: 'with character_buffered()' tests are in runners.py as it's a lot
+# easier to test some aspects in a non-unit sense (e.g. a keyboard-interrupting
+# Runner subclass). MEH.
+
+
+class terminals:
     class pty_size:
         @patch("fcntl.ioctl", wraps=fcntl.ioctl)
         def calls_fcntl_with_TIOCGWINSZ(self, ioctl):

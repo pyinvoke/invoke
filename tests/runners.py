@@ -1,6 +1,7 @@
 import os
 import struct
 import sys
+import termios
 import types
 from io import BytesIO
 from itertools import chain, repeat
@@ -66,6 +67,36 @@ def _expect_platform_shell(shell):
         assert shell.endswith("cmd.exe")
     else:
         assert shell == "/bin/bash"
+
+
+def make_tcattrs(cc_is_ints=True, echo=False):
+    # Set up the control character sub-array; it's technically platform
+    # dependent so we need to be dynamic.
+    # NOTE: setting this up so we can test both potential values for
+    # the 'cc' members...docs say ints, reality says one-byte
+    # bytestrings...
+    cc_base = [None] * (max(termios.VMIN, termios.VTIME) + 1)
+    cc_ints, cc_bytes = cc_base[:], cc_base[:]
+    cc_ints[termios.VMIN], cc_ints[termios.VTIME] = 1, 0
+    cc_bytes[termios.VMIN], cc_bytes[termios.VTIME] = b"\x01", b"\x00"
+    # Set tcgetattr to look like it's already cbroken...
+    attrs = [
+        # iflag, oflag, cflag - don't care
+        None,
+        None,
+        None,
+        # lflag needs to have ECHO and ICANON unset
+        ~(termios.ECHO | termios.ICANON),
+        # ispeed, ospeed - don't care
+        None,
+        None,
+        # cc - care about its VMIN and VTIME members.
+        cc_ints if cc_is_ints else cc_bytes,
+    ]
+    # Undo the ECHO unset if caller wants this to look like a non-cbroken term
+    if echo:
+        attrs[3] = attrs[3] | termios.ECHO
+    return attrs
 
 
 class Runner_:
@@ -1099,8 +1130,8 @@ stderr 25
     class character_buffered_stdin:
         @skip_if_windows
         @patch("invoke.terminals.tty")
-        @patch("invoke.terminals.termios")  # stub
-        def setcbreak_called_on_tty_stdins(self, mock_termios, mock_tty):
+        def setcbreak_called_on_tty_stdins(self, mock_tty, mock_termios):
+            mock_termios.tcgetattr.return_value = make_tcattrs(echo=True)
             self._run(_)
             mock_tty.setcbreak.assert_called_with(sys.stdin)
 
@@ -1125,27 +1156,27 @@ stderr 25
             mock_os.tcgetpgrp.assert_called_once_with(sys.stdin.fileno())
 
         @skip_if_windows
-        @patch("invoke.terminals.tty")  # stub
-        @patch("invoke.terminals.termios")
+        @patch("invoke.terminals.tty")
         def tty_stdins_have_settings_restored_by_default(
-            self, mock_termios, mock_tty
+            self, mock_tty, mock_termios
         ):
-            sentinel = [1, 7, 3, 27]
-            mock_termios.tcgetattr.return_value = sentinel
+            # Get already-cbroken attrs since that's an easy way to get the
+            # right format/layout
+            attrs = make_tcattrs(echo=True)
+            mock_termios.tcgetattr.return_value = attrs
             self._run(_)
+            # Ensure those old settings are being restored
             mock_termios.tcsetattr.assert_called_once_with(
-                sys.stdin, mock_termios.TCSADRAIN, sentinel
+                sys.stdin, mock_termios.TCSADRAIN, attrs
             )
 
         @skip_if_windows
         @patch("invoke.terminals.tty")  # stub
-        @patch("invoke.terminals.termios")
         def tty_stdins_have_settings_restored_on_KeyboardInterrupt(
-            self, mock_termios, mock_tty
+            self, mock_tty, mock_termios
         ):
             # This test is re: GH issue #303
-            # tcgetattr returning some arbitrary value
-            sentinel = [1, 7, 3, 27]
+            sentinel = make_tcattrs(echo=True)
             mock_termios.tcgetattr.return_value = sentinel
             # Don't actually bubble up the KeyboardInterrupt...
             try:
@@ -1156,6 +1187,26 @@ stderr 25
             mock_termios.tcsetattr.assert_called_once_with(
                 sys.stdin, mock_termios.TCSADRAIN, sentinel
             )
+
+        @skip_if_windows
+        @patch("invoke.terminals.tty")
+        def setcbreak_not_called_if_terminal_seems_already_cbroken(
+            self, mock_tty, mock_termios
+        ):
+            # Proves #559, sorta, insofar as it only passes when the fixed
+            # behavior is in place. (Proving the old bug is hard as it is race
+            # condition reliant; the new behavior sidesteps that entirely.)
+
+            # Test both bytes and ints versions of CC values, since docs
+            # disagree with at least some platforms' realities on that.
+            for is_ints in (True, False):
+                mock_termios.tcgetattr.return_value = make_tcattrs(
+                    cc_is_ints=is_ints
+                )
+                self._run(_)
+                # Ensure tcsetattr and setcbreak were never called
+                assert not mock_tty.setcbreak.called
+                assert not mock_termios.tcsetattr.called
 
     class send_interrupt:
         def _run_with_mocked_interrupt(self, klass):

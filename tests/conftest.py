@@ -1,9 +1,11 @@
 import logging
 import os
 import sys
+import termios
 
 from invoke.vendor.six import iteritems
 import pytest
+from mock import patch
 
 from _util import support
 
@@ -58,3 +60,15 @@ def clean_sys_modules():
 @pytest.fixture
 def integration(reset_environ, chdir_support, clean_sys_modules):
     yield
+
+
+@pytest.fixture
+def mock_termios():
+    with patch("invoke.terminals.termios") as mocked:
+        # Ensure mocked termios has 'real' values for constants...otherwise
+        # doing bit arithmetic on Mocks kinda defeats the point.
+        mocked.ECHO = termios.ECHO
+        mocked.ICANON = termios.ICANON
+        mocked.VMIN = termios.VMIN
+        mocked.VTIME = termios.VTIME
+        yield mocked
