@@ -2,6 +2,15 @@
 Changelog
 =========
 
+- :bug:`559` (also `fabric/fabric#1812
+  <https://github.com/fabric/fabric/issues/1812>`_) Modify how
+  `~invoke.runners.Runner` performs stdin terminal mode changes, to avoid
+  incorrect terminal state restoration when run concurrently (which could lead
+  to things like terminal echo becoming disabled after the Python process
+  exits).
+
+  Thanks to Adam Jensen and Nick Timkovich for the detailed bug reports &
+  reproduction assistance.
 - :release:`1.0.1 <2018-07-12>`
 - :bug:`270` (also :issue:`551`) ``None`` values in config levels (most
   commonly caused by empty configuration files) would raise ``AttributeError``
