@@ -1130,8 +1130,8 @@ stderr 25
     class character_buffered_stdin:
         @skip_if_windows
         @patch("invoke.terminals.tty")
-        @patch("invoke.terminals.termios")  # stub
-        def setcbreak_called_on_tty_stdins(self, mock_termios, mock_tty):
+        def setcbreak_called_on_tty_stdins(self, mock_tty, mock_termios):
+            mock_termios.tcgetattr.return_value = make_tcattrs(echo=True)
             self._run(_)
             mock_tty.setcbreak.assert_called_with(sys.stdin)
 
@@ -1172,13 +1172,11 @@ stderr 25
 
         @skip_if_windows
         @patch("invoke.terminals.tty")  # stub
-        @patch("invoke.terminals.termios")
         def tty_stdins_have_settings_restored_on_KeyboardInterrupt(
-            self, mock_termios, mock_tty
+            self, mock_tty, mock_termios
         ):
             # This test is re: GH issue #303
-            # tcgetattr returning some arbitrary value
-            sentinel = [1, 7, 3, 27]
+            sentinel = make_tcattrs(echo=True)
             mock_termios.tcgetattr.return_value = sentinel
             # Don't actually bubble up the KeyboardInterrupt...
             try:
