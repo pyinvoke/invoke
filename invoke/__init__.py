@@ -4,30 +4,27 @@ from .config import Config  # noqa
 from .context import Context, MockContext  # noqa
 from .exceptions import (  # noqa
     AmbiguousEnvVar,
-    ThreadException,
-    ParseError,
-    CollectionNotFound,  # noqa
-    UnknownFileType,
-    Exit,
-    UncastableEnvVar,
-    PlatformError,  # noqa
-    ResponseNotAccepted,
-    UnexpectedExit,
     AuthFailure,
-    WatcherError,  # noqa
-)  # noqa
+    CollectionNotFound,
+    Exit,
+    ParseError,
+    PlatformError,
+    ResponseNotAccepted,
+    ThreadException,
+    UncastableEnvVar,
+    UnexpectedExit,
+    UnknownFileType,
+    UnpicklableConfigMember,
+    WatcherError,
+)
 from .executor import Executor  # noqa
 from .loader import FilesystemLoader  # noqa
 from .parser import Argument  # noqa
 from .program import Program  # noqa
-from .runners import Runner, Local, Failure, Result  # noqa  # noqa  # noqa
+from .runners import Runner, Local, Failure, Result  # noqa
 from .tasks import task, call, Call, Task  # noqa
 from .terminals import pty_size  # noqa
-from .watchers import (  # noqa
-    StreamWatcher,
-    Responder,
-    FailingResponder,  # noqa
-)  # noqa
+from .watchers import FailingResponder, Responder, StreamWatcher  # noqa
 
 
 def run(command, **kwargs):
