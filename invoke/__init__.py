@@ -4,16 +4,16 @@ from .config import Config  # noqa
 from .context import Context, MockContext  # noqa
 from .exceptions import (  # noqa
     AmbiguousEnvVar,
-    ThreadException,
-    ParseError,
+    AuthFailure,
     CollectionNotFound,
-    UnknownFileType,
     Exit,
-    UncastableEnvVar,
+    ParseError,
     PlatformError,
     ResponseNotAccepted,
+    ThreadException,
+    UncastableEnvVar,
     UnexpectedExit,
-    AuthFailure,
+    UnknownFileType,
     WatcherError,
 )
 from .executor import Executor  # noqa
