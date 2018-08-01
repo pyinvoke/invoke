@@ -14,6 +14,7 @@ from .exceptions import (  # noqa
     UncastableEnvVar,
     UnexpectedExit,
     UnknownFileType,
+    UnpicklableConfigMember,
     WatcherError,
 )
 from .executor import Executor  # noqa
