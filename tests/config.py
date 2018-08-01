@@ -5,7 +5,7 @@ from os.path import join, expanduser
 from invoke.util import six
 from mock import patch, call
 import pytest
-from pytest import raises
+from pytest_relaxed import raises
 
 from invoke.runners import Local
 from invoke.config import Config
@@ -13,9 +13,10 @@ from invoke.exceptions import (
     AmbiguousEnvVar,
     UncastableEnvVar,
     UnknownFileType,
+    UnpicklableConfigMember,
 )
 
-from _util import skip_if_windows
+from _util import skip_if_windows, support
 
 
 pytestmark = pytest.mark.usefixtures("integration")
@@ -606,10 +607,10 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
             assert "outer" in config._runtime
             assert "outer" not in config
 
+        @raises(UnknownFileType)
         def unknown_suffix_in_runtime_path_raises_useful_error(self):
             c = Config(runtime_path=join(CONFIGS_PATH, "screw.ini"))
-            with raises(UnknownFileType):
-                c.load_runtime()
+            c.load_runtime()
 
         def python_modules_dont_load_special_vars(self):
             "Python modules don't load special vars"
@@ -620,6 +621,16 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
             # Real test that builtins, etc are stripped out
             for special in ("builtins", "file", "package", "name", "doc"):
                 assert "__{}__".format(special) not in c
+
+        def python_modules_except_usefully_on_unpicklable_modules(self):
+            # Re: #556; when bug present, a TypeError pops up instead (granted,
+            # at merge time, but we want it to raise ASAP, so we're testing the
+            # intended new behavior: raising at config load time.
+            c = Config()
+            c.set_runtime_path(join(support, "has_modules.py"))
+            expected = r"'os' is a module.*giving a tasks file.*mistake"
+            with pytest.raises(UnpicklableConfigMember, match=expected):
+                c.load_runtime(merge=False)
 
     class collection_level_config_loading:
         def performed_explicitly_and_directly(self):
@@ -651,9 +662,9 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
             c = Config({"foo": {"bar": "biz"}})
             assert c["foo"] == {"bar": "biz"}
 
+        @raises(TypeError)
         def is_explicitly_not_hashable(self):
-            with raises(TypeError):
-                hash(Config())
+            hash(Config())
 
     class env_vars:
         "Environment variables"
@@ -689,11 +700,11 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
             c.load_shell_env()
             assert c.foo_bar.biz == "baz"
 
+        @raises(AmbiguousEnvVar)
         def ambiguous_underscores_dont_guess(self):
             os.environ["INVOKE_FOO_BAR"] = "biz"
             c = Config(defaults={"foo_bar": "wat", "foo": {"bar": "huh"}})
-            with raises(AmbiguousEnvVar):
-                c.load_shell_env()
+            c.load_shell_env()
 
         class type_casting:
             def strings_replaced_with_env_value(self):
@@ -770,11 +781,11 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
                 assert c.foo is not old_obj
 
             class uncastable_types:
+                @raises(UncastableEnvVar)
                 def _uncastable_type(self, default):
                     os.environ["INVOKE_FOO"] = "stuff"
                     c = Config(defaults={"foo": default})
-                    with raises(UncastableEnvVar):
-                        c.load_shell_env()
+                    c.load_shell_env()
 
                 def lists(self):
                     self._uncastable_type(["a", "list"])

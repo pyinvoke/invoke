@@ -1,6 +1,7 @@
 import copy
 import json
 import os
+import types
 from os.path import join, splitext, expanduser
 
 from .util import six, yaml
@@ -27,7 +28,7 @@ else:
 
 
 from .env import Environment
-from .exceptions import UnknownFileType
+from .exceptions import UnknownFileType, UnpicklableConfigMember
 from .runners import Local
 from .terminals import WINDOWS
 from .util import debug
@@ -914,8 +915,18 @@ class Config(DataProxy):
     def _load_py(self, path):
         data = {}
         for key, value in six.iteritems(load_source("mod", path)):
+            # Strip special members, as these are always going to be builtins
+            # and other special things a user will not want in their config.
             if key.startswith("__"):
                 continue
+            # Raise exceptions on module values; they are unpicklable.
+            # TODO: suck it up and reimplement copy() without pickling? Then
+            # again, a user trying to stuff a module into their config is
+            # probably doing something better done in runtime/library level
+            # code and not in a "config file"...right?
+            if isinstance(value, types.ModuleType):
+                err = "'{}' is a module, which can't be used as a config value. (Are you perhaps giving a tasks file instead of a config file by mistake?)"  # noqa
+                raise UnpicklableConfigMember(err.format(key))
             data[key] = value
         return data
 
