@@ -2,6 +2,7 @@
 Changelog
 =========
 
+- :release:`1.0.2 <2018-07-31>`
 - :bug:`556` (also `fabric/fabric#1823
   <https://github.com/fabric/fabric/issues/1823>`_) Pre-emptively check for an
   error condition involving an unpicklable config file value (Python config
