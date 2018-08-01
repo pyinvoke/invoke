@@ -6,16 +6,16 @@ from .exceptions import (  # noqa
     AmbiguousEnvVar,
     ThreadException,
     ParseError,
-    CollectionNotFound,  # noqa
+    CollectionNotFound,
     UnknownFileType,
     Exit,
     UncastableEnvVar,
-    PlatformError,  # noqa
+    PlatformError,
     ResponseNotAccepted,
     UnexpectedExit,
     AuthFailure,
-    WatcherError,  # noqa
-)  # noqa
+    WatcherError,
+)
 from .executor import Executor  # noqa
 from .loader import FilesystemLoader  # noqa
 from .parser import Argument  # noqa
