@@ -234,6 +234,8 @@ class UnpicklableConfigMember(Exception):
     (unclearly phrased) TypeError bubble out of the pickle module. (However, to
     avoid our own fragile catching of that error, we head it off by explicitly
     testing for module members.)
+
+    .. versionadded:: 1.0.2
     """
 
     pass

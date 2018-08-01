@@ -2,6 +2,12 @@
 Changelog
 =========
 
+- :bug:`556` (also `fabric/fabric#1823
+  <https://github.com/fabric/fabric/issues/1823>`_) Pre-emptively check for an
+  error condition involving an unpicklable config file value (Python config
+  files and imported module objects) and raise a useful exception instead of
+  allowing a confusing ``TypeError`` to bubble up later. Reported by Pham Cong
+  Dinh.
 - :bug:`559` (also `fabric/fabric#1812
   <https://github.com/fabric/fabric/issues/1812>`_) Modify how
   `~invoke.runners.Runner` performs stdin terminal mode changes, to avoid
