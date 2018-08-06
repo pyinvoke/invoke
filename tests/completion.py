@@ -47,7 +47,7 @@ class CompletionScriptPrinter:
         )
         expect(
             "--print-completion-script bla",
-            err='Console type "bla" not supported. Choose either',
+            err='Console type "bla" not supported (options are: bash, zsh, fish).',  # noqa
             test=_assert_contains,
         )
 

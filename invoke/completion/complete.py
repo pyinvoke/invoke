@@ -96,10 +96,15 @@ def print_task_names(collection):
 
 
 def print_completion_script(console_type, binary):
-    if console_type not in ("bash", "zsh", "fish"):
+    # TODO: if possible, look in cwd, strip out .py, use remainder as list.
+    # TODO: this is a TODO because not sure it'll work in a non source derived
+    # installation...
+    haves = ("bash", "zsh", "fish")
+    if console_type not in haves:
         raise ParseError(
-            'Console type "%s" not supported. Choose either '
-            "bash, zsh or fish."
+            'Console type "{}" not supported (options are: {}).'.format(
+                console_type, ", ".join(haves)
+            )
         )
     path2script = os.path.join(
         os.path.dirname(os.path.realpath(__file__)), console_type
