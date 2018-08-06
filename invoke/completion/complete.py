@@ -106,12 +106,12 @@ def print_completion_script(console_type, binary):
                 console_type, ", ".join(haves)
             )
         )
-    path2script = os.path.join(
+    path = os.path.join(
         os.path.dirname(os.path.realpath(__file__)), console_type
     )
-    debug("Printing completion script from {}".format(path2script))
+    debug("Printing completion script from {}".format(path))
     binary_names = binary_selector(binary).split("|")
-    with open(path2script, "r") as script:
+    with open(path, "r") as script:
         for line in script.readlines():
             # TODO: replace this (fragile) with some form of actual template
             # that can render/inject desired binary name list (less fragile,
