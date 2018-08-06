@@ -113,6 +113,9 @@ def print_completion_script(console_type, binary):
     binary_names = binary_selector(binary).split("|")
     with open(path2script, "r") as script:
         for line in script.readlines():
+            # TODO: replace this (fragile) with some form of actual template
+            # that can render/inject desired binary name list (less fragile,
+            # more work)
             print(
                 line.strip("\n")
                 .replace("inv invoke", " ".join(binary_names))  # noqa
