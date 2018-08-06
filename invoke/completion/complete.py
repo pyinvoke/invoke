@@ -14,7 +14,7 @@ from ..util import debug, task_name_sort_key
 def complete(binary, core, initial_context, collection):
     # Strip out program name (scripts give us full command line)
     invocation = re.sub(
-        r"^(%s) " % binary_selector(binary), "", core.remainder
+        r"^({}) ".format(binary_selector(binary)), "", core.remainder
     )
     debug("Completing for invocation: {!r}".format(invocation))
     # Tokenize (shlex will have to do)
@@ -109,7 +109,7 @@ def print_completion_script(console_type, binary):
     path2script = os.path.join(
         os.path.dirname(os.path.realpath(__file__)), console_type
     )
-    debug("Printing completion script from %s" % path2script)
+    debug("Printing completion script from {}".format(path2script))
     binary_names = binary_selector(binary).split("|")
     with open(path2script, "r") as script:
         for line in script.readlines():

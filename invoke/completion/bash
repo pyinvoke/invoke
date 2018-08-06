@@ -27,6 +27,6 @@ _complete_invoke() {
 # * -F: use given function name to generate completions.
 # * -o default: when function generates no results, use filenames.
 # * positional args: program names to complete for.
-complete -F _complete_invoke -o default inv invoke 
+complete -F _complete_invoke -o default inv invoke
 
 # vim: set ft=sh :
