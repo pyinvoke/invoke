@@ -11,13 +11,18 @@ pytestmark = pytest.mark.usefixtures("integration")
 
 
 @trap
-def _complete(invocation, collection=None):
+def _complete(invocation, collection=None, **kwargs):
     colstr = ""
     if collection:
         colstr = "-c {}".format(collection)
     command = "inv --complete {0} -- inv {0} {1}".format(colstr, invocation)
-    Program().run(command, exit=False)
+    Program(**kwargs).run(command, exit=False)
     return sys.stdout.getvalue()
+
+# TODO: remove in favor of direct asserts, needs non shite way of getting at
+# stderr instead of just stdout.
+def _assert_contains(haystack, needle):
+    assert needle in haystack
 
 
 class CompletionScriptPrinter:
@@ -29,17 +34,17 @@ class CompletionScriptPrinter:
         expect(
             '--print-completion-script bash',
             program=Program(binary='inv[oke]'),
-            out="inv invoke", test=assert_contains
+            out="inv invoke", test=_assert_contains
         )
 
     def only_accepts_certain_console_types(self):
         expect(
             '--print-completion-script',
-            err="needed value and was not given one", test=assert_contains
+            err="needed value and was not given one", test=_assert_contains
         )
         expect(
             '--print-completion-script bla',
-            err="not supported. Choose either", test=assert_contains
+            err="not supported. Choose either", test=_assert_contains
         )
 
     def prints_for_custom_binary(self):
@@ -47,7 +52,7 @@ class CompletionScriptPrinter:
             'myapp --print-completion-script zsh',
             program=Program(binary='mya[pp]'),
             invoke=False,
-            out="mya myapp", test=assert_contains
+            out="mya myapp", test=_assert_contains
         )
 
 
@@ -64,7 +69,7 @@ class ShellCompletion:
             'myapp -c integration --complete -- ba',
             program=Program(binary='myapp'),
             invoke=False,
-            out="bar", test=assert_contains
+            out="bar", test=_assert_contains
         )
 
     def aliased_custom_binary_name_completes(self):
@@ -73,7 +78,7 @@ class ShellCompletion:
                 '{0} -c integration --complete -- ba'.format(used_binary),
                 program=Program(binary='my[app]'),
                 invoke=False,
-                out="bar", test=assert_contains
+                out="bar", test=_assert_contains
             )
 
     def no_input_with_no_tasks_yields_empty_response(self):
