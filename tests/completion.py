@@ -47,7 +47,7 @@ class CompletionScriptPrinter:
         )
         expect(
             "--print-completion-script bla",
-            err="not supported. Choose either",
+            err='Console type "bla" not supported. Choose either',
             test=_assert_contains,
         )
 
