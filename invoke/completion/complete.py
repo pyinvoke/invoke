@@ -13,8 +13,9 @@ from ..util import debug, task_name_sort_key
 
 def complete(binary, core, initial_context, collection):
     # Strip out program name (scripts give us full command line)
-    invocation = re.sub(r'^(%s) ' % binary_selector(binary), '',
-                        core.remainder)
+    invocation = re.sub(
+        r"^(%s) " % binary_selector(binary), "", core.remainder
+    )
     debug("Completing for invocation: {!r}".format(invocation))
     # Tokenize (shlex will have to do)
     tokens = shlex.split(invocation)
@@ -95,20 +96,25 @@ def print_task_names(collection):
 
 
 def print_completion_script(console_type, binary):
-    if console_type not in ('bash', 'zsh', 'fish'):
-        raise ParseError('Console type "%s" not supported. Choose either '
-                         'bash, zsh or fish.')
-    path2script = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                               console_type)
+    if console_type not in ("bash", "zsh", "fish"):
+        raise ParseError(
+            'Console type "%s" not supported. Choose either '
+            "bash, zsh or fish."
+        )
+    path2script = os.path.join(
+        os.path.dirname(os.path.realpath(__file__)), console_type
+    )
     debug("Printing completion script from %s" % path2script)
     binary_names = binary_selector(binary).split("|")
-    with open(path2script, 'r') as script:
+    with open(path2script, "r") as script:
         for line in script.readlines():
-            print(line.strip("\n")
-                      .replace('inv invoke', ' '.join(binary_names)) # noqa
-                      .replace("inv'/'invoke", "'/'".join(binary_names)) # noqa
-                      .replace('invoke', binary_names[-1]) # noqa
-                      .replace('py{0}'.format(binary_names[-1]), 'pyinvoke')) # noqa
+            print(
+                line.strip("\n")
+                .replace("inv invoke", " ".join(binary_names))  # noqa
+                .replace("inv'/'invoke", "'/'".join(binary_names))  # noqa
+                .replace("invoke", binary_names[-1])  # noqa
+                .replace("py{0}".format(binary_names[-1]), "pyinvoke")
+            )  # noqa
 
 
 def binary_selector(binary):

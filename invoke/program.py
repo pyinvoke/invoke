@@ -46,10 +46,10 @@ class Program(object):
                 help="Print tab-completion candidates for given parse remainder.",  # noqa
             ),
             Argument(
-                names=('print-completion-script',),
+                names=("print-completion-script",),
                 kind=str,
-                default='',
-                help="Write a tab-completion script for your preferred console (bash|zsh|fish).", # noqa
+                default="",
+                help="Write a tab-completion script for your preferred console (bash|zsh|fish).",  # noqa
             ),
             Argument(
                 names=("debug", "d"),
@@ -469,13 +469,15 @@ class Program(object):
 
         # Print completion helpers if necessary
         if self.args.complete.value:
-            complete(self.binary, self.core, self.initial_context,
-                     self.collection)
+            complete(
+                self.binary, self.core, self.initial_context, self.collection
+            )
 
         # Print completion script if necessary
-        if self.args['print-completion-script'].value:
-            print_completion_script(self.args['print-completion-script'].value,
-                                    self.binary)
+        if self.args["print-completion-script"].value:
+            print_completion_script(
+                self.args["print-completion-script"].value, self.binary
+            )
             raise Exit
 
         # Fallback behavior if no tasks were given & no default specified
