@@ -1,10 +1,11 @@
+import os
 import sys
 
 from invoke import Program
 
 import pytest
 
-from _util import expect, trap
+from _util import expect, trap, ROOT
 
 
 pytestmark = pytest.mark.usefixtures("integration")
@@ -30,6 +31,15 @@ class CompletionScriptPrinter:
     """
     Printing the completion script
     """
+
+    def setup(self):
+        self.prev_cwd = os.getcwd()
+        # Chdir to system root to (hopefully) avoid any tasks.py. This will
+        # prove that --print-completion-script works w/o nearby tasks.
+        os.chdir(ROOT)
+
+    def teardown(self):
+        os.chdir(self.prev_cwd)
 
     def only_accepts_certain_shells(self):
         expect(
