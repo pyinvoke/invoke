@@ -53,8 +53,9 @@ script:
   - "if [[ $TRAVIS_PYTHON_VERSION != 'pypy3' ]]; then inv www.doctest; fi"
   # Did we break setup.py?
   - inv travis.test-installation --package=invoke --sanity="inv --list"
-  # Test distribution builds.
-  - inv travis.test-packaging --package=invoke --sanity="inv --list" --alt-python=alt_env/bin/python
+  # Test distribution builds, including some package_data based stuff
+  # (completion script printing)
+  - "inv travis.test-packaging --package=invoke --sanity='inv --list && inv --print-completion-script zsh' --alt-python=alt_env/bin/python"
 after_success:
   # Upload coverage data to codecov
   - codecov
