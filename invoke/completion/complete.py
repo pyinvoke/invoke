@@ -95,20 +95,15 @@ def print_task_names(collection):
             print(alias)
 
 
-def print_completion_script(console_type, binary):
+def print_completion_script(shell, binary):
     # TODO: if possible, look in cwd, strip out .py, use remainder as list.
     # TODO: this is a TODO because not sure it'll work in a non source derived
     # installation...
     haves = ("bash", "zsh", "fish")
-    if console_type not in haves:
-        raise ParseError(
-            'Console type "{}" not supported (options are: {}).'.format(
-                console_type, ", ".join(haves)
-            )
-        )
-    path = os.path.join(
-        os.path.dirname(os.path.realpath(__file__)), console_type
-    )
+    if shell not in haves:
+        err = 'Completion for shell "{}" not supported (options are: {}).'
+        raise ParseError(err.format(shell, ", ".join(haves)))
+    path = os.path.join(os.path.dirname(os.path.realpath(__file__)), shell)
     debug("Printing completion script from {}".format(path))
     binary_names = binary_selector(binary).split("|")
     with open(path, "r") as script:

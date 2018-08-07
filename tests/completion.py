@@ -39,7 +39,7 @@ class CompletionScriptPrinter:
             test=_assert_contains,
         )
 
-    def only_accepts_certain_console_types(self):
+    def only_accepts_certain_shells(self):
         expect(
             "--print-completion-script",
             err="needed value and was not given one",
@@ -47,7 +47,7 @@ class CompletionScriptPrinter:
         )
         expect(
             "--print-completion-script bla",
-            err='Console type "bla" not supported (options are: bash, zsh, fish).',  # noqa
+            err='Completion for shell "bla" not supported (options are: bash, zsh, fish).',  # noqa
             test=_assert_contains,
         )
 

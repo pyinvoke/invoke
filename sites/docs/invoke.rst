@@ -49,10 +49,10 @@ for anywhere in the command line.
     For more details on how to make best use of this option, see the
     print-completion-script option below.
 
-.. option:: --print-completion-script=STRING
+.. option:: --print-completion-script=SHELL
 
-    Print a completion script for the console type you prefer (bash, zsh or
-    fish). This can be sourced into the current session in order to enjoy
+    Print a completion script for desired ``SHELL`` (e.g. ``bash``, ``zsh``,
+    etc). This can be sourced into the current session in order to enjoy
     :ref:`tab-completion for tasks and options <tab-completion>`.
 
 .. option:: --hide=STRING
@@ -208,10 +208,10 @@ handful of ready-made wrapper scripts aimed at the most common shells such as
     * If your program uses :ref:`a distinct binary name <reusing-as-a-binary>`,
       substitute that for ``invoke`` in the command above and in the guide
       below.
-    * Specifying ``fish`` as console type (instead of ``bash`` or
-      ``zsh``) is supported, but is currently not suitable to be sourced.
-      Copy the output of ``invoke --print-completion-script fish``
-      into a file in your ``~/.config/fish/completions`` directory.
+    * Completion output for ``fish`` is supported, but not (yet) in a format
+      that can be sourced inline. Copy the output of ``invoke
+      --print-completion-script fish`` into a file in your
+      ``~/.config/fish/completions`` directory.
 
 * By default, tabbing after typing ``inv`` or ``invoke`` will display task
   names from your current directory/project's tasks file.
