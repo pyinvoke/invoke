@@ -558,13 +558,23 @@ class Program(object):
         return self._name or self.binary.capitalize()
 
     @property
+    def called_as(self):
+        """
+        Returns the program name we were actually called as.
+
+        Specifically, this is the (Python's os module's concept of a) basename
+        of the first argument in the parsed argument vector.
+        """
+        return os.path.basename(self.argv[0])
+
+    @property
     def binary(self):
         """
         Derive program's help-oriented binary name(s) from init args & argv.
 
         .. versionadded:: 1.0
         """
-        return self._binary or os.path.basename(self.argv[0])
+        return self._binary or self.called_as
 
     @property
     def args(self):

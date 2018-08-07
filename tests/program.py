@@ -158,6 +158,22 @@ class Program_:
             assert "myapp [--core-opts]" in stdout
             assert "/usr/local/bin" not in stdout
 
+    class called_as:
+        # NOTE: these tests are meh due to Program's lifecycle design
+        # (attributes get modified during run(), such as things based on
+        # observed argv). It's not great, but, whatever.
+        @trap
+        def is_the_whole_deal_when_just_a_name(self):
+            p = Program()
+            p.run("whatever --help", exit=False)
+            assert p.called_as == "whatever"
+
+        @trap
+        def is_basename_when_given_a_path(self):
+            p = Program()
+            p.run("/usr/local/bin/whatever --help", exit=False)
+            assert p.called_as == "whatever"
+
     class binary_names:
         # NOTE: this is currently only used for completion stuff, so we use
         # that to test. TODO: maybe make this more unit-y...
@@ -167,7 +183,11 @@ class Program_:
 
         def can_be_given_directly(self):
             program = Program(binary_names=["foo", "bar"])
-            stdout, _ = run("foo --print-completion-script zsh", invoke=False)
+            stdout, _ = run(
+                "foo --print-completion-script zsh",
+                invoke=False,
+                program=program,
+            )
             assert " foo bar" in stdout
 
     class print_version:
