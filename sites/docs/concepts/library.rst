@@ -78,7 +78,7 @@ exposing its own version number::
     Usage: tester [--core-opts] task1 [--task1-opts] ... taskN [--taskN-opts]
 
     Core options:
-        ... core Invoke options here ... 
+        ... core Invoke options here ...
 
     $ tester --list
     Can't find any collection named 'tasks'!
@@ -149,7 +149,7 @@ Notice how the 'usage' line changed (to specify 'subcommands' instead of
 ``--help``; and ``--list`` has been removed from the options.
 
 You can enable :ref:`tab-completion<tab-completion>` for your distinct
-binary and subcommands. 
+binary and subcommands.
 
 
 Modifying core parser arguments

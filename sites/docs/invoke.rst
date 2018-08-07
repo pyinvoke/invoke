@@ -1,7 +1,7 @@
 .. _inv:
 
 ========================
-``inv[oke]`` core usage 
+``inv[oke]`` core usage
 ========================
 
 .. seealso::
@@ -196,15 +196,15 @@ handful of ready-made wrapper scripts aimed at the most common shells such as
   current session::
 
         $ source <(invoke --print-completion-script bash)
-        
+
   or::
 
         $ source <(invoke --print-completion-script zsh)
- 
+
   ..
 
-    * The line above is probably most useful if you place it in your shell 
-      login file (i.e. ``~/.bash_profile`` or ``~/.zshrc``).    
+    * The line above is probably most useful if you place it in your shell
+      login file (i.e. ``~/.bash_profile`` or ``~/.zshrc``).
     * If your program uses :ref:`a distinct binary name <reusing-as-a-binary>`,
       substitute that for ``invoke`` in the command above and in the guide
       below.
