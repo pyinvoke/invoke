@@ -96,10 +96,15 @@ def print_task_names(collection):
 
 
 def print_completion_script(shell, binary):
-    # TODO: if possible, look in cwd, strip out .py, use remainder as list.
-    # TODO: this is a TODO because not sure it'll work in a non source derived
-    # installation...
-    haves = ("bash", "zsh", "fish")
+    # Grab all non-python source, non-temporary files in invoke/completion/;
+    # they should be completion scripts named after the shell in question.
+    haves = sorted(
+        [
+            x
+            for x in os.listdir(os.path.dirname(__file__))
+            if not x.endswith(".py") and not x.startswith(".")
+        ]
+    )
     if shell not in haves:
         err = 'Completion for shell "{}" not supported (options are: {}).'
         raise ParseError(err.format(shell, ", ".join(haves)))

@@ -50,7 +50,7 @@ class CompletionScriptPrinter:
             # NOTE: this needs updating when the real world changes, just like
             # eg our --help output tests. That's OK & better than just
             # reimplementing the code under test here.
-            err='Completion for shell "bla" not supported (options are: bash, zsh, fish).',  # noqa
+            err='Completion for shell "bla" not supported (options are: bash, fish, zsh).',  # noqa
             test=_assert_contains,
         )
 
