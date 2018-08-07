@@ -11,12 +11,10 @@ from ..parser import Parser
 from ..util import debug, task_name_sort_key
 
 
-def complete(binary, core, initial_context, collection):
+def complete(names, core, initial_context, collection):
     # Strip out program name (scripts give us full command line)
     # TODO: this may not handle path/to/script though?
-    invocation = re.sub(
-        r"^({}) ".format(binary_selector(binary)), "", core.remainder
-    )
+    invocation = re.sub(r"^({}) ".format("|".join(names)), "", core.remainder)
     debug("Completing for invocation: {!r}".format(invocation))
     # Tokenize (shlex will have to do)
     tokens = shlex.split(invocation)
@@ -96,7 +94,7 @@ def print_task_names(collection):
             print(alias)
 
 
-def print_completion_script(shell, binary):
+def print_completion_script(shell, names):
     # Grab all non-python source, non-temporary files in invoke/completion/;
     # they should be completion scripts named after the shell in question.
     haves = sorted(
@@ -111,30 +109,10 @@ def print_completion_script(shell, binary):
         raise ParseError(err.format(shell, ", ".join(haves)))
     path = os.path.join(os.path.dirname(os.path.realpath(__file__)), shell)
     debug("Printing completion script from {}".format(path))
-    binary_names = binary_selector(binary).split("|")
+    # Choose one arbitrary program name for script's own internal invocation
+    # (also used to construct completion function names when necessary)
+    binary = names[0]
     with open(path, "r") as script:
-        for line in script.readlines():
-            # TODO: replace this (fragile) with some form of actual template
-            # that can render/inject desired binary name list (less fragile,
-            # more work)
-            print(
-                line.strip("\n")
-                .replace("inv invoke", " ".join(binary_names))  # noqa
-                .replace("inv'/'invoke", "'/'".join(binary_names))  # noqa
-                .replace("invoke", binary_names[-1])  # noqa
-                .replace("py{0}".format(binary_names[-1]), "pyinvoke")
-            )  # noqa
-
-
-def binary_selector(binary):
-    """
-    Return a selector which can be used in regular expressions
-    to match binary name in strings.
-    E.g. if you use binary=inv[oke], this gives you 'inv|invoke'.
-         if you use binary=fabric, this simply returns 'fabric'.
-    """
-    m = re.match(r"(\w+)\[?(\w+)?\]?", binary)
-    if m.group(2):
-        return "{0}|{0}{1}".format(m.group(1), m.group(2))
-    else:
-        return m.group(1)
+        print(
+            script.read().format(binary=binary, spaced_names=" ".join(names))
+        )

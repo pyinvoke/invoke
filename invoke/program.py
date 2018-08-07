@@ -170,6 +170,7 @@ class Program(object):
         loader_class=None,
         executor_class=None,
         config_class=None,
+        binary_names=None,
     ):
         """
         Create a new, parameterized `.Program` instance.
@@ -248,6 +249,7 @@ class Program(object):
         # TODO 2.0: rename binary to binary_help_name or similar. (Or write
         # code to autogenerate it from binary_names.)
         self._binary = binary
+        self._binary_names = binary_names
         self.argv = None
         self.loader_class = loader_class or FilesystemLoader
         self.executor_class = executor_class or Executor
@@ -488,13 +490,17 @@ class Program(object):
         # Print completion helpers if necessary
         if self.args.complete.value:
             complete(
-                self.binary, self.core, self.initial_context, self.collection
+                names=self.binary_names,
+                core=self.core,
+                initial_context=self.initial_context,
+                collection=self.collection,
             )
 
         # Print completion script if necessary
         if self.args["print-completion-script"].value:
             print_completion_script(
-                self.args["print-completion-script"].value, self.binary
+                shell=self.args["print-completion-script"].value,
+                names=self.binary_names,
             )
             raise Exit
 
@@ -564,6 +570,8 @@ class Program(object):
 
         Specifically, this is the (Python's os module's concept of a) basename
         of the first argument in the parsed argument vector.
+
+        .. versionadded:: 1.2
         """
         return os.path.basename(self.argv[0])
 
@@ -575,6 +583,15 @@ class Program(object):
         .. versionadded:: 1.0
         """
         return self._binary or self.called_as
+
+    @property
+    def binary_names(self):
+        """
+        Derive program's completion-oriented binary name(s) from args & argv.
+
+        .. versionadded:: 1.2
+        """
+        return self._binary_names or [self.called_as]
 
     @property
     def args(self):

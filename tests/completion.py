@@ -31,15 +31,6 @@ class CompletionScriptPrinter:
     Printing the completion script
     """
 
-    def prints_for_invoke_by_default(self):
-        out, err = expect("--print-completion-script zsh")
-        # Sentinels to ensure entire script is being printed
-        assert "_complete_inv() {" in out
-        assert "compctl -K" in out
-        for line in out.splitlines():
-            if line.startswith("compctl"):
-                assert line.endswith(" inv invoke")
-
     def only_accepts_certain_shells(self):
         expect(
             "--print-completion-script",
@@ -55,7 +46,7 @@ class CompletionScriptPrinter:
             test=_assert_contains,
         )
 
-    def prints_for_custom_binary(self):
+    def prints_for_custom_binary_names(self):
         out, err = expect(
             "myapp --print-completion-script zsh",
             program=Program(binary_names=["mya", "myapp"]),
