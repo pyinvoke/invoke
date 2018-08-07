@@ -158,6 +158,18 @@ class Program_:
             assert "myapp [--core-opts]" in stdout
             assert "/usr/local/bin" not in stdout
 
+    class binary_names:
+        # NOTE: this is currently only used for completion stuff, so we use
+        # that to test. TODO: maybe make this more unit-y...
+        def defaults_to_argv_when_None(self):
+            stdout, _ = run("foo --print-completion-script zsh", invoke=False)
+            assert " foo" in stdout
+
+        def can_be_given_directly(self):
+            program = Program(binary_names=["foo", "bar"])
+            stdout, _ = run("foo --print-completion-script zsh", invoke=False)
+            assert " foo bar" in stdout
+
     class print_version:
         def displays_name_and_version(self):
             expect(

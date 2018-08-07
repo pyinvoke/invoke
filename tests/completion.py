@@ -31,13 +31,14 @@ class CompletionScriptPrinter:
     Printing the completion script
     """
 
-    def prints_for_invoke(self):
-        out, err = expect(
-            "--print-completion-script zsh", program=Program(binary="inv[oke]")
-        )
+    def prints_for_invoke_by_default(self):
+        out, err = expect("--print-completion-script zsh")
         # Sentinels to ensure entire script is being printed
-        assert "_complete_invoke() {" in out
+        assert "_complete_inv() {" in out
         assert "compctl -K" in out
+        for line in out.splitlines():
+            if line.startswith("compctl"):
+                assert line.endswith(" inv invoke")
 
     def only_accepts_certain_shells(self):
         expect(
@@ -57,14 +58,40 @@ class CompletionScriptPrinter:
     def prints_for_custom_binary(self):
         out, err = expect(
             "myapp --print-completion-script zsh",
-            program=Program(binary="mya[pp]"),
+            program=Program(binary_names=["mya", "myapp"]),
             invoke=False,
         )
         # Combines some sentinels from vanilla test, with checks that it's
         # really replacing 'invoke' with desired binary names
-        assert "_complete_myapp() {" in out
+        assert "_complete_mya() {" in out
         assert "invoke" not in out
-        assert "mya myapp" in out
+        assert " mya myapp" in out
+
+    def default_binary_names_is_completing_argv_0(self):
+        out, err = expect(
+            "someappname --print-completion-script zsh",
+            program=Program(binary_names=None),
+            invoke=False,
+        )
+        assert "_complete_someappname() {" in out
+        assert " someappname" in out
+
+    def bash_works(self):
+        out, err = expect(
+            "someappname --print-completion-script bash", invoke=False
+        )
+        assert "_complete_someappname() {" in out
+        assert "complete -F" in out
+        for line in out.splitlines():
+            if line.startswith("complete -F"):
+                assert line.endswith(" someappname")
+
+    def fish_works(self):
+        out, err = expect(
+            "someappname --print-completion-script fish", invoke=False
+        )
+        assert "function __complete_someappname" in out
+        assert "complete --command someappname" in out
 
 
 class ShellCompletion:
