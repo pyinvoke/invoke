@@ -32,12 +32,12 @@ class CompletionScriptPrinter:
     """
 
     def prints_for_invoke(self):
-        expect(
-            "--print-completion-script bash",
-            program=Program(binary="inv[oke]"),
-            out="inv invoke",
-            test=_assert_contains,
+        out, err = expect(
+            "--print-completion-script zsh", program=Program(binary="inv[oke]")
         )
+        # Sentinels to ensure entire script is being printed
+        assert "_complete_invoke() {" in out
+        assert "compctl -K" in out
 
     def only_accepts_certain_shells(self):
         expect(
@@ -52,13 +52,16 @@ class CompletionScriptPrinter:
         )
 
     def prints_for_custom_binary(self):
-        expect(
+        out, err = expect(
             "myapp --print-completion-script zsh",
             program=Program(binary="mya[pp]"),
             invoke=False,
-            out="mya myapp",
-            test=_assert_contains,
         )
+        # Combines some sentinels from vanilla test, with checks that it's
+        # really replacing 'invoke' with desired binary names
+        assert "_complete_myapp() {" in out
+        assert "invoke" not in out
+        assert "mya myapp" in out
 
 
 class ShellCompletion:
