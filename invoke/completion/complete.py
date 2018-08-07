@@ -101,7 +101,9 @@ def print_completion_script(shell, names):
         [
             x
             for x in os.listdir(os.path.dirname(__file__))
-            if not x.endswith(".py") and not x.startswith(".")
+            if not x.endswith(".py")
+            and not x.startswith(".")
+            and not x.startswith("_")
         ]
     )
     if shell not in haves:
