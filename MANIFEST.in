@@ -1,6 +1,7 @@
 include LICENSE
 include README.rst
 include tasks.py
+recursive-include invoke/completion *
 recursive-include sites *
 recursive-exclude sites/*/_build *
 include dev-requirements.txt
