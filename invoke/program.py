@@ -402,10 +402,18 @@ class Program(object):
         if self.args.debug.value:
             enable_logging()
 
-        # Print version & exit if necessary
+        # Short-circuit if --version
         if self.args.version.value:
             debug("Saw --version, printing version & exiting")
             self.print_version()
+            raise Exit
+
+        # Print (dynamic, no tasks required) completion script if requested
+        if self.args["print-completion-script"].value:
+            print_completion_script(
+                shell=self.args["print-completion-script"].value,
+                names=self.binary_names,
+            )
             raise Exit
 
     def parse_collection(self):
@@ -495,14 +503,6 @@ class Program(object):
                 initial_context=self.initial_context,
                 collection=self.collection,
             )
-
-        # Print completion script if necessary
-        if self.args["print-completion-script"].value:
-            print_completion_script(
-                shell=self.args["print-completion-script"].value,
-                names=self.binary_names,
-            )
-            raise Exit
 
         # Fallback behavior if no tasks were given & no default specified
         # (mostly a subroutine for overriding purposes)
