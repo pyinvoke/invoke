@@ -19,6 +19,7 @@ from invoke.terminals import WINDOWS
 
 
 support = os.path.join(os.path.dirname(__file__), "_support")
+ROOT = os.path.abspath(os.path.sep)
 
 
 def skip_if_windows(fn):

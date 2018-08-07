@@ -22,6 +22,7 @@ from invoke import main
 from invoke.util import cd
 
 from _util import (
+    ROOT,
     expect,
     load,
     run,
@@ -29,9 +30,6 @@ from _util import (
     support_file,
     support_path,
 )
-
-
-ROOT = os.path.abspath(os.path.sep)
 
 
 pytestmark = pytest.mark.usefixtures("integration")
