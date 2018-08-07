@@ -2,6 +2,7 @@
 Command-line completion mechanisms, executed by the core ``--complete`` flag.
 """
 
+import glob
 import os
 import re
 import shlex
@@ -95,21 +96,21 @@ def print_task_names(collection):
 
 
 def print_completion_script(shell, names):
-    # Grab all non-python source, non-temporary files in invoke/completion/;
-    # they should be completion scripts named after the shell in question.
-    haves = sorted(
-        [
-            x
-            for x in os.listdir(os.path.dirname(__file__))
-            if not x.endswith(".py")
-            and not x.startswith(".")
-            and not x.startswith("_")
-        ]
-    )
-    if shell not in haves:
+    # Grab all .completion files in invoke/completion/. (These used to have no
+    # suffix, but surprise, that's super fragile.
+    completions = {
+        os.path.splitext(os.path.basename(x))[0]: x
+        for x in glob.glob(
+            os.path.join(
+                os.path.dirname(os.path.realpath(__file__)), "*.completion"
+            )
+        )
+    }
+    try:
+        path = completions[shell]
+    except KeyError:
         err = 'Completion for shell "{}" not supported (options are: {}).'
-        raise ParseError(err.format(shell, ", ".join(haves)))
-    path = os.path.join(os.path.dirname(os.path.realpath(__file__)), shell)
+        raise ParseError(err.format(shell, ", ".join(sorted(completions))))
     debug("Printing completion script from {}".format(path))
     # Choose one arbitrary program name for script's own internal invocation
     # (also used to construct completion function names when necessary)
