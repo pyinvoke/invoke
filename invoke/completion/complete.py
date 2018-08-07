@@ -13,6 +13,7 @@ from ..util import debug, task_name_sort_key
 
 def complete(binary, core, initial_context, collection):
     # Strip out program name (scripts give us full command line)
+    # TODO: this may not handle path/to/script though?
     invocation = re.sub(
         r"^({}) ".format(binary_selector(binary)), "", core.remainder
     )
