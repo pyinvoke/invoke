@@ -191,49 +191,115 @@ for anywhere in the command line.
 Shell tab completion
 ====================
 
+Generating a completion script
+------------------------------
+
 Invoke's philosophy is to implement generic APIs and then "bake in" a few
 common use cases built on top of those APIs; tab completion is no different.
 Generic tab completion functionality (outputting a shell-compatible list of
 completion tokens for a given command line context) is provided by the
 :option:`--complete` core CLI option described above.
 
-However, you probably won't need to use that argument yourself: we distribute a
+However, you probably won't need to use that flag yourself: we distribute a
 handful of ready-made wrapper scripts aimed at the most common shells like
 ``bash`` and ``zsh`` (plus others). These scripts can be automatically
-generated from Invoke or any Invoke-driven command-line tool, using
-:option:`--print-completion-script` as follows:
+generated from Invoke or :ref:`any Invoke-driven command-line tool
+<reusing-as-a-binary>`, using :option:`--print-completion-script`; the printed
+scripts will contain the correct binary name(s) for the program generating
+them.
 
-* ``source`` the shell completion helper script provided by Invoke, giving it
-  your shell's name, into your current session; for example, in ``zsh``::
+For example, the following command prints (to stdout) a script which works for
+``zsh``, instructs ``zsh`` to use it for the ``inv`` and ``invoke`` programs,
+and calls ``invoke --complete`` at runtime to get dynamic completion
+information::
 
-        $ source <(invoke --print-completion-script zsh)
+    $ invoke --print-completion-script zsh
 
-  ..
+.. note::
+    You'll probably want to source this command or store its output somewhere
+    permanently; more on that in the next section.
 
-    * This is most useful if you place it in your shell login file (e.g.
-      ``~/.bash_profile`` or ``~/.zshrc``).
-    * If your program uses :ref:`a distinct binary name <reusing-as-a-binary>`,
-      substitute that for ``invoke`` in the command above and in the guide
-      below.
-    * Completion output for ``fish`` is supported, but not (yet) in a format
-      that can be sourced inline. Copy the output of ``invoke
-      --print-completion-script fish`` into a file in your
-      ``~/.config/fish/completions`` directory.
+Similarly, the `Fabric <http://fabfile.org>`_ tool inherits from Invoke, and
+only has a single binary name (``fab``); if you wanted to get Fabric completion
+in ``bash``, you would say::
 
-* By default, tabbing after typing ``inv`` or ``invoke`` will display task
+    $ fab --print-completion-script bash
+
+In the rest of this section, we'll use ``inv`` in examples, but please remember
+to replace it with the program you're actually using, if it's not Invoke
+itself!
+
+Sourcing the script
+-------------------
+
+There are a few ways to utilize the output of the above commands, depending on
+your needs, where the program is installed, and your shell:
+
+- The simplest and least disruptive method is to ``source`` the printed
+  completion script inline, which doesn't place anything on disk, and will only
+  affect the current shell session::
+
+    $ source <(inv --print-completion-script zsh)
+
+- If you've got the program available in your system's global Python
+  interpreter (and you're okay with running the program at the startup of each
+  shell session - Python's speed is admittedly not its strong point) you could
+  add that snippet to your shell's startup file, such as ``~/.zshrc`` or
+  ``~/.bashrc``.
+- If the program's available globally but you'd prefer to *avoid* running an
+  extra Python program at shell startup, you can cache the output of the
+  command in its own file; where this file lives is entirely up to you and how
+  your shell is configured. For example, you might just drop it into your home
+  directory as a hidden file::
+
+    $ inv --print-completion-script zsh > ~/.invoke-completion.sh
+
+  and then perhaps add the following to the end of ``~/.zshrc``::
+
+    source ~/.invoke-completion.sh
+
+  But again, this is entirely up to you and your shell.
+
+  .. note::
+    If you're using ``fish``, you *must* use this tactic, as our fish
+    completion script is not suitable for direct sourcing. Fish shell users
+    should direct the output of the command to a file in the
+    ``~/.config/fish/completions/`` directory.
+
+- Finally, if your copy of the needing-completion program is only installed in
+  a specific environment like a virtualenv, you can use either of the above
+  techniques:
+
+    - Caching the output and referencing it in a global shell startup file will
+      still work in this case, as it does not require the program to be
+      available when the shell loads -- only when you actually attempt to tab
+      complete.
+    - Using the ``source <(inv --print-completion-script yourshell)`` approach
+      will work *as long as* you place it in some appropriate per-environment
+      startup file, which will vary depending on how you manage Python
+      environments. For example, if you use ``virtualenvwrapper``, you could
+      append the ``source`` line in ``/path/to/virtualenv/bin/postactivate``.
+
+Utilizing tab completion itself
+-------------------------------
+
+You've ensured that the completion script is active in your environment - what
+have you gained?
+
+- By default, tabbing after typing ``inv`` or ``invoke`` will display task
   names from your current directory/project's tasks file.
-* Tabbing after typing a dash (``-``) or double dash (``--``) will display
+- Tabbing after typing a dash (``-``) or double dash (``--``) will display
   valid options/flags for the current context: core Invoke options if no task
   names have been typed yet; options for the most recently typed task
   otherwise.
 
-    * Tabbing while typing a partial long option will complete matching long
+    - Tabbing while typing a partial long option will complete matching long
       options, using your shell's native substring completion. E.g. if no task
       names have been typed yet, ``--e<tab>`` will offer ``--echo`` as a
       completion option.
 
-* Hitting tab when the most recent typed/completed token is a flag which takes
+- Hitting tab when the most recent typed/completed token is a flag which takes
   a value, will 'fall through' to your shell's native filename completion.
 
-    * For example, prior to typing a task name, ``--config <tab>`` will
+    - For example, prior to typing a task name, ``--config <tab>`` will
       complete local file paths to assist in filling in a config file.
