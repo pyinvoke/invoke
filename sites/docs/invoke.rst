@@ -5,8 +5,9 @@
 ========================
 
 .. seealso::
-    This page documents ``invoke``'s core arguments, options and behavior. For
-    details on invoking user-specified tasks, see
+    This page documents ``invoke``'s core arguments, options and behavior
+    (which includes options present in :ref:`custom Invoke-based binaries
+    <reusing-as-a-binary>`). For details on invoking user-specified tasks, see
     :doc:`/concepts/invoking-tasks`.
 
 
@@ -46,14 +47,17 @@ for anywhere in the command line.
         --foo-arg
         --foo-arg-2
 
-    For more details on how to make best use of this option, see the
-    print-completion-script option below.
+    For more details on how to make best use of this option, see
+    :option:`--print-completion-script`.
 
 .. option:: --print-completion-script=SHELL
 
     Print a completion script for desired ``SHELL`` (e.g. ``bash``, ``zsh``,
     etc). This can be sourced into the current session in order to enjoy
     :ref:`tab-completion for tasks and options <tab-completion>`.
+
+    These scripts are bundled with Invoke's distributed codebase, and
+    internally make use of :option:`--complete`.
 
 .. option:: --hide=STRING
 
@@ -186,25 +190,26 @@ Shell tab completion
 ====================
 
 Invoke's philosophy is to implement generic APIs and then "bake in" a few
-common use cases built on top of those APIs, and tab completion is no
-different. Generic tab completion functionality is provided by the
-:option:`--complete` core CLI option described above, and we distribute a
-handful of ready-made wrapper scripts aimed at the most common shells such as
-``bash`` and ``zsh`` (plus others). To use one of these scripts:
+common use cases built on top of those APIs; tab completion is no different.
+Generic tab completion functionality (outputting a shell-compatible list of
+completion tokens for a given command line context) is provided by the
+:option:`--complete` core CLI option described above.
 
-* ``source`` the shell completion helper script provided by Invoke into your
-  current session::
+However, you probably won't need to use that argument yourself: we distribute a
+handful of ready-made wrapper scripts aimed at the most common shells like
+``bash`` and ``zsh`` (plus others). These scripts can be automatically
+generated from Invoke or any Invoke-driven command-line tool, using
+:option:`--print-completion-script` as follows:
 
-        $ source <(invoke --print-completion-script bash)
-
-  or::
+* ``source`` the shell completion helper script provided by Invoke, giving it
+  your shell's name, into your current session; for example, in ``zsh``::
 
         $ source <(invoke --print-completion-script zsh)
 
   ..
 
-    * The line above is probably most useful if you place it in your shell
-      login file (i.e. ``~/.bash_profile`` or ``~/.zshrc``).
+    * This is most useful if you place it in your shell login file (e.g.
+      ``~/.bash_profile`` or ``~/.zshrc``).
     * If your program uses :ref:`a distinct binary name <reusing-as-a-binary>`,
       substitute that for ``invoke`` in the command above and in the guide
       below.
