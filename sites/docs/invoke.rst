@@ -50,6 +50,8 @@ for anywhere in the command line.
     For more details on how to make best use of this option, see
     :option:`--print-completion-script`.
 
+.. _print-completion-script:
+
 .. option:: --print-completion-script=SHELL
 
     Print a completion script for desired ``SHELL`` (e.g. ``bash``, ``zsh``,

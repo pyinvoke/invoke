@@ -2,6 +2,11 @@
 Changelog
 =========
 
+- :feature:`301` (via :issue:`414`) Overhaul tab completion mechanisms so users
+  can :ref:`print a completion script <print-completion-script>` which
+  automatically matches the emitting binary's configured names (compared to the
+  previous hardcoded scripts, which only worked for ``inv``/``invoke`` by
+  default). Thanks to Nicolas Höning for the foundational patchset.
 - :release:`1.1.1 <2018-07-31>`
 - :release:`1.0.2 <2018-07-31>`
 - :bug:`556` (also `fabric/fabric#1823
