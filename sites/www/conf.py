@@ -17,7 +17,7 @@ if os.environ.get("READTHEDOCS") == "True":
     target = "http://docs.pyinvoke.org/en/latest/"
 intersphinx_mapping["docs"] = (target, None)
 
-# Sister-site links to API docs
+# Sister-site links to documentation
 html_theme_options["extra_nav_links"] = {
-    "API Docs": "http://docs.pyinvoke.org"
+    "Documentation": "http://docs.pyinvoke.org"
 }
