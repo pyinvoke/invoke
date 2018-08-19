@@ -170,7 +170,7 @@ class Runner(object):
                 ``hide=True`` will override ``echo=True`` if both are given.
 
         :param dict env:
-            By default, subprocesses recieve a copy of Invoke's own environment
+            By default, subprocesses receive a copy of Invoke's own environment
             (i.e. ``os.environ``). Supply a dict here to update that child
             environment.
 
