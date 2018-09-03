@@ -1099,7 +1099,7 @@ class Local(Runner):
             return code
             # TODO: do we care about WIFSTOPPED? Maybe someday?
         else:
-            return self.process.returncode
+            return self.process.poll()
 
     def stop(self):
         # No explicit close-out required (so far).

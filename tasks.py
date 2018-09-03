@@ -10,6 +10,11 @@ from invocations.packaging import vendorize, release
 
 
 @task
+def cat(c):
+    c.run("cat")
+
+
+@task
 def test(
     c,
     verbose=False,
@@ -73,6 +78,7 @@ def coverage(c, report="term", opts=""):
 
 
 ns = Collection(
+    cat,
     test,
     coverage,
     integration,
