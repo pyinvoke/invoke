@@ -2,6 +2,7 @@
 Changelog
 =========
 
+- :release:`1.2.0 <2018-09-13>`
 - :feature:`301` (via :issue:`414`) Overhaul tab completion mechanisms so users
   can :ref:`print a completion script <print-completion-script>` which
   automatically matches the emitting binary's configured names (compared to the
