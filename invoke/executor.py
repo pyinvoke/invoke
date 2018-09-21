@@ -90,6 +90,7 @@ class Executor(object):
         # Obtain copy of directly-given tasks since they should sometimes
         # behave differently
         direct = list(calls)
+
         # Expand pre/post tasks
         # TODO: may make sense to bundle expansion & deduping now eh?
         expanded = self.expand_calls(calls)
@@ -101,37 +102,60 @@ class Executor(object):
             dedupe = True
         # Dedupe across entire run now that we know about all calls in order
         calls = self.dedupe(expanded) if dedupe else expanded
+
         # Execute
         results = {}
         # TODO: maybe clone initial config here? Probably not necessary,
         # especially given Executor is not designed to execute() >1 time at the
         # moment...
-        for call in calls:
-            autoprint = call in direct and call.autoprint
-            args = call.args
-            debug("Executing {!r}".format(call))
-            # Hand in reference to our config, which will preserve user
-            # modifications across the lifetime of the session.
-            config = self.config
-            # But make sure we reset its task-sensitive levels each time
-            # (collection & shell env)
-            # TODO: load_collection needs to be skipped if task is anonymous
-            # (Fabric 2 or other subclassing libs only)
-            collection_config = self.collection.configuration(call.called_as)
-            config.load_collection(collection_config)
-            config.load_shell_env()
-            debug("Finished loading collection & shell env configs")
-            # Get final context from the Call (which will know how to generate
-            # an appropriate one; e.g. subclasses might use extra data from
-            # being parameterized), handing in this config for use there.
-            context = call.make_context(config)
-            args = (context,) + args
-            result = call.task(*args, **call.kwargs)
-            if autoprint:
-                print(result)
-            # TODO: handle the non-dedupe case / the same-task-different-args
-            # case, wherein one task obj maps to >1 result.
-            results[call.task] = result
+        for c in calls:
+            def run_call(call):
+                autoprint = call in direct and call.autoprint
+                args = call.args
+                debug("Executing {!r}".format(call))
+                # Hand in reference to our config, which will preserve user
+                # modifications across the lifetime of the session.
+                config = self.config
+                # But make sure we reset its task-sensitive levels each time
+                # (collection & shell env)
+                # TODO: load_collection needs to be skipped if task is anonymous
+                # (Fabric 2 or other subclassing libs only)
+                collection_config = self.collection.configuration(call.called_as)
+                config.load_collection(collection_config)
+                config.load_shell_env()
+                debug("Finished loading collection & shell env configs")
+                # Get final context from the Call (which will know how to generate
+                # an appropriate one; e.g. subclasses might use extra data from
+                # being parameterized), handing in this config for use there.
+                context = call.make_context(config)
+                args = (context,) + args
+                result = call.task(*args, **call.kwargs)
+                if autoprint:
+                    print(result)
+                # TODO: handle the non-dedupe case / the same-task-different-args
+                # TODO: REMOVEME - Is ^^ comment still accurate?
+                # case, wherein one task obj maps to >1 result.
+                results[call.task] = result
+                return result
+
+            failed_check = None
+            for check_task in c.checks:
+                check_call = Call(task=check_task)
+                result = run_call(check_call)
+                if not result:
+                    failed_check = check_call
+                    break
+
+            # This special case for len == 0 tells me that maybe we should rename
+            # checks to skip_if
+            if failed_check:
+                debug("Running {} because {} returned {}".format(
+                    c.name, check_call.name, result))
+            if failed_check or len(c.checks) == 0:
+                run_call(c)
+            else:
+                debug("All {} checks for {} passed, skipping".format(len(c.checks), c.name))
+
         return results
 
     def normalize(self, tasks):
@@ -192,6 +216,10 @@ class Executor(object):
         .. versionadded:: 1.0
         """
         ret = []
+        if not getattr(calls, '__iter__', False):
+            raise ValueError("Expected iterable! Did you do "
+                "pre=mytask instead of pre=[mytask]?")
+
         for call in calls:
             # Normalize to Call (this method is sometimes called with pre/post
             # task lists, which may contain 'raw' Task objects)

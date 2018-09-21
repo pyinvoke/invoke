@@ -60,7 +60,7 @@ class task_:
         skip()
 
     def sets_which_args_are_optional(self):
-        assert self.vanilla["optional_values"].optional == ("myopt",)
+        assert self.vanilla["optional_values"].optional == ["myopt",]
 
     def allows_annotating_args_as_positional(self):
         assert self.vanilla["one_positional"].positional == ["pos"]
