@@ -218,7 +218,7 @@ class Task(object):
         # Help
         help_name_key = name if name in self.help else opts["attr_name"]
         if help_name_key in self.help:
-            opts["help"] = self.help[help_name_key]
+            opts["help"] = self.help.pop(help_name_key)
         return opts
 
     def get_arguments(self):
@@ -253,6 +253,11 @@ class Task(object):
                 if arg.name == posarg:
                     args.insert(0, args.pop(i))
                     break
+
+        if self.help:
+            raise ValueError(
+                "Help field was set for params that didn't exist: {}".format(
+                    list(self.help.keys())))
         return args
 
 
