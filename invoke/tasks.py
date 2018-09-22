@@ -215,8 +215,9 @@ class Task(object):
                 opts["kind"] = kind
             opts["default"] = default
         # Help
-        if name in self.help:
-            opts["help"] = self.help[name]
+        help_name_key = name if name in self.help else opts["attr_name"]
+        if help_name_key in self.help:
+            opts["help"] = self.help[help_name_key]
         return opts
 
     def get_arguments(self):
