@@ -125,7 +125,9 @@ class Executor(object):
             # an appropriate one; e.g. subclasses might use extra data from
             # being parameterized), handing in this config for use there.
             context = call.make_context(config)
-            args = (context,) + args
+            # TODO 531 figure out why args is always blank here + how to
+            # space out *args past regular named args
+            args = (context,) + args + tuple(call.varargs)
             result = call.task(*args, **call.kwargs)
             if autoprint:
                 print(result)
@@ -144,15 +146,16 @@ class Executor(object):
         """
         calls = []
         for task in tasks:
-            name, kwargs = None, {}
+            name, varargs, kwargs = None, [], {}
             if isinstance(task, six.string_types):
                 name = task
             elif isinstance(task, ParserContext):
                 name = task.name
-                kwargs = task.as_kwargs
+                varargs, kwargs = task.as_varargs_and_kwargs
             else:
                 name, kwargs = task
-            c = Call(task=self.collection[name], kwargs=kwargs, called_as=name)
+            c = Call(task=self.collection[name],
+                     varargs=varargs, kwargs=kwargs, called_as=name)
             calls.append(c)
         if not tasks and self.collection.default is not None:
             calls = [Call(task=self.collection[self.collection.default])]
