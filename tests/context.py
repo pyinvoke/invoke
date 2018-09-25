@@ -209,12 +209,18 @@ class Context_:
 
         @patch(local_path)
         def cd_should_accept_pathlib_path_objects(self, Local):
-            from pathlib import Path
+            try:
+                from pathlib import Path
+            except ImportError:
+                # for Python 2.7 and pypy
+                # in this case, this test will be redundant
+                test_path = "foo"
+            else:
+                test_path = Path("foo")
 
             runner = Local.return_value
             c = Context()
 
-            test_path = Path("foo")
             with c.cd(test_path):
                 c.run("whoami")
 
