@@ -366,6 +366,8 @@ class Context(DataProxy):
 
         .. versionadded:: 1.0
         """
+        # NOTE this seems to be the simplest/most universal way to implement this functionality
+        path = str(path)
         self.command_cwds.append(path)
         try:
             yield
