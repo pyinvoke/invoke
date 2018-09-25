@@ -189,6 +189,20 @@ class Context_:
             assert runner.run.called, "run() never called runner.run()!"
             assert runner.run.call_args[0][0] == cmd
 
+        @patch(local_path)
+        def cd_should_accept_pathlib_path_objects(self, Local):
+            from pathlib import Path
+
+            runner = Local.return_value
+            c = Context()
+
+            test_path = Path("foo")
+            with c.cd(test_path):
+                c.run("whoami")
+
+            cmd = "cd foo && whoami"
+            assert runner.run.call_args[0][0] == cmd
+
     class prefix:
         def setup(self):
             self.escaped_prompt = re.escape(Config().sudo.prompt)
