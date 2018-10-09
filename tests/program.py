@@ -537,6 +537,7 @@ Core options:
                                      parse remainder.
   --hide=STRING                      Set default value of run()'s 'hide' kwarg.
   --no-dedupe                        Disable task deduplication.
+  --no-dependencies                  Disable the dependency system.
   --print-completion-script=STRING   Print the tab-completion script for your
                                      preferred shell (bash|zsh|fish).
   --prompt-for-sudo-password         Prompt user at start of session for the
@@ -1287,41 +1288,6 @@ Default 'build' task: .all
                     # But run the default test task, which expects a "yaml"
                     # string. If the env var won, this would explode.
                     expect("-c runtime -f yaml/invoke.yaml mytask")
-
-        def tasks_dedupe_honors_configuration(self):
-            # Kinda-sorta duplicates some tests in executor.py, but eh.
-            with cd("configs"):
-                # Runtime conf file
-                expect(
-                    "-c integration -f no-dedupe.yaml biz",
-                    out="""
-foo
-foo
-bar
-biz
-post1
-post2
-post2
-""".lstrip(),
-                )
-                # Flag beats runtime
-                expect(
-                    "-c integration -f dedupe.yaml --no-dedupe biz",
-                    out="""
-foo
-foo
-bar
-biz
-post1
-post2
-post2
-""".lstrip(),
-                )
-
-        # * debug (top level?)
-        # * hide (run.hide...lol)
-        # * pty (run.pty)
-        # * warn (run.warn)
 
         def env_vars_load_with_prefix(self, monkeypatch):
             monkeypatch.setenv("INVOKE_RUN_ECHO", "1")

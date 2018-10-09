@@ -70,6 +70,10 @@ for anywhere in the command line. (For parsing details, see
 
     Disable task deduplication.
 
+.. option:: --no-dependencies
+
+    Disable the :doc:`dependency system </concepts/invoking-tasks>`.
+
 .. _prompt-for-sudo-password:
 
 .. option:: --prompt-for-sudo-password

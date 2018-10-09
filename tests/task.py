@@ -84,6 +84,7 @@ class task_:
 
         assert len(mytask.positional) == 0
 
+    # TODO: duplicate all the below for dependencies= ...
     def pre_tasks_stored_directly(self):
         @task
         def whatever(c):
@@ -124,6 +125,11 @@ class task_:
             @task(pre1, pre=[pre2])
             def func(c):
                 pass
+
+    # TODO: wow there were never ANY tests for post= ??? welp. maybe add some,
+    # maybe just settle for doing 'afterwards=' only...
+
+    # TODO: tests for checks=/check=
 
     def sets_name(self):
         @task(name="foo")

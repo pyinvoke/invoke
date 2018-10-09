@@ -2,6 +2,14 @@
 Changelog
 =========
 
+- :feature:`461` Extend the existing ``pre``/``post`` based dependency system
+  with a :ref:`more robust implementation <task-execution>` offering true
+  directed-acyclic-graph dependency deduplication and custom "does this task
+  need executing or not" check functionality.
+  
+  The older ``pre``/``post`` task arguments remain intact, but are now
+  considered deprecated in favor of the newer arguments: ``depends_on``, 
+  ``afterwards``, and ``checks``.
 - :bug:`466 major` Update the parsing and CLI-program mechanisms so that all
   core arguments may be given within task CLI contexts; previously this
   functionality only worked for the ``--help`` flag, and other core arguments
@@ -993,7 +1001,7 @@ Changelog
 - :release:`0.8.0 <2014-06-08>`
 - :feature:`135` (also bugs :issue:`120`, :issue:`123`) Implement post-tasks to
   match pre-tasks, and allow control over the arguments passed to both (via
-  `invoke.tasks.call`). For details, see :ref:`pre-post-tasks`.
+  `invoke.tasks.call`).
 
   .. warning::
       Pre-tasks were overhauled a moderate amount to implement this feature;
