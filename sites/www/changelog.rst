@@ -5,7 +5,7 @@ Changelog
 - :feature:`461` Extend the existing ``pre``/``post`` based dependency system
   with a :ref:`more robust implementation <task-execution>` offering true
   directed-acyclic-graph dependency deduplication and custom "does this task
-  need executing or not" check functionality.
+  need executing or not" check functionality (similar to ``make``).
   
   The older ``pre``/``post`` task arguments remain intact, but are now
   considered deprecated in favor of the newer arguments: ``depends_on``, 
