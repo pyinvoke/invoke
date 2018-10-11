@@ -142,16 +142,13 @@ class Program(object):
                 names=("collection", "c"),
                 help="Specify collection name to load.",
             ),
-            # TODO 2.0: deprecate? it's arguably the near-opposite of
-            # --no-dependencies below.
+            # TODO 2.0: deprecate
             Argument(
                 names=("no-dedupe",),
                 kind=bool,
                 default=False,
                 help="Disable task deduplication.",
             ),
-            # TODO: phrase as 'dependencies' and default to true? same
-            # effect/flag, different name/value when used post-parsing?
             # TODO: consider instead allowing selection of executor/execution
             # strategy? more forward-looking, but also harder to grok.
             Argument(
