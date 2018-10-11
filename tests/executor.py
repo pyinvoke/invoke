@@ -344,7 +344,7 @@ Testing
             # foo twice, NOR does it run followup2 twice.
             pass
 
-        def cli_targets_plus_deps_deduplicate(self):
+        def cli_tasks_plus_deps_deduplicate(self):
             # bar depends on foo; calling "foo bar" does not run "foo" 2x
             self._expect(
                 "foo bar",
@@ -354,17 +354,17 @@ bar
 """,
             )
 
-        def cli_targets_plus_followups_deduplicate(self):
+        def cli_tasks_plus_followups_deduplicate(self):
             # TODO: same as previous but with a followup instead
             pass
 
-        def dependencies_given_as_cli_targets_afterwards(self):
+        def dependencies_given_as_cli_tasks_afterwards(self):
             # bar depends on foo; calling "bar foo" DOES run 'foo' twice, i.e.,
             # "foo bar foo".
             # TODO: this
             pass
 
-        def multiple_cli_targets_with_same_followup(self):
+        def multiple_cli_tasks_with_same_followup(self):
             # Add another task that depends on 'followup2'; run it + followup1
             # (which also depends on followup2); assert that we get "newtask
             # followup1 followup2" and _not_ e.g. "newtask followup2 followup1

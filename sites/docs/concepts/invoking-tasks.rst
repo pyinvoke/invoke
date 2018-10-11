@@ -364,17 +364,19 @@ How tasks run
 Basic concepts / terminology
 ----------------------------
 
-.. TODO: flesh this out more with some sort of short intro?
-.. TODO: seems like targets-vs-tasks was left unfinished, figure that out.
+The previous sections outlined the syntax of describing which tasks you want to
+run; however, the final sequence of what happens may differ from
+that initial list, depending on your task definitions. Here's a quick list of
+terms involved in how Invoke thinks about the work it's doing for you:
 
 - **Tasks** are executable units of logic, i.e. instances of `.Task`, which
   typically wrap functions or other callables.
 - Tasks may declare that their purpose is to produce some state (a file
   on-disk, as with ``make``; runtime configuration data; a database value; etc)
   and that they can be safely skipped if the configured **checks** pass.
-- When called, targets may be given **arguments**, same as any Python callable;
+- When called, tasks may be given **arguments**, same as any Python callable;
   these are typically seen as command-line flags when discussing the CLI.
-- Targets may be **parameterized** into multiple **calls**, e.g. invoking the
+- Tasks may be **parameterized** into multiple **calls**, e.g. invoking the
   same build procedure against multiple different file paths, or executing a
   remote command on multiple target servers.
 - **Dependencies** state that for a task to successfully execute, other tasks
