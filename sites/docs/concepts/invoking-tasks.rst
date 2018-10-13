@@ -371,24 +371,24 @@ terms involved in how Invoke thinks about the work it's doing for you:
 
 - **Tasks** are executable units of logic, i.e. instances of `.Task`, which
   typically wrap functions or other callables.
-- Tasks may declare that their purpose is to produce some state (a file
-  on-disk, as with ``make``; runtime configuration data; a database value; etc)
-  and that they can be safely skipped if the configured **checks** pass.
+- Tasks may specify **checks** (typically functions) which allow skipping
+  execution of a task if its desired result already seems to be complete (a
+  file on disk exists, as with ``make``; a runtime configuration value has been
+  set; etc).
 - When called, tasks may be given **arguments**, same as any Python callable;
   these are typically seen as command-line flags when discussing the CLI.
 - Tasks may be **parameterized** into multiple **calls**, e.g. invoking the
-  same build procedure against multiple different file paths, or executing a
+  same build procedure with different requested output formats, or executing a
   remote command on multiple target servers.
 - **Dependencies** state that for a task to successfully execute, other tasks
-  (sometimes referred to as **pre-tasks** or, in ``make``, *prerequisites*)
-  must be run sometime beforehand.
+  (sometimes referred to as **pre-tasks** or *prerequisites*) must be run
+  sometime beforehand.
 - **Followup tasks**  (sometimes referred to as **post-tasks**) are roughly the
   inverse of dependencies - a task requesting that another task always be run
-  sometime *after* it itself executes.
+  sometime *after* it itself completes.
 
-Now that we've framed the discussion, we can show you some concrete examples,
-the features that enable them, and how those features interact with one
-another.
+Now that we've framed the discussion, we can show you some concrete examples of
+how these features behave and interact with one another.
 
 One task
 --------
@@ -403,19 +403,18 @@ instead, to make things easier to follow::
     def build(ctx):
         print("Building!")
 
-Running it is trivial::
+Running it does about as you'd expect::
 
     $ inv build
     Building!
 
-
 Multiple tasks
 --------------
 
-Like ``make`` and (some) other task runners, you can call more than one task at
-the same time. A classic example is to have a ``clean`` task that cleans up
-previously generated output, which you might call before a new ``build`` to
-make sure previous build results don't cause problems::
+Like ``make``, you can call more than one task at the same time. A classic
+example is to have a ``clean`` task that cleans up previously generated output,
+which you might call before a ``build`` to make sure previous build results
+don't cause problems::
 
     @task
     def clean(ctx):
@@ -425,25 +424,25 @@ make sure previous build results don't cause problems::
     def build(ctx):
         print("Building!")
 
-As you'd expect, they run in the order requested::
+They run in the order requested::
 
     $ inv clean build
     Cleaning!
     Building!
 
-
 Avoiding multiple tasks
 -----------------------
 
-Running multiple tasks at once isn't actually a frequent practice -- because
-anytime you have a common pattern, automating it is a smart move. (This leaves
-the multiple-task use case for uncommon situations where you're mixing &
-matching tasks that are not always run together.)
+Running the same set of tasks together on the CLI isn't actually done too often
+-- users will quickly seek ways to avoid such frequent repetition, leaving the
+multi-task use case to be useful in ad-hoc situations instead.
 
-One way to do this requires no special help from Invoke, but simply leverages
-typical Python logic: have ``build`` call ``clean`` automatically (while
-preserving ``clean`` as a distinct task in case one ever needs to call it by
-hand)::
+.. TODO: below may want to at least 'see also' link to any #170 solution
+
+There are a few ways to avoid always calling ``inv clean build`` or similar;
+the first requires no special features, instead leveraging the fact that Invoke
+is straight-up Python: have ``build`` call ``clean`` directly, while preserving
+``clean`` as a distinct task in case one ever needs to call it by hand::
 
     @task
     def clean(ctx):
@@ -460,11 +459,10 @@ Executed::
     Cleaning!
     Building!
 
-Maybe you don't want to clean some of the time - easy enough to add basic logic
-(relying on mild name obfuscation to avoid name collisions - Invoke
-automatically strips leading/trailing underscores when turning args into CLI
-flags; and it creates ``--no-`` versions of default-true Boolean args as
-well)::
+Maybe you want to skip the ``clean`` step some of the time - it's easy enough
+to add basic logic (note, we tweak the argument name to avoid overwriting which
+object is bound to the local name ``clean``; trailing underscores are ignored
+by the CLI parser, which makes this safe to do)::
 
     @task
     def clean(ctx):
@@ -476,8 +474,9 @@ well)::
             clean(ctx)
         print("Building!")
 
-Default behavior is the same as before, but you can now override the auto-clean
-with ``--no-clean``::
+The default behavior is the same as before, but now one can override the
+auto-clean with ``--no-clean`` (using the parser's automatic ``--no-`` prefix
+for Boolean arguments)::
 
     $ inv build
     Cleaning!
@@ -485,18 +484,20 @@ with ``--no-clean``::
     $ inv build --no-clean
     Building!
 
-
 Dependencies
 ------------
 
-Another way to achieve the functionality shown in the previous section is to
-leverage the concept of dependencies. This removes boilerplate from your task
-bodies; and it lets you ensure that dependencies only run one time, even if
-multiple tasks in a session would otherwise want to call them (covered in the
-next section.)
+Directly calling other tasks, as above, works fine initially but has a number
+of minor-to-major disadvantages (especially as one leverages more of Invoke's
+feature set). A more built-in way of describing these types of task relationships is the concept of dependencies.
 
-Here's our nascent build task tree, using the ``depends_on`` kwarg to `@task
-<.task>`::
+Declaring dependencies removes boilerplate from your task bodies and
+signatures, and let you ensure dependencies only run once, even if multiple
+tasks in a session would otherwise want to call them (an example of this is
+covered in the next section.)
+
+Here's our build task tree reimagined using dependencies, specifically the
+``depends_on`` argument to `@task <.task>`::
 
     @task
     def clean(ctx):
@@ -508,7 +509,9 @@ Here's our nascent build task tree, using the ``depends_on`` kwarg to `@task
 
 As with the inline call to ``clean()`` earlier, execution of ``build`` still
 calls ``clean`` automatically by default; and you can use the core
-``--no-dependencies`` flag to disable dependencies if necessary::
+``--no-dependencies`` flag to disable dependencies if necessary (replacing the
+need for each task to set up its own variation on the earlier example's
+``--no-clean``)::
 
     $ inv build
     Cleaning!
@@ -516,57 +519,65 @@ calls ``clean`` automatically by default; and you can use the core
     $ inv --no-dependencies build
     Building!
 
-.. note::
-    A convenient (and ``make``-esque) shortcut is to give dependencies as
-    positional arguments to ``@task``; this is exactly the same as if one gave
-    an explicit, iterable ``depends_on`` kwarg. In other words, ``@task(clean)``
-    is a shorter way of saying ``@task(depends_on=[clean])``; ``@task(clean,
-    check_config)`` is equivalent to ``@task(depends_on=[clean,
-    check_config])``; etc.
+A convenient (and ``make``-esque) shortcut is to give dependencies as
+positional arguments to ``@task``; this is exactly the same as if one gave an
+explicit, iterable ``depends_on`` kwarg. For example, these two snippets are
+functionally identical::
 
+    @task(depends_on=[clean])
+    def build(ctx):
+        pass
+
+    @task(clean)
+    def build(ctx):
+        pass
+    
+as are these two (referencing another hypothetical ``check_config`` task)::
+
+    @task(depends_on=[clean, check_config])
+    def build(ctx):
+        pass
+
+    @task(clean, check_config)
+    def build(ctx):
+        pass
 
 Skipping execution via checks
 -----------------------------
 
-To continue the "build" example (and make it more concrete), let's say we want
-to put some real behavior in place, and make some assertions about it.
+To continue the "build" example (and make it more concrete), let's have it do
+actual work, and make some assertions about the results of that work.
 Specifically:
 
-- ``build`` is responsible for creating a file named ``output``
-- ``build`` should not run if ``output`` already exists
-
-  - Yes, this is a simplistic example!! If you're wondering about timestamps
-    and hashes, this document isn't really for you; you may want to just skip
-    over to the `checks module documentation <invoke.checks>`.)
-
+- ``build`` is responsible for creating a file named ``output``.
+- ``build`` should not run if ``output`` already exists.
 - ``clean`` is responsible for removing ``output``
 - ``clean`` should not run if ``output`` does not exist
 
 .. note::
-    We could phrase some of these constraints inside our tasks as well, but
-    having the tests or predicates live outside task bodies lets us perform
-    extra logic, as with dependencies.
+    This is still a mostly contrived example; for example we're purposely
+    ignoring common tactics such as file modification timestamps, hashing, or
+    things like ``rm -f``. If you're already experienced with such things,
+    consider heading to the `checks module documentation <invoke.checks>`
+    instead.
 
-    Conversely, some situations that would make sense for checks are made
-    unnecessary by the dependency/followup system, which uses a graph mechanism
-    to remove duplicate calls (see :ref:`recursive-dependencies`.) This leaves
-    checks primarily useful for causing a task to run *zero* times, instead of
-    *only once*.
+To enable those behaviors, we add some `~Context.run` calls and use the
+``check`` argument for `@task <.task>`, handing the latter a callable predicate
+function (note that there's also a ``checks`` argument which takes an iterable
+of same).
 
-    As always, we provide these various tools, but it's up to you to decide
-    which of them apply best to your specific use case.
+Checks may be arbitrary callables, though as with other areas in Python that
+accept callable objects, this largely means one of three things:
 
-To enable these behaviors, we update the task bodies to do real work; and we
-use the ``check`` and/or ``checks`` kwargs to `@task <.task>`, handing them
-callable predicate functions (or iterables of same.)
+- Inline ``lambda`` expressions, if one's expressions are trivial and need no
+  reuse;
+- Direct references to functions or instances of callable classes;
+- Functions or instances returned *by* other functions (i.e. from *check
+  factories*), which allow specifying behavior at interpretation time, while
+  yielding something callable lazily at runtime.
 
-Checks may be arbitrary callables, typically taking a few forms:
-
-- Inline lambdas, if one's expressions are trivial and need no reuse;
-- Functions or other callables;
-- Functions returned by other functions (i.e. from *check factories*), which
-  allow specifying behavior at interpretation time, while yielding something
-  callable lazily at runtime.
+.. TODO: is 'check factories' an actual thing we mention anywhere else?
+.. TODO: or should we just make that a general reference to factories?
 
 Our new, improved, slightly less trivial tasks file::
 
@@ -583,28 +594,21 @@ Our new, improved, slightly less trivial tasks file::
         print("Building!")
         ctx.run("touch output")
 
-With the checks in place, a session when ``output`` doesn't exist yet should
-skip ``clean`` but run ``build``, and sure enough::
+With these checks in place, we'd expect ``clean`` to only ever run if there is
+something *to* clean, regardless of whether it's called explicitly or as a
+dependency of ``build``. Sure enough, we don't see its ``print`` happen when
+``output`` doesn't exist, in either case::
 
     $ ls
     tasks.py
+    $ inv clean
     $ inv build
     Building!
     $ ls
     output  tasks.py
 
-Conversely, now that ``output`` exists, ``clean`` will run - but only once::
-
-    $ inv clean
-    Cleaning!
-    $ ls
-    tasks.py
-    $ inv clean
-    $
-
-Putting ``output`` back in place, we can see that ``clean`` still runs as a
-dependency when it has a job to do, and only afterwards is ``build``'s check
-consulted (and since things were cleaned, it gives the affirmative)::
+Now that our ``output`` file exists, ``clean`` will actually run the next time
+we call it or ``build``::
 
     $ ls
     output  tasks.py
@@ -612,33 +616,50 @@ consulted (and since things were cleaned, it gives the affirmative)::
     Cleaning!
     Building!
 
-Finally, ``build`` would typically always run, because ``clean`` will always
-clean up before it; but if we skip dependencies, we'll find ``build`` also
-short-circuits when it has no work to do::
+Finally, ``build`` would normally *always* run, because ``clean`` would always
+clean up beforehand and cause ``build``'s check to trigger; but if we skip
+dependencies, we'll find ``build`` short-circuits as expected if ``output`` is
+already present::
 
     $ ls
     output  tasks.py
     $ inv --no-dependencies build
     $ 
 
-This is a highly contrived example, but hopefully illustrative.
+.. TODO: add logging for this stuff and use that in these examples?
+.. TODO: having explicit output would be nicer than 'did not print'
 
+.. note::
+    We could phrase some of these constraints as regular Python logic inside
+    our tasks as well, but having the tests/predicates live outside tasks
+    lets Invoke perform additional logic around them, similar to how
+    dependencies work.
+
+    Conversely, some situations that could be implemented via checks are made
+    unnecessary by the existence of dependencies/followups, which use a graph
+    mechanism to remove duplicate calls (see :ref:`recursive-dependencies`.)
+    This means checks are mostly useful for allowing a task to run *zero*
+    times, instead of *only once*.
+
+    As always, we provide these tools but it's up to you to decide which of
+    them apply best to your specific use case!
 
 Followup tasks
 --------------
 
-Task dependencies are a common use case; less common is their effective
-inverse, calling tasks *after* the invoked task, instead of before. We refer to
+Task dependencies are a common use case; less common is their inverse, calling
+tasks automatically *after* an invoked task, instead of before. We refer to
 these as "followup" tasks ("followups" in plural) and their `@task <.task>`
 keyword is ``afterwards``.
 
 For example, perhaps we want to invert the earlier example a bit, and build a
 file purely for the purpose of uploading to a remote server. In such a
 scenario, we may want to clean up at the end, lest we leave temporary files
-lying around on disk.
+lying around.
 
 Here's a tasks file with tasks for building a tarball, uploading it to a
-server, and cleaning up afterwards::
+server, and cleaning up afterwards (note that we aren't using any checks in
+this example, for simplicity)::
 
     @task
     def build(ctx):
@@ -655,7 +676,7 @@ server, and cleaning up afterwards::
         print("Uploading!")
         ctx.run("scp output.tgz myserver:/var/www/")
 
-Typically one would use the tasks file like so::
+Typically one would use these tasks like so::
 
     $ ls
     source-directory  tasks.py
@@ -667,8 +688,7 @@ Typically one would use the tasks file like so::
     source-directory  tasks.py
 
 Notice how the intermediate artifact, ``output.tgz``, isn't present after
-things are all done, due to ``clean``.
-
+execution, due to ``clean``.
 
 Avoiding followups
 ------------------
