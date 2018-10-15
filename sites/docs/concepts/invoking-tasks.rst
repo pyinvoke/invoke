@@ -531,7 +531,7 @@ functionally identical::
     @task(clean)
     def build(ctx):
         pass
-    
+
 as are these two (referencing another hypothetical ``check_config`` task)::
 
     @task(depends_on=[clean, check_config])
@@ -624,7 +624,7 @@ already present::
     $ ls
     output  tasks.py
     $ inv --no-dependencies build
-    $ 
+    $
 
 .. TODO: add logging for this stuff and use that in these examples?
 .. TODO: having explicit output would be nicer than 'did not print'
@@ -857,7 +857,7 @@ impact that. Thus, the result is::
     - However, these implicit dependencies *do not* mutate the original task:
       the nodes in the DAG which map to the tasks given on the CLI are actually
       'call' objects that lightly wrap the real tasks.
-      
+
     Thus, the real ``clean`` task is not modified to have a dependency on
     ``build``, and no cycle is created.
 
