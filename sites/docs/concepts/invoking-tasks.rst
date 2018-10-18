@@ -718,7 +718,6 @@ statements::
 
 In this case, even if your ``scp`` were to fail, ``clean`` would still run.
 
-
 .. _recursive-dependencies:
 
 Recursive dependencies
@@ -769,9 +768,10 @@ And execution of the topmost task::
     Building another thing!!
     BUILT ALL THE THINGS!!!
 
-Note how ``clean`` only ran once, despite being a dependency of both of the
-intermediate build steps.
-
+Note how ``clean`` only ran once, despite being a dependency of both
+intermediate build steps (``build_one_thing`` and ``build_another_thing``). The
+graph logic determined that running the four tasks in a specific order
+satisfied all of the dependencies appropriately.
 
 Call graph edge cases
 ---------------------
@@ -797,10 +797,9 @@ Given a ``build`` that depends on ``clean``::
 What should happen if one explicitly calls ``clean`` before ``build``, despite
 it being implicitly depended upon? Should it run once, or twice?
 
-This is actually sort of a trick question; from the perspective of a call
-graph, we can't add the same task twice as a dependency of another - it's
-effectively a no-op. So ``clean`` will end up only appearing in the graph once,
-and only gets run once::
+This is sort of a trick question; from the perspective of a normal
+(deduplicating) graph, we can't add the same item twice - it's effectively a
+no-op. So ``clean`` will appear in the graph once, and only gets run once::
 
     $ inv clean build
     Cleaning!
@@ -835,13 +834,12 @@ depends on ``clean``, what if we wanted to test our build task and then clean
 up afterwards (i.e. we're testing the act of building and don't truly care
 about keeping the result, for now.)
 
-So we run ``inv build clean``...but does that second ``clean`` actually run, or
-not?
+So we run ``inv build clean``...but should that second ``clean`` run, or not?
 
 We've decided that in most cases, users will expect it *to* run the second
 time, because they explicitly stated they wanted to "``build``, then
-``clean``". The fact that building also implicitly includes a clean shouldn't
-impact that. Thus, the result is::
+``clean``". The fact that building also implicitly includes a clean beforehand
+shouldn't impact that. Thus, the result is::
 
     $ inv build clean
     Cleaning!
@@ -852,20 +850,23 @@ impact that. Thus, the result is::
     On a technical level, this works with a DAG and doesn't create a cycle, for
     two reasons:
 
-    - First, multiple explicitly requested tasks are added to the DAG by having
-      later ones depend on earlier ones; so in this case, ``clean`` implicitly
-      depends on ``build`` because it comes afterwards in the series.
+    - First, the "top level" explicitly-requested tasks are all added to the
+      DAG by having later ones depend on earlier ones; so in this case,
+      the explicitly requested ``clean`` temporarily depends on ``build``
+      because it comes afterwards in the series.
     - However, these implicit dependencies *do not* mutate the original task:
       the nodes in the DAG which map to the tasks given on the CLI are actually
-      'call' objects that lightly wrap the real tasks.
+      'call' objects that lightly wrap the real tasks. You can think of them as
+      clones or copies, from the graph's perspective.
 
-    Thus, the real ``clean`` task is not modified to have a dependency on
+    Thus, the main ``clean`` task is not modified to have a dependency on
     ``build``, and no cycle is created.
 
 Multiple explicitly invoked tasks with the same followup
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Say we've got two tasks which both follow up with the same, third task::
+Say we've got two tasks which both want to be followed by the same, third
+task::
 
     @task
     def notify(c):
@@ -885,17 +886,17 @@ possible "expansions":
 #. Both followups get triggered: ``test``, ``notify``, ``build``, and another ``notify``
 #. Only one gets triggered, as early as possible: ``test``, ``notify``,
    ``build``. (Earlier versions of Invoke that didn't use a DAG ended up
-   accidentally selecting this option!)
+   unintentionally selecting this option!)
 #. Only one gets triggered, as late as possible: ``test``, ``build``,
    ``notify``.
 
-If you guessed option 3, you're right - due to how we build the DAG ("A follows
-up with B" tends to get turned around into "B depends on A"), ``notify`` ends
-up not being able to run until both ``build`` and ``test`` have executed.
-Happily, this is typically what's desired.
+If you guessed option 3, you're right - due to how we build the DAG, we
+rephrase everything (including followups) as temporary dependencies, and end up
+adding a reference to ``notify`` which has ``test`` and ``build`` as
+dependencies. Therefore, it runs once, and only after those two tasks have
+executed. Happily, this is typically what's desired.
 
 .. note::
     Option 1, "I really wanted ``notify`` to run after *both* tasks!", is
     another example of when *not* to use the dependency tree. That case is a
-    job for simple, explicit invocation of ``notify`` at the end of one's task
-    bodies.
+    job for explicit invocation of ``notify`` at the end of one's task bodies.
