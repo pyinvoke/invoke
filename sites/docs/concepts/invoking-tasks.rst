@@ -400,7 +400,7 @@ instead, to make things easier to follow::
     from invoke import task
 
     @task
-    def build(ctx):
+    def build(c):
         print("Building!")
 
 Running it does about as you'd expect::
@@ -417,11 +417,11 @@ which you might call before a ``build`` to make sure previous build results
 don't cause problems::
 
     @task
-    def clean(ctx):
+    def clean(c):
         print("Cleaning!")
 
     @task
-    def build(ctx):
+    def build(c):
         print("Building!")
 
 They run in the order requested::
@@ -445,12 +445,12 @@ is straight-up Python: have ``build`` call ``clean`` directly, while preserving
 ``clean`` as a distinct task in case one ever needs to call it by hand::
 
     @task
-    def clean(ctx):
+    def clean(c):
         print("Cleaning!")
 
     @task
-    def build(ctx):
-        clean(ctx)
+    def build(c):
+        clean(c)
         print("Building!")
 
 Executed::
@@ -465,13 +465,13 @@ object is bound to the local name ``clean``; trailing underscores are ignored
 by the CLI parser, which makes this safe to do)::
 
     @task
-    def clean(ctx):
+    def clean(c):
         print("Cleaning!")
 
     @task
-    def build(ctx, clean_=True):
+    def build(c, clean_=True):
         if clean_:
-            clean(ctx)
+            clean(c)
         print("Building!")
 
 The default behavior is the same as before, but now one can override the
@@ -500,11 +500,11 @@ Here's our build task tree reimagined using dependencies, specifically the
 ``depends_on`` argument to `@task <.task>`::
 
     @task
-    def clean(ctx):
+    def clean(c):
         print("Cleaning!")
 
     @task(depends_on=[clean])
-    def build(ctx):
+    def build(c):
         print("Building!")
 
 As with the inline call to ``clean()`` earlier, execution of ``build`` still
@@ -525,21 +525,21 @@ explicit, iterable ``depends_on`` kwarg. For example, these two snippets are
 functionally identical::
 
     @task(depends_on=[clean])
-    def build(ctx):
+    def build(c):
         pass
 
     @task(clean)
-    def build(ctx):
+    def build(c):
         pass
 
 as are these two (referencing another hypothetical ``check_config`` task)::
 
     @task(depends_on=[clean, check_config])
-    def build(ctx):
+    def build(c):
         pass
 
     @task(clean, check_config)
-    def build(ctx):
+    def build(c):
         pass
 
 Skipping execution via checks
@@ -585,14 +585,14 @@ Our new, improved, slightly less trivial tasks file::
     from invoke import task
 
     @task(check=lambda: not exists('output'))
-    def clean(ctx):
+    def clean(c):
         print("Cleaning!")
-        ctx.run("rm output")
+        c.run("rm output")
 
     @task(depends_on=[clean], check=lambda: exists('output'))
-    def build(ctx):
+    def build(c):
         print("Building!")
-        ctx.run("touch output")
+        c.run("touch output")
 
 With these checks in place, we'd expect ``clean`` to only ever run if there is
 something *to* clean, regardless of whether it's called explicitly or as a
@@ -662,19 +662,19 @@ server, and cleaning up afterwards (note that we aren't using any checks in
 this example, for simplicity)::
 
     @task
-    def build(ctx):
+    def build(c):
         print("Building!")
-        ctx.run("tar czf output.tgz source-directory")
+        c.run("tar czf output.tgz source-directory")
 
     @task
-    def clean(ctx):
+    def clean(c):
         print("Cleaning!")
-        ctx.run("rm output.tgz")
+        c.run("rm output.tgz")
 
     @task(depends_on=[build], afterwards=[clean])
-    def upload(ctx):
+    def upload(c):
         print("Uploading!")
-        ctx.run("scp output.tgz myserver:/var/www/")
+        c.run("scp output.tgz myserver:/var/www/")
 
 Typically one would use these tasks like so::
 
@@ -709,12 +709,12 @@ In that case, you probably want to use generic Python ``try``/``finally``
 statements::
 
     @task(depends_on=[build])
-    def upload(ctx):
+    def upload(c):
         try:
             print("Uploading!")
-            ctx.run("scp output.tgz myserver:/var/www/")
+            c.run("scp output.tgz myserver:/var/www/")
         finally:
-            clean(ctx)
+            clean(c)
 
 In this case, even if your ``scp`` were to fail, ``clean`` would still run.
 
@@ -746,19 +746,19 @@ A quick example of what this looks like, with shared dependencies in a small
 tree::
 
     @task
-    def clean(ctx):
+    def clean(c):
         print("Cleaning!")
 
     @task(clean)
-    def build_one_thing(ctx):
+    def build_one_thing(c):
         print("Building one thing!")
 
     @task(clean)
-    def build_another_thing(ctx):
+    def build_another_thing(c):
         print("Building another thing!!")
 
     @task(build_one_thing, build_another_thing)
-    def build_all_the_things(ctx):
+    def build_all_the_things(c):
         print("BUILT ALL THE THINGS!!!")
 
 And execution of the topmost task::
@@ -787,11 +787,11 @@ Explicitly invoked dependencies
 Given a ``build`` that depends on ``clean``::
 
     @task
-    def clean(ctx):
+    def clean(c):
         print("Cleaning!")
 
     @task(clean)
-    def build(ctx):
+    def build(c):
         print("Building!")
 
 What should happen if one explicitly calls ``clean`` before ``build``, despite
@@ -812,11 +812,11 @@ Explicitly invoked followups
 Similar to previous, but with followups instead::
 
     @task
-    def notify(ctx):
+    def notify(c):
         print("Notifying!")
 
     @task(afterwards=[notify])
-    def test(ctx):
+    def test(c):
         print("Testing!")
 
 If one calls ``inv test notify``, should ``notify`` run once or twice? As
@@ -868,15 +868,15 @@ Multiple explicitly invoked tasks with the same followup
 Say we've got two tasks which both follow up with the same, third task::
 
     @task
-    def notify(ctx):
+    def notify(c):
         print("Notifying!")
 
     @task(afterwards=[notify])
-    def build(ctx):
+    def build(c):
         print("Building!")
 
     @task(afterwards=[notify])
-    def test(ctx):
+    def test(c):
         print("Testing!")
 
 What happens if we run ``inv test build``? One could imagine a handful of
