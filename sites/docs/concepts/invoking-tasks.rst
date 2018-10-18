@@ -696,7 +696,7 @@ Avoiding followups
 As noted a few sections earlier, just because dependencies exist doesn't mean
 they're the only appropriate solution for "call one thing before another."
 Similarly, followups are useful, but they're best when you want some other task
-to be called "eventually" (as opposed to "always right after".) They're also
+to be called "eventually" (as opposed to "always right after"). They're also
 not the best for situations where you want a followup to run *even if* the task
 requesting them fails.
 
@@ -705,7 +705,8 @@ files on disk. The previous snippet can't do this: if the network is down or
 the user lacks the right key, an exception would be thrown, and Invoke would
 never call ``clean``, leaving artifacts lying around.
 
-In that case, you really just want to use ``try``/``finally``::
+In that case, you probably want to use generic Python ``try``/``finally``
+statements::
 
     @task(depends_on=[build])
     def upload(ctx):
@@ -715,8 +716,7 @@ In that case, you really just want to use ``try``/``finally``::
         finally:
             clean(ctx)
 
-In this case, even if your ``scp`` were to fail, ``clean`` would still get a
-shot at running.
+In this case, even if your ``scp`` were to fail, ``clean`` would still run.
 
 
 .. _recursive-dependencies:
@@ -726,22 +726,23 @@ Recursive dependencies
 
 All of the above has focused on groups of tasks with simple, one-hop
 relationships to each other. In the real world, things can be far messier. It's
-quite possible to end up calling one task, which depends on another, which
-depends on a third, which...you get the idea. Multiple tasks might share the
-same dependency - running that dependency multiple times in a session is at
-best inefficient and at worst incorrect. And once we add followups to the mix,
-the complexity increases further.
+quite possible to call one task, which depends on another, which depends on a
+third, and so forth.
+
+Multiple tasks in such a tree might share a dependency - and running it
+multiple times in a session may be inefficient or even outright incorrect. Add
+followup tasks to the mix and you've got quite a recipe for complexity.
 
 Tools like Invoke tackle this by building a graph (technically, a *directed
-acyclic graph* or *DAG*) of the tasks and their relationships, enabling
-deduplication and determination of the best execution order.
+acyclic graph* or *DAG*) of the requested tasks and their relationships, enabling
+deduplication and determination of the correct execution order.
 
 .. note::
     This deduplication does not require use of task checks (tasks are simply
     removed from the graph after they run), but the two features work well
     together nonetheless.
 
-A quick example of what this looks like: some shared dependencies in a small
+A quick example of what this looks like, with shared dependencies in a small
 tree::
 
     @task
