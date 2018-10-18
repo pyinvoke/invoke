@@ -16,6 +16,7 @@ html_theme_options = {
     "analytics_id": "UA-18486793-3",
     "travis_button": True,
     "codecov_button": True,
+    "tidelift_url": "https://tidelift.com/subscription/pkg/pypi-invoke?utm_source=pypi-invoke&utm_medium=referral&utm_campaign=docs",
 }
 html_sidebars = {
     "**": ["about.html", "navigation.html", "searchbox.html", "donate.html"]
