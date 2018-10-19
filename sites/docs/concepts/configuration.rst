@@ -89,9 +89,15 @@ For convenience, we refer to nested setting names with a dotted syntax, so e.g.
       :ref:`collection discovery <collection-discovery>`, and defaults to
       ``"tasks"``.
     - ``tasks.executor_class`` allows users to override the class instantiated
-      and used for task execution. Must be a fully-qualified dotted path of the
-      form ``module(.submodule...).class``; defaults to ``None``, meaning to
-      use the running `.Program` object's ``executor_class`` attribute.
+      and used for task execution.
+
+      Must be a fully-qualified dotted path of the form
+      ``module(.submodule...).class``, where all but ``.class`` will be handed
+      to `importlib.import_module`, and ``class`` is expected to be an
+      attribute on that resulting module object.
+
+      Defaults to ``None``, meaning to use the running `.Program` object's
+      ``executor_class`` attribute.
 
       .. warning::
           Take care if using this setting in tandem with :ref:`custom program
