@@ -6,6 +6,7 @@ import json
 import os
 import sys
 import textwrap
+from importlib import import_module  # buffalo buffalo
 
 from .util import six
 
@@ -534,7 +535,17 @@ class Program(object):
 
         .. versionadded:: 1.0
         """
-        executor = self.executor_class(self.collection, self.config, self.core)
+        klass = self.executor_class
+        config_path = self.config.tasks.executor_class
+        if config_path is not None:
+            # TODO: why the heck is this not builtin to importlib?
+            module_path, _, class_name = config_path.rpartition(".")
+            # TODO: worth trying to wrap both of these and raising ImportError
+            # for cases where module exists but class name does not? More
+            # "normal" but also its own possible source of bugs/confusion...
+            module = import_module(module_path)
+            klass = getattr(module, class_name)
+        executor = klass(self.collection, self.config, self.core)
         executor.execute(*self.tasks)
 
     def normalize_argv(self, argv):

@@ -20,6 +20,7 @@ from invoke import (
 )
 from invoke import main
 from invoke.util import cd
+from invoke.config import merge_dicts
 
 from _util import (
     ROOT,
@@ -241,6 +242,21 @@ class Program_:
             Program(executor_class=klass).run("myapp foo", exit=False)
             klass.assert_called_with(ANY, ANY, ANY)
             klass.return_value.execute.assert_called_with(ANY)
+
+        def executor_class_may_be_overridden_via_configured_string(self):
+            class ExecutorOverridingConfig(Config):
+                @staticmethod
+                def global_defaults():
+                    defaults = Config.global_defaults()
+                    path = "custom_executor.CustomExecutor"
+                    merge_dicts(defaults, {"tasks": {"executor_class": path}})
+                    return defaults
+
+            mock = load("custom_executor").CustomExecutor
+            p = Program(config_class=ExecutorOverridingConfig)
+            p.run("myapp noop", exit=False)
+            assert mock.assert_called
+            assert mock.return_value.execute.called
 
         def executor_is_given_access_to_core_args_and_remainder(self):
             klass = Mock()
