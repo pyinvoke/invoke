@@ -32,7 +32,7 @@ follows:
 #. **Collection-driven configurations** defined in tasks modules via
    `.Collection.configure`. (See :ref:`collection-configuration` below for
    details.)
-   
+
      - Sub-collections' configurations get merged into the top level collection
        and the final result forms the basis of the overall configuration setup.
 
@@ -129,7 +129,7 @@ For convenience, we refer to nested setting names with a dotted syntax, so e.g.
 
 - A top level config setting, ``debug``, controls whether debug-level output is
   logged; it defaults to ``False``.
-  
+
   ``debug`` can be toggled via the :option:`-d` CLI flag, which enables
   debugging after CLI parsing runs. It can also be toggled via the
   ``INVOKE_DEBUG`` environment variable which - unlike regular env vars - is
