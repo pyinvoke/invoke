@@ -526,7 +526,9 @@ class Program(object):
 
         .. note::
             Client code just wanting a different `.Executor` subclass can just
-            set ``executor_class`` in `.__init__`.
+            set ``executor_class`` in `.__init__`, or even set
+            ``tasks.executor_class`` anywhere in the config system (which may
+            allow you to avoid using a custom Program entirely).
 
         .. versionadded:: 1.0
         """
