@@ -2,6 +2,14 @@
 Changelog
 =========
 
+- :feature:`-` Allow the configuration system to override which
+  `~invoke.executor.Executor` subclass to use when executing tasks (via an
+  import-oriented string).
+
+  Specifically, it's now possible to alter execution by distributing such a
+  subclass alongside, for example, a repository-local config file which sets
+  ``tasks.executor_class``; previously, this sort of thing required use of
+  :ref:`custom binaries <reusing-as-a-binary>`.
 - :release:`1.2.0 <2018-09-13>`
 - :feature:`301` (via :issue:`414`) Overhaul tab completion mechanisms so users
   can :ref:`print a completion script <print-completion-script>` which

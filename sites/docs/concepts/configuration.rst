@@ -89,13 +89,14 @@ For convenience, we refer to nested setting names with a dotted syntax, so e.g.
       :ref:`collection discovery <collection-discovery>`, and defaults to
       ``"tasks"``.
     - ``tasks.executor_class`` allows users to override the class instantiated
-      and used for task execution. Defaults to `.Executor`, and should always
-      point to some subclass thereof.
+      and used for task execution. Must be a fully-qualified dotted path of the
+      form ``module(.submodule...).class``; defaults to ``None``, meaning to
+      use the running `.Program` object's ``executor_class`` attribute.
 
       .. warning::
           Take care if using this setting in tandem with :ref:`custom program
-          binaries <reusing-as-a-binary>`, since custom programs may themselves
-          specify a default executor class (which your use of this setting will
+          binaries <reusing-as-a-binary>`, since custom programs may specify
+          their own default executor class (which your use of this setting will
           override!) and assume certain behaviors stemming from that.
 
     - ``tasks.search_root`` allows overriding the default :ref:`collection

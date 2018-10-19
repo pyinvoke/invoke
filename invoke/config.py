@@ -496,9 +496,10 @@ class Config(DataProxy):
                 "user": None,
             },
             "tasks": {
-                "dedupe": True,
                 "auto_dash_names": True,
                 "collection_name": "tasks",
+                "dedupe": True,
+                "executor_class": None,
                 "search_root": None,
             },
         }

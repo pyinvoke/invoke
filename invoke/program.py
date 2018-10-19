@@ -235,7 +235,8 @@ class Program(object):
 
             Defaults to `.Executor`; may also be overridden at runtime by the
             :ref:`configuration system <default-values>` and its
-            ``tasks.executor_class`` setting.
+            ``tasks.executor_class`` setting (anytime that setting is not
+            ``None``).
 
         :param config_class:
             The `.Config` subclass to use for the base config object.
@@ -526,9 +527,10 @@ class Program(object):
 
         .. note::
             Client code just wanting a different `.Executor` subclass can just
-            set ``executor_class`` in `.__init__`, or even set
-            ``tasks.executor_class`` anywhere in the config system (which may
-            allow you to avoid using a custom Program entirely).
+            set ``executor_class`` in `.__init__`, or override
+            ``tasks.executor_class`` anywhere in the :ref:`config system
+            <default-values>` (which may allow you to avoid using a custom
+            Program entirely).
 
         .. versionadded:: 1.0
         """
