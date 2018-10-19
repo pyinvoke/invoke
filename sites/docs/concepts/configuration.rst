@@ -88,6 +88,16 @@ For convenience, we refer to nested setting names with a dotted syntax, so e.g.
     - ``tasks.collection_name`` controls the Python import name sought out by
       :ref:`collection discovery <collection-discovery>`, and defaults to
       ``"tasks"``.
+    - ``tasks.executor_class`` allows users to override the class instantiated
+      and used for task execution. Defaults to `.Executor`, and should always
+      point to some subclass thereof.
+
+      .. warning::
+          Take care if using this setting in tandem with :ref:`custom program
+          binaries <reusing-as-a-binary>`, since custom programs may themselves
+          specify a default executor class (which your use of this setting will
+          override!) and assume certain behaviors stemming from that.
+
     - ``tasks.search_root`` allows overriding the default :ref:`collection
       discovery <collection-discovery>` root search location. It defaults to
       ``None``, which indicates to use the executing process' current working

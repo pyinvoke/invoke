@@ -233,7 +233,9 @@ class Program(object):
         :param executor_class:
             The `.Executor` subclass to use when executing tasks.
 
-            Defaults to `.Executor`.
+            Defaults to `.Executor`; may also be overridden at runtime by the
+            :ref:`configuration system <default-values>` and its
+            ``tasks.executor_class`` setting.
 
         :param config_class:
             The `.Config` subclass to use for the base config object.
