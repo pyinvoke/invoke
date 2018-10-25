@@ -14,6 +14,8 @@ execution strategies (which tasks actually get run, and in what order).
     :local:
 
 
+.. _basic-cli-layout:
+
 Basic command line layout
 =========================
 
@@ -40,6 +42,20 @@ the args and options it will accept:
 
 For the core arguments and flags, see :doc:`/invoke`; for details on how your
 tasks affect the CLI, read onwards.
+
+.. note::
+    There is a minor convenience-minded exception to how parse contexts behave:
+    core options *may* also be given inside per-task contexts, *if and only if*
+    there is no conflict with similarly-named/prefixed arguments of the
+    being-parsed task.
+
+    For example, ``invoke mytask --echo`` will behave identically to ``invoke
+    --echo mytask``, *unless* ``mytask`` has its own ``echo`` flag (in which
+    case that flag is handed to the task context, as normal).
+
+    Similarly, ``invoke mytask -e`` will turn on command echoing too, unless
+    ``mytask`` has its own argument whose shortflag ends up set to ``-e`` (e.g.
+    ``def mytask(env)``).
 
 
 .. _task-arguments:
@@ -101,9 +117,11 @@ Per-task help / printing available flags
 
 To get help for a specific task, you can give the task name as an argument to
 the core ``--help``/``-h`` option, or give ``--help``/``-h`` after the task
-(assuming it doesn't itself define a ``--help`` or ``-h``). When help is
-requested, you'll see the task's docstring (if any) and per-argument/flag help
-output::
+(which will trigger custom-to-``help`` behavior where the task name itself is
+given to ``--help`` as its argument value).
+
+When help is requested, you'll see the task's docstring (if any) and
+per-argument/flag help output::
 
     $ inv --help build  # or invoke build --help
 

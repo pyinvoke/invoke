@@ -7,8 +7,8 @@
 .. seealso::
     This page documents ``invoke``'s core arguments, options and behavior
     (which includes options present in :ref:`custom Invoke-based binaries
-    <reusing-as-a-binary>`). For details on invoking user-specified tasks, see
-    :doc:`/concepts/invoking-tasks`.
+    <reusing-as-a-binary>`). For details on invoking user-specified tasks and
+    other parser-related details, see :doc:`/concepts/invoking-tasks`.
 
 
 Core options and flags
@@ -20,7 +20,8 @@ Core options and flags
 
 All core options & flags are below; almost all of them must be given *before*
 any task names, with a few (such as :option:`--help`) being specially looked
-for anywhere in the command line.
+for anywhere in the command line. (For parsing details, see
+:ref:`basic-cli-layout`.)
 
 .. option:: --complete
 
