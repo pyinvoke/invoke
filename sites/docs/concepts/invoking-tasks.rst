@@ -280,15 +280,15 @@ And its use::
     $inv mytask -vvv
     3
 
-Happily, because in Python 0 is 'falsey' and 1 (or any other number) is
+Happily, because in Python ``0`` is 'falsey' and ``1`` (or any other number) is
 'truthy', this functions a lot like a boolean flag as well, at least if one
-defaults it to 0.
+defaults it to ``0``.
 
 .. note::
     You may supply any integer default value for such arguments (it simply
     serves as the starting value), but take care that consumers of the argument
     are written understanding that it is always going to appear 'truthy' unless
-    it's 0!
+    it's ``0``!
 
 Dashes vs underscores in flag names
 -----------------------------------
