@@ -441,7 +441,7 @@ With a depth-first behavior, the below is hopefully intuitive to most users::
     Building
     Deploying
 
-        
+
 .. _parameterizing-pre-post-tasks:
 
 Parameterizing pre/post-tasks
@@ -503,7 +503,7 @@ With deduplication turned off (see below), the above would execute ``clean`` ->
     as a pre-task in two different ways - e.g. ``call(clean, 'html')`` and
     ``call(clean, 'all')`` - they would not get deduped should both end up
     running in the same session.
-    
+
     However, two separate references to ``call(clean, 'html')`` *would* become
     deduplicated.
 
