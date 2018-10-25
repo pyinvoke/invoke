@@ -15,7 +15,7 @@ else:
 
 try:
     from inspect import getfullargspec as getargspec
-except AttributeError:
+except ImportError:
     from inspect import getargspec
 
 from .context import Context
