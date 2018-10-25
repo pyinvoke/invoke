@@ -454,8 +454,55 @@ class Parser_:
             assert result[1].args.meh.value == "mehval2"
 
     class per_task_core_flags:
-        class help_:
-            def task_has_no_help_shows_per_task_help(self):
+        class general:
+            def _echo(self):
+                return Argument("echo", kind=bool, default=False)
+
+            def core_flags_work_normally_when_no_conflict(self):
+                # Initial parse context with an --echo, plus a no-args task
+                initial = Context(args=[self._echo()])
+                task1 = Context("mytask")
+                parser = Parser(initial=initial, contexts=[task1])
+                # Call with --echo in the per-task context, expect the core
+                # context got updated (vs an error)
+                result = parser.parse_argv(["mytask", "--echo"])
+                assert result[0].args.echo.value is True
+
+            def when_conflict_per_task_args_win_out(self):
+                # Initial parse context with an --echo, plus task w/ same
+                initial = Context(args=[self._echo()])
+                task1 = Context("mytask", args=[self._echo()])
+                parser = Parser(initial=initial, contexts=[task1])
+                # Call with --echo in the per-task context, expect the task
+                # context got updated, and not core.
+                result = parser.parse_argv(["mytask", "--echo", "both"])
+                assert result[0].args.echo.value is None
+                assert result[1].args.echo.value is True
+
+            def value_requiring_core_flags_also_work_correctly(self):
+                "value-requiring core flags also work correctly"
+                initial = Context(args=[Argument("hide")])
+                task1 = Context("mytask")
+                parser = Parser(initial=initial, contexts=[task1])
+                result = parser.parse_argv(["mytask", "--hide", "both"])
+                assert result[0].args.hide.value == "both"
+
+        class edge_cases:
+            def core_bool_but_per_task_string(self):
+                # Initial parse context with bool --hide, and a task with a
+                # regular (string) --hide
+                initial = Context(args=[Argument("hide", kind=bool, default=False)])
+                task1 = Context("mytask", args=[Argument("hide")])
+                parser = Parser(initial=initial, contexts=[task1])
+                # Expect that, because the task's version wins, we're able to
+                # call it with a value. (If there were weird bugs where the
+                # core flag informed the parsing, this would fail.)
+                result = parser.parse_argv(["mytask", "--hide", "both"])
+                assert result[0].args.hide.value is False
+                assert result[1].args.hide.value == "both"
+
+        class help_treats_context_name_as_its_value:
+            def by_itself_base_case(self):
                 task1 = Context("mytask")
                 init = Context(args=[Argument("help", optional=True)])
                 parser = Parser(initial=init, contexts=[task1])
@@ -464,40 +511,18 @@ class Parser_:
                 assert result[0].args.help.value == "mytask"
                 assert "help" not in result[1].args
 
-            # TODO: ideally we want an explosion, but for now, overriding
-            # happens naturally and is not the worst thing ever
-            def per_task_flag_wins_over_core_flag(self):
-                task1 = Context("mytask", args=[Argument("help")])
+            def other_tokens_afterwards_raise_parse_errors(self):
+                # NOTE: this is because of the special-casing where we supply
+                # the task name as the value; all other core flags would
+                # 'naturally' eat the next token for their value (as is proven
+                # up above under 'general' tests)
+                task1 = Context("mytask")
                 init = Context(args=[Argument("help", optional=True)])
                 parser = Parser(initial=init, contexts=[task1])
-                result = parser.parse_argv(["mytask", "--help", "foo"])
-                assert result[1].args.help.value == "foo"
-
-            def task_has_no_h_shortflag_shows_per_task_help(self):
-                task1 = Context("mytask")
-                arg = Argument(names=("help", "h"), optional=True)
-                init = Context(args=[arg])
-                parser = Parser(initial=init, contexts=[task1])
-                result = parser.parse_argv(["mytask", "-h"])
+                result = parser.parse_argv(["mytask", "--help", "foobar"])
                 assert len(result) == 2
                 assert result[0].args.help.value == "mytask"
                 assert "help" not in result[1].args
-
-            def task_has_h_shortflag_throws_error(self):
-                # def mytask(c, height):
-                # inv mytask -h
-                skip()
-
-        class other_core_flags_do_not_work_in_task_contexts:
-            # NOTE: only doing a subset here for sanity tests
-            def list_(self):
-                skip()
-
-            def no_dedupe(self):
-                skip()
-
-        # TODO: can define what core flags work as per-task flags, somehow?
-        # I.e. how to implement --roles/--hosts in fab 2?
 
 
 class ParseResult_:

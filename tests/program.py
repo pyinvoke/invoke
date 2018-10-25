@@ -2,7 +2,7 @@ import json
 import os
 import sys
 
-from invoke.util import six
+from invoke.util import six, Lexicon
 from mock import patch, Mock, ANY
 import pytest
 from pytest import skip
@@ -276,6 +276,24 @@ class Program_:
                 assert name in core_arg_names
             # Also make sure it's a list for easier tweaking/appending
             assert isinstance(core_args, list)
+
+    class args_property:
+        def shorthand_for_self_core_args(self):
+            "is shorthand for self.core[0].args"
+            p = Program()
+            p.run("myapp -e foo", exit=False)
+            args = p.args
+            assert isinstance(args, Lexicon)
+            assert args.echo.value is True
+
+        def contains_core_args_from_all_contexts(self):
+            # Part of #466.
+            p = Program()
+            p.run("myapp -e foo --hide both", exit=False)
+            # Was given in core
+            assert p.args.echo.value is True
+            # Was given in per-task
+            assert p.args.hide.value == "both"
 
     class run:
         # NOTE: some of these are integration-style tests, but they are still
