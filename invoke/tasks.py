@@ -4,7 +4,6 @@ generate new tasks.
 """
 
 from copy import deepcopy
-import inspect
 import types
 
 from .util import six
@@ -13,6 +12,11 @@ if six.PY3:
     from itertools import zip_longest
 else:
     from itertools import izip_longest as zip_longest
+
+try:
+    from inspect import getfullargspec as getargspec
+except AttributeError:
+    from inspect import getargspec
 
 from .context import Context
 from .parser import Argument, translate_underscores
@@ -151,7 +155,7 @@ class Task(object):
         # TODO: __call__ exhibits the 'self' arg; do we manually nix 1st result
         # in argspec, or is there a way to get the "really callable" spec?
         func = body if isinstance(body, types.FunctionType) else body.__call__
-        spec = inspect.getfullargspec(func)
+        spec = getargspec(func)
         arg_names = spec.args[:]
         matched_args = [reversed(x) for x in [spec.args, spec.defaults or []]]
         spec_dict = dict(zip_longest(*matched_args, fillvalue=NO_DEFAULT))
