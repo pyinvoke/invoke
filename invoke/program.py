@@ -1,5 +1,6 @@
 from __future__ import unicode_literals, print_function
 
+import copy
 import getpass
 import inspect
 import json
@@ -462,7 +463,7 @@ class Program(object):
 
         .. versionadded:: 1.0
         """
-        halp = self.args.help.value or self.core_via_tasks.args.help.value
+        halp = self.args.help.value
 
         # Core (no value given) --help output (only when bundled namespace)
         if halp is True:
@@ -610,14 +611,35 @@ class Program(object):
         """
         return self._binary_names or [self.called_as]
 
+    # TODO 2.0: ugh rename this or core_args, they are too confusing
     @property
     def args(self):
         """
         Obtain core program args from ``self.core`` parse result.
 
         .. versionadded:: 1.0
+        .. versionchanged:: 1.3
+            Extended this property so it reflects the union of ``self.core``
+            and ``self.core_via_tasks``, allowing core parser arguments to be
+            honored even when given after tasks.
         """
-        return self.core[0].args
+        core_args = self.core[0].args
+        if hasattr(self, "core_via_tasks"):
+            # NOTE: it seems unlikely that this will be noticeable at
+            # human-facing speeds, but in the event that it is, consider
+            # something (even) uglier like a one-time update of self.core[0] at
+            # the time that we also write self.core_via_tasks.
+            core_args = copy.deepcopy(core_args)
+            # TODO: might be nice to make a Lexicon subclass for these
+            # lexicons-of-args which is capable of doing e.g. .update() w/
+            # below semantics
+            # Ensure we update the actual args' values, and only if actually
+            # set, to avoid overwriting the entire objects or applying defaults
+            # on top of non-default values.
+            for key, arg in self.core_via_tasks.args.items():
+                if arg._value is not None:
+                    core_args[key].value = arg._value
+        return core_args
 
     @property
     def initial_context(self):
@@ -706,7 +728,6 @@ class Program(object):
         )
         debug("Parsing tasks against {!r}".format(self.collection))
         result = self.parser.parse_argv(self.core.unparsed)
-        # TODO: can we easily 'merge' this into self.core? Ehh
         self.core_via_tasks = result.pop(0)
         self.tasks = result
         debug("Resulting task contexts: {!r}".format(self.tasks))
