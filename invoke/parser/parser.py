@@ -272,20 +272,18 @@ class ParseMachine(StateMachine):
         elif self.initial and token in self.initial.flags:
             debug("Saw (initial-context) flag {!r}".format(token))
             flag = self.initial.flags[token]
-            # TODO: handle ambiguity? Right now, flags in the context that
-            # shadow initial-context flags would always naturally "win" by
-            # being higher up in this if/elsif/etc chain. Ideally we'd complain
-            # to avoid users shooting themselves in the foot?
-            # Flags of this type that take a value are always given the current
-            # context's name as a string value.
-            # TODO: document this in the parser docs
-            if flag.takes_value:
+            # Special-case for core --help flag: context name is used as value.
+            if flag.name == "help":
                 flag.value = self.context.name
+                msg = "Saw --help in a per-task context, setting task name ({!r}) as its value"  # noqa
+                debug(msg.format(flag.value))
+            # All others: just enter the 'switch to flag' parser state
             else:
-                # TODO: handle inverse flags, other flag types?
-                flag.value = True
-            msg = "Setting (initial-context) flag {!r} to value {!r}"
-            debug(msg.format(flag, flag.value))
+                # TODO: handle inverse core flags too? There are none at the
+                # moment (e.g. --no-dedupe is actually 'no_dedupe', not a
+                # default-False 'dedupe') and it's up to us whether we actually
+                # put any in place.
+                self.switch_to_flag(token)
         # Unknown
         else:
             if not self.ignore_unknown:
@@ -383,7 +381,16 @@ class ParseMachine(StateMachine):
         # Set flag/arg obj
         flag = self.context.inverse_flags[flag] if inverse else flag
         # Update state
-        self.flag = self.context.flags[flag]
+        try:
+            self.flag = self.context.flags[flag]
+        except KeyError as e:
+            # Try fallback to initial/core flag
+            try:
+                self.flag = self.initial.flags[flag]
+            except KeyError:
+                # If it wasn't in either, raise the original context's
+                # exception, as that's more useful / correct.
+                raise e
         debug("Moving to flag {!r}".format(self.flag))
         # Bookkeeping for iterable-type flags (where the typical 'value
         # non-empty/nondefault -> clearly it got its value already' test is

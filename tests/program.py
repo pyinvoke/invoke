@@ -281,7 +281,7 @@ class Program_:
         def shorthand_for_self_core_args(self):
             "is shorthand for self.core[0].args"
             p = Program()
-            p.run("myapp -e foo", exit=False)
+            p.run("myapp -e noop", exit=False)
             args = p.args
             assert isinstance(args, Lexicon)
             assert args.echo.value is True
@@ -289,7 +289,7 @@ class Program_:
         def contains_core_args_from_all_contexts(self):
             # Part of #466.
             p = Program()
-            p.run("myapp -e foo --hide both", exit=False)
+            p.run("myapp -e noop --hide both", exit=False)
             # Was given in core
             assert p.args.echo.value is True
             # Was given in per-task

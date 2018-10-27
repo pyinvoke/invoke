@@ -1,4 +1,4 @@
-from pytest import raises, skip
+from pytest import raises
 
 from invoke.parser import Parser, Context, Argument, ParseError
 
@@ -475,8 +475,8 @@ class Parser_:
                 parser = Parser(initial=initial, contexts=[task1])
                 # Call with --echo in the per-task context, expect the task
                 # context got updated, and not core.
-                result = parser.parse_argv(["mytask", "--echo", "both"])
-                assert result[0].args.echo.value is None
+                result = parser.parse_argv(["mytask", "--echo"])
+                assert result[0].args.echo.value is False
                 assert result[1].args.echo.value is True
 
             def value_requiring_core_flags_also_work_correctly(self):
@@ -491,7 +491,9 @@ class Parser_:
             def core_bool_but_per_task_string(self):
                 # Initial parse context with bool --hide, and a task with a
                 # regular (string) --hide
-                initial = Context(args=[Argument("hide", kind=bool, default=False)])
+                initial = Context(
+                    args=[Argument("hide", kind=bool, default=False)]
+                )
                 task1 = Context("mytask", args=[Argument("hide")])
                 parser = Parser(initial=initial, contexts=[task1])
                 # Expect that, because the task's version wins, we're able to
@@ -513,16 +515,13 @@ class Parser_:
 
             def other_tokens_afterwards_raise_parse_errors(self):
                 # NOTE: this is because of the special-casing where we supply
-                # the task name as the value; all other core flags would
-                # 'naturally' eat the next token for their value (as is proven
-                # up above under 'general' tests)
+                # the task name as the value when the flag is literally named
+                # "help".
                 task1 = Context("mytask")
                 init = Context(args=[Argument("help", optional=True)])
                 parser = Parser(initial=init, contexts=[task1])
-                result = parser.parse_argv(["mytask", "--help", "foobar"])
-                assert len(result) == 2
-                assert result[0].args.help.value == "mytask"
-                assert "help" not in result[1].args
+                with raises(ParseError, match=r".*foobar.*"):
+                    parser.parse_argv(["mytask", "--help", "foobar"])
 
 
 class ParseResult_:
