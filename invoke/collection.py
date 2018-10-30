@@ -404,9 +404,10 @@ class Collection(object):
         result = []
         for primary, aliases in six.iteritems(self.task_names):
             task = self[primary]
+            args, vararg = task.get_arguments()
             result.append(
                 ParserContext(
-                    name=primary, aliases=aliases, args=task.get_arguments()
+                    name=primary, aliases=aliases, args=args, vararg=vararg
                 )
             )
         return result

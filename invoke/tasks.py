@@ -3,6 +3,7 @@ This module contains the core `.Task` class & convenience decorators used to
 generate new tasks.
 """
 
+from collections import namedtuple
 from copy import deepcopy
 import inspect
 import types
@@ -135,7 +136,7 @@ class Task(object):
 
     def argspec(self, body):
         """
-        Returns two-tuple:
+        Returns three-tuple:
 
         * First item is list of arg names, in order defined.
 
@@ -145,6 +146,8 @@ class Task(object):
           `.NO_DEFAULT` (an 'empty' value distinct from None, since None
           is a valid value on its own).
 
+        * Third item is namedtuple (varargs, kwargs)
+
         .. versionadded:: 1.0
         """
         # Handle callable-but-not-function objects
@@ -153,6 +156,8 @@ class Task(object):
         func = body if isinstance(body, types.FunctionType) else body.__call__
         spec = inspect.getargspec(func)
         arg_names = spec.args[:]
+
+        # Collect into for regular args
         matched_args = [reversed(x) for x in [spec.args, spec.defaults or []]]
         spec_dict = dict(zip_longest(*matched_args, fillvalue=NO_DEFAULT))
         # Pop context argument
@@ -162,10 +167,16 @@ class Task(object):
             # TODO: see TODO under __call__, this should be same type
             raise TypeError("Tasks must have an initial Context argument!")
         del spec_dict[context_arg]
-        return arg_names, spec_dict
+
+        # Pass along the name of varargs and kwargs.
+        special = namedtuple('SpecialArgSpec', ['varargs', 'kwargs'])(
+            spec.varargs, spec.keywords)
+
+        return arg_names, spec_dict, special
 
     def fill_implicit_positionals(self, positional):
-        args, spec_dict = self.argspec(self.body)
+        # TODO 378 Is this good logic for varargs here? Don't think it matters
+        args, spec_dict, _ = self.argspec(self.body)
         # If positionals is None, everything lacking a default
         # value will be automatically considered positional.
         if positional is None:
@@ -222,12 +233,14 @@ class Task(object):
 
     def get_arguments(self):
         """
-        Return a list of Argument objects representing this task's signature.
+        Return a 2-tuple:
+          [0] - list of Argument objects representing this task's signature.
+          [1] - name of vararg parameter on the function
 
         .. versionadded:: 1.0
         """
         # Core argspec
-        arg_names, spec_dict = self.argspec(self.body)
+        arg_names, spec_dict, vararg_kwarg = self.argspec(self.body)
         # Obtain list of args + their default values (if any) in
         # declaration/definition order (i.e. based on getargspec())
         tuples = [(x, spec_dict[x]) for x in arg_names]
@@ -244,6 +257,7 @@ class Task(object):
             # (which may include new shortflags) so subsequent Argument
             # creation knows what's taken.
             taken_names.update(set(new_arg.names))
+        vararg, kwarg = vararg_kwarg
         # Now we need to ensure positionals end up in the front of the list, in
         # order given in self.positionals, so that when Context consumes them,
         # this order is preserved.
@@ -252,7 +266,7 @@ class Task(object):
                 if arg.name == posarg:
                     args.insert(0, args.pop(i))
                     break
-        return args
+        return args, vararg
 
 
 def task(*args, **kwargs):
@@ -369,7 +383,7 @@ class Call(object):
     .. versionadded:: 1.0
     """
 
-    def __init__(self, task, called_as=None, args=None, kwargs=None):
+    def __init__(self, task, called_as=None, args=None, varargs=None, kwargs=None):
         """
         Create a new `.Call` object.
 
@@ -389,6 +403,7 @@ class Call(object):
         self.task = task
         self.called_as = called_as
         self.args = args or tuple()
+        self.varargs = varargs or tuple()
         self.kwargs = kwargs or dict()
 
     # TODO: just how useful is this? feels like maybe overkill magic

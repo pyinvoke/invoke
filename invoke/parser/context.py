@@ -67,7 +67,7 @@ class ParserContext(object):
     .. versionadded:: 1.0
     """
 
-    def __init__(self, name=None, aliases=(), args=()):
+    def __init__(self, name=None, aliases=(), args=(), vararg=None):
         """
         Create a new ``ParserContext`` named ``name``, with ``aliases``.
 
@@ -90,6 +90,10 @@ class ParserContext(object):
         self.aliases = aliases
         for arg in args:
             self.add_arg(arg)
+        if vararg:
+            self.varargs = []
+        else:
+            self.varargs = None
 
     def __repr__(self):
         aliases = ""
@@ -148,12 +152,35 @@ class ParserContext(object):
             inverse_name = to_flag("no-{}".format(main))
             self.inverse_flags[inverse_name] = to_flag(main)
 
+    def add_vararg(self, value):
+        # as worst case for compatibility, throwing away all of the
+        # vararg stuff and just stuffing them all into kwargs works
+        # fine. You could even unpack them in executor or task.
+        # but i'm sure there's a cleaner way. Hackish way left
+        # here commented out.
+        #   name = "_vararg{}".format(len(self.positional_args))
+        #   arg = Argument(name=name, positional=True)
+        # instead, we just track vararg values separately from regular values.
+        # For least surprise, I think it's important that *args take precedence
+        # over optional parameters.
+        self.varargs.append(value)
+
+
     @property
     def missing_positional_args(self):
         return [x for x in self.positional_args if x.value is None]
 
     @property
-    def as_kwargs(self):
+    def eat_all(self):
+        returning = not self.missing_positional_args and self.have_vararg
+        return returning
+
+    @property
+    def have_vararg(self):
+        return self.varargs is not None
+
+    @property
+    def as_varargs_and_kwargs(self):
         """
         This context's arguments' values keyed by their ``.name`` attribute.
 
@@ -165,7 +192,7 @@ class ParserContext(object):
         ret = {}
         for arg in self.args.values():
             ret[arg.name] = arg.value
-        return ret
+        return self.varargs, ret
 
     def names_for(self, flag):
         # TODO: should probably be a method on Lexicon/AliasDict
