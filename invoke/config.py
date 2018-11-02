@@ -896,6 +896,9 @@ class Config(DataProxy):
             # found
             try:
                 self._set(data, loader(filepath))
+                self._set(path, filepath)
+                self._set(found, True)
+                break
             except IOError as e:
                 # Typically means 'no such file', so just note & skip past.
                 # TODO: is there a better / x-platform way to detect this?
@@ -904,9 +907,6 @@ class Config(DataProxy):
                     debug(err.format(filepath))
                 else:
                     raise
-            self._set(path, filepath)
-            self._set(found, True)
-            break
         # Still None -> no suffixed paths were found, record this fact
         if getattr(self, path) is None:
             self._set(found, False)
