@@ -149,3 +149,18 @@ class Argument(object):
             # TODO: explode nicely if self._value was not an int to start with
             func = lambda x: self._value + 1
         self._value = func(value)
+
+    @property
+    def got_value(self):
+        """
+        Returns whether the argument was ever given a (non-default) value.
+
+        For most argument kinds, this simply checks whether the internally
+        stored value is non-``None``; for others, such as ``list`` kinds,
+        different checks may be used.
+
+        .. versionadded:: 1.3
+        """
+        if self.kind is list:
+            return bool(self._value)
+        return self._value is not None

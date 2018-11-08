@@ -179,6 +179,19 @@ class Argument_:
             a = Argument("a", kind=int)
             assert a.raw_value is None
 
+    class got_value:
+        def non_list_kind_tests_for_None_value(self):
+            arg = Argument("a")
+            assert not arg.got_value
+            arg.value = "something"
+            assert arg.got_value
+
+        def list_kind_test_for_empty_list_value(self):
+            arg = Argument("a", kind=list)
+            assert not arg.got_value
+            arg.value = "append-me"
+            assert arg.got_value
+
     class set_value:
         def casts_by_default(self):
             a = Argument("a", kind=int)
