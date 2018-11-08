@@ -332,6 +332,27 @@ class Program_:
             # Now the behavior of .args can be tested as desired
             assert p.args["filename"].value == []  # Not [[]]!
 
+        def copying_from_task_context_does_not_overwrite_good_values(self):
+            # Another subcase, also mostly applying to list types: core context
+            # got a useful value, nothing was found in the per-task context;
+            # when a naive 'is not None' check is used, this overwrites the
+            # good value with an empty list.
+            # (Other types tend to not have this problem because their ._value
+            # is always None when not set. TODO: maybe this should be
+            # considered incorrect behavior for list type args?)
+            def make_arg():
+                return Argument("filename", kind=list)
+
+            p = Program()
+            # Core arg, which got a value
+            arg = make_arg()
+            arg.value = "some-file"  # appends to list
+            p.core = ParseResult([ParserContext(args=[arg])])
+            # Set core-via-tasks version to vanilla/blank/empty-list version
+            p.core_via_tasks = ParserContext(args=[make_arg()])
+            # Call .args, expect that the initial value was not overwritten
+            assert p.args.filename.value == ["some-file"]
+
     class run:
         # NOTE: some of these are integration-style tests, but they are still
         # fast tests (so not needing to go into the integration suite) and
