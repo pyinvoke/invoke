@@ -638,7 +638,7 @@ class Program(object):
             # on top of non-default values.
             for key, arg in self.core_via_tasks.args.items():
                 if arg._value is not None:
-                    core_args[key].value = arg._value
+                    core_args[key]._value = arg._value
         return core_args
 
     @property
