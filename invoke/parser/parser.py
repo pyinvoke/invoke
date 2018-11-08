@@ -75,7 +75,7 @@ class Parser(object):
             Parser(...).parse_argv(['invoke', '--core-opt', ...])
 
         :param argv: List of argument string tokens.
-        :returns: A `.ParserContext` (``list`` subclass).
+        :returns: A `.ParseResult` (a subclass of `.ParserContext`).
 
         .. versionadded:: 1.0
         """
