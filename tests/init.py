@@ -86,6 +86,15 @@ class Init:
         def argument(self):
             assert invoke.Argument is invoke.parser.Argument
 
+        def parsercontext(self):
+            assert invoke.ParserContext is invoke.parser.ParserContext
+
+        def parser(self):
+            assert invoke.Parser is invoke.parser.Parser
+
+        def parseresult(self):
+            assert invoke.ParseResult is invoke.parser.ParseResult
+
         def executor(self):
             assert invoke.Executor is invoke.executor.Executor
 
