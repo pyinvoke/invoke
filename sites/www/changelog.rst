@@ -2,6 +2,10 @@
 Changelog
 =========
 
+- :bug:`466 major` Update the parsing and CLI-program mechanisms so that all
+  core arguments may be given within task CLI contexts; previously this
+  functionality only worked for the ``--help`` flag, and other core arguments
+  given after task names (such as ``--echo``) were silently ignored.
 - :feature:`-` Allow the configuration system to override which
   `~invoke.executor.Executor` subclass to use when executing tasks (via an
   import-oriented string).
