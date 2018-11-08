@@ -623,12 +623,17 @@ class Program(object):
             and ``self.core_via_tasks``, allowing core parser arguments to be
             honored even when given after tasks.
         """
+        # Memoization which kicks in after core_via_tasks has shown up and been
+        # merged; generally efficient, also makes debugging less painful. (And
+        # still leaves self.core[0].args unmolested, which also helps with
+        # debugging.)
+        if hasattr(self, "_merged_core_and_task_args"):
+            return self._merged_core_and_task_args
+        # Degenerate/base case: we just want the initial core context's args.
         core_args = self.core[0].args
-        # Uses memoization to avoid lots of repetition (which can also make
-        # debugging more annoying too).
-        if hasattr(self, "core_via_tasks") and not getattr(
-            self, "_already_merged_task_args", False
-        ):
+        # Have we finished both main parse steps already? Generate a merged
+        # result and store+return that.
+        if hasattr(self, "core_via_tasks"):
             core_args = copy.deepcopy(core_args)
             # Ensure we update the actual args' values, and only if actually
             # set, to avoid overwriting the entire objects or applying defaults
@@ -641,7 +646,8 @@ class Program(object):
                 new_val = arg._value
                 if new_val is not None:
                     core_args[key]._value = new_val
-            self._already_merged_task_args = True
+            # Cache
+            self._merged_core_and_task_args = core_args
         return core_args
 
     @property

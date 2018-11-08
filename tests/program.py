@@ -1,3 +1,4 @@
+import copy
 import json
 import os
 import sys
@@ -300,13 +301,19 @@ class Program_:
 
         def only_copies_from_task_contexts_once(self):
             p = Program()
-            p.core = ParseResult([ParserContext()])
-            # NOTE: below will trigger the hasattr() near what we're testing,
-            # but that shouldn't be a problem.
-            p.core_via_tasks = Mock(args=Mock(items=Mock(return_value=[])))
-            p.args
-            p.args
-            assert p.core_via_tasks.args.items.call_count == 1  # not 2
+            p.core = ParseResult([ParserContext(args=[Argument("arg")])])
+            # Set core-via-tasks to be a modified/value-given arg, which
+            # catches bugs where the memoization doesn't actually preserve
+            # state.
+            new_arg = Argument("arg")
+            new_arg.value = "got-something"
+            p.core_via_tasks = ParserContext(args=[new_arg])
+            # Mock copy.deepcopy for call tracking
+            deepmock = Mock(side_effect=copy.deepcopy)
+            with patch("copy.deepcopy", deepmock):
+                assert p.args["arg"].value == "got-something"
+                assert p.args["arg"].value == "got-something"
+                assert deepmock.call_count == 1  # not 2
 
         def copying_from_task_context_does_not_set_empty_list_values(self):
             # Less of an issue for scalars, but for list-type args, doing
