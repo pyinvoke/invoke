@@ -637,8 +637,10 @@ class Program(object):
             # set, to avoid overwriting the entire objects or applying defaults
             # on top of non-default values.
             for key, arg in self.core_via_tasks.args.items():
-                if arg._value is not None:
-                    core_args[key]._value = arg._value
+                core_val = core_args[key]._value
+                new_val = arg._value
+                if new_val is not None:
+                    core_args[key]._value = new_val
         return core_args
 
     @property
