@@ -298,6 +298,16 @@ class Program_:
             # Was given in per-task
             assert p.args.hide.value == "both"
 
+        def only_copies_from_task_contexts_once(self):
+            p = Program()
+            p.core = ParseResult([ParserContext()])
+            # NOTE: below will trigger the hasattr() near what we're testing,
+            # but that shouldn't be a problem.
+            p.core_via_tasks = Mock(args=Mock(items=Mock(return_value=[])))
+            p.args
+            p.args
+            assert p.core_via_tasks.args.items.call_count == 1  # not 2
+
         def copying_from_task_context_does_not_set_empty_list_values(self):
             # Less of an issue for scalars, but for list-type args, doing
             # .value = <default value> actually ends up creating a

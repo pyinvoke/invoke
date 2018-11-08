@@ -624,23 +624,24 @@ class Program(object):
             honored even when given after tasks.
         """
         core_args = self.core[0].args
-        if hasattr(self, "core_via_tasks"):
-            # NOTE: it seems unlikely that this will be noticeable at
-            # human-facing speeds, but in the event that it is, consider
-            # something (even) uglier like a one-time update of self.core[0] at
-            # the time that we also write self.core_via_tasks.
+        # Uses memoization to avoid lots of repetition (which can also make
+        # debugging more annoying too).
+        if hasattr(self, "core_via_tasks") and not getattr(
+            self, "_already_merged_task_args", False
+        ):
             core_args = copy.deepcopy(core_args)
-            # TODO: might be nice to make a Lexicon subclass for these
-            # lexicons-of-args which is capable of doing e.g. .update() w/
-            # below semantics
             # Ensure we update the actual args' values, and only if actually
             # set, to avoid overwriting the entire objects or applying defaults
             # on top of non-default values.
+            # TODO: might be nice to make a Lexicon subclass for these
+            # lexicons-of-args which is capable of doing e.g. .update() w/
+            # below semantics
             for key, arg in self.core_via_tasks.args.items():
                 core_val = core_args[key]._value
                 new_val = arg._value
                 if new_val is not None:
                     core_args[key]._value = new_val
+            self._already_merged_task_args = True
         return core_args
 
     @property
