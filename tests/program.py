@@ -9,10 +9,13 @@ from pytest import skip
 from pytest_relaxed import trap
 
 from invoke import (
+    Argument,
     Collection,
     Config,
     Executor,
     FilesystemLoader,
+    ParserContext,
+    ParseResult,
     Program,
     Result,
     Task,
@@ -294,6 +297,23 @@ class Program_:
             assert p.args.echo.value is True
             # Was given in per-task
             assert p.args.hide.value == "both"
+
+        def copying_from_task_context_does_not_set_empty_list_values(self):
+            # Less of an issue for scalars, but for list-type args, doing
+            # .value = <default value> actually ends up creating a
+            # list-of-lists.
+            p = Program()
+            # Set up core-args parser context with an iterable arg that hasn't
+            # seen any value yet
+            def filename_args():
+                return [Argument("filename", kind=list)]
+
+            p.core = ParseResult([ParserContext(args=filename_args())])
+            # And a core-via-tasks context with a copy of that same arg, which
+            # also hasn't seen any value yet
+            p.core_via_tasks = ParserContext(args=filename_args())
+            # Now the behavior of .args can be tested as desired
+            assert p.args["filename"].value == []  # Not [[]]!
 
     class run:
         # NOTE: some of these are integration-style tests, but they are still
