@@ -642,10 +642,8 @@ class Program(object):
             # lexicons-of-args which is capable of doing e.g. .update() w/
             # below semantics
             for key, arg in self.core_via_tasks.args.items():
-                core_val = core_args[key]._value
-                new_val = arg._value
-                if new_val is not None:
-                    core_args[key]._value = new_val
+                if arg.got_value:
+                    core_args[key]._value = arg._value
             # Cache
             self._merged_core_and_task_args = core_args
         return core_args
