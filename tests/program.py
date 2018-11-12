@@ -1,4 +1,3 @@
-import copy
 import json
 import os
 import sys
@@ -290,7 +289,10 @@ class Program_:
             assert isinstance(args, Lexicon)
             assert args.echo.value is True
 
-        def contains_core_args_from_all_contexts(self):
+    class core_args_from_task_contexts:
+        # NOTE: many of these use Program.args in lieu of Program.core[0], for
+        # convenience, tho also because initially the behavior was _in_ .args
+        def core_context_gets_updated_with_core_flags_from_tasks(self):
             # Part of #466.
             p = Program()
             p.run("myapp -e noop --hide both", exit=False)
@@ -298,22 +300,6 @@ class Program_:
             assert p.args.echo.value is True
             # Was given in per-task
             assert p.args.hide.value == "both"
-
-        def only_copies_from_task_contexts_once(self):
-            p = Program()
-            p.core = ParseResult([ParserContext(args=[Argument("arg")])])
-            # Set core-via-tasks to be a modified/value-given arg, which
-            # catches bugs where the memoization doesn't actually preserve
-            # state.
-            new_arg = Argument("arg")
-            new_arg.value = "got-something"
-            p.core_via_tasks = ParserContext(args=[new_arg])
-            # Mock copy.deepcopy for call tracking
-            deepmock = Mock(side_effect=copy.deepcopy)
-            with patch("copy.deepcopy", deepmock):
-                assert p.args["arg"].value == "got-something"
-                assert p.args["arg"].value == "got-something"
-                assert deepmock.call_count == 1  # not 2
 
         def copying_from_task_context_does_not_set_empty_list_values(self):
             # Less of an issue for scalars, but for list-type args, doing

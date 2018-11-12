@@ -1,6 +1,5 @@
 from __future__ import unicode_literals, print_function
 
-import copy
 import getpass
 import inspect
 import json
@@ -618,35 +617,8 @@ class Program(object):
         Obtain core program args from ``self.core`` parse result.
 
         .. versionadded:: 1.0
-        .. versionchanged:: 1.3
-            Extended this property so it reflects the union of ``self.core``
-            and ``self.core_via_tasks``, allowing core parser arguments to be
-            honored even when given after tasks.
         """
-        # Memoization which kicks in after core_via_tasks has shown up and been
-        # merged; generally efficient, also makes debugging less painful. (And
-        # still leaves self.core[0].args unmolested, which also helps with
-        # debugging.)
-        if hasattr(self, "_merged_core_and_task_args"):
-            return self._merged_core_and_task_args
-        # Degenerate/base case: we just want the initial core context's args.
-        core_args = self.core[0].args
-        # Have we finished both main parse steps already? Generate a merged
-        # result and store+return that.
-        if hasattr(self, "core_via_tasks"):
-            core_args = copy.deepcopy(core_args)
-            # Ensure we update the actual args' values, and only if actually
-            # set, to avoid overwriting the entire objects or applying defaults
-            # on top of non-default values.
-            # TODO: might be nice to make a Lexicon subclass for these
-            # lexicons-of-args which is capable of doing e.g. .update() w/
-            # below semantics
-            for key, arg in self.core_via_tasks.args.items():
-                if arg.got_value:
-                    core_args[key]._value = arg._value
-            # Cache
-            self._merged_core_and_task_args = core_args
-        return core_args
+        return self.core[0].args
 
     @property
     def initial_context(self):
@@ -719,6 +691,15 @@ class Program(object):
         except CollectionNotFound as e:
             raise Exit("Can't find any collection named {!r}!".format(e.name))
 
+    def _update_core_context(self, context, new_args):
+        # Update core context w/ core_via_task args, if and only if the
+        # via-task version of the arg was truly given a value.
+        # TODO: push this into an Argument-aware Lexicon subclass and
+        # .update()?
+        for key, arg in new_args.items():
+            if arg.got_value:
+                context.args[key]._value = arg._value
+
     def parse_tasks(self):
         """
         Parse leftover args, which are typically tasks & per-task args.
@@ -726,6 +707,10 @@ class Program(object):
         Sets ``self.parser`` to the parser used, ``self.tasks`` to the
         parsed per-task contexts, and ``self.core_via_tasks`` to a context
         holding any core flags seen within the task contexts.
+
+        Also modifies ``self.core`` to include the data from ``core_via_tasks``
+        (so that it correctly reflects any supplied core flags regardless of
+        where they appeared).
 
         .. versionadded:: 1.0
         """
@@ -736,6 +721,9 @@ class Program(object):
         debug("Parsing tasks against {!r}".format(self.collection))
         result = self.parser.parse_argv(self.core.unparsed)
         self.core_via_tasks = result.pop(0)
+        self._update_core_context(
+            context=self.core[0], new_args=self.core_via_tasks.args
+        )
         self.tasks = result
         debug("Resulting task contexts: {!r}".format(self.tasks))
 
