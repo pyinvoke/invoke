@@ -263,44 +263,44 @@ def task(*args, **kwargs):
     specified. Otherwise, the following keyword arguments are allowed in the
     parenthese'd form:
 
-    - ``name``: Default name to use when binding to a `.Collection`. Useful for
-      avoiding Python namespace issues (i.e. when the desired CLI level name
-      can't or shouldn't be used as the Python level name.)
     - ``aliases``: Specify one or more aliases for this task, allowing it to be
       invoked as multiple different names. For example, a task named ``mytask``
       with a simple ``@task`` wrapper may only be invoked as ``"mytask"``.
       Changing the decorator to be ``@task(aliases=['myothertask'])`` allows
       invocation as ``"mytask"`` *or* ``"myothertask"``.
-    - ``positional``: Iterable overriding the parser's automatic "args with no
-      default value are considered positional" behavior. If a list of arg
-      names, no args besides those named in this iterable will be considered
-      positional. (This means that an empty list will force all arguments to be
-      given as explicit flags.)
+    - ``autoprint``: Boolean determining whether to automatically print this
+      task's return value to standard output when invoked directly via the CLI.
+      Defaults to False.
+    - ``auto_shortflags``: Whether or not to automatically create short
+      flags from task options; defaults to True.
+    - ``default``: Boolean option specifying whether this task should be its
+      collection's default task (i.e. called if the collection's own name is
+      given.)
+    - ``depends_on``, ``afterwards``: Task object (or iterable of same) to
+      execute prior to, or after, the wrapped task whenever it is executed.
+      (See :ref:`how-tasks-run`.)
+    - ``help``: Dict mapping argument names to their help strings. Will be
+      displayed in ``--help`` output.
+    - ``incrementable``: Iterable of argument names, declaring them to
+      :ref:`increment their values <incrementable-flag-values>`.
+    - ``iterable``: Iterable of argument names, declaring them to :ref:`build
+      iterable values <iterable-flag-values>`.
+    - ``klass``: Class to instantiate/return. Defaults to `.Task`.
+    - ``name``: Default name to use when binding to a `.Collection`. Useful for
+      avoiding Python namespace issues (i.e. when the desired CLI level name
+      can't or shouldn't be used as the Python level name.)
     - ``optional``: Iterable of argument names, declaring those args to
       have :ref:`optional values <optional-values>`. Such arguments may be
       given as value-taking options (e.g. ``--my-arg=myvalue``, wherein the
       task is given ``"myvalue"``) or as Boolean flags (``--my-arg``, resulting
       in ``True``).
-    - ``iterable``: Iterable of argument names, declaring them to :ref:`build
-      iterable values <iterable-flag-values>`.
-    - ``incrementable``: Iterable of argument names, declaring them to
-      :ref:`increment their values <incrementable-flag-values>`.
-    - ``default``: Boolean option specifying whether this task should be its
-      collection's default task (i.e. called if the collection's own name is
-      given.)
-    - ``auto_shortflags``: Whether or not to automatically create short
-      flags from task options; defaults to True.
-    - ``help``: Dict mapping argument names to their help strings. Will be
-      displayed in ``--help`` output.
-    - ``depends_on``, ``afterwards``: Task object (or iterable of same) to
-      execute prior to, or after, the wrapped task whenever it is executed.
-      (See :ref:`how-tasks-run`.)
+    - ``positional``: Iterable overriding the parser's automatic "args with no
+      default value are considered positional" behavior. If a list of arg
+      names, no args besides those named in this iterable will be considered
+      positional. (This means that an empty list will force all arguments to be
+      given as explicit flags.)
     - ``pre``, ``post``: Legacy aliases for ``depends_on`` and ``afterwards``,
       respectively.
-    - ``autoprint``: Boolean determining whether to automatically print this
-      task's return value to standard output when invoked directly via the CLI.
-      Defaults to False.
-    - ``klass``: Class to instantiate/return. Defaults to `.Task`.
 
     If any non-keyword arguments are given, they are taken as the value of the
     ``pre`` kwarg for convenience's sake. (It is an error to give both
