@@ -489,7 +489,8 @@ Dependencies
 
 Directly calling other tasks, as above, works fine initially but has a number
 of minor-to-major disadvantages (especially as one leverages more of Invoke's
-feature set). A more built-in way of describing these types of task relationships is the concept of dependencies.
+feature set). A more built-in way of describing these types of task
+relationships is the concept of dependencies.
 
 Declaring dependencies removes boilerplate from your task bodies and
 signatures, and let you ensure dependencies only run once, even if multiple

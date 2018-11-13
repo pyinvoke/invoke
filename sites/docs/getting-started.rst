@@ -191,9 +191,8 @@ build (but which, of course, can still be executed on its own)::
 Now when you ``invoke build``, it will automatically run ``clean`` first.
 
 .. note::
-    If you're not a fan of the implicit "positional arguments are pre-run task
-    names" API, you can instead explicitly give the ``pre`` kwarg:
-    ``@task(pre=[clean])``.
+    If you prefer not to be implicit, you can instead explicitly give the
+    ``depends_on`` kwarg: ``@task(depends_on=[clean])``.
 
 Details can be found in :ref:`how-tasks-run`.
 
