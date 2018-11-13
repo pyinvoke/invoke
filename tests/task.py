@@ -84,52 +84,168 @@ class task_:
 
         assert len(mytask.positional) == 0
 
-    # TODO: duplicate all the below for dependencies= ...
-    def pre_tasks_stored_directly(self):
-        @task
-        def whatever(c):
-            pass
+    class dependencies:
+        # TODO: add pre/post -> depends_on/afterwards alias tests
+        class depends_on:
+            def defaults_to_empty_list(self):
+                @task
+                def foo(c):
+                    pass
 
-        @task(pre=[whatever])
-        def func(c):
-            pass
+                assert foo.depends_on == []
 
-        assert func.pre == [whatever]
+            def stored_directly_as_attribute(self):
+                @task
+                def whatever(c):
+                    pass
 
-    def allows_star_args_as_shortcut_for_pre(self):
-        @task
-        def pre1(c):
-            pass
+                @task(depends_on=[whatever])
+                def func(c):
+                    pass
 
-        @task
-        def pre2(c):
-            pass
+                assert func.depends_on == [whatever]
 
-        @task(pre1, pre2)
-        def func(c):
-            pass
+            def star_args_acts_as_shortcut(self):
+                @task
+                def pre1(c):
+                    pass
 
-        assert func.pre == (pre1, pre2)
+                @task
+                def pre2(c):
+                    pass
 
-    def disallows_ambiguity_between_star_args_and_pre_kwarg(self):
-        @task
-        def pre1(c):
-            pass
+                @task(pre1, pre2)
+                def func(c):
+                    pass
 
-        @task
-        def pre2(c):
-            pass
+                assert func.depends_on == [pre1, pre2]
 
-        with raises(TypeError):
+            def disallows_ambiguity_between_star_args_and_kwarg(self):
+                @task
+                def pre1(c):
+                    pass
 
-            @task(pre1, pre=[pre2])
-            def func(c):
+                @task
+                def pre2(c):
+                    pass
+
+                with raises(TypeError):
+
+                    @task(pre1, depends_on=[pre2])
+                    def func(c):
+                        pass
+
+            def normalizes_single_callable_to_list(self):
+                @task
+                def whatever(c):
+                    pass
+
+                @task(depends_on=whatever)  # No list
+                def func(c):
+                    pass
+
+                assert func.depends_on == [whatever]  # List
+
+            def pre_kwarg_and_attr_acts_as_alias(self):
+                @task
+                def whatever(c):
+                    pass
+
+                @task(pre=[whatever])
+                def func(c):
+                    pass
+
+                assert func.depends_on == [whatever]
+                assert func.pre == func.depends_on
+
+            def disallows_ambiguity_between_pre_and_depends_on(self):
+                @task
+                def pre1(c):
+                    pass
+
+                @task
+                def pre2(c):
+                    pass
+
+                with raises(TypeError):
+
+                    @task(pre=[pre1], depends_on=[pre2])
+                    def func(c):
+                        pass
+
+        class afterwards:
+            def defaults_to_empty_list(self):
+                @task
+                def foo(c):
+                    pass
+
+                assert foo.afterwards == []
+
+            def stored_directly_as_attribute(self):
+                @task
+                def whatever(c):
+                    pass
+
+                @task(afterwards=[whatever])
+                def func(c):
+                    pass
+
+                assert func.afterwards == [whatever]
+
+            def normalizes_single_callable_to_list(self):
+                @task
+                def whatever(c):
+                    pass
+
+                @task(afterwards=whatever)  # No list
+                def func(c):
+                    pass
+
+                assert func.afterwards == [whatever]  # List
+
+            def post_kwarg_and_attr_acts_as_alias(self):
+                @task
+                def whatever(c):
+                    pass
+
+                @task(post=[whatever])
+                def func(c):
+                    pass
+
+                assert func.afterwards == [whatever]
+                assert func.post == func.afterwards
+
+            def disallows_ambiguity_between_post_and_afterwards(self):
+                @task
+                def post1(c):
+                    pass
+
+                @task
+                def post2(c):
+                    pass
+
+                with raises(TypeError):
+
+                    @task(post=[post1], afterwards=[post2])
+                    def func(c):
+                        pass
+
+    class check:
+        def defaults_to_None(self):
+            @task
+            def foo(c):
                 pass
 
-    # TODO: wow there were never ANY tests for post= ??? welp. maybe add some,
-    # maybe just settle for doing 'afterwards=' only...
+            assert foo.check is None
 
-    # TODO: tests for check=
+        def stored_directly_as_attribute(self):
+            check = lambda x: False
+
+            @task(check=check)
+            def foo(c):
+                pass
+
+            assert foo.check is check
 
     def sets_name(self):
         @task(name="foo")

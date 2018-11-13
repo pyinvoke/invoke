@@ -55,6 +55,9 @@ class Task(object):
         default=False,
         auto_shortflags=True,
         help=None,
+        check=None,
+        depends_on=None,
+        afterwards=None,
         pre=None,
         post=None,
         autoprint=False,
@@ -81,11 +84,41 @@ class Task(object):
         self.auto_shortflags = auto_shortflags
         self.help = help or {}
         # Call chain bidness
-        self.pre = pre or []
-        self.post = post or []
+        self._set_dependencies(pre, post, depends_on, afterwards)
+        self.check = check
         self.times_called = 0
         # Whether to print return value post-execution
         self.autoprint = autoprint
+
+    def _set_dependencies(self, pre, post, depends_on, afterwards):
+        if pre:
+            if depends_on:
+                err = "May not give both 'pre' and 'depends_on'; please use 'depends_on'!"  # noqa
+                raise TypeError(err)
+            depends_on = pre
+        if post:
+            if afterwards:
+                err = "May not give both 'post' and 'afterwards'; please use 'afterwards'!"  # noqa
+                raise TypeError(err)
+            afterwards = post
+        self.depends_on = depends_on or []
+        self.afterwards = afterwards or []
+        # Normalize to list. TODO: I feel like there's a lib that does this...
+        for attr in ("depends_on", "afterwards"):
+            value = getattr(self, attr)
+            # TODO: handle strings in some fashion, perhaps pending #170
+            if not hasattr(value, "__iter__"):
+                setattr(self, attr, [value])
+
+    # TODO 2.0: remove
+    @property
+    def pre(self):
+        return self.depends_on
+
+    # TODO 2.0: remove
+    @property
+    def post(self):
+        return self.afterwards
 
     @property
     def name(self):
@@ -323,11 +356,11 @@ def task(*args, **kwargs):
         return klass(args[0], **kwargs)
     # @task(pre, tasks, here)
     if args:
-        if "pre" in kwargs:
+        if "depends_on" in kwargs:
             raise TypeError(
-                "May not give *args and 'pre' kwarg simultaneously!"
+                "May not give *args and 'depends_on' kwarg simultaneously!"
             )
-        kwargs["pre"] = args
+        kwargs["depends_on"] = list(args)
     # @task(options)
     # TODO: why the heck did we originally do this in this manner instead of
     # simply delegating to Task?! Let's just remove all this sometime & see

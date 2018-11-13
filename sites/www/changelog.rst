@@ -8,9 +8,16 @@ Changelog
   "does this task need executing or not" check functionality (similar to
   ``make``).
 
-  The older ``pre``/``post`` task arguments remain intact, but are now
+  The older ``pre``/``post`` task arguments remain largely intact, but are now
   considered deprecated in favor of the newer arguments: ``depends_on``,
   ``afterwards``, and ``check``.
+
+  .. warning::
+    There is a minor backwards incompatibility here: if you were directly
+    modifying task objects' ``.pre`` or ``.post`` attributes, this will no
+    longer work (they are now read-only properties). To fix, simply change the
+    mutations to affect ``.depends_on`` or ``.afterwards``, respectively.
+
 - :bug:`466 major` Update the parsing and CLI-program mechanisms so that all
   core arguments may be given within task CLI contexts; previously this
   functionality only worked for the ``--help`` flag, and other core arguments
