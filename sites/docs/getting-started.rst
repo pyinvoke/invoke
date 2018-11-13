@@ -192,7 +192,7 @@ Now when you ``invoke build``, it will automatically run ``clean`` first.
 
 .. note::
     If you prefer not to be implicit, you can instead explicitly give the
-    ``depends_on`` kwarg: ``@task(depends_on=[clean])``.
+    ``depends_on`` kwarg: ``@task(depends_on=clean)``.
 
 Details about the dependency system (including followup tasks and pre-execution
 checks) can be found in :ref:`how-tasks-run`.

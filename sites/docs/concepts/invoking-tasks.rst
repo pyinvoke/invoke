@@ -504,7 +504,7 @@ Here's our build task tree reimagined using dependencies, specifically the
     def clean(c):
         print("Cleaning!")
 
-    @task(depends_on=[clean])
+    @task(depends_on=clean)
     def build(c):
         print("Building!")
 
@@ -522,10 +522,10 @@ need for each task to set up its own variation on the earlier example's
 
 A convenient (and ``make``-esque) shortcut is to give dependencies as
 positional arguments to ``@task``; this is exactly the same as if one gave an
-explicit, iterable ``depends_on`` kwarg. For example, these two snippets are
-functionally identical::
+explicit ``depends_on`` kwarg. For example, these two snippets are functionally
+identical::
 
-    @task(depends_on=[clean])
+    @task(depends_on=clean)
     def build(c):
         pass
 
@@ -533,7 +533,9 @@ functionally identical::
     def build(c):
         pass
 
-as are these two (referencing another hypothetical ``check_config`` task)::
+as are these two (referencing another hypothetical ``check_config`` task, and
+showing off how ``depends_on`` may take either a single callable or an iterable
+of them)::
 
     @task(depends_on=[clean, check_config])
     def build(c):
@@ -547,8 +549,7 @@ Skipping execution via checks
 -----------------------------
 
 To continue the "build" example (and make it more concrete), let's have it do
-actual work, and make some assertions about the results of that work.
-Specifically:
+actual work, and make assertions about the results of that work. Specifically:
 
 - ``build`` is responsible for creating a file named ``output``.
 - ``build`` should not run if ``output`` already exists.
@@ -556,19 +557,15 @@ Specifically:
 - ``clean`` should not run if ``output`` does not exist
 
 .. note::
-    This is still a mostly contrived example; for example we're purposely
-    ignoring common tactics such as file modification timestamps, hashing, or
-    things like ``rm -f``. If you're already experienced with such things,
-    consider heading to the `checks module documentation <invoke.checks>`
-    instead.
+    This is still a contrived example; we're purposely ignoring common tactics
+    such as file modification timestamps, hashing, or commands like ``rm -f``.
+    If you're already experienced with such things, consider heading straight
+    to the `checks module documentation <invoke.checks>` instead.
 
 To enable those behaviors, we add some `~Context.run` calls and use the
 ``check`` argument for `@task <.task>`, handing the latter a callable predicate
-function (note that there's also a ``checks`` argument which takes an iterable
-of same).
-
-Checks may be arbitrary callables, though as with other areas in Python that
-accept callable objects, this largely means one of three things:
+function. Checks may be arbitrary callables, which in Python usually means one
+of the following:
 
 - Inline ``lambda`` expressions, if one's expressions are trivial and need no
   reuse;
@@ -590,7 +587,7 @@ Our new, improved, slightly less trivial tasks file::
         print("Cleaning!")
         c.run("rm output")
 
-    @task(depends_on=[clean], check=lambda: exists('output'))
+    @task(depends_on=clean, check=lambda: exists('output'))
     def build(c):
         print("Building!")
         c.run("touch output")
@@ -672,7 +669,7 @@ this example, for simplicity)::
         print("Cleaning!")
         c.run("rm output.tgz")
 
-    @task(depends_on=[build], afterwards=[clean])
+    @task(depends_on=build, afterwards=clean)
     def upload(c):
         print("Uploading!")
         c.run("scp output.tgz myserver:/var/www/")
@@ -709,7 +706,7 @@ never call ``clean``, leaving artifacts lying around.
 In that case, you probably want to use generic Python ``try``/``finally``
 statements::
 
-    @task(depends_on=[build])
+    @task(depends_on=build)
     def upload(c):
         try:
             print("Uploading!")
@@ -815,7 +812,7 @@ Similar to previous, but with followups instead::
     def notify(c):
         print("Notifying!")
 
-    @task(afterwards=[notify])
+    @task(afterwards=notify)
     def test(c):
         print("Testing!")
 
@@ -873,11 +870,11 @@ task::
     def notify(c):
         print("Notifying!")
 
-    @task(afterwards=[notify])
+    @task(afterwards=notify)
     def build(c):
         print("Building!")
 
-    @task(afterwards=[notify])
+    @task(afterwards=notify)
     def test(c):
         print("Testing!")
 
