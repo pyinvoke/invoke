@@ -214,9 +214,8 @@ def bytes_to_read(input_):
     Query stream ``input_`` to see how many bytes may be readable.
 
     .. note::
-        If we are unable to tell (e.g. if ``input_`` isn't a true file
-        descriptor or isn't a valid TTY) we fall back to suggesting reading 1
-        byte only.
+        If we are unable to tell (e.g. on Windows), we fall back to suggesting
+        reading 1 byte only.
 
     :param input: Input stream object (file-like).
 
@@ -227,6 +226,10 @@ def bytes_to_read(input_):
     # NOTE: we have to check both possibilities here; situations exist where
     # it's not a tty but has a fileno, or vice versa; neither is typically
     # going to work re: ioctl().
+    # Like ready_for_reading() above, if it has no fileno, assume that it is a
+    # file-like object with nonblocking read, and read from it in chunks.
+    if not has_fileno(input_):
+        return 8192
     if not WINDOWS and isatty(input_) and has_fileno(input_):
         fionread = fcntl.ioctl(input_, termios.FIONREAD, "  ")
         return struct.unpack("h", fionread)[0]
