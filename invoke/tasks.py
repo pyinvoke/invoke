@@ -303,8 +303,8 @@ def task(*args, **kwargs):
       respectively.
 
     If any non-keyword arguments are given, they are taken as the value of the
-    ``pre`` kwarg for convenience's sake. (It is an error to give both
-    ``*args`` and ``pre`` at the same time.)
+    ``depends_on`` kwarg. (It is an error to give both ``*args`` and
+    ``depends_on`` at the same time.)
 
     .. versionadded:: 1.0
     .. versionchanged:: 1.1
