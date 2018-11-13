@@ -315,7 +315,7 @@ def task(*args, **kwargs):
     .. versionchanged:: 1.1
         Added the ``klass`` keyword argument.
     .. versionchanged:: 1.3
-        Added the ``depends_on`` and ``afterwards`` kwargs.
+        Added the ``check``, ``depends_on``, and ``afterwards`` kwargs.
     """
     klass = kwargs.pop("klass", Task)
     # @task -- no options were (probably) given.
