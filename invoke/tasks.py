@@ -292,8 +292,11 @@ def task(*args, **kwargs):
       flags from task options; defaults to True.
     * ``help``: Dict mapping argument names to their help strings. Will be
       displayed in ``--help`` output.
-    * ``pre``, ``post``: Lists of task objects to execute prior to, or after,
-      the wrapped task whenever it is executed.
+    * ``depends_on``, ``follows``: Lists of task objects to execute prior to,
+      or after, the wrapped task whenever it is executed. (See
+      :ref:`how-tasks-run`.)
+    * ``pre``, ``post``: Legacy aliases for ``depends_on`` and ``follows``,
+      respectively.
     * ``autoprint``: Boolean determining whether to automatically print this
       task's return value to standard output when invoked directly via the CLI.
       Defaults to False.

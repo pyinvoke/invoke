@@ -10,8 +10,8 @@ as separating tasks into a tree of nested namespaces.
 
 The `.Collection` class provides an API for organizing tasks (and :ref:`their
 configuration <collection-configuration>`) into a tree-like structure. When
-referenced by strings (e.g. on the CLI or in pre/post hooks) tasks in nested
-namespaces use a dot-separated syntax, e.g. ``docs.build``.
+referenced by strings (e.g. on the CLI or in dependency specifiers) tasks in
+nested namespaces use a dot-separated syntax, e.g. ``docs.build``.
 
 In this section, we show how building namespaces with this API is flexible but
 also allows following Python package layouts with minimal boilerplate.

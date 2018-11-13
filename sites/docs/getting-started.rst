@@ -168,8 +168,8 @@ honor the current state (such as `.Context.run`) as well as access to that
 state itself.
 
 
-Declaring pre-tasks
-===================
+Declaring dependencies
+======================
 
 Tasks may be configured in a number of ways via the `.task` decorator. One of
 these is to select one or more other tasks you wish to always run prior to
@@ -194,7 +194,8 @@ Now when you ``invoke build``, it will automatically run ``clean`` first.
     If you prefer not to be implicit, you can instead explicitly give the
     ``depends_on`` kwarg: ``@task(depends_on=[clean])``.
 
-Details can be found in :ref:`how-tasks-run`.
+Details about the dependency system (including followup tasks and pre-execution
+checks) can be found in :ref:`how-tasks-run`.
 
 
 Creating namespaces

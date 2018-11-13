@@ -383,9 +383,9 @@ terms involved in how Invoke thinks about the work it's doing for you:
 - **Dependencies** state that for a task to successfully execute, other tasks
   (sometimes referred to as **pre-tasks** or *prerequisites*) must be run
   sometime beforehand.
-- **Followup tasks**  (sometimes referred to as **post-tasks**) are roughly the
-  inverse of dependencies - a task requesting that another task always be run
-  sometime *after* it itself completes.
+- **Followup tasks**  (sometimes referred to as **followups** or
+  **post-tasks**) are roughly the inverse of dependencies - a task requesting
+  that another task always be run sometime *after* it itself completes.
 
 Now that we've framed the discussion, we can show you some concrete examples of
 how these features behave and interact with one another.
