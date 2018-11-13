@@ -83,18 +83,18 @@ For convenience, we refer to nested setting names with a dotted syntax, so e.g.
     - ``tasks.auto_dash_names`` controls whether task and collection names have
       underscores turned to dashes on the CLI. Default: ``True``. See also
       :ref:`dashes-vs-underscores`.
-    - ``tasks.checks`` controls whether task check callables are consulted
-      during :doc:`task invocation </concepts/invoking-tasks>`. Default:
-      ``True``.
+    - ``tasks.checks_enabled`` controls whether task check callables are
+      consulted during :doc:`task invocation </concepts/invoking-tasks>`.
+      Default: ``True``.
     - ``tasks.collection_name`` controls the Python import name sought out by
       :ref:`collection discovery <collection-discovery>`, and defaults to
       ``"tasks"``.
     - ``tasks.dedupe`` controls :ref:`deduping` and defaults to ``True``. It
       can also be overridden at runtime via :option:`--no-dedupe`.
-    - ``tasks.dependencies`` controls whether the task dependency system is
-      leveraged during :doc:`task invocation </concepts/invoking-tasks>` or if
-      Invoke only executes *exactly* the tasks requested and no others.
-      Default: ``True``.
+    - ``tasks.dependencies_enabled`` controls whether the task dependency
+      system is leveraged during :doc:`task invocation
+      </concepts/invoking-tasks>` or if Invoke only executes *exactly* the
+      tasks requested and no others. Default: ``True``.
     - ``tasks.executor_class`` allows users to override the class instantiated
       and used for task execution.
 
