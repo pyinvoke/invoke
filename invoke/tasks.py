@@ -273,6 +273,9 @@ def task(*args, **kwargs):
       Defaults to False.
     - ``auto_shortflags``: Whether or not to automatically create short flags
       from task options; defaults to True.
+    - ``check``: A callable which may return ``False`` to prevent the task from
+      running. (See :ref:`how-tasks-run`.)
+      (See :ref:`how-tasks-run`.)
     - ``default``: Boolean option specifying whether this task should be its
       collection's default task (i.e. called if the collection's own name is
       given.)

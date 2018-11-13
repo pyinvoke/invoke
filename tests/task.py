@@ -129,7 +129,7 @@ class task_:
     # TODO: wow there were never ANY tests for post= ??? welp. maybe add some,
     # maybe just settle for doing 'afterwards=' only...
 
-    # TODO: tests for checks=/check=
+    # TODO: tests for check=
 
     def sets_name(self):
         @task(name="foo")

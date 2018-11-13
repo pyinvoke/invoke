@@ -10,7 +10,7 @@ Changelog
 
   The older ``pre``/``post`` task arguments remain intact, but are now
   considered deprecated in favor of the newer arguments: ``depends_on``,
-  ``afterwards``, and ``checks``.
+  ``afterwards``, and ``check``.
 - :bug:`466 major` Update the parsing and CLI-program mechanisms so that all
   core arguments may be given within task CLI contexts; previously this
   functionality only worked for the ``--help`` flag, and other core arguments

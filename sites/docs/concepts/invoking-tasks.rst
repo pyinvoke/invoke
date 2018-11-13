@@ -563,7 +563,7 @@ actual work, and make assertions about the results of that work. Specifically:
     to the `checks module documentation <invoke.checks>` instead.
 
 To enable those behaviors, we add some `~Context.run` calls and use the
-``check`` argument for `@task <.task>`, handing the latter a callable predicate
+``check`` argument to `@task <.task>`, handing the latter a callable predicate
 function. Checks may be arbitrary callables, which in Python usually means one
 of the following:
 
