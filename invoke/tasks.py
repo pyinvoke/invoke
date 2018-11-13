@@ -281,7 +281,9 @@ def task(*args, **kwargs):
       given.)
     - ``depends_on``, ``afterwards``: Task object (or iterable of same) to
       execute prior to, or after, the wrapped task whenever it is executed.
-      (See :ref:`how-tasks-run`.)
+      Normalized to an iterable, so e.g. ``@task(depends_on=foo)`` will result
+      in a `.Task` whose ``.depends_on`` is ``[foo]``. See :ref:`how-tasks-run`
+      for details.
     - ``help``: Dict mapping argument names to their help strings. Will be
       displayed in ``--help`` output.
     - ``incrementable``: Iterable of argument names, declaring them to
