@@ -271,8 +271,8 @@ def task(*args, **kwargs):
     - ``autoprint``: Boolean determining whether to automatically print this
       task's return value to standard output when invoked directly via the CLI.
       Defaults to False.
-    - ``auto_shortflags``: Whether or not to automatically create short
-      flags from task options; defaults to True.
+    - ``auto_shortflags``: Whether or not to automatically create short flags
+      from task options; defaults to True.
     - ``default``: Boolean option specifying whether this task should be its
       collection's default task (i.e. called if the collection's own name is
       given.)
@@ -289,11 +289,11 @@ def task(*args, **kwargs):
     - ``name``: Default name to use when binding to a `.Collection`. Useful for
       avoiding Python namespace issues (i.e. when the desired CLI level name
       can't or shouldn't be used as the Python level name.)
-    - ``optional``: Iterable of argument names, declaring those args to
-      have :ref:`optional values <optional-values>`. Such arguments may be
-      given as value-taking options (e.g. ``--my-arg=myvalue``, wherein the
-      task is given ``"myvalue"``) or as Boolean flags (``--my-arg``, resulting
-      in ``True``).
+    - ``optional``: Iterable of argument names, declaring those args to have
+      :ref:`optional values <optional-values>`. Such arguments may be given as
+      value-taking options (e.g. ``--my-arg=myvalue``, wherein the task is
+      given ``"myvalue"``) or as Boolean flags (``--my-arg``, resulting in
+      ``True``).
     - ``positional``: Iterable overriding the parser's automatic "args with no
       default value are considered positional" behavior. If a list of arg
       names, no args besides those named in this iterable will be considered
