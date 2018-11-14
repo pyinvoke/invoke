@@ -1,0 +1,5 @@
+==========
+``checks``
+==========
+
+.. automodule:: invoke.checks
