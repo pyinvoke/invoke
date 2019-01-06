@@ -212,16 +212,15 @@ class Context_:
             try:
                 from pathlib import Path
             except ImportError:
-                # for Python 2.7 and pypy
-                # in this case, this test will be redundant
-                test_path = "foo"
-            else:
-                test_path = Path("foo")
+                # Path can be missing if we're on Python 2 or
+                # PyPy without pathlib or pathlib2 installed
+                if sys.version_info[0] == 2:
+                    skip("pathlib Path not available on Python 2")
 
             runner = Local.return_value
             c = Context()
 
-            with c.cd(test_path):
+            with c.cd(Path("foo")):
                 c.run("whoami")
 
             cmd = "cd foo && whoami"
