@@ -256,7 +256,9 @@ class Task(object):
         if self.help:
             raise ValueError(
                 "Help field was set for params that didn't exist: {}".format(
-                    list(self.help.keys())))
+                    list(self.help.keys())
+                )
+            )
         return args
 
 
