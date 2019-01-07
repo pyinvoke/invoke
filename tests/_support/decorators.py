@@ -42,6 +42,26 @@ def punch(c, who, why):
     pass
 
 
+@task(
+    help={"parameter-with-underscores": "Help supplied with dashes"},
+    name="help_dashed",
+)
+def parameter_help_with_dashes_in_key(c, parameter_with_underscores):
+    # Note: keeping task 'name' short to fit on 79 columns
+    # in the --list output.
+    pass
+
+
+@task(
+    help={"parameter_with_underscores": "Supplied with underscores"},
+    name="help_uscored",
+)
+def parameter_help_with_underscores_in_key(c, parameter_with_underscores):
+    # Note: keeping the task 'name' short to fit on 79 columns
+    # in the --list output.
+    pass
+
+
 @task(positional=["pos"])
 def one_positional(c, pos, nonpos):
     pass
