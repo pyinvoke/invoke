@@ -548,6 +548,13 @@ class Program(object):
         executor = klass(self.collection, self.config, self.core)
         executor.execute(*self.tasks)
 
+    def invoke_execute(self, context, task_name, **kwargs):
+        executor = self.executor_class(
+            self.collection, config=context.config, core=self.core
+        )
+        results = executor.execute((task_name, kwargs))
+        return results[self.collection[task_name]]
+
     def normalize_argv(self, argv):
         """
         Massages ``argv`` into a useful list of strings.
