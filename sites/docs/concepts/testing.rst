@@ -131,7 +131,7 @@ And the tests::
     from mytasks import platform_response
 
     def test_platform_response_on_mac():
-        assert "Apple" in platform_response("Darwin\n")
+        assert "Apple" in platform_response("Darwin")
 
     def test_platform_response_on_linux():
-        assert "desktop" in platform_response("Linux\n")
+        assert "desktop" in platform_response("Linux")
