@@ -114,7 +114,8 @@ class FilesystemLoader(Loader):
         # Accumulate all parent directories
         start = self.start
         debug("FilesystemLoader find starting at {!r}".format(start))
-        parents = [os.path.abspath(start)]
+        parents = os.sys.path
+        parents.append(os.path.abspath(start))
         parents.append(os.path.dirname(parents[-1]))
         while parents[-1] != parents[-2]:
             parents.append(os.path.dirname(parents[-1]))
