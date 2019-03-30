@@ -30,7 +30,10 @@ class Executor_:
     # TODO: replace with fixture
     def teardown(self):
         import sys
-        from invoke.vendor.six import iteritems
+        try:
+            from invoke.vendor.six import iteritems
+        except ImportError:
+            from six import iteritems
         from _util import support
         # Strip any test-support task collections from sys.modules to prevent
         # state bleed between tests; otherwise tests can incorrectly pass

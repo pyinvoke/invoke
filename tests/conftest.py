@@ -2,7 +2,11 @@ import logging
 import os
 import sys
 
-from invoke.vendor.six import iteritems
+try:
+    from invoke.vendor.six import iteritems
+except ImportError:
+    from six import iteritems
+
 import pytest
 
 from _util import support
