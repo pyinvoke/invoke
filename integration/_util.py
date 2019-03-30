@@ -3,7 +3,10 @@ from resource import getrusage, RUSAGE_SELF
 import sys
 import time
 
-from invoke.vendor.six import wraps
+try:
+    from invoke.vendor.six import wraps
+except ImportError:
+    from six import wraps
 
 from pytest import skip
 

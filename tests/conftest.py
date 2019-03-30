@@ -3,7 +3,11 @@ import os
 import sys
 import termios
 
-from invoke.vendor.six import iteritems
+try:
+    from invoke.vendor.six import iteritems
+except ImportError:
+    from six import iteritems
+
 import pytest
 from mock import patch
 

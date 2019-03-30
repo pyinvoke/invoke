@@ -6,7 +6,10 @@ import types
 from io import BytesIO
 from itertools import chain, repeat
 
-from invoke.vendor.six import StringIO, b, PY2, iteritems
+try:
+    from invoke.vendor.six import StringIO, b, PY2, iteritems
+except ImportError:
+    from six import StringIO, b, PY2, iteritems
 
 from pytest import raises, skip
 from pytest_relaxed import trap
