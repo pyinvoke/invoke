@@ -78,11 +78,15 @@ class Main:
             _output_eq("inv print-addition 3 3", "6\n")
 
         @trap
-        def invocation_with_multiple_positional_arg_single_optional_no_value(self):
+        def invocation_with_multiple_positional_arg_single_optional_no_value(
+            self
+        ):
             _output_eq("inv print-addition 3", "5\n")
 
         @trap
-        def invocation_with_multiple_positional_arg_single_optional_as_flag(self):
+        def invocation_with_multiple_positional_arg_single_optional_as_flag(
+            self
+        ):
             _output_eq("inv print-addition 3 --second 5", "8\n")
 
         @trap

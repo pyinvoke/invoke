@@ -156,7 +156,11 @@ class ParserContext(object):
         missing_args = []
 
         for x in self.positional_args:
-            if x.value is None or (x in self.optional_positional_args and not x.got_value):
+            if (
+                x.value is None
+                or x in self.optional_positional_args
+                and not x.got_value
+            ):
                 missing_args.append(x)
 
         return missing_args
@@ -164,7 +168,11 @@ class ParserContext(object):
     @property
     def missing_non_optional_positional_args(self):
         # Difference of set() values does not preserve order
-        purely_positional = [x for x in self.positional_args if x not in self.optional_positional_args]
+        purely_positional = [
+            x
+            for x in self.positional_args
+            if x not in self.optional_positional_args
+        ]
         return [x for x in purely_positional if x.value is None]
 
     @property

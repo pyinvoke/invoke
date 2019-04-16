@@ -362,7 +362,9 @@ class ParseMachine(StateMachine):
         # fail.
         tests = []
         # Unfilled posargs still exist?
-        tests.append(self.context and self.context.missing_non_optional_positional_args)
+        tests.append(
+            self.context and self.context.missing_non_optional_positional_args
+        )
         # Value matches another valid task/context name?
         tests.append(value in self.contexts)
         if any(tests):
