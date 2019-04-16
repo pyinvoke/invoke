@@ -84,6 +84,7 @@ class ParserContext(object):
         """
         self.args = Lexicon()
         self.positional_args = []
+        self.optional_positional_args = []
         self.flags = Lexicon()
         self.inverse_flags = {}  # No need for Lexicon here
         self.name = name
@@ -132,6 +133,8 @@ class ParserContext(object):
         # Note positionals in distinct, ordered list attribute
         if arg.positional:
             self.positional_args.append(arg)
+        if arg.positional and (arg.optional or arg.default):
+            self.optional_positional_args.append(arg)
         # Add names & nicknames to flags, args
         self.flags[to_flag(main)] = arg
         for name in arg.nicknames:
@@ -150,7 +153,19 @@ class ParserContext(object):
 
     @property
     def missing_positional_args(self):
-        return [x for x in self.positional_args if x.value is None]
+        missing_args = []
+
+        for x in self.positional_args:
+            if x.value is None or (x in self.optional_positional_args and not x.got_value):
+                missing_args.append(x)
+
+        return missing_args
+
+    @property
+    def missing_non_optional_positional_args(self):
+        # Difference of set() values does not preserve order
+        purely_positional = [x for x in self.positional_args if x not in self.optional_positional_args]
+        return [x for x in purely_positional if x.value is None]
 
     @property
     def as_kwargs(self):

@@ -305,11 +305,11 @@ class ParseMachine(StateMachine):
             )
         )
         # Ensure all of context's positional args have been given.
-        if self.context and self.context.missing_positional_args:
+        if self.context and self.context.missing_non_optional_positional_args:
             err = "'{}' did not receive required positional arguments: {}"
             names = ", ".join(
                 "'{}'".format(x.name)
-                for x in self.context.missing_positional_args
+                for x in self.context.missing_non_optional_positional_args
             )
             self.error(err.format(self.context.name, names))
         if self.context and self.context not in self.result:
@@ -362,7 +362,7 @@ class ParseMachine(StateMachine):
         # fail.
         tests = []
         # Unfilled posargs still exist?
-        tests.append(self.context and self.context.missing_positional_args)
+        tests.append(self.context and self.context.missing_non_optional_positional_args)
         # Value matches another valid task/context name?
         tests.append(value in self.contexts)
         if any(tests):
@@ -413,7 +413,7 @@ class ParseMachine(StateMachine):
 
     def see_positional_arg(self, value):
         for arg in self.context.positional_args:
-            if arg.value is None:
+            if not arg.got_value:
                 arg.value = value
                 break
 
