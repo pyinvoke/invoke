@@ -1000,7 +1000,10 @@ stderr 25
                     in_stream=StringIO("foo"),
                     out_stream=StringIO(),  # null output to not pollute tests
                 )
-            assert mock_time.sleep.call_args_list == [call(0.007)] * 3
+            # Just make sure the first few sleeps all look good. Can't know
+            # exact length of list due to stdin worker hanging out til end of
+            # process. Still worth testing more than the first tho.
+            assert mock_time.sleep.call_args_list[:3] == [call(0.007)] * 3
 
     class stdin_mirroring:
         def _test_mirroring(self, expect_mirroring, **kwargs):
