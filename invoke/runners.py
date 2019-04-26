@@ -658,7 +658,6 @@ class Runner(object):
                     # terminal streams, an empty byte signals EOF.
                     if not self.using_pty:
                         self.close_proc_stdin()
-                    break
                 # Dual all-done signals: program being executed is done
                 # running, *and* we don't seem to be reading anything out of
                 # stdin. (NOTE: If we only test the former, we may encounter
