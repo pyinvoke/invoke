@@ -277,7 +277,7 @@ class _Dummy(Runner):
     def _write_proc_stdin(self, data):
         pass
 
-    def _close_proc_stdin(self):
+    def close_proc_stdin(self):
         pass
 
     @property
