@@ -274,7 +274,15 @@ class Runner(object):
 
     def _run_body(self, command, **kwargs):
         # Normalize kwargs w/ config
-        opts, out_stream, err_stream, in_stream = self._run_opts(kwargs)
+        (
+            opts,
+            out_stream,
+            out_redirected,
+            err_stream,
+            err_redirected,
+            in_stream,
+            in_redirected,
+        ) = self._run_opts(kwargs)
         shell = opts["shell"]
         # Environment setup
         env = self.generate_env(opts["env"], opts["replace_env"])
@@ -290,7 +298,7 @@ class Runner(object):
         thread_args = {
             self.handle_stdout: {
                 "buffer_": stdout,
-                "hide": "stdout" in opts["hide"],
+                "hide": "stdout" in opts["hide"] and not out_redirected,
                 "output": out_stream,
             }
         }
@@ -303,11 +311,12 @@ class Runner(object):
                 "input_": in_stream,
                 "output": out_stream,
                 "echo": opts["echo_stdin"],
+                # TODO: is there any use for in_redirected?
             }
         if not self.using_pty:
             thread_args[self.handle_stderr] = {
                 "buffer_": stderr,
-                "hide": "stderr" in opts["hide"],
+                "hide": "stderr" in opts["hide"] and not err_redirected,
                 "output": err_stream,
             }
         # Kick off IO threads
@@ -409,8 +418,10 @@ class Runner(object):
         Unify `run` kwargs with config options to arrive at local options.
 
         :returns:
-            Four-tuple of ``(opts_dict, stdout_stream, stderr_stream,
-            stdin_stream)``.
+            Tuple of ``(opts_dict, stdout_stream, stdout_redirected,
+            stderr_stream, stderr_redirected, stdin_stream, stdin_redirected)``
+            - each stream pair being the stream object itself and whether that
+            stream is being redirected or is the default value.
         """
         opts = {}
         for key, value in six.iteritems(self.context.config.run):
@@ -429,19 +440,33 @@ class Runner(object):
         opts["hide"] = normalize_hide(opts["hide"])
         # Derive stream objects
         out_stream = opts["out_stream"]
+        out_redirected = True
         if out_stream is None:
             out_stream = sys.stdout
+            out_redirected = False
         err_stream = opts["err_stream"]
+        err_redirected = True
         if err_stream is None:
             err_stream = sys.stderr
+            err_redirected = False
         in_stream = opts["in_stream"]
+        in_redirected = True
         if in_stream is None:
             in_stream = sys.stdin
+            in_redirected = False
         # Determine pty or no
         self.using_pty = self.should_use_pty(opts["pty"], opts["fallback"])
         if opts["watchers"]:
             self.watchers = opts["watchers"]
-        return opts, out_stream, err_stream, in_stream
+        return (
+            opts,
+            out_stream,
+            out_redirected,
+            err_stream,
+            err_redirected,
+            in_stream,
+            in_redirected,
+        )
 
     def _thread_timeout(self, target):
         # Add a timeout to out/err thread joins when it looks like they're not

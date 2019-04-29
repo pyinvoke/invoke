@@ -469,6 +469,18 @@ class Runner_:
             err.write.assert_called_once_with("whatever")
             err.flush.assert_called_once_with()
 
+        def hide_ignored_when_out_stream_not_going_to_sys_stdout(self):
+            out = Mock(spec=StringIO)
+            self._runner(out="meh").run(_, out_stream=out, hide=True)
+            # When bug present, this would not be called
+            out.write.assert_called_once_with("meh")
+
+        def hide_ignored_when_err_stream_going_to_default_location(self):
+            err = Mock(spec=StringIO)
+            self._runner(err="meh").run(_, err_stream=err, hide=True)
+            # When bug present, this would not be called
+            err.write.assert_called_once_with("meh")
+
     class input_stream_handling:
         # NOTE: actual autoresponder tests are elsewhere. These just test that
         # stdin works normally & can be overridden.
