@@ -296,8 +296,10 @@ class Context(DataProxy):
         .. versionadded:: 1.0
         """
         self.command_prefixes.append(command)
-        yield
-        self.command_prefixes.pop()
+        try:
+            yield
+        finally:
+            self.command_prefixes.pop()
 
     @property
     def cwd(self):
