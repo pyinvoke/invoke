@@ -2,6 +2,11 @@
 Changelog
 =========
 
+- :bug:`557` (with assist from :issue:`640`) Fix the
+  `~invoke.context.Context.cd` and `~invoke.context.Context.prefix` context
+  managers so that ``with cd`` and ``with prefix`` correctly revert their state
+  manipulations after they exit, when exceptions occur. Thanks to Jon Walsh and
+  Artur Puzio for their respective patches.
 - :release:`1.0.2 <2018-07-31>`
 - :bug:`556` (also `fabric/fabric#1823
   <https://github.com/fabric/fabric/issues/1823>`_) Pre-emptively check for an
