@@ -156,7 +156,7 @@ class Context_:
             self.escaped_prompt = re.escape(Config().sudo.prompt)
 
         @patch(local_path)
-        def cd_should_apply_to_run(self, Local):
+        def should_apply_to_run(self, Local):
             runner = Local.return_value
             c = Context()
             with c.cd("foo"):
@@ -167,7 +167,7 @@ class Context_:
             assert runner.run.call_args[0][0] == cmd
 
         @patch(local_path)
-        def cd_should_apply_to_sudo(self, Local):
+        def should_apply_to_sudo(self, Local):
             runner = Local.return_value
             c = Context()
             with c.cd("foo"):
@@ -178,7 +178,7 @@ class Context_:
             assert runner.run.call_args[0][0] == cmd
 
         @patch(local_path)
-        def cd_should_occur_before_prefixes(self, Local):
+        def should_occur_before_prefixes(self, Local):
             runner = Local.return_value
             c = Context()
             with c.prefix("source venv"):
@@ -188,6 +188,23 @@ class Context_:
             cmd = "cd foo && source venv && whoami"
             assert runner.run.called, "run() never called runner.run()!"
             assert runner.run.call_args[0][0] == cmd
+
+        @patch(local_path)
+        def should_use_finally_to_revert_changes_on_exceptions(self, Local):
+            class Oops(Exception):
+                pass
+            runner = Local.return_value
+            c = Context()
+            try:
+                with c.cd("foo"):
+                    c.run("whoami")
+                    assert runner.run.call_args[0][0] == "cd foo && whoami"
+                    raise Oops
+            except Oops:
+                pass
+            c.run("ls")
+            # When bug present, this would be "cd foo && ls"
+            assert runner.run.call_args[0][0] == "ls"
 
     class prefix:
         def setup(self):
@@ -238,6 +255,23 @@ class Context_:
             cmd = "whoami"
             assert runner.run.called, "run() never called runner.run()!"
             assert runner.run.call_args[0][0] == cmd
+
+        @patch(local_path)
+        def should_use_finally_to_revert_changes_on_exceptions(self, Local):
+            class Oops(Exception):
+                pass
+            runner = Local.return_value
+            c = Context()
+            try:
+                with c.prefix("cd foo"):
+                    c.run("whoami")
+                    assert runner.run.call_args[0][0] == "cd foo && whoami"
+                    raise Oops
+            except Oops:
+                pass
+            c.run("ls")
+            # When bug present, this would be "cd foo && ls"
+            assert runner.run.call_args[0][0] == "ls"
 
     class sudo:
         def setup(self):
