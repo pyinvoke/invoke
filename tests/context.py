@@ -193,6 +193,7 @@ class Context_:
         def should_use_finally_to_revert_changes_on_exceptions(self, Local):
             class Oops(Exception):
                 pass
+
             runner = Local.return_value
             c = Context()
             try:
@@ -260,6 +261,7 @@ class Context_:
         def should_use_finally_to_revert_changes_on_exceptions(self, Local):
             class Oops(Exception):
                 pass
+
             runner = Local.return_value
             c = Context()
             try:
