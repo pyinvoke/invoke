@@ -2,6 +2,11 @@
 Changelog
 =========
 
+- :bug:`557` (with assist from :issue:`640`) Fix the
+  `~invoke.context.Context.cd` and `~invoke.context.Context.prefix` context
+  managers so that ``with cd`` and ``with prefix`` correctly revert their state
+  manipulations after they exit, when exceptions occur. Thanks to Jon Walsh and
+  Artur Puzio for their respective patches.
 - :bug:`466 major` Update the parsing and CLI-program mechanisms so that all
   core arguments may be given within task CLI contexts; previously this
   functionality only worked for the ``--help`` flag, and other core arguments
