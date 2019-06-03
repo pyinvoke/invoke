@@ -2,6 +2,11 @@
 Changelog
 =========
 
+- :bug:`557` (with assist from :issue:`640`) Fix the
+  `~invoke.context.Context.cd` and `~invoke.context.Context.prefix` context
+  managers so that ``with cd`` and ``with prefix`` correctly revert their state
+  manipulations after they exit, when exceptions occur. Thanks to Jon Walsh and
+  Artur Puzio for their respective patches.
 - :release:`1.2.0 <2018-09-13>`
 - :feature:`301` (via :issue:`414`) Overhaul tab completion mechanisms so users
   can :ref:`print a completion script <print-completion-script>` which
