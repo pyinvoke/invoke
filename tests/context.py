@@ -189,6 +189,23 @@ class Context_:
             assert runner.run.called, "run() never called runner.run()!"
             assert runner.run.call_args[0][0] == cmd
 
+        @patch(local_path)
+        def should_use_finally_to_revert_changes_on_exceptions(self, Local):
+            class Oops(Exception):
+                pass
+            runner = Local.return_value
+            c = Context()
+            try:
+                with c.cd("foo"):
+                    c.run("whoami")
+                    assert runner.run.call_args[0][0] == "cd foo && whoami"
+                    raise Oops
+            except Oops:
+                pass
+            c.run("ls")
+            # When bug present, this would be "cd foo && ls"
+            assert runner.run.call_args[0][0] == "ls"
+
     class prefix:
         def setup(self):
             self.escaped_prompt = re.escape(Config().sudo.prompt)
