@@ -156,7 +156,7 @@ class Context_:
             self.escaped_prompt = re.escape(Config().sudo.prompt)
 
         @patch(local_path)
-        def cd_should_apply_to_run(self, Local):
+        def should_apply_to_run(self, Local):
             runner = Local.return_value
             c = Context()
             with c.cd("foo"):
@@ -167,7 +167,7 @@ class Context_:
             assert runner.run.call_args[0][0] == cmd
 
         @patch(local_path)
-        def cd_should_apply_to_sudo(self, Local):
+        def should_apply_to_sudo(self, Local):
             runner = Local.return_value
             c = Context()
             with c.cd("foo"):
@@ -178,7 +178,7 @@ class Context_:
             assert runner.run.call_args[0][0] == cmd
 
         @patch(local_path)
-        def cd_should_occur_before_prefixes(self, Local):
+        def should_occur_before_prefixes(self, Local):
             runner = Local.return_value
             c = Context()
             with c.prefix("source venv"):
