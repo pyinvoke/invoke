@@ -53,7 +53,7 @@ script:
   # NOTE: sometime in 2019 travis grew a bizarre EnvironmentError problem
   # around inability to overwrite/remote __pycache__ dirs...this attempts to
   # workaround
-  - "find . -type d -name __pycache__ | xargs rm -rf"
+  - "find . -type d -name __pycache__ | sudo xargs rm -rf"
   - inv travis.test-installation --package=invoke --sanity="inv --list"
   # Test distribution builds.
   - inv travis.test-packaging --package=invoke --sanity="inv --list" --alt-python=alt_env/bin/python
