@@ -1,6 +1,6 @@
 language: python
 sudo: required
-dist: trusty
+dist: xenial
 cache:
   directories:
     - $HOME/.cache/pip
@@ -9,15 +9,13 @@ python:
   - "3.4"
   - "3.5"
   - "3.6"
-  - "3.7-dev"
-  - "nightly"
+  - "3.7"
+  - "3.8-dev"
   - "pypy"
   - "pypy3"
 matrix:
-  # NOTE: comment this out if we have to reinstate any allow_failures, because
-  # of https://github.com/travis-ci/travis-ci/issues/1696 (multiple
-  # notifications)
-  fast_finish: true
+  allow_failures:
+    - python: "3.8-dev"
 install:
   # For some reason Travis' build envs have wildly different pip/setuptools
   # versions between minor Python versions, and this can cause many hilarious
