@@ -1304,19 +1304,6 @@ post2
 post2
 """.lstrip(),
                 )
-                # Flag beats runtime
-                expect(
-                    "-c integration -f dedupe.yaml --no-dedupe biz",
-                    out="""
-foo
-foo
-bar
-biz
-post1
-post2
-post2
-""".lstrip(),
-                )
 
         # * debug (top level?)
         # * hide (run.hide...lol)

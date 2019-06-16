@@ -774,9 +774,11 @@ class Config(DataProxy):
 
         :returns: ``None``.
 
+        :raises: ``ValueError`` If can't find specified config file.
+
         .. versionadded:: 1.0
         """
-        self._load_file(prefix="runtime", absolute=True, merge=merge)
+        self._load_file(prefix="runtime", absolute=True, merge=merge, safe=True)
 
     def load_shell_env(self):
         """
@@ -840,7 +842,7 @@ class Config(DataProxy):
         # Data loaded from the per-project config file.
         self._set(_project={})
 
-    def _load_file(self, prefix, absolute=False, merge=True):
+    def _load_file(self, prefix, absolute=False, merge=True, safe=False):
         # Setup
         found = "_{}_found".format(prefix)
         path = "_{}_path".format(prefix)
@@ -872,23 +874,34 @@ class Config(DataProxy):
         for filepath in paths:
             # Normalize
             filepath = expanduser(filepath)
+            exception = None
             try:
-                try:
-                    type_ = splitext(filepath)[1].lstrip(".")
-                    loader = getattr(self, "_load_{}".format(type_))
-                except AttributeError as e:
-                    msg = "Config files of type {!r} (from file {!r}) are not supported! Please use one of: {!r}"  # noqa
-                    raise UnknownFileType(
-                        msg.format(type_, filepath, self._file_suffixes)
-                    )
-                # Store data, the path it was found at, and fact that it was
-                # found
+                type_ = splitext(filepath)[1].lstrip(".")
+                loader = getattr(self, "_load_{}".format(type_))
+            except AttributeError as e:
+                msg = "Config files of type {!r} (from file {!r}) are not supported! Please use one of: {!r}"  # noqa
+                # Hold onto the exception, don't throw it yet.
+                # If we throw it here, we get 2 stacktraces. That's
+                # a little scary if you don't know our internals.
+                exception = UnknownFileType(
+                    msg.format(type_, filepath, self._file_suffixes)
+                )
+            # Make sure file exists without hiding bad suffix exception.
+            if not exception and safe and not os.path.exists(filepath):
+                    exception = ValueError(
+                        "Could not find config file {}".format(filepath))
+            if exception:
+                raise exception
+
+            # Store data, the path it was found at, and fact that it was
+            # found
+            try:
                 self._set(data, loader(filepath))
                 self._set(path, filepath)
                 self._set(found, True)
                 break
-            # Typically means 'no such file', so just note & skip past.
             except IOError as e:
+                # Typically means 'no such file', so just note & skip past.
                 # TODO: is there a better / x-platform way to detect this?
                 if "No such file" in e.strerror:
                     err = "Didn't see any {}, skipping."
