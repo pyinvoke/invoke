@@ -557,6 +557,7 @@ Core options:
   -p, --pty                          Use a pty when executing shell commands.
   -r STRING, --search-root=STRING    Change root directory used for finding
                                      task modules.
+  -R, --dry                          Echo commands instead of running.
   -V, --version                      Show version and exit.
   -w, --warn-only                    Warn, instead of failing, when shell
                                      commands fail.
