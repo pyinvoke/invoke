@@ -483,6 +483,7 @@ class Config(DataProxy):
                 "in_stream": None,
                 "watchers": [],
                 "echo_stdin": None,
+                "command_timeout": None,
             },
             # This doesn't live inside the 'run' tree; otherwise it'd make it
             # somewhat harder to extend/override in Fabric 2 which has a split

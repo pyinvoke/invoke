@@ -105,6 +105,7 @@ class Config_:
                     "replace_env": False,
                     "shell": "/bin/bash",
                     "warn": False,
+                    "command_timeout": None,
                     "watchers": [],
                 },
                 "runners": {"local": Local},

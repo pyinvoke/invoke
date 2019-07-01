@@ -111,6 +111,18 @@ Stderr:{}
         )
 
 
+class CommandTimedOut(UnexpectedExit):
+    def __init__(self, result, timeout=None):
+        super(CommandTimedOut, self).__init__(result)
+        self.timeout = timeout
+
+    def __str__(self):
+        return (
+            super(CommandTimedOut, self).__str__()
+            + "\n[TIMEOUT after %ss]" % self.timeout
+        )
+
+
 class AuthFailure(Failure):
     """
     An authentication failure, e.g. due to an incorrect ``sudo`` password.
