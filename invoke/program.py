@@ -77,7 +77,7 @@ class Program(object):
                 help="Echo executed commands before running.",
             ),
             Argument(
-                names=('dry', 'D'),
+                names=("dry", "R"),
                 kind=bool,
                 default=False,
                 help="Echo commands instead of running.",
