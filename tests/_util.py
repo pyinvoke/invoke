@@ -265,7 +265,7 @@ class _Dummy(Runner):
     # which isn't a problem for testing).
     input_sleep = 0
 
-    def start(self, command, shell, env):
+    def start(self, command, shell, env, command_timeout):
         pass
 
     def read_proc_stdout(self, num_bytes):

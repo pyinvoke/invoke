@@ -16,6 +16,7 @@ from .exceptions import (  # noqa
     UnknownFileType,
     UnpicklableConfigMember,
     WatcherError,
+    CommandTimedOut,
 )
 from .executor import Executor  # noqa
 from .loader import FilesystemLoader  # noqa

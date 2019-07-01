@@ -7,6 +7,7 @@ from subprocess import Popen, PIPE
 import sys
 import threading
 import time
+import signal
 
 from .util import six
 
@@ -25,7 +26,13 @@ try:
 except ImportError:
     termios = None
 
-from .exceptions import UnexpectedExit, Failure, ThreadException, WatcherError
+from .exceptions import (
+    UnexpectedExit,
+    Failure,
+    ThreadException,
+    WatcherError,
+    CommandTimedOut,
+)
 from .terminals import (
     WINDOWS,
     pty_size,
@@ -91,6 +98,8 @@ class Runner(object):
         #: A list of `.StreamWatcher` instances for use by `respond`. Is filled
         #: in at runtime by `run`.
         self.watchers = []
+
+        self.timer = None
 
     def run(self, command, **kwargs):
         """
@@ -250,6 +259,9 @@ class Runner(object):
             When not ``None``, this parameter will override that auto-detection
             and force, or disable, echoing.
 
+        :param command_timeout:
+            time in seconds  to abort the command
+
         :returns:
             `Result`, or a subclass thereof.
 
@@ -282,7 +294,15 @@ class Runner(object):
         if opts["echo"]:
             print("\033[1;37m{}\033[0m".format(command))
         # Start executing the actual command (runs in background)
-        self.start(command, shell, env)
+        try:
+            self.start(
+                command, shell, env, command_timeout=opts["command_timeout"]
+            )
+        except TypeError as ex:
+            if "command_timeout" in str(ex) and not opts["command_timeout"]:
+                self.start(command, shell, env)
+            else:
+                raise
         # Arrive at final encoding if neither config nor kwargs had one
         self.encoding = opts["encoding"] or self.default_encoding()
         # Set up IO thread parameters (format - body_func: {kwargs})
@@ -400,6 +420,13 @@ class Runner(object):
             # TODO: ambiguity exists if we somehow get WatcherError in *both*
             # threads...as unlikely as that would normally be.
             raise Failure(result, reason=watcher_errors[0])
+        if (
+            opts["command_timeout"]
+            and self.timer
+            and not self.timer.is_alive()
+            and not opts["warn"]
+        ):
+            raise CommandTimedOut(result, timeout=opts["command_timeout"])
         if not (result or opts["warn"]):
             raise UnexpectedExit(result)
         return result
@@ -810,7 +837,7 @@ class Runner(object):
         """
         raise NotImplementedError
 
-    def start(self, command, shell, env):
+    def start(self, command, shell, env, command_timeout):
         """
         Initiate execution of ``command`` (via ``shell``, with ``env``).
 
@@ -1006,7 +1033,7 @@ class Local(Runner):
             if "Broken pipe" not in str(e):
                 raise
 
-    def start(self, command, shell, env):
+    def start(self, command, shell, env, command_timeout=None):
         if self.using_pty:
             if pty is None:  # Encountered ImportError
                 err = "You indicated pty=True, but your platform doesn't support the 'pty' module!"  # noqa
@@ -1033,6 +1060,14 @@ class Local(Runner):
                 # for now.
                 # TODO: see if subprocess is using equivalent of execvp...
                 os.execve(shell, [shell, "-c", command], env)
+            else:
+                if command_timeout:
+                    self.timer = threading.Timer(
+                        command_timeout,
+                        os.kill,
+                        args=(self.pid, signal.SIGKILL),
+                    )
+                    self.timer.start()
         else:
             self.process = Popen(
                 command,
@@ -1043,6 +1078,13 @@ class Local(Runner):
                 stderr=PIPE,
                 stdin=PIPE,
             )
+            if command_timeout:
+                self.timer = threading.Timer(
+                    command_timeout,
+                    os.kill,
+                    args=(self.process.pid, signal.SIGKILL),
+                )
+                self.timer.start()
 
     @property
     def process_is_finished(self):
@@ -1081,8 +1123,9 @@ class Local(Runner):
             return self.process.returncode
 
     def stop(self):
-        # No explicit close-out required (so far).
-        pass
+        # explicit close-out required
+        if self.timer:
+            self.timer.cancel()
 
 
 class Result(object):
