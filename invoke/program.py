@@ -309,7 +309,7 @@ class Program(object):
         if self.args.echo.value:
             run["echo"] = True
         if self.args.dry.value:
-            run['dry'] = True
+            run["dry"] = True
         tasks = {}
         if "no-dedupe" in self.args and self.args["no-dedupe"].value:
             tasks["dedupe"] = False
