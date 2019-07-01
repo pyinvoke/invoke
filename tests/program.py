@@ -555,6 +555,7 @@ Core options:
   -p, --pty                          Use a pty when executing shell commands.
   -r STRING, --search-root=STRING    Change root directory used for finding
                                      task modules.
+  -R, --dry                          Echo commands instead of running.
   -T INT, --command-timeout=INT      Specify a global command execution
                                      timeout, in seconds.
   -V, --version                      Show version and exit.
