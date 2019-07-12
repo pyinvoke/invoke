@@ -19,6 +19,7 @@ from invoke import (
     Config,
     Failure,
     ThreadException,
+    SubprocessPipeError,
     Responder,
     WatcherError,
     UnexpectedExit,
@@ -1413,6 +1414,13 @@ class Local_:
             expected = {"OTHERVAR": "OTHERVAL", "FOO": "BAR"}
             env = mock_os.execve.call_args_list[0][0][2]
             assert env == expected
+
+    class close_proc_stdin:
+        def raises_SubprocessPipeError_when_pty_in_use(self):
+            with raises(SubprocessPipeError):
+                runner = Local(Context())
+                runner.using_pty = True
+                runner.close_proc_stdin()
 
 
 class Result_:

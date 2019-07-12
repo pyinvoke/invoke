@@ -349,3 +349,17 @@ class ResponseNotAccepted(WatcherError):
     """
 
     pass
+
+
+class SubprocessPipeError(Exception):
+    """
+    Some problem was encountered handling subprocess pipes (stdout/err/in).
+
+    Typically only for corner cases; most of the time, errors in this area are
+    raised by the interpreter or the operating system, and end up wrapped in a
+    `.ThreadException`.
+
+    .. versionadded:: 1.3
+    """
+
+    pass

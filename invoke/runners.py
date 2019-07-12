@@ -25,7 +25,13 @@ try:
 except ImportError:
     termios = None
 
-from .exceptions import UnexpectedExit, Failure, ThreadException, WatcherError
+from .exceptions import (
+    UnexpectedExit,
+    Failure,
+    ThreadException,
+    WatcherError,
+    SubprocessPipeError,
+)
 from .terminals import (
     WINDOWS,
     pty_size,
@@ -1021,7 +1027,7 @@ class Local(Runner):
         if self.using_pty:
             # there is no working scenario to tell the process that stdin
             # closed when using pty
-            raise Exception("Cannot close stdin when pty=True")
+            raise SubprocessPipeError("Cannot close stdin when pty=True")
         self.process.stdin.close()
 
     def start(self, command, shell, env):

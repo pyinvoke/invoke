@@ -10,6 +10,7 @@ from .exceptions import (  # noqa
     ParseError,
     PlatformError,
     ResponseNotAccepted,
+    SubprocessPipeError,
     ThreadException,
     UncastableEnvVar,
     UnexpectedExit,
