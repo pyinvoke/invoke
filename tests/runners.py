@@ -1422,6 +1422,13 @@ class Local_:
                 runner.using_pty = True
                 runner.close_proc_stdin()
 
+        def closes_process_stdin(self):
+            runner = Local(Context())
+            runner.process = Mock()
+            runner.using_pty = False
+            runner.close_proc_stdin()
+            runner.process.stdin.close.assert_called_once_with()
+
 
 class Result_:
     def nothing_is_required(self):
