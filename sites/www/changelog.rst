@@ -2,6 +2,16 @@
 Changelog
 =========
 
+- :bug:`552 major` (also :issue:`553`) Add a new `~invoke.runners.Runner`
+  method, `~invoke.runners.Runner.close_proc_stdin`, and call it when standard
+  input processing detects an EOF. Without this, subprocesses that read their
+  stdin until EOF would block forever, hanging the program. Thanks to
+  ``@plockc`` for the report & initial patch.
+
+  .. note::
+    This fix only applies when ``pty=False`` (the default); PTYs complicate the
+    situation greatly (but also mean the issue is less likely to occur).
+
 - :bug:`557` (with assist from :issue:`640`) Fix the
   `~invoke.context.Context.cd` and `~invoke.context.Context.prefix` context
   managers so that ``with cd`` and ``with prefix`` correctly revert their state
