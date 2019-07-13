@@ -247,7 +247,7 @@ Tying them together is ``tasks/__init__.py``::
 
     from invoke import Collection
 
-    import release, docs
+    from tasks import release, docs
 
     ns = Collection()
     ns.add_collection(Collection.from_module(release))
@@ -315,8 +315,8 @@ sake. Just because it's stored in a module doesn't mean we must use
 
     from invoke import Collection
 
-    import docs
-    from release import release
+    from tasks import docs
+    from tasks.release import release
 
     ns = Collection()
     ns.add_collection(docs)
@@ -342,7 +342,7 @@ appropriate::
 
     from invoke import Collection
 
-    import docs, release
+    from tasks import docs, release
 
     ns = Collection(release.release, docs)
 
