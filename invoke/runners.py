@@ -337,7 +337,10 @@ class Runner(object):
             # them to the subprocess before handling 'normally'.
             except KeyboardInterrupt as e:
                 self.send_interrupt(e)
-                # NOTE: no break; we want to return to self.wait()
+                # NOTE: no break; we want to return to self.wait() since we
+                # can't know if subprocess is actually terminating due to this
+                # or not (think REPLs-within-shells, editors, other interactive
+                # use cases)
             except BaseException as e:  # Want to handle SystemExit etc still
                 # Store exception for post-shutdown reraise
                 exception = e
