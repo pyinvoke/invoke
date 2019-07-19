@@ -607,10 +607,8 @@ Stdout: already printed
 
 Stderr: already printed
 
-""".format(
-                        _
-                    )
-                    assert str(e) == expected
+"""
+                    assert str(e) == expected.format(_)
                 else:
                     assert False, "Failed to raise UnexpectedExit!"
 
@@ -631,10 +629,8 @@ Stdout: already printed
 
 Stderr: n/a (PTYs have no stderr)
 
-""".format(
-                        _
-                    )
-                    assert str(e) == expected
+"""
+                    assert str(e) == expected.format(_)
 
             @trap
             def pty_stderr_message_wins_over_hidden_stderr(self):
@@ -690,10 +686,8 @@ stderr 23
 stderr 24
 stderr 25
 
-""".format(
-                        _
-                    )
-                    assert str(e) == expected
+"""
+                    assert str(e) == expected.format(_)
 
             @trap
             def displays_tails_of_streams_only_when_hidden(self):
