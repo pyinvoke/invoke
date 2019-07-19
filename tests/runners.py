@@ -1516,6 +1516,9 @@ class Result_:
     def shell_defaults_to_empty_string(self):
         assert Result().shell == ""
 
+    def encoding_defaults_to_None(self):
+        assert Result().encoding is None
+
     def env_defaults_to_empty_dict(self):
         assert Result().env == {}
 
