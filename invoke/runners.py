@@ -645,6 +645,7 @@ class Runner(object):
         # runtime passwords? (search for 'input_enabled')
         # TODO: fabric#1339 is strongly related to this, if it's not literally
         # exposing some regression in Fabric 1.x itself.
+        closed_stdin = False
         with character_buffered(input_):
             while True:
                 data = self.read_our_stdin(input_)
@@ -665,8 +666,9 @@ class Runner(object):
                 elif data is not None:
                     # When reading from file-like objects that aren't "real"
                     # terminal streams, an empty byte signals EOF.
-                    if not self.using_pty:
+                    if not self.using_pty and not closed_stdin:
                         self.close_proc_stdin()
+                        closed_stdin = True
                 # Dual all-done signals: program being executed is done
                 # running, *and* we don't seem to be reading anything out of
                 # stdin. (NOTE: If we only test the former, we may encounter

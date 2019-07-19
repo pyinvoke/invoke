@@ -531,6 +531,24 @@ class Runner_:
             assert "'oh god why'" in msg
             assert "in thread for 'handle_stdin'" in msg
 
+        def EOF_triggers_closing_of_proc_stdin(self):
+            class Fake(_Dummy):
+                pass
+
+            Fake.close_proc_stdin = Mock()
+            self._runner(klass=Fake).run(_, in_stream=StringIO("what?"))
+            Fake.close_proc_stdin.assert_called_once_with()
+
+        def EOF_does_not_close_proc_stdin_when_pty_True(self):
+            class Fake(_Dummy):
+                pass
+
+            Fake.close_proc_stdin = Mock()
+            self._runner(klass=Fake).run(
+                _, in_stream=StringIO("what?"), pty=True
+            )
+            assert not Fake.close_proc_stdin.called
+
     class failure_handling:
         def fast_failures(self):
             with raises(UnexpectedExit):
