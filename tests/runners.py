@@ -1533,3 +1533,44 @@ class Result_:
 
     def repr_contains_useful_info(self):
         assert repr(Result(command="foo")) == "<Result cmd='foo' exited=0>"
+
+    class tail:
+        def setup(self):
+            self.sample = "\n".join(str(x) for x in range(25))
+
+        def returns_last_10_lines_of_given_stream_plus_whitespace(self):
+            expected = """
+
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24"""
+            assert Result(stdout=self.sample).tail("stdout") == expected
+
+        def line_count_is_configurable(self):
+            expected = """
+
+23
+24"""
+            tail = Result(stdout=self.sample).tail("stdout", count=2)
+            assert tail == expected
+
+        def works_for_stderr_too(self):
+            # Dumb test is dumb, but whatever
+            expected = """
+
+23
+24"""
+            tail = Result(stderr=self.sample).tail("stderr", count=2)
+            assert tail == expected
+
+        @patch("invoke.runners.encode_output")
+        def encodes_with_result_encoding(self, encode):
+            Result(stdout="foo", encoding="utf-16").tail("stdout")
+            encode.assert_called_once_with("\n\nfoo", "utf-16")

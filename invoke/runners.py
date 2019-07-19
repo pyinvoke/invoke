@@ -1302,6 +1302,23 @@ class Result(object):
         """
         return not self.ok
 
+    def tail(self, stream, count=10):
+        """
+        Return the last ``count`` lines of ``stream``, plus leading whitespace.
+
+        :param str stream:
+            Name of some captured stream attribute, eg ``"stdout"``.
+        :param int count:
+            Number of lines to preserve.
+
+        .. versionadded:: 1.3
+        """
+        # TODO: preserve alternate line endings? Mehhhh
+        # NOTE: no trailing \n preservation; easier for below display if
+        # normalized
+        text = "\n\n" + "\n".join(getattr(self, stream).splitlines()[-count:])
+        return encode_output(text, self.encoding)
+
 
 def normalize_hide(val):
     hide_vals = (None, False, "out", "stdout", "err", "stderr", "both", True)

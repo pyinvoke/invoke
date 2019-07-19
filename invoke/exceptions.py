@@ -11,8 +11,6 @@ from pprint import pformat
 
 from .util import six
 
-from .util import encode_output
-
 
 class CollectionNotFound(Exception):
     def __init__(self, name, start):
@@ -48,14 +46,6 @@ class Failure(Exception):
         self.reason = reason
 
 
-def _tail(stream):
-    # TODO: make configurable
-    # TODO: preserve alternate line endings? Mehhhh
-    tail = "\n\n" + "\n".join(stream.splitlines()[-10:])
-    # NOTE: no trailing \n preservation; easier for below display if normalized
-    return tail
-
-
 class UnexpectedExit(Failure):
     """
     A shell command ran to completion but exited with an unexpected exit code.
@@ -76,18 +66,14 @@ class UnexpectedExit(Failure):
         if "stdout" not in self.result.hide:
             stdout = already_printed
         else:
-            stdout = encode_output(
-                _tail(self.result.stdout), self.result.encoding
-            )
+            stdout = self.result.tail("stdout")
         if self.result.pty:
             stderr = " n/a (PTYs have no stderr)"
         else:
             if "stderr" not in self.result.hide:
                 stderr = already_printed
             else:
-                stderr = encode_output(
-                    _tail(self.result.stderr), self.result.encoding
-                )
+                stderr = self.result.tail("stderr")
         command = self.result.command
         exited = self.result.exited
         template = """Encountered a bad command exit code!
