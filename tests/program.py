@@ -432,9 +432,7 @@ class Program_:
             # Expect repr() of exception prints to stderr
             # NOTE: this partially duplicates a test in runners.py; whatever.
             stderr = sys.stderr.getvalue()
-            assert (
-                stderr
-                == """Encountered a bad command exit code!
+            expected = """Encountered a bad command exit code!
 
 Command: 'meh'
 
@@ -449,7 +447,7 @@ Stderr:
 ohnoz!
 
 """
-            )
+            assert stderr == expected
             # And exit with expected code (vs e.g. 1 or 0)
             mock_exit.assert_called_with(54)
 

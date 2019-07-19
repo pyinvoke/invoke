@@ -8,6 +8,6 @@ pytest==3.2.5
 pytest-relaxed==1.1.4
 pytest-cov==2.5.1
 mock==1.0.1
-flake8==2.4.0
+flake8==3.7.8
 # Stuff needed for our tasks.py to execute (broken out for ease of CI)
 -r tasks-requirements.txt

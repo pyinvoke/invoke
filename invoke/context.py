@@ -321,7 +321,7 @@ class Context(DataProxy):
 
         # TODO: see if there's a stronger "escape this path" function somewhere
         # we can reuse. e.g., escaping tildes or slashes in filenames.
-        paths = [path.replace(" ", "\ ") for path in self.command_cwds[i:]]
+        paths = [path.replace(" ", r"\ ") for path in self.command_cwds[i:]]
         return os.path.join(*paths)
 
     @contextmanager

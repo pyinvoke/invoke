@@ -80,7 +80,7 @@ class Loader_:
 
 class FilesystemLoader_:
     def setup(self):
-        self.l = FSLoader(start=support)
+        self.loader = FSLoader(start=support)
 
     def discovery_start_point_defaults_to_cwd(self):
         assert FSLoader().start == os.getcwd()
@@ -98,16 +98,16 @@ class FilesystemLoader_:
 
     def raises_CollectionNotFound_if_not_found(self):
         with raises(CollectionNotFound):
-            self.l.load("nope")
+            self.loader.load("nope")
 
     def raises_ImportError_if_found_collection_cannot_be_imported(self):
         # Instead of masking with a CollectionNotFound
         with raises(ImportError):
-            self.l.load("oops")
+            self.loader.load("oops")
 
     def searches_towards_root_of_filesystem(self):
         # Loaded while root is in same dir as .py
-        directly = self.l.load("foo")
+        directly = self.loader.load("foo")
         # Loaded while root is multiple dirs deeper than the .py
         deep = os.path.join(support, "ignoreme", "ignoremetoo")
         indirectly = FSLoader(start=deep).load("foo")

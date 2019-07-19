@@ -59,7 +59,7 @@ class Responder(StreamWatcher):
     """
 
     def __init__(self, pattern, response):
-        """
+        r"""
         Imprint this `Responder` with necessary parameters.
 
         :param pattern:

@@ -1,18 +1,15 @@
-# Skip on Windows CI, it may blow up on one of these
-from invoke.terminals import WINDOWS
-import pytest
-
-pytestmark = pytest.mark.skipif(
-    WINDOWS, reason="Low level terminal tests only work well on POSIX"
-)
-
 import fcntl
 import termios
 
 from mock import Mock, patch
-from pytest import skip
+from pytest import skip, mark
 
-from invoke.terminals import pty_size, bytes_to_read
+from invoke.terminals import pty_size, bytes_to_read, WINDOWS
+
+# Skip on Windows CI, it may blow up on one of these tests
+pytestmark = mark.skipif(
+    WINDOWS, reason="Low level terminal tests only work well on POSIX"
+)
 
 
 # NOTE: 'with character_buffered()' tests are in runners.py as it's a lot

@@ -4,7 +4,12 @@ import os
 import types
 from os.path import join, splitext, expanduser
 
-from .util import six, yaml
+from .env import Environment
+from .exceptions import UnknownFileType, UnpicklableConfigMember
+from .runners import Local
+from .terminals import WINDOWS
+from .util import debug, six, yaml
+
 
 if six.PY3:
     try:
@@ -25,13 +30,6 @@ else:
         if not os.path.exists(path):
             return {}
         return vars(imp.load_source("mod", path))
-
-
-from .env import Environment
-from .exceptions import UnknownFileType, UnpicklableConfigMember
-from .runners import Local
-from .terminals import WINDOWS
-from .util import debug
 
 
 class DataProxy(object):
@@ -876,7 +874,7 @@ class Config(DataProxy):
                 try:
                     type_ = splitext(filepath)[1].lstrip(".")
                     loader = getattr(self, "_load_{}".format(type_))
-                except AttributeError as e:
+                except AttributeError:
                     msg = "Config files of type {!r} (from file {!r}) are not supported! Please use one of: {!r}"  # noqa
                     raise UnknownFileType(
                         msg.format(type_, filepath, self._file_suffixes)

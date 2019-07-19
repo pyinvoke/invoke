@@ -44,6 +44,15 @@ class _RaisingWatcher(StreamWatcher):
         raise WatcherError("meh")
 
 
+class _GenericException(Exception):
+    pass
+
+
+class _GenericExceptingRunner(_Dummy):
+    def wait(self):
+        raise _GenericException
+
+
 def _run(*args, **kwargs):
     klass = kwargs.pop("klass", _Dummy)
     settings = kwargs.pop("settings", {})
@@ -569,12 +578,10 @@ class Runner_:
         class UnexpectedExit_str:
             def setup(self):
                 def lines(prefix):
-                    return (
-                        "\n".join(
-                            "{} {}".format(prefix, x) for x in range(1, 26)
-                        )
-                        + "\n"
+                    prefixed = "\n".join(
+                        "{} {}".format(prefix, x) for x in range(1, 26)
                     )
+                    return prefixed + "\n"
 
                 self._stdout = lines("stdout")
                 self._stderr = lines("stderr")
@@ -1236,7 +1243,7 @@ stderr 25
             runner.send_interrupt = Mock()
             try:
                 runner.run(_)
-            except:
+            except _GenericException:
                 pass
             return runner
 
@@ -1247,10 +1254,6 @@ stderr 25
             assert runner.send_interrupt.called
 
         def not_called_for_other_exceptions(self):
-            class _GenericExceptingRunner(_Dummy):
-                def wait(self):
-                    raise Exception
-
             runner = self._run_with_mocked_interrupt(_GenericExceptingRunner)
             assert not runner.send_interrupt.called
 
