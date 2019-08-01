@@ -889,8 +889,7 @@ class Config(DataProxy):
                 break
             # Typically means 'no such file', so just note & skip past.
             except IOError as e:
-                # TODO: is there a better / x-platform way to detect this?
-                if "No such file" in e.strerror:
+                if e.errno == 2:
                     err = "Didn't see any {}, skipping."
                     debug(err.format(filepath))
                 else:
