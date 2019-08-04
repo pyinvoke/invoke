@@ -1,8 +1,9 @@
 import os
 import platform
+import time
 
 from mock import Mock
-from pytest import skip
+from pytest import skip, raises
 
 from invoke import (
     run,
@@ -13,6 +14,7 @@ from invoke import (
     FailingResponder,
     WatcherError,
     Failure,
+    CommandTimedOut,
 )
 
 from _util import assert_cpu_usage
@@ -121,3 +123,19 @@ class Runner_:
 
         def nonpty_subproc_should_not_hang_if_IO_thread_has_an_exception(self):
             self._hang_on_full_pipe(pty=False)
+
+    class timeouts:
+        def does_not_fire_when_command_quick(self):
+            assert Local(Context()).run("sleep 1", timeout=5)
+
+        def triggers_exception_when_command_slow(self):
+            before = time.time()
+            with raises(CommandTimedOut) as info:
+                Local(Context()).run("sleep 5", timeout=0.5)
+            after = time.time()
+            # Fudge real time check a bit, <=0.5 typically fails due to
+            # overhead etc. May need raising further to avoid races? Meh.
+            assert (after - before) <= 0.75
+            # Sanity checks of the exception obj
+            assert info.value.timeout == 0.5
+            assert info.value.result.command == "sleep 5"

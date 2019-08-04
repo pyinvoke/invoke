@@ -3,14 +3,12 @@ import struct
 import sys
 import termios
 import types
-import time
 
 from io import BytesIO
 from itertools import chain, repeat
 
 from invoke.vendor.six import StringIO, b, PY2, iteritems
 
-import pytest
 from pytest import raises, skip
 from pytest_relaxed import trap
 from mock import patch, Mock, call
@@ -28,7 +26,6 @@ from invoke import (
     UnexpectedExit,
     StreamWatcher,
     Result,
-    CommandTimedOut,
 )
 from invoke.terminals import WINDOWS
 
@@ -1263,53 +1260,40 @@ stderr 25
                 runner.run(_, pty=pty)
                 mock_stdin.assert_called_once_with(u"\x03")
 
-    class command_timeout:
-        def _run_with_timeout(self, **kwargs):
-            runner = Context()
-            before = time.time()
+    class timeout:
+        def defaults_to_None_and_not_given_to_start_if_so(self):
+            runner = self._runner()
+            assert runner.context.config.timeouts.command is None
+            runner.start = Mock()
+            runner.run(_)
+            assert "timeout" not in runner.start.call_args[1]
 
-            with pytest.raises(CommandTimedOut) as exc:
-                runner.run("sleep 5", command_timeout=0.1, **kwargs)
-            after = time.time()
-            passed = after - before
-            assert passed < 0.2
-            assert exc.value.timeout == 0.1
-            assert "TIMEOUT" in str(exc.value)
+        def start_not_given_timeout_kwarg_if_set_to_None(self):
+            runner = self._runner()
+            runner.start = Mock()
+            runner.run(_, timeout=None)
+            assert "timeout" not in runner.start.call_args[1]
 
-        def pass_in_run(self):
-            self._run_with_timeout()
+        def run_setup_honors_timeouts_command_config(self):
+            runner = self._runner(timeouts={"command": 7})
+            runner.start = Mock()
+            assert runner.context.config.timeouts.command == 7
+            runner.run(_)
+            assert runner.start.call_args[1]["timeout"] == 7
 
-        def pass_in_run_with_pty(self):
-            self._run_with_timeout(pty=True)
+        def run_honors_timeout_kwarg(self):
+            runner = self._runner()
+            runner.start = Mock()
+            assert runner.context.config.timeouts.command is None
+            runner.run(_, timeout=3)
+            assert runner.start.call_args[1]["timeout"] == 3
 
-        def old_runner_call_to_start(Self):
-            class _OldRunner(_Dummy):
-                def start(self, command, shell, env):
-                    raise OhNoz()
-
-            runner = _OldRunner(context=Context())
-            runner.stop = Mock()
-            try:
-                runner.run(_)
-            except OhNoz:
-                runner.stop.assert_called_once_with()
-            else:
-                assert False, "_OldRunner did not except!"
-
-        def old_runner_call_to_start_with_timeout(Self):
-            class _OldRunner(_Dummy):
-                def start(self, command, shell, env):
-                    raise OhNoz()
-
-            runner = _OldRunner(context=Context())
-            runner.stop = Mock()
-            try:
-                runner.run(_, command_timeout=2)
-            except TypeError as ex:
-                runner.stop.assert_called_once_with()
-                assert "command_timeout" in str(ex)
-            else:
-                assert False, "_OldRunner did not except!"
+        def kwarg_wins_over_config(self):
+            runner = self._runner(timeouts={"command": 7})
+            runner.start = Mock()
+            assert runner.context.config.timeouts.command == 7
+            runner.run(_, timeout=3)
+            assert runner.start.call_args[1]["timeout"] == 3
 
     class stop:
         def always_runs_no_matter_what(self):
