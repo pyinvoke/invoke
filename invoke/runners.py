@@ -134,6 +134,10 @@ class Runner(object):
                 will usually be bundled inside `.Failure` objects (in order to
                 preserve the execution context).
 
+                Ditto `.CommandTimedOut` - basically, anything that prevents a
+                command from actually getting to "exited with an exit code"
+                ignores this flag.
+
         :param hide:
             Allows the caller to disable ``run``'s default behavior of copying
             the subprocess' stdout and stderr to the controlling terminal.
@@ -868,11 +872,15 @@ class Runner(object):
             Environment dict used to prep shell environment.
 
         :param int timeout:
-            Timeout, in seconds, triggering use of a thread timer if not-None.
+            Timeout, in seconds, after which to raise `CommandTimedOut`.
 
             .. versionadded:: 1.3
 
         .. versionadded:: 1.0
+
+        :raises:
+            `CommandTimedOut`, if the started subprocess takes longer than
+            ``timeout`` seconds to execute.
         """
         raise NotImplementedError
 

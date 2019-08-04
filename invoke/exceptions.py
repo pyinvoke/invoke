@@ -31,8 +31,10 @@ class Failure(Exception):
 
     * ``result``: a `.Result` instance with info about the command being
       executed and, if it ran to completion, how it exited.
-    * ``reason``: ``None``, if the command finished; or an exception instance
-      if e.g. a `.StreamWatcher` raised `WatcherError`.
+    * ``reason``: a wrapped exception instance if applicable (e.g. a
+    `.StreamWatcher` raised `WatcherError`) or ``None`` otherwise, in which
+    case, it's probably a `Failure` subclass indicating its own specific
+    nature, such as `UnexpectedExit` or `CommandTimedOut`.
 
     This class is only rarely raised by itself; most of the time `.Runner.run`
     (or a wrapper of same, such as `.Context.sudo`) will raise a specific
