@@ -26,23 +26,30 @@ class Runner_:
         os.chdir(os.path.join(os.path.dirname(__file__), "_support"))
 
     class responding:
-        # TODO: update respond_*.py so they timeout instead of hanging forever
-        # when not being responded to
-
         def base_case(self):
             # Basic "doesn't explode" test: respond.py will exit nonzero unless
             # this works, causing a Failure.
             watcher = Responder(r"What's the password\?", "Rosebud\n")
             # Gotta give -u or Python will line-buffer its stdout, so we'll
             # never actually see the prompt.
-            run("python -u respond_base.py", watchers=[watcher], hide=True)
+            run(
+                "python -u respond_base.py",
+                watchers=[watcher],
+                hide=True,
+                timeout=5,
+            )
 
         def both_streams(self):
             watchers = [
                 Responder("standard out", "with it\n"),
                 Responder("standard error", "between chair and keyboard\n"),
             ]
-            run("python -u respond_both.py", watchers=watchers, hide=True)
+            run(
+                "python -u respond_both.py",
+                watchers=watchers,
+                hide=True,
+                timeout=5,
+            )
 
         def watcher_errors_become_Failures(self):
             watcher = FailingResponder(
@@ -51,7 +58,12 @@ class Runner_:
                 sentinel="You're not Citizen Kane!",
             )
             try:
-                run("python -u respond_fail.py", watchers=[watcher], hide=True)
+                run(
+                    "python -u respond_fail.py",
+                    watchers=[watcher],
+                    hide=True,
+                    timeout=5,
+                )
             except Failure as e:
                 assert isinstance(e.reason, WatcherError)
                 assert e.result.exited is None
