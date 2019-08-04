@@ -369,7 +369,7 @@ class Runner(object):
         self.program_finished.set()
         # Join threads, setting a timeout if necessary
         for target, thread in six.iteritems(self.threads):
-            thread.join(self._thread_timeout(target))
+            thread.join(self._thread_join_timeout(target))
             e = thread.exception()
             if e is not None:
                 exceptions.append(e)
@@ -478,7 +478,7 @@ class Runner(object):
             self.watchers = opts["watchers"]
         return opts, out_stream, err_stream, in_stream
 
-    def _thread_timeout(self, target):
+    def _thread_join_timeout(self, target):
         # Add a timeout to out/err thread joins when it looks like they're not
         # dead but their counterpart is dead; this indicates issue #351 (fixed
         # by #432) where the subproc may hang because its stdout (or stderr) is
