@@ -105,7 +105,6 @@ class Config_:
                     "replace_env": False,
                     "shell": "/bin/bash",
                     "warn": False,
-                    "command_timeout": None,
                     "watchers": [],
                 },
                 "runners": {"local": Local},
@@ -121,6 +120,7 @@ class Config_:
                     "executor_class": None,
                     "search_root": None,
                 },
+                "timeouts": {"command": None},
             }
             assert Config.global_defaults() == expected
 
@@ -234,7 +234,7 @@ class Config_:
                 expected = """
 No attribute or config key found for 'nope'
 
-Valid keys: ['run', 'runners', 'sudo', 'tasks']
+Valid keys: ['run', 'runners', 'sudo', 'tasks', 'timeouts']
 
 Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_data', 'global_defaults', 'load_base_conf_files', 'load_collection', 'load_defaults', 'load_overrides', 'load_project', 'load_runtime', 'load_shell_env', 'load_system', 'load_user', 'merge', 'pop', 'popitem', 'prefix', 'set_project_location', 'set_runtime_path', 'setdefault', 'update']
 """.strip()  # noqa
@@ -583,7 +583,7 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
             assert c._project_path is None
             c.load_project()
             assert list(c._project.keys()) == []
-            defaults = ["tasks", "run", "runners", "sudo"]
+            defaults = ["tasks", "run", "runners", "sudo", "timeouts"]
             assert set(c.keys()) == set(defaults)
 
         def project_location_can_be_set_after_init(self):

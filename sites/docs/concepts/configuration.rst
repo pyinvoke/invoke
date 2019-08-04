@@ -142,6 +142,13 @@ For convenience, we refer to nested setting names with a dotted syntax, so e.g.
   honored from the start of execution and is thus useful for troubleshooting
   parsing and/or config loading.
 
+- A small config tree, ``timeouts``, holds various kinds of timeout controls.
+  At present, for Invoke, this only holds a ``command`` subkey, which controls
+  subprocess execution timeouts.
+
+    - Client code often adds more to this tree, and Invoke itself may add more
+      in the future as well.
+
 
 .. _config-files:
 

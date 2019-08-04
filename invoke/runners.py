@@ -260,8 +260,12 @@ class Runner(object):
             When not ``None``, this parameter will override that auto-detection
             and force, or disable, echoing.
 
-        :param command_timeout:
-            time in seconds  to abort the command
+        :param timeout:
+            Cause the runner to raise `CommandTimedOut` if the command takes
+            longer than ``timeout`` seconds to execute. Defaults to ``None``,
+            meaning no timeout.
+
+            .. versionadded:: 1.3
 
         :returns:
             `Result`, or a subclass thereof.
@@ -844,7 +848,7 @@ class Runner(object):
         """
         raise NotImplementedError
 
-    def start(self, command, shell, env, command_timeout):
+    def start(self, command, shell, env, timeout):
         """
         Initiate execution of ``command`` (via ``shell``, with ``env``).
 
@@ -853,6 +857,20 @@ class Runner(object):
 
         In most cases, this method will also set subclass-specific member
         variables used in other methods such as `wait` and/or `returncode`.
+
+        :param str command:
+            Command string to execute.
+
+        :param str shell:
+            Shell to use when executing ``command``.
+
+        :param dict env:
+            Environment dict used to prep shell environment.
+
+        :param int timeout:
+            Timeout, in seconds, triggering use of a thread timer if not-None.
+
+            .. versionadded:: 1.3
 
         .. versionadded:: 1.0
         """
