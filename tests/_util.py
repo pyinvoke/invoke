@@ -184,6 +184,7 @@ def mock_pty(
     trailing_error=None,
     skip_asserts=False,
     insert_os=False,
+    be_childish=False,
 ):
     # Windows doesn't have ptys, so all the pty tests should be
     # skipped anyway...
@@ -205,7 +206,7 @@ def mock_pty(
             # Don't actually fork, but pretend we did & that main thread is
             # also the child (pid 0) to trigger execve call; & give 'parent fd'
             # of 1 (stdout).
-            pty.fork.return_value = 0, 1
+            pty.fork.return_value = (12345 if be_childish else 0), 1
             # We don't really need to care about waiting since not truly
             # forking/etc, so here we just return a nonzero "pid" + sentinel
             # wait-status value (used in some tests about WIFEXITED etc)
@@ -238,6 +239,9 @@ def mock_pty(
             # TODO: inject our mocks back into the tests so they can make their
             # own assertions if desired
             pty.fork.assert_called_with()
+            # Skip rest of asserts if we pretended to be the child
+            if be_childish:
+                return
             # Expect a get, and then later set, of terminal window size
             assert ioctl.call_args_list[0][0][1] == termios.TIOCGWINSZ
             assert ioctl.call_args_list[1][0][1] == termios.TIOCSWINSZ
