@@ -1310,13 +1310,15 @@ stderr 25
             assert runner.start.call_args[1]["timeout"] == 3
 
         def raises_CommandTimedOut_with_timeout_info(self):
-            runner = self._runner(klass=_TimingOutRunner, timeouts={"command": 7})
+            runner = self._runner(
+                klass=_TimingOutRunner, timeouts={"command": 7}
+            )
             with raises(CommandTimedOut) as info:
                 runner.run(_)
             assert info.value.timeout == 7
             _repr = "<CommandTimedOut: cmd='nope' timeout=7>"
             assert repr(info.value) == _repr
-            assert str(info.value) == """
+            expected = """
 Command did not complete within 7 seconds!
 
 Command: 'nope'
@@ -1326,6 +1328,7 @@ Stdout: already printed
 Stderr: already printed
 
 """.lstrip()
+            assert str(info.value) == expected
 
     class stop:
         def always_runs_no_matter_what(self):
