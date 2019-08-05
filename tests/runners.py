@@ -29,6 +29,7 @@ from invoke import (
     StreamWatcher,
     Result,
 )
+from invoke.runners import default_encoding
 from invoke.terminals import WINDOWS
 
 from _util import (
@@ -1568,8 +1569,8 @@ class Result_:
     def shell_defaults_to_empty_string(self):
         assert Result().shell == ""
 
-    def encoding_defaults_to_None(self):
-        assert Result().encoding is None
+    def encoding_defaults_to_local_default_encoding(self):
+        assert Result().encoding == default_encoding()
 
     def env_defaults_to_empty_dict(self):
         assert Result().env == {}
