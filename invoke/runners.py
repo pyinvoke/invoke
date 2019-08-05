@@ -1216,6 +1216,11 @@ class Result(object):
     :param int exited:
         An integer representing the subprocess' exit/return code.
 
+        .. note::
+            This may be ``None`` in situations where the subprocess did not run
+            to completion, such as when auto-responding failed or a timeout was
+            reached.
+
     :param bool pty:
         A boolean describing whether the subprocess was invoked with a pty or
         not; see `.Runner.run`.
