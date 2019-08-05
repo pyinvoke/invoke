@@ -99,8 +99,7 @@ class Runner(object):
         #: A list of `.StreamWatcher` instances for use by `respond`. Is filled
         #: in at runtime by `run`.
         self.watchers = []
-
-        self.timer = None
+        self._timer = None
 
     def run(self, command, **kwargs):
         """
@@ -269,6 +268,13 @@ class Runner(object):
             longer than ``timeout`` seconds to execute. Defaults to ``None``,
             meaning no timeout.
 
+            .. note::
+                How exactly the timeout is implemented, and what happens to the
+                subprocess that's taking too long, is up to the implementing
+                subclass. The subclass must implement the `timed_out` property,
+                as this parent class will test it when deciding whether to
+                raise `CommandTimedOut`.
+
             .. versionadded:: 1.3
 
         :returns:
@@ -303,15 +309,13 @@ class Runner(object):
         if opts["echo"]:
             print("\033[1;37m{}\033[0m".format(command))
         # Start executing the actual command (runs in background)
-        try:
-            self.start(
-                command, shell, env, command_timeout=opts["command_timeout"]
-            )
-        except TypeError as ex:
-            if "command_timeout" in str(ex) and not opts["command_timeout"]:
-                self.start(command, shell, env)
-            else:
-                raise
+        start_kwargs = {}
+        # Only hand in things like timeout if explicitly given; this prevents
+        # blowing up older subclasses unless the user is specifically trying to
+        # use a newer feature.
+        if "timeout" in opts:
+            start_kwargs["timeout"] = opts["timeout"]
+        self.start(command, shell, env, **start_kwargs)
         # Arrive at final encoding if neither config nor kwargs had one
         self.encoding = opts["encoding"] or self.default_encoding()
         # Set up IO thread parameters (format - body_func: {kwargs})
@@ -432,13 +436,10 @@ class Runner(object):
             # TODO: ambiguity exists if we somehow get WatcherError in *both*
             # threads...as unlikely as that would normally be.
             raise Failure(result, reason=watcher_errors[0])
-        if (
-            opts["command_timeout"]
-            and self.timer
-            and not self.timer.is_alive()
-            and not opts["warn"]
-        ):
-            raise CommandTimedOut(result, timeout=opts["command_timeout"])
+        # If a timeout was requested and the subprocess did time out, shout.
+        timeout = opts.get("timeout", None)
+        if timeout is not None and self.timed_out:
+            raise CommandTimedOut(result, timeout=timeout)
         if not (result or opts["warn"]):
             raise UnexpectedExit(result)
         return result
@@ -455,6 +456,12 @@ class Runner(object):
         for key, value in six.iteritems(self.context.config.run):
             runtime = kwargs.pop(key, None)
             opts[key] = value if runtime is None else runtime
+        # Pull in command execution timeout, which stores config elsewhere,
+        # but only use it if it's actually set (backwards compat)
+        config_timeout = self.context.config.timeouts.command
+        timeout = kwargs.pop("timeout", config_timeout)
+        if timeout is not None:
+            opts["timeout"] = timeout
         # Handle invalid kwarg keys (anything left in kwargs).
         # Act like a normal function would, i.e. TypeError
         if kwargs:
@@ -852,7 +859,7 @@ class Runner(object):
         """
         raise NotImplementedError
 
-    def start(self, command, shell, env, timeout):
+    def start(self, command, shell, env, timeout=None):
         """
         Initiate execution of ``command`` (via ``shell``, with ``env``).
 
@@ -997,6 +1004,15 @@ class Runner(object):
         """
         raise NotImplementedError
 
+    @property
+    def timed_out(self):
+        """
+        Returns ``True`` if the subprocess stopped because it timed out.
+
+        .. versionadded:: 1.3
+        """
+        raise NotImplementedError
+
 
 class Local(Runner):
     """
@@ -1083,7 +1099,15 @@ class Local(Runner):
             raise SubprocessPipeError("Cannot close stdin when pty=True")
         self.process.stdin.close()
 
-    def start(self, command, shell, env, command_timeout=None):
+    def _start_timer(self, timeout, pid):
+        if timeout is None:
+            return
+        self._timer = threading.Timer(
+            timeout, os.kill, args=(pid, signal.SIGKILL)
+        )
+        self._timer.start()
+
+    def start(self, command, shell, env, timeout=None):
         if self.using_pty:
             if pty is None:  # Encountered ImportError
                 err = "You indicated pty=True, but your platform doesn't support the 'pty' module!"  # noqa
@@ -1111,13 +1135,7 @@ class Local(Runner):
                 # TODO: see if subprocess is using equivalent of execvp...
                 os.execve(shell, [shell, "-c", command], env)
             else:
-                if command_timeout:
-                    self.timer = threading.Timer(
-                        command_timeout,
-                        os.kill,
-                        args=(self.pid, signal.SIGKILL),
-                    )
-                    self.timer.start()
+                self._start_timer(timeout, self.pid)
         else:
             self.process = Popen(
                 command,
@@ -1128,13 +1146,7 @@ class Local(Runner):
                 stderr=PIPE,
                 stdin=PIPE,
             )
-            if command_timeout:
-                self.timer = threading.Timer(
-                    command_timeout,
-                    os.kill,
-                    args=(self.process.pid, signal.SIGKILL),
-                )
-                self.timer.start()
+            self._start_timer(timeout, self.process.pid)
 
     @property
     def process_is_finished(self):
@@ -1173,9 +1185,15 @@ class Local(Runner):
             return self.process.returncode
 
     def stop(self):
-        # explicit close-out required
-        if self.timer:
-            self.timer.cancel()
+        # Make sure to stop any active command-timeout timer
+        if self._timer:
+            self._timer.cancel()
+
+    @property
+    def timed_out(self):
+        # Timer expiry implies we did time out. (The timer itself will have
+        # killed the subprocess, allowing us to even get to this point.)
+        return self._timer and not self._timer.is_alive()
 
 
 class Result(object):

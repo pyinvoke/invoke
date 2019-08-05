@@ -16,6 +16,7 @@ from mock import patch, Mock, call
 from invoke import (
     Runner,
     Local,
+    CommandTimedOut,
     Context,
     Config,
     Failure,
@@ -110,6 +111,12 @@ def make_tcattrs(cc_is_ints=True, echo=False):
     return attrs
 
 
+class _TimingOutRunner(_Dummy):
+    @property
+    def timed_out(self):
+        return True
+
+
 class Runner_:
     # NOTE: these copies of _run and _runner form the base case of "test Runner
     # subclasses via self._run/_runner helpers" functionality. See how e.g.
@@ -171,6 +178,12 @@ class Runner_:
                 assert isinstance(e.reason, WatcherError)
             else:
                 assert False, "Did not raise Failure for WatcherError!"
+
+        def does_not_apply_to_timeout_errors(self):
+            with raises(CommandTimedOut):
+                self._runner(klass=_TimingOutRunner).run(
+                    _, timeout=1, warn=True
+                )
 
     class hide:
         @trap
@@ -1294,6 +1307,24 @@ stderr 25
             assert runner.context.config.timeouts.command == 7
             runner.run(_, timeout=3)
             assert runner.start.call_args[1]["timeout"] == 3
+
+        def raises_CommandTimedOut_with_timeout_info(self):
+            runner = self._runner(klass=_TimingOutRunner, timeouts={"command": 7})
+            with raises(CommandTimedOut) as info:
+                runner.run(_)
+            assert info.value.timeout == 7
+            _repr = "<CommandTimedOut: cmd='nope' timeout=7>"
+            assert repr(info.value) == _repr
+            assert str(info.value) == """
+Command did not complete within 7 seconds!
+
+Command: 'nope'
+
+Stdout: already printed
+
+Stderr: already printed
+
+""".lstrip()
 
     class stop:
         def always_runs_no_matter_what(self):

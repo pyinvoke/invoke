@@ -77,6 +77,25 @@ class Failure(Exception):
                 stderr = self.result.tail("stderr")
         return stdout, stderr
 
+    def __repr__(self):
+        return self._repr()
+
+    def _repr(self, **kwargs):
+        """
+        Return ``__repr__``-like value from inner result + any kwargs.
+        """
+        # TODO: expand?
+        # TODO: truncate command?
+        template = "<{}: cmd={!r}{}>"
+        rest = ""
+        if kwargs:
+            rest = " " + " ".join(
+                "{}={}".format(key, value) for key, value in kwargs.items()
+            )
+        return template.format(
+            self.__class__.__name__, self.result.command, rest
+        )
+
 
 class UnexpectedExit(Failure):
     """
@@ -111,23 +130,30 @@ Stderr:{}
         return template.format(command, exited, stdout, stderr)
 
     def __repr__(self):
-        # TODO: expand?
-        template = "<{}: cmd={!r} exited={}>"
-        return template.format(
-            self.__class__.__name__, self.result.command, self.result.exited
-        )
+        return self._repr(exited=self.result.exited)
 
 
-class CommandTimedOut(UnexpectedExit):
-    def __init__(self, result, timeout=None):
+class CommandTimedOut(Failure):
+    def __init__(self, result, timeout):
         super(CommandTimedOut, self).__init__(result)
         self.timeout = timeout
 
+    def __repr__(self):
+        return self._repr(timeout=self.timeout)
+
     def __str__(self):
-        return (
-            super(CommandTimedOut, self).__str__()
-            + "\n[TIMEOUT after %ss]" % self.timeout
-        )
+        stdout, stderr = self.streams_for_display()
+        command = self.result.command
+        template = """Command did not complete within {} seconds!
+
+Command: {!r}
+
+Stdout:{}
+
+Stderr:{}
+
+"""
+        return template.format(self.timeout, command, stdout, stderr)
 
 
 class AuthFailure(Failure):

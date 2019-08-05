@@ -265,7 +265,7 @@ class _Dummy(Runner):
     # which isn't a problem for testing).
     input_sleep = 0
 
-    def start(self, command, shell, env, timeout):
+    def start(self, command, shell, env, timeout=None):
         pass
 
     def read_proc_stdout(self, num_bytes):
@@ -289,6 +289,10 @@ class _Dummy(Runner):
 
     def stop(self):
         pass
+
+    @property
+    def timed_out(self):
+        return False
 
 
 # Dummy command that will blow up if it ever truly hits a real shell.
