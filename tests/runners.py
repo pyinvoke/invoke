@@ -1,4 +1,5 @@
 import os
+import signal
 import struct
 import sys
 import termios
@@ -1510,6 +1511,45 @@ class Local_:
             runner.using_pty = False
             runner.close_proc_stdin()
             runner.process.stdin.close.assert_called_once_with()
+
+    class timeout:
+        def setup(self):
+            self.runner = Local(Context())
+            self.runner._timer = Mock()
+
+        @mock_pty(be_childish=True, insert_os=True)
+        def uses_thread_Timer_to_kill_pty_subprocess_on_timeout(self, _os):
+            with patch("invoke.runners.threading.Timer") as Timer:
+                self._run(_, pty=True, timeout=2)
+            call = Timer.call_args
+            assert call[0] == (2, _os.kill)
+            assert call[1]["args"][1] == signal.SIGKILL
+            Timer.return_value.start.assert_called_once_with()
+
+        @mock_subprocess()
+        def uses_thread_Timer_to_kill_non_pty_subprocess_on_timeout(self):
+            with patch("invoke.runners.threading.Timer") as Timer:
+                self._run(_, pty=False, timeout=2)
+            call = Timer.call_args
+            assert call[0] == (2, os.kill)
+            assert call[1]["args"][1] == signal.SIGKILL
+            Timer.return_value.start.assert_called_once_with()
+
+        def stop_cancels_timer(self):
+            self.runner.stop()
+            self.runner._timer.cancel.assert_called_once_with()
+
+        def timer_death_means_it_timed_out(self):
+            # Might be redundant, but easy enough to unit test
+            self.runner._timer.is_alive.return_value = False
+            assert self.runner.timed_out
+            self.runner._timer.is_alive.return_value = True
+            assert not self.runner.timed_out
+
+        def timeout_specified_but_no_timer_means_no_exception(self):
+            # Weird corner case but worth testing
+            self.runner._timer = None
+            assert not self.runner.timed_out
 
 
 class Result_:
