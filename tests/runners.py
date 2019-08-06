@@ -334,6 +334,27 @@ class Runner_:
             # TODO: vendor & use a color module
             assert sys.stdout.getvalue() == "\x1b[1;37mmy command\x1b[0m\n"
 
+    class dry_running:
+        @trap
+        def sets_echo_to_True(self):
+            self._run("what up", settings={"run": {"dry": True}})
+            assert "what up" in sys.stdout.getvalue()
+
+        @trap
+        def short_circuits_with_dummy_result(self):
+            runner = self._runner(run={"dry": True})
+            # Using the call to self.start() in _run_body() as a sentinel for
+            # all the work beyond it.
+            runner.start = Mock()
+            result = runner.run(_)
+            assert not runner.start.called
+            assert isinstance(result, Result)
+            assert result.command == _
+            assert result.stdout == ""
+            assert result.stderr == ""
+            assert result.exited == 0
+            assert result.pty is False
+
     class encoding:
         # NOTE: these tests just check what Runner.encoding ends up as; it's
         # difficult/impossible to mock string objects themselves to see what
