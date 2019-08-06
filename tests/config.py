@@ -3,7 +3,7 @@ import os
 from os.path import join, expanduser
 
 from invoke.util import six
-from mock import patch, call
+from mock import patch, call, Mock
 import pytest
 from pytest_relaxed import raises
 
@@ -633,6 +633,21 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
             expected = r"'os' is a module.*giving a tasks file.*mistake"
             with pytest.raises(UnpicklableConfigMember, match=expected):
                 c.load_runtime(merge=False)
+
+        @patch("invoke.config.debug")
+        def nonexistent_files_are_skipped_and_logged(self, mock_debug):
+            c = Config()
+            c._load_yml = Mock(side_effect=IOError(2, "aw nuts"))
+            c.set_runtime_path("is-a.yml")  # Triggers use of _load_yml
+            c.load_runtime()
+            mock_debug.assert_has_call("Didn't see any is-a.yml, skipping.")
+
+        @raises(IOError)
+        def non_missing_file_IOErrors_are_raised(self):
+            c = Config()
+            c._load_yml = Mock(side_effect=IOError(17, "uh, what?"))
+            c.set_runtime_path("is-a.yml")  # Triggers use of _load_yml
+            c.load_runtime()
 
     class collection_level_config_loading:
         def performed_explicitly_and_directly(self):

@@ -2,6 +2,11 @@
 Changelog
 =========
 
+- :bug:`384 major` (via :issue:`653`) Modify config file loading so it detects
+  missing-file IOErrors via their ``errno`` attribute instead of their string
+  rendering (eg ``"No such file"``). This should improve compatibility for
+  non-English locales. Thanks to Patrick Massot for the report and Github user
+  ``@cybiere`` for the patch.
 - :feature:`539` (via :issue:`645`) Add support for command timeouts, i.e. the
   ability to add an upper bound on how long a call to
   `~invoke.context.Context.run` may take to execute. Specifically:
