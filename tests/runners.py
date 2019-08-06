@@ -1331,20 +1331,50 @@ Stderr: already printed
 """.lstrip()
             assert str(info.value) == expected
 
+        @patch("invoke.runners.threading.Timer")
+        def start_timer_gives_its_timer_the_kill_method(self, Timer):
+            runner = self._runner()
+            runner.start_timer(30)
+            Timer.assert_called_once_with(30, runner.kill)
+
+        def _mocked_timer(self):
+            runner = self._runner()
+            runner._timer = Mock()
+            return runner
+
+        def run_always_stops_timer(self):
+            runner = _GenericExceptingRunner(Context())
+            runner.stop_timer = Mock()
+            with raises(_GenericException):
+                runner.run(_)
+            runner.stop_timer.assert_called_once_with()
+
+        def stop_timer_cancels_timer(self):
+            runner = self._mocked_timer()
+            runner.stop_timer()
+            runner._timer.cancel.assert_called_once_with()
+
+        def timer_aliveness_is_test_of_timing_out(self):
+            # Might be redundant, but easy enough to unit test
+            runner = Runner(Context())
+            runner._timer.is_alive.return_value = False
+            assert runner.timed_out
+            runner._timer.is_alive.return_value = True
+            assert not runner.timed_out
+
+        def timeout_specified_but_no_timer_means_no_exception(self):
+            # Weird corner case but worth testing
+            runner = self._mocked_timer()
+            runner._timer = None
+            assert not runner.timed_out
+
     class stop:
         def always_runs_no_matter_what(self):
-            class _ExceptingRunner(_Dummy):
-                def wait(self):
-                    raise OhNoz()
-
-            runner = _ExceptingRunner(context=Context())
+            runner = _GenericExceptingRunner(context=Context())
             runner.stop = Mock()
-            try:
+            with raises(_GenericException):
                 runner.run(_)
-            except OhNoz:
-                runner.stop.assert_called_once_with()
-            else:
-                assert False, "_ExceptingRunner did not except!"
+            runner.stop.assert_called_once_with()
 
 
 class _FastLocal(Local):
