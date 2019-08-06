@@ -466,11 +466,12 @@ class Runner(object):
         # If hide was True, turn off echoing
         if opts["hide"] is True:
             opts["echo"] = False
+        # Conversely, ensure echoing is always on when dry-running
+        if opts["dry"] is True:
+            opts["echo"] = True
         # Then normalize 'hide' from one of the various valid input values,
         # into a stream-names tuple.
         opts["hide"] = normalize_hide(opts["hide"])
-        if opts["dry"] is True:
-            opts["echo"] = True
         # Derive stream objects
         out_stream = opts["out_stream"]
         if out_stream is None:
