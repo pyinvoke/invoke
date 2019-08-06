@@ -302,7 +302,7 @@ class Runner(object):
         # Echo running command
         if opts["echo"]:
             print("\033[1;37m{}\033[0m".format(command))
-        # if dry-run, stop here.
+        # If dry-run, stop here.
         if opts["dry"]:
             return self.generate_result(
                 command=command,

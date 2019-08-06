@@ -2,6 +2,25 @@
 Changelog
 =========
 
+- :feature:`324` Add basic dry-run support, in the form of a new
+  :option:`--dry` CLI option and matching ``run.dry`` config setting, which
+  causes command runners (eg `~invoke.run`, `Context.run
+  <invoke.context.Context.run>`) to:
+
+  - Act as if the ``echo`` option has been turned on, printing the
+    command-to-be-run to stdout;
+  - Skip actual subprocess invocation (returning before any of that machinery
+    starts running);
+  - Return a dummy `~invoke.runners.Result` object with 'blank' values (empty
+    stdout/err strings, ``0`` exit code, etc).
+
+  This allows quickly seeing what a given task or series of tasks might do,
+  without actually running any shell commands (though naturally, any
+  state-modifying Python code will still run).
+
+  Thanks to Monty Hindman for the feature request and ``@thebjorn`` for the
+  initial patch.
+
 - :bug:`384 major` (via :issue:`653`) Modify config file loading so it detects
   missing-file IOErrors via their ``errno`` attribute instead of their string
   rendering (eg ``"No such file"``). This should improve compatibility for
