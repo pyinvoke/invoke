@@ -2,6 +2,7 @@
 Changelog
 =========
 
+- :release:`1.3.0 <2019-08-06>`
 - :feature:`324` Add basic dry-run support, in the form of a new
   :option:`--dry` CLI option and matching ``run.dry`` config setting, which
   causes command runners (eg `~invoke.run`, `Context.run
