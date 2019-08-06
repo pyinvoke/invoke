@@ -41,16 +41,19 @@ class Program(object):
         # Arguments present always, even when wrapped as a different binary
         return [
             Argument(
+                names=("command-timeout", "T"),
+                kind=int,
+                help="Specify a global command execution timeout, in seconds.",
+            ),
+            Argument(
                 names=("complete",),
                 kind=bool,
                 default=False,
                 help="Print tab-completion candidates for given parse remainder.",  # noqa
             ),
             Argument(
-                names=("print-completion-script",),
-                kind=str,
-                default="",
-                help="Print the tab-completion script for your preferred shell (bash|zsh|fish).",  # noqa
+                names=("config", "f"),
+                help="Runtime configuration file to use.",
             ),
             Argument(
                 names=("debug", "d"),
@@ -59,26 +62,10 @@ class Program(object):
                 help="Enable debug output.",
             ),
             Argument(
-                names=("prompt-for-sudo-password",),
-                kind=bool,
-                default=False,
-                help="Prompt user at start of session for the sudo.password config value.",  # noqa
-            ),
-            Argument(
-                names=("write-pyc",),
-                kind=bool,
-                default=False,
-                help="Enable creation of .pyc files.",
-            ),
-            Argument(
                 names=("echo", "e"),
                 kind=bool,
                 default=False,
                 help="Echo executed commands before running.",
-            ),
-            Argument(
-                names=("config", "f"),
-                help="Runtime configuration file to use.",
             ),
             Argument(
                 names=("help", "h"),
@@ -106,6 +93,18 @@ class Program(object):
                 default="flat",
             ),
             Argument(
+                names=("print-completion-script",),
+                kind=str,
+                default="",
+                help="Print the tab-completion script for your preferred shell (bash|zsh|fish).",  # noqa
+            ),
+            Argument(
+                names=("prompt-for-sudo-password",),
+                kind=bool,
+                default=False,
+                help="Prompt user at start of session for the sudo.password config value.",  # noqa
+            ),
+            Argument(
                 names=("pty", "p"),
                 kind=bool,
                 default=False,
@@ -124,9 +123,10 @@ class Program(object):
                 help="Warn, instead of failing, when shell commands fail.",
             ),
             Argument(
-                names=("command-timeout", "T"),
-                kind=int,
-                help="Specify a global command execution timeout, in seconds.",
+                names=("write-pyc",),
+                kind=bool,
+                default=False,
+                help="Enable creation of .pyc files.",
             ),
         ]
 

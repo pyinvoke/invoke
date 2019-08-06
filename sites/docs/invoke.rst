@@ -51,6 +51,14 @@ for anywhere in the command line. (For parsing details, see
     For more details on how to make best use of this option, see
     :option:`--print-completion-script`.
 
+.. option:: --hide=STRING
+
+    Set default value of run()'s 'hide' kwarg.
+
+.. option:: --no-dedupe
+
+    Disable task deduplication.
+
 .. _print-completion-script:
 
 .. option:: --print-completion-script=SHELL
@@ -61,14 +69,6 @@ for anywhere in the command line. (For parsing details, see
 
     These scripts are bundled with Invoke's distributed codebase, and
     internally make use of :option:`--complete`.
-
-.. option:: --hide=STRING
-
-    Set default value of run()'s 'hide' kwarg.
-
-.. option:: --no-dedupe
-
-    Disable task deduplication.
 
 .. _prompt-for-sudo-password:
 
@@ -94,31 +94,6 @@ for anywhere in the command line. (For parsing details, see
 
     Enable debug output.
 
-.. option:: -e, --echo
-
-    Echo executed commands before running.
-
-.. option:: -f, --config
-
-    Specify a :ref:`runtime configuration file <config-hierarchy>` to load.
-
-    Note that you may instead use the ``INVOKE_RUNTIME_CONFIG`` environment
-    variable in place of this option. If both are given, the CLI option will
-    win out.
-
-.. option:: -h STRING, --help=STRING
-
-    When given without any task names, displays core help; when given with a
-    task name (may come before *or* after the task name) displays help for that
-    particular task.
-
-.. option:: -l, --list=STRING
-
-    List available tasks. Shows all tasks by default; may give an explicit
-    namespace to 'root' the displayed task tree to only that namespace. (This
-    argument may contain periods, as with task names, so it's possible to show
-    only a small, deep portion of the overall tree if desired.)
-
 .. option:: -D, --list-depth=INT
 
     Limit :option:`--list` display to the specified number of levels, e.g.
@@ -130,6 +105,18 @@ for anywhere in the command line. (For parsing details, see
 
     Default behavior if this is not given is to show all levels of the entire
     task tree.
+
+.. option:: -e, --echo
+
+    Echo executed commands before running.
+
+.. option:: -f, --config
+
+    Specify a :ref:`runtime configuration file <config-hierarchy>` to load.
+
+    Note that you may instead use the ``INVOKE_RUNTIME_CONFIG`` environment
+    variable in place of this option. If both are given, the CLI option will
+    win out.
 
 .. option:: -F, --list-format=STRING
 
@@ -170,6 +157,19 @@ for anywhere in the command line. (For parsing details, see
       The JSON emitted is not pretty-printed, but does end with a trailing
       newline.
 
+.. option:: -h STRING, --help=STRING
+
+    When given without any task names, displays core help; when given with a
+    task name (may come before *or* after the task name) displays help for that
+    particular task.
+
+.. option:: -l, --list=STRING
+
+    List available tasks. Shows all tasks by default; may give an explicit
+    namespace to 'root' the displayed task tree to only that namespace. (This
+    argument may contain periods, as with task names, so it's possible to show
+    only a small, deep portion of the overall tree if desired.)
+
 .. option:: -p, --pty
 
     Use a pty when executing shell commands.
@@ -178,6 +178,11 @@ for anywhere in the command line. (For parsing details, see
 
     Change root directory used for finding task modules.
 
+.. option:: -T INT, --command-timeout=INT
+
+    Set a default command execution timeout of INT seconds. Maps to the
+    ``timeouts.command`` config setting.
+
 .. option:: -V, --version
 
     Show version and exit.
@@ -185,12 +190,6 @@ for anywhere in the command line. (For parsing details, see
 .. option:: -w, --warn-only
 
     Warn, instead of failing, when shell commands fail.
-
-
-.. option:: -T INT, --command-timeout=INT
-
-    Set a default command execution timeout of INT seconds. Maps to the
-    ``timeouts.command`` config setting.
 
 
 .. _tab-completion:
