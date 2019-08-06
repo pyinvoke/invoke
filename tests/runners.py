@@ -1276,39 +1276,26 @@ stderr 25
                 mock_stdin.assert_called_once_with(u"\x03")
 
     class timeout:
-        def defaults_to_None_and_not_given_to_start_if_so(self):
-            runner = self._runner()
-            assert runner.context.config.timeouts.command is None
-            runner.start = Mock()
-            runner.run(_)
-            assert "timeout" not in runner.start.call_args[1]
-
-        def start_not_given_timeout_kwarg_if_set_to_None(self):
-            runner = self._runner()
-            runner.start = Mock()
-            runner.run(_, timeout=None)
-            assert "timeout" not in runner.start.call_args[1]
-
-        def run_setup_honors_timeouts_command_config(self):
+        def start_timer_called_with_config_value(self):
             runner = self._runner(timeouts={"command": 7})
-            runner.start = Mock()
+            runner.start_timer = Mock()
             assert runner.context.config.timeouts.command == 7
             runner.run(_)
-            assert runner.start.call_args[1]["timeout"] == 7
+            runner.start_timer.assert_called_once_with(7)
 
-        def run_honors_timeout_kwarg(self):
+        def run_kwarg_honored(self):
             runner = self._runner()
-            runner.start = Mock()
+            runner.start_timer = Mock()
             assert runner.context.config.timeouts.command is None
             runner.run(_, timeout=3)
-            assert runner.start.call_args[1]["timeout"] == 3
+            runner.start_timer.assert_called_once_with(3)
 
         def kwarg_wins_over_config(self):
             runner = self._runner(timeouts={"command": 7})
-            runner.start = Mock()
+            runner.start_timer = Mock()
             assert runner.context.config.timeouts.command == 7
             runner.run(_, timeout=3)
-            assert runner.start.call_args[1]["timeout"] == 3
+            runner.start_timer.assert_called_once_with(3)
 
         def raises_CommandTimedOut_with_timeout_info(self):
             runner = self._runner(
@@ -1357,6 +1344,7 @@ Stderr: already printed
         def timer_aliveness_is_test_of_timing_out(self):
             # Might be redundant, but easy enough to unit test
             runner = Runner(Context())
+            runner._timer = Mock()
             runner._timer.is_alive.return_value = False
             assert runner.timed_out
             runner._timer.is_alive.return_value = True
@@ -1364,7 +1352,7 @@ Stderr: already printed
 
         def timeout_specified_but_no_timer_means_no_exception(self):
             # Weird corner case but worth testing
-            runner = self._mocked_timer()
+            runner = Runner(Context())
             runner._timer = None
             assert not runner.timed_out
 
@@ -1547,43 +1535,21 @@ class Local_:
             runner.process.stdin.close.assert_called_once_with()
 
     class timeout:
-        def setup(self):
-            self.runner = Local(Context())
-            self.runner._timer = Mock()
+        @patch("invoke.runners.os")
+        def kill_uses_self_pid_when_pty(self, mock_os):
+            runner = self._runner()
+            runner.using_pty = True
+            runner.pid = 50
+            runner.kill()
+            mock_os.kill.assert_called_once_with(50, signal.SIGKILL)
 
-        @mock_pty(be_childish=True, insert_os=True)
-        def uses_thread_Timer_to_kill_pty_subprocess_on_timeout(self, _os):
-            with patch("invoke.runners.threading.Timer") as Timer:
-                self._run(_, pty=True, timeout=2)
-            call = Timer.call_args
-            assert call[0] == (2, _os.kill)
-            assert call[1]["args"][1] == signal.SIGKILL
-            Timer.return_value.start.assert_called_once_with()
-
-        @mock_subprocess()
-        def uses_thread_Timer_to_kill_non_pty_subprocess_on_timeout(self):
-            with patch("invoke.runners.threading.Timer") as Timer:
-                self._run(_, pty=False, timeout=2)
-            call = Timer.call_args
-            assert call[0] == (2, os.kill)
-            assert call[1]["args"][1] == signal.SIGKILL
-            Timer.return_value.start.assert_called_once_with()
-
-        def stop_cancels_timer(self):
-            self.runner.stop()
-            self.runner._timer.cancel.assert_called_once_with()
-
-        def timer_death_means_it_timed_out(self):
-            # Might be redundant, but easy enough to unit test
-            self.runner._timer.is_alive.return_value = False
-            assert self.runner.timed_out
-            self.runner._timer.is_alive.return_value = True
-            assert not self.runner.timed_out
-
-        def timeout_specified_but_no_timer_means_no_exception(self):
-            # Weird corner case but worth testing
-            self.runner._timer = None
-            assert not self.runner.timed_out
+        @patch("invoke.runners.os")
+        def kill_uses_self_process_pid_when_not_pty(self, mock_os):
+            runner = self._runner()
+            runner.using_pty = False
+            runner.process = Mock(pid=30)
+            runner.kill()
+            mock_os.kill.assert_called_once_with(30, signal.SIGKILL)
 
 
 class Result_:
