@@ -187,6 +187,12 @@ for anywhere in the command line. (For parsing details, see
     Warn, instead of failing, when shell commands fail.
 
 
+.. option:: -T INT, --command-timeout=INT
+
+    Set a default command execution timeout of INT seconds. Maps to the
+    ``timeouts.command`` config setting.
+
+
 .. _tab-completion:
 
 Shell tab completion

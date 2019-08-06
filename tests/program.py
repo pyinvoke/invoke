@@ -555,6 +555,8 @@ Core options:
   -p, --pty                          Use a pty when executing shell commands.
   -r STRING, --search-root=STRING    Change root directory used for finding
                                      task modules.
+  -T INT, --command-timeout=INT      Specify a global command execution
+                                     timeout, in seconds.
   -V, --version                      Show version and exit.
   -w, --warn-only                    Warn, instead of failing, when shell
                                      commands fail.
@@ -1219,6 +1221,13 @@ Default 'build' task: .all
 
         def echo(self):
             self._test_flag("-e", "echo")
+
+        def timeout(self):
+            for flag in ("-T", "--command-timeout"):
+                p = Program()
+                p.execute = Mock()  # neuter
+                p.run("inv {} 5 foo".format(flag))
+                assert p.config.timeouts.command == 5
 
     class configuration:
         "Configuration-related concerns"

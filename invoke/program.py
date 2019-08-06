@@ -123,6 +123,11 @@ class Program(object):
                 default=False,
                 help="Warn, instead of failing, when shell commands fail.",
             ),
+            Argument(
+                names=("command-timeout", "T"),
+                kind=int,
+                help="Specify a global command execution timeout, in seconds.",
+            ),
         ]
 
     def task_args(self):
@@ -305,13 +310,17 @@ class Program(object):
         tasks = {}
         if "no-dedupe" in self.args and self.args["no-dedupe"].value:
             tasks["dedupe"] = False
+        timeouts = {}
+        command = self.args["command-timeout"].value
+        if command:
+            timeouts["command"] = command
         # Handle "fill in config values at start of runtime", which for now is
         # just sudo password
         sudo = {}
         if self.args["prompt-for-sudo-password"].value:
             prompt = "Desired 'sudo.password' config value: "
             sudo["password"] = getpass.getpass(prompt)
-        overrides = dict(run=run, tasks=tasks, sudo=sudo)
+        overrides = dict(run=run, tasks=tasks, sudo=sudo, timeouts=timeouts)
         self.config.load_overrides(overrides, merge=False)
         runtime_path = self.args.config.value
         if runtime_path is None:
