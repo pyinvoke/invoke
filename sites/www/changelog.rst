@@ -2,10 +2,10 @@
 Changelog
 =========
 
-- :feature:`645` Add support for command timeouts, i.e. the ability to add an
-  upper bound on how long a call to `~invoke.context.Context.run` may take to
-  execute. Thanks to Israel Fruchter for the request & an early version of the
-  patchset.
+- :feature:`539` (via :issue:`645`) Add support for command timeouts, i.e. the
+  ability to add an upper bound on how long a call to
+  `~invoke.context.Context.run` may take to execute. Thanks to Israel Fruchter
+  for the request & an early version of the patchset.
 - :bug:`552 major` (also :issue:`553`) Add a new `~invoke.runners.Runner`
   method, `~invoke.runners.Runner.close_proc_stdin`, and call it when standard
   input processing detects an EOF. Without this, subprocesses that read their
