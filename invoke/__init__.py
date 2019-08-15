@@ -31,7 +31,7 @@ from .watchers import FailingResponder, Responder, StreamWatcher  # noqa
 
 def run(command, **kwargs):
     """
-    Run ``command`` in a local subprocess and return a `.Result` object.
+    Run ``command`` in a subprocess and return a `.Result` object.
 
     See `.Runner.run` for API details.
 
@@ -46,3 +46,23 @@ def run(command, **kwargs):
     .. versionadded:: 1.0
     """
     return Context().run(command, **kwargs)
+
+
+def sudo(command, **kwargs):
+    """
+    Run ``command`` in a ``sudo`` subprocess and return a `.Result` object.
+
+    See `.Runner.sudo` for API details, such as the ``password`` kwarg.
+
+    .. note::
+        This function is a convenience wrapper around Invoke's `.Context` and
+        `.Runner` APIs.
+
+        Specifically, it creates an anonymous `.Context` instance and calls its
+        `~.Context.sudo` method, which in turn defaults to using a `.Local`
+        runner subclass for command execution (plus sudo-related bits &
+        pieces).
+
+    .. versionadded:: 1.4
+    """
+    return Context().sudo(command, **kwargs)

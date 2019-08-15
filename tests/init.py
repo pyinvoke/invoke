@@ -2,6 +2,8 @@ import re
 
 import six
 
+from mock import patch
+
 import invoke
 import invoke.collection
 import invoke.exceptions
@@ -104,3 +106,18 @@ class Init:
         def Call(self):
             # Starting to think we shouldn't bother with lowercase-c call...
             assert invoke.Call is invoke.tasks.Call
+
+    class offers_singletons:
+        @patch("invoke.Context")
+        def run(self, Context):
+            result = invoke.run("foo", bar="biz")
+            ctx = Context.return_value
+            ctx.run.assert_called_once_with("foo", bar="biz")
+            assert result is ctx.run.return_value
+
+        @patch("invoke.Context")
+        def sudo(self, Context):
+            result = invoke.sudo("foo", bar="biz")
+            ctx = Context.return_value
+            ctx.sudo.assert_called_once_with("foo", bar="biz")
+            assert result is ctx.sudo.return_value

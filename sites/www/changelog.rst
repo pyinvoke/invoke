@@ -2,6 +2,9 @@
 Changelog
 =========
 
+- :feature:`-` Never accompanied the top-level singleton `~invoke.run` (which
+  simply wraps an anonymous `~invoke.context.Context`'s ``run`` method) with
+  its logical sibling, `~invoke.sudo` - this has been remedied.
 - :release:`1.3.0 <2019-08-06>`
 - :feature:`324` Add basic dry-run support, in the form of a new
   :option:`--dry` CLI option and matching ``run.dry`` config setting, which
