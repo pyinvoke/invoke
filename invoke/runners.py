@@ -1188,6 +1188,7 @@ class Local(Runner):
             return code
             # TODO: do we care about WIFSTOPPED? Maybe someday?
         else:
+            self.process.wait(timeout=3)
             return self.process.returncode
 
     def stop(self):
