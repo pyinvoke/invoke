@@ -332,7 +332,11 @@ class Runner_:
         def uses_ansi_bold(self):
             self._run("my command", echo=True)
             # TODO: vendor & use a color module
-            assert sys.stdout.getvalue() == "\x1b[1;37mmy command\x1b[0m\n"
+            if sys.stdout.isatty():
+                expected = "\x1b[1;37mmy command\x1b[0m\n"
+            else:
+                expected = "my command\n"
+            assert sys.stdout.getvalue() == expected
 
     class dry_running:
         @trap
