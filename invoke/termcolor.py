@@ -13,18 +13,18 @@ Example usage::
     >>> print(green('Hello World!'))
     >>> print(green('Hello World!', bold=True))
 """
-from os import getenv, isatty
+from os import getenv
 from random import choice
 from sys import platform, stdout
-from typing import Callable, List
+from typing import Callable, Dict, List
 from typing.io import IO
 
 #: If this is set to "True", no color output will be enabled
-DISABLE_COLORS = bool(getenv('INVOKE_DISABLE_COLORS', False))
+DISABLE_COLORS = bool(getenv("INVOKE_DISABLE_COLORS", False))
 
 #: This collection keeps track of already assigned colorisers, so the same can
 #: be used repeatedly for the same key
-KEYED_COLORISERS = {}  # type: Dict[str, Callable[..., str]
+KEYED_COLORISERS = {}  # type: Dict[str, Callable[..., str]]
 
 
 def color_wrapper(color_code: int) -> Callable[..., str]:
@@ -36,7 +36,11 @@ def color_wrapper(color_code: int) -> Callable[..., str]:
     The returned function takes one mandatory and two optional arguments. The
     signature is::
 
-        def coloriser(text: str, bold: bool = False, stream: IO = stdout) -> str:
+        def coloriser(
+            text: str,
+            bold: bool = False,
+            stream: IO = stdout
+        ) -> str: ...
 
     Example::
 
@@ -60,22 +64,25 @@ def color_wrapper(color_code: int) -> Callable[..., str]:
             used to determine if we should drop the escape-codes (and print
             simple black-and-white text) or not.
         """
-        if (DISABLE_COLORS or
-                not stream.isatty() or
-                platform not in ('linux', 'cygwin', 'darwin')):
-            # We only want color output on a TTY and on a platform which supports
-            # ANSI color codes. For all other cases we just return the text
-            # unmodified.
+        if (
+            DISABLE_COLORS
+            or not stream.isatty()
+            or platform not in ("linux", "cygwin", "darwin")
+        ):
+            # We only want color output on a TTY and on a platform which
+            # supports ANSI color codes. For all other cases we just return the
+            # text unmodified.
             return text
 
         modifier = 1 if bold else 0
         return "\033[%d;%dm%s\033[0m" % (modifier, color_code, text)
+
     return coloriser
 
 
 def sticky_coloriser(
-        key: str,
-        color_choice: List[int] = None) -> Callable[..., str]:
+    key: str, color_choice: List[int] = None
+) -> Callable[..., str]:
     """
     Returns a random color for a given key. It guarantees that the same
     coloriser is returned for the same key.
