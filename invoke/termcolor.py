@@ -69,7 +69,7 @@ def color_wrapper(color_code):
         if (
             DISABLE_COLORS
             or not stream.isatty()
-            or platform not in ("linux", "cygwin", "darwin")
+            or platform == "win32"
         ):
             # We only want color output on a TTY and on a platform which
             # supports ANSI color codes. For all other cases we just return the
