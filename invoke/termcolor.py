@@ -16,7 +16,7 @@ Example usage::
 from os import getenv
 from random import choice
 from sys import platform, stdout
-from typing import Callable, Dict, List
+from typing import Callable, Dict, List, Optional
 from typing.io import IO
 
 #: If this is set to "True", no color output will be enabled
@@ -27,7 +27,8 @@ DISABLE_COLORS = bool(getenv("INVOKE_DISABLE_COLORS", False))
 KEYED_COLORISERS = {}  # type: Dict[str, Callable[..., str]]
 
 
-def color_wrapper(color_code: int) -> Callable[..., str]:
+def color_wrapper(color_code):
+    # type: (int) -> Callable[..., str]
     """
     Creates a wrapper function for colorised text.
 
@@ -51,7 +52,8 @@ def color_wrapper(color_code: int) -> Callable[..., str]:
         '\033[1;37m<thetext>\033[0m'
     """
 
-    def coloriser(text: str, bold: bool = False, stream: IO = stdout) -> str:
+    def coloriser(text, bold=False, stream=stdout):
+        # type: (str, bool, IO) -> str
         """
         Returns *text* wrapped with color information (including a "reset" to
         defaults at the end of the string). If *stream* is not a valid TTY, the
@@ -80,9 +82,8 @@ def color_wrapper(color_code: int) -> Callable[..., str]:
     return coloriser
 
 
-def sticky_coloriser(
-    key: str, color_choice: List[int] = None
-) -> Callable[..., str]:
+def sticky_coloriser(key, color_choice=None):
+    # type: (str, Optional[List[int]]) -> Callable[..., str]
     """
     Returns a random color for a given key. It guarantees that the same
     coloriser is returned for the same key.
