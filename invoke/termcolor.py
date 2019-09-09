@@ -14,13 +14,17 @@ Example usage::
     >>> print(green('Hello World!', bold=True))
 """
 from os import getenv, isatty
+from random import choice
 from sys import platform, stdout
-from typing import Callable
+from typing import Callable, List
 from typing.io import IO
-
 
 #: If this is set to "True", no color output will be enabled
 DISABLE_COLORS = bool(getenv('INVOKE_DISABLE_COLORS', False))
+
+#: This collection keeps track of already assigned colorisers, so the same can
+#: be used repeatedly for the same key
+KEYED_COLORISERS = {}  # type: Dict[str, Callable[..., str]
 
 
 def color_wrapper(color_code: int) -> Callable[..., str]:
@@ -67,6 +71,24 @@ def color_wrapper(color_code: int) -> Callable[..., str]:
         modifier = 1 if bold else 0
         return "\033[%d;%dm%s\033[0m" % (modifier, color_code, text)
     return coloriser
+
+
+def sticky_coloriser(
+        key: str,
+        color_choice: List[int] = None) -> Callable[..., str]:
+    """
+    Returns a random color for a given key. It guarantees that the same
+    coloriser is returned for the same key.
+
+    :param key: The key by which to identify the coloriser
+    :param color_choice: A collection of possible ANSI color codes. If left to
+        "None", all supported color other than white and black are used
+    """
+    if key not in KEYED_COLORISERS:
+        colors = color_choice or range(31, 37)
+        new_coloriser = color_wrapper(choice(colors))
+        KEYED_COLORISERS[key] = new_coloriser
+    return KEYED_COLORISERS[key]
 
 
 black = color_wrapper(30)
