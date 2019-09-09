@@ -1,6 +1,7 @@
 from invoke import termcolor
 from io import StringIO
 
+
 class FakeTTY(StringIO):
     def isatty(self):
         return True
@@ -24,6 +25,5 @@ def test_tty_output():
 
 
 def test_no_tty_output():
-    faketty = FakeTTY()
     output = termcolor.white("hello", stream=StringIO())
     assert output == "hello"
