@@ -66,11 +66,7 @@ def color_wrapper(color_code):
             used to determine if we should drop the escape-codes (and print
             simple black-and-white text) or not.
         """
-        if (
-            DISABLE_COLORS
-            or not stream.isatty()
-            or platform == "win32"
-        ):
+        if DISABLE_COLORS or not stream.isatty() or platform == "win32":
             # We only want color output on a TTY and on a platform which
             # supports ANSI color codes. For all other cases we just return the
             # text unmodified.
