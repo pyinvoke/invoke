@@ -328,15 +328,24 @@ class Runner_:
             self._run("yup", echo=True, settings={"run": {"echo": False}})
             assert "yup" in sys.stdout.getvalue()
 
-        @trap
         def uses_ansi_bold(self):
-            self._run("my command", echo=True)
-            # TODO: vendor & use a color module
-            if sys.stdout.isatty():
-                expected = "\x1b[1;37mmy command\x1b[0m\n"
-            else:
-                expected = "my command\n"
-            assert sys.stdout.getvalue() == expected
+            stdout = Mock()
+            stdout.isatty.return_value = True
+            with patch('invoke.runners.Runner.handle_stdin') as stdin:
+                # TODO: vendor & use a color module
+                self._run("my command", echo=True, out_stream=stdout)
+            stdout.write.assert_has_calls([
+                call("\x1b[1;37mmy command\x1b[0m")
+            ])
+
+        def uses_ansi_bold_notty(self):
+            stdout = Mock()
+            stdout.isatty.return_value = False
+            with patch('invoke.runners.Runner.handle_stdin') as stdin:
+                self._run("my command", echo=True, out_stream=stdout)
+            stdout.write.assert_has_calls([
+                call("my command")
+            ])
 
     class dry_running:
         @trap
