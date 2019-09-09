@@ -10,7 +10,7 @@ from itertools import chain, repeat
 
 from invoke.vendor.six import StringIO, b, PY2, iteritems
 
-from pytest import raises, skip
+from pytest import raises, skip, mark
 from pytest_relaxed import trap
 from mock import patch, Mock, call
 
@@ -328,6 +328,10 @@ class Runner_:
             self._run("yup", echo=True, settings={"run": {"echo": False}})
             assert "yup" in sys.stdout.getvalue()
 
+        @mark.skipif(
+            sys.version_info < (3, 0),
+            reason="Does not behave as expecten in Python-2",
+        )
         def uses_ansi_bold(self):
             stdout = Mock()
             stdout.isatty.return_value = True
