@@ -10,6 +10,7 @@ import time
 import signal
 
 from .util import six
+from .termcolor import white
 
 # Import some platform-specific things at top level so they can be mocked for
 # tests.
@@ -301,7 +302,7 @@ class Runner(object):
         env = self.generate_env(opts["env"], opts["replace_env"])
         # Echo running command
         if opts["echo"]:
-            print("\033[1;37m{}\033[0m".format(command))
+            print(white(command, bold=True))
         # If dry-run, stop here.
         if opts["dry"]:
             return self.generate_result(
