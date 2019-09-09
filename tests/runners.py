@@ -331,21 +331,19 @@ class Runner_:
         def uses_ansi_bold(self):
             stdout = Mock()
             stdout.isatty.return_value = True
-            with patch('invoke.runners.Runner.handle_stdin') as stdin:
+            with patch("invoke.runners.Runner.handle_stdin"):
                 # TODO: vendor & use a color module
                 self._run("my command", echo=True, out_stream=stdout)
-            stdout.write.assert_has_calls([
-                call("\x1b[1;37mmy command\x1b[0m")
-            ])
+            stdout.write.assert_has_calls(
+                [call("\x1b[1;37mmy command\x1b[0m")]
+            )
 
         def uses_ansi_bold_notty(self):
             stdout = Mock()
             stdout.isatty.return_value = False
-            with patch('invoke.runners.Runner.handle_stdin') as stdin:
+            with patch("invoke.runners.Runner.handle_stdin"):
                 self._run("my command", echo=True, out_stream=stdout)
-            stdout.write.assert_has_calls([
-                call("my command")
-            ])
+            stdout.write.assert_has_calls([call("my command")])
 
     class dry_running:
         @trap

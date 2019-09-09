@@ -303,8 +303,9 @@ class Runner(object):
         env = self.generate_env(opts["env"], opts["replace_env"])
         # Echo running command
         if opts["echo"]:
-            print(white(command, bold=True, stream=out_stream),
-                  file=out_stream)
+            print(
+                white(command, bold=True, stream=out_stream), file=out_stream
+            )
         # If dry-run, stop here.
         if opts["dry"]:
             return self.generate_result(
