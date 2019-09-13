@@ -157,7 +157,7 @@ class Task(object):
         for param in sig.parameters:
             arg = sig.parameters[param]
             arg_names.append(param)
-            if arg.default == inspect._empty:
+            if arg.default == inspect.Signature.empty:
                 spec_dict[param] = NO_DEFAULT
             else:
                 spec_dict[param] = arg.default
