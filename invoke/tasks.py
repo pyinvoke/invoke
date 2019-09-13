@@ -157,7 +157,10 @@ class Task(object):
         for param in sig.parameters:
             arg = sig.parameters[param]
             arg_names.append(param)
-            spec_dict[param] = NO_DEFAULT if arg.default == inspect._empty else arg.default
+            if arg.default == inspect._empty:
+                spec_dict[param] = NO_DEFAULT
+            else:
+                spec_dict[param] = arg.default
 
         # Pop context argument
         try:
