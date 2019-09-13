@@ -145,15 +145,20 @@ class Task(object):
           is a valid value on its own).
 
         .. versionadded:: 1.0
+        .. versionmodified:: 1.3.0
+        The original method (version 1.0) was using inspect.getargspec()
+        which makes problem when get args from decorated function.
+        It is recommended to replace by inspect.signature() from Python 3.0
+        https://docs.python.org/3.6/library/inspect.html#inspect.getargspec
         """
-        # Handle callable-but-not-function objects
-        # TODO: __call__ exhibits the 'self' arg; do we manually nix 1st result
-        # in argspec, or is there a way to get the "really callable" spec?
-        func = body if isinstance(body, types.FunctionType) else body.__call__
-        spec = inspect.getargspec(func)
-        arg_names = spec.args[:]
-        matched_args = [reversed(x) for x in [spec.args, spec.defaults or []]]
-        spec_dict = dict(zip_longest(*matched_args, fillvalue=NO_DEFAULT))
+        sig = inspect.signature(body)
+        arg_names = []
+        spec_dict = {}
+        for param in sig.parameters:
+            arg = sig.parameters[param]
+            arg_names.append(param)
+            spec_dict[param] = NO_DEFAULT if arg.default == inspect._empty else arg.default
+
         # Pop context argument
         try:
             context_arg = arg_names.pop(0)
