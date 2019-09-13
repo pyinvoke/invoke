@@ -229,7 +229,7 @@ class Task_:
                 mytask(5)
 
         def errors_if_no_first_arg_at_all(self):
-            with raises(TypeError):
+            with raises(ValueError):
 
                 @task
                 def mytask():

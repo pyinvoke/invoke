@@ -163,8 +163,7 @@ class Task(object):
         try:
             context_arg = arg_names.pop(0)
         except IndexError:
-            # TODO: see TODO under __call__, this should be same type
-            raise TypeError("Tasks must have an initial Context argument!")
+            raise ValueError("Tasks must have an initial Context argument!")
         del spec_dict[context_arg]
         return arg_names, spec_dict
 
