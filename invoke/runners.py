@@ -1194,6 +1194,18 @@ class Local(Runner):
         # No explicit close-out required (so far).
         pass
 
+    def wait(self):
+        super(Local, self).wait()
+        if WINDOWS and self.has_dead_threads:
+            # On Windows Pipes my close a little bit before the
+            # subprocess is finished. Thus we add a little bit more
+            # time to give the subprocess a chance to send its exitcode
+            start_time = time.time()
+            while not self.process_is_finished:
+                if time.time() - start_time >= 0.100:
+                    break
+                time.sleep(0.010)
+
 
 class Result(object):
     """
