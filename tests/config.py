@@ -110,6 +110,7 @@ class Config_:
                     "shell": "/bin/bash",
                     "warn": False,
                     "watchers": [],
+                    "ok_ret_codes": None,
                 },
                 "runners": {"local": Local},
                 "sudo": {
