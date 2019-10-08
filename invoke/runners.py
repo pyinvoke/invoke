@@ -293,6 +293,14 @@ class Runner(object):
             self.stop()
             self.stop_timer()
 
+    def _echo_cmd(self, command):
+        """
+        Echoes *command* to stdout.
+
+        This function exists as hook to be more easily subclassable
+        """
+        print("\033[1;37m[local] {}\033[0m".format(command))
+
     def _run_body(self, command, **kwargs):
         # Normalize kwargs w/ config
         opts, out_stream, err_stream, in_stream = self._run_opts(kwargs)
@@ -301,7 +309,7 @@ class Runner(object):
         env = self.generate_env(opts["env"], opts["replace_env"])
         # Echo running command
         if opts["echo"]:
-            print("\033[1;37m{}\033[0m".format(command))
+            self._echo_cmd(command)
         # If dry-run, stop here.
         if opts["dry"]:
             return self.generate_result(
