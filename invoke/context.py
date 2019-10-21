@@ -4,8 +4,10 @@ from contextlib import contextmanager
 
 try:
     from invoke.vendor.six import raise_from, iteritems
+    from shlex import quote as shlex_quote
 except ImportError:
     from six import raise_from, iteritems
+    from pipes import quote as shlex_quote
 
 from .config import Config, DataProxy
 from .exceptions import Failure, AuthFailure, ResponseNotAccepted
@@ -192,8 +194,8 @@ class Context(DataProxy):
         user_flags = ""
         if user is not None:
             user_flags = "-H -u {} ".format(user)
-        command = self._prefix_commands(command)
-        cmd_str = "sudo -S -p '{}' {}{}".format(prompt, user_flags, command)
+        command = shlex_quote(self._prefix_commands(command))
+        cmd_str = "sudo -S -p '{}' {}$SHELL -c {}".format(prompt, user_flags, command)
         watcher = FailingResponder(
             pattern=re.escape(prompt),
             response="{}\n".format(password),
