@@ -309,7 +309,7 @@ class Context_:
             runner = Local.return_value
             config = Config(overrides={"sudo": {"user": "rando"}})
             Context(config=config).sudo("whoami", user="calrissian")
-            cmd = "sudo -S -p '[sudo] password: ' -H -u calrissian $SHELL -c whoami"
+            cmd = "sudo -S -p '[sudo] password: ' -H -u calrissian $SHELL -c whoami"  # noqa
             assert runner.run.call_args[0][0] == cmd
 
         @trap

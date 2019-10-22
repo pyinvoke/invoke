@@ -195,7 +195,9 @@ class Context(DataProxy):
         if user is not None:
             user_flags = "-H -u {} ".format(user)
         command = shlex_quote(self._prefix_commands(command))
-        cmd_str = "sudo -S -p '{}' {}$SHELL -c {}".format(prompt, user_flags, command)
+        cmd_str = "sudo -S -p '{}' {}$SHELL -c {}".format(
+            prompt, user_flags, command
+        )
         watcher = FailingResponder(
             pattern=re.escape(prompt),
             response="{}\n".format(password),
