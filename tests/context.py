@@ -207,18 +207,17 @@ class Context_:
             # When bug present, this would be "cd foo && ls"
             assert runner.run.call_args[0][0] == "ls"
 
-
         @patch(local_path)
         def should_convert_arg_to_string(self, Local):
             class Path:
                 def __str__(self):
-                    return 'foo'
+                    return "foo"
 
             runner = Local.return_value
 
             c = Context()
             with c.cd(Path()):
-                c.run('ls -al')
+                c.run("ls -al")
 
             cmd = "cd foo && ls -al"
             assert runner.run.called, "run() never called runner.run()!"
