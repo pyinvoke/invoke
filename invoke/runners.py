@@ -378,28 +378,8 @@ class Runner(object):
         # likely to be Big Serious Problems.
         if thread_exceptions:
             raise ThreadException(thread_exceptions)
-        # At this point, we had enough success that we want to be returning or
-        # raising detailed info about our execution; so we generate a Result.
-        stdout = "".join(stdout)
-        stderr = "".join(stderr)
-        if WINDOWS:
-            # "Universal newlines" - replace all standard forms of
-            # newline with \n. This is not technically Windows related
-            # (\r as newline is an old Mac convention) but we only apply
-            # the translation for Windows as that's the only platform
-            # it is likely to matter for these days.
-            stdout = stdout.replace("\r\n", "\n").replace("\r", "\n")
-            stderr = stderr.replace("\r\n", "\n").replace("\r", "\n")
-        # Get return/exit code, unless there were WatcherErrors to handle.
-        # NOTE: In that case, returncode() may block waiting on the process
-        # (which may be waiting for user input). Since most WatcherError
-        # situations lack a useful exit code anyways, skipping this doesn't
-        # really hurt any.
-        exited = None if watcher_errors else self.returncode()
-        # Obtain actual result
-        result = self.generate_result(
-            **self.result_kwargs, stdout=stdout, stderr=stderr, exited=exited
-        )
+        # Collate stdout/err, calculate exited, and get final result obj
+        result = self._collate_result(stdout, stderr, watcher_errors)
         # Any presence of WatcherError from the threads indicates a watcher was
         # upset and aborted execution; make a generic Failure out of it and
         # raise that.
@@ -463,6 +443,32 @@ class Runner(object):
         # Set data
         self.opts = opts
         self.streams = {"out": out_stream, "err": err_stream, "in": in_stream}
+
+    def _collate_result(self, stdout, stderr, watcher_errors):
+        # At this point, we had enough success that we want to be returning or
+        # raising detailed info about our execution; so we generate a Result.
+        stdout = "".join(stdout)
+        stderr = "".join(stderr)
+        if WINDOWS:
+            # "Universal newlines" - replace all standard forms of
+            # newline with \n. This is not technically Windows related
+            # (\r as newline is an old Mac convention) but we only apply
+            # the translation for Windows as that's the only platform
+            # it is likely to matter for these days.
+            stdout = stdout.replace("\r\n", "\n").replace("\r", "\n")
+            stderr = stderr.replace("\r\n", "\n").replace("\r", "\n")
+        # Get return/exit code, unless there were WatcherErrors to handle.
+        # NOTE: In that case, returncode() may block waiting on the process
+        # (which may be waiting for user input). Since most WatcherError
+        # situations lack a useful exit code anyways, skipping this doesn't
+        # really hurt any.
+        exited = None if watcher_errors else self.returncode()
+        # TODO: as noted elsewhere, I kinda hate this. Consider changing
+        # generate_result()'s API in next major rev so we can tidy up.
+        result = self.generate_result(
+            **self.result_kwargs, stdout=stdout, stderr=stderr, exited=exited
+        )
+        return result
 
     def _thread_join_timeout(self, target):
         # Add a timeout to out/err thread joins when it looks like they're not
