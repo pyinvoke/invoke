@@ -357,25 +357,25 @@ class Runner(object):
             # Inform stdin-mirroring worker to stop its eternal looping
             self.program_finished.set()
             # Join threads, storing inner exceptions, & set a timeout if
-            # necessary
-            exceptions = []
+            # necessary. (Segregate WatcherErrors as they are "anticipated
+            # errors" that want to show up at the end during creation of
+            # Failure objects.)
+            watcher_errors = []
+            thread_exceptions = []
             for target, thread in six.iteritems(self.threads):
                 thread.join(self._thread_join_timeout(target))
-                e = thread.exception()
-                if e is not None:
-                    exceptions.append(e)
-        # Strip out WatcherError from any thread exceptions; they are bundled
-        # into Failure handling at the end.
-        watcher_errors = []
-        thread_exceptions = []
-        for exception in exceptions:
-            real = exception.value
-            if isinstance(real, WatcherError):
-                watcher_errors.append(real)
-            else:
-                thread_exceptions.append(exception)
+                exception = thread.exception()
+                if exception is not None:
+                    real = exception.value
+                    if isinstance(real, WatcherError):
+                        watcher_errors.append(real)
+                    else:
+                        thread_exceptions.append(exception)
         # If any exceptions appeared inside the threads, raise them now as an
         # aggregate exception object.
+        # NOTE: this is kept outside the 'finally' so that main-thread
+        # exceptions are raised before worker-thread exceptions; they're more
+        # likely to be Big Serious Problems.
         if thread_exceptions:
             raise ThreadException(thread_exceptions)
         # At this point, we had enough success that we want to be returning or
