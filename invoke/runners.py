@@ -325,42 +325,34 @@ class Runner(object):
         )
         for thread in self.threads.values():
             thread.start()
-        # Wait for completion, then tie things off & obtain result
-        # And make sure we perform that tying off even if things asplode.
-        exception = None
-        while True:
-            try:
-                self.wait()
-                break  # done waiting!
-            # NOTE: we handle all this now instead of at
-            # actual-exception-handling time because otherwise the stdout/err
-            # reader threads may block until the subprocess exits.
-            # TODO: honor other signals sent to our own process and transmit
-            # them to the subprocess before handling 'normally'.
-            except KeyboardInterrupt as e:
-                self.send_interrupt(e)
-                # NOTE: no break; we want to return to self.wait() since we
-                # can't know if subprocess is actually terminating due to this
-                # or not (think REPLs-within-shells, editors, other interactive
-                # use cases)
-            except BaseException as e:  # Want to handle SystemExit etc still
-                # Store exception for post-shutdown reraise
-                exception = e
-                # Break out of return-to-wait() loop - we want to shut down
-                break
-        # Inform stdin-mirroring worker to stop its eternal looping
-        self.program_finished.set()
-        # Join threads, storing inner exceptions, & set a timeout if necessary
-        exceptions = []
-        for target, thread in six.iteritems(self.threads):
-            thread.join(self._thread_join_timeout(target))
-            e = thread.exception()
-            if e is not None:
-                exceptions.append(e)
-        # If we got a main-thread exception while wait()ing, raise it now that
-        # we've closed our worker threads.
-        if exception is not None:
-            raise exception
+        # Wait for subprocess to run, forwarding signals as we get them.
+        try:
+            while True:
+                try:
+                    self.wait()
+                    break  # done waiting!
+                # Don't locally stop on ^C, only forward it:
+                # - if remote end really stops, we'll naturally stop after
+                # - if remote end does not stop (eg REPL, editor) we don't want
+                # to stop prematurely
+                except KeyboardInterrupt as e:
+                    self.send_interrupt(e)
+                # TODO: honor other signals sent to our own process and
+                # transmit them to the subprocess before handling 'normally'.
+        # Make sure we tie off our worker threads, even if something exploded.
+        # Any exceptions that raised during self.wait() above will appear after
+        # this block.
+        finally:
+            # Inform stdin-mirroring worker to stop its eternal looping
+            self.program_finished.set()
+            # Join threads, storing inner exceptions, & set a timeout if
+            # necessary
+            exceptions = []
+            for target, thread in six.iteritems(self.threads):
+                thread.join(self._thread_join_timeout(target))
+                e = thread.exception()
+                if e is not None:
+                    exceptions.append(e)
         # Strip out WatcherError from any thread exceptions; they are bundled
         # into Failure handling at the end.
         watcher_errors = []
