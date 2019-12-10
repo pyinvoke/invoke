@@ -316,38 +316,15 @@ class Runner(object):
         self.start_timer(opts["timeout"])
         # Arrive at final encoding if neither config nor kwargs had one
         self.encoding = opts["encoding"] or self.default_encoding()
-        # Set up IO thread parameters (format - body_func: {kwargs})
-        stdout, stderr = [], []
-        thread_args = {
-            self.handle_stdout: {
-                "buffer_": stdout,
-                "hide": "stdout" in opts["hide"],
-                "output": out_stream,
-            }
-        }
-        # After opt processing above, in_stream will be a real stream obj or
-        # False, so we can truth-test it. We don't even create a stdin-handling
-        # thread if it's False, meaning user indicated stdin is nonexistent or
-        # problematic.
-        if in_stream:
-            thread_args[self.handle_stdin] = {
-                "input_": in_stream,
-                "output": out_stream,
-                "echo": opts["echo_stdin"],
-            }
-        if not self.using_pty:
-            thread_args[self.handle_stderr] = {
-                "buffer_": stderr,
-                "hide": "stderr" in opts["hide"],
-                "output": err_stream,
-            }
-        # Kick off IO threads
-        self.threads = {}
-        exceptions = []
-        for target, kwargs in six.iteritems(thread_args):
-            t = ExceptionHandlingThread(target=target, kwargs=kwargs)
-            self.threads[target] = t
-            t.start()
+        # Stand up & kick off IO threads
+        self.threads, stdout, stderr = self.create_io_threads(
+            opts=opts,
+            out_stream=out_stream,
+            err_stream=err_stream,
+            in_stream=in_stream,
+        )
+        for thread in self.threads.values():
+            thread.start()
         # Wait for completion, then tie things off & obtain result
         # And make sure we perform that tying off even if things asplode.
         exception = None
@@ -373,7 +350,8 @@ class Runner(object):
                 break
         # Inform stdin-mirroring worker to stop its eternal looping
         self.program_finished.set()
-        # Join threads, setting a timeout if necessary
+        # Join threads, storing inner exceptions, & set a timeout if necessary
+        exceptions = []
         for target, thread in six.iteritems(self.threads):
             thread.join(self._thread_join_timeout(target))
             e = thread.exception()
@@ -503,6 +481,45 @@ class Runner(object):
         if opposite in self.threads and self.threads[opposite].is_dead:
             return 1
         return None
+
+    def create_io_threads(self, opts, out_stream, err_stream, in_stream):
+        """
+        Create and return a dictionary of IO thread worker objects.
+
+        Caller is expected to handle persisting and/or starting the wrapped
+        threads.
+        """
+        stdout, stderr = [], []
+        # Set up IO thread parameters (format - body_func: {kwargs})
+        thread_args = {
+            self.handle_stdout: {
+                "buffer_": stdout,
+                "hide": "stdout" in opts["hide"],
+                "output": out_stream,
+            }
+        }
+        # After opt processing above, in_stream will be a real stream obj or
+        # False, so we can truth-test it. We don't even create a stdin-handling
+        # thread if it's False, meaning user indicated stdin is nonexistent or
+        # problematic.
+        if in_stream:
+            thread_args[self.handle_stdin] = {
+                "input_": in_stream,
+                "output": out_stream,
+                "echo": opts["echo_stdin"],
+            }
+        if not self.using_pty:
+            thread_args[self.handle_stderr] = {
+                "buffer_": stderr,
+                "hide": "stderr" in opts["hide"],
+                "output": err_stream,
+            }
+        # Kick off IO threads
+        threads = {}
+        for target, kwargs in six.iteritems(thread_args):
+            t = ExceptionHandlingThread(target=target, kwargs=kwargs)
+            threads[target] = t
+        return threads, stdout, stderr
 
     def generate_result(self, **kwargs):
         """
