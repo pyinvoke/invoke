@@ -293,36 +293,47 @@ class Runner(object):
             self.stop()
             self.stop_timer()
 
-    def _run_body(self, command, **kwargs):
-        # Normalize kwargs w/ config
-        opts, out_stream, err_stream, in_stream = self._run_opts(kwargs)
-        shell = opts["shell"]
+    def _setup(self, command, kwargs):
+        """
+        Prepare data on ``self`` so we're ready to start running.
+        """
+        # Normalize kwargs w/ config; sets self.opts, self.streams
+        self._unify_kwargs_with_config(kwargs)
         # Environment setup
-        env = self.generate_env(opts["env"], opts["replace_env"])
-        # Echo running command
-        if opts["echo"]:
+        self.env = self.generate_env(
+            self.opts["env"], self.opts["replace_env"]
+        )
+        # Arrive at final encoding if neither config nor kwargs had one
+        self.encoding = self.opts["encoding"] or self.default_encoding()
+        # Echo running command (wants to be early to be included in dry-run)
+        if self.opts["echo"]:
             print("\033[1;37m{}\033[0m".format(command))
+        # Prepare common result args.
+        # TODO: I hate this. Needs a deeper separate think about tweaking
+        # Runner.generate_result in a way that isn't literally just this same
+        # two-step process, and which also works w/ downstream.
+        self.result_kwargs = dict(
+            command=command,
+            shell=self.opts["shell"],
+            env=self.env,
+            pty=self.using_pty,
+            hide=self.opts["hide"],
+            encoding=self.encoding,
+        )
+
+    def _run_body(self, command, **kwargs):
+        # Prepare all the bits n bobs.
+        self._setup(command, kwargs)
         # If dry-run, stop here.
-        if opts["dry"]:
+        if self.opts["dry"]:
             return self.generate_result(
-                command=command,
-                stdout="",
-                stderr="",
-                exited=0,
-                pty=self.using_pty,
+                **self.result_kwargs, stdout="", stderr="", exited=0
             )
         # Start executing the actual command (runs in background)
-        self.start(command, shell, env)
-        self.start_timer(opts["timeout"])
-        # Arrive at final encoding if neither config nor kwargs had one
-        self.encoding = opts["encoding"] or self.default_encoding()
+        self.start(command, self.opts["shell"], self.env)
+        self.start_timer(self.opts["timeout"])
         # Stand up & kick off IO threads
-        self.threads, stdout, stderr = self.create_io_threads(
-            opts=opts,
-            out_stream=out_stream,
-            err_stream=err_stream,
-            in_stream=in_stream,
-        )
+        self.threads, stdout, stderr = self.create_io_threads()
         for thread in self.threads.values():
             thread.start()
         # Wait for subprocess to run, forwarding signals as we get them.
@@ -387,15 +398,7 @@ class Runner(object):
         exited = None if watcher_errors else self.returncode()
         # Obtain actual result
         result = self.generate_result(
-            command=command,
-            shell=shell,
-            env=env,
-            stdout=stdout,
-            stderr=stderr,
-            exited=exited,
-            pty=self.using_pty,
-            hide=opts["hide"],
-            encoding=self.encoding,
+            **self.result_kwargs, stdout=stdout, stderr=stderr, exited=exited
         )
         # Any presence of WatcherError from the threads indicates a watcher was
         # upset and aborted execution; make a generic Failure out of it and
@@ -405,20 +408,21 @@ class Runner(object):
             # threads...as unlikely as that would normally be.
             raise Failure(result, reason=watcher_errors[0])
         # If a timeout was requested and the subprocess did time out, shout.
-        timeout = opts["timeout"]
+        timeout = self.opts["timeout"]
         if timeout is not None and self.timed_out:
             raise CommandTimedOut(result, timeout=timeout)
-        if not (result or opts["warn"]):
+        if not (result or self.opts["warn"]):
             raise UnexpectedExit(result)
         return result
 
-    def _run_opts(self, kwargs):
+    def _unify_kwargs_with_config(self, kwargs):
         """
         Unify `run` kwargs with config options to arrive at local options.
 
-        :returns:
-            Four-tuple of ``(opts_dict, stdout_stream, stderr_stream,
-            stdin_stream)``.
+        Sets:
+
+        - ``self.opts`` - opts dict
+        - ``self.streams`` - map of stream names to stream target values
         """
         opts = {}
         for key, value in six.iteritems(self.context.config.run):
@@ -456,7 +460,9 @@ class Runner(object):
         self.using_pty = self.should_use_pty(opts["pty"], opts["fallback"])
         if opts["watchers"]:
             self.watchers = opts["watchers"]
-        return opts, out_stream, err_stream, in_stream
+        # Set data
+        self.opts = opts
+        self.streams = {"out": out_stream, "err": err_stream, "in": in_stream}
 
     def _thread_join_timeout(self, target):
         # Add a timeout to out/err thread joins when it looks like they're not
@@ -474,37 +480,42 @@ class Runner(object):
             return 1
         return None
 
-    def create_io_threads(self, opts, out_stream, err_stream, in_stream):
+    def create_io_threads(self):
         """
         Create and return a dictionary of IO thread worker objects.
 
         Caller is expected to handle persisting and/or starting the wrapped
         threads.
         """
+        # TODO: these need to be async friendly for when we exit early - what
+        # should the threads be "shoveling" data into as they run, if there
+        # might be multiple copies of them? Is it as simple as assigning these
+        # handles to the return Result subclass? (Maybe generate that up
+        # front?)
         stdout, stderr = [], []
         # Set up IO thread parameters (format - body_func: {kwargs})
         thread_args = {
             self.handle_stdout: {
                 "buffer_": stdout,
-                "hide": "stdout" in opts["hide"],
-                "output": out_stream,
+                "hide": "stdout" in self.opts["hide"],
+                "output": self.streams["out"],
             }
         }
         # After opt processing above, in_stream will be a real stream obj or
         # False, so we can truth-test it. We don't even create a stdin-handling
         # thread if it's False, meaning user indicated stdin is nonexistent or
         # problematic.
-        if in_stream:
+        if self.streams["in"]:
             thread_args[self.handle_stdin] = {
-                "input_": in_stream,
-                "output": out_stream,
-                "echo": opts["echo_stdin"],
+                "input_": self.streams["in"],
+                "output": self.streams["out"],
+                "echo": self.opts["echo_stdin"],
             }
         if not self.using_pty:
             thread_args[self.handle_stderr] = {
                 "buffer_": stderr,
-                "hide": "stderr" in opts["hide"],
-                "output": err_stream,
+                "hide": "stderr" in self.opts["hide"],
+                "output": self.streams["err"],
             }
         # Kick off IO threads
         threads = {}

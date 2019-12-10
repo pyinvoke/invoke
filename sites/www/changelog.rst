@@ -2,6 +2,11 @@
 Changelog
 =========
 
+- :bug:`- major` As part of feature work on :issue:`682`, we noticed that the
+  `~invoke.runners.Result` return value from `~invoke.context.Context.run` was
+  inconsistent between dry-run and regular modes; for example, the dry-run
+  version of the object lacked updated values for ``hide``, ``encoding`` and
+  ``env``. This has been fixed.
 - :feature:`-` Never accompanied the top-level singleton `~invoke.run` (which
   simply wraps an anonymous `~invoke.context.Context`'s ``run`` method) with
   its logical sibling, `~invoke.sudo` - this has been remedied.
