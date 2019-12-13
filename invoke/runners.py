@@ -1088,7 +1088,6 @@ class Runner(object):
         # TODO 2.0: merge with stop() (i.e. make stop() something users extend
         # and call super() in, instead of completely overriding, then just move
         # this into the default implementation of stop().
-        # TODO: this
         if self._timer:
             self._timer.cancel()
 
