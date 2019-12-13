@@ -103,7 +103,18 @@ class Runner(object):
 
     def run(self, command, **kwargs):
         """
-        Execute ``command``, returning an instance of `Result`.
+        Execute ``command``, returning an instance of `Result` once complete.
+
+        By default, this method is synchronous (it only returns once the
+        subprocess has completed), and allows interactive keyboard
+        communication with the subprocess.
+
+        It can instead behave asynchronously (returning early & requiring
+        interaction with the resulting object to manage subprocess lifecycle
+        and streams) if you specify ``asynchronous=True``. Furthermore, you can
+        completely disassociate the subprocess from Invoke's control (allowing
+        it to persist on its own after Python exits) by saying ``disown=True``.
+        See the per-kwarg docs below for details on both of these.
 
         .. note::
             All kwargs will default to the values found in this instance's
@@ -174,6 +185,58 @@ class Runner(object):
             Controls auto-fallback behavior re: problems offering a pty when
             ``pty=True``. Whether this has any effect depends on the specific
             `Runner` subclass being invoked. Default: ``True``.
+
+        :param bool asynchronous:
+            When set to ``True`` (default ``False``), enables asynchronous
+            behavior, as follows:
+
+            - Connections to the controlling terminal are disabled, meaning you
+              will not see the subprocess output and it will not respond to
+              your input - similar to ``hide=True`` and ``in_stream=False``
+              (though explicitly given ``(out|err|in)_stream`` file-like
+              objects will still be honored as normal).
+            - `.run` returns immediately after starting the subprocess, and its
+              return value becomes a `Result` sublass, `AsyncResult`, which
+              behaves almost identically to its parent but whose
+              ``.stdout``/``.stderr``/``.exited`` values are updated
+              dynamically as the subprocess runs.
+            - `AsyncResult` also adds new methods such as `~AsyncResult.join`,
+              allowing similar semantics to APIs like threading.
+
+                .. warning::
+                    Also like such APIs, these methods should be utilized to
+                    ensure a clean exit, or the background code reading from
+                    the subprocess' pipes may block interpreter shutdown.
+
+            .. versionadded:: 1.4
+
+        :param bool disown:
+            When set to ``True`` (default ``False``), returns immediately like
+            ``asynchronous=True``, but does not perform any background work
+            related to that subprocess (it is completely ignored). This allows
+            subprocesses using shell backgrounding or similar techniques (e.g.
+            trailing ``&``, ``nohup``) to persist beyond the lifetime of the
+            Python process running Invoke.
+
+            .. note::
+                If you're unsure whether you want this or ``asynchronous``, you
+                probably want ``asynchronous``!
+
+            Specifically, ``disown=True`` has the following behaviors:
+
+            - The return value is ``None`` instead of a `Result` or subclass.
+            - No I/O worker threads are spun up, so you will have no access to
+              the subprocess' stdout/stderr, your stdin will not be forwarded,
+              ``(out|err|in)_stream`` will be ignored, and features like
+              ``watchers`` will not function.
+            - No exit code is checked for, so you will not receive any errors
+              if the subprocess fails to exit cleanly.
+            - ``pty=True`` may not function correctly (subprocesses may not run
+              at all; this seems to be a potential bug in Python's
+              ``pty.fork``) unless your command line includes tools such as
+              ``nohup`` or (the shell builtin) ``disown``.
+
+            .. versionadded:: 1.4
 
         :param bool echo:
             Controls whether `.run` prints the command string to local stdout

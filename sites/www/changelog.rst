@@ -7,6 +7,19 @@ Changelog
   inconsistent between dry-run and regular modes; for example, the dry-run
   version of the object lacked updated values for ``hide``, ``encoding`` and
   ``env``. This has been fixed.
+- :feature:`682` (originally reported as :issue:`194`) Add asynchronous
+  behavior to `~invoke.runners.Runner.run`:
+
+  - Basic asynchronicity, where the method returns as soon as the subprocess
+    has started running, and the return value offers an asynchronous API for
+    retrieving stdout/stderr and exit code.
+  - "Disowning" subprocesses entirely, which not only returns immediately but
+    also omits background threading, allowing the subprocesses to outlive
+    Invoke's own process.
+
+  See the updated API docs for the `~invoke.runners.Runner` for details on the
+  new ``asynchronous`` and ``disown`` kwargs enabling this behavior. Thanks to
+  ``@MinchinWeb`` for the original report.
 - :feature:`-` Never accompanied the top-level singleton `~invoke.run` (which
   simply wraps an anonymous `~invoke.context.Context`'s ``run`` method) with
   its logical sibling, `~invoke.sudo` - this has been remedied.
