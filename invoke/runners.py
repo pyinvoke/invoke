@@ -394,8 +394,8 @@ class Runner(object):
             )
         # Start executing the actual command (runs in background)
         self.start(command, self.opts["shell"], self.env)
+        # Stand up & kick off IO, timer threads
         self.start_timer(self.opts["timeout"])
-        # Stand up & kick off IO threads
         self.threads, stdout, stderr = self.create_io_threads()
         for thread in self.threads.values():
             thread.start()

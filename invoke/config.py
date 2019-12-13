@@ -469,29 +469,29 @@ class Config(DataProxy):
             # default" that could go here. Alternately, make _more_ of these
             # default to None?
             "run": {
-                "warn": False,
-                "hide": None,
-                "shell": shell,
-                "pty": False,
-                "fallback": True,
-                "env": {},
-                "replace_env": False,
-                "echo": False,
-                "encoding": None,
-                "out_stream": None,
-                "err_stream": None,
-                "in_stream": None,
-                "watchers": [],
-                "echo_stdin": None,
                 "dry": False,
+                "echo": False,
+                "echo_stdin": None,
+                "encoding": None,
+                "env": {},
+                "err_stream": None,
+                "fallback": True,
+                "hide": None,
+                "in_stream": None,
+                "out_stream": None,
+                "pty": False,
+                "replace_env": False,
+                "shell": shell,
+                "warn": False,
+                "watchers": [],
             },
             # This doesn't live inside the 'run' tree; otherwise it'd make it
             # somewhat harder to extend/override in Fabric 2 which has a split
             # local/remote runner situation.
             "runners": {"local": Local},
             "sudo": {
-                "prompt": "[sudo] password: ",
                 "password": None,
+                "prompt": "[sudo] password: ",
                 "user": None,
             },
             "tasks": {
