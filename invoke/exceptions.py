@@ -64,14 +64,14 @@ class Failure(Exception):
         .. versionadded:: 1.3
         """
         already_printed = " already printed"
-        if "stdout" not in self.result.hide:
+        if "stdout" in self.result.hide:
             stdout = already_printed
         else:
             stdout = self.result.tail("stdout")
         if self.result.pty:
             stderr = " n/a (PTYs have no stderr)"
         else:
-            if "stderr" not in self.result.hide:
+            if "stderr" in self.result.hide:
                 stderr = already_printed
             else:
                 stderr = self.result.tail("stderr")
