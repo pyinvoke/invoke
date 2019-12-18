@@ -390,7 +390,7 @@ class Runner(object):
         # If dry-run, stop here.
         if self.opts["dry"]:
             return self.generate_result(
-                **self.result_kwargs, stdout="", stderr="", exited=0
+                **dict(self.result_kwargs, stdout="", stderr="", exited=0)
             )
         # Start executing the actual command (runs in background)
         self.start(command, self.opts["shell"], self.env)
@@ -529,7 +529,9 @@ class Runner(object):
         # TODO: as noted elsewhere, I kinda hate this. Consider changing
         # generate_result()'s API in next major rev so we can tidy up.
         result = self.generate_result(
-            **self.result_kwargs, stdout=stdout, stderr=stderr, exited=exited
+            **dict(
+                self.result_kwargs, stdout=stdout, stderr=stderr, exited=exited
+            )
         )
         return result
 
