@@ -99,7 +99,11 @@ class Runner(object):
         #: A list of `.StreamWatcher` instances for use by `respond`. Is filled
         #: in at runtime by `run`.
         self.watchers = []
+        # Optional timeout timer placeholder
         self._timer = None
+        # Async flag (initialized for 'finally' referencing in case something
+        # goes REAL bad during options parsing)
+        self._async = False
 
     def run(self, command, **kwargs):
         """
@@ -353,8 +357,9 @@ class Runner(object):
         try:
             return self._run_body(command, **kwargs)
         finally:
-            self.stop()
-            self.stop_timer()
+            if not self._async:
+                self.stop()
+                self.stop_timer()
 
     def _setup(self, command, kwargs):
         """
@@ -366,6 +371,8 @@ class Runner(object):
         self.env = self.generate_env(
             self.opts["env"], self.opts["replace_env"]
         )
+        # Set async flag (informs stop() behavior)
+        self._async = self.opts["asynchronous"] or self.opts["disown"]
         # Arrive at final encoding if neither config nor kwargs had one
         self.encoding = self.opts["encoding"] or self.default_encoding()
         # Echo running command (wants to be early to be included in dry-run)
@@ -394,6 +401,13 @@ class Runner(object):
             )
         # Start executing the actual command (runs in background)
         self.start(command, self.opts["shell"], self.env)
+        # If disowned, we just stop here - no threads, no timer, no error
+        # checking, nada.
+        # TODO: or is that a lie? do we want a very stripped down eg
+        # DisownedResult that at least knows the PID? (Though that would not
+        # always apply to downstream.)
+        if self.opts["disown"]:
+            return
         # Stand up & kick off IO, timer threads
         self.start_timer(self.opts["timeout"])
         self.threads, stdout, stderr = self.create_io_threads()

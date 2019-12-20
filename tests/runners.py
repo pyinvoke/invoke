@@ -3,6 +3,7 @@ import signal
 import struct
 import sys
 import termios
+import threading
 import types
 
 from io import BytesIO
@@ -1384,6 +1385,24 @@ Stderr: already printed
             with raises(_GenericException):
                 runner.run(_)
             runner.stop.assert_called_once_with()
+
+    class disown:
+        @patch.object(threading.Thread, "start")
+        def starts_and_returns_None_but_does_nothing_else(self, thread_start):
+            r = Runner(Context())
+            not_called = ["wait", "generate_result", "stop", "stop_timer"]
+            for attr in ["start"] + not_called:
+                setattr(r, attr, Mock())
+            result = r.run(_, disown=True)
+            # No Result object!
+            assert result is None
+            # Subprocess kicked off
+            assert r.start.called
+            # No timer or IO threads started
+            assert not thread_start.called
+            # No wait or shutdown related Runner methods called
+            for attr in not_called:
+                assert not getattr(r, attr).called
 
 
 class _FastLocal(Local):

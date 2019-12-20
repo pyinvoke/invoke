@@ -92,6 +92,8 @@ class Config_:
             # which override them, e.g. runner tests around warn=True, etc).
             expected = {
                 "run": {
+                    "asynchronous": False,
+                    "disown": False,
                     "dry": False,
                     "echo": False,
                     "echo_stdin": None,

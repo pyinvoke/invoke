@@ -469,6 +469,8 @@ class Config(DataProxy):
             # default" that could go here. Alternately, make _more_ of these
             # default to None?
             "run": {
+                "asynchronous": False,
+                "disown": False,
                 "dry": False,
                 "echo": False,
                 "echo_stdin": None,
