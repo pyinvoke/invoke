@@ -16,19 +16,19 @@ from pytest_relaxed import trap
 from mock import patch, Mock, call
 
 from invoke import (
-    Runner,
-    Local,
     CommandTimedOut,
-    Context,
     Config,
+    Context,
     Failure,
-    ThreadException,
-    SubprocessPipeError,
+    Local,
     Responder,
-    WatcherError,
-    UnexpectedExit,
-    StreamWatcher,
     Result,
+    Runner,
+    StreamWatcher,
+    SubprocessPipeError,
+    ThreadException,
+    UnexpectedExit,
+    WatcherError,
 )
 from invoke.runners import default_encoding
 from invoke.terminals import WINDOWS
