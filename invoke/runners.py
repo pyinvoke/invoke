@@ -332,7 +332,7 @@ class Runner(object):
 
         :param timeout:
             Cause the runner to submit an interrupt to the subprocess and raise
-            `CommandTimedOut`, if the command takes longer than ``timeout``
+            `.CommandTimedOut`, if the command takes longer than ``timeout``
             seconds to execute. Defaults to ``None``, meaning no timeout.
 
             .. versionadded:: 1.3

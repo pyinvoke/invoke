@@ -52,7 +52,7 @@ def sudo(command, **kwargs):
     """
     Run ``command`` in a ``sudo`` subprocess and return a `.Result` object.
 
-    See `.Runner.sudo` for API details, such as the ``password`` kwarg.
+    See `.Context.sudo` for API details, such as the ``password`` kwarg.
 
     .. note::
         This function is a convenience wrapper around Invoke's `.Context` and
