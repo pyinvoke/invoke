@@ -134,6 +134,10 @@ Stderr:{}
 
 
 class CommandTimedOut(Failure):
+    """
+    Raised when a subprocess did not exit within a desired timeframe.
+    """
+
     def __init__(self, result, timeout):
         super(CommandTimedOut, self).__init__(result)
         self.timeout = timeout
