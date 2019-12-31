@@ -196,21 +196,26 @@ class Runner(object):
 
             - Connections to the controlling terminal are disabled, meaning you
               will not see the subprocess output and it will not respond to
-              your input - similar to ``hide=True`` and ``in_stream=False``
-              (though explicitly given ``(out|err|in)_stream`` file-like
-              objects will still be honored as normal).
-            - `.run` returns immediately after starting the subprocess, and its
-              return value becomes a `Result` sublass, `AsyncResult`, which
-              behaves almost identically to its parent but whose
-              ``.stdout``/``.stderr``/``.exited`` values are updated
-              dynamically as the subprocess runs.
-            - `AsyncResult` also adds new methods such as `~AsyncResult.join`,
-              allowing similar semantics to APIs like threading.
+              your keyboard input - similar to ``hide=True`` and
+              ``in_stream=False`` (though explicitly given
+              ``(out|err|in)_stream`` file-like objects will still be honored
+              as normal).
+            - `.run` returns immediately after starting the subprocess, and
+              its return value becomes an instance of `Promise`
+              instead of `~Result`.
+            - `Promise` objects are primarily useful for their
+              `~Promise.join` method, which blocks until
+              the subprocess exits (similar to  threading APIs) and either
+              returns a final `~Result` or raises an exception, just as a
+              synchronous ``run`` would.
 
-                .. warning::
-                    Also like such APIs, these methods should be utilized to
-                    ensure a clean exit, or the background code reading from
-                    the subprocess' pipes may block interpreter shutdown.
+                - As with threading and similar APIs, users of
+                  ``asynchronous=True`` should make sure to ``join`` their
+                  `Promise` objects to prevent issues with interpreter
+                  shutdown.
+                - One easy way to handle such cleanup is to use the `Promise`
+                  as a context manager - it will automatically ``join`` at the
+                  exit of the context block.
 
             .. versionadded:: 1.4
 
@@ -1472,6 +1477,40 @@ class Result(object):
         # normalized
         text = "\n\n" + "\n".join(getattr(self, stream).splitlines()[-count:])
         return encode_output(text, self.encoding)
+
+
+class Promise(Result):
+    """
+    A promise of some future `Result`, yielded from asynchronous execution.
+
+    This class' primary API member is `join`; instances may also be used as
+    context managers, which will automatically call `join` when the block
+    exits. In such cases, the context manager yields ``self``.
+
+    `Promise` also exposes copies of many `Result` attributes, specifically
+    those that derive from `~Runner.run` kwargs and not the result of command
+    execution. For example, ``command`` is replicated here, but ``stdout`` is
+    not.
+
+    .. versionadded:: 1.4
+    """
+
+    def join(self):
+        """
+        Block until associated subprocess exits, returning/raising the result.
+
+        This acts identically to the end of a synchronously executed ``run``,
+        namely that:
+
+        - various background threads (such as IO workers) are themselves
+          joined;
+        - if the subprocess exited normally, a `Result` is returned;
+        - in any other case (unforeseen exceptions, IO sub-thread
+          `.ThreadException`, `.Failure`, `.WatcherError`) the relevant exception
+          is raised here.
+
+        See `~Runner.run` docs, or those of the relevant classes, for further details.
+        """
 
 
 def normalize_hide(val):
