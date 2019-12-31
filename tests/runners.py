@@ -1386,6 +1386,18 @@ Stderr: already printed
                 runner.run(_)
             runner.stop.assert_called_once_with()
 
+    class asynchronous:
+        def returns_Promise_immediately_and_finishes_in_background(self):
+            r = Runner(Context())
+            # TODO: set proc completion bits to be falsey
+            result = r.run(_, asynchronous=True)
+            assert isinstance(Promise, result)
+            # TODO: assert stop(), etc have not been called yet
+            # TODO: set proc completion to be truthy
+            # TODO: assert stop() etc now called
+
+        # NOTE: see Promise tests below for its side
+
     class disown:
         @patch.object(threading.Thread, "start")
         def starts_and_returns_None_but_does_nothing_else(self, thread_start):
@@ -1666,3 +1678,47 @@ class Result_:
         def encodes_with_result_encoding(self, encode):
             Result(stdout="foo", encoding="utf-16").tail("stdout")
             encode.assert_called_once_with("\n\nfoo", "utf-16")
+
+
+class Promise_:
+    def exposes_read_only_run_params(self):
+        # TODO: may work well w/ factoring out the bits in collate_result? or
+        # not?
+        skip()
+
+    class join:
+        def blocks_until_subprocess_exits(self):
+            skip()
+
+        def returns_Result_on_success(self):
+            skip()
+
+        def raises_main_thread_exception_on_kaboom(self):
+            skip()
+
+        def raises_subthread_exception_on_their_kaboom(self):
+            skip()
+
+        def raises_Failure_on_failure(self):
+            skip()
+
+    class context_manager:
+        def calls_join_or_wait_on_close_of_block(self):
+            skip()
+
+        def yields_self(self):
+            skip()
+
+    # TODO: additional method to force stopping early? (eg triggers equivalent
+    # of send_interrupt()?)
+
+
+class LocalPromise_:
+    def subclasses_Promise(self):
+        skip()
+
+    def adds_pid_attribute(self):
+        skip()
+
+    # TODO: should its Result /also/ have that PID? it's not really gonna be
+    # useful after it's exited tho...right?
