@@ -1766,20 +1766,37 @@ class Promise_:
         assert not hasattr(promise, "stderr")
 
     class join:
-        def blocks_until_subprocess_exits(self):
-            skip()
+        # NOTE: high level Runner lifecycle mechanics of join() (re: wait(),
+        # process_is_finished() etc) are tested in main suite.
 
         def returns_Result_on_success(self):
-            skip()
+            result = _runner().run(_, asynchronous=True).join()
+            assert isinstance(result, Result)
+            # Sanity
+            assert result.command == _
+            assert result.exited == 0
 
         def raises_main_thread_exception_on_kaboom(self):
-            skip()
+            runner = _runner(klass=_GenericExceptingRunner)
+            with raises(_GenericException):
+                runner.run(_, asynchronous=True).join()
 
         def raises_subthread_exception_on_their_kaboom(self):
-            skip()
+            class Kaboom(_Dummy):
+                def handle_stdout(self, **kwargs):
+                    raise OhNoz()
+
+            runner = _runner(klass=Kaboom)
+            promise = runner.run(_, asynchronous=True)
+            with raises(ThreadException) as info:
+                promise.join()
+            assert isinstance(info.value.exceptions[0].value, OhNoz)
 
         def raises_Failure_on_failure(self):
-            skip()
+            runner = _runner(exits=1)
+            promise = runner.run(_, asynchronous=True)
+            with raises(Failure):
+                promise.join()
 
     class context_manager:
         def calls_join_or_wait_on_close_of_block(self):
