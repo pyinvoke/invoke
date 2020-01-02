@@ -101,9 +101,10 @@ class Runner(object):
         self.watchers = []
         # Optional timeout timer placeholder
         self._timer = None
-        # Async flag (initialized for 'finally' referencing in case something
+        # Async flags (initialized for 'finally' referencing in case something
         # goes REAL bad during options parsing)
-        self._async = False
+        self._asynchronous = False
+        self._disowned = False
 
     def run(self, command, **kwargs):
         """
@@ -114,11 +115,11 @@ class Runner(object):
         communication with the subprocess.
 
         It can instead behave asynchronously (returning early & requiring
-        interaction with the resulting object to manage subprocess lifecycle
-        and streams) if you specify ``asynchronous=True``. Furthermore, you can
-        completely disassociate the subprocess from Invoke's control (allowing
-        it to persist on its own after Python exits) by saying ``disown=True``.
-        See the per-kwarg docs below for details on both of these.
+        interaction with the resulting object to manage subprocess lifecycle)
+        if you specify ``asynchronous=True``. Furthermore, you can completely
+        disassociate the subprocess from Invoke's control (allowing it to
+        persist on its own after Python exits) by saying ``disown=True``. See
+        the per-kwarg docs below for details on both of these.
 
         .. note::
             All kwargs will default to the values found in this instance's
@@ -200,14 +201,13 @@ class Runner(object):
               ``in_stream=False`` (though explicitly given
               ``(out|err|in)_stream`` file-like objects will still be honored
               as normal).
-            - `.run` returns immediately after starting the subprocess, and
-              its return value becomes an instance of `Promise`
-              instead of `~Result`.
-            - `Promise` objects are primarily useful for their
-              `~Promise.join` method, which blocks until
-              the subprocess exits (similar to  threading APIs) and either
-              returns a final `~Result` or raises an exception, just as a
-              synchronous ``run`` would.
+            - `.run` returns immediately after starting the subprocess, and its
+              return value becomes an instance of `Promise` instead of
+              `Result`.
+            - `Promise` objects are primarily useful for their `~Promise.join`
+              method, which blocks until the subprocess exits (similar to
+              threading APIs) and either returns a final `~Result` or raises an
+              exception, just as a synchronous ``run`` would.
 
                 - As with threading and similar APIs, users of
                   ``asynchronous=True`` should make sure to ``join`` their
@@ -362,7 +362,7 @@ class Runner(object):
         try:
             return self._run_body(command, **kwargs)
         finally:
-            if not self._async:
+            if not (self._asynchronous or self._disowned):
                 self.stop()
                 self.stop_timer()
 
@@ -376,8 +376,9 @@ class Runner(object):
         self.env = self.generate_env(
             self.opts["env"], self.opts["replace_env"]
         )
-        # Set async flag (informs stop() behavior)
-        self._async = self.opts["asynchronous"] or self.opts["disown"]
+        # Set disowned, async flags
+        self._asynchronous = self.opts["asynchronous"]
+        self._disowned = self.opts["disown"]
         # Arrive at final encoding if neither config nor kwargs had one
         self.encoding = self.opts["encoding"] or self.default_encoding()
         # Echo running command (wants to be early to be included in dry-run)
@@ -408,16 +409,25 @@ class Runner(object):
         self.start(command, self.opts["shell"], self.env)
         # If disowned, we just stop here - no threads, no timer, no error
         # checking, nada.
-        # TODO: or is that a lie? do we want a very stripped down eg
-        # DisownedResult that at least knows the PID? (Though that would not
-        # always apply to downstream.)
-        if self.opts["disown"]:
+        if self._disowned:
             return
         # Stand up & kick off IO, timer threads
         self.start_timer(self.opts["timeout"])
-        self.threads, stdout, stderr = self.create_io_threads()
+        self.threads, self.stdout, self.stderr = self.create_io_threads()
         for thread in self.threads.values():
             thread.start()
+        # Wrap up or promise that we will, depending
+        return self.make_promise() if self._asynchronous else self._finish()
+
+    def make_promise(self):
+        """
+        Return a `Promise` allowing async control of the rest of lifecycle.
+
+        .. versionadded:: 1.4
+        """
+        return Promise(self)
+
+    def _finish(self):
         # Wait for subprocess to run, forwarding signals as we get them.
         try:
             while True:
@@ -461,7 +471,7 @@ class Runner(object):
         if thread_exceptions:
             raise ThreadException(thread_exceptions)
         # Collate stdout/err, calculate exited, and get final result obj
-        result = self._collate_result(stdout, stderr, watcher_errors)
+        result = self._collate_result(watcher_errors)
         # Any presence of WatcherError from the threads indicates a watcher was
         # upset and aborted execution; make a generic Failure out of it and
         # raise that.
@@ -526,11 +536,11 @@ class Runner(object):
         self.opts = opts
         self.streams = {"out": out_stream, "err": err_stream, "in": in_stream}
 
-    def _collate_result(self, stdout, stderr, watcher_errors):
+    def _collate_result(self, watcher_errors):
         # At this point, we had enough success that we want to be returning or
         # raising detailed info about our execution; so we generate a Result.
-        stdout = "".join(stdout)
-        stderr = "".join(stderr)
+        stdout = "".join(self.stdout)
+        stderr = "".join(self.stderr)
         if WINDOWS:
             # "Universal newlines" - replace all standard forms of
             # newline with \n. This is not technically Windows related
@@ -1495,6 +1505,17 @@ class Promise(Result):
     .. versionadded:: 1.4
     """
 
+    def __init__(self, runner):
+        """
+        Create a new promise.
+
+        :param runner:
+            An in-flight `Runner` instance making this promise.
+
+            Must already have started the subprocess and spun up IO threads.
+        """
+        self.runner = runner
+
     def join(self):
         """
         Block until associated subprocess exits, returning/raising the result.
@@ -1511,6 +1532,11 @@ class Promise(Result):
 
         See `~Runner.run` docs, or those of the relevant classes, for further details.
         """
+        try:
+            return self.runner._finish()
+        finally:
+            self.runner.stop()
+            self.runner.stop_timer()
 
 
 def normalize_hide(val):

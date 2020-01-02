@@ -21,6 +21,7 @@ from invoke import (
     Context,
     Failure,
     Local,
+    Promise,
     Responder,
     Result,
     Runner,
@@ -121,6 +122,8 @@ class _TimingOutRunner(_Dummy):
 
 
 class Runner_:
+    _stop_methods = ["generate_result", "stop", "stop_timer"]
+
     # NOTE: these copies of _run and _runner form the base case of "test Runner
     # subclasses via self._run/_runner helpers" functionality. See how e.g.
     # Local_ uses the same approach but bakes in the dummy class used.
@@ -1387,34 +1390,57 @@ Stderr: already printed
             runner.stop.assert_called_once_with()
 
     class asynchronous:
-        def returns_Promise_immediately_and_finishes_in_background(self):
-            r = Runner(Context())
-            # TODO: set proc completion bits to be falsey
-            result = r.run(_, asynchronous=True)
-            assert isinstance(Promise, result)
-            # TODO: assert stop(), etc have not been called yet
-            # TODO: set proc completion to be truthy
-            # TODO: assert stop() etc now called
+        def returns_Promise_immediately_and_finishes_on_join(self):
+            # Dummy subclass with controllable process_is_finished flag
+            class _Finisher(_Dummy):
+                _finished = False
 
-        # NOTE: see Promise tests below for its side
+                @property
+                def process_is_finished(self):
+                    return self._finished
+
+            runner = _Finisher(Context())
+            # Set up mocks and go
+            runner.start = Mock()
+            for method in self._stop_methods:
+                setattr(runner, method, Mock())
+            result = runner.run(_, asynchronous=True)
+            # Got a Promise (its attrs etc are in its own test subsuite)
+            assert isinstance(result, Promise)
+            # Started, but did not stop (as would've happened for disown)
+            assert runner.start.called
+            for method in self._stop_methods:
+                assert not getattr(runner, method).called
+            # Set proc completion flag to truthy and join()
+            runner._finished = True
+            result.join()
+            for method in self._stop_methods:
+                assert getattr(runner, method).called
+
+        def hides_output(self):
+            skip()
+
+        def does_not_forward_stdin(self):
+            skip()
 
     class disown:
         @patch.object(threading.Thread, "start")
         def starts_and_returns_None_but_does_nothing_else(self, thread_start):
-            r = Runner(Context())
-            not_called = ["wait", "generate_result", "stop", "stop_timer"]
-            for attr in ["start"] + not_called:
-                setattr(r, attr, Mock())
-            result = r.run(_, disown=True)
+            runner = Runner(Context())
+            runner.start = Mock()
+            not_called = self._stop_methods + ["wait"]
+            for method in not_called:
+                setattr(runner, method, Mock())
+            result = runner.run(_, disown=True)
             # No Result object!
             assert result is None
             # Subprocess kicked off
-            assert r.start.called
+            assert runner.start.called
             # No timer or IO threads started
             assert not thread_start.called
             # No wait or shutdown related Runner methods called
-            for attr in not_called:
-                assert not getattr(r, attr).called
+            for method in not_called:
+                assert not getattr(runner, method).called
 
 
 class _FastLocal(Local):

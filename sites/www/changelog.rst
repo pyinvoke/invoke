@@ -11,8 +11,8 @@ Changelog
   behavior to `~invoke.runners.Runner.run`:
 
   - Basic asynchronicity, where the method returns as soon as the subprocess
-    has started running, and the return value offers an asynchronous API for
-    retrieving stdout/stderr and exit code.
+    has started running, and that return value is an object with methods
+    allowing access to the final result.
   - "Disowning" subprocesses entirely, which not only returns immediately but
     also omits background threading, allowing the subprocesses to outlive
     Invoke's own process.
