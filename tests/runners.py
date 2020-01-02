@@ -1754,9 +1754,16 @@ class Result_:
 
 class Promise_:
     def exposes_read_only_run_params(self):
-        # TODO: may work well w/ factoring out the bits in collate_result? or
-        # not?
-        skip()
+        runner = _runner()
+        promise = runner.run(
+            _, pty=True, encoding="utf-17", shell="sea", asynchronous=True
+        )
+        assert promise.command == _
+        assert promise.pty is True
+        assert promise.encoding == "utf-17"
+        assert promise.shell == "sea"
+        assert not hasattr(promise, "stdout")
+        assert not hasattr(promise, "stderr")
 
     class join:
         def blocks_until_subprocess_exits(self):

@@ -1520,6 +1520,10 @@ class Promise(Result):
             Must already have started the subprocess and spun up IO threads.
         """
         self.runner = runner
+        # Basically just want exactly this (recently refactored) kwargs dict.
+        # TODO: consider proxying vs copying, but prob wait for refactor
+        for key, value in self.runner.result_kwargs.items():
+            setattr(self, key, value)
 
     def join(self):
         """
