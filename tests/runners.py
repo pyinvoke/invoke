@@ -487,10 +487,24 @@ class Runner_:
             assert sys.stdout.getvalue() == ""
 
         @trap
+        def overridden_out_is_never_hidden(self):
+            out = StringIO()
+            self._runner(out="sup").run(_, out_stream=out, hide=True)
+            assert out.getvalue() == "sup"
+            assert sys.stdout.getvalue() == ""
+
+        @trap
         def err_can_be_overridden(self):
             "err_stream can be overridden"
             err = StringIO()
             self._runner(err="sup").run(_, err_stream=err)
+            assert err.getvalue() == "sup"
+            assert sys.stderr.getvalue() == ""
+
+        @trap
+        def overridden_err_is_never_hidden(self):
+            err = StringIO()
+            self._runner(err="sup").run(_, err_stream=err, hide=True)
             assert err.getvalue() == "sup"
             assert sys.stderr.getvalue() == ""
 
@@ -1436,6 +1450,24 @@ Stderr: already printed
             # when stdin is disabled, the handler is never even called (no
             # thread is created for it).
             assert not MockedHandleStdin.handle_stdin.called
+
+        def leaves_overridden_streams_alone(self):
+            # NOTE: technically a duplicate test of the generic tests for #637
+            # re: intersect of hide and overridden streams. But that's an
+            # implementation detail so this is still valuable.
+            klass = self._mock_stdin_writer()
+            out, err, in_ = StringIO(), StringIO(), StringIO("hallo")
+            runner = self._runner(out="foo", err="bar", klass=klass)
+            runner.run(
+                _,
+                asynchronous=True,
+                out_stream=out,
+                err_stream=err,
+                in_stream=in_,
+            ).join()
+            assert out.getvalue() == "foo"
+            assert err.getvalue() == "bar"
+            assert klass.write_proc_stdin.called  # lazy
 
     class disown:
         @patch.object(threading.Thread, "start")

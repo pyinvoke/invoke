@@ -2,6 +2,14 @@
 Changelog
 =========
 
+- :bug:`637 major` A corner case in `~invoke.context.Context.run` caused
+  overridden streams to be unused if those streams were also set to be hidden
+  (eg ``run(command, hide=True, out_stream=StringIO())`` would result in no
+  writes to the ``StringIO`` object).
+
+  This has been fixed - hiding for a given stream is now ignored if that stream
+  has been set to some non-``None`` (and in the case of ``in_stream``,
+  non-``False``) value.
 - :bug:`- major` As part of feature work on :issue:`682`, we noticed that the
   `~invoke.runners.Result` return value from `~invoke.context.Context.run` was
   inconsistent between dry-run and regular modes; for example, the dry-run

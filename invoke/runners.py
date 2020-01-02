@@ -519,13 +519,12 @@ class Runner(object):
         if self._asynchronous:
             opts["hide"] = True
         # Then normalize 'hide' from one of the various valid input values,
-        # into a stream-names tuple.
-        opts["hide"] = normalize_hide(opts["hide"])
+        # into a stream-names tuple. Also account for the streams.
+        out_stream, err_stream = opts["out_stream"], opts["err_stream"]
+        opts["hide"] = normalize_hide(opts["hide"], out_stream, err_stream)
         # Derive stream objects
-        out_stream = opts["out_stream"]
         if out_stream is None:
             out_stream = sys.stdout
-        err_stream = opts["err_stream"]
         if err_stream is None:
             err_stream = sys.stderr
         in_stream = opts["in_stream"]
@@ -1545,22 +1544,28 @@ class Promise(Result):
             self.runner.stop_timer()
 
 
-def normalize_hide(val):
+def normalize_hide(val, out_stream=None, err_stream=None):
+    # Normalize to list-of-stream-names
     hide_vals = (None, False, "out", "stdout", "err", "stderr", "both", True)
     if val not in hide_vals:
         err = "'hide' got {!r} which is not in {!r}"
         raise ValueError(err.format(val, hide_vals))
     if val in (None, False):
-        hide = ()
+        hide = []
     elif val in ("both", True):
-        hide = ("stdout", "stderr")
+        hide = ["stdout", "stderr"]
     elif val == "out":
-        hide = ("stdout",)
+        hide = ["stdout"]
     elif val == "err":
-        hide = ("stderr",)
+        hide = ["stderr"]
     else:
-        hide = (val,)
-    return hide
+        hide = [val]
+    # Revert any streams that have been overridden from the default value
+    if out_stream is not None and "stdout" in hide:
+        hide.remove("stdout")
+    if err_stream is not None and "stderr" in hide:
+        hide.remove("stderr")
+    return tuple(hide)
 
 
 def default_encoding():
