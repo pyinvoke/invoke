@@ -1547,6 +1547,12 @@ class Promise(Result):
             self.runner.stop()
             self.runner.stop_timer()
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.join()
+
 
 def normalize_hide(val, out_stream=None, err_stream=None):
     # Normalize to list-of-stream-names

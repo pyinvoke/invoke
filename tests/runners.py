@@ -1800,10 +1800,16 @@ class Promise_:
 
     class context_manager:
         def calls_join_or_wait_on_close_of_block(self):
-            skip()
+            promise = _runner().run(_, asynchronous=True)
+            promise.join = Mock()
+            with promise:
+                pass
+            promise.join.assert_called_once_with()
 
         def yields_self(self):
-            skip()
+            promise = _runner().run(_, asynchronous=True)
+            with promise as value:
+                assert value is promise
 
     # TODO: additional method to force stopping early? (eg triggers equivalent
     # of send_interrupt()?)
