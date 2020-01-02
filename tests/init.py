@@ -60,6 +60,9 @@ class Init:
         def runner_class(self):
             assert invoke.Runner is invoke.runners.Runner
 
+        def promise_class(self):
+            assert invoke.Promise is invoke.runners.Promise
+
         def failure_class(self):
             assert invoke.Failure is invoke.runners.Failure
 
