@@ -376,9 +376,6 @@ class Runner(object):
         self.env = self.generate_env(
             self.opts["env"], self.opts["replace_env"]
         )
-        # Set disowned, async flags
-        self._asynchronous = self.opts["asynchronous"]
-        self._disowned = self.opts["disown"]
         # Arrive at final encoding if neither config nor kwargs had one
         self.encoding = self.opts["encoding"] or self.default_encoding()
         # Echo running command (wants to be early to be included in dry-run)
@@ -509,12 +506,18 @@ class Runner(object):
         if kwargs:
             err = "run() got an unexpected keyword argument '{}'"
             raise TypeError(err.format(list(kwargs.keys())[0]))
+        # Update disowned, async flags
+        self._asynchronous = opts["asynchronous"]
+        self._disowned = opts["disown"]
         # If hide was True, turn off echoing
         if opts["hide"] is True:
             opts["echo"] = False
         # Conversely, ensure echoing is always on when dry-running
         if opts["dry"] is True:
             opts["echo"] = True
+        # Always hide if async
+        if self._asynchronous:
+            opts["hide"] = True
         # Then normalize 'hide' from one of the various valid input values,
         # into a stream-names tuple.
         opts["hide"] = normalize_hide(opts["hide"])
@@ -527,7 +530,10 @@ class Runner(object):
             err_stream = sys.stderr
         in_stream = opts["in_stream"]
         if in_stream is None:
-            in_stream = sys.stdin
+            # If in_stream hasn't been overridden, and we're async, we don't
+            # want to read from sys.stdin (otherwise the default) - so set
+            # False instead.
+            in_stream = False if self._asynchronous else sys.stdin
         # Determine pty or no
         self.using_pty = self.should_use_pty(opts["pty"], opts["fallback"])
         if opts["watchers"]:

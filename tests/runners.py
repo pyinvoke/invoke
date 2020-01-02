@@ -1417,11 +1417,25 @@ Stderr: already printed
             for method in self._stop_methods:
                 assert getattr(runner, method).called
 
+        @trap
         def hides_output(self):
-            skip()
+            # Run w/ faux subproc stdout/err data, but async
+            self._runner(out="foo", err="bar").run(_, asynchronous=True).join()
+            # Expect that default out/err streams did not get printed to.
+            assert sys.stdout.getvalue() == ""
+            assert sys.stderr.getvalue() == ""
 
         def does_not_forward_stdin(self):
-            skip()
+            class MockedHandleStdin(_Dummy):
+                pass
+
+            MockedHandleStdin.handle_stdin = Mock()
+            runner = self._runner(klass=MockedHandleStdin)
+            runner.run(_, asynchronous=True).join()
+            # As with the main test for setting this to False, we know that
+            # when stdin is disabled, the handler is never even called (no
+            # thread is created for it).
+            assert not MockedHandleStdin.handle_stdin.called
 
     class disown:
         @patch.object(threading.Thread, "start")
