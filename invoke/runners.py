@@ -363,8 +363,13 @@ class Runner(object):
             return self._run_body(command, **kwargs)
         finally:
             if not (self._asynchronous or self._disowned):
-                self.stop()
-                self.stop_timer()
+                self._stop_everything()
+
+    def _stop_everything(self):
+        # TODO 2.0: as probably noted elsewhere, stop_timer should become part
+        # of stop() and then we can nix this. Ugh!
+        self.stop()
+        self.stop_timer()
 
     def _setup(self, command, kwargs):
         """
@@ -1547,8 +1552,7 @@ class Promise(Result):
         try:
             return self.runner._finish()
         finally:
-            self.runner.stop()
-            self.runner.stop_timer()
+            self.runner._stop_everything()
 
     def __enter__(self):
         return self
