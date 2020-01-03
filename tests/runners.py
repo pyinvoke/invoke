@@ -1816,17 +1816,3 @@ class Promise_:
             promise = _runner().run(_, asynchronous=True)
             with promise as value:
                 assert value is promise
-
-    # TODO: additional method to force stopping early? (eg triggers equivalent
-    # of send_interrupt()?)
-
-
-class LocalPromise_:
-    def subclasses_Promise(self):
-        skip()
-
-    def adds_pid_attribute(self):
-        skip()
-
-    # TODO: should its Result /also/ have that PID? it's not really gonna be
-    # useful after it's exited tho...right?
