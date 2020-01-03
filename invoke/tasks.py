@@ -150,7 +150,7 @@ class Task(object):
         # TODO: __call__ exhibits the 'self' arg; do we manually nix 1st result
         # in argspec, or is there a way to get the "really callable" spec?
         func = body if isinstance(body, types.FunctionType) else body.__call__
-        spec = inspect.getargspec(func)
+        spec = inspect.getargspec(self.follow_wrapped(func))
         arg_names = spec.args[:]
         matched_args = [reversed(x) for x in [spec.args, spec.defaults or []]]
         spec_dict = dict(zip_longest(*matched_args, fillvalue=NO_DEFAULT))
@@ -162,6 +162,13 @@ class Task(object):
             raise TypeError("Tasks must have an initial Context argument!")
         del spec_dict[context_arg]
         return arg_names, spec_dict
+    
+    @classmethod
+    def follow_wrapped(cls, func):
+        try:
+            return cls.follow_wrapped(func.__wrapped__)
+        except AttributeError:
+            return func
 
     def fill_implicit_positionals(self, positional):
         args, spec_dict = self.argspec(self.body)
