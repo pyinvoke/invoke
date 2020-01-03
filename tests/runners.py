@@ -1488,6 +1488,12 @@ Stderr: already printed
             for method in not_called:
                 assert not getattr(runner, method).called
 
+        def cannot_be_given_alongside_asynchronous(self):
+            with raises(ValueError) as info:
+                self._runner().run(_, asynchronous=True, disown=True)
+            sentinel = "Cannot give both 'asynchronous' and 'disown'"
+            assert sentinel in str(info.value)
+
 
 class _FastLocal(Local):
     # Neuter this for same reason as in _Dummy above

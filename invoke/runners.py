@@ -509,6 +509,9 @@ class Runner(object):
         # Update disowned, async flags
         self._asynchronous = opts["asynchronous"]
         self._disowned = opts["disown"]
+        if self._asynchronous and self._disowned:
+            err = "Cannot give both 'asynchronous' and 'disown' at the same time!"  # noqa
+            raise ValueError(err)
         # If hide was True, turn off echoing
         if opts["hide"] is True:
             opts["echo"] = False
