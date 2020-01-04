@@ -94,6 +94,18 @@ for anywhere in the command line. (For parsing details, see
 
     Enable debug output.
 
+.. option:: --dry
+
+    Echo commands instead of actually running them; specifically, causes any
+    ``run`` calls to:
+
+    - Act as if the ``echo`` option has been turned on, printing the
+      command-to-be-run to stdout;
+    - Skip actual subprocess invocation (returning before any of that machinery
+      starts running);
+    - Return a dummy `~invoke.runners.Result` object with 'blank' values (empty
+      stdout/err strings, ``0`` exit code, etc).
+
 .. option:: -D, --list-depth=INT
 
     Limit :option:`--list` display to the specified number of levels, e.g.
