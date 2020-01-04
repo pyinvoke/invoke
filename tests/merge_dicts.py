@@ -101,10 +101,11 @@ class merge_dicts_:
         assert proj["foo"]["bar"]["biz"] == "proj value"
 
     def merge_file_types_by_reference(self):
-        d1 = {}
-        d2 = {"foo": open(__file__)}
-        merge_dicts(d1, d2)
-        assert d1["foo"].closed is False
+        with open(__file__) as fd:
+            d1 = {}
+            d2 = {"foo": fd}
+            merge_dicts(d1, d2)
+            assert d1["foo"].closed is False
 
 
 class copy_dict_:
