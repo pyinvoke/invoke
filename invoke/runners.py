@@ -600,11 +600,6 @@ class Runner(object):
         Caller is expected to handle persisting and/or starting the wrapped
         threads.
         """
-        # TODO: these need to be async friendly for when we exit early - what
-        # should the threads be "shoveling" data into as they run, if there
-        # might be multiple copies of them? Is it as simple as assigning these
-        # handles to the return Result subclass? (Maybe generate that up
-        # front?)
         stdout, stderr = [], []
         # Set up IO thread parameters (format - body_func: {kwargs})
         thread_args = {
