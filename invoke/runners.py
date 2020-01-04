@@ -1539,10 +1539,11 @@ class Promise(Result):
           joined;
         - if the subprocess exited normally, a `Result` is returned;
         - in any other case (unforeseen exceptions, IO sub-thread
-          `.ThreadException`, `.Failure`, `.WatcherError`) the relevant exception
-          is raised here.
+          `.ThreadException`, `.Failure`, `.WatcherError`) the relevant
+          exception is raised here.
 
-        See `~Runner.run` docs, or those of the relevant classes, for further details.
+        See `~Runner.run` docs, or those of the relevant classes, for further
+        details.
         """
         try:
             return self.runner._finish()
