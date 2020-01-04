@@ -2,6 +2,7 @@
 Changelog
 =========
 
+- :release:`1.4.0 <2020-01-03>`
 - :bug:`637 major` A corner case in `~invoke.context.Context.run` caused
   overridden streams to be unused if those streams were also set to be hidden
   (eg ``run(command, hide=True, out_stream=StringIO())`` would result in no
