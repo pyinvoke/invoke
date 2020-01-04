@@ -1,6 +1,6 @@
 language: python
 sudo: required
-dist: trusty
+dist: xenial
 cache:
   directories:
     - $HOME/.cache/pip
@@ -9,15 +9,13 @@ python:
   - "3.4"
   - "3.5"
   - "3.6"
-  - "3.7-dev"
-  - "nightly"
+  - "3.7"
+  - "3.8-dev"
   - "pypy"
   - "pypy3"
 matrix:
-  # NOTE: comment this out if we have to reinstate any allow_failures, because
-  # of https://github.com/travis-ci/travis-ci/issues/1696 (multiple
-  # notifications)
-  fast_finish: true
+  allow_failures:
+    - python: "3.8-dev"
 install:
   # For some reason Travis' build envs have wildly different pip/setuptools
   # versions between minor Python versions, and this can cause many hilarious
@@ -52,6 +50,10 @@ script:
   # Doctests in websites OK? (Same caveat as above...)
   - "if [[ $TRAVIS_PYTHON_VERSION != 'pypy3' ]]; then inv www.doctest; fi"
   # Did we break setup.py?
+  # NOTE: sometime in 2019 travis grew a bizarre EnvironmentError problem
+  # around inability to overwrite/remote __pycache__ dirs...this attempts to
+  # workaround
+  - "find . -type d -name __pycache__ | sudo xargs rm -rf"
   - inv travis.test-installation --package=invoke --sanity="inv --list"
   # Test distribution builds.
   - inv travis.test-packaging --package=invoke --sanity="inv --list" --alt-python=alt_env/bin/python
