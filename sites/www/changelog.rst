@@ -2,6 +2,10 @@
 Changelog
 =========
 
+- :bug:`518` Close pseudoterminals opened by the `~invoke.runners.Local` class
+  during ``run(..., pty=True)``. Previously, these were only closed
+  incidentally at process shutdown, causing file descriptor leakage in
+  long-running processes. Thanks to Jonathan Paulson for the report.
 - :bug:`557` (with assist from :issue:`640`) Fix the
   `~invoke.context.Context.cd` and `~invoke.context.Context.prefix` context
   managers so that ``with cd`` and ``with prefix`` correctly revert their state
