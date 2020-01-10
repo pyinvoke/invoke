@@ -234,8 +234,6 @@ def mock_pty(
             if trailing_error:
                 return
             # Sanity checks to make sure the stuff we mocked, actually got ran!
-            # TODO: inject our mocks back into the tests so they can make their
-            # own assertions if desired
             pty.fork.assert_called_with()
             # Expect a get, and then later set, of terminal window size
             assert ioctl.call_args_list[0][0][1] == termios.TIOCGWINSZ
