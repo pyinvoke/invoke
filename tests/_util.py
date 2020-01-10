@@ -185,6 +185,7 @@ def mock_pty(
     skip_asserts=False,
     insert_os=False,
     be_childish=False,
+    os_close_error=False,
 ):
     # Windows doesn't have ptys, so all the pty tests should be
     # skipped anyway...
@@ -203,10 +204,10 @@ def mock_pty(
         def wrapper(*args, **kwargs):
             args = list(args)
             pty, os, ioctl = args.pop(), args.pop(), args.pop()
-            # Don't actually fork, but pretend we did & that main thread is
-            # also the child (pid 0) to trigger execve call; & give 'parent fd'
-            # of 1 (stdout).
-            pty.fork.return_value = (12345 if be_childish else 0), 1
+            # Don't actually fork, but pretend we did (with "our" pid differing
+            # depending on be_childish) & give 'parent fd' of 3 (typically,
+            # first allocated non-stdin/out/err FD)
+            pty.fork.return_value = (12345 if be_childish else 0), 3
             # We don't really need to care about waiting since not truly
             # forking/etc, so here we just return a nonzero "pid" + sentinel
             # wait-status value (used in some tests about WIFEXITED etc)
@@ -221,7 +222,7 @@ def mock_pty(
             err_file = BytesIO(b(err))
 
             def fakeread(fileno, count):
-                fd = {1: out_file, 2: err_file}[fileno]
+                fd = {3: out_file, 2: err_file}[fileno]
                 ret = fd.read(count)
                 # If asked, fake a Linux-platform trailing I/O error.
                 if not ret and trailing_error:
@@ -229,15 +230,18 @@ def mock_pty(
                 return ret
 
             os.read.side_effect = fakeread
+            if os_close_error:
+                os.close.side_effect = IOError
             if insert_os:
                 args.append(os)
+
+            # Do the thing!!!
             f(*args, **kwargs)
+
             # Short-circuit if we raised an error in fakeread()
             if trailing_error:
                 return
             # Sanity checks to make sure the stuff we mocked, actually got ran!
-            # TODO: inject our mocks back into the tests so they can make their
-            # own assertions if desired
             pty.fork.assert_called_with()
             # Skip rest of asserts if we pretended to be the child
             if be_childish:
@@ -250,6 +254,8 @@ def mock_pty(
                     assert getattr(os, name).called
                 # Ensure at least one of the exit status getters was called
                 assert os.WEXITSTATUS.called or os.WTERMSIG.called
+                # Ensure something closed the pty FD
+                os.close.assert_called_once_with(3)
 
         return wrapper
 

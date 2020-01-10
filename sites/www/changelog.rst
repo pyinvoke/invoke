@@ -2,6 +2,10 @@
 Changelog
 =========
 
+- :bug:`518` Close pseudoterminals opened by the `~invoke.runners.Local` class
+  during ``run(..., pty=True)``. Previously, these were only closed
+  incidentally at process shutdown, causing file descriptor leakage in
+  long-running processes. Thanks to Jonathan Paulson for the report.
 - :release:`1.4.0 <2020-01-03>`
 - :bug:`637 major` A corner case in `~invoke.context.Context.run` caused
   overridden streams to be unused if those streams were also set to be hidden
