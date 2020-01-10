@@ -1082,8 +1082,16 @@ class Local(Runner):
             return self.process.returncode
 
     def stop(self):
-        # No explicit close-out required (so far).
-        pass
+        # If we opened a PTY for child communications, make sure to close() it,
+        # otherwise long-running Invoke-using processes exhaust their file
+        # descriptors eventually.
+        if self.using_pty:
+            try:
+                os.close(self.parent_fd)
+            except:
+                # If something weird happened preventing the close, there's
+                # nothing to be done about it now...
+                pass
 
 
 class Result(object):

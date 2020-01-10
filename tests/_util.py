@@ -183,6 +183,7 @@ def mock_pty(
     trailing_error=None,
     skip_asserts=False,
     insert_os=False,
+    os_close_error=False,
 ):
     # Windows doesn't have ptys, so all the pty tests should be
     # skipped anyway...
@@ -227,9 +228,14 @@ def mock_pty(
                 return ret
 
             os.read.side_effect = fakeread
+            if os_close_error:
+                os.close.side_effect = IOError
             if insert_os:
                 args.append(os)
+
+            # Do the thing!!!
             f(*args, **kwargs)
+
             # Short-circuit if we raised an error in fakeread()
             if trailing_error:
                 return
@@ -243,6 +249,8 @@ def mock_pty(
                     assert getattr(os, name).called
                 # Ensure at least one of the exit status getters was called
                 assert os.WEXITSTATUS.called or os.WTERMSIG.called
+                # Ensure something closed the pty FD
+                os.close.assert_called_once_with(3)
 
         return wrapper
 
