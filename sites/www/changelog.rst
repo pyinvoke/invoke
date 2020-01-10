@@ -2,6 +2,10 @@
 Changelog
 =========
 
+- :bug:`518` Close pseudoterminals opened by the `~invoke.runners.Local` class
+  during ``run(..., pty=True)``. Previously, these were only closed
+  incidentally at process shutdown, causing file descriptor leakage in
+  long-running processes. Thanks to Jonathan Paulson for the report.
 - :release:`1.3.0 <2019-08-06>`
 - :feature:`324` Add basic dry-run support, in the form of a new
   :option:`--dry` CLI option and matching ``run.dry`` config setting, which

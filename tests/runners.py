@@ -1475,6 +1475,12 @@ class Local_:
                 assert e.type == OSError
                 assert str(e.value) == "wat"
 
+        @mock_pty(os_close_error=True)
+        def stop_mutes_errors_on_pty_close(self):
+            # Another doesn't-blow-up test, this time around os.close() of the
+            # pty itself (due to os_close_error=True)
+            self._run(_, pty=True)
+
         class fallback:
             @mock_pty(isatty=False)
             def can_be_overridden_by_kwarg(self):
