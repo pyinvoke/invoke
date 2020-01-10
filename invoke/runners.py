@@ -1031,7 +1031,8 @@ class Local(Runner):
                 # Use execve for bare-minimum "exec w/ variable # args + env"
                 # behavior. No need for the 'p' (use PATH to find executable)
                 # for now.
-                # TODO: see if subprocess is using equivalent of execvp...
+                # NOTE: stdlib subprocess (actually its posix flavor, which is
+                # written in C) uses either execve or execv, depending.
                 os.execve(shell, [shell, "-c", command], env)
         else:
             self.process = Popen(
