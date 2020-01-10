@@ -1325,7 +1325,7 @@ class Local(Runner):
         if self.using_pty:
             try:
                 os.close(self.parent_fd)
-            except:
+            except Exception:
                 # If something weird happened preventing the close, there's
                 # nothing to be done about it now...
                 pass
