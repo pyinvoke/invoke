@@ -203,8 +203,8 @@ def mock_pty(
             pty, os, ioctl = args.pop(), args.pop(), args.pop()
             # Don't actually fork, but pretend we did & that main thread is
             # also the child (pid 0) to trigger execve call; & give 'parent fd'
-            # of 1 (stdout).
-            pty.fork.return_value = 0, 1
+            # of 3 (typically, first allocated non-stdin/out/err FD)
+            pty.fork.return_value = 0, 3
             # We don't really need to care about waiting since not truly
             # forking/etc, so here we just return a nonzero "pid" + sentinel
             # wait-status value (used in some tests about WIFEXITED etc)
@@ -219,7 +219,7 @@ def mock_pty(
             err_file = BytesIO(b(err))
 
             def fakeread(fileno, count):
-                fd = {1: out_file, 2: err_file}[fileno]
+                fd = {3: out_file, 2: err_file}[fileno]
                 ret = fd.read(count)
                 # If asked, fake a Linux-platform trailing I/O error.
                 if not ret and trailing_error:
