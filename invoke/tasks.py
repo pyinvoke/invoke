@@ -6,6 +6,7 @@ generate new tasks.
 from copy import deepcopy
 import inspect
 import types
+import sys
 
 from .context import Context
 from .parser import Argument, translate_underscores
@@ -147,10 +148,13 @@ class Task(object):
         .. versionadded:: 1.0
         .. versionmodified:: 1.3.0
         The original method (version 1.0) was using inspect.getargspec()
-        which makes problem when get args from decorated function.
-        It is recommended to replace by inspect.signature() from Python 3.0
+        which makes problem when getting args a from decorated function.
+        It is recommended to replace by inspect.signature() from Python 3.3
         https://docs.python.org/3.6/library/inspect.html#inspect.getargspec
         """
+        if sys.version_info[0] < 3:
+            return self.argspec_python2(body)
+
         sig = inspect.signature(body)
         arg_names = []
         spec_dict = {}
@@ -167,6 +171,27 @@ class Task(object):
             context_arg = arg_names.pop(0)
         except IndexError:
             raise ValueError("Tasks must have an initial Context argument!")
+        del spec_dict[context_arg]
+        return arg_names, spec_dict
+
+    def argspec_python2(self, body):
+        """
+        For the compatible Python 2.x only.
+        """
+        # Handle callable-but-not-function objects
+        # TODO: __call__ exhibits the 'self' arg; do we manually nix 1st result
+        # in argspec, or is there a way to get the "really callable" spec?
+        func = body if isinstance(body, types.FunctionType) else body.__call__
+        spec = inspect.getargspec(func)
+        arg_names = spec.args[:]
+        matched_args = [reversed(x) for x in [spec.args, spec.defaults or []]]
+        spec_dict = dict(zip_longest(*matched_args, fillvalue=NO_DEFAULT))
+        # Pop context argument
+        try:
+            context_arg = arg_names.pop(0)
+        except IndexError:
+            # TODO: see TODO under __call__, this should be same type
+            raise TypeError("Tasks must have an initial Context argument!")
         del spec_dict[context_arg]
         return arg_names, spec_dict
 
