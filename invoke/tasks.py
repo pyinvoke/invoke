@@ -146,7 +146,6 @@ class Task(object):
           is a valid value on its own).
 
         .. versionadded:: 1.0
-        .. versionmodified:: 1.3.0
         The original method (version 1.0) was using inspect.getargspec()
         which makes problem when getting args a from decorated function.
         It is recommended to replace by inspect.signature() from Python 3.3
