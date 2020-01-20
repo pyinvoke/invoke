@@ -311,9 +311,8 @@ class Task_:
                     @task  # apply @task on top of others
                     @deco_increase_one
                     def foo(c):
-                        "My docstring"
+                        """My docstring"""
                         return 5
-
 
     class callability_under_class_decorators:
         def setup(self):
