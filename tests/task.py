@@ -299,7 +299,6 @@ class Task_:
 
         def python2_should_not_support_multi_decorators(self):
             def deco_increase_one(func):
-
                 @wraps(func)
                 def inner(*args, **kwargs):
                     return func(*args, **kwargs) + 1
@@ -308,6 +307,7 @@ class Task_:
 
             if sys.version_info[0] < 2:
                 with raises(ValueError):
+
                     @task  # apply @task on top of others
                     @deco_increase_one
                     def foo(c):
