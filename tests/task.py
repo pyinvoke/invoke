@@ -1,3 +1,5 @@
+from functools import wraps, update_wrapper, partial
+
 from mock import Mock
 from pytest import raises, skip
 
@@ -249,6 +251,86 @@ class Task_:
 
         def wraps_body_name(self):
             assert self.task.__name__ == "foo"
+
+    class callability_under_decorators:
+        def setup(self):
+            def deco_increase_one(func):
+                """
+                This is an example of decorator as a function
+                """
+                @wraps(func)
+                def inner(*args, **kwargs):
+                    return func(*args, **kwargs) + 1
+                return inner
+
+            @deco_increase_one
+            @task
+            def foo(c):
+                "My docstring"
+                return 5
+
+            @deco_increase_one
+            @deco_increase_one
+            @task
+            def bar(c):
+                "My docstring"
+                return 5
+
+            self.task_foo = foo
+            self.task_bar = bar
+
+        def call_task_has_a_decorator(self):
+            context = Context()
+            assert self.task_foo(context) == 6
+
+        def call_task_has_multi_decorators(self):
+            context = Context()
+            assert self.task_bar(context) == 7
+
+    class callability_under_class_decorators:
+        def setup(self):
+            def deco_increase(value_up=0):
+                class DecoIncrease(object):
+                    """
+                    This is an example of decorator as a class
+                    Decorator as class example is found at https://stackoverflow.com/a/45361673/1235074
+                    """
+                    def __init__(self, func):
+                        update_wrapper(self, func)
+                        self.func = func
+
+                    def __get__(self, obj, objtype):
+                        """Support instance methods."""
+                        return partial(self.__call__, obj)
+
+                    def __call__(self, *args, **kwargs):
+                        returned_value = self.func(*args, **kwargs)
+                        return returned_value + value_up
+                return DecoIncrease
+
+            @deco_increase(value_up=1)
+            @task
+            def foo(c):
+                "My docstring"
+                return 5
+
+            @deco_increase(value_up=2)
+            @deco_increase(value_up=1)
+            @task
+            def bar(c):
+                "My docstring"
+                return 5
+
+            self.task_foo = foo
+            self.task_bar = bar
+
+        def call_task_has_a_kwarg_decorator(self):
+            context = Context()
+            assert self.task_foo(context) == 6
+
+        def call_task_has_multi_kwarg_decorators(self):
+            context = Context()
+            assert self.task_bar(context) == 8
 
     class get_arguments:
         def setup(self):
