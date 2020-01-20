@@ -147,11 +147,11 @@ class Task(object):
 
         .. versionadded:: 1.0
         """
+        # The original method (version 1.0) uses inspect.getargspec()
+        # which gets problem with args a from decorated function.
+        # It's recommended to replace by inspect.signature() from Python 3.3
+        # https://docs.python.org/3.3/library/inspect.html#inspect.getargspec
         if sys.version_info[0] < 3:
-            # The original method (version 1.0) was using inspect.getargspec()
-            # which made a problem when getting args a from decorated function.
-            # It is recommended to replace by inspect.signature() from Python 3.3
-            # https://docs.python.org/3.3/library/inspect.html#inspect.getargspec
             return self.argspec_python2(body)
 
         sig = inspect.signature(body)

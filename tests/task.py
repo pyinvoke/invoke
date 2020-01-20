@@ -294,7 +294,8 @@ class Task_:
                 class DecoIncrease(object):
                     """
                     This is an example of decorator as a class
-                    Decorator as class example is found at https://stackoverflow.com/a/45361673/1235074
+                    Decorator as class example is found at
+                    https://stackoverflow.com/a/45361673/1235074
                     """
                     def __init__(self, func):
                         update_wrapper(self, func)
