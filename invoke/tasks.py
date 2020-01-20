@@ -176,7 +176,7 @@ class Task(object):
 
     def argspec_python2(self, body):
         """
-        For the compatible Python 2.x only.
+        For keeping the compatibility with Python 2.x only.
         """
         # Handle callable-but-not-function objects
         # TODO: __call__ exhibits the 'self' arg; do we manually nix 1st result
