@@ -1,3 +1,4 @@
+import sys
 from functools import wraps, update_wrapper, partial
 
 from mock import Mock
@@ -290,6 +291,30 @@ class Task_:
             context = Context()
             assert self.task_bar(context) == 7
 
+    class callability_with_python2_decorators:
+        """
+        PR 666 only adds the feature to Python 3.
+        Because Python 2 does not have inspect.signature()
+        """
+
+        def python2_should_not_support_multi_decorators(self):
+            def deco_increase_one(func):
+
+                @wraps(func)
+                def inner(*args, **kwargs):
+                    return func(*args, **kwargs) + 1
+
+                return inner
+
+            if sys.version_info[0] < 2:
+                with raises(ValueError):
+                    @task  # apply @task on top of others
+                    @deco_increase_one
+                    def foo(c):
+                        "My docstring"
+                        return 5
+
+
     class callability_under_class_decorators:
         def setup(self):
             def deco_increase(value_up=0):
@@ -314,8 +339,8 @@ class Task_:
 
                 return DecoIncrease
 
-            @deco_increase(value_up=1)
             @task
+            @deco_increase(value_up=1)
             def foo(c):
                 "Apply one decorator"
                 return 5
