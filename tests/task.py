@@ -259,9 +259,11 @@ class Task_:
                 """
                 This is an example of decorator as a function
                 """
+
                 @wraps(func)
                 def inner(*args, **kwargs):
                     return func(*args, **kwargs) + 1
+
                 return inner
 
             @deco_increase_one
@@ -297,6 +299,7 @@ class Task_:
                     Decorator as class example is found at
                     https://stackoverflow.com/a/45361673/1235074
                     """
+
                     def __init__(self, func):
                         update_wrapper(self, func)
                         self.func = func
@@ -308,6 +311,7 @@ class Task_:
                     def __call__(self, *args, **kwargs):
                         returned_value = self.func(*args, **kwargs)
                         return returned_value + value_up
+
                 return DecoIncrease
 
             @deco_increase(value_up=1)
