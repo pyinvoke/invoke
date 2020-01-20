@@ -145,14 +145,13 @@ class Task(object):
           `.NO_DEFAULT` (an 'empty' value distinct from None, since None
           is a valid value on its own).
 
-        The original method (version 1.0) was using inspect.getargspec()
-        which makes problem when getting args a from decorated function.
-        It is recommended to replace by inspect.signature() from Python 3.3
-        https://docs.python.org/3.3/library/inspect.html#inspect.getargspec
-
         .. versionadded:: 1.0
         """
         if sys.version_info[0] < 3:
+            # The original method (version 1.0) was using inspect.getargspec()
+            # which made a problem when getting args a from decorated function.
+            # It is recommended to replace by inspect.signature() from Python 3.3
+            # https://docs.python.org/3.3/library/inspect.html#inspect.getargspec
             return self.argspec_python2(body)
 
         sig = inspect.signature(body)
