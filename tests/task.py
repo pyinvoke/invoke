@@ -232,7 +232,8 @@ class Task_:
 
         def errors_if_no_first_arg_at_all(self):
             with raises(ValueError):
-
+                # keep this expectation not conflicted with
+                #   tests.collection.Collection_.add_task.raises_ValueError_if_no_name_found
                 @task
                 def mytask():
                     pass
@@ -266,14 +267,14 @@ class Task_:
             @deco_increase_one
             @task
             def foo(c):
-                "My docstring"
+                "Apply one decorator"
                 return 5
 
             @deco_increase_one
             @deco_increase_one
             @task
             def bar(c):
-                "My docstring"
+                "Apply multi decorators"
                 return 5
 
             self.task_foo = foo
@@ -311,14 +312,14 @@ class Task_:
             @deco_increase(value_up=1)
             @task
             def foo(c):
-                "My docstring"
+                "Apply one decorator"
                 return 5
 
             @deco_increase(value_up=2)
             @deco_increase(value_up=1)
             @task
             def bar(c):
-                "My docstring"
+                "Apply multi decorators"
                 return 5
 
             self.task_foo = foo
