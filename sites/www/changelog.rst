@@ -2,6 +2,11 @@
 Changelog
 =========
 
+- :bug:`660` Fix an issue with `~invoke.run` & friends having intermittent
+  problems at exit time (symptom was typically about the exit code value being
+  ``None`` instead of an integer; often with an exception trace). Thanks to
+  Frank Lazzarini for the report and to the numerous others who provided
+  reproduction cases.
 - :bug:`518` Close pseudoterminals opened by the `~invoke.runners.Local` class
   during ``run(..., pty=True)``. Previously, these were only closed
   incidentally at process shutdown, causing file descriptor leakage in
