@@ -126,12 +126,12 @@ class Runner_:
 
     class timeouts:
         def does_not_fire_when_command_quick(self):
-            assert Local(Context()).run("sleep 1", timeout=5)
+            assert run("sleep 1", timeout=5)
 
         def triggers_exception_when_command_slow(self):
             before = time.time()
             with raises(CommandTimedOut) as info:
-                Local(Context()).run("sleep 5", timeout=0.5)
+                run("sleep 5", timeout=0.5)
             after = time.time()
             # Fudge real time check a bit, <=0.5 typically fails due to
             # overhead etc. May need raising further to avoid races? Meh.

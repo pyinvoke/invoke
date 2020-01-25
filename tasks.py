@@ -72,10 +72,23 @@ def coverage(c, report="term", opts=""):
     return coverage_(c, report=report, opts=opts, tester=test)
 
 
+@task
+def regression(c, jobs=8):
+    """
+    Run an expensive, hard-to-test-in-pytest run() regression checker.
+
+    :param int jobs: Number of jobs to run, in total. Ideally num of CPUs.
+    """
+    os.chdir("integration/_support")
+    cmd = "seq {} | parallel -n0 --halt=now,fail=1 inv -c regression check"
+    c.run(cmd.format(jobs))
+
+
 ns = Collection(
     test,
     coverage,
     integration,
+    regression,
     vendorize,
     release,
     www,

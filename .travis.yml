@@ -16,6 +16,11 @@ python:
 matrix:
   allow_failures:
     - python: "3.8-dev"
+# WHY does this have to be in before_install and not install? o_O
+before_install:
+  # Used by 'inv regression' (more performant/safe/likely to expose real issues
+  # than in-Python threads...)
+  - sudo apt-get -y install parallel
 install:
   # For some reason Travis' build envs have wildly different pip/setuptools
   # versions between minor Python versions, and this can cause many hilarious
@@ -45,6 +50,8 @@ before_script:
 script:
   # Execute full test suite + coverage, as the new sudo-capable user
   - inv travis.sudo-coverage
+  # Perform extra "not feasible inside pytest for no obvious reason" tests
+  - inv regression
   # Websites build OK? (Not on PyPy3, Sphinx is all "who the hell are you?" =/
   - "if [[ $TRAVIS_PYTHON_VERSION != 'pypy3' ]]; then inv sites; fi"
   # Doctests in websites OK? (Same caveat as above...)
