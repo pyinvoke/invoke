@@ -9,4 +9,3 @@ include tasks-requirements.txt
 recursive-include tests *
 recursive-exclude * *.pyc *.pyo
 recursive-exclude **/__pycache__ *
-
