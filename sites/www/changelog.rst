@@ -92,7 +92,7 @@ Changelog
     This fix only applies when ``pty=False`` (the default); PTYs complicate the
     situation greatly (but also mean the issue is less likely to occur).
 
-- :bug:`557` (with assist from :issue:`640`) Fix the
+- :bug:`557 major` (with assist from :issue:`640`) Fix the
   `~invoke.context.Context.cd` and `~invoke.context.Context.prefix` context
   managers so that ``with cd`` and ``with prefix`` correctly revert their state
   manipulations after they exit, when exceptions occur. Thanks to Jon Walsh and
