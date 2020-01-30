@@ -2,6 +2,7 @@
 Changelog
 =========
 
+- :release:`1.3.1 <2020-01-29>`
 - :support:`586` Explicitly strip out ``__pycache__`` (and for good measure,
   ``.py[co]``, which previously we only stripped from the ``tests/`` folder) in
   our ``MANIFEST.in``, since at least some earlier releases erroneously
