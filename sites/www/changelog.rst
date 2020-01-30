@@ -3,11 +3,11 @@ Changelog
 =========
 
 - :release:`1.3.1 <2020-01-29>`
-- :support:`586` Explicitly strip out ``__pycache__`` (and for good measure,
-  ``.py[co]``, which previously we only stripped from the ``tests/`` folder) in
-  our ``MANIFEST.in``, since at least some earlier releases erroneously
-  included such. Credit to Martijn Pieters for the report and Floris Lambrechts
-  for the patch.
+- :support:`586 backported` Explicitly strip out ``__pycache__`` (and for good
+  measure, ``.py[co]``, which previously we only stripped from the ``tests/``
+  folder) in our ``MANIFEST.in``, since at least some earlier releases
+  erroneously included such. Credit to Martijn Pieters for the report and
+  Floris Lambrechts for the patch.
 - :bug:`660` Fix an issue with `~invoke.run` & friends having intermittent
   problems at exit time (symptom was typically about the exit code value being
   ``None`` instead of an integer; often with an exception trace). Thanks to
