@@ -5,6 +5,7 @@ import struct
 import sys
 import threading
 import time
+import shlex
 import signal
 from subprocess import Popen, PIPE
 from types import TracebackType
@@ -15,10 +16,13 @@ from typing import (
     Dict,
     Generator,
     IO,
+    Iterable,
     List,
     Optional,
+    Sequence,
     Tuple,
     Type,
+    Union,
 )
 
 # Import some platform-specific things at top level so they can be mocked for
@@ -54,8 +58,14 @@ from .terminals import (
 from .util import has_fileno, isatty, ExceptionHandlingThread
 
 if TYPE_CHECKING:
+    from _typeshed import StrPath
+
     from .context import Context
     from .watchers import StreamWatcher
+
+    # Based on subprocess._CMD form typeshed (but without `bytes` support)
+    # https://github.com/python/typeshed/blob/main/stdlib/subprocess.pyi
+    Command = Union[str, Sequence[StrPath]]
 
 
 class Runner:
@@ -122,7 +132,7 @@ class Runner:
         self._asynchronous = False
         self._disowned = False
 
-    def run(self, command: str, **kwargs: Any) -> Optional["Result"]:
+    def run(self, command: "Command", **kwargs: Any) -> Optional["Result"]:
         """
         Execute ``command``, returning an instance of `Result` once complete.
 
@@ -144,7 +154,10 @@ class Runner:
             the ``echo`` keyword, etc). The base default values are described
             in the parameter list below.
 
-        :param str command: The shell command to execute.
+        :type command: str or sequence of PathLike
+        :param command:
+            The shell command to execute as a single string or a list of
+            arguments.
 
         :param bool asynchronous:
             When set to ``True`` (default ``False``), enables asynchronous
@@ -400,7 +413,7 @@ class Runner:
     def echo(self, command: str) -> None:
         print(self.opts["echo_format"].format(command=command))
 
-    def _setup(self, command: str, kwargs: Any) -> None:
+    def _setup(self, command: "Command", kwargs: Any) -> None:
         """
         Prepare data on ``self`` so we're ready to start running.
         """
@@ -414,7 +427,7 @@ class Runner:
         self.encoding = self.opts["encoding"] or self.default_encoding()
         # Echo running command (wants to be early to be included in dry-run)
         if self.opts["echo"]:
-            self.echo(command)
+            self.echo(command_string(command))
         # Prepare common result args.
         # TODO: I hate this. Needs a deeper separate think about tweaking
         # Runner.generate_result in a way that isn't literally just this same
@@ -428,7 +441,9 @@ class Runner:
             encoding=self.encoding,
         )
 
-    def _run_body(self, command: str, **kwargs: Any) -> Optional["Result"]:
+    def _run_body(
+        self, command: "Command", **kwargs: Any
+    ) -> Optional["Result"]:
         # Prepare all the bits n bobs.
         self._setup(command, kwargs)
         # If dry-run, stop here.
@@ -1043,7 +1058,9 @@ class Runner:
         """
         raise NotImplementedError
 
-    def start(self, command: str, shell: str, env: Dict[str, Any]) -> None:
+    def start(
+        self, command: "Command", shell: str, env: Dict[str, Any]
+    ) -> None:
         """
         Initiate execution of ``command`` (via ``shell``, with ``env``).
 
@@ -1053,7 +1070,8 @@ class Runner:
         In most cases, this method will also set subclass-specific member
         variables used in other methods such as `wait` and/or `returncode`.
 
-        :param str command:
+        :type command: str or sequence of PathLike
+        :param command:
             Command string to execute.
 
         :param str shell:
@@ -1305,7 +1323,9 @@ class Local(Runner):
                 "Unable to close missing subprocess or stdin!"
             )
 
-    def start(self, command: str, shell: str, env: Dict[str, Any]) -> None:
+    def start(
+        self, command: "Command", shell: str, env: Dict[str, Any]
+    ) -> None:
         if self.using_pty:
             if pty is None:  # Encountered ImportError
                 err = "You indicated pty=True, but your platform doesn't support the 'pty' module!"  # noqa
@@ -1332,7 +1352,7 @@ class Local(Runner):
                 # for now.
                 # NOTE: stdlib subprocess (actually its posix flavor, which is
                 # written in C) uses either execve or execv, depending.
-                os.execve(shell, [shell, "-c", command], env)
+                os.execve(shell, [shell, "-c", command_string(command)], env)
         else:
             self.process = Popen(
                 command,
@@ -1414,7 +1434,8 @@ class Result:
     :param str encoding:
         The string encoding used by the local shell environment.
 
-    :param str command:
+    :type command: str or sequence of PathLike
+    :param command:
         The command which was executed.
 
     :param str shell:
@@ -1469,7 +1490,7 @@ class Result:
         stdout: str = "",
         stderr: str = "",
         encoding: Optional[str] = None,
-        command: str = "",
+        command: "Command" = "",
         shell: str = "",
         env: Optional[Dict[str, Any]] = None,
         exited: int = 0,
@@ -1667,3 +1688,28 @@ def default_encoding() -> str:
     """
     encoding = locale.getpreferredencoding(False)
     return encoding
+
+
+def command_string(command: "Command") -> str:
+    """
+    Turns a command (which can be a sequence containing PathLike)
+    into a string.
+    """
+    if isinstance(command, str):
+        return command
+    return shlex_join(str(s) for s in command)
+
+
+if sys.version_info >= (3, 8):
+    from shlex import join as shlex_join
+else:
+
+    def shlex_join(iterable: Iterable[str]) -> str:
+        """
+        Join elements into a shell-safe string.
+
+        .. note::
+            Backport of Python 3.8's `shlex.join
+            <https://docs.python.org/3/library/shlex.html#shlex.join>`_.
+        """
+        return " ".join(shlex.quote(s) for s in iterable)
