@@ -461,14 +461,21 @@ class MockContext(Context):
         # result? E.g. filling in .command, etc? Possibly useful for debugging
         # if one hits unexpected-order problems with what they passed in to
         # __init__.
-        return self._yield_result("__run", command)
+        result = self._yield_result("__run", command)
+        if result.command == "":
+            result.command = command
+        return result
+
 
     def sudo(self, command, *args, **kwargs):
         # TODO: this completely nukes the top-level behavior of sudo(), which
         # could be good or bad, depending. Most of the time I think it's good.
         # No need to supply dummy password config, etc.
         # TODO: see the TODO from run() re: injecting arg/kwarg values
-        return self._yield_result("__sudo", command)
+        result = self._yield_result("__sudo", command)
+        if result.command == "":
+            result.command = command
+        return result
 
     def set_result_for(self, attname, command, result):
         """
