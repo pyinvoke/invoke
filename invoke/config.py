@@ -905,6 +905,9 @@ class Config(DataProxy):
 
     def _load_yaml(self, path):
         with open(path) as fd:
+            if hasattr(yaml, "safe_load"):
+                # Use safe loader if available
+                return yaml.safe_load(fd)
             return yaml.load(fd)
 
     def _load_yml(self, path):
