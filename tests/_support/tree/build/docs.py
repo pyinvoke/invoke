@@ -1,6 +1,6 @@
 "Tasks for managing Sphinx docs."
 
-from invoke import task, Collection
+from invoke import task
 
 
 @task(name="all", default=True)

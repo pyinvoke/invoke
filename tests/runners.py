@@ -546,7 +546,7 @@ class Runner_:
             # sys.stdin.
             # NOTE: this also tests that non-fileno-bearing streams read/write
             # 1 byte at a time. See farther-down test for fileno-bearing stdin
-            calls = list(map(lambda x: call(x), "Text!"))
+            calls = list(map(call, "Text!"))
             klass.write_proc_stdin.assert_has_calls(calls, any_order=False)
 
         def can_be_overridden(self):
@@ -556,7 +556,7 @@ class Runner_:
                 _, in_stream=in_stream, out_stream=StringIO()
             )
             # stdin mirroring occurs char-by-char
-            calls = list(map(lambda x: call(x), "Hey, listen!"))
+            calls = list(map(call, "Hey, listen!"))
             klass.write_proc_stdin.assert_has_calls(calls, any_order=False)
 
         def can_be_disabled_entirely(self):
@@ -1014,7 +1014,7 @@ stderr 25
                 "Destroy": "your ego",
                 "humans": "are awful",
             }
-            calls = map(lambda x: call(x), responses.values())
+            calls = map(call, responses.values())
             # CANNOT assume order due to simultaneous streams.
             # If we didn't say any_order=True we could get race condition fails
             self._expect_response(
@@ -1110,7 +1110,7 @@ stderr 25
             # Examine mocked output stream to see if it was mirrored to
             if expect_mirroring:
                 calls = output.write.call_args_list
-                assert calls == list(map(lambda x: call(x), fake_in))
+                assert calls == list(map(call, fake_in))
                 assert len(output.flush.call_args_list) == len(fake_in)
             # Or not mirrored to
             else:
