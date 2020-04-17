@@ -208,6 +208,8 @@ class ParserContext(object):
             full_names.append(name + valuestr)
         namestr = ", ".join(sorted(full_names, key=len))
         helpstr = arg.help or ""
+        if helpstr == "SKIP":
+            return
         return namestr, helpstr
 
     def help_tuples(self):
@@ -239,9 +241,12 @@ class ParserContext(object):
         # changes?
         # Cast to list to ensure non-generator on Python 3.
         return list(
-            map(
-                lambda x: self.help_for(to_flag(x.name)),
-                sorted(self.flags.values(), key=flag_key),
+            filter(
+                None,
+                map(
+                    lambda x: self.help_for(to_flag(x.name)),
+                    sorted(self.flags.values(), key=flag_key),
+                ),
             )
         )
 
