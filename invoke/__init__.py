@@ -21,7 +21,7 @@ from .exceptions import (  # noqa
 )
 from .executor import Executor  # noqa
 from .loader import FilesystemLoader  # noqa
-from .parser import Argument, Parser, ParserContext, ParseResult  # noqa
+from .parser import Argument, Parser, ParserContext, ParseResult, SKIP  # noqa
 from .program import Program  # noqa
 from .runners import Runner, Local, Failure, Result, Promise  # noqa
 from .tasks import task, call, Call, Task  # noqa
