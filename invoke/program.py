@@ -803,7 +803,7 @@ class Program(object):
         indent = len(ancestors) * self.indent
         ancestor_path = ".".join(x for x in ancestors)
         for name, task in sorted(six.iteritems(coll.tasks)):
-            if task.hidden:
+            if task.hidden is True:
                 continue
             is_default = name == coll.default
             # Start with just the name and just the aliases, no prefixes or
