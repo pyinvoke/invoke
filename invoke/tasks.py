@@ -15,6 +15,10 @@ if six.PY3:
     from itertools import zip_longest
 else:
     from itertools import izip_longest as zip_longest
+try:
+    from collections.abc import Iterable
+except ImportError:
+    from collections import Iterable
 
 
 #: Sentinel object representing a truly blank value (vs ``None``).
@@ -82,6 +86,8 @@ class Task(object):
         # Call chain bidness
         self.pre = pre or []
         self.post = post or []
+        assert isinstance(self.pre, Iterable)
+        assert isinstance(self.post, Iterable)
         self.times_called = 0
         # Whether to print return value post-execution
         self.autoprint = autoprint
