@@ -1,9 +1,30 @@
-from .util import six
+from collections import defaultdict
+from functools import reduce, wraps
+import inspect
 
 from .config import Config
 from .parser import ParserContext
-from .util import debug
-from .tasks import Call, Task
+from .util import debug, six
+from .tasks import Call, Task, NOT_SET, FROM_PARENT
+
+
+def unwrap(f):
+    while hasattr(f, '__wrapped__'):
+        f = f.__wrapped__
+    return f
+
+
+def apply_arg_tree(arg_tree, call):
+    task = call.task
+    body = unwrap(call.task.body)
+    kwargs = {}
+    kwargs.update(call.kwargs)
+    parent_tasks = arg_tree[hash(body)]
+    for k, v in kwargs.items():
+        if v is FROM_PARENT:
+            _v = next((t.kwargs[k] for t in parent_tasks if k in t.kwargs), NOT_SET)
+            kwargs[k] = _v
+    return task, kwargs
 
 
 class Executor(object):
@@ -95,6 +116,7 @@ class Executor(object):
         expanded = self.expand_calls(calls)
         # Get some good value for dedupe option, even if config doesn't have
         # the tree we expect. (This is a concession to testing.)
+        arg_tree, expanded = self.expand_calls(calls)
         try:
             dedupe = self.config.tasks.dedupe
         except AttributeError:
@@ -126,7 +148,8 @@ class Executor(object):
             # being parameterized), handing in this config for use there.
             context = call.make_context(config)
             args = (context,) + args
-            result = call.task(*args, **call.kwargs)
+            _task, _kwargs = apply_arg_tree(arg_tree, call)
+            result = _task(*args, **_kwargs)
             if autoprint:
                 print(result)
             # TODO: handle the non-dedupe case / the same-task-different-args
@@ -178,7 +201,13 @@ class Executor(object):
                 debug("{!r}: found in list already, skipping".format(call))
         return deduped
 
-    def expand_calls(self, calls):
+    def _merge(self, memo, d):
+        k, v = d
+        if v not in memo[k]:
+            memo[k] += v
+        return memo
+
+    def expand_calls(self, calls, parent=None):
         """
         Expand a list of `.Call` objects into a near-final list of same.
 
@@ -192,6 +221,8 @@ class Executor(object):
         .. versionadded:: 1.0
         """
         ret = []
+        arg_tree = defaultdict(list)
+
         for call in calls:
             # Normalize to Call (this method is sometimes called with pre/post
             # task lists, which may contain 'raw' Task objects)
@@ -206,7 +237,17 @@ class Executor(object):
             # TODO: we _probably_ don't even want the config in here anymore,
             # we want this to _just_ be about the recursion across pre/post
             # tasks or parameterization...?
-            ret.extend(self.expand_calls(call.pre))
+            _arg_tree, _calls = self.expand_calls(call.pre, call)
+            ret.extend(_calls)
+            arg_tree = reduce(self._merge, list(arg_tree.items()) + list(_arg_tree.items()), defaultdict(list))
+
             ret.append(call)
-            ret.extend(self.expand_calls(call.post))
-        return ret
+            if hasattr(call.task.body, '__wrapped__'):
+                arg_tree[hash(call.task.body.__wrapped__)].append(parent.clone())
+            else:
+                arg_tree[hash(call.task.body)].append(parent)
+
+            _arg_tree, _calls = self.expand_calls(call.post, call)
+            ret.extend(_calls)
+            arg_tree = reduce(self._merge, list(arg_tree.items()) + list(_arg_tree.items()), defaultdict(list))
+        return arg_tree, ret
