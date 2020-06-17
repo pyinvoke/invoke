@@ -138,7 +138,7 @@ def stdin_is_foregrounded_tty(stream):
         return False
     try:
         return os.getpgrp() == os.tcgetpgrp(stream.fileno())
-    except:
+    except OSError:
         return False
 
 
