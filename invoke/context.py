@@ -324,12 +324,12 @@ class Context(DataProxy):
         if path.startswith("~"):
             # Ensure that tilde expansion continues to work after quoting; this
             # requires the first path component starting with a tilde to not be
-            # inside quotes.
-            # For example, the path `~a/b(c)` needs to become, after quoting,
-            # ~a/'b(c)'.
-            # This means that the user name must not contain special characters.
-            # This should be fine, since user names generally follow NAME_REGEX,
-            # which is usually equivalent to: "^[a-z][-a-z0-9_]*$".
+            # inside quotes. For example, the path `~a/b(c)` needs to become,
+            # after quoting, ~a/'b(c)'.
+            # This means that the user name must not contain special
+            # characters. This should be fine, since user names generally
+            # follow NAME_REGEX, which is usually equivalent to:
+            # "^[a-z][-a-z0-9_]*$".
             quotestart = path.find("/") + 1
             if quotestart == 0:
                 quotestart = len(path)
