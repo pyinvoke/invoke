@@ -8,6 +8,22 @@ try:
 except ImportError:
     from six import raise_from, iteritems
 
+try:
+    shlex.quote
+except AttributeError:
+    # Copied from CPython 3's implementation of shlex.quote
+    _shlex_find_unsafe = re.compile(r'[^\w@%+=:,./-]').search
+
+    def _shlex_quote(s):
+        if not s:
+            return "''"
+        if _shlex_find_unsafe(s) is None:
+            return s
+
+        return "'" + s.replace("'", "'\"'\"'") + "'"
+
+    shlex.quote = _shlex_quote
+
 from .config import Config, DataProxy
 from .exceptions import Failure, AuthFailure, ResponseNotAccepted
 from .runners import Result
