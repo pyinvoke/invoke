@@ -1,6 +1,7 @@
 import os
 import pickle
 import re
+import shlex
 import sys
 
 from mock import patch, Mock, call
@@ -150,6 +151,18 @@ class Context_:
         def home(self):
             self.c.command_cwds = ["a", "~b", "c"]
             assert self.c.cwd == os.path.join("~b", "c")
+
+        def spaces(self):
+            self.c.command_cwds = ["a b", "c"]
+            assert self.c.cwd == shlex.quote(os.path.join("a b", "c"))
+
+        def special(self):
+            self.c.command_cwds = ["a(b)", "c"]
+            assert self.c.cwd == shlex.quote(os.path.join("a(b)", "c"))
+
+        def special_home(self):
+            self.c.command_cwds = ["~a", "b(c)"]
+            assert self.c.cwd == os.path.join("~a", shlex.quote("b(c)"))
 
     class cd:
         def setup(self):
