@@ -12,7 +12,7 @@ try:
     shlex.quote
 except AttributeError:
     # Copied from CPython 3's implementation of shlex.quote
-    _shlex_find_unsafe = re.compile(r'[^\w@%+=:,./-]').search
+    _shlex_find_unsafe = re.compile(r"[^\w@%+=:,./-]").search
 
     def _shlex_quote(s):
         if not s:
