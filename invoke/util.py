@@ -169,7 +169,8 @@ def helpline(obj):
     docstring = obj.__doc__
     if not docstring or docstring == type(obj).__doc__:
         return None
-    return docstring.lstrip().splitlines()[0]
+    lines =  docstring.lstrip().splitlines()
+    return lines[0] if lines else ""
 
 
 class ExceptionHandlingThread(threading.Thread):
