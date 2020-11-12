@@ -384,7 +384,7 @@ class MockContext(Context):
         ``NotImplementedError`` if called (since the alternative is to call the
         real underlying method - typically undesirable when mocking.)
 
-        .. versionadded:: 1.0
+    .. versionadded:: 1.0
     """
 
     def __init__(self, config=None, **kwargs):
