@@ -42,19 +42,23 @@ def chdir_support():
 
 @pytest.fixture
 def clean_sys_modules():
-    # TODO: _arguably_ it might be cleaner to register this as a 'finalizer'?
-    # it's not like the yield isn't readable here - it's a fixture that only
-    # performs teardown.
+    """
+    Attempt to nix any imports incurred by the test, to prevent state bleed.
+
+    In some cases this prevents outright errors (eg a test accidentally relying
+    on another's import of a task tree in the support folder) and in others
+    it's required because we're literally testing runtime imports.
+    """
+    snapshot = sys.modules.copy()
     yield
-    # Strip any test-support task collections from sys.modules to prevent
-    # state bleed between tests; otherwise tests can incorrectly pass
-    # despite not explicitly loading/cd'ing to get the tasks they call
-    # loaded.
+    # Iterate over another copy to avoid ye olde mutate-during-iterate problem
+    # NOTE: cannot simply 'sys.modules = snapshot' as that is warned against
     for name, module in iteritems(sys.modules.copy()):
-        # Get some comparable __file__ path value, including handling cases
-        # where it is None instead of undefined (seems new in Python 3.7?)
-        if module and support in (getattr(module, "__file__", "") or ""):
+        # Delete anything newly added (imported)
+        if name not in snapshot:
             del sys.modules[name]
+        # Overwrite anything that was modified (the easy version...)
+        sys.modules.update(snapshot)
 
 
 @pytest.fixture
