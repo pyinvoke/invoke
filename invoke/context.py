@@ -429,10 +429,10 @@ class MockContext(Context):
         Mock = None
         try:
             from mock import Mock
-        except ImportError as e:
+        except ImportError:
             try:
                 from unittest.mock import Mock
-            except ImportError as e:
+            except ImportError:
                 pass
         # TODO: would be nice to allow regexen instead of exact string matches
         super(MockContext, self).__init__(config)

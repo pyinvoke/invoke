@@ -542,11 +542,9 @@ class MockContext_:
         assert c.run("foo").stdout == "biz"
 
     class commands_injected_into_Result:
-        @mark.parametrize("kwargs", (
-            dict(),
-            dict(command=""),
-            dict(command=None),
-        ))
+        @mark.parametrize(
+            "kwargs", (dict(), dict(command=""), dict(command=None))
+        )
         def when_not_set_or_falsey(self, kwargs):
             c = MockContext(run={"foo": Result("bar", **kwargs)})
             assert c.run("foo").command == "foo"
@@ -655,8 +653,10 @@ class MockContext_:
 
         # TODO: be nice if pytest-relaxed supported class level fixtures, if
         # only I knew the guy who wrote that...
-        def does_not_wrap_when_no_mock_library_present(self, clean_sys_modules):
-            for module in ('unittest.mock', 'mock'):
+        def does_not_wrap_when_no_mock_library_present(
+            self, clean_sys_modules
+        ):
+            for module in ("unittest.mock", "mock"):
                 sys.modules[module] = None
             mc = MockContext(**self.kwargs)
             assert not isinstance(mc.run, Mock)
@@ -679,6 +679,6 @@ class MockContext_:
             preferred, other = Mock(), Mock()
             sys.modules["mock"] = preferred
             sys.modules["unittest.mock"] = other
-            mc = MockContext(**self.kwargs)
+            MockContext(**self.kwargs)
             assert preferred.Mock.call_count == 2
             assert other.Mock.call_count == 0
