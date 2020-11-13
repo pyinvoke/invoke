@@ -380,11 +380,20 @@ class MockContext(Context):
     Primarily useful for testing Invoke-using codebases.
 
     .. note::
+        If this class' constructor is able to import the ``Mock`` class at
+        runtime (via the ``mock`` or ``unittest.mock`` modules, in that order)
+        it will wraps its ``run``, etc methods in ``Mock`` objects. This allows
+        you to easily assert that the methods (still returning the values you
+        prepare them with) were actually called.
+
+    .. note::
         Methods not given `Results <.Result>` to yield will raise
         ``NotImplementedError`` if called (since the alternative is to call the
         real underlying method - typically undesirable when mocking.)
 
     .. versionadded:: 1.0
+    .. versionchanged:: 1.5
+        Added conditional ``Mock`` wrapping of ``run`` and ``sudo``.
     """
 
     def __init__(self, config=None, **kwargs):
@@ -416,6 +425,15 @@ class MockContext(Context):
             ``TypeError``, if the values given to ``run`` or other kwargs
             aren't individual `.Result` objects or iterables.
         """
+        # Figure out if we can support Mock in the current environment
+        Mock = None
+        try:
+            from mock import Mock
+        except ImportError as e:
+            try:
+                from unittest.mock import Mock
+            except ImportError as e:
+                pass
         # TODO: would be nice to allow regexen instead of exact string matches
         super(MockContext, self).__init__(config)
         for method, results in iteritems(kwargs):
@@ -427,7 +445,11 @@ class MockContext(Context):
             ):
                 err = "Not sure how to yield results from a {!r}"
                 raise TypeError(err.format(type(results)))
+            # Set the return values
             self._set("__{}".format(method), results)
+            # Wrap the method in a Mock, if applicable
+            if Mock is not None:
+                self._set(method, Mock(wraps=getattr(self, method)))
 
     # TODO: _maybe_ make this more metaprogrammy/flexible (using __call__ etc)?
     # Pretty worried it'd cause more hard-to-debug issues than it's presently

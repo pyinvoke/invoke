@@ -2,6 +2,9 @@
 Changelog
 =========
 
+- :feature:`-` Upgrade `~invoke.context.MockContext` to wrap its methods in
+  ``Mock`` objects if the ``(unittest.)mock`` library is importable. This makes
+  testing Invoke-using codebases even easier.
 - :release:`1.4.1 <2020-01-29>`
 - :release:`1.3.1 <2020-01-29>`
 - :support:`586 backported` Explicitly strip out ``__pycache__`` (and for good
