@@ -33,34 +33,75 @@ For example, take this task::
     from invoke import task
 
     @task
-    def show_platform(c):
+    def get_platform(c):
         uname = c.run("uname -s").stdout.strip()
         if uname == 'Darwin':
-            print("You paid the Apple tax!")
+            return "You paid the Apple tax!"
         elif uname == 'Linux':
-            print("Year of Linux on the desktop!")
+            return "Year of Linux on the desktop!"
 
-An example of testing it with `.MockContext` could be the following (note:
-``trap`` is only one example of a common test framework tactic which mocks
-``sys.stdout``/``err``)::
+An example of testing it with `.MockContext` could be the following::
 
-    import sys
-    from spec import trap
     from invoke import MockContext, Result
-    from mytasks import show_platform
+    from mytasks import get_platform
 
-    @trap
-    def test_show_platform_on_mac():
+    def test_get_platform_on_mac():
         c = MockContext(run=Result("Darwin\n"))
-        show_platform(c)
-        assert "Apple" in sys.stdout.getvalue()
+        assert "Apple" in get_platform(c)
 
-    @trap
-    def test_show_platform_on_linux():
+    def test_get_platform_on_linux():
         c = MockContext(run=Result("Linux\n"))
-        show_platform(c)
-        assert "desktop" in sys.stdout.getvalue()
+        assert "desktop" in get_platform(c)
 
+Putting the ``Mock`` in `.MockContext`
+--------------------------------------
+
+Starting in Invoke 1.5, `.MockContext` will attempt to import the ``mock``
+library at instantiation time and wrap its methods within ``Mock`` objects.
+This lets you not only present realistic return values to your code, but make
+test assertions about what commands your code is running.
+
+Here's another "platform sensitive" task, being tested with the assumption that
+the test environment has some flavor of ``mock`` installed (here we'll pretend
+it's Python 3.6 or later, and also use some f-strings for brevity)::
+
+    from invoke import task
+
+    @task
+    def replace(c, path, search, replacement):
+        # Assume systems have sed, and that some (eg macOS w/ Homebrew) may
+        # have gsed, implying regular sed is BSD style.
+        has_gsed = c.run("which gsed", warn=True, hide=True)
+        # Set command to run accordingly
+        binary = "gsed" if has_gsed else "sed"
+        c.run(f"{binary} -e 's/{search}/{replacement}/g' {path}")
+
+The test code (again, which presumes that eg ``MockContext.run`` is now a
+``Mock`` wrapper) relies primarily on 'last call' assertions
+(``Mock.assert_called_with``) but you can of course use any ``Mock`` methods
+you need. It also shows how you can set the mock context to respond to multiple
+possible commands, using a dict value::
+
+    from invoke import MockContext, Result
+    from mytasks import replace
+
+    def test_regular_sed():
+        expected_sed = "sed -e s/foo/bar/g file.txt"
+        c = MockContext(run={
+            "which gsed": Result(exited=1),
+            expected_sed: Result(),
+        })
+        replace(c, 'file.txt', 'foo', 'bar')
+        c.run.assert_called_with(expected_sed)
+
+    def test_homebrew_gsed():
+        expected_sed = "gsed -e s/foo/bar/g file.txt"
+        c = MockContext(run={
+            "which gsed": Result(),
+            expected_sed: Result(),
+        })
+        replace(c, 'file.txt', 'foo', 'bar')
+        c.run.assert_called_with(expected_sed)
 
 Expect `Results <.Result>`
 ==========================
@@ -70,14 +111,14 @@ objects - which (as seen above) can be readily instantiated by themselves with
 only partial data (e.g. standard output, but no exit code or standard error).
 
 This means that well-organized code can be even easier to test and doesn't
-require as much use of `.MockContext` or terminal output mocking.
+require as much use of `.MockContext`.
 
-An iteration on the previous example::
+An iteration on the initial `.MockContext`-using example above::
 
     from invoke import task
 
     @task
-    def show_platform(c):
+    def get_platform(c):
         print(platform_response(c.run("uname -s")))
 
     def platform_response(result):
@@ -87,9 +128,8 @@ An iteration on the previous example::
         elif uname == 'Linux':
             return "Year of Linux on the desktop!"
 
-Now the bulk of the actual logic is testable with fewer lines of code and fewer
-assumptions about the "real world" the code runs within (e.g. no need to care
-about ``sys.stdout`` at all)::
+With the logic encapsulated in a subroutine, you can just unit test that
+function by itself, deferring testing of the task or its context::
 
     from invoke import Result
     from mytasks import platform_response

@@ -2,6 +2,9 @@
 Changelog
 =========
 
+- :support:`-` Update the `testing documentation </concepts/testing>` a bit:
+  cleaned up existing examples and added new sections for the other updates in
+  the 1.5 release.
 - :feature:`700` Automatically populate the ``command`` attribute of
   `~invoke.runners.Result` objects returned by `~invoke.context.MockContext`
   methods, with the command string triggering that result. Previously users had
