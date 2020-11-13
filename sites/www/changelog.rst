@@ -2,6 +2,11 @@
 Changelog
 =========
 
+- :feature:`700` Automatically populate the ``command`` attribute of
+  `~invoke.runners.Result` objects returned by `~invoke.context.MockContext`
+  methods, with the command string triggering that result. Previously users had
+  to do this by hand or otherwise suffered inaccurate result objects. Thanks to
+  ``@SwampFalc`` for the report & initial patch.
 - :feature:`-` Upgrade `~invoke.context.MockContext` to wrap its methods in
   ``Mock`` objects if the ``(unittest.)mock`` library is importable. This makes
   testing Invoke-using codebases even easier.

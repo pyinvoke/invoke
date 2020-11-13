@@ -461,6 +461,7 @@ class MockContext(Context):
         # NotImplementedErrors, but it doubled method size, and chance of
         # unexpected index/etc errors seems low here.
         try:
+            # Obtain result if possible
             value = getattr(self, attname)
             # TODO: thought there's a 'better' 2x3 DictType or w/e, but can't
             # find one offhand
@@ -474,6 +475,9 @@ class MockContext(Context):
             elif isinstance(value, Result):
                 result = value
                 delattr(self, attname)
+            # Populate command string unless explicitly given
+            if not result.command:
+                result.command = command
             return result
         except (AttributeError, IndexError, KeyError):
             raise_from(NotImplementedError, None)

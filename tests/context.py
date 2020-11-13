@@ -5,7 +5,7 @@ import sys
 
 from mock import patch, Mock, call
 from pytest_relaxed import trap
-from pytest import skip, raises
+from pytest import skip, raises, mark
 
 from invoke import (
     AuthFailure,
@@ -540,6 +540,21 @@ class MockContext_:
         c = MockContext(run={"foo": [Result("bar"), Result("biz")]})
         assert c.run("foo").stdout == "bar"
         assert c.run("foo").stdout == "biz"
+
+    class commands_injected_into_Result:
+        @mark.parametrize("kwargs", (
+            dict(),
+            dict(command=""),
+            dict(command=None),
+        ))
+        def when_not_set_or_falsey(self, kwargs):
+            c = MockContext(run={"foo": Result("bar", **kwargs)})
+            assert c.run("foo").command == "foo"
+
+        def does_not_occur_when_truthy(self):
+            # Not sure why you'd want this but whatevs!
+            c = MockContext(run={"foo": Result("bar", command="nope")})
+            assert c.run("foo").command == "nope"  # not "bar"
 
     def methods_with_no_kwarg_values_raise_NotImplementedError(self):
         with raises(NotImplementedError):
