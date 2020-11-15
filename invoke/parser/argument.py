@@ -44,6 +44,7 @@ class Argument(object):
         optional=False,
         incrementable=False,
         attr_name=None,
+        hidden=False,
     ):
         if name and names:
             msg = "Cannot give both 'name' and 'names' arguments! Pick one."
@@ -66,6 +67,7 @@ class Argument(object):
         self.optional = optional
         self.incrementable = incrementable
         self.attr_name = attr_name
+        self.hidden = hidden
 
     def __repr__(self):
         nicks = ""

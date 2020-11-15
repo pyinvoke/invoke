@@ -59,6 +59,7 @@ class Task(object):
         autoprint=False,
         iterable=None,
         incrementable=None,
+        hidden=False,
     ):
         # Real callable
         self.body = body
@@ -79,6 +80,9 @@ class Task(object):
         self.incrementable = incrementable or []
         self.auto_shortflags = auto_shortflags
         self.help = help or {}
+        if hidden not in (True, False):
+            hidden = set(hidden)
+        self.hidden = hidden
         # Call chain bidness
         self.pre = pre or []
         self.post = post or []
@@ -217,6 +221,8 @@ class Task(object):
         # Help
         if name in self.help:
             opts["help"] = self.help[name]
+        if isinstance(self.hidden, set):
+            opts["hidden"] = name in self.hidden
         return opts
 
     def get_arguments(self):

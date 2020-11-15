@@ -182,6 +182,8 @@ class ParserContext(object):
             err = "{!r} is not a valid flag for this context! Valid flags are: {!r}"  # noqa
             raise ValueError(err.format(flag, self.flags.keys()))
         arg = self.flags[flag]
+        if arg.hidden:
+            return
         # Determine expected value type, if any
         value = {str: "STRING", int: "INT"}.get(arg.kind)
         # Format & go
@@ -239,9 +241,12 @@ class ParserContext(object):
         # changes?
         # Cast to list to ensure non-generator on Python 3.
         return list(
-            map(
-                lambda x: self.help_for(to_flag(x.name)),
-                sorted(self.flags.values(), key=flag_key),
+            filter(
+                None,
+                map(
+                    lambda x: self.help_for(to_flag(x.name)),
+                    sorted(self.flags.values(), key=flag_key),
+                ),
             )
         )
 
