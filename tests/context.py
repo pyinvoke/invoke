@@ -173,7 +173,7 @@ class Context_:
             with c.cd("foo"):
                 c.sudo("whoami")
 
-            cmd = "sudo -S -p '[sudo] password: ' cd foo && whoami"
+            cmd = "sudo -S -p '[sudo] password: ' $SHELL -c 'cd foo && whoami'"
             assert runner.run.called, "sudo() never called runner.run()!"
             assert runner.run.call_args[0][0] == cmd
 
@@ -229,7 +229,7 @@ class Context_:
             with c.prefix("cd foo"):
                 c.sudo("whoami")
 
-            cmd = "sudo -S -p '[sudo] password: ' cd foo && whoami"
+            cmd = "sudo -S -p '[sudo] password: ' $SHELL -c 'cd foo && whoami'"
             assert runner.run.called, "sudo() never called runner.run()!"
             assert runner.run.call_args[0][0] == cmd
 
@@ -284,7 +284,7 @@ class Context_:
             runner = Local.return_value
             Context().sudo("whoami")
             # NOTE: implicitly tests default sudo.prompt conf value
-            cmd = "sudo -S -p '[sudo] password: ' whoami"
+            cmd = "sudo -S -p '[sudo] password: ' $SHELL -c whoami"
             assert runner.run.called, "sudo() never called runner.run()!"
             assert runner.run.call_args[0][0] == cmd
 
@@ -292,7 +292,7 @@ class Context_:
         def optional_user_argument_adds_u_and_H_flags(self, Local):
             runner = Local.return_value
             Context().sudo("whoami", user="rando")
-            cmd = "sudo -S -p '[sudo] password: ' -H -u rando whoami"
+            cmd = "sudo -S -p '[sudo] password: ' -H -u rando $SHELL -c whoami"
             assert runner.run.called, "sudo() never called runner.run()!"
             assert runner.run.call_args[0][0] == cmd
 
@@ -301,7 +301,7 @@ class Context_:
             runner = Local.return_value
             config = Config(overrides={"sudo": {"user": "rando"}})
             Context(config=config).sudo("whoami")
-            cmd = "sudo -S -p '[sudo] password: ' -H -u rando whoami"
+            cmd = "sudo -S -p '[sudo] password: ' -H -u rando $SHELL -c whoami"
             assert runner.run.call_args[0][0] == cmd
 
         @patch(local_path)
@@ -309,7 +309,7 @@ class Context_:
             runner = Local.return_value
             config = Config(overrides={"sudo": {"user": "rando"}})
             Context(config=config).sudo("whoami", user="calrissian")
-            cmd = "sudo -S -p '[sudo] password: ' -H -u calrissian whoami"
+            cmd = "sudo -S -p '[sudo] password: ' -H -u calrissian $SHELL -c whoami"  # noqa
             assert runner.run.call_args[0][0] == cmd
 
         @trap
@@ -329,7 +329,7 @@ class Context_:
             runner = Local.return_value
             config = Config(overrides={"sudo": {"prompt": "FEED ME: "}})
             Context(config=config).sudo("whoami")
-            cmd = "sudo -S -p 'FEED ME: ' whoami"
+            cmd = "sudo -S -p 'FEED ME: ' $SHELL -c whoami"
             assert runner.run.call_args[0][0] == cmd
 
         def prompt_value_is_properly_shell_escaped(self):
