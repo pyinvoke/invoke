@@ -2,6 +2,26 @@
 Changelog
 =========
 
+- :feature:`-` `~invoke.context.MockContext` now accepts a few quality-of-life
+  shortcuts as keys and values in its ``run``/``sudo`` arguments:
+
+    - Keys may be compiled regular expression objects, as well as strings, and
+      will match any calls whose commands match the regex.
+    - Values may be ``True`` or ``False`` as shorthand for otherwise empty
+      `~invoke.runners.Result` objects with exit codes of ``0`` or ``1``
+      respectively.
+    - Values may also be strings, as shorthand for otherwise empty
+      `~invoke.runners.Result` objects with those strings given as the
+      ``stdout`` argument.
+
+- :feature:`441` Add a new ``repeat`` kwarg to `~invoke.context.MockContext`
+  which, when True (default: False) causes stored results for its methods to be
+  yielded repeatedly instead of consumed. Feature request courtesy of
+  ``@SwampFalc``.
+- :bug:`- major` Immutable iterable result values handed to
+  `~invoke.context.MockContext` would yield errors (due to the use of
+  ``pop()``). The offending logic has been retooled to be more iterator-focused
+  and now works for tuples and etc.
 - :support:`-` Update the `testing documentation </concepts/testing>` a bit:
   cleaned up existing examples and added new sections for the other updates in
   the 1.5 release.

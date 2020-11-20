@@ -528,7 +528,7 @@ class MockContext_:
         assert c.run("doesn't mattress").stdout == "some output"
 
     def return_value_kwargs_can_take_iterables_too(self):
-        c = MockContext(run=[Result("some output"), Result("more!")])
+        c = MockContext(run=(Result("some output"), Result("more!")))
         assert c.run("doesn't mattress").stdout == "some output"
         assert c.run("still doesn't mattress").stdout == "more!"
 
@@ -537,9 +537,46 @@ class MockContext_:
         assert c.run("foo").stdout == "bar"
 
     def return_value_map_kwargs_may_take_iterables_too(self):
-        c = MockContext(run={"foo": [Result("bar"), Result("biz")]})
+        c = MockContext(run={"foo": (Result("bar"), Result("biz"))})
         assert c.run("foo").stdout == "bar"
         assert c.run("foo").stdout == "biz"
+
+    def regexen_return_value_map_keys_match_on_command(self):
+        c = MockContext(
+            run={"string": Result("yup"), re.compile(r"foo.*"): Result("bar")}
+        )
+        assert c.run("string").stdout == "yup"
+        assert c.run("foobar").stdout == "bar"
+
+    class boolean_result_shorthand:
+        def as_singleton_args(self):
+            assert MockContext(run=True).run("anything").ok
+            assert not MockContext(run=False).run("anything", warn=True).ok
+
+        def as_iterables(self):
+            mc = MockContext(run=[True, False])
+            assert mc.run("anything").ok
+            assert not mc.run("anything", warn=True).ok
+
+        def as_dict_values(self):
+            mc = MockContext(run=dict(foo=True, bar=False))
+            assert mc.run("foo").ok
+            assert not mc.run("bar", warn=True).ok
+
+    class string_result_shorthand:
+        def as_singleton_args(self):
+            assert MockContext(run="foo").run("anything").stdout == "foo"
+
+        def as_iterables(self):
+            mc = MockContext(run=["definition", "of", "insanity"])
+            assert mc.run("anything").stdout == "definition"
+            assert mc.run("anything").stdout == "of"
+            assert mc.run("anything").stdout == "insanity"
+
+        def as_dict_values(self):
+            mc = MockContext(run=dict(foo="foo", bar="bar"))
+            assert mc.run("foo").stdout == "foo"
+            assert mc.run("bar").stdout == "bar"
 
     class commands_injected_into_Result:
         @mark.parametrize(
@@ -557,6 +594,24 @@ class MockContext_:
     def methods_with_no_kwarg_values_raise_NotImplementedError(self):
         with raises(NotImplementedError):
             MockContext().run("onoz I did not anticipate this would happen")
+
+    def repeat_True_does_not_consume_results(self):
+        mc = MockContext(
+            repeat=True,
+            run=dict(
+                singleton=True,  # will repeat
+                wassup=Result("yo"),  # ditto
+                iterable=[Result("tick"), Result("tock")],  # will not
+            ),
+        )
+        assert mc.run("singleton").ok
+        assert mc.run("singleton").ok  # not consumed
+        assert mc.run("wassup").ok
+        assert mc.run("wassup").ok  # not consumed
+        assert mc.run("iterable").stdout == "tick"
+        assert mc.run("iterable").stdout == "tock"
+        assert mc.run("iterable").stdout == "tick"  # not consumed
+        assert mc.run("iterable").stdout == "tock"
 
     def sudo_also_covered(self):
         c = MockContext(sudo=Result(stderr="super duper"))

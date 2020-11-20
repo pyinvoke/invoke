@@ -97,11 +97,119 @@ possible commands, using a dict value::
     def test_homebrew_gsed():
         expected_sed = "gsed -e s/foo/bar/g file.txt"
         c = MockContext(run={
-            "which gsed": Result(),
+            "which gsed": Result(exited=0),
             expected_sed: Result(),
         })
         replace(c, 'file.txt', 'foo', 'bar')
         c.run.assert_called_with(expected_sed)
+
+Boolean mock results
+--------------------
+
+You may have noticed the above example uses a handful of 'empty' `.Result`
+objects; these stand in for "succeeded, but otherwise had no useful attributes"
+command executions (as `.Result` defaults to an exit code of ``0`` and empty
+strings for stdout/stderr).
+
+This is relatively common - think "interrogative" commands where the caller
+only cares for a boolean result, or times when a command is called purely for
+its side effects. To support this, there's a shorthand in `.MockContext`:
+passing ``True`` or ``False`` to stand in for otherwise blank Results with exit
+codes of ``0`` or ``1`` respectively.
+
+The example tests then look like this::
+
+    from invoke import MockContext, Result
+    from mytasks import replace
+
+    def test_regular_sed():
+        expected_sed = "sed -e s/foo/bar/g file.txt"
+        c = MockContext(run={
+            "which gsed": False,
+            expected_sed: True,
+        })
+        replace(c, 'file.txt', 'foo', 'bar')
+        c.run.assert_called_with(expected_sed)
+
+    def test_homebrew_gsed():
+        expected_sed = "gsed -e s/foo/bar/g file.txt"
+        c = MockContext(run={
+            "which gsed": True,
+            expected_sed: True,
+        })
+        replace(c, 'file.txt', 'foo', 'bar')
+        c.run.assert_called_with(expected_sed)
+
+String mock results
+-------------------
+
+Another convenient shorthand is using string values, which are interpreted to
+be the stdout of the resulting `.Result`. This only really saves you from
+writing out the class itself (since ``stdout`` is the first positional arg of
+`.Result`!) but "command X results in stdout Y" is a common enough use case
+that we implemented it anyway.
+
+By example, let's modify an earlier example where we cared about stdout::
+
+    from invoke import MockContext
+    from mytasks import get_platform
+
+    def test_get_platform_on_mac():
+        c = MockContext(run="Darwin\n")
+        assert "Apple" in get_platform(c)
+
+    def test_get_platform_on_linux():
+        c = MockContext(run="Linux\n")
+        assert "desktop" in get_platform(c)
+
+As with everything else in this document, this tactic can be applied to
+iterators or mappings as well as individual values.
+
+Regular expression command matching
+-----------------------------------
+
+The dict form of `.MockContext` kwarg can accept regular expression objects as
+keys, in addition to strings; ideal for situations where you either don't know
+the exact command being invoked, or simply don't need or want to write out the
+entire thing.
+
+Imagine you're writing a function to run package management commands on a few
+different Linux distros and you're trying to test its error handling. You might
+want to set up a context that pretends any arbitrary ``apt`` or ``yum`` command
+fails, and ensure the function returns stderr when it encounters a problem::
+
+    import re
+    from invoke import MockContext
+    from mypackage.tasks import install
+
+    package_manager = re.compile(r"^(apt(-get)?|yum) .*")
+
+    def test_package_success_returns_True():
+        c = MockContext(run={package_manager: True})
+        assert install(c, package="somepackage") is True
+
+    def test_package_explosions_return_stderr():
+        c = MockContext(run={
+            package_manager: Result(stderr="oh no!", exited=1),
+        })
+        assert install(c, package="otherpackage") == "oh no!"
+
+A bit contrived - there are a bunch of other ways to organize this exact test
+code so you don't truly need the regex - but hopefully it's clear that when you
+*do* need this flexibility, this is how you could go about it.
+
+Repeated results
+----------------
+
+By default, the values in these mock structures are consumed, causing
+`.MockContext` to raise ``NotImplementedError`` afterwards (as it does for any
+unexpected command executions). This was designed with the assumption that
+most code under test will run a given command once.
+
+If your situation doesn't match this, give ``repeat=True`` to the constructor,
+and you'll see values repeat indefinitely instead (or in cycles, for
+iterables).
+
 
 Expect `Results <.Result>`
 ==========================
