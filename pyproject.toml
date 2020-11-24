@@ -1,0 +1,29 @@
+[tool.poetry]
+name = "invoke"
+version = "1.5.0"
+description = "Pythonic task execution"
+authors = ["Jeff Forcier <jeff@bitprophet.org>"]
+license = "BSD"
+
+[tool.poetry.dependencies]
+python = "2.7 || ^3.4"
+
+[tool.poetry.dev-dependencies]
+codecov = "2.0.15"
+certifi = "2018.4.16"
+readme-renderer = "17.2"
+twine = "1.11.0"
+wheel = "0.24"
+flake8 = "3.7.8"
+mock = "1.0.1"
+pytest-cov = "2.5.1"
+pytest-relaxed = "1.1.5"
+pytest = "4.6.3"
+alabaster = "0.7.12"
+releases = "~1"
+invocations = "^1.4.0"
+semantic-version = "^2.4"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
