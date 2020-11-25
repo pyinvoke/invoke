@@ -67,12 +67,16 @@ include = '\.pyi?$'
 exclude = '''
 (
   /(
+    | \.eggs
     | \.git
     | \.mypy_cache
+    | \.tox
     | \.pytest_cache
     | _build
+    | buck-out
     | build
     | dist
+    | vendor
   )
 )
 '''
