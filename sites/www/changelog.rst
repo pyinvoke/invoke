@@ -2,6 +2,11 @@
 Changelog
 =========
 
+- :feature:`-` `~invoke.context.MockContext` now populates its
+  `NotImplementedError` exception instances (typically raised when a command is
+  executed which had no pre-prepared result) with the command string that
+  triggered them; this makes it much easier to tell what exactly in a test
+  caused the error.
 - :feature:`-` `~invoke.context.MockContext` now accepts a few quality-of-life
   shortcuts as keys and values in its ``run``/``sudo`` arguments:
 

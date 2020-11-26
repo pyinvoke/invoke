@@ -618,8 +618,8 @@ class MockContext_:
         assert c.sudo("doesn't mattress").stderr == "super duper"
         try:
             MockContext().sudo("meh")
-        except NotImplementedError:
-            pass
+        except NotImplementedError as e:
+            assert str(e) == "meh"
         else:
             assert False, "Did not get a NotImplementedError for sudo!"
 
@@ -628,8 +628,8 @@ class MockContext_:
             context.run("something")
             try:
                 context.run("something")
-            except NotImplementedError:
-                pass
+            except NotImplementedError as e:
+                assert str(e) == "something"
             else:
                 assert False, "Didn't raise NotImplementedError"
 

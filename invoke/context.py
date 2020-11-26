@@ -535,7 +535,7 @@ class MockContext(Context):
                 result.command = command
             return result
         except (AttributeError, IndexError, KeyError, StopIteration):
-            raise_from(NotImplementedError, None)
+            raise_from(NotImplementedError(command), None)
 
     def run(self, command, *args, **kwargs):
         # TODO: perform more convenience stuff associating args/kwargs with the
