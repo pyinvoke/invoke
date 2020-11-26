@@ -393,6 +393,11 @@ class Program(object):
                 print(e.message, file=sys.stderr)
             if isinstance(e, UnexpectedExit) and e.result.hide:
                 print(e, file=sys.stderr, end="")
+            if isinstance(e, UnexpectedExit) and not e.result.hide:
+                print(
+                    "UnexpectedExit with code: {}".format(e.result.exited),
+                    file=sys.stderr,
+                )
             # Terminate execution unless we were told not to.
             if exit:
                 if isinstance(e, UnexpectedExit):
