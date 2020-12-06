@@ -10,12 +10,14 @@ python:
   - "3.5"
   - "3.6"
   - "3.7"
-  - "3.8-dev"
+  - "3.8"
+  - "3.9"
+  - "3.10-dev"
   - "pypy"
   - "pypy3"
 matrix:
   allow_failures:
-    - python: "3.8-dev"
+    - python: "3.10-dev"
 # WHY does this have to be in before_install and not install? o_O
 before_install:
   # Used by 'inv regression' (more performant/safe/likely to expose real issues
