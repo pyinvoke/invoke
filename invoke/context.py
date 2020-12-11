@@ -476,7 +476,9 @@ class MockContext(Context):
             if isinstance(results, dict):
                 for key, value in iteritems(results):
                     results[key] = self._normalize(value)
-            elif isinstance(results, singletons) or hasattr(results, "__iter__"):
+            elif isinstance(results, singletons) or hasattr(
+                results, "__iter__"
+            ):
                 results = self._normalize(results)
             # Unknown input value: cry
             else:
