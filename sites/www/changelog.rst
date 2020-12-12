@@ -2,6 +2,8 @@
 Changelog
 =========
 
+- :support:`-` Enhanced test coverage in a handful of modules whose coverage
+  was under 90%.
 - :feature:`-` `~invoke.context.MockContext` now populates its
   `NotImplementedError` exception instances (typically raised when a command is
   executed which had no pre-prepared result) with the command string that
