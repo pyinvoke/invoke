@@ -11,11 +11,12 @@ python:
   - "3.6"
   - "3.7"
   - "3.8"
+  - "3.9-dev"
   - "pypy"
   - "pypy3"
 matrix:
   allow_failures:
-    - python: "3.8-dev"
+    - python: "3.9-dev"
 # Setup package management image layer
 before_install:
   # Used by 'inv regression' (more performant/safe/likely to expose real issues
