@@ -25,7 +25,7 @@ before_install:
   - pip uninstall pipenv numpy -y
   - pip install poetry
 install:
-  - poetry install --no-root
+  - poetry install
 before_script:
   # Create 'sudouser' w/ sudo password & perms on Travis' homedir
   - inv travis.make-sudouser
