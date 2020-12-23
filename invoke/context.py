@@ -412,11 +412,6 @@ class MockContext(Context):
             Specifically, this kwarg accepts:
 
             - A single `.Result` object.
-
-                - Remember that class's first positional argument is its stdout
-                  - it can thus be handy to hand in expressions like
-                    ``Result("command output here!")``.)
-
             - A boolean; if True, yields a `.Result` whose ``exited`` is ``0``,
               and if False, ``1``.
             - An iterable of the above values, which will be returned on each
@@ -435,7 +430,7 @@ class MockContext(Context):
             repeat or are consumed.
 
             For example, when a single result is indicated, it will normally
-            only be returned once, causing `NotImplementedError` afterwards.
+            only be returned once, causing ``NotImplementedError`` afterwards.
             But when ``repeat=True`` is given, that result is returned on
             every call, forever.
 

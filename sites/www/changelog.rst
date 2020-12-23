@@ -5,8 +5,8 @@ Changelog
 - :support:`-` Enhanced test coverage in a handful of modules whose coverage
   was under 90%.
 - :feature:`-` `~invoke.context.MockContext` now populates its
-  `NotImplementedError` exception instances (typically raised when a command is
-  executed which had no pre-prepared result) with the command string that
+  ``NotImplementedError`` exception instances (typically raised when a command
+  is executed which had no pre-prepared result) with the command string that
   triggered them; this makes it much easier to tell what exactly in a test
   caused the error.
 - :feature:`-` `~invoke.context.MockContext` now accepts a few quality-of-life
@@ -29,9 +29,9 @@ Changelog
   `~invoke.context.MockContext` would yield errors (due to the use of
   ``pop()``). The offending logic has been retooled to be more iterator-focused
   and now works for tuples and etc.
-- :support:`-` Update the `testing documentation </concepts/testing>` a bit:
-  cleaned up existing examples and added new sections for the other updates in
-  the 1.5 release.
+- :support:`-` Update the :ref:`testing documentation <testing-user-code>` a
+  bit: cleaned up existing examples and added new sections for the other
+  updates in the 1.5 release.
 - :feature:`700` Automatically populate the ``command`` attribute of
   `~invoke.runners.Result` objects returned by `~invoke.context.MockContext`
   methods, with the command string triggering that result. Previously users had
