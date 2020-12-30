@@ -272,9 +272,7 @@ class Collection(object):
         for alias in list(task.aliases) + list(aliases or []):
             self.tasks.alias(self.transform(alias), to=name)
         if default is True or (default is None and task.is_default):
-            if self.default:
-                msg = "'{}' cannot be the default because '{}' already is!"
-                raise ValueError(msg.format(name, self.default))
+            self._check_default_collision(name)
             self.default = name
 
     def add_collection(self, coll, name=None, default=None):
@@ -309,10 +307,13 @@ class Collection(object):
         # Insert
         self.collections[name] = coll
         if default:
-            if self.default:
-                msg = "'{}' cannot be the default because '{}' already is!"
-                raise ValueError(msg.format(name, self.default))
+            self._check_default_collision(name)
             self.default = coll
+
+    def _check_default_collision(self, name):
+        if self.default:
+            msg = "'{}' cannot be the default because '{}' already is!"
+            raise ValueError(msg.format(name, self.default))
 
     def _split_path(self, path):
         """

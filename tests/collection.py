@@ -315,7 +315,10 @@ class Collection_:
             t1 = Task(_func, default=True)
             t2 = Task(_func, default=True)
             self.c.add_task(t1, "foo")
-            with raises(ValueError):
+            with raises(
+                ValueError,
+                match=r"'bar' cannot be the default because 'foo' already is!",
+            ):
                 self.c.add_task(t2, "bar")
 
         def raises_ValueError_if_task_added_mirrors_subcollection_name(self):
@@ -385,7 +388,10 @@ class Collection_:
             t1 = Task(_func, default=True)
             self.c.add_task(t1, "foo")
             collection = Collection("bar")
-            with raises(ValueError):
+            with raises(
+                ValueError,
+                match=r"'bar' cannot be the default because 'foo' already is!",
+            ):
                 self.c.add_collection(collection, default=True)
 
     class getitem:
