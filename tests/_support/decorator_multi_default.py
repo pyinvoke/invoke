@@ -2,9 +2,10 @@ from invoke.tasks import task
 
 
 @task(default=True)
-def foo():
+def foo(c):
     pass
 
+
 @task(default=True)
-def biz():
+def biz(c):
     pass

@@ -1,0 +1,5 @@
+==========
+``config``
+==========
+
+.. automodule:: invoke.config

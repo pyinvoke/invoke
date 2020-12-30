@@ -1,24 +1,37 @@
-from ..vendor.lexicon import Lexicon
+import itertools
+
+try:
+    from ..vendor.lexicon import Lexicon
+except ImportError:
+    from lexicon import Lexicon
 
 from .argument import Argument
 
 
+def translate_underscores(name):
+    return name.lstrip("_").rstrip("_").replace("_", "-")
+
+
 def to_flag(name):
-    name = name.replace('_', '-')
+    name = translate_underscores(name)
     if len(name) == 1:
-        return '-' + name
-    return '--' + name
+        return "-" + name
+    return "--" + name
+
 
 def sort_candidate(arg):
     names = arg.names
     # TODO: is there no "split into two buckets on predicate" builtin?
-    shorts = set(x for x in names if len(x.strip('-')) == 1)
-    longs = set(x for x in names if x not in shorts)
+    shorts = {x for x in names if len(x.strip("-")) == 1}
+    longs = {x for x in names if x not in shorts}
     return sorted(shorts if shorts else longs)[0]
+
 
 def flag_key(x):
     """
     Obtain useful key list-of-ints for sorting CLI flags.
+
+    .. versionadded:: 1.0
     """
     # Setup
     ret = []
@@ -33,14 +46,16 @@ def flag_key(x):
     ret.append(x.lower())
     # Finally, if the case-insensitive test also matched, compare
     # case-sensitive, but inverse (with lowercase letters coming first)
-    inversed = ''
+    inversed = ""
     for char in x:
         inversed += char.lower() if char.isupper() else char.upper()
     ret.append(inversed)
     return ret
 
 
-class Context(object):
+# Named slightly more verbose so Sphinx references can be unambiguous.
+# Got real sick of fully qualified paths.
+class ParserContext(object):
     """
     Parsing context with knowledge of flags & their format.
 
@@ -48,14 +63,17 @@ class Context(object):
 
     When run through a parser, will also hold runtime values filled in by the
     parser.
+
+    .. versionadded:: 1.0
     """
+
     def __init__(self, name=None, aliases=(), args=()):
         """
-        Create a new ``Context`` named ``name``, with ``aliases``.
+        Create a new ``ParserContext`` named ``name``, with ``aliases``.
 
         ``name`` is optional, and should be a string if given. It's used to
-        tell Context objects apart, and for use in a Parser when determining
-        what chunk of input might belong to a given Context.
+        tell ParserContext objects apart, and for use in a Parser when
+        determining what chunk of input might belong to a given ParserContext.
 
         ``aliases`` is also optional and should be an iterable containing
         strings. Parsing will honor any aliases when trying to "find" a given
@@ -67,20 +85,19 @@ class Context(object):
         self.args = Lexicon()
         self.positional_args = []
         self.flags = Lexicon()
-        self.inverse_flags = {} # No need for Lexicon here
+        self.inverse_flags = {}  # No need for Lexicon here
         self.name = name
         self.aliases = aliases
         for arg in args:
             self.add_arg(arg)
 
-    def __str__(self):
-        aliases = (" (%s)" % ', '.join(self.aliases)) if self.aliases else ""
-        name = (" %r%s" % (self.name, aliases)) if self.name else ""
-        args = (": %r" % (self.args,)) if self.args else ""
-        return "<parser/Context%s%s>" % (name, args)
-
     def __repr__(self):
-        return str(self)
+        aliases = ""
+        if self.aliases:
+            aliases = " ({})".format(", ".join(self.aliases))
+        name = (" {!r}{}".format(self.name, aliases)) if self.name else ""
+        args = (": {!r}".format(self.args)) if self.args else ""
+        return "<parser/Context{}{}>".format(name, args)
 
     def add_arg(self, *args, **kwargs):
         """
@@ -96,6 +113,8 @@ class Context(object):
           "inverse" versions of boolean flags which default to True. This
           allows the parser to track e.g. ``--no-myflag`` and turn it into a
           False value for the ``myflag`` Argument.
+
+        .. versionadded:: 1.0
         """
         # Normalize
         if len(args) == 1 and isinstance(args[0], Argument):
@@ -105,10 +124,10 @@ class Context(object):
         # Uniqueness constraint: no name collisions
         for name in arg.names:
             if name in self.args:
-                msg = "Tried to add an argument named %r but one already exists!"
-                raise ValueError(msg % name)
+                msg = "Tried to add an argument named {!r} but one already exists!"  # noqa
+                raise ValueError(msg.format(name))
         # First name used as "main" name for purposes of aliasing
-        main = arg.names[0] # NOT arg.name
+        main = arg.names[0]  # NOT arg.name
         self.args[main] = arg
         # Note positionals in distinct, ordered list attribute
         if arg.positional:
@@ -122,16 +141,16 @@ class Context(object):
         if arg.attr_name:
             self.args.alias(arg.attr_name, to=main)
         # Add to inverse_flags if required
-        if arg.kind == bool and arg.default == True:
+        if arg.kind == bool and arg.default is True:
             # Invert the 'main' flag name here, which will be a dashed version
             # of the primary argument name if underscore-to-dash transformation
             # occurred.
-            inverse_name = to_flag("no-%s" % main)
+            inverse_name = to_flag("no-{}".format(main))
             self.inverse_flags[inverse_name] = to_flag(main)
 
     @property
-    def needs_positional_arg(self):
-        return any(x.value is None for x in self.positional_args)
+    def missing_positional_args(self):
+        return [x for x in self.positional_args if x.value is None]
 
     @property
     def as_kwargs(self):
@@ -140,44 +159,49 @@ class Context(object):
 
         Results in a dict suitable for use in Python contexts, where e.g. an
         arg named ``foo-bar`` becomes accessible as ``foo_bar``.
+
+        .. versionadded:: 1.0
         """
         ret = {}
         for arg in self.args.values():
             ret[arg.name] = arg.value
         return ret
 
+    def names_for(self, flag):
+        # TODO: should probably be a method on Lexicon/AliasDict
+        return list(set([flag] + self.flags.aliases_of(flag)))
+
     def help_for(self, flag):
         """
         Return 2-tuple of ``(flag-spec, help-string)`` for given ``flag``.
+
+        .. versionadded:: 1.0
         """
         # Obtain arg obj
         if flag not in self.flags:
-            raise ValueError("%r is not a valid flag for this context! Valid flags are: %r" % (flag, self.flags.keys()))
+            err = "{!r} is not a valid flag for this context! Valid flags are: {!r}"  # noqa
+            raise ValueError(err.format(flag, self.flags.keys()))
         arg = self.flags[flag]
-        # Show all potential names for this flag in the output
-        names = list(set([flag] + self.flags.aliases_of(flag)))
         # Determine expected value type, if any
-        value = {
-            str: 'STRING',
-        }.get(arg.kind)
+        value = {str: "STRING", int: "INT"}.get(arg.kind)
         # Format & go
         full_names = []
-        for name in names:
+        for name in self.names_for(flag):
             if value:
                 # Short flags are -f VAL, long are --foo=VAL
                 # When optional, also, -f [VAL] and --foo[=VAL]
-                if len(name.strip('-')) == 1:
-                    value_ = ("[%s]" % value) if arg.optional else value
-                    valuestr = " %s" % value_
+                if len(name.strip("-")) == 1:
+                    value_ = ("[{}]".format(value)) if arg.optional else value
+                    valuestr = " {}".format(value_)
                 else:
-                    valuestr = "=%s" % value
+                    valuestr = "={}".format(value)
                     if arg.optional:
-                        valuestr = "[%s]" % valuestr
+                        valuestr = "[{}]".format(valuestr)
             else:
                 # no value => boolean
                 # check for inverse
                 if name in self.inverse_flags.values():
-                    name = "--[no-]%s" % name[2:]
+                    name = "--[no-]{}".format(name[2:])
 
                 valuestr = ""
             # Tack together
@@ -206,13 +230,32 @@ class Context(object):
             -a, --query # short flag wins
             -b, --argh
             -c
+
+        .. versionadded:: 1.0
         """
         # TODO: argument/flag API must change :(
         # having to call to_flag on 1st name of an Argument is just dumb.
         # To pass in an Argument object to help_for may require moderate
         # changes?
         # Cast to list to ensure non-generator on Python 3.
-        return list(map(
-            lambda x: self.help_for(to_flag(x.name)),
-            sorted(self.flags.values(), key=flag_key)
-        ))
+        return list(
+            map(
+                lambda x: self.help_for(to_flag(x.name)),
+                sorted(self.flags.values(), key=flag_key),
+            )
+        )
+
+    def flag_names(self):
+        """
+        Similar to `help_tuples` but returns flag names only, no helpstrs.
+
+        Specifically, all flag names, flattened, in rough order.
+
+        .. versionadded:: 1.0
+        """
+        # Regular flag names
+        flags = sorted(self.flags.values(), key=flag_key)
+        names = [self.names_for(to_flag(x.name)) for x in flags]
+        # Inverse flag names sold separately
+        names.append(self.inverse_flags.keys())
+        return tuple(itertools.chain.from_iterable(names))

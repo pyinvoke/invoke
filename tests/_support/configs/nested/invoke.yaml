@@ -1,0 +1,3 @@
+outer:
+  inner:
+    hooray: "yaml"

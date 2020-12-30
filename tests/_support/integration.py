@@ -1,38 +1,52 @@
+"""
+A semi-integration-test style fixture spanning multiple feature examples.
+
+If we're being honest, though, the new 'tree' fixture package is a lot bigger.
+"""
+
 from invoke.tasks import task
 
 
 @task
-def print_foo():
+def print_foo(c):
     print("foo")
 
+
 @task
-def print_name(name):
+def print_name(c, name):
     print(name)
 
+
 @task
-def print_underscored_arg(my_option):
+def print_underscored_arg(c, my_option):
     print(my_option)
 
+
 @task
-def foo():
+def foo(c):
     print("foo")
 
+
 @task(foo)
-def bar():
+def bar(c):
     print("bar")
 
+
 @task
-def post2():
+def post2(c):
     print("post2")
 
+
 @task(post=[post2])
-def post1():
+def post1(c):
     print("post1")
 
+
 @task(foo, bar, post=[post1, post2])
-def biz():
+def biz(c):
     print("biz")
 
+
 @task(bar, foo, post=[post2, post1])
-def boz():
+def boz(c):
     print("boz")

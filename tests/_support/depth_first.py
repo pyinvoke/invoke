@@ -2,33 +2,40 @@ from invoke import task
 
 
 @task
-def clean_html():
+def clean_html(c):
     print("Cleaning HTML")
 
+
 @task
-def clean_tgz():
+def clean_tgz(c):
     print("Cleaning .tar.gz files")
 
+
 @task(clean_html, clean_tgz)
-def clean():
+def clean(c):
     print("Cleaned everything")
 
+
 @task
-def makedirs():
+def makedirs(c):
     print("Making directories")
 
+
 @task(clean, makedirs)
-def build():
+def build(c):
     print("Building")
 
+
 @task
-def pretest():
+def pretest(c):
     print("Preparing for testing")
 
+
 @task(pretest)
-def test():
+def test(c):
     print("Testing")
 
+
 @task(build, post=[test])
-def deploy():
+def deploy(c):
     print("Deploying")

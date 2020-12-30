@@ -1,24 +1,42 @@
 import copy
-from operator import add
 import types
 
-from .vendor import six
-from .vendor.lexicon import Lexicon
+from .util import six, Lexicon, helpline
 
+from .config import merge_dicts, copy_dict
 from .parser import Context as ParserContext
 from .tasks import Task
 
 
 class Collection(object):
     """
-    A collection of executable tasks.
+    A collection of executable tasks. See :doc:`/concepts/namespaces`.
+
+    .. versionadded:: 1.0
     """
+
     def __init__(self, *args, **kwargs):
         """
         Create a new task collection/namespace.
 
         `.Collection` offers a set of methods for building a collection of
         tasks from scratch, plus a convenient constructor wrapping said API.
+
+        In either case:
+
+        * The first positional argument may be a string, which (if given) is
+          used as the collection's default name when performing namespace
+          lookups;
+        * A ``loaded_from`` keyword argument may be given, which sets metadata
+          indicating the filesystem path the collection was loaded from. This
+          is used as a guide when loading per-project :ref:`configuration files
+          <config-hierarchy>`.
+        * An ``auto_dash_names`` kwarg may be given, controlling whether task
+          and collection names have underscores turned to dashes in most cases;
+          it defaults to ``True`` but may be set to ``False`` to disable.
+
+          The CLI machinery will pass in the value of the
+          ``tasks.auto_dash_names`` config value to this kwarg.
 
         **The method approach**
 
@@ -45,12 +63,12 @@ class Collection(object):
 
         **The constructor approach**
 
-        All ``*args`` given to `.Collection` (besides the optional first 'name'
-        argument) are expected to be `.Task` or `.Collection` instances which
-        will be passed to `.add_task`/`.add_collection` as appropriate. Module
-        objects are also valid (as they are for `.add_collection`). For
-        example, the below snippet results in the same two task identifiers as
-        the one above::
+        All ``*args`` given to `.Collection` (besides the abovementioned
+        optional positional 'name' argument and ``loaded_from`` kwarg) are
+        expected to be `.Task` or `.Collection` instances which will be passed
+        to `.add_task`/`.add_collection` as appropriate. Module objects are
+        also valid (as they are for `.add_collection`). For example, the below
+        snippet results in the same two task identifiers as the one above::
 
             ns = Collection(top_level_task, Collection('docs', doc_task))
 
@@ -77,10 +95,16 @@ class Collection(object):
         self.default = None
         self.name = None
         self._configuration = {}
+        # Specific kwargs if applicable
+        self.loaded_from = kwargs.pop("loaded_from", None)
+        self.auto_dash_names = kwargs.pop("auto_dash_names", None)
+        # splat-kwargs version of default value (auto_dash_names=True)
+        if self.auto_dash_names is None:
+            self.auto_dash_names = True
         # Name if applicable
         args = list(args)
         if args and isinstance(args[0], six.string_types):
-            self.name = args.pop(0)
+            self.name = self.transform(args.pop(0))
         # Dispatch args/kwargs
         for arg in args:
             self._add_object(arg)
@@ -94,21 +118,41 @@ class Collection(object):
         elif isinstance(obj, (Collection, types.ModuleType)):
             method = self.add_collection
         else:
-            raise TypeError("No idea how to insert %r!" % type(obj))
+            raise TypeError("No idea how to insert {!r}!".format(type(obj)))
         return method(obj, name=name)
 
-    def __str__(self):
-        return "<Collection {0!r}: {1}>".format(
-            self.name, ", ".join(sorted(self.tasks.keys())))
-
     def __repr__(self):
-        return str(self)
+        task_names = list(self.tasks.keys())
+        collections = ["{}...".format(x) for x in self.collections.keys()]
+        return "<Collection {!r}: {}>".format(
+            self.name, ", ".join(sorted(task_names) + sorted(collections))
+        )
 
     def __eq__(self, other):
-        return self.name == other.name and self.tasks == other.tasks
+        return (
+            self.name == other.name
+            and self.tasks == other.tasks
+            and self.collections == other.collections
+        )
+
+    def __ne__(self, other):
+        return not self == other
+
+    def __nonzero__(self):
+        return self.__bool__()
+
+    def __bool__(self):
+        return bool(self.task_names)
 
     @classmethod
-    def from_module(self, module, name=None, config=None):
+    def from_module(
+        cls,
+        module,
+        name=None,
+        config=None,
+        loaded_from=None,
+        auto_dash_names=None,
+    ):
         """
         Return a new `.Collection` created from ``module``.
 
@@ -125,51 +169,73 @@ class Collection(object):
         Explicitly given collections will only be given that module-derived
         name if they don't already have a valid ``.name`` attribute.
 
-        :param name:
+        If the module has a docstring (``__doc__``) it is copied onto the
+        resulting `.Collection` (and used for display in help, list etc
+        output.)
+
+        :param str name:
             A string, which if given will override any automatically derived
             collection name (or name set on the module's root namespace, if it
             has one.)
 
-        :param config:
-            A dict, used to set config options on the newly created
-            `.Collection` before returning it (saving you a call to
-            `.configure`.)
-            
+        :param dict config:
+            Used to set config options on the newly created `.Collection`
+            before returning it (saving you a call to `.configure`.)
+
             If the imported module had a root namespace object, ``config`` is
             merged on top of it (i.e. overriding any conflicts.)
+
+        :param str loaded_from:
+            Identical to the same-named kwarg from the regular class
+            constructor - should be the path where the module was
+            found.
+
+        :param bool auto_dash_names:
+            Identical to the same-named kwarg from the regular class
+            constructor - determines whether emitted names are auto-dashed.
+
+        .. versionadded:: 1.0
         """
-        module_name = module.__name__.split('.')[-1]
+        module_name = module.__name__.split(".")[-1]
+
+        def instantiate(obj_name=None):
+            # Explicitly given name wins over root ns name (if applicable),
+            # which wins over actual module name.
+            args = [name or obj_name or module_name]
+            kwargs = dict(
+                loaded_from=loaded_from, auto_dash_names=auto_dash_names
+            )
+            instance = cls(*args, **kwargs)
+            instance.__doc__ = module.__doc__
+            return instance
+
         # See if the module provides a default NS to use in lieu of creating
         # our own collection.
-        for candidate in ('ns', 'namespace'):
+        for candidate in ("ns", "namespace"):
             obj = getattr(module, candidate, None)
             if obj and isinstance(obj, Collection):
-                # Explicitly given name wins over root ns name which wins over
-                # actual module name.
-                ret = Collection(name or obj.name or module_name)
-                ret.tasks = copy.deepcopy(obj.tasks)
-                ret.collections = copy.deepcopy(obj.collections)
-                ret.default = copy.deepcopy(obj.default)
+                # TODO: make this into Collection.clone() or similar?
+                ret = instantiate(obj_name=obj.name)
+                ret.tasks = ret._transform_lexicon(obj.tasks)
+                ret.collections = ret._transform_lexicon(obj.collections)
+                ret.default = ret.transform(obj.default)
                 # Explicitly given config wins over root ns config
-                obj_config = copy.deepcopy(obj._configuration)
+                obj_config = copy_dict(obj._configuration)
                 if config:
-                    obj_config.update(config)
+                    merge_dicts(obj_config, config)
                 ret._configuration = obj_config
                 return ret
         # Failing that, make our own collection from the module's tasks.
-        tasks = filter(
-            lambda x: isinstance(x, Task),
-            vars(module).values()
-        )
+        tasks = filter(lambda x: isinstance(x, Task), vars(module).values())
         # Again, explicit name wins over implicit one from module path
-        collection = Collection(name or module_name)
+        collection = instantiate()
         for task in tasks:
             collection.add_task(task)
         if config:
             collection.configure(config)
         return collection
 
-    def add_task(self, task, name=None, default=None):
+    def add_task(self, task, name=None, aliases=None, default=None):
         """
         Add `.Task` ``task`` to this collection.
 
@@ -180,26 +246,35 @@ class Collection(object):
             self-defined ``name`` attribute and/or any Python identifier (i.e.
             ``.func_name``.)
 
+        :param aliases:
+            Optional iterable of additional names to bind the task as, on top
+            of the primary name. These will be used in addition to any aliases
+            the task itself declares internally.
+
         :param default: Whether this task should be the collection default.
+
+        .. versionadded:: 1.0
         """
         if name is None:
             if task.name:
                 name = task.name
-            elif hasattr(task.body, 'func_name'):
+            elif hasattr(task.body, "func_name"):
                 name = task.body.func_name
-            elif hasattr(task.body, '__name__'):
+            elif hasattr(task.body, "__name__"):
                 name = task.__name__
             else:
                 raise ValueError("Could not obtain a name for this task!")
+        name = self.transform(name)
         if name in self.collections:
-            raise ValueError("Name conflict: this collection has a sub-collection named %r already" % name)
+            err = "Name conflict: this collection has a sub-collection named {!r} already"  # noqa
+            raise ValueError(err.format(name))
         self.tasks[name] = task
-        for alias in task.aliases:
-            self.tasks.alias(alias, to=name)
+        for alias in list(task.aliases) + list(aliases or []):
+            self.tasks.alias(self.transform(alias), to=name)
         if default is True or (default is None and task.is_default):
             if self.default:
-                msg = "'%s' cannot be the default because '%s' already is!"
-                raise ValueError(msg % (name, self.default))
+                msg = "'{}' cannot be the default because '{}' already is!"
+                raise ValueError(msg.format(name, self.default))
             self.default = name
 
     def add_collection(self, coll, name=None, default=None):
@@ -213,6 +288,9 @@ class Collection(object):
             own internal name.
 
         :param default: Whether this sub-collection should be the default.
+            .. versionadded:: 1.5
+
+        .. versionadded:: 1.0
         """
         # Handle module-as-collection
         if isinstance(coll, types.ModuleType):
@@ -221,9 +299,13 @@ class Collection(object):
         name = name or coll.name
         if not name:
             raise ValueError("Non-root collections must have a name!")
+        name = self.transform(name)
         # Test for conflict
         if name in self.tasks:
-            raise ValueError("Name conflict: this collection has a task named %r already" % name)
+            err = (
+                "Name conflict: this collection has a task named {!r} already"
+            )  # noqa
+            raise ValueError(err.format(name))
         # Insert
         self.collections[name] = coll
         if default:
@@ -232,7 +314,7 @@ class Collection(object):
                 raise ValueError(msg % (name, self.default))
             self.default = coll
 
-    def split_path(self, path):
+    def _split_path(self, path):
         """
         Obtain first collection + remainder, of a task path.
 
@@ -242,10 +324,22 @@ class Collection(object):
 
         An empty path becomes simply ``('', '')``.
         """
-        parts = path.split('.')
+        parts = path.split(".")
         coll = parts.pop(0)
-        rest = '.'.join(parts)
+        rest = ".".join(parts)
         return coll, rest
+
+    def subcollection_from_path(self, path):
+        """
+        Given a ``path`` to a subcollection, return that subcollection.
+
+        .. versionadded:: 1.0
+        """
+        parts = path.split(".")
+        collection = self
+        while parts:
+            collection = collection.collections[parts.pop(0)]
+        return collection
 
     def __getitem__(self, name=None):
         """
@@ -258,6 +352,8 @@ class Collection(object):
         Tasks within subcollections should be given in dotted form, e.g.
         'foo.bar'. Subcollection default tasks will be returned on the
         subcollection's name.
+
+        .. versionadded:: 1.0
         """
         return self.task_with_config(name)[0]
 
@@ -277,6 +373,8 @@ class Collection(object):
         See `~.Collection.__getitem__` for semantics of the ``name`` argument.
 
         :returns: Two-tuple of (`.Task`, `dict`).
+
+        .. versionadded:: 1.0
         """
         # Our top level configuration
         ours = self.configuration()
@@ -288,19 +386,21 @@ class Collection(object):
                 return self._task_with_merged_config(self.default.name, '', ours)
             else:
                 return self[self.default], ours
+        # Normalize name to the format we're expecting
+        name = self.transform(name)
         # Non-default tasks within subcollections -> recurse (sorta)
-        if '.' in name:
-            coll, rest = self.split_path(name)
+        if "." in name:
+            coll, rest = self._split_path(name)
             return self._task_with_merged_config(coll, rest, ours)
         # Default task for subcollections (via empty-name lookup)
         if name in self.collections:
-            return self._task_with_merged_config(name, '', ours)
+            return self._task_with_merged_config(name, "", ours)
         # Regular task lookup
         return self.tasks[name], ours
 
     def __contains__(self, name):
         try:
-            task = self[name]
+            self[name]
             return True
         except KeyError:
             return False
@@ -308,42 +408,110 @@ class Collection(object):
     def to_contexts(self):
         """
         Returns all contained tasks and subtasks as a list of parser contexts.
+
+        .. versionadded:: 1.0
         """
         result = []
         for primary, aliases in six.iteritems(self.task_names):
             task = self[primary]
-            result.append(ParserContext(
-                name=primary, aliases=aliases, args=task.get_arguments()
-            ))
+            result.append(
+                ParserContext(
+                    name=primary, aliases=aliases, args=task.get_arguments()
+                )
+            )
         return result
 
     def subtask_name(self, collection_name, task_name):
-        return "%s.%s" % (collection_name, task_name)
+        return ".".join(
+            [self.transform(collection_name), self.transform(task_name)]
+        )
+
+    def transform(self, name):
+        """
+        Transform ``name`` with the configured auto-dashes behavior.
+
+        If the collection's ``auto_dash_names`` attribute is ``True``
+        (default), all non leading/trailing underscores are turned into dashes.
+        (Leading/trailing underscores tend to get stripped elsewhere in the
+        stack.)
+
+        If it is ``False``, the inverse is applied - all dashes are turned into
+        underscores.
+
+        .. versionadded:: 1.0
+        """
+        # Short-circuit on anything non-applicable, e.g. empty strings, bools,
+        # None, etc.
+        if not name:
+            return name
+        from_, to = "_", "-"
+        if not self.auto_dash_names:
+            from_, to = "-", "_"
+        replaced = []
+        end = len(name) - 1
+        for i, char in enumerate(name):
+            # Don't replace leading or trailing underscores (+ taking dotted
+            # names into account)
+            # TODO: not 100% convinced of this / it may be exposing a
+            # discrepancy between this level & higher levels which tend to
+            # strip out leading/trailing underscores entirely.
+            if (
+                i not in (0, end)
+                and char == from_
+                and name[i - 1] != "."
+                and name[i + 1] != "."
+            ):
+                char = to
+            replaced.append(char)
+        return "".join(replaced)
+
+    def _transform_lexicon(self, old):
+        """
+        Take a Lexicon and apply `.transform` to its keys and aliases.
+
+        :returns: A new Lexicon.
+        """
+        new_ = Lexicon()
+        # Lexicons exhibit only their real keys in most places, so this will
+        # only grab those, not aliases.
+        for key, value in six.iteritems(old):
+            # Deepcopy the value so we're not just copying a reference
+            new_[self.transform(key)] = copy.deepcopy(value)
+        # Also copy all aliases, which are string-to-string key mappings
+        for key, value in six.iteritems(old.aliases):
+            new_.alias(from_=self.transform(key), to=self.transform(value))
+        return new_
 
     @property
     def task_names(self):
         """
-        Return all task identifiers for this collection as a dict.
+        Return all task identifiers for this collection as a one-level dict.
 
         Specifically, a dict with the primary/"real" task names as the key, and
         any aliases as a list value.
+
+        It basically collapses the namespace tree into a single
+        easily-scannable collection of invocation strings, and is thus suitable
+        for things like flat-style task listings or transformation into parser
+        contexts.
+
+        .. versionadded:: 1.0
         """
         ret = {}
         # Our own tasks get no prefix, just go in as-is: {name: [aliases]}
         for name, task in six.iteritems(self.tasks):
-            ret[name] = task.aliases
+            ret[name] = list(map(self.transform, task.aliases))
         # Subcollection tasks get both name + aliases prefixed
         for coll_name, coll in six.iteritems(self.collections):
             for task_name, aliases in six.iteritems(coll.task_names):
                 # Cast to list to handle Py3 map() 'map' return value,
                 # so we can add to it down below if necessary.
-                aliases = list(map(
-                    lambda x: self.subtask_name(coll_name, x),
-                    aliases
-                ))
+                aliases = list(
+                    map(lambda x: self.subtask_name(coll_name, x), aliases)
+                )
                 # Tack on collection name to alias list if this task is the
                 # collection's default.
-                if coll.default and coll.default == task_name:
+                if coll.default == task_name:
                     aliases += (coll_name,)
                 ret[self.subtask_name(coll_name, task_name)] = aliases
         return ret
@@ -352,9 +520,6 @@ class Collection(object):
         """
         Obtain merged configuration values from collection & children.
 
-        .. note::
-            Merging uses ``copy.deepcopy`` to prevent state bleed.
-
         :param taskpath:
             (Optional) Task name/path, identical to that used for
             `~.Collection.__getitem__` (e.g. may be dotted for nested tasks,
@@ -362,18 +527,20 @@ class Collection(object):
             when merging config values.
 
         :returns: A `dict` containing configuration values.
+
+        .. versionadded:: 1.0
         """
         if taskpath is None:
-            return copy.deepcopy(self._configuration)
+            return copy_dict(self._configuration)
         return self.task_with_config(taskpath)[1]
 
     def configure(self, options):
         """
-        Merge ``options`` dict into this collection's `.configuration`.
+        (Recursively) merge ``options`` into the current `.configuration`.
 
-        Options configured this way will be available to all
-        :doc:`contextualized tasks </concepts/context>`. It is recommended to
-        use unique keys to avoid potential clashes with other config options
+        Options configured this way will be available to all tasks. It is
+        recommended to use unique keys to avoid potential clashes with other
+        config options
 
         For example, if you were configuring a Sphinx docs build target
         directory, it's better to use a key like ``'sphinx.target'`` than
@@ -381,5 +548,36 @@ class Collection(object):
 
         :param options: An object implementing the dictionary protocol.
         :returns: ``None``.
+
+        .. versionadded:: 1.0
         """
-        self._configuration.update(options)
+        merge_dicts(self._configuration, options)
+
+    def serialized(self):
+        """
+        Return an appropriate-for-serialization version of this object.
+
+        See the documentation for `.Program` and its ``json`` task listing
+        format; this method is the driver for that functionality.
+
+        .. versionadded:: 1.0
+        """
+        return {
+            "name": self.name,
+            "help": helpline(self),
+            "default": self.default,
+            "tasks": [
+                {
+                    "name": self.transform(x.name),
+                    "help": helpline(x),
+                    "aliases": [self.transform(y) for y in x.aliases],
+                }
+                for x in sorted(self.tasks.values(), key=lambda x: x.name)
+            ],
+            "collections": [
+                x.serialized()
+                for x in sorted(
+                    self.collections.values(), key=lambda x: x.name or ""
+                )
+            ],
+        }

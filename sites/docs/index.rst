@@ -6,8 +6,6 @@ This site covers Invoke's conceptual & API documentation. For basic info on
 what Invoke is, including its public changelog & how the project is maintained,
 please see `the main project website <http://pyinvoke.org>`_.
 
-.. include:: ../alpha.rst
-
 Getting started
 ---------------
 
@@ -17,7 +15,18 @@ document:
 .. toctree::
     :maxdepth: 2
 
-    getting_started
+    getting-started
+
+
+The ``invoke`` CLI tool
+-----------------------
+
+Details on the CLI interface to Invoke, available core flags, and tab
+completion options.
+
+.. toctree::
+    invoke
+
 
 Concepts
 --------
@@ -29,6 +38,8 @@ Dig deeper into specific topics:
     :glob:
 
     concepts/*
+
+.. _api:
 
 API
 ---

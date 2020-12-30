@@ -1,17 +1,33 @@
 language: python
+sudo: required
+dist: xenial
+cache:
+  directories:
+    - $HOME/.cache/pip
 python:
-  - "2.6"
   - "2.7"
-  - "3.2"
-  - "3.3"
   - "3.4"
+  - "3.5"
+  - "3.6"
+  - "3.7"
+  - "3.8-dev"
   - "pypy"
+  - "pypy3"
 matrix:
-  # pypy is frequentlyish unstable on Travis, don't let it mark entire status
-  # as 'bad' =/ (Still worth running it though.)
   allow_failures:
-    - python: pypy
+    - python: "3.8-dev"
+# WHY does this have to be in before_install and not install? o_O
+before_install:
+  # Used by 'inv regression' (more performant/safe/likely to expose real issues
+  # than in-Python threads...)
+  - sudo apt-get -y install parallel
 install:
+  # For some reason Travis' build envs have wildly different pip/setuptools
+  # versions between minor Python versions, and this can cause many hilarious
+  # corner packaging cases. So...
+  - pip install -U pip
+  # Setuptools 34+ seems to get less stable
+  - pip install 'setuptools>33,<34'
   # Pre-requirements sanity test (again, resembles pure, non-dev install
   # environment.) Avoids e.g. spec's 'six' from gumming up our attempts to
   # import our vendorized 'six'.
@@ -19,22 +35,45 @@ install:
   - inv --list
   # Install remaining dev requirements (test runner, etc)
   - pip install -r dev-requirements.txt
+  - pip list --format=columns
+  # Also create a workable alt-interpreter venv for testing dual package builds
+  # Python 3 is nicely namespaced, globally. Python 2 is masked by Travis'
+  # default venv, so we gotta hardcode it.
+  - "virtualenv alt_env --python=$([[ $TRAVIS_PYTHON_VERSION == 2* ]] && echo python3 || echo /usr/bin/python)"
+  - alt_env/bin/pip install wheel
+before_script:
+  # Create 'sudouser' w/ sudo password & perms on Travis' homedir
+  - inv travis.make-sudouser
+  # Blacken and flake8 before running any tests, it's a faster fail
+  - inv travis.blacken
+  - flake8
 script:
-  # Main test suite
-  - inv test
-  # Slow, annoying-to-run-every-time integration suite
-  - inv integration
-  # Websites build OK? (NOTE: sphinx/jinja are fucked on Python 3.2 now?)
-  - "[[ $TRAVIS_PYTHON_VERSION == 3.2 ]] || inv sites"
+  # Execute full test suite + coverage, as the new sudo-capable user
+  - inv travis.sudo-coverage
+  # Perform extra "not feasible inside pytest for no obvious reason" tests
+  - inv regression
+  # Websites build OK? (Not on PyPy3, Sphinx is all "who the hell are you?" =/
+  - "if [[ $TRAVIS_PYTHON_VERSION != 'pypy3' ]]; then inv sites; fi"
+  # Doctests in websites OK? (Same caveat as above...)
+  - "if [[ $TRAVIS_PYTHON_VERSION != 'pypy3' ]]; then inv www.doctest; fi"
   # Did we break setup.py?
-  - pip uninstall -y invoke # To undo the implicit -e install from above
-  - pip install . # NO -e!
-  - inv -l # Sanity check
+  # NOTE: sometime in 2019 travis grew a bizarre EnvironmentError problem
+  # around inability to overwrite/remote __pycache__ dirs...this attempts to
+  # workaround
+  - "find . -type d -name __pycache__ | sudo xargs rm -rf"
+  - inv travis.test-installation --package=invoke --sanity="inv --list"
+  # Test distribution builds, including some package_data based stuff
+  # (completion script printing)
+  - "inv travis.test-packaging --package=invoke --sanity='inv --list && inv --print-completion-script zsh' --alt-python=alt_env/bin/python"
+after_success:
+  # Upload coverage data to codecov
+  - codecov
 notifications:
   irc:
     channels: "irc.freenode.org#invoke"
     template:
-      - "%{repository}@%{branch}: %{message} (%{build_url})"
+      - "%{repository_name}@%{branch}: %{message} (%{build_url})"
     on_success: change
     on_failure: change
+    on_error: change
   email: false

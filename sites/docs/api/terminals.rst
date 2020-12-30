@@ -1,0 +1,5 @@
+=============
+``terminals``
+=============
+
+.. automodule:: invoke.terminals

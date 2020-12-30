@@ -1,11 +1,16 @@
 from invoke import task, Collection
 
-@task
-def toplevel():
-    pass
 
 @task
-def subtask():
+def toplevel(c):
     pass
 
-ns = Collection(toplevel, Collection('a', subtask, Collection('nother', subtask)))
+
+@task
+def subtask(c):
+    pass
+
+
+ns = Collection(
+    toplevel, Collection("a", subtask, Collection("nother", subtask))
+)

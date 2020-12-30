@@ -20,6 +20,11 @@ We follow `contribution-guide.org`_ for all of our development - please `go
 there`_ for details on submitting patches, which branch(es) to work out of,
 and so on. Our issue tracker is on `our GitHub page`_.
 
+Changelog location
+==================
+
+Invoke's changelog lives in ``sites/www/changelog.rst`` and is formatted
+using the `Releases <https://releases.readthedocs.io>`_ Sphinx plugin.
 
 Running management tasks
 ========================
@@ -34,9 +39,13 @@ see with ``inv --list``. Some specific tasks of note:
     * ``www`` and ``docs`` (and their subtasks like ``docs.browse``): Builds
       the WWW site and the API docs, respectively.
 
+Another good resource is to skim our ``.travis.yml`` file for the commands it
+executes - if submissions don't pass all of those commands to some degree, they
+won't pass Travis' CI builds either!
+
 
 .. _go there:
 .. _contribution-guide.org: http://contribution-guide.org
 
 .. _our GitHub page:
-.. _pyinvoke/invoke: https://github.cm/pyinvoke/invoke
+.. _pyinvoke/invoke: https://github.com/pyinvoke/invoke

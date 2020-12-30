@@ -1,49 +1,11 @@
-Invoke is a Python (2.6+ and 3.2+) task execution tool & library, drawing inspiration from various sources to arrive at a powerful & clean feature set.
+Welcome to Invoke!
+==================
 
-* Like Ruby's Rake tool and Invoke's own predecessor Fabric 1.x, it provides a
-  clean, high level API for running shell commands and defining/organizing
-  task functions from a ``tasks.py`` file::
+Invoke is a Python (2.7 and 3.4+) library for managing shell-oriented
+subprocesses and organizing executable Python code into CLI-invokable tasks. It
+draws inspiration from various sources (``make``/``rake``, Fabric 1.x, etc) to
+arrive at a powerful & clean feature set.
 
-    from invoke import run, task
-
-    @task
-    def clean(docs=False, bytecode=False, extra=''):
-        patterns = ['build']
-        if docs:
-            patterns.append('docs/_build')
-        if bytecode:
-            patterns.append('**/*.pyc')
-        if extra:
-            patterns.append(extra)
-        for pattern in patterns:
-            run("rm -rf %s" % pattern)
-
-    @task
-    def build(docs=False):
-        run("python setup.py build")
-        if docs:
-            run("sphinx-build docs docs/_build")
-
-* From GNU Make, it inherits an emphasis on minimal boilerplate for common
-  patterns and the ability to run multiple tasks in a single invocation::
-
-    $ invoke clean build
-
-* Following the lead of most Unix CLI applications, it offers a traditional
-  flag-based style of command-line parsing, deriving flag names and value types
-  from task signatures (optionally, of course!)::
-
-    $ invoke clean --docs --bytecode build --docs --extra='**/*.pyo'
-    $ invoke clean -d -b build --docs -e '**/*.pyo'
-    $ invoke clean -db build -de '**/*.pyo'
-
-* Like many of its predecessors, it offers advanced features as well --
-  namespacing, task aliasing, before/after hooks, parallel execution and more.
-
-For documentation, including detailed installation information, please see
-http://docs.pyinvoke.org. Post-install usage information may be found in ``invoke
---help``.
-
-You can install the `development version
-<https://github.com/pyinvoke/invoke/tarball/master#egg=invoke-dev>`_ via ``pip
-install invoke==dev``.
+For a high level introduction, including example code, please see `our main
+project website <http://pyinvoke.org>`_; or for detailed API docs, see `the
+versioned API website <http://docs.pyinvoke.org>`_.

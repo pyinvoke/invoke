@@ -1,1 +1,1 @@
-import modulethatdoesnotexistohnoes
+import modulethatdoesnotexistohnoes  # noqa

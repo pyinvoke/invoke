@@ -23,12 +23,28 @@ class Argument(object):
         ``False`` (default) arguments must be explicitly named.
     :param optional:
         Whether or not this (non-``bool``) argument requires a value.
+    :param incrementable:
+        Whether or not this (``int``) argument is to be incremented instead of
+        overwritten/assigned to.
     :param attr_name:
         A Python identifier/attribute friendly name, typically filled in with
         the underscored version when ``name``/``names`` contain dashes.
+
+    .. versionadded:: 1.0
     """
-    def __init__(self, name=None, names=(), kind=str, default=None, help=None,
-        positional=False, optional=False, attr_name=None):
+
+    def __init__(
+        self,
+        name=None,
+        names=(),
+        kind=str,
+        default=None,
+        help=None,
+        positional=False,
+        optional=False,
+        incrementable=False,
+        attr_name=None,
+    ):
         if name and names:
             msg = "Cannot give both 'name' and 'names' arguments! Pick one."
             raise TypeError(msg)
@@ -36,23 +52,40 @@ class Argument(object):
             raise TypeError("An Argument must have at least one name.")
         self.names = tuple(names if names else (name,))
         self.kind = kind
-        self.raw_value = self._value = None
+        initial_value = None
+        # Special case: list-type args start out as empty list, not None.
+        if kind is list:
+            initial_value = []
+        # Another: incrementable args start out as their default value.
+        if incrementable:
+            initial_value = default
+        self.raw_value = self._value = initial_value
         self.default = default
         self.help = help
         self.positional = positional
         self.optional = optional
+        self.incrementable = incrementable
         self.attr_name = attr_name
 
-    def __str__(self):
-        return "<%s: %s%s%s>" % (
-            self.__class__.__name__,
-            self.name,
-            " (%s)" % (", ".join(self.nicknames)) if self.nicknames else "",
-            "*" if self.positional else ""
-        )
-
     def __repr__(self):
-        return str(self)
+        nicks = ""
+        if self.nicknames:
+            nicks = " ({})".format(", ".join(self.nicknames))
+        flags = ""
+        if self.positional or self.optional:
+            flags = " "
+        if self.positional:
+            flags += "*"
+        if self.optional:
+            flags += "?"
+        # TODO: store this default value somewhere other than signature of
+        # Argument.__init__?
+        kind = ""
+        if self.kind != str:
+            kind = " [{}]".format(self.kind.__name__)
+        return "<{}: {}{}{}{}>".format(
+            self.__class__.__name__, self.name, nicks, kind, flags
+        )
 
     @property
     def name(self):
@@ -61,6 +94,8 @@ class Argument(object):
 
         Will be ``attr_name`` (if given to constructor) or the first name in
         ``names`` otherwise.
+
+        .. versionadded:: 1.0
         """
         return self.attr_name or self.names[0]
 
@@ -70,7 +105,11 @@ class Argument(object):
 
     @property
     def takes_value(self):
-        return self.kind is not bool
+        if self.kind is bool:
+            return False
+        if self.incrementable:
+            return False
+        return True
 
     @property
     def value(self):
@@ -86,8 +125,42 @@ class Argument(object):
 
         Sets ``self.raw_value`` to ``value`` directly.
 
-        Sets ``self.value`` to ``self.kind(value)``, unless ``cast=False`` in
-        which case the raw value is also used.
+        Sets ``self.value`` to ``self.kind(value)``, unless:
+
+        - ``cast=False``, in which case the raw value is also used.
+        - ``self.kind==list``, in which case the value is appended to
+          ``self.value`` instead of cast & overwritten.
+        - ``self.incrementable==True``, in which case the value is ignored and
+          the current (assumed int) value is simply incremented.
+
+        .. versionadded:: 1.0
         """
         self.raw_value = value
-        self._value = (self.kind if cast else lambda x: x)(value)
+        # Default to do-nothing/identity function
+        func = lambda x: x
+        # If cast, set to self.kind, which should be str/int/etc
+        if cast:
+            func = self.kind
+        # If self.kind is a list, append instead of using cast func.
+        if self.kind is list:
+            func = lambda x: self._value + [x]
+        # If incrementable, just increment.
+        if self.incrementable:
+            # TODO: explode nicely if self._value was not an int to start with
+            func = lambda x: self._value + 1
+        self._value = func(value)
+
+    @property
+    def got_value(self):
+        """
+        Returns whether the argument was ever given a (non-default) value.
+
+        For most argument kinds, this simply checks whether the internally
+        stored value is non-``None``; for others, such as ``list`` kinds,
+        different checks may be used.
+
+        .. versionadded:: 1.3
+        """
+        if self.kind is list:
+            return bool(self._value)
+        return self._value is not None

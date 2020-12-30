@@ -1,5 +1,6 @@
 from invoke import task
 
+
 @task
-def mytask():
+def mytask(c):
     pass

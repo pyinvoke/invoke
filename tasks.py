@@ -1,74 +1,126 @@
 import os
-from os.path import join
-import shutil
 
-from invocations import docs as _docs
-from invocations.testing import test
+from invoke import Collection, task
+from invoke.util import LOG_FORMAT
+
+from invocations import travis, checks
+from invocations.docs import docs, www, sites, watch_docs
+from invocations.pytest import coverage as coverage_, test as test_
 from invocations.packaging import vendorize, release
-
-from invoke import ctask as task, run, Collection
-
-
-d = 'sites'
-
-# Usage doc/API site (published as docs.paramiko.org)
-docs_path = join(d, 'docs')
-docs_build = join(docs_path, '_build')
-docs = Collection.from_module(_docs, name='docs', config={
-    'sphinx.source': docs_path,
-    'sphinx.target': docs_build,
-})
-
-# Main/about/changelog site ((www.)?paramiko.org)
-www_path = join(d, 'www')
-www = Collection.from_module(_docs, name='www', config={
-    'sphinx.source': www_path,
-    'sphinx.target': join(www_path, '_build'),
-})
 
 
 @task
-def vendorize_pexpect(ctx, version):
-    target = 'invoke/vendor'
-    package = 'pexpect'
-    vendorize(
-        distribution="pexpect-u",
-        package=package,
-        version=version,
-        vendor_dir=target,
-        license='LICENSE', # TODO: autodetect this in vendorize
-    )
-    # Nuke test dir inside package hrrgh
-    shutil.rmtree(os.path.join(target, package, 'tests'))
+def test(
+    c,
+    verbose=False,
+    color=True,
+    capture="no",
+    module=None,
+    k=None,
+    x=False,
+    opts="",
+    pty=True,
+):
+    """
+    Run pytest. See `invocations.pytest.test` for details.
 
+    This is a simple wrapper around the abovementioned task, which makes a
+    couple minor defaults changes appropriate for this particular test suite,
+    such as:
+
+    - setting ``capture=no`` instead of ``capture=sys``, as we do a very large
+      amount of subprocess IO testing that even the ``sys``  capture screws up
+    - setting ``verbose=False`` because we have a large number of tests and
+      skipping verbose output by default is a ~20% time savings.)
+    """
+    # TODO: update test suite to use c.config.run.in_stream = False globally.
+    # somehow.
+    return test_(
+        c,
+        verbose=verbose,
+        color=color,
+        capture=capture,
+        module=module,
+        k=k,
+        x=x,
+        opts=opts,
+        pty=pty,
+    )
+
+
+# TODO: replace with invocations' once the "call truly local tester" problem is
+# solved (see other TODOs). For now this is just a copy/paste/modify.
 @task(help=test.help)
-def integration(c, module=None, runner=None, opts=None):
+def integration(c, opts=None, pty=True):
     """
     Run the integration test suite. May be slow!
     """
     opts = opts or ""
-    opts += " --tests=integration/"
-    test(c, module, runner, opts)
+    opts += " integration/"
+    test(c, opts=opts, pty=pty)
 
 
 @task
-def sites(c):
+def coverage(c, report="term", opts=""):
     """
-    Builds both doc sites w/ maxed nitpicking.
+    Run pytest in coverage mode. See `invocations.pytest.coverage` for details.
     """
-    # Turn warnings into errors, emit warnings about missing references.
-    # This gives us a maximally noisy docs build.
-    # Also enable tracebacks for easier debuggage.
-    opts = "-W -n -T"
-    # This is super lolzy but we haven't actually tackled nontrivial in-Python
-    # task calling yet, so...
-    docs_c, www_c = c.clone(), c.clone()
-    docs_c.update(**docs.configuration())
-    www_c.update(**www.configuration())
-    docs['build'](docs_c, opts=opts)
-    www['build'](www_c, opts=opts)
+    # Use our own test() instead of theirs.
+    # TODO: allow coverage() to just look up the nearby-by-namespace-attachment
+    # test() instead of hardcoding its own test or doing it this way with an
+    # arg.
+    return coverage_(c, report=report, opts=opts, tester=test)
+
+
+@task
+def regression(c, jobs=8):
+    """
+    Run an expensive, hard-to-test-in-pytest run() regression checker.
+
+    :param int jobs: Number of jobs to run, in total. Ideally num of CPUs.
+    """
+    os.chdir("integration/_support")
+    cmd = "seq {} | parallel -n0 --halt=now,fail=1 inv -c regression check"
+    c.run(cmd.format(jobs))
 
 
 ns = Collection(
-    test, integration, vendorize, release, www, docs, sites, vendorize_pexpect
+    test,
+    coverage,
+    integration,
+    regression,
+    vendorize,
+    release,
+    www,
+    docs,
+    sites,
+    watch_docs,
+    travis,
+    checks.blacken,
+)
+ns.configure(
+    {
+        "blacken": {
+            # Skip the vendor directory and the (Travis-only) alt venv when
+            # blackening.
+            # TODO: this is making it seem like I really do want an explicit
+            # arg/conf-opt in the blacken task for "excluded paths"...ha
+            "find_opts": "-and -not \( -path './invoke/vendor*' -or -path './alt_env*' -or -path './build*' \)"  # noqa
+        },
+        "tests": {"logformat": LOG_FORMAT, "package": "invoke"},
+        "travis": {
+            "sudo": {"user": "sudouser", "password": "mypass"},
+            "black": {"version": "18.6b4"},
+        },
+        "packaging": {
+            "sign": True,
+            "wheel": True,
+            "check_desc": True,
+            # Because of PyYAML's dual source nonsense =/
+            "dual_wheels": True,
+            "changelog_file": os.path.join(
+                www.configuration()["sphinx"]["source"], "changelog.rst"
+            ),
+        },
+    }
 )

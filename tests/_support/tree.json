@@ -1,0 +1,130 @@
+{
+    "name": "tree",
+    "help": null,
+    "tasks": [
+        {
+            "name": "shell",
+            "aliases": ["ipython"],
+            "help": "Load a REPL with project state already set up."
+        },
+        {
+            "name": "test",
+            "aliases": ["run-tests"],
+            "help": "Run the test suite with baked-in args."
+        }
+    ],
+    "default": "test",
+    "collections": [
+        {
+            "name": null,
+            "help": "Tasks for compiling static code and assets.",
+            "tasks": [
+                {
+                    "name": "all",
+                    "aliases": ["everything"],
+                    "help": "Build all necessary artifacts."
+                },
+                {
+                    "name": "c-ext",
+                    "aliases": ["ext"],
+                    "help": "Build our internal C extension."
+                },
+                {
+                    "name": "zap",
+                    "aliases": [],
+                    "help": "A silly way to clean."
+                }
+            ],
+            "default": "all",
+            "collections": [
+                {
+                    "name": "docs",
+                    "help": "Tasks for managing Sphinx docs.",
+                    "tasks": [
+                        {
+                            "name": "all",
+                            "aliases": [],
+                            "help": "Build all doc formats."
+                        },
+                        {
+                            "name": "html",
+                            "aliases": [],
+                            "help": "Build HTML output only."
+                        },
+                        {
+                            "name": "pdf",
+                            "aliases": [],
+                            "help": "Build PDF output only."
+                        }
+                    ],
+                    "default": "all",
+                    "collections": []
+                },
+                {
+                    "name": "python",
+                    "help": "PyPI/etc distribution artifacts.",
+                    "tasks": [
+                        {
+                            "name": "all",
+                            "aliases": [],
+                            "help": "Build all Python packages."
+                        },
+                        {
+                            "name": "sdist",
+                            "aliases": [],
+                            "help": "Build classic style tar.gz."
+                        },
+                        {
+                            "name": "wheel",
+                            "aliases": [],
+                            "help": "Build a wheel."
+                        }
+                    ],
+                    "default": "all",
+                    "collections": []
+                }
+            ]
+        },
+        {
+            "name": "deploy",
+            "help": "How to deploy our code and configs.",
+            "tasks": [
+                {
+                    "name": "db",
+                    "aliases": ["db-servers"],
+                    "help": "Deploy to our database servers."
+                },
+                {
+                    "name": "everywhere",
+                    "aliases": [],
+                    "help": "Deploy to all targets."
+                },
+                {
+                    "name": "web",
+                    "aliases": [],
+                    "help": "Update and bounce the webservers."
+                }
+            ],
+            "default": "everywhere",
+            "collections": []
+        },
+        {
+            "name": "provision",
+            "help": "System setup code.",
+            "tasks": [
+                {
+                    "name": "db",
+                    "aliases": [],
+                    "help": "Stand up one or more DB servers."
+                },
+                {
+                    "name": "web",
+                    "aliases": [],
+                    "help": "Stand up a Web server."
+                }
+            ],
+            "default": null,
+            "collections": []
+        }
+    ]
+}

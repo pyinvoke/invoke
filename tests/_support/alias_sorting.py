@@ -1,5 +1,6 @@
-from invoke import task, Collection
+from invoke import task
 
-@task(aliases=('z', 'a'))
-def toplevel():
+
+@task(aliases=("z", "a"))
+def toplevel(c):
     pass
