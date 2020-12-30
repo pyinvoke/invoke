@@ -299,6 +299,46 @@ of ``--list``, highlighting the fact that ``docs.build`` can be invoked as
         docs.build (docs)
         docs.clean
 
+Default subcollections
+----------------------
+
+As of version 1.5, this functionality is also extended to subcollections: a
+subcollection can be specified as the default when being added to its parent
+collection, and that subcollection's own default task (or sub-subcollection!)
+will be invoked as the default for the parent.
+
+An example probably makes that clearer. Here's a tiny inline task tree with two
+subcollections, each with their own default task::
+
+    from invoke import Collection, task
+
+    @task(default=True)
+    def build_all(c):
+        print("build ALL THE THINGS!")
+
+    @task
+    def build_wheel(c):
+        print("Just the wheel")
+
+    build = Collection(all=build_all, wheel=build_wheel)
+
+    @task(default=True)
+    def build_docs(c):
+        print("Code without docs is no code at all")
+
+    docs = Collection(build_docs)
+
+Then we tie those into one top level collection, setting the ``build``
+subcollection as the overall default::
+
+    ns = Collection()
+    ns.add_collection(build, default=True)
+    ns.add_collection(docs)
+
+The result is that ``build.all`` becomes the absolute default task::
+
+    $ invoke
+    build ALL THE THINGS!
 
 Mix and match
 =============

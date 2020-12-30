@@ -129,8 +129,9 @@ Stderr:{}
 """
         return template.format(command, exited, stdout, stderr)
 
-    def __repr__(self):
-        return self._repr(exited=self.result.exited)
+    def _repr(self, **kwargs):
+        kwargs.setdefault("exited", self.result.exited)
+        return super(UnexpectedExit, self)._repr(**kwargs)
 
 
 class CommandTimedOut(Failure):

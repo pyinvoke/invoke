@@ -13,6 +13,7 @@ from invoke import (
     Collection,
     Config,
     Executor,
+    Exit,
     FilesystemLoader,
     ParserContext,
     ParseResult,
@@ -488,6 +489,41 @@ this is also not ascii: \xe4\x8c\xa1
 """
             got = six.BytesIO.getvalue(sys.stderr)
             assert got == expected
+
+        class Exit_:
+            @patch("invoke.program.sys.exit")
+            def defaults_to_exiting_0(self, mock_exit):
+                p = Program()
+                p.execute = Mock(side_effect=Exit())
+                p.run("myapp foo")
+                mock_exit.assert_called_once_with(0)
+
+            @trap
+            @patch("invoke.program.sys.exit")
+            def prints_message_exiting_1_if_message_given(self, mock_exit):
+                p = Program()
+                p.execute = Mock(side_effect=Exit("onoz"))
+                p.run("myapp foo")
+                mock_exit.assert_called_once_with(1)
+                assert sys.stderr.getvalue() == "onoz\n"
+
+            @trap
+            @patch("invoke.program.sys.exit")
+            def may_explicitly_supply_code_with_message(self, mock_exit):
+                p = Program()
+                p.execute = Mock(side_effect=Exit("onoz", code=17))
+                p.run("myapp foo")
+                mock_exit.assert_called_once_with(17)
+                assert sys.stderr.getvalue() == "onoz\n"
+
+            @trap
+            @patch("invoke.program.sys.exit")
+            def may_explicitly_supply_code_without_message(self, mock_exit):
+                p = Program()
+                p.execute = Mock(side_effect=Exit(code=17))
+                p.run("myapp foo")
+                mock_exit.assert_called_once_with(17)
+                assert sys.stderr.getvalue() == ""
 
         def should_show_core_usage_on_core_parse_failures(self):
             skip()

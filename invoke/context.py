@@ -1,11 +1,12 @@
 import os
 import re
 from contextlib import contextmanager
+from itertools import cycle
 
 try:
-    from invoke.vendor.six import raise_from, iteritems
+    from invoke.vendor.six import raise_from, iteritems, string_types
 except ImportError:
-    from six import raise_from, iteritems
+    from six import raise_from, iteritems, string_types
 
 from .config import Config, DataProxy
 from .exceptions import Failure, AuthFailure, ResponseNotAccepted
@@ -380,11 +381,20 @@ class MockContext(Context):
     Primarily useful for testing Invoke-using codebases.
 
     .. note::
+        If this class' constructor is able to import the ``Mock`` class at
+        runtime (via the ``mock`` or ``unittest.mock`` modules, in that order)
+        it will wraps its ``run``, etc methods in ``Mock`` objects. This allows
+        you to easily assert that the methods (still returning the values you
+        prepare them with) were actually called.
+
+    .. note::
         Methods not given `Results <.Result>` to yield will raise
         ``NotImplementedError`` if called (since the alternative is to call the
         real underlying method - typically undesirable when mocking.)
 
-        .. versionadded:: 1.0
+    .. versionadded:: 1.0
+    .. versionchanged:: 1.5
+        Added conditional ``Mock`` wrapping of ``run`` and ``sudo``.
     """
 
     def __init__(self, config=None, **kwargs):
@@ -395,39 +405,100 @@ class MockContext(Context):
             A Configuration object to use. Identical in behavior to `.Context`.
 
         :param run:
-            A data structure of `Results <.Result>`, to return from calls to
-            the instantiated object's `~.Context.run` method (instead of
-            actually executing the requested shell command).
+            A data structure indicating what `.Result` objects to return from
+            calls to the instantiated object's `~.Context.run` method (instead
+            of actually executing the requested shell command).
 
             Specifically, this kwarg accepts:
 
-            - A single `.Result` object, which will be returned once.
-            - An iterable of `Results <.Result>`, which will be returned on
-              each subsequent call to ``.run``.
-            - A map of command strings to either of the above, allowing
-              specific call-and-response semantics instead of assuming a call
-              order.
+            - A single `.Result` object.
+            - A boolean; if True, yields a `.Result` whose ``exited`` is ``0``,
+              and if False, ``1``.
+            - An iterable of the above values, which will be returned on each
+              subsequent call to ``.run`` (the first item on the first call,
+              the second on the second call, etc).
+            - A dict mapping command strings or compiled regexen to the above
+              values (including an iterable), allowing specific
+              call-and-response semantics instead of assuming a call order.
 
         :param sudo:
             Identical to ``run``, but whose values are yielded from calls to
             `~.Context.sudo`.
 
+        :param bool repeat:
+            A flag determining whether results yielded by this class' methods
+            repeat or are consumed.
+
+            For example, when a single result is indicated, it will normally
+            only be returned once, causing ``NotImplementedError`` afterwards.
+            But when ``repeat=True`` is given, that result is returned on
+            every call, forever.
+
+            Similarly, iterable results are normally exhausted once, but when
+            this setting is enabled, they are wrapped in `itertools.cycle`.
+
+            Default: ``False`` (for backwards compatibility reasons).
+
         :raises:
             ``TypeError``, if the values given to ``run`` or other kwargs
-            aren't individual `.Result` objects or iterables.
+            aren't of the expected types.
+
+        .. versionchanged:: 1.5
+            Added support for boolean and string result values.
+        .. versionchanged:: 1.5
+            Added support for regex dict keys.
+        .. versionchanged:: 1.5
+            Added the ``repeat`` keyword argument.
         """
-        # TODO: would be nice to allow regexen instead of exact string matches
+        # Figure out if we can support Mock in the current environment
+        Mock = None
+        try:
+            from mock import Mock
+        except ImportError:
+            try:
+                from unittest.mock import Mock
+            except ImportError:
+                pass
+        # Set up like any other Context would, with the config
         super(MockContext, self).__init__(config)
+        # Pull out behavioral kwargs
+        self._set("__repeat", kwargs.pop("repeat", False))
+        # The rest must be things like run/sudo - mock Context method info
         for method, results in iteritems(kwargs):
-            # Special convenience case: individual Result -> one-item list
-            if (
-                not hasattr(results, "__iter__")
-                and not isinstance(results, Result)
-                # No need for explicit dict test; they have __iter__
+            # For each possible value type, normalize to iterable of Result
+            # objects (possibly repeating).
+            singletons = tuple([Result, bool] + list(string_types))
+            if isinstance(results, dict):
+                for key, value in iteritems(results):
+                    results[key] = self._normalize(value)
+            elif isinstance(results, singletons) or hasattr(
+                results, "__iter__"
             ):
+                results = self._normalize(results)
+            # Unknown input value: cry
+            else:
                 err = "Not sure how to yield results from a {!r}"
                 raise TypeError(err.format(type(results)))
+            # Save results for use by the method
             self._set("__{}".format(method), results)
+            # Wrap the method in a Mock, if applicable
+            if Mock is not None:
+                self._set(method, Mock(wraps=getattr(self, method)))
+
+    def _normalize(self, value):
+        # First turn everything into an iterable
+        if not hasattr(value, "__iter__") or isinstance(value, string_types):
+            value = [value]
+        # Then turn everything within into a Result
+        results = []
+        for obj in value:
+            if isinstance(obj, bool):
+                obj = Result(exited=0 if obj else 1)
+            elif isinstance(obj, string_types):
+                obj = Result(obj)
+            results.append(obj)
+        # Finally, turn that iterable into an iteratOR, depending on repeat
+        return cycle(results) if getattr(self, "__repeat") else iter(results)
 
     # TODO: _maybe_ make this more metaprogrammy/flexible (using __call__ etc)?
     # Pretty worried it'd cause more hard-to-debug issues than it's presently
@@ -435,26 +506,33 @@ class MockContext(Context):
     # in Fabric 2; though Fabric could do its own sub-subclass in that case...)
 
     def _yield_result(self, attname, command):
-        # NOTE: originally had this with a bunch of explicit
-        # NotImplementedErrors, but it doubled method size, and chance of
-        # unexpected index/etc errors seems low here.
         try:
-            value = getattr(self, attname)
-            # TODO: thought there's a 'better' 2x3 DictType or w/e, but can't
-            # find one offhand
-            if isinstance(value, dict):
-                if hasattr(value[command], "__iter__"):
-                    result = value[command].pop(0)
-                elif isinstance(value[command], Result):
-                    result = value.pop(command)
-            elif hasattr(value, "__iter__"):
-                result = value.pop(0)
-            elif isinstance(value, Result):
-                result = value
-                delattr(self, attname)
+            obj = getattr(self, attname)
+            # Dicts need to try direct lookup or regex matching
+            if isinstance(obj, dict):
+                try:
+                    obj = obj[command]
+                except KeyError:
+                    # TODO: could optimize by skipping this if not any regex
+                    # objects in keys()?
+                    for key, value in iteritems(obj):
+                        if hasattr(key, "match") and key.match(command):
+                            obj = value
+                            break
+                    else:
+                        # Nope, nothing did match.
+                        raise KeyError
+            # Here, the value was either never a dict or has been extracted
+            # from one, so we can assume it's an iterable of Result objects due
+            # to work done by __init__.
+            result = next(obj)
+            # Populate Result's command string with what matched unless
+            # explicitly given
+            if not result.command:
+                result.command = command
             return result
-        except (AttributeError, IndexError, KeyError):
-            raise_from(NotImplementedError, None)
+        except (AttributeError, IndexError, KeyError, StopIteration):
+            raise_from(NotImplementedError(command), None)
 
     def run(self, command, *args, **kwargs):
         # TODO: perform more convenience stuff associating args/kwargs with the
@@ -505,4 +583,4 @@ class MockContext(Context):
         if not isinstance(value, dict):
             raise heck
         # OK, we're good to modify, so do so.
-        value[command] = result
+        value[command] = self._normalize(result)

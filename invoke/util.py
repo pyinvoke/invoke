@@ -271,8 +271,7 @@ class ExceptionHandlingThread(threading.Thread):
         # NOTE: it seems highly unlikely that a thread could still be
         # is_alive() but also have encountered an exception. But hey. Why not
         # be thorough?
-        alive = self.is_alive() and (self.exc_info is None)
-        return not alive
+        return (not self.is_alive()) and self.exc_info is not None
 
     def __repr__(self):
         # TODO: beef this up more

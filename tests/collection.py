@@ -315,7 +315,10 @@ class Collection_:
             t1 = Task(_func, default=True)
             t2 = Task(_func, default=True)
             self.c.add_task(t1, "foo")
-            with raises(ValueError):
+            with raises(
+                ValueError,
+                match=r"'bar' cannot be the default because 'foo' already is!",
+            ):
                 self.c.add_task(t2, "bar")
 
         def raises_ValueError_if_task_added_mirrors_subcollection_name(self):
@@ -362,6 +365,11 @@ class Collection_:
             self.c.add_collection(load("integration"))
             assert "integration" in self.c.collections
 
+        def allows_specifying_defaultness(self):
+            collection = Collection("foo")
+            self.c.add_collection(collection, default=True)
+            assert self.c.default == collection.name
+
         def raises_ValueError_if_collection_without_name(self):
             # Aka non-root collections must either have an explicit name given
             # via kwarg, have a name attribute set, or be a module with
@@ -376,6 +384,16 @@ class Collection_:
             with raises(ValueError):
                 self.c.add_collection(Collection("sub"))
 
+        def raises_ValueError_on_multiple_defaults(self):
+            t1 = Task(_func, default=True)
+            self.c.add_task(t1, "foo")
+            collection = Collection("bar")
+            with raises(
+                ValueError,
+                match=r"'bar' cannot be the default because 'foo' already is!",
+            ):
+                self.c.add_collection(collection, default=True)
+
     class getitem:
         "__getitem__"
 
@@ -385,27 +403,34 @@ class Collection_:
         def finds_own_tasks_by_name(self):
             # TODO: duplicates an add_task test above, fix?
             self.c.add_task(_mytask, "foo")
-            assert self.c["foo"] == _mytask
+            assert self.c["foo"] is _mytask
 
         def finds_subcollection_tasks_by_dotted_name(self):
             sub = Collection("sub")
             sub.add_task(_mytask)
             self.c.add_collection(sub)
-            assert self.c["sub._mytask"] == _mytask
+            assert self.c["sub._mytask"] is _mytask
 
         def honors_aliases_in_own_tasks(self):
-            t = Task(_func, aliases=["bar"])
-            self.c.add_task(t, "foo")
-            assert self.c["bar"] == t
+            task = Task(_func, aliases=["bar"])
+            self.c.add_task(task, "foo")
+            assert self.c["bar"] is task
 
         def honors_subcollection_task_aliases(self):
             self.c.add_collection(load("decorators"))
             assert "decorators.bar" in self.c
 
         def honors_own_default_task_with_no_args(self):
-            t = Task(_func, default=True)
-            self.c.add_task(t)
-            assert self.c[""] == t
+            task = Task(_func, default=True)
+            self.c.add_task(task)
+            assert self.c[""] is task
+
+        def honors_own_default_subcollection(self):
+            task = Task(_func, default=True)
+            sub = Collection("sub")
+            sub.add_task(task, default=True)
+            self.c.add_collection(sub, default=True)
+            assert self.c[""] is task
 
         def honors_subcollection_default_tasks_on_subcollection_name(self):
             sub = Collection.from_module(load("decorators"))

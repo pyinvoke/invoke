@@ -2,6 +2,62 @@
 Changelog
 =========
 
+- :feature:`197` Allow subcollections to act as the default 'tasks' of their
+  parent collections (via the new ``default`` kwarg to
+  `~invoke.collection.Collection.add_collection`). This means that nontrivial
+  task trees can specify eg "use my test subcollection's default task as the
+  global default task" and similar. Thanks to Tye Wang for the request and
+  initial patch.
+- :support:`-` Enhanced test coverage in a handful of modules whose coverage
+  was under 90%.
+- :feature:`-` `~invoke.context.MockContext` now populates its
+  ``NotImplementedError`` exception instances (typically raised when a command
+  is executed which had no pre-prepared result) with the command string that
+  triggered them; this makes it much easier to tell what exactly in a test
+  caused the error.
+- :feature:`-` `~invoke.context.MockContext` now accepts a few quality-of-life
+  shortcuts as keys and values in its ``run``/``sudo`` arguments:
+
+    - Keys may be compiled regular expression objects, as well as strings, and
+      will match any calls whose commands match the regex.
+    - Values may be ``True`` or ``False`` as shorthand for otherwise empty
+      `~invoke.runners.Result` objects with exit codes of ``0`` or ``1``
+      respectively.
+    - Values may also be strings, as shorthand for otherwise empty
+      `~invoke.runners.Result` objects with those strings given as the
+      ``stdout`` argument.
+
+- :feature:`441` Add a new ``repeat`` kwarg to `~invoke.context.MockContext`
+  which, when True (default: False) causes stored results for its methods to be
+  yielded repeatedly instead of consumed. Feature request courtesy of
+  ``@SwampFalc``.
+- :bug:`- major` Immutable iterable result values handed to
+  `~invoke.context.MockContext` would yield errors (due to the use of
+  ``pop()``). The offending logic has been retooled to be more iterator-focused
+  and now works for tuples and etc.
+- :support:`-` Update the :ref:`testing documentation <testing-user-code>` a
+  bit: cleaned up existing examples and added new sections for the other
+  updates in the 1.5 release.
+- :feature:`700` Automatically populate the ``command`` attribute of
+  `~invoke.runners.Result` objects returned by `~invoke.context.MockContext`
+  methods, with the command string triggering that result. Previously users had
+  to do this by hand or otherwise suffered inaccurate result objects. Thanks to
+  ``@SwampFalc`` for the report & initial patch.
+- :feature:`-` Upgrade `~invoke.context.MockContext` to wrap its methods in
+  ``Mock`` objects if the ``(unittest.)mock`` library is importable. This makes
+  testing Invoke-using codebases even easier.
+- :release:`1.4.1 <2020-01-29>`
+- :release:`1.3.1 <2020-01-29>`
+- :support:`586 backported` Explicitly strip out ``__pycache__`` (and for good
+  measure, ``.py[co]``, which previously we only stripped from the ``tests/``
+  folder) in our ``MANIFEST.in``, since at least some earlier releases
+  erroneously included such. Credit to Martijn Pieters for the report and
+  Floris Lambrechts for the patch.
+- :bug:`660` Fix an issue with `~invoke.run` & friends having intermittent
+  problems at exit time (symptom was typically about the exit code value being
+  ``None`` instead of an integer; often with an exception trace). Thanks to
+  Frank Lazzarini for the report and to the numerous others who provided
+  reproduction cases.
 - :bug:`518` Close pseudoterminals opened by the `~invoke.runners.Local` class
   during ``run(..., pty=True)``. Previously, these were only closed
   incidentally at process shutdown, causing file descriptor leakage in
@@ -80,7 +136,7 @@ Changelog
     This fix only applies when ``pty=False`` (the default); PTYs complicate the
     situation greatly (but also mean the issue is less likely to occur).
 
-- :bug:`557` (with assist from :issue:`640`) Fix the
+- :bug:`557 major` (with assist from :issue:`640`) Fix the
   `~invoke.context.Context.cd` and `~invoke.context.Context.prefix` context
   managers so that ``with cd`` and ``with prefix`` correctly revert their state
   manipulations after they exit, when exceptions occur. Thanks to Jon Walsh and

@@ -272,12 +272,10 @@ class Collection(object):
         for alias in list(task.aliases) + list(aliases or []):
             self.tasks.alias(self.transform(alias), to=name)
         if default is True or (default is None and task.is_default):
-            if self.default:
-                msg = "'{}' cannot be the default because '{}' already is!"
-                raise ValueError(msg.format(name, self.default))
+            self._check_default_collision(name)
             self.default = name
 
-    def add_collection(self, coll, name=None):
+    def add_collection(self, coll, name=None, default=None):
         """
         Add `.Collection` ``coll`` as a sub-collection of this one.
 
@@ -286,6 +284,12 @@ class Collection(object):
         :param str name:
             The name to attach the collection as. Defaults to the collection's
             own internal name.
+
+        :param default:
+            Whether this sub-collection('s default task-or-collection) should
+            be the default invocation of the parent collection.
+
+            .. versionadded:: 1.5
 
         .. versionadded:: 1.0
         """
@@ -305,6 +309,14 @@ class Collection(object):
             raise ValueError(err.format(name))
         # Insert
         self.collections[name] = coll
+        if default:
+            self._check_default_collision(name)
+            self.default = name
+
+    def _check_default_collision(self, name):
+        if self.default:
+            msg = "'{}' cannot be the default because '{}' already is!"
+            raise ValueError(msg.format(name, self.default))
 
     def _split_path(self, path):
         """
@@ -372,10 +384,9 @@ class Collection(object):
         ours = self.configuration()
         # Default task for this collection itself
         if not name:
-            if self.default:
-                return self[self.default], ours
-            else:
+            if not self.default:
                 raise ValueError("This collection has no default task.")
+            return self[self.default], ours
         # Normalize name to the format we're expecting
         name = self.transform(name)
         # Non-default tasks within subcollections -> recurse (sorta)
