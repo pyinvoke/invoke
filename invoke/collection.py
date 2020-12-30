@@ -310,8 +310,8 @@ class Collection(object):
         self.collections[name] = coll
         if default:
             if self.default:
-                msg = "'%s' cannot be the default because '%s' already is!"
-                raise ValueError(msg % (name, self.default))
+                msg = "'{}' cannot be the default because '{}' already is!"
+                raise ValueError(msg.format(name, self.default))
             self.default = coll
 
     def _split_path(self, path):
@@ -383,7 +383,9 @@ class Collection(object):
             if not self.default:
                 raise ValueError("This collection has no default task.")
             if isinstance(self.default, Collection):
-                return self._task_with_merged_config(self.default.name, '', ours)
+                return self._task_with_merged_config(
+                    self.default.name, "", ours
+                )
             else:
                 return self[self.default], ours
         # Normalize name to the format we're expecting

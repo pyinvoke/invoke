@@ -363,11 +363,10 @@ class Collection_:
             assert "integration" in self.c.collections
 
         def allows_specifying_defaultness(self):
-            collection = Collection('foo')
+            collection = Collection("foo")
             self.c.add_collection(collection, default=True)
-            eq_(self.c.default, collection)
+            assert self.c.default is collection
 
-        @raises(ValueError)
         def raises_ValueError_if_collection_without_name(self):
             # Aka non-root collections must either have an explicit name given
             # via kwarg, have a name attribute set, or be a module with
@@ -382,12 +381,12 @@ class Collection_:
             with raises(ValueError):
                 self.c.add_collection(Collection("sub"))
 
-        @raises(ValueError)
         def raises_ValueError_on_multiple_defaults(self):
             t1 = Task(_func, default=True)
-            self.c.add_task(t1, 'foo')
-            collection = Collection('bar')
-            self.c.add_collection(collection, default=True)
+            self.c.add_task(t1, "foo")
+            collection = Collection("bar")
+            with raises(ValueError):
+                self.c.add_collection(collection, default=True)
 
     class getitem:
         "__getitem__"
@@ -422,10 +421,10 @@ class Collection_:
 
         def honors_own_default_subcollection(self):
             task = Task(_func, default=True)
-            sub = Collection('sub')
+            sub = Collection("sub")
             sub.add_task(task, default=True)
             self.c.add_collection(sub, default=True)
-            eq_(self.c[''], task)
+            assert self.c[""] == task
 
         def honors_subcollection_default_tasks_on_subcollection_name(self):
             sub = Collection.from_module(load("decorators"))
