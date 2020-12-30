@@ -308,7 +308,7 @@ class Collection(object):
         self.collections[name] = coll
         if default:
             self._check_default_collision(name)
-            self.default = coll
+            self.default = name
 
     def _check_default_collision(self, name):
         if self.default:
@@ -383,12 +383,7 @@ class Collection(object):
         if not name:
             if not self.default:
                 raise ValueError("This collection has no default task.")
-            if isinstance(self.default, Collection):
-                return self._task_with_merged_config(
-                    self.default.name, "", ours
-                )
-            else:
-                return self[self.default], ours
+            return self[self.default], ours
         # Normalize name to the format we're expecting
         name = self.transform(name)
         # Non-default tasks within subcollections -> recurse (sorta)

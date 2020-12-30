@@ -368,7 +368,7 @@ class Collection_:
         def allows_specifying_defaultness(self):
             collection = Collection("foo")
             self.c.add_collection(collection, default=True)
-            assert self.c.default is collection
+            assert self.c.default == collection.name
 
         def raises_ValueError_if_collection_without_name(self):
             # Aka non-root collections must either have an explicit name given
