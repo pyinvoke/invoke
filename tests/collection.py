@@ -403,34 +403,34 @@ class Collection_:
         def finds_own_tasks_by_name(self):
             # TODO: duplicates an add_task test above, fix?
             self.c.add_task(_mytask, "foo")
-            assert self.c["foo"] == _mytask
+            assert self.c["foo"] is _mytask
 
         def finds_subcollection_tasks_by_dotted_name(self):
             sub = Collection("sub")
             sub.add_task(_mytask)
             self.c.add_collection(sub)
-            assert self.c["sub._mytask"] == _mytask
+            assert self.c["sub._mytask"] is _mytask
 
         def honors_aliases_in_own_tasks(self):
-            t = Task(_func, aliases=["bar"])
-            self.c.add_task(t, "foo")
-            assert self.c["bar"] == t
+            task = Task(_func, aliases=["bar"])
+            self.c.add_task(task, "foo")
+            assert self.c["bar"] is task
 
         def honors_subcollection_task_aliases(self):
             self.c.add_collection(load("decorators"))
             assert "decorators.bar" in self.c
 
         def honors_own_default_task_with_no_args(self):
-            t = Task(_func, default=True)
-            self.c.add_task(t)
-            assert self.c[""] == t
+            task = Task(_func, default=True)
+            self.c.add_task(task)
+            assert self.c[""] is task
 
         def honors_own_default_subcollection(self):
             task = Task(_func, default=True)
             sub = Collection("sub")
             sub.add_task(task, default=True)
             self.c.add_collection(sub, default=True)
-            assert self.c[""] == task
+            assert self.c[""] is task
 
         def honors_subcollection_default_tasks_on_subcollection_name(self):
             sub = Collection.from_module(load("decorators"))
