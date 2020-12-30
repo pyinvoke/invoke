@@ -298,7 +298,9 @@ def task(*args, **kwargs):
     * ``auto_shortflags``: Whether or not to automatically create short
       flags from task options; defaults to True.
     * ``help``: Dict mapping argument names to their help strings. Will be
-      displayed in ``--help`` output.
+      displayed in ``--help`` output. For arguments containing underscores
+      (which are transformed into dashes on the CLI by default), either the
+      dashed or underscored version may be supplied here.
     * ``pre``, ``post``: Lists of task objects to execute prior to, or after,
       the wrapped task whenever it is executed.
     * ``autoprint``: Boolean determining whether to automatically print this

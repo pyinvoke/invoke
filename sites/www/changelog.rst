@@ -2,6 +2,14 @@
 Changelog
 =========
 
+- :bug:`409 major` (via :issue:`611`/:issue:`580`) Don't silently discard help
+  text for task arguments whose names happen to contain underscores. Reported
+  by ``@iago1460``, original patches by Hayden Flinner and Floris Lambrechts.
+- :bug:`398 major` (via :issue:`611`/:issue:`580`) Don't silently ignore task
+  help specifiers which don't actually map to the decorated task's arguments
+  (eg ``@task(help={"foo": "help for foo"})`` wrapping a task without a ``foo``
+  argument). Reported by Sohaib Farooqi, with original patches by Hayden
+  Flinner and Floris Lambrechts.
 - :feature:`197` Allow subcollections to act as the default 'tasks' of their
   parent collections (via the new ``default`` kwarg to
   `~invoke.collection.Collection.add_collection`). This means that nontrivial
