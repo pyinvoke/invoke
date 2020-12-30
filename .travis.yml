@@ -65,9 +65,11 @@ script:
   # Test distribution builds, including some package_data based stuff
   # (completion script printing)
   - "inv travis.test-packaging --package=invoke --sanity='inv --list && inv --print-completion-script zsh' --alt-python=alt_env/bin/python"
-after_success:
+#after_success:
   # Upload coverage data to codecov
-  - codecov
+  # NOTE: commented out because something here is resulting in inaccurate
+  # coverage stats, eg 75% when it's really 95%! Fix on Circle.
+  #- codecov
 notifications:
   irc:
     channels: "irc.freenode.org#invoke"
