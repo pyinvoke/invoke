@@ -285,7 +285,10 @@ class Collection(object):
             The name to attach the collection as. Defaults to the collection's
             own internal name.
 
-        :param default: Whether this sub-collection should be the default.
+        :param default:
+            Whether this sub-collection('s default task-or-collection) should
+            be the default invocation of the parent collection.
+
             .. versionadded:: 1.5
 
         .. versionadded:: 1.0

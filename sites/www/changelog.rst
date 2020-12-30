@@ -2,6 +2,10 @@
 Changelog
 =========
 
+- :feature:`197` Allow subcollections to act as the default 'tasks' of their
+  parent collections. This means that nontrivial task trees can specify eg
+  "use my test subcollection's default task as the global default task" and
+  similar. Thanks to Tye Wang for the request and initial patch.
 - :support:`-` Enhanced test coverage in a handful of modules whose coverage
   was under 90%.
 - :feature:`-` `~invoke.context.MockContext` now populates its
