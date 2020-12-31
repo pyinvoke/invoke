@@ -622,6 +622,19 @@ class Runner_:
             r = self._runner(exits=17).run(_, warn=True)
             assert r.failed is True
 
+        class Failure_repr:
+            def defaults_to_just_class_and_command(self):
+                expected = "<Failure: cmd='oh hecc'>"
+                assert repr(Failure(Result(command="oh hecc"))) == expected
+
+            def subclasses_may_add_more_kv_pairs(self):
+                class TotalFailure(Failure):
+                    def _repr(self, **kwargs):
+                        return super(TotalFailure, self)._repr(mood="dejected")
+
+                expected = "<TotalFailure: cmd='onoz' mood=dejected>"
+                assert repr(TotalFailure(Result(command="onoz"))) == expected
+
         class UnexpectedExit_repr:
             def similar_to_just_the_result_repr(self):
                 try:

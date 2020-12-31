@@ -5,7 +5,7 @@ import sys
 
 from mock import patch, Mock, call
 from pytest_relaxed import trap
-from pytest import skip, raises
+from pytest import skip, raises, mark
 
 from invoke import (
     AuthFailure,
@@ -547,7 +547,7 @@ class MockContext_:
         assert c.run("doesn't mattress").stdout == "some output"
 
     def return_value_kwargs_can_take_iterables_too(self):
-        c = MockContext(run=[Result("some output"), Result("more!")])
+        c = MockContext(run=(Result("some output"), Result("more!")))
         assert c.run("doesn't mattress").stdout == "some output"
         assert c.run("still doesn't mattress").stdout == "more!"
 
@@ -556,21 +556,89 @@ class MockContext_:
         assert c.run("foo").stdout == "bar"
 
     def return_value_map_kwargs_may_take_iterables_too(self):
-        c = MockContext(run={"foo": [Result("bar"), Result("biz")]})
+        c = MockContext(run={"foo": (Result("bar"), Result("biz"))})
         assert c.run("foo").stdout == "bar"
         assert c.run("foo").stdout == "biz"
+
+    def regexen_return_value_map_keys_match_on_command(self):
+        c = MockContext(
+            run={"string": Result("yup"), re.compile(r"foo.*"): Result("bar")}
+        )
+        assert c.run("string").stdout == "yup"
+        assert c.run("foobar").stdout == "bar"
+
+    class boolean_result_shorthand:
+        def as_singleton_args(self):
+            assert MockContext(run=True).run("anything").ok
+            assert not MockContext(run=False).run("anything", warn=True).ok
+
+        def as_iterables(self):
+            mc = MockContext(run=[True, False])
+            assert mc.run("anything").ok
+            assert not mc.run("anything", warn=True).ok
+
+        def as_dict_values(self):
+            mc = MockContext(run=dict(foo=True, bar=False))
+            assert mc.run("foo").ok
+            assert not mc.run("bar", warn=True).ok
+
+    class string_result_shorthand:
+        def as_singleton_args(self):
+            assert MockContext(run="foo").run("anything").stdout == "foo"
+
+        def as_iterables(self):
+            mc = MockContext(run=["definition", "of", "insanity"])
+            assert mc.run("anything").stdout == "definition"
+            assert mc.run("anything").stdout == "of"
+            assert mc.run("anything").stdout == "insanity"
+
+        def as_dict_values(self):
+            mc = MockContext(run=dict(foo="foo", bar="bar"))
+            assert mc.run("foo").stdout == "foo"
+            assert mc.run("bar").stdout == "bar"
+
+    class commands_injected_into_Result:
+        @mark.parametrize(
+            "kwargs", (dict(), dict(command=""), dict(command=None))
+        )
+        def when_not_set_or_falsey(self, kwargs):
+            c = MockContext(run={"foo": Result("bar", **kwargs)})
+            assert c.run("foo").command == "foo"
+
+        def does_not_occur_when_truthy(self):
+            # Not sure why you'd want this but whatevs!
+            c = MockContext(run={"foo": Result("bar", command="nope")})
+            assert c.run("foo").command == "nope"  # not "bar"
 
     def methods_with_no_kwarg_values_raise_NotImplementedError(self):
         with raises(NotImplementedError):
             MockContext().run("onoz I did not anticipate this would happen")
+
+    def repeat_True_does_not_consume_results(self):
+        mc = MockContext(
+            repeat=True,
+            run=dict(
+                singleton=True,  # will repeat
+                wassup=Result("yo"),  # ditto
+                iterable=[Result("tick"), Result("tock")],  # will not
+            ),
+        )
+        assert mc.run("singleton").ok
+        assert mc.run("singleton").ok  # not consumed
+        assert mc.run("wassup").ok
+        assert mc.run("wassup").ok  # not consumed
+        assert mc.run("iterable").stdout == "tick"
+        assert mc.run("iterable").stdout == "tock"
+        assert mc.run("iterable").stdout == "tick"  # not consumed
+        assert mc.run("iterable").stdout == "tock"
 
     def sudo_also_covered(self):
         c = MockContext(sudo=Result(stderr="super duper"))
         assert c.sudo("doesn't mattress").stderr == "super duper"
         try:
             MockContext().sudo("meh")
-        except NotImplementedError:
-            pass
+        except NotImplementedError as e:
+            assert str(e) == "meh"
         else:
             assert False, "Did not get a NotImplementedError for sudo!"
 
@@ -579,8 +647,8 @@ class MockContext_:
             context.run("something")
             try:
                 context.run("something")
-            except NotImplementedError:
-                pass
+            except NotImplementedError as e:
+                assert str(e) == "something"
             else:
                 assert False, "Didn't raise NotImplementedError"
 
@@ -650,3 +718,41 @@ class MockContext_:
             assert mc.sudo("foo").stdout == "bar"
             mc.set_result_for("sudo", "foo", Result("biz"))
             assert mc.sudo("foo").stdout == "biz"
+
+    class mock_wrapping:
+        def setup(self):
+            results = {"foo": Result("bar")}
+            self.kwargs = dict(run=results, sudo=results)
+            self.mock_module = Mock(Mock=Mock)  # buffalo buffalo
+
+        # TODO: be nice if pytest-relaxed supported class level fixtures, if
+        # only I knew the guy who wrote that...
+        def does_not_wrap_when_no_mock_library_present(
+            self, clean_sys_modules
+        ):
+            for module in ("unittest.mock", "mock"):
+                sys.modules[module] = None
+            mc = MockContext(**self.kwargs)
+            assert not isinstance(mc.run, Mock)
+
+        def wraps_when_mock_importable(self, clean_sys_modules):
+            sys.modules["mock"] = self.mock_module
+            sys.modules["unittest.mock"] = None
+            mc = MockContext(**self.kwargs)
+            assert isinstance(mc.run, Mock)
+            assert isinstance(mc.sudo, Mock)
+
+        def wraps_when_unittest_mock_importable(self, clean_sys_modules):
+            sys.modules["mock"] = None
+            sys.modules["unittest.mock"] = self.mock_module
+            mc = MockContext(**self.kwargs)
+            assert isinstance(mc.run, Mock)
+            assert isinstance(mc.sudo, Mock)
+
+        def prefers_direct_mock_over_stdlib(self, clean_sys_modules):
+            preferred, other = Mock(), Mock()
+            sys.modules["mock"] = preferred
+            sys.modules["unittest.mock"] = other
+            MockContext(**self.kwargs)
+            assert preferred.Mock.call_count == 2
+            assert other.Mock.call_count == 0

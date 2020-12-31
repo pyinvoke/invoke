@@ -48,7 +48,7 @@ First, as with any distinct Python package providing CLI
     This is just an example snippet and is not a fully valid ``setup.py``; if
     you don't know how Python packaging works, a good starting place is `the
     Python Packaging User's Guide
-    <https://python-packaging-user-guide.readthedocs.io/en/latest/>`_.
+    <https://python-packaging-user-guide.readthedocs.io>`_.
 
 Nothing here is specific to Invoke - it's a standard way of telling Python to
 install a ``tester`` script that executes the ``run`` method of a ``program``

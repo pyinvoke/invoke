@@ -78,7 +78,7 @@ class Task(object):
         self.iterable = iterable or []
         self.incrementable = incrementable or []
         self.auto_shortflags = auto_shortflags
-        self.help = help or {}
+        self.help = (help or {}).copy()
         # Call chain bidness
         self.pre = pre or []
         self.post = post or []
@@ -193,6 +193,7 @@ class Task(object):
             opts["incrementable"] = True
         # Argument name(s) (replace w/ dashed version if underscores present,
         # and move the underscored version to be the attr_name instead.)
+        original_name = name  # For reference in eg help=
         if "_" in name:
             opts["attr_name"] = name
             name = translate_underscores(name)
@@ -215,8 +216,10 @@ class Task(object):
                 opts["kind"] = kind
             opts["default"] = default
         # Help
-        if name in self.help:
-            opts["help"] = self.help[name]
+        for possibility in name, original_name:
+            if possibility in self.help:
+                opts["help"] = self.help.pop(possibility)
+                break
         return opts
 
     def get_arguments(self):
@@ -243,6 +246,14 @@ class Task(object):
             # (which may include new shortflags) so subsequent Argument
             # creation knows what's taken.
             taken_names.update(set(new_arg.names))
+        # If any values were leftover after consuming a 'help' dict, it implies
+        # the user messed up & had a tyop or similar. Let's explode.
+        if self.help:
+            raise ValueError(
+                "Help field was set for param(s) that don't exist: {}".format(
+                    list(self.help.keys())
+                )
+            )
         # Now we need to ensure positionals end up in the front of the list, in
         # order given in self.positionals, so that when Context consumes them,
         # this order is preserved.
@@ -290,7 +301,9 @@ def task(*args, **kwargs):
     * ``auto_shortflags``: Whether or not to automatically create short
       flags from task options; defaults to True.
     * ``help``: Dict mapping argument names to their help strings. Will be
-      displayed in ``--help`` output.
+      displayed in ``--help`` output. For arguments containing underscores
+      (which are transformed into dashes on the CLI by default), either the
+      dashed or underscored version may be supplied here.
     * ``pre``, ``post``: Lists of task objects to execute prior to, or after,
       the wrapped task whenever it is executed.
     * ``autoprint``: Boolean determining whether to automatically print this

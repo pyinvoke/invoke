@@ -32,14 +32,20 @@ class ExceptionHandlingThread_:
             assert isinstance(wrapper.value, AttributeError)
 
         def exhibits_is_dead_flag(self):
+            # Spin up a thread that will except internally (can't put() on a
+            # None object)
             t = EHThread(target=self.worker, args=[None])
             t.start()
             t.join()
+            # Excepted -> it's dead
             assert t.is_dead
+            # Spin up a happy thread that can exit peacefully (it's not "dead",
+            # though...maybe we should change that terminology)
             t = EHThread(target=self.worker, args=[Queue()])
             t.start()
             t.join()
-            assert t.is_dead
+            # Not dead, just uh...sleeping?
+            assert not t.is_dead
 
     class via_subclassing:
         def setup(self):
@@ -73,11 +79,17 @@ class ExceptionHandlingThread_:
             assert isinstance(wrapper.value, AttributeError)
 
         def exhibits_is_dead_flag(self):
+            # Spin up a thread that will except internally (can't put() on a
+            # None object)
             t = self.klass(queue=None)
             t.start()
             t.join()
+            # Excepted -> it's dead
             assert t.is_dead
+            # Spin up a happy thread that can exit peacefully (it's not "dead",
+            # though...maybe we should change that terminology)
             t = self.klass(queue=Queue())
             t.start()
             t.join()
-            assert t.is_dead
+            # Not dead, just uh...sleeping?
+            assert not t.is_dead
