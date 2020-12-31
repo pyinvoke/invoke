@@ -2,6 +2,7 @@
 Changelog
 =========
 
+- :release:`1.5.0 <2020-12-30>`
 - :feature:`454` (also :issue:`577`/:issue:`658`, via
   :issue:`583`/:issue:`681`/:issue:`607`) Allow any string-compatible object to
   be passed to `Context.cd <invoke.context.Context.cd>`, enabling use of eg
