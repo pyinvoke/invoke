@@ -289,9 +289,9 @@ class Collection(object):
             Whether this sub-collection('s default task-or-collection) should
             be the default invocation of the parent collection.
 
-            .. versionadded:: 1.5
-
         .. versionadded:: 1.0
+        .. versionchanged:: 1.5
+            Added the ``default`` parameter.
         """
         # Handle module-as-collection
         if isinstance(coll, types.ModuleType):
