@@ -208,14 +208,13 @@ class Context_:
             assert runner.run.call_args[0][0] == "ls"
 
         @patch(local_path)
-        def cd_should_accept_pathlib_path_objects(self, Local):
-            try:
-                from pathlib import Path
-            except ImportError:
-                # Path can be missing if we're on Python 2 or
-                # PyPy without pathlib or pathlib2 installed
-                if sys.version_info[0] == 2:
-                    skip("pathlib Path not available on Python 2")
+        def cd_should_accept_any_stringable_object(self, Local):
+            class Path(object):
+                def __init__(self, value):
+                    self.value = value
+
+                def __str__(self):
+                    return self.value
 
             runner = Local.return_value
             c = Context()

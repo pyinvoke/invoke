@@ -2,6 +2,11 @@
 Changelog
 =========
 
+- :feature:`454` (also :issue:`577`/:issue:`658`, via
+  :issue:`583`/:issue:`681`/:issue:`607`) Allow any string-compatible object to
+  be passed to `Context.cd <invoke.context.Context.cd>`, enabling use of eg
+  ``pathlib.Path`` instances. Thanks to Jimm Domingo for the original report
+  and Ludovico Bianchi, Mario César, and Floris Lambrechts for patches.
 - :bug:`409 major` (via :issue:`611`/:issue:`580`) Don't silently discard help
   text for task arguments whose names happen to contain underscores. Reported
   by ``@iago1460``, original patches by Hayden Flinner and Floris Lambrechts.

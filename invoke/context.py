@@ -366,8 +366,12 @@ class Context(DataProxy):
             such directory names easier.
 
         .. versionadded:: 1.0
+        .. versionchanged:: 1.5
+            Explicitly cast the ``path`` argument (the only argument) to a
+            string; this allows any object defining ``__str__`` to be handed in
+            (such as the various ``Path`` objects out there), and not just
+            string literals.
         """
-        # path may be a Path object, turn into a string
         path = str(path)
         self.command_cwds.append(path)
         try:
