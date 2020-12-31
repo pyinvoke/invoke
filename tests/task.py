@@ -53,9 +53,6 @@ class task_:
         with raises(ValueError):
             self._load("decorator_multi_default")
 
-    def sets_arg_help(self):
-        assert self.vanilla["punch"].help["why"] == "Motive"
-
     def sets_arg_kind(self):
         skip()
 
@@ -369,6 +366,59 @@ class Task_:
             assert arg.names == ("longer-arg", "l")
             assert arg.attr_name == "longer_arg"
             assert arg.name == "longer_arg"
+
+        class help:
+            def setup(self):
+                @task(
+                    help={
+                        "simple": "key",
+                        "with_underscores": "yup",
+                        "with-dashes": "also yup",
+                    }
+                )
+                def mytask(c, simple, with_underscores, with_dashes):
+                    pass
+
+                self.help = {
+                    arg.name: arg.help for arg in mytask.get_arguments()
+                }
+
+            def base_case(self):
+                assert self.help["simple"] == "key"
+
+            def underscored_name_via_underscores(self):
+                assert self.help["with_underscores"] == "yup"
+
+            def underscored_name_via_dashes(self):
+                assert self.help["with_dashes"] == "also yup"
+
+            def raises_ValueError_on_keys_not_found_in_task_args(self):
+                @task(help={"non-existing-param": "Help text"})
+                def no_parameters(c):
+                    pass
+
+                err = r"field was set.*don't exist:.*'non-existing-param'*"
+                with raises(ValueError, match=err):
+                    no_parameters.get_arguments()
+
+            def arg_value_is_copied_to_avoid_state_bleed_when_shared(self):
+                # TODO: the 'real' solve here is to make sharing common
+                # arguments between tasks a first class citizen; there's
+                # tickets for that.
+                shared_help = {"shared": "help"}
+
+                @task(help=shared_help)
+                def first(c, shared):
+                    pass
+
+                @task(help=shared_help)
+                def second(c, shared):
+                    pass
+
+                # Running get_arguments() is required to trigger bug or lack
+                # thereof, but also lets us do a nice safety check after.
+                helps = [x.get_arguments()[0].help for x in (first, second)]
+                assert helps == ["help", "help"]
 
 
 # Dummy task for Call tests

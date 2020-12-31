@@ -731,35 +731,6 @@ Options:
             def complains_if_given_invalid_task_name(self):
                 expect("-h this", err="No idea what 'this' is!\n")
 
-        class per_parameter:
-            "per-parameter"
-
-            def displays_when_help_is_supplied_with_dashes_in_key(self):
-                expected = """
-Usage: invoke [--core-opts] help-dashed [--options] [other tasks here ...]
-
-Docstring:
-  none
-
-Options:
-  -p STRING, --parameter-with-underscores=STRING   Help supplied with dashes
-
-""".lstrip()
-                expect("-c decorators -h help-dashed --list", out=expected)
-
-            def displays_when_help_is_supplied_with_underscores_in_key(self):
-                expected = """
-Usage: invoke [--core-opts] help-uscored [--options] [other tasks here ...]
-
-Docstring:
-  none
-
-Options:
-  -p STRING, --parameter-with-underscores=STRING   Supplied with underscores
-
-""".lstrip()
-                expect("-c decorators -h help-uscored --list", out=expected)
-
     class task_list:
         "--list"
 

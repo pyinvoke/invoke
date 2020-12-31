@@ -600,14 +600,6 @@ class Collection_:
         def exposes_aliases(self):
             assert "mytask27" in self.aliases
 
-        def raises_ValueError_on_help_without_matching_parameter(self):
-            @task(help={"non-existing-parameter": "Help text"})
-            def _no_parameter(c):
-                pass
-
-            with raises(ValueError):
-                Collection(_no_parameter).to_contexts()
-
     class task_names:
         def setup(self):
             self.c = Collection.from_module(load("explicit_root"))
