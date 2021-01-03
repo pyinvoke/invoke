@@ -247,7 +247,7 @@ class Task(object):
             # creation knows what's taken.
             taken_names.update(set(new_arg.names))
         # If any values were leftover after consuming a 'help' dict, it implies
-        # the user messed up & had a tyop or similar. Let's explode.
+        # the user messed up & had a typo or similar. Let's explode.
         if self.help:
             raise ValueError(
                 "Help field was set for param(s) that don't exist: {}".format(
