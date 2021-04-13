@@ -9,6 +9,12 @@ class util:
 
             assert helpline(foo) is None
 
+        def is_None_if_empty_docstring(self):
+            def foo(c):
+                ""
+
+            assert helpline(foo) is None
+
         def is_entire_thing_if_docstring_one_liner(self):
             def foo(c):
                 "foo!"
