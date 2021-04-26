@@ -338,6 +338,11 @@ class Runner_:
             # TODO: vendor & use a color module
             assert sys.stdout.getvalue() == "\x1b[1;37mmy command\x1b[0m\n"
 
+        @trap
+        def uses_custom_format(self):
+            self._run("my command", echo=True, settings={"run": {"output_format": 'AA{command}ZZ\n'}})
+            assert sys.stdout.getvalue() == "AAmy commandZZ\n"
+
     class dry_running:
         @trap
         def sets_echo_to_True(self):

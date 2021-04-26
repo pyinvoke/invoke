@@ -282,6 +282,16 @@ class Runner(object):
             should be written. If ``None`` (the default), ``sys.stdout`` will
             be used.
 
+        :param output_format:
+            A string, which when passed to Python's inbuilt ``.format`` method,
+            will change the format of the output when ``run.echo`` is set to
+            true.
+            
+            Currently, only ``{command}`` is supported as a parameter.
+            
+            Defaults to ``\033[1;37m{command}\033[0m\n`` (prints the full
+            command in ANSI-escaped bold).
+
         :param err_stream:
             Same as ``out_stream``, except for standard error, and defaulting
             to ``sys.stderr``.
@@ -370,7 +380,12 @@ class Runner(object):
         # of stop() and then we can nix this. Ugh!
         self.stop()
         self.stop_timer()
-
+    
+    def echo(self, command):
+        sys.stdout.write(self.opts['output_format'].format(
+            command=command,
+        ))
+    
     def _setup(self, command, kwargs):
         """
         Prepare data on ``self`` so we're ready to start running.
@@ -385,7 +400,7 @@ class Runner(object):
         self.encoding = self.opts["encoding"] or self.default_encoding()
         # Echo running command (wants to be early to be included in dry-run)
         if self.opts["echo"]:
-            print("\033[1;37m{}\033[0m".format(command))
+            self.echo(command)
         # Prepare common result args.
         # TODO: I hate this. Needs a deeper separate think about tweaking
         # Runner.generate_result in a way that isn't literally just this same
