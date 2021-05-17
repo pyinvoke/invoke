@@ -24,7 +24,7 @@ try:
     from .vendor.six.moves import reduce  # noqa
 
     if six.PY3:
-        from .vendor import yaml3 as yaml  # noqa
+        import yaml  # noqa
     else:
         from .vendor import yaml2 as yaml  # noqa
 except ImportError:
