@@ -7,7 +7,7 @@ following ways:
 * Bug reports and feature requests: first read `contribution-guide.org
   <http://contribution-guide.org>`_, then check out our `GitHub page
   <https://github.com/pyinvoke/invoke>`_.
-* IRC: ``#invoke`` on Freenode
+* Blog posts: http://bitprophet.org/categories/invoke/
 * Twitter: you've got a few options here:
 
     * `@bitprophet <https://twitter.com/bitprophet>`_ is the canonical source
@@ -23,5 +23,3 @@ following ways:
       unfortunately let it languish. Should we automate our release process
       further, this account may get posts again, and we'll update this page
       accordingly.
-
-* Blog: TK
