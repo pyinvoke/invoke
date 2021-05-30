@@ -282,7 +282,7 @@ class Runner(object):
             should be written. If ``None`` (the default), ``sys.stdout`` will
             be used.
 
-        :param output_format:
+        :param echo_format:
             A string, which when passed to Python's inbuilt ``.format`` method,
             will change the format of the output when ``run.echo`` is set to
             true.
@@ -382,7 +382,7 @@ class Runner(object):
         self.stop_timer()
 
     def echo(self, command):
-        sys.stdout.write(self.opts['output_format'].format(
+        sys.stdout.write(self.opts['echo_format'].format(
             command=command,
         ))
 

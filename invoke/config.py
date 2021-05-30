@@ -481,7 +481,7 @@ class Config(DataProxy):
                 "hide": None,
                 "in_stream": None,
                 "out_stream": None,
-                "output_format": "\033[1;37m{command}\033[0m\n",
+                "echo_format": "\033[1;37m{command}\033[0m\n",
                 "pty": False,
                 "replace_env": False,
                 "shell": shell,
