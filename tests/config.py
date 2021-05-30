@@ -96,7 +96,7 @@ class Config_:
                     "disown": False,
                     "dry": False,
                     "echo": False,
-                    "echo_format": "\033[1;37m{command}\033[0m\n",
+                    "echo_format": "\033[1;37m{command}\033[0m",
                     "echo_stdin": None,
                     "encoding": None,
                     "env": {},

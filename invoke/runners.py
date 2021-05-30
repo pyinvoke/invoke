@@ -382,7 +382,7 @@ class Runner(object):
         self.stop_timer()
 
     def echo(self, command):
-        sys.stdout.write(self.opts["echo_format"].format(command=command))
+        print(self.opts["echo_format"].format(command=command))
 
     def _setup(self, command, kwargs):
         """

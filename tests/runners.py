@@ -343,7 +343,7 @@ class Runner_:
             self._run(
                 "my command",
                 echo=True,
-                settings={"run": {"echo_format": "AA{command}ZZ\n"}},
+                settings={"run": {"echo_format": "AA{command}ZZ"}},
             )
             assert sys.stdout.getvalue() == "AAmy commandZZ\n"
 
