@@ -2,6 +2,10 @@
 Changelog
 =========
 
+- :feature:`791` Add a new ``run.echo_format`` configuration option allowing
+  control over the format of echoed commands. It defaults to the previously
+  hardcoded value (wrap in ANSI bold) and is thus backwards compatible. Thanks
+  to David JM Emmett for the patch.
 - :release:`1.5.0 <2020-12-30>`
 - :feature:`454` (also :issue:`577`/:issue:`658`, via
   :issue:`583`/:issue:`681`/:issue:`607`) Allow any string-compatible object to
