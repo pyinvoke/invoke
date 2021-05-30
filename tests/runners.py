@@ -340,7 +340,11 @@ class Runner_:
 
         @trap
         def uses_custom_format(self):
-            self._run("my command", echo=True, settings={"run": {"echo_format": 'AA{command}ZZ\n'}})
+            self._run(
+                "my command",
+                echo=True,
+                settings={"run": {"echo_format": "AA{command}ZZ\n"}},
+            )
             assert sys.stdout.getvalue() == "AAmy commandZZ\n"
 
     class dry_running:
