@@ -286,9 +286,9 @@ class Runner(object):
             A string, which when passed to Python's inbuilt ``.format`` method,
             will change the format of the output when ``run.echo`` is set to
             true.
-            
+
             Currently, only ``{command}`` is supported as a parameter.
-            
+
             Defaults to ``\033[1;37m{command}\033[0m\n`` (prints the full
             command in ANSI-escaped bold).
 
@@ -380,12 +380,12 @@ class Runner(object):
         # of stop() and then we can nix this. Ugh!
         self.stop()
         self.stop_timer()
-    
+
     def echo(self, command):
         sys.stdout.write(self.opts['output_format'].format(
             command=command,
         ))
-    
+
     def _setup(self, command, kwargs):
         """
         Prepare data on ``self`` so we're ready to start running.
