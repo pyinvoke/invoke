@@ -2,6 +2,8 @@
 Changelog
 =========
 
+- :bug:`751` Don't explode on empty-but-for-whitespace task docstrings. Thanks
+  to Matt Hayden for the report & initial patches.
 - :feature:`791` Add a new ``run.echo_format`` configuration option allowing
   control over the format of echoed commands. It defaults to the previously
   hardcoded value (wrap in ANSI bold) and is thus backwards compatible. Thanks
