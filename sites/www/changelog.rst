@@ -2,6 +2,8 @@
 Changelog
 =========
 
+- :bug:`751` Don't explode on empty-but-for-whitespace task docstrings. Thanks
+  to Matt Hayden for the report & initial patches.
 - :release:`1.5.0 <2020-12-30>`
 - :feature:`454` (also :issue:`577`/:issue:`658`, via
   :issue:`583`/:issue:`681`/:issue:`607`) Allow any string-compatible object to

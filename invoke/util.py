@@ -162,12 +162,16 @@ def encode_output(string, encoding):
 
 def helpline(obj):
     """
-    Yield an object's first docstring line, or an empty string.
+    Yield an object's first docstring line, or None if there was no docstring.
 
     .. versionadded:: 1.0
     """
     docstring = obj.__doc__
-    if not docstring or docstring == type(obj).__doc__:
+    if (
+        not docstring
+        or not docstring.strip()
+        or docstring == type(obj).__doc__
+    ):
         return None
     return docstring.lstrip().splitlines()[0]
 
