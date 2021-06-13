@@ -1224,13 +1224,13 @@ class Local(Runner):
                 # "end of output" logic in code using reader functions.
                 data = None
         else:
-            data = os.read(self.process.stdout.fileno(), num_bytes)
+            data = self.process.stdout.read(num_bytes)
         return data
 
     def read_proc_stderr(self, num_bytes):
         # NOTE: when using a pty, this will never be called.
         # TODO: do we ever get those OSErrors on stderr? Feels like we could?
-        return os.read(self.process.stderr.fileno(), num_bytes)
+        return self.process.stderr.read(num_bytes)
 
     def _write_proc_stdin(self, data):
         # NOTE: parent_fd from os.fork() is a read/write pipe attached to our
@@ -1289,6 +1289,7 @@ class Local(Runner):
                 stdout=PIPE,
                 stderr=PIPE,
                 stdin=PIPE,
+                bufsize=0,
             )
 
     def kill(self):
