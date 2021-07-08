@@ -130,67 +130,6 @@ class Runner(object):
 
         :param str command: The shell command to execute.
 
-        :param str shell:
-            Which shell binary to use. Default: ``/bin/bash`` (on Unix;
-            ``COMSPEC`` or ``cmd.exe`` on Windows.)
-
-        :param bool warn:
-            Whether to warn and continue, instead of raising
-            `.UnexpectedExit`, when the executed command exits with a
-            nonzero status. Default: ``False``.
-
-            .. note::
-                This setting has no effect on exceptions, which will still be
-                raised, typically bundled in `.ThreadException` objects if they
-                were raised by the IO worker threads.
-
-                Similarly, `.WatcherError` exceptions raised by
-                `.StreamWatcher` instances will also ignore this setting, and
-                will usually be bundled inside `.Failure` objects (in order to
-                preserve the execution context).
-
-                Ditto `.CommandTimedOut` - basically, anything that prevents a
-                command from actually getting to "exited with an exit code"
-                ignores this flag.
-
-        :param hide:
-            Allows the caller to disable ``run``'s default behavior of copying
-            the subprocess' stdout and stderr to the controlling terminal.
-            Specify ``hide='out'`` (or ``'stdout'``) to hide only the stdout
-            stream, ``hide='err'`` (or ``'stderr'``) to hide only stderr, or
-            ``hide='both'`` (or ``True``) to hide both streams.
-
-            The default value is ``None``, meaning to print everything;
-            ``False`` will also disable hiding.
-
-            .. note::
-                Stdout and stderr are always captured and stored in the
-                ``Result`` object, regardless of ``hide``'s value.
-
-            .. note::
-                ``hide=True`` will also override ``echo=True`` if both are
-                given (either as kwargs or via config/CLI).
-
-        :param bool pty:
-            By default, ``run`` connects directly to the invoked process and
-            reads its stdout/stderr streams. Some programs will buffer (or even
-            behave) differently in this situation compared to using an actual
-            terminal or pseudoterminal (pty). To use a pty instead of the
-            default behavior, specify ``pty=True``.
-
-            .. warning::
-                Due to their nature, ptys have a single output stream, so the
-                ability to tell stdout apart from stderr is **not possible**
-                when ``pty=True``. As such, all output will appear on
-                ``out_stream`` (see below) and be captured into the ``stdout``
-                result attribute. ``err_stream`` and ``stderr`` will always be
-                empty when ``pty=True``.
-
-        :param bool fallback:
-            Controls auto-fallback behavior re: problems offering a pty when
-            ``pty=True``. Whether this has any effect depends on the specific
-            `Runner` subclass being invoked. Default: ``True``.
-
         :param bool asynchronous:
             When set to ``True`` (default ``False``), enables asynchronous
             behavior, as follows:
@@ -247,40 +186,19 @@ class Runner(object):
 
             .. versionadded:: 1.4
 
+        :param bool dry:
+            Whether to dry-run instead of truly invoking the given command. See
+            :option:`--dry` (which flips this on globally) for details on this
+            behavior.
+
+            .. versionadded:: 1.3
+
         :param bool echo:
             Controls whether `.run` prints the command string to local stdout
             prior to executing it. Default: ``False``.
 
             .. note::
                 ``hide=True`` will override ``echo=True`` if both are given.
-
-        :param dict env:
-            By default, subprocesses receive a copy of Invoke's own environment
-            (i.e. ``os.environ``). Supply a dict here to update that child
-            environment.
-
-            For example, ``run('command', env={'PYTHONPATH':
-            '/some/virtual/env/maybe'})`` would modify the ``PYTHONPATH`` env
-            var, with the rest of the child's env looking identical to the
-            parent.
-
-            .. seealso:: ``replace_env`` for changing 'update' to 'replace'.
-
-        :param bool replace_env:
-            When ``True``, causes the subprocess to receive the dictionary
-            given to ``env`` as its entire shell environment, instead of
-            updating a copy of ``os.environ`` (which is the default behavior).
-            Default: ``False``.
-
-        :param str encoding:
-            Override auto-detection of which encoding the subprocess is using
-            for its stdout/stderr streams (which defaults to the return value
-            of `default_encoding`).
-
-        :param out_stream:
-            A file-like stream object to which the subprocess' standard output
-            should be written. If ``None`` (the default), ``sys.stdout`` will
-            be used.
 
         :param echo_format:
             A string, which when passed to Python's inbuilt ``.format`` method,
@@ -291,30 +209,6 @@ class Runner(object):
 
             Defaults to ``\033[1;37m{command}\033[0m\n`` (prints the full
             command in ANSI-escaped bold).
-
-        :param err_stream:
-            Same as ``out_stream``, except for standard error, and defaulting
-            to ``sys.stderr``.
-
-        :param in_stream:
-            A file-like stream object to used as the subprocess' standard
-            input. If ``None`` (the default), ``sys.stdin`` will be used.
-
-            If ``False``, will disable stdin mirroring entirely (though other
-            functionality which writes to the subprocess' stdin, such as
-            autoresponding, will still function.) Disabling stdin mirroring can
-            help when ``sys.stdin`` is a misbehaving non-stream object, such as
-            under test harnesses or headless command runners.
-
-        :param watchers:
-            A list of `.StreamWatcher` instances which will be used to scan the
-            program's ``stdout`` or ``stderr`` and may write into its ``stdin``
-            (typically ``str`` or ``bytes`` objects depending on Python
-            version) in response to patterns or other heuristics.
-
-            See :doc:`/concepts/watchers` for details on this functionality.
-
-            Default: ``[]``.
 
         :param bool echo_stdin:
             Whether to write data from ``in_stream`` back to ``out_stream``.
@@ -345,12 +239,125 @@ class Runner(object):
             When not ``None``, this parameter will override that auto-detection
             and force, or disable, echoing.
 
+        :param str encoding:
+            Override auto-detection of which encoding the subprocess is using
+            for its stdout/stderr streams (which defaults to the return value
+            of `default_encoding`).
+
+        :param err_stream:
+            Same as ``out_stream``, except for standard error, and defaulting
+            to ``sys.stderr``.
+
+        :param dict env:
+            By default, subprocesses receive a copy of Invoke's own environment
+            (i.e. ``os.environ``). Supply a dict here to update that child
+            environment.
+
+            For example, ``run('command', env={'PYTHONPATH':
+            '/some/virtual/env/maybe'})`` would modify the ``PYTHONPATH`` env
+            var, with the rest of the child's env looking identical to the
+            parent.
+
+            .. seealso:: ``replace_env`` for changing 'update' to 'replace'.
+
+        :param bool fallback:
+            Controls auto-fallback behavior re: problems offering a pty when
+            ``pty=True``. Whether this has any effect depends on the specific
+            `Runner` subclass being invoked. Default: ``True``.
+
+        :param hide:
+            Allows the caller to disable ``run``'s default behavior of copying
+            the subprocess' stdout and stderr to the controlling terminal.
+            Specify ``hide='out'`` (or ``'stdout'``) to hide only the stdout
+            stream, ``hide='err'`` (or ``'stderr'``) to hide only stderr, or
+            ``hide='both'`` (or ``True``) to hide both streams.
+
+            The default value is ``None``, meaning to print everything;
+            ``False`` will also disable hiding.
+
+            .. note::
+                Stdout and stderr are always captured and stored in the
+                ``Result`` object, regardless of ``hide``'s value.
+
+            .. note::
+                ``hide=True`` will also override ``echo=True`` if both are
+                given (either as kwargs or via config/CLI).
+
+        :param in_stream:
+            A file-like stream object to used as the subprocess' standard
+            input. If ``None`` (the default), ``sys.stdin`` will be used.
+
+            If ``False``, will disable stdin mirroring entirely (though other
+            functionality which writes to the subprocess' stdin, such as
+            autoresponding, will still function.) Disabling stdin mirroring can
+            help when ``sys.stdin`` is a misbehaving non-stream object, such as
+            under test harnesses or headless command runners.
+
+        :param out_stream:
+            A file-like stream object to which the subprocess' standard output
+            should be written. If ``None`` (the default), ``sys.stdout`` will
+            be used.
+
+        :param bool pty:
+            By default, ``run`` connects directly to the invoked process and
+            reads its stdout/stderr streams. Some programs will buffer (or even
+            behave) differently in this situation compared to using an actual
+            terminal or pseudoterminal (pty). To use a pty instead of the
+            default behavior, specify ``pty=True``.
+
+            .. warning::
+                Due to their nature, ptys have a single output stream, so the
+                ability to tell stdout apart from stderr is **not possible**
+                when ``pty=True``. As such, all output will appear on
+                ``out_stream`` (see below) and be captured into the ``stdout``
+                result attribute. ``err_stream`` and ``stderr`` will always be
+                empty when ``pty=True``.
+
+        :param bool replace_env:
+            When ``True``, causes the subprocess to receive the dictionary
+            given to ``env`` as its entire shell environment, instead of
+            updating a copy of ``os.environ`` (which is the default behavior).
+            Default: ``False``.
+
+        :param str shell:
+            Which shell binary to use. Default: ``/bin/bash`` (on Unix;
+            ``COMSPEC`` or ``cmd.exe`` on Windows.)
+
         :param timeout:
             Cause the runner to submit an interrupt to the subprocess and raise
             `.CommandTimedOut`, if the command takes longer than ``timeout``
             seconds to execute. Defaults to ``None``, meaning no timeout.
 
             .. versionadded:: 1.3
+
+        :param bool warn:
+            Whether to warn and continue, instead of raising
+            `.UnexpectedExit`, when the executed command exits with a
+            nonzero status. Default: ``False``.
+
+            .. note::
+                This setting has no effect on exceptions, which will still be
+                raised, typically bundled in `.ThreadException` objects if they
+                were raised by the IO worker threads.
+
+                Similarly, `.WatcherError` exceptions raised by
+                `.StreamWatcher` instances will also ignore this setting, and
+                will usually be bundled inside `.Failure` objects (in order to
+                preserve the execution context).
+
+                Ditto `.CommandTimedOut` - basically, anything that prevents a
+                command from actually getting to "exited with an exit code"
+                ignores this flag.
+
+        :param watchers:
+            A list of `.StreamWatcher` instances which will be used to scan the
+            program's ``stdout`` or ``stderr`` and may write into its ``stdin``
+            (typically ``str`` or ``bytes`` objects depending on Python
+            version) in response to patterns or other heuristics.
+
+            See :doc:`/concepts/watchers` for details on this functionality.
+
+            Default: ``[]``.
 
         :returns:
             `Result`, or a subclass thereof.

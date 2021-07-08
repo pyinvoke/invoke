@@ -2,6 +2,11 @@
 Changelog
 =========
 
+- :support:`- backported` (Mostly) alphabetize the list of ``run()`` params in
+  the runners API docs. Previously they were an unordered mess.
+- :support:`- backported` Document the ``dry`` keyword argument to ``run``,
+  which had been added in version 1.3 but only documented as a CLI flag; it
+  does also work as a kwarg (and as a config option).
 - :bug:`751` Don't explode on empty-but-for-whitespace task docstrings. Thanks
   to Matt Hayden for the report & initial patches.
 - :feature:`791` Add a new ``run.echo_format`` configuration option allowing
