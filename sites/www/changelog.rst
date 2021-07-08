@@ -2,6 +2,8 @@
 Changelog
 =========
 
+- :support:`- backported` (Mostly) alphabetize the list of ``run()`` params in
+  the runners API docs. Previously they were an unordered mess.
 - :support:`- backported` Document the ``dry`` keyword argument to ``run``,
   which had been added in version 1.3 but only documented as a CLI flag; it
   does also work as a kwarg (and as a config option).
