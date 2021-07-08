@@ -130,6 +130,13 @@ class Runner(object):
 
         :param str command: The shell command to execute.
 
+        :param bool dry:
+            Whether to dry-run instead of truly invoking the given command. See
+            :option:`--dry` (which flips this on globally) for details on this
+            behavior.
+
+            .. versionadded:: 1.3
+
         :param str shell:
             Which shell binary to use. Default: ``/bin/bash`` (on Unix;
             ``COMSPEC`` or ``cmd.exe`` on Windows.)

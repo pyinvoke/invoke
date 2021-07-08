@@ -2,6 +2,9 @@
 Changelog
 =========
 
+- :support:`- backported` Document the ``dry`` keyword argument to ``run``,
+  which had been added in version 1.3 but only documented as a CLI flag; it
+  does also work as a kwarg (and as a config option).
 - :bug:`751` Don't explode on empty-but-for-whitespace task docstrings. Thanks
   to Matt Hayden for the report & initial patches.
 - :release:`1.5.0 <2020-12-30>`
