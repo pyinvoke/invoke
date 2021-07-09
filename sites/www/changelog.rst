@@ -2,6 +2,7 @@
 Changelog
 =========
 
+- :release:`1.6.0 <2021-07-09>`
 - :release:`1.5.1 <2021-07-09>`
 - :support:`- backported` (Mostly) alphabetize the list of ``run()`` params in
   the runners API docs. Previously they were an unordered mess.
