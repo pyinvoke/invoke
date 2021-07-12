@@ -24,7 +24,10 @@ class BaseResolver(object):
 
     def add_implicit_resolver(cls, tag, regexp, first):
         if not 'yaml_implicit_resolvers' in cls.__dict__:
-            cls.yaml_implicit_resolvers = cls.yaml_implicit_resolvers.copy()
+            implicit_resolvers = {}
+            for key in cls.yaml_implicit_resolvers:
+                implicit_resolvers[key] = cls.yaml_implicit_resolvers[key][:]
+            cls.yaml_implicit_resolvers = implicit_resolvers
         if first is None:
             first = [None]
         for ch in first:
@@ -143,8 +146,8 @@ class BaseResolver(object):
                 resolvers = self.yaml_implicit_resolvers.get(u'', [])
             else:
                 resolvers = self.yaml_implicit_resolvers.get(value[0], [])
-            resolvers += self.yaml_implicit_resolvers.get(None, [])
-            for tag, regexp in resolvers:
+            wildcard_resolvers = self.yaml_implicit_resolvers.get(None, [])
+            for tag, regexp in resolvers + wildcard_resolvers:
                 if regexp.match(value):
                     return tag
             implicit = implicit[1]

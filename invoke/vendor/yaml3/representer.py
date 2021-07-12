@@ -5,7 +5,7 @@ __all__ = ['BaseRepresenter', 'SafeRepresenter', 'Representer',
 from .error import *
 from .nodes import *
 
-import datetime, sys, copyreg, types, base64
+import datetime, copyreg, types, base64, collections
 
 class RepresenterError(YAMLError):
     pass
@@ -15,8 +15,9 @@ class BaseRepresenter:
     yaml_representers = {}
     yaml_multi_representers = {}
 
-    def __init__(self, default_style=None, default_flow_style=None):
+    def __init__(self, default_style=None, default_flow_style=False, sort_keys=True):
         self.default_style = default_style
+        self.sort_keys = sort_keys
         self.default_flow_style = default_flow_style
         self.represented_objects = {}
         self.object_keeper = []
@@ -107,10 +108,11 @@ class BaseRepresenter:
         best_style = True
         if hasattr(mapping, 'items'):
             mapping = list(mapping.items())
-            try:
-                mapping = sorted(mapping)
-            except TypeError:
-                pass
+            if self.sort_keys:
+                try:
+                    mapping = sorted(mapping)
+                except TypeError:
+                    pass
         for item_key, item_value in mapping:
             node_key = self.represent_data(item_key)
             node_value = self.represent_data(item_value)
@@ -132,7 +134,9 @@ class BaseRepresenter:
 class SafeRepresenter(BaseRepresenter):
 
     def ignore_aliases(self, data):
-        if data in [None, ()]:
+        if data is None:
+            return True
+        if isinstance(data, tuple) and data == ():
             return True
         if isinstance(data, (str, bytes, bool, int, float)):
             return True
@@ -224,7 +228,7 @@ class SafeRepresenter(BaseRepresenter):
         return self.represent_mapping(tag, state, flow_style=flow_style)
 
     def represent_undefined(self, data):
-        raise RepresenterError("cannot represent an object: %s" % data)
+        raise RepresenterError("cannot represent an object", data)
 
 SafeRepresenter.add_representer(type(None),
         SafeRepresenter.represent_none)
@@ -314,7 +318,7 @@ class Representer(SafeRepresenter):
         elif hasattr(data, '__reduce__'):
             reduce = data.__reduce__()
         else:
-            raise RepresenterError("cannot represent object: %r" % data)
+            raise RepresenterError("cannot represent an object", data)
         reduce = (list(reduce)+[None]*5)[:5]
         function, args, state, listitems, dictitems = reduce
         args = list(args)
@@ -351,6 +355,14 @@ class Representer(SafeRepresenter):
             value['dictitems'] = dictitems
         return self.represent_mapping(tag+function_name, value)
 
+    def represent_ordered_dict(self, data):
+        # Provide uniform representation across different Python versions.
+        data_type = type(data)
+        tag = 'tag:yaml.org,2002:python/object/apply:%s.%s' \
+                % (data_type.__module__, data_type.__name__)
+        items = [[key, value] for key, value in data.items()]
+        return self.represent_sequence(tag, [items])
+
 Representer.add_representer(complex,
         Representer.represent_complex)
 
@@ -359,6 +371,9 @@ Representer.add_representer(tuple,
 
 Representer.add_representer(type,
         Representer.represent_name)
+
+Representer.add_representer(collections.OrderedDict,
+        Representer.represent_ordered_dict)
 
 Representer.add_representer(types.FunctionType,
         Representer.represent_name)
