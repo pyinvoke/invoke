@@ -207,7 +207,7 @@ class Runner(object):
 
             Currently, only ``{command}`` is supported as a parameter.
 
-            Defaults to ``\033[1;37m{command}\033[0m\n`` (prints the full
+            Defaults to ``\\033[1;37m{command}\\033[0m\\n`` (prints the full
             command in ANSI-escaped bold).
 
         :param bool echo_stdin:
