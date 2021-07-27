@@ -19,14 +19,14 @@ import sys
 # to worry about it (they can't rely on the imported 'six' directly via
 # attribute access, since six.moves does import shenanigans.)
 try:
-    from .vendor.lexicon import Lexicon  # noqa
-    from .vendor import six
-    from .vendor.six.moves import reduce  # noqa
+    from inoke.vendor.lexicon import Lexicon  # noqa
+    from inoke.vendor import six
+    from inoke.vendor.six.moves import reduce  # noqa
 
     if six.PY3:
-        from .vendor import yaml3 as yaml  # noqa
+        from invoke.vendor import yaml3 as yaml  # noqa
     else:
-        from .vendor import yaml2 as yaml  # noqa
+        from invoke.vendor import yaml2 as yaml  # noqa
 except ImportError:
     from lexicon import Lexicon  # noqa
     import six

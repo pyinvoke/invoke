@@ -2,9 +2,9 @@ import os
 import sys
 import imp
 
-from . import Config
-from .exceptions import CollectionNotFound
-from .util import debug
+from invoke import Config
+from invoke.exceptions import CollectionNotFound
+from invoke.util import debug
 
 
 class Loader(object):

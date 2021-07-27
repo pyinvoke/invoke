@@ -10,10 +10,10 @@ not be included in the Sphinx API documentation.
 
 import os
 
-from .util import six
+from invoke.util import six
 
-from .exceptions import UncastableEnvVar, AmbiguousEnvVar
-from .util import debug
+from invoke.exceptions import UncastableEnvVar, AmbiguousEnvVar
+from invoke.util import debug
 
 
 class Environment(object):

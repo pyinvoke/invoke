@@ -13,7 +13,7 @@ import select
 import sys
 
 # TODO: move in here? They're currently platform-agnostic...
-from .util import has_fileno, isatty
+from invoke.util import has_fileno, isatty
 
 
 WINDOWS = sys.platform == "win32"

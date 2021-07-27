@@ -4,11 +4,11 @@ import os
 import types
 from os.path import join, splitext, expanduser
 
-from .env import Environment
-from .exceptions import UnknownFileType, UnpicklableConfigMember
-from .runners import Local
-from .terminals import WINDOWS
-from .util import debug, six, yaml
+from invoke.env import Environment
+from invoke.exceptions import UnknownFileType, UnpicklableConfigMember
+from invoke.runners import Local
+from invoke.terminals import WINDOWS
+from invoke.util import debug, six, yaml
 
 
 if six.PY3:

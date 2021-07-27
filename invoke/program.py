@@ -8,14 +8,14 @@ import sys
 import textwrap
 from importlib import import_module  # buffalo buffalo
 
-from .util import six
+from invoke.util import six
 
-from . import Collection, Config, Executor, FilesystemLoader
-from .completion.complete import complete, print_completion_script
-from .parser import Parser, ParserContext, Argument
-from .exceptions import UnexpectedExit, CollectionNotFound, ParseError, Exit
-from .terminals import pty_size
-from .util import debug, enable_logging, helpline
+from invoke import Collection, Config, Executor, FilesystemLoader
+from invoke.completion.complete import complete, print_completion_script
+from invoke.parser import Parser, ParserContext, Argument
+from invoke.exceptions import UnexpectedExit, CollectionNotFound, ParseError, Exit
+from invoke.terminals import pty_size
+from invoke.util import debug, enable_logging, helpline
 
 
 class Program(object):

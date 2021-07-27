@@ -8,10 +8,10 @@ try:
 except ImportError:
     from six import raise_from, iteritems, string_types
 
-from .config import Config, DataProxy
-from .exceptions import Failure, AuthFailure, ResponseNotAccepted
-from .runners import Result
-from .watchers import FailingResponder
+from invoke.config import Config, DataProxy
+from invoke.exceptions import Failure, AuthFailure, ResponseNotAccepted
+from invoke.runners import Result
+from invoke.watchers import FailingResponder
 
 
 class Context(DataProxy):

@@ -1,7 +1,7 @@
 import re
 import threading
 
-from .exceptions import ResponseNotAccepted
+from invoke.exceptions import ResponseNotAccepted
 
 
 class StreamWatcher(threading.local):

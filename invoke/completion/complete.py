@@ -7,9 +7,9 @@ import os
 import re
 import shlex
 
-from ..exceptions import Exit, ParseError
-from ..parser import Parser
-from ..util import debug, task_name_sort_key
+from invoke.exceptions import Exit, ParseError
+from invoke.parser import Parser
+from invoke.util import debug, task_name_sort_key
 
 
 def complete(names, core, initial_context, collection):

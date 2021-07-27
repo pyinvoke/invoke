@@ -9,7 +9,7 @@ condition in a way easily told apart from other, truly unexpected errors".
 from traceback import format_exception
 from pprint import pformat
 
-from .util import six
+from invoke.util import six
 
 
 class CollectionNotFound(Exception):

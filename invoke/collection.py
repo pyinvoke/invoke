@@ -1,11 +1,11 @@
 import copy
 import types
 
-from .util import six, Lexicon, helpline
+from invoke.util import six, Lexicon, helpline
 
-from .config import merge_dicts, copy_dict
-from .parser import Context as ParserContext
-from .tasks import Task
+from invoke.config import merge_dicts, copy_dict
+from invoke.parser import Context as ParserContext
+from invoke.tasks import Task
 
 
 class Collection(object):

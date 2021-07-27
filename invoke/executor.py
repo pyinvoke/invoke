@@ -1,9 +1,9 @@
-from .util import six
+from invoke.util import six
 
-from .config import Config
-from .parser import ParserContext
-from .util import debug
-from .tasks import Call, Task
+from invoke.config import Config
+from invoke.parser import ParserContext
+from invoke.util import debug
+from invoke.tasks import Call, Task
 
 
 class Executor(object):

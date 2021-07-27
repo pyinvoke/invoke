@@ -9,7 +9,7 @@ import threading
 import time
 import signal
 
-from .util import six
+from invoke.util import six
 
 # Import some platform-specific things at top level so they can be mocked for
 # tests.
@@ -26,7 +26,7 @@ try:
 except ImportError:
     termios = None
 
-from .exceptions import (
+from inoke.exceptions import (
     UnexpectedExit,
     Failure,
     ThreadException,
@@ -34,14 +34,14 @@ from .exceptions import (
     SubprocessPipeError,
     CommandTimedOut,
 )
-from .terminals import (
+from invoke.terminals import (
     WINDOWS,
     pty_size,
     character_buffered,
     ready_for_reading,
     bytes_to_read,
 )
-from .util import has_fileno, isatty, ExceptionHandlingThread, encode_output
+from invoke.util import has_fileno, isatty, ExceptionHandlingThread, encode_output
 
 
 class Runner(object):

@@ -1,11 +1,11 @@
 import itertools
 
 try:
-    from ..vendor.lexicon import Lexicon
+    from invoke.vendor.lexicon import Lexicon
 except ImportError:
     from lexicon import Lexicon
 
-from .argument import Argument
+from invoke.parser.argument import Argument
 
 
 def translate_underscores(name):

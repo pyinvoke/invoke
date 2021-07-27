@@ -1,8 +1,8 @@
-from ._version import __version_info__, __version__  # noqa
-from .collection import Collection  # noqa
-from .config import Config  # noqa
-from .context import Context, MockContext  # noqa
-from .exceptions import (  # noqa
+from invoke._version import __version_info__, __version__  # noqa
+from invoke.collection import Collection  # noqa
+from invoke.config import Config  # noqa
+from invoke.context import Context, MockContext  # noqa
+from invoke.exceptions import (  # noqa
     AmbiguousEnvVar,
     AuthFailure,
     CollectionNotFound,
@@ -19,14 +19,14 @@ from .exceptions import (  # noqa
     WatcherError,
     CommandTimedOut,
 )
-from .executor import Executor  # noqa
-from .loader import FilesystemLoader  # noqa
-from .parser import Argument, Parser, ParserContext, ParseResult  # noqa
-from .program import Program  # noqa
-from .runners import Runner, Local, Failure, Result, Promise  # noqa
-from .tasks import task, call, Call, Task  # noqa
-from .terminals import pty_size  # noqa
-from .watchers import FailingResponder, Responder, StreamWatcher  # noqa
+from inoke.executor import Executor  # noqa
+from inoke.loader import FilesystemLoader  # noqa
+from inoke.parser import Argument, Parser, ParserContext, ParseResult  # noqa
+from inoke.program import Program  # noqa
+from inoke.runners import Runner, Local, Failure, Result, Promise  # noqa
+from inoke.tasks import task, call, Call, Task  # noqa
+from inoke.terminals import pty_size  # noqa
+from inoke.watchers import FailingResponder, Responder, StreamWatcher  # noqa
 
 
 def run(command, **kwargs):

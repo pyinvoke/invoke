@@ -1,14 +1,14 @@
 import copy
 
 try:
-    from ..vendor.lexicon import Lexicon
-    from ..vendor.fluidity import StateMachine, state, transition
+    from invoke.vendor.lexicon import Lexicon
+    from invoke.vendor.fluidity import StateMachine, state, transition
 except ImportError:
     from lexicon import Lexicon
     from fluidity import StateMachine, state, transition
 
-from ..util import debug
-from ..exceptions import ParseError
+from invoke.util import debug
+from invoke.exceptions import ParseError
 
 
 def is_flag(value):

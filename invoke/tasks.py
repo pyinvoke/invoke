@@ -7,9 +7,9 @@ from copy import deepcopy
 import inspect
 import types
 
-from .context import Context
-from .parser import Argument, translate_underscores
-from .util import six
+from invoke.context import Context
+from invoke.parser import Argument, translate_underscores
+from invoke.util import six
 
 if six.PY3:
     from itertools import zip_longest
