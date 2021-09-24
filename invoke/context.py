@@ -468,6 +468,8 @@ class MockContext(Context):
         # Set up like any other Context would, with the config
         super(MockContext, self).__init__(config)
         # Pull out behavioral kwargs
+        # TODO 2.0: Jesus tap-dancing Christ this needs to default to True, it
+        # gets me every single time
         self._set("__repeat", kwargs.pop("repeat", False))
         # The rest must be things like run/sudo - mock Context method info
         for method, results in iteritems(kwargs):
