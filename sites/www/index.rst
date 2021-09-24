@@ -4,7 +4,9 @@ Welcome to Invoke!
 This website covers project information for Invoke such as the changelog,
 contribution guidelines, development roadmap, news/blog, and so forth.
 Detailed usage and API documentation can be found at our code documentation
-site, `docs.pyinvoke.org <http://docs.pyinvoke.org>`_.
+site, `docs.pyinvoke.org <http://docs.pyinvoke.org>`_. Additionally, the
+project maintainer keeps a `roadmap <http://bitprophet.org/projects#roadmap>`_
+on his website.
 
 Please see below for a high level intro, or the navigation on the left for the
 rest of the site content.
