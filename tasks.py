@@ -1,6 +1,6 @@
 import os
 
-from invoke import Collection, task
+from invoke import Collection
 from invoke.util import LOG_FORMAT
 
 from invocations import travis, checks
@@ -9,7 +9,12 @@ from invocations.pytest import coverage as coverage_, test as test_
 from invocations.packaging import vendorize, release
 
 
-@task
+ns = Collection(
+    vendorize, release, www, docs, sites, watch_docs, travis, checks.blacken
+)
+
+
+@ns.task
 def test(
     c,
     verbose=False,
@@ -50,7 +55,7 @@ def test(
 
 # TODO: replace with invocations' once the "call truly local tester" problem is
 # solved (see other TODOs). For now this is just a copy/paste/modify.
-@task(help=test.help)
+@ns.task(help=test.help)
 def integration(c, opts=None, pty=True):
     """
     Run the integration test suite. May be slow!
@@ -60,7 +65,7 @@ def integration(c, opts=None, pty=True):
     test(c, opts=opts, pty=pty)
 
 
-@task
+@ns.task
 def coverage(c, report="term", opts=""):
     """
     Run pytest in coverage mode. See `invocations.pytest.coverage` for details.
@@ -72,7 +77,7 @@ def coverage(c, report="term", opts=""):
     return coverage_(c, report=report, opts=opts, tester=test)
 
 
-@task
+@ns.task
 def regression(c, jobs=8):
     """
     Run an expensive, hard-to-test-in-pytest run() regression checker.
@@ -84,20 +89,6 @@ def regression(c, jobs=8):
     c.run(cmd.format(jobs))
 
 
-ns = Collection(
-    test,
-    coverage,
-    integration,
-    regression,
-    vendorize,
-    release,
-    www,
-    docs,
-    sites,
-    watch_docs,
-    travis,
-    checks.blacken,
-)
 ns.configure(
     {
         "blacken": {

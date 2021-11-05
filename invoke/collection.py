@@ -5,7 +5,7 @@ from .util import six, Lexicon, helpline
 
 from .config import merge_dicts, copy_dict
 from .parser import Context as ParserContext
-from .tasks import Task
+from .tasks import Task, task
 
 
 class Collection(object):
@@ -582,3 +582,21 @@ class Collection(object):
                 )
             ],
         }
+
+    def task(self, *args, **kwargs):
+        """
+        Wrap a callable object and register it to the current colelction.
+
+        .. versionadded:: 1.5
+        """
+        maybe_task = task(*args, **kwargs)
+        if isinstance(maybe_task, Task):
+            self.add_task(maybe_task)
+            return maybe_task
+
+        def inner(*args, **kwargs):
+            configured_task = maybe_task(*args, **kwargs)
+            self.add_task(configured_task)
+            return configured_task
+
+        return inner
