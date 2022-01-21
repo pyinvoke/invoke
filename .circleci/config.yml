@@ -2,7 +2,43 @@ version: 2.1
 
 
 orbs:
-  orb: invocations/orb@1.0.4
+  orb: invocations/orb@dev:ci
+
+
+jobs:
+  # Unit+integration tests, with coverage
+  coverage:
+    executor:
+      name: orb/default
+      version: "3.6"
+    steps:
+      - orb/setup
+      - run: inv ci.make-sudouser
+      # Split up coverage generation (under sudo for integration suite) and
+      # compiling/uploading (wants to be as main user)
+      - run: inv ci.sudo-run 'inv coverage'
+      - run: coverage xml
+      - run: codecov
+      - orb/debug
+
+  regression:
+    executor:
+      name: orb/default
+      version: "3.6"
+    steps:
+      - orb/setup
+      - run: inv regression
+      - orb/debug
+
+  doctests:
+    executor:
+      name: orb/default
+      version: "3.6"
+    steps:
+      - orb/setup
+      - run: inv www.doctest
+      - orb/debug
+
 
 workflows:
   main:
@@ -11,8 +47,10 @@ workflows:
           name: Lint
       - orb/format:
           name: Style check
-      - orb/coverage:
+      - coverage:
           name: Test 3.6
+      - regression:
+          name: Regression tests
       - orb/test-release:
           name: Release test
       - orb/test:
@@ -24,3 +62,6 @@ workflows:
       - orb/docs:
           name: "Docs"
           requires: ["Test 3.6"]
+      - doctests:
+          name: "Doctests"
+          requires: ["Docs"]

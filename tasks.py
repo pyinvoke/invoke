@@ -3,7 +3,7 @@ import os
 from invoke import Collection, task, Exit
 from invoke.util import LOG_FORMAT
 
-from invocations import travis, checks
+from invocations import ci, checks
 from invocations.docs import docs, www, sites, watch_docs
 from invocations.pytest import coverage as coverage_, test as test_
 from invocations.packaging import vendorize, release
@@ -68,15 +68,22 @@ def integration(c, opts=None, pty=True):
 
 
 @task
-def coverage(c, report="term", opts=""):
+def coverage(c, report="term", opts="", codecov=False):
     """
     Run pytest in coverage mode. See `invocations.pytest.coverage` for details.
     """
     # Use our own test() instead of theirs.
-    # TODO: allow coverage() to just look up the nearby-by-namespace-attachment
-    # test() instead of hardcoding its own test or doing it this way with an
-    # arg.
-    return coverage_(c, report=report, opts=opts, tester=test)
+    # Also add integration test so this always hits both.
+    # (Not regression, since that's "weird" / doesn't really hit any new
+    # coverage points)
+    coverage_(
+        c,
+        report=report,
+        opts=opts,
+        tester=test,
+        additional_testers=[integration],
+        codecov=codecov,
+    )
 
 
 @task
@@ -102,23 +109,18 @@ ns = Collection(
     docs,
     sites,
     watch_docs,
-    travis,
+    ci,
     checks.blacken,
 )
 ns.configure(
     {
         "blacken": {
-            # Skip the vendor directory and the (Travis-only) alt venv when
-            # blackening.
+            # Skip vendor, build dirs when blackening.
             # TODO: this is making it seem like I really do want an explicit
             # arg/conf-opt in the blacken task for "excluded paths"...ha
-            "find_opts": "-and -not \( -path './invoke/vendor*' -or -path './alt_env*' -or -path './build*' \)"  # noqa
+            "find_opts": "-and -not \( -path './invoke/vendor*' -or -path './build*' \)"  # noqa
         },
         "tests": {"logformat": LOG_FORMAT, "package": "invoke"},
-        "travis": {
-            "sudo": {"user": "sudouser", "password": "mypass"},
-            "black": {"version": "18.6b4"},
-        },
         "packaging": {
             "sign": True,
             "wheel": True,
