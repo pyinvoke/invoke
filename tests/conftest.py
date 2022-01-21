@@ -20,6 +20,16 @@ from _util import support
 logging.basicConfig(level=logging.INFO)
 
 
+@pytest.fixture(autouse=True)
+def fake_user_home():
+    # Ignore any real user homedir for purpose of testing.
+    # This allows, for example, a user who has real Invoke configs in their
+    # homedir to still run the test suite safely.
+    # TODO: this is still a bit of a kludge & doesn't solve systemwide configs
+    with patch("invoke.config.expanduser", side_effect=lambda x: x):
+        yield
+
+
 @pytest.fixture
 def reset_environ():
     """
