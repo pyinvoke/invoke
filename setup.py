@@ -34,7 +34,14 @@ setup(
     long_description=long_description,
     author="Jeff Forcier",
     author_email="jeff@bitprophet.org",
-    url="https://docs.pyinvoke.org",
+    url="https://pyinvoke.org",
+    project_urls={
+        "Docs": "https://docs.pyinvoke.org",
+        "Source": "https://github.com/pyinvoke/invoke",
+        "Issues": "https://github.com/pyinvoke/invoke/issues",
+        "Changelog": "https://www.pyinvoke.org/changelog.html",
+        "CI": "https://app.circleci.com/pipelines/github/pyinvoke/invoke",
+    },
     packages=find_packages(exclude=exclude),
     include_package_data=True,
     entry_points={
