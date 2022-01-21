@@ -20,11 +20,11 @@ namespace. ``tasks`` (or any other name given via :ref:`loading configuration
 options <configuring-loading>`) is searched for in the following ways:
 
 * First, if a valid tasks module by that name already exists on Python's
-  `sys.path <http://docs.python.org/release/2.7/library/sys.html#sys.path>`_,
+  `sys.path <https//docs.python.org/release/2.7/library/sys.html#sys.path>`_,
   no more searching is done -- that module is selected.
 * Failing that, search towards the root of the local filesystem, starting with
   the user's current working directory (`os.getcwd
-  <http://docs.python.org/release/2.7/library/os.html#os.getcwd>`_) and try
+  <https//docs.python.org/release/2.7/library/os.html#os.getcwd>`_) and try
   importing again with each directory temporarily added to ``sys.path``.
 
     * Due to how Python's import machinery works, this approach will always

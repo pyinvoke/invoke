@@ -21,8 +21,8 @@ long_description = """
 {}
 
 For a high level introduction, including example code, please see `our main
-project website <http://pyinvoke.org>`_; or for detailed API docs, see `the
-versioned API website <http://docs.pyinvoke.org>`_.
+project website <https://pyinvoke.org>`_; or for detailed API docs, see `the
+versioned API website <https://docs.pyinvoke.org>`_.
 """.format(version, open("README.rst").read())
 
 
@@ -34,7 +34,7 @@ setup(
     long_description=long_description,
     author="Jeff Forcier",
     author_email="jeff@bitprophet.org",
-    url="http://docs.pyinvoke.org",
+    url="https://docs.pyinvoke.org",
     packages=find_packages(exclude=exclude),
     include_package_data=True,
     entry_points={

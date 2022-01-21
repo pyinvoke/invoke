@@ -25,7 +25,7 @@ draws inspiration from various sources (``make``/``rake``, Fabric 1.x, etc) to
 arrive at a powerful & clean feature set.
 
 To find out what's new in this version of Invoke, please see `the changelog
-<http://pyinvoke.org/changelog.html#{}>`_.
+<https://pyinvoke.org/changelog.html#{}>`_.
 
 The project maintainer keeps a `roadmap
-<http//bitprophet.org/projects#roadmap>`_ on his website.
+<https//bitprophet.org/projects#roadmap>`_ on his website.
