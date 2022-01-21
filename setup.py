@@ -16,16 +16,14 @@ version = _locals["__version__"]
 # exclude whichever appears inappropriate for the installing interpreter.
 exclude = ["*.yaml3" if sys.version_info[0] == 2 else "*.yaml2"]
 
-# Frankenstein long_description: version-specific changelog note + README
-text = open("README.rst").read()
+# Frankenstein long_description
 long_description = """
-To find out what's new in this version of Invoke, please see `the changelog
-<http://pyinvoke.org/changelog.html#{}>`_.
-
 {}
-""".format(
-    version, text
-)
+
+For a high level introduction, including example code, please see `our main
+project website <http://pyinvoke.org>`_; or for detailed API docs, see `the
+versioned API website <http://docs.pyinvoke.org>`_.
+""".format(version, open("README.rst").read())
 
 
 setup(
