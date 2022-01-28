@@ -1,6 +1,6 @@
 import os
 
-from invoke import Collection, task
+from invoke import Collection, task, Exit
 from invoke.util import LOG_FORMAT
 
 from invocations import travis, checks
@@ -55,6 +55,13 @@ def integration(c, opts=None, pty=True):
     """
     Run the integration test suite. May be slow!
     """
+    # Abort if no default shell on this system - implies some unusual dev
+    # environment. Certain entirely-standalone tests will fail w/o it, even if
+    # tests honoring config overrides (like the unit-test suite) don't.
+    shell = c.config.global_defaults()["run"]["shell"]
+    if not c.run("which {}".format(shell), hide=True, warn=True):
+        err = "No {} on this system - cannot run integration tests! Try a container?"  # noqa
+        raise Exit(err.format(shell))
     opts = opts or ""
     opts += " integration/"
     test(c, opts=opts, pty=pty)
