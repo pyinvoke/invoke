@@ -5,7 +5,6 @@ recursive-include invoke/completion *
 recursive-include sites *
 recursive-exclude sites/*/_build *
 include dev-requirements.txt
-include tasks-requirements.txt
 recursive-include tests *
 recursive-exclude * *.pyc *.pyo
 recursive-exclude **/__pycache__ *
