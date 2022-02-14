@@ -355,6 +355,17 @@ class Context_:
             # NOTE: possibly best to tie into issue #2
             skip()
 
+        @patch(local_path)
+        def explicit_env_vars_are_preserved(self, Local):
+            runner = Local.return_value
+            Context().sudo(
+                "whoami", env={"GRATUITOUS_ENVIRONMENT_VARIABLE": "arbitrary value"}
+            )
+            assert (
+                "--preserve-env='GRATUITOUS_ENVIRONMENT_VARIABLE'"
+                in runner.run.call_args[0][0]
+            )
+
         def _expect_responses(self, expected, config=None, kwargs=None):
             """
             Execute mocked sudo(), expecting watchers= kwarg in its run().
