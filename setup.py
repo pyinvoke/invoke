@@ -37,6 +37,9 @@ setup(
     author="Jeff Forcier",
     author_email="jeff@bitprophet.org",
     url="http://docs.pyinvoke.org",
+    project_urls={
+        "Source:" "https://github.com/pyinvoke/invoke",
+    },
     packages=find_packages(exclude=exclude),
     include_package_data=True,
     entry_points={
