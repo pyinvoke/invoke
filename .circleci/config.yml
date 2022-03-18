@@ -2,7 +2,7 @@ version: 2.1
 
 
 orbs:
-  orb: invocations/orb@dev:ci
+  orb: invocations/orb@1.1.0
 
 
 jobs:
@@ -51,8 +51,8 @@ workflows:
           name: Test 3.6
       - regression:
           name: Regression tests
-      - orb/test-release:
-          name: Release test
+#      - orb/test-release:
+#          name: Release test
       - orb/test:
           name: Test << matrix.version >>
           requires: ["Test 3.6"]
