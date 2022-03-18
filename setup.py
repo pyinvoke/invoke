@@ -16,15 +16,15 @@ version = _locals["__version__"]
 # exclude whichever appears inappropriate for the installing interpreter.
 exclude = ["*.yaml3" if sys.version_info[0] == 2 else "*.yaml2"]
 
-# Frankenstein long_description: version-specific changelog note + README
-text = open("README.rst").read()
+# Frankenstein long_description
 long_description = """
-To find out what's new in this version of Invoke, please see `the changelog
-<http://pyinvoke.org/changelog.html#{}>`_.
-
 {}
+
+For a high level introduction, including example code, please see `our main
+project website <https://pyinvoke.org>`_; or for detailed API docs, see `the
+versioned API website <https://docs.pyinvoke.org>`_.
 """.format(
-    version, text
+    version, open("README.rst").read()
 )
 
 
@@ -36,7 +36,14 @@ setup(
     long_description=long_description,
     author="Jeff Forcier",
     author_email="jeff@bitprophet.org",
-    url="http://docs.pyinvoke.org",
+    url="https://pyinvoke.org",
+    project_urls={
+        "Docs": "https://docs.pyinvoke.org",
+        "Source": "https://github.com/pyinvoke/invoke",
+        "Issues": "https://github.com/pyinvoke/invoke/issues",
+        "Changelog": "https://www.pyinvoke.org/changelog.html",
+        "CI": "https://app.circleci.com/pipelines/github/pyinvoke/invoke",
+    },
     packages=find_packages(exclude=exclude),
     include_package_data=True,
     entry_points={
@@ -62,6 +69,9 @@ setup(
         "Programming Language :: Python :: 3.4",
         "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
         "Topic :: Software Development",
         "Topic :: Software Development :: Build Tools",
         "Topic :: Software Development :: Libraries",

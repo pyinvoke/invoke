@@ -2,6 +2,21 @@
 Changelog
 =========
 
+- :support:`-` Switch our continuous integration service from Travis-CI to
+  Circle-CI, plus related and necessary updates to various administrative
+  config files, management tasks and metadata. Including but not limited to:
+
+  - Enhanced PyPI-level metadata/links
+  - Split out tool config data from ``setup.cfg``
+  - Enhance execution & coverage of unit vs integration tests under CI
+
+  .. warning::
+    Due to various factors, this release will **not** include a Python
+    2-compatible wheel archive. Users of Python 2 can still install from the
+    sdist, and are strongly encouraged to check `the roadmap
+    <https://bitprophet.org/projects/#roadmap>`_ as the next release will
+    likely be the one that removes Python 2 entirely!
+
 - :release:`1.6.0 <2021-07-09>`
 - :release:`1.5.1 <2021-07-09>`
 - :support:`- backported` (Mostly) alphabetize the list of ``run()`` params in

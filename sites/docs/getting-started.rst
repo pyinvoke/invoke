@@ -4,7 +4,7 @@ Getting started
 
 This document presents a whirlwind tour of Invoke's feature set. Please see the
 links throughout for detailed conceptual & API docs. For installation help, see
-the project's `installation page <http://www.pyinvoke.org/installing.html>`_.
+the project's `installation page <https//www.pyinvoke.org/installing.html>`_.
 
 .. _defining-and-running-task-functions:
 
@@ -158,7 +158,7 @@ loaded from :doc:`configuration files </concepts/configuration>` or :ref:`other
 configuration vectors <collection-configuration>`, given via CLI flags,
 generated in 'setup' tasks, etc.
 
-Some libraries (such as `Fabric <http://fabfile.org>`_ 1.x) implement this via
+Some libraries (such as `Fabric <https//fabfile.org>`_ 1.x) implement this via
 module-level attributes, which makes testing difficult and error prone, limits
 concurrency, and increases implementation complexity.
 
