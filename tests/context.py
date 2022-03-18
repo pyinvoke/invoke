@@ -359,7 +359,8 @@ class Context_:
         def explicit_env_vars_are_preserved(self, Local):
             runner = Local.return_value
             Context().sudo(
-                "whoami", env={"GRATUITOUS_ENVIRONMENT_VARIABLE": "arbitrary value"}
+                "whoami",
+                env={"GRATUITOUS_ENVIRONMENT_VARIABLE": "arbitrary value"},
             )
             assert (
                 "--preserve-env='GRATUITOUS_ENVIRONMENT_VARIABLE'"
