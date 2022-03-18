@@ -1,12 +1,13 @@
 import pickle
 import os
-from os.path import join, expanduser
+from os.path import join
 
 from invoke.util import six
 from mock import patch, call, Mock
 import pytest
 from pytest_relaxed import raises
 
+from invoke import config as config_mod  # for accessing mocks
 from invoke.runners import Local
 from invoke.config import Config
 from invoke.exceptions import (
@@ -157,7 +158,11 @@ class Config_:
         @patch.object(Config, "_load_yaml")
         def default_user_prefix_is_homedir_plus_dot(self, load_yaml):
             Config()
-            load_yaml.assert_any_call(expanduser("~/.invoke.yaml"))
+            # NOTE: expects autouse fixture which patches expanduser
+            # Make sure we called expanduser() with tilde syntax
+            config_mod.expanduser.assert_any_call("~/.invoke.yaml")
+            # Make sure result of that call was passed into load_yaml
+            load_yaml.assert_any_call(config_mod.expanduser("~/.invoke.yaml"))
 
         @patch.object(Config, "_load_yaml")
         def configure_project_location(self, load_yaml):

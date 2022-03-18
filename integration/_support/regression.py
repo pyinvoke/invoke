@@ -32,3 +32,5 @@ def check(c):
     if failures:
         print("run() FAILED {}/{} times!".format(len(failures), count))
         sys.exit(1)
+    else:
+        print("No failures detected after {} runs, A-OK".format(count))

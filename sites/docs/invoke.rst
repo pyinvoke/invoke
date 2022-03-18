@@ -237,7 +237,7 @@ information::
     You'll probably want to source this command or store its output somewhere
     permanently; more on that in the next section.
 
-Similarly, the `Fabric <http://fabfile.org>`_ tool inherits from Invoke, and
+Similarly, the `Fabric <https//fabfile.org>`_ tool inherits from Invoke, and
 only has a single binary name (``fab``); if you wanted to get Fabric completion
 in ``bash``, you would say::
 
