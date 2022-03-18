@@ -2,6 +2,9 @@
 Changelog
 =========
 
+- :feature:`845` Env vars explicitly supplied to `~invoke.context.Context.sudo`
+  (via its ``env`` kwarg) are now explicitly preserved via ``sudo``'s
+  ``--preserve-env`` argument. Patch courtesy of Benno Rice.
 - :support:`-` Switch our continuous integration service from Travis-CI to
   Circle-CI, plus related and necessary updates to various administrative
   config files, management tasks and metadata. Including but not limited to:
