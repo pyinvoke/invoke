@@ -2,6 +2,10 @@
 Changelog
 =========
 
+- :feature:`793` Add a new ``tasks.ignore_unknown_help`` config option for
+  users who hand their tasks centrally-defined argument help dictionaries; it
+  defaults to ``False`` but such users may set it to ``True`` to avoid
+  exceptions. Thanks to ``@Allu2`` for the report.
 - :support:`-` Switch to using ``yaml.safe_load`` for loading config files.
   This avoids some warnings under newer PyYAML versions and is also, in a
   shocking twist, more secure.

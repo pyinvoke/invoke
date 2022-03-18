@@ -733,7 +733,9 @@ class Program(object):
         """
         self.parser = Parser(
             initial=self.initial_context,
-            contexts=self.collection.to_contexts(),
+            contexts=self.collection.to_contexts(
+                ignore_unknown_help=self.config.tasks.ignore_unknown_help
+            ),
         )
         debug("Parsing tasks against {!r}".format(self.collection))
         result = self.parser.parse_argv(self.core.unparsed)

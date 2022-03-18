@@ -123,6 +123,7 @@ class Config_:
                     "collection_name": "tasks",
                     "dedupe": True,
                     "executor_class": None,
+                    "ignore_unknown_help": False,
                     "search_root": None,
                 },
                 "timeouts": {"command": None},

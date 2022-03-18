@@ -406,18 +406,28 @@ class Collection(object):
         except KeyError:
             return False
 
-    def to_contexts(self):
+    def to_contexts(self, ignore_unknown_help=None):
         """
         Returns all contained tasks and subtasks as a list of parser contexts.
 
+        :param bool ignore_unknown_help:
+            Passed on to each task's ``get_arguments()`` method. See the config
+            option by the same name for details.
+
         .. versionadded:: 1.0
+        .. versionchanged:: 1.7
+            Added the ``ignore_unknown_help`` kwarg.
         """
         result = []
         for primary, aliases in six.iteritems(self.task_names):
             task = self[primary]
             result.append(
                 ParserContext(
-                    name=primary, aliases=aliases, args=task.get_arguments()
+                    name=primary,
+                    aliases=aliases,
+                    args=task.get_arguments(
+                        ignore_unknown_help=ignore_unknown_help
+                    ),
                 )
             )
         return result

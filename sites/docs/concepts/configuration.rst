@@ -105,6 +105,10 @@ For convenience, we refer to nested setting names with a dotted syntax, so e.g.
           their own default executor class (which your use of this setting will
           override!) and assume certain behaviors stemming from that.
 
+    - ``tasks.ignore_unknown_help`` (default: ``False``) lets users disable
+      "help keys were supplied for nonexistent arguments" errors. Normally,
+      Invoke assumes such a situation implies a typo in the ``help`` argument
+      to ``@task``, but sometimes users have good reasons for this.
     - ``tasks.search_root`` allows overriding the default :ref:`collection
       discovery <collection-discovery>` root search location. It defaults to
       ``None``, which indicates to use the executing process' current working

@@ -401,6 +401,20 @@ class Task_:
                 with raises(ValueError, match=err):
                     no_parameters.get_arguments()
 
+            def no_ValueError_on_unfound_keys_when_configured_otherwise(self):
+                @task(
+                    help={"non-existing-param": "Help text", "param": "ganoes"}
+                )
+                def malazan(c, param):
+                    pass
+
+                arg_dict = {
+                    arg.name: arg.help
+                    for arg in malazan.get_arguments(ignore_unknown_help=True)
+                }
+                assert "non_existing_param" not in arg_dict
+                assert arg_dict["param"] == "ganoes"
+
             def arg_value_is_copied_to_avoid_state_bleed_when_shared(self):
                 # TODO: the 'real' solve here is to make sharing common
                 # arguments between tasks a first class citizen; there's
