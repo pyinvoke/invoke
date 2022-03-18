@@ -2,6 +2,9 @@
 Changelog
 =========
 
+- :support:`803` Upgrade our vendored PyYAML from 3.11 to 5.4.1; this should
+  both supply a number of security fixes, and address problems loading
+  project-level YAML config files under Python 3.10. Fix via Andreas Rammhold.
 - :feature:`845` Env vars explicitly supplied to `~invoke.context.Context.sudo`
   (via its ``env`` kwarg) are now explicitly preserved via ``sudo``'s
   ``--preserve-env`` argument. Patch courtesy of Benno Rice.
