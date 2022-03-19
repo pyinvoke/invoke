@@ -2,6 +2,7 @@
 Changelog
 =========
 
+- :release:`1.7.0 <2022-03-18>`
 - :feature:`793` Add a new ``tasks.ignore_unknown_help`` config option for
   users who hand their tasks centrally-defined argument help dictionaries; it
   defaults to ``False`` but such users may set it to ``True`` to avoid
