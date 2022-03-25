@@ -9,7 +9,7 @@ minimum of extra work. CLI parsing, subprocess command execution, task
 organization, etc, are all written as broadly separated concerns.
 
 This document outlines use cases already known to work (because downstream
-tools like `Fabric <https//fabfile.org>`_ are already utilizing them).
+tools like `Fabric <https://fabfile.org>`_ are already utilizing them).
 
 
 .. _reusing-as-a-binary:

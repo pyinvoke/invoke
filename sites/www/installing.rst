@@ -19,7 +19,7 @@ dependencies within its source tree.
 
 .. note:: 
     See `this blog post
-    <https//bitprophet.org/blog/2012/06/07/on-vendorizing/>`_ for background on
+    <https://bitprophet.org/blog/2012/06/07/on-vendorizing/>`_ for background on
     our decision to vendorize dependencies.
 
 .. seealso::

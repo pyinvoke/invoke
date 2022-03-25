@@ -8,7 +8,7 @@ General project questions
 
 .. _invoke-split-from-fabric:
 
-Why was Invoke split off from the `Fabric <https//fabfile.org>`_ project?
+Why was Invoke split off from the `Fabric <https://fabfile.org>`_ project?
 -------------------------------------------------------------------------
 
 Fabric (1.x and earlier) was a hybrid project implementing two feature sets:

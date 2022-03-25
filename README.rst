@@ -28,4 +28,4 @@ To find out what's new in this version of Invoke, please see `the changelog
 <https://pyinvoke.org/changelog.html#{}>`_.
 
 The project maintainer keeps a `roadmap
-<https//bitprophet.org/projects#roadmap>`_ on his website.
+<https://bitprophet.org/projects#roadmap>`_ on his website.
