@@ -120,7 +120,6 @@ ns.configure(
             # arg/conf-opt in the blacken task for "excluded paths"...ha
             "find_opts": "-and -not \( -path './invoke/vendor*' -or -path './build*' \)"  # noqa
         },
-        "tests": {"logformat": LOG_FORMAT, "package": "invoke"},
         "packaging": {
             "sign": True,
             "wheel": True,
