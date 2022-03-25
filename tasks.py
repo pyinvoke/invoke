@@ -1,7 +1,6 @@
 import os
 
 from invoke import Collection, task, Exit
-from invoke.util import LOG_FORMAT
 
 from invocations import ci, checks
 from invocations.docs import docs, www, sites, watch_docs
