@@ -46,14 +46,16 @@ def _run(**kwargs:Any) -> Result:
     return process_result
 
 @pytest.mark.skipif(sys.version_info < (3, 7), reason="requires python3.7 or higher (dataclasses)")
-def test_timeout_1s() -> None:
+@pytest.mark.parametrize('runargs', 
+    [dict(pty=True), dict(pty=False)],)
+def test_timeout_1s(runargs) -> None:
     """
     Test for issue https://github.com/pyinvoke/invoke/issues/851
     """
-    r = _run(command="set -euo pipefail\nping -c 10 localhost\necho 'Done'", 
-             timeout=1, pty=True, in_stream=False, out_stream=sys.stderr, err_stream=sys.stderr, )
+    r = _run(command='\n'.join(
+        ["ping -c 5 localhost", 
+         "echo 'Done'"]), timeout=1, **runargs)
     assert r.failure == "Command timed out after 1 seconds."
-    # Ensures no more than 10 lines got printed, for instance:
-    # PING localhost (127.0.0.1): 56 data bytes
-    # 64 bytes from 127.0.0.1: icmp_seq=0 ttl=64 time=0.053 ms
-    assert len(list(l for l in r.stdout.split('\n') if l.strip('\r\t '))) < 10, r.stdout
+    # Ensures no more than 5 lines got printed.
+    lines = list(l for l in r.stdout.split('\n') if l.strip('\r\t '))
+    assert len(lines) < 5, r.stdout
