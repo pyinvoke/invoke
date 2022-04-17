@@ -1,6 +1,5 @@
+from queue import Queue, Empty
 from threading import Thread, Event
-
-from invoke.vendor.six.moves.queue import Queue, Empty
 
 from invoke import Responder, FailingResponder, ResponseNotAccepted
 

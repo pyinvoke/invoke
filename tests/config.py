@@ -2,7 +2,6 @@ import pickle
 import os
 from os.path import join
 
-from invoke.util import six
 from mock import patch, call, Mock
 import pytest
 from pytest_relaxed import raises
@@ -274,12 +273,7 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
             assert c == c2
             assert len(c) == 1
             assert c.get("foo") == "bar"
-            if six.PY2:
-                assert c.has_key("foo") is True  # noqa
-                assert list(c.iterkeys()) == ["foo"]
-                assert list(c.itervalues()) == ["bar"]
             assert list(c.items()) == [("foo", "bar")]
-            assert list(six.iteritems(c)) == [("foo", "bar")]
             assert list(c.keys()) == ["foo"]
             assert list(c.values()) == ["bar"]
 
@@ -739,17 +733,6 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
                 c = Config(defaults={"foo": "myoldvalue"})
                 c.load_shell_env()
                 assert c.foo == u"myvalue"
-                assert isinstance(c.foo, six.text_type)
-
-            def unicode_replaced_with_env_value(self):
-                # Python 3 doesn't allow you to put 'bytes' objects into
-                # os.environ, so the test makes no sense there.
-                if six.PY3:
-                    return
-                os.environ["INVOKE_FOO"] = "myunicode"
-                c = Config(defaults={"foo": u"myoldvalue"})
-                c.load_shell_env()
-                assert c.foo == "myunicode"
                 assert isinstance(c.foo, str)
 
             def None_replaced(self):
@@ -786,8 +769,6 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
                 ]
                 # Can't use '5L' in Python 3, even having it in a branch makes
                 # it upset.
-                if not six.PY3:
-                    tests.append((long, "5", long(5)))  # noqa
                 for old, new_, result in tests:
                     os.environ["INVOKE_FOO"] = new_
                     c = Config(defaults={"foo": old()})

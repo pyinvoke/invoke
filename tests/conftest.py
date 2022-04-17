@@ -3,7 +3,6 @@ import os
 import sys
 import termios
 
-from invoke.vendor.six import iteritems
 import pytest
 from mock import patch
 
@@ -63,7 +62,7 @@ def clean_sys_modules():
     yield
     # Iterate over another copy to avoid ye olde mutate-during-iterate problem
     # NOTE: cannot simply 'sys.modules = snapshot' as that is warned against
-    for name, module in iteritems(sys.modules.copy()):
+    for name, module in sys.modules.copy().items():
         # Delete anything newly added (imported)
         if name not in snapshot:
             del sys.modules[name]

@@ -1,5 +1,3 @@
-from .util import six
-
 from .config import Config
 from .parser import ParserContext
 from .util import debug
@@ -145,7 +143,7 @@ class Executor(object):
         calls = []
         for task in tasks:
             name, kwargs = None, {}
-            if isinstance(task, six.string_types):
+            if isinstance(task, str):
                 name = task
             elif isinstance(task, ParserContext):
                 name = task.name
