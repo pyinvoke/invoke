@@ -1,5 +1,7 @@
 import os
 import sys
+from io import BytesIO
+from functools import wraps
 
 try:
     import termios
@@ -7,8 +9,6 @@ except ImportError:
     # Not available on Windows
     termios = None
 from contextlib import contextmanager
-
-from invoke.vendor.six import BytesIO, b, wraps
 
 from mock import patch, Mock
 from pytest import skip
@@ -109,8 +109,8 @@ def expect(
 
 class MockSubprocess(object):
     def __init__(self, out="", err="", exit=0, isatty=None, autostart=True):
-        self.out_file = BytesIO(b(out))
-        self.err_file = BytesIO(b(err))
+        self.out_file = BytesIO(out.encode())
+        self.err_file = BytesIO(err.encode())
         self.exit = exit
         self.isatty = isatty
         if autostart:
@@ -218,8 +218,8 @@ def mock_pty(
             # If requested, mock isatty to fake out pty detection
             if isatty is not None:
                 os.isatty.return_value = isatty
-            out_file = BytesIO(b(out))
-            err_file = BytesIO(b(err))
+            out_file = BytesIO(out.encode())
+            err_file = BytesIO(err.encode())
 
             def fakeread(fileno, count):
                 fd = {3: out_file, 2: err_file}[fileno]

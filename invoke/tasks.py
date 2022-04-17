@@ -9,7 +9,6 @@ import types
 
 from .context import Context
 from .parser import Argument, translate_underscores
-from .util import six
 
 
 class Task(object):

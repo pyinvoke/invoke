@@ -1,8 +1,7 @@
 from __future__ import print_function
 
 import operator
-
-from invoke.util import reduce
+from functools import reduce
 
 from pytest import raises
 

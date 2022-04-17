@@ -8,28 +8,18 @@ from .env import Environment
 from .exceptions import UnknownFileType, UnpicklableConfigMember
 from .runners import Local
 from .terminals import WINDOWS
-from .util import debug, six, yaml
+from .util import debug, yaml
 
 
-if six.PY3:
-    try:
-        from importlib.machinery import SourceFileLoader
-    except ImportError:  # PyPy3
-        from importlib._bootstrap import _SourceFileLoader as SourceFileLoader
+try:
+    from importlib.machinery import SourceFileLoader
+except ImportError:  # PyPy3
+    from importlib._bootstrap import _SourceFileLoader as SourceFileLoader
 
-    def load_source(name, path):
-        if not os.path.exists(path):
-            return {}
-        return vars(SourceFileLoader("mod", path).load_module())
-
-
-else:
-    import imp
-
-    def load_source(name, path):
-        if not os.path.exists(path):
-            return {}
-        return vars(imp.load_source("mod", path))
+def load_source(name, path):
+    if not os.path.exists(path):
+        return {}
+    return vars(SourceFileLoader("mod", path).load_module())
 
 
 class DataProxy(object):
@@ -200,7 +190,7 @@ class DataProxy(object):
         """
         if args:
             object.__setattr__(self, *args)
-        for key, value in six.iteritems(kwargs):
+        for key, value in kwargs.items():
             object.__setattr__(self, key, value)
 
     def __repr__(self):
@@ -295,7 +285,7 @@ class DataProxy(object):
 
     def update(self, *args, **kwargs):
         if kwargs:
-            for key, value in six.iteritems(kwargs):
+            for key, value in kwargs.items():
                 self[key] = value
         elif args:
             # TODO: complain if arity>1
@@ -918,7 +908,7 @@ class Config(DataProxy):
 
     def _load_py(self, path):
         data = {}
-        for key, value in six.iteritems(load_source("mod", path)):
+        for key, value in (load_source("mod", path)).items():
             # Strip special members, as these are always going to be builtins
             # and other special things a user will not want in their config.
             if key.startswith("__"):
@@ -1273,7 +1263,7 @@ def obliterate(base, deletions):
 
     .. versionadded:: 1.0
     """
-    for key, value in six.iteritems(deletions):
+    for key, value in deletions.items():
         if isinstance(value, dict):
             # NOTE: not testing for whether base[key] exists; if something's
             # listed in a deletions structure, it must exist in some source

@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-
-import errno
 import locale
 import os
 import struct
@@ -9,8 +6,6 @@ import sys
 import threading
 import time
 import signal
-
-from .util import six
 
 # Import some platform-specific things at top level so they can be mocked for
 # tests.
@@ -476,7 +471,7 @@ class Runner(object):
             # Failure objects.)
             watcher_errors = []
             thread_exceptions = []
-            for target, thread in six.iteritems(self.threads):
+            for target, thread in self.threads.items():
                 thread.join(self._thread_join_timeout(target))
                 exception = thread.exception()
                 if exception is not None:
@@ -519,7 +514,7 @@ class Runner(object):
         - ``self.streams`` - map of stream names to stream target values
         """
         opts = {}
-        for key, value in six.iteritems(self.context.config.run):
+        for key, value in self.context.config.run.items():
             runtime = kwargs.pop(key, None)
             opts[key] = value if runtime is None else runtime
         # Pull in command execution timeout, which stores config elsewhere,
@@ -647,7 +642,7 @@ class Runner(object):
             }
         # Kick off IO threads
         threads = {}
-        for target, kwargs in six.iteritems(thread_args):
+        for target, kwargs in thread_args.items():
             t = ExceptionHandlingThread(target=target, kwargs=kwargs)
             threads[target] = t
         return threads, stdout, stderr
@@ -804,7 +799,7 @@ class Runner(object):
                     raise
             # Decode if it appears to be binary-type. (From real terminal
             # streams, usually yes; from file-like objects, often no.)
-            if bytes_ and isinstance(bytes_, six.binary_type):
+            if bytes_ and isinstance(bytes_, bytes):
                 # TODO: will decoding 1 byte at a time break multibyte
                 # character encodings? How to square interactivity with that?
                 bytes_ = self.decode(bytes_)
@@ -1633,8 +1628,4 @@ def default_encoding():
     # Linux and OS X, and `locale.getpreferredencoding(do_setlocale=True)`
     # triggers some global state changes. (See #274 for discussion.)
     encoding = locale.getpreferredencoding(False)
-    if six.PY2 and not WINDOWS:
-        default = locale.getdefaultlocale()[1]
-        if default is not None:
-            encoding = default
     return encoding

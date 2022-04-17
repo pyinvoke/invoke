@@ -3,11 +3,6 @@ import re
 from contextlib import contextmanager
 from itertools import cycle
 
-try:
-    from invoke.vendor.six import raise_from, iteritems, string_types
-except ImportError:
-    from six import raise_from, iteritems, string_types
-
 from .config import Config, DataProxy
 from .exceptions import Failure, AuthFailure, ResponseNotAccepted
 from .runners import Result
@@ -227,10 +222,10 @@ class Context(DataProxy):
             # For now that has been judged unnecessary complexity.
             if isinstance(failure.reason, ResponseNotAccepted):
                 # NOTE: not bothering with 'reason' here, it's pointless.
-                # NOTE: using raise_from(..., None) to suppress Python 3's
+                # NOTE: previously used raise_from(..., None) to suppress Py3
                 # "helpful" multi-exception output. It's confusing here.
                 error = AuthFailure(result=failure.result, prompt=prompt)
-                raise_from(error, None)
+                raise error
             # Reraise for any other error so it bubbles up normally.
             else:
                 raise
@@ -478,12 +473,12 @@ class MockContext(Context):
         # gets me every single time
         self._set("__repeat", kwargs.pop("repeat", False))
         # The rest must be things like run/sudo - mock Context method info
-        for method, results in iteritems(kwargs):
+        for method, results in kwargs.items():
             # For each possible value type, normalize to iterable of Result
             # objects (possibly repeating).
-            singletons = tuple([Result, bool] + list(string_types))
+            singletons = tuple([Result, bool] + [str])
             if isinstance(results, dict):
-                for key, value in iteritems(results):
+                for key, value in results.items():
                     results[key] = self._normalize(value)
             elif isinstance(results, singletons) or hasattr(
                 results, "__iter__"
@@ -501,14 +496,14 @@ class MockContext(Context):
 
     def _normalize(self, value):
         # First turn everything into an iterable
-        if not hasattr(value, "__iter__") or isinstance(value, string_types):
+        if not hasattr(value, "__iter__") or isinstance(value, str):
             value = [value]
         # Then turn everything within into a Result
         results = []
         for obj in value:
             if isinstance(obj, bool):
                 obj = Result(exited=0 if obj else 1)
-            elif isinstance(obj, string_types):
+            elif isinstance(obj, str):
                 obj = Result(obj)
             results.append(obj)
         # Finally, turn that iterable into an iteratOR, depending on repeat
@@ -529,7 +524,7 @@ class MockContext(Context):
                 except KeyError:
                     # TODO: could optimize by skipping this if not any regex
                     # objects in keys()?
-                    for key, value in iteritems(obj):
+                    for key, value in obj.items():
                         if hasattr(key, "match") and key.match(command):
                             obj = value
                             break
@@ -546,7 +541,8 @@ class MockContext(Context):
                 result.command = command
             return result
         except (AttributeError, IndexError, KeyError, StopIteration):
-            raise_from(NotImplementedError(command), None)
+            # raise_from(NotImplementedError(command), None)
+            raise NotImplementedError(command)
 
     def run(self, command, *args, **kwargs):
         # TODO: perform more convenience stuff associating args/kwargs with the

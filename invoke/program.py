@@ -8,8 +8,6 @@ import sys
 import textwrap
 from importlib import import_module  # buffalo buffalo
 
-from .util import six
-
 from . import Collection, Config, Executor, FilesystemLoader
 from .completion.complete import complete, print_completion_script
 from .parser import Parser, ParserContext, Argument
@@ -505,7 +503,7 @@ class Program(object):
         self.list_depth = self.args["list-depth"].value
         if list_root:
             # Not just --list, but --list some-root - do moar work
-            if isinstance(list_root, six.string_types):
+            if isinstance(list_root, str):
                 self.list_root = list_root
                 try:
                     sub = self.collection.subcollection_from_path(list_root)
@@ -586,7 +584,7 @@ class Program(object):
         if argv is None:
             argv = sys.argv
             debug("argv was None; using sys.argv: {!r}".format(argv))
-        elif isinstance(argv, six.string_types):
+        elif isinstance(argv, str):
             argv = argv.split()
             debug("argv was string-like; splitting: {!r}".format(argv))
         self.argv = argv
@@ -810,7 +808,7 @@ class Program(object):
         pairs = []
         indent = len(ancestors) * self.indent
         ancestor_path = ".".join(x for x in ancestors)
-        for name, task in sorted(six.iteritems(coll.tasks)):
+        for name, task in sorted(coll.tasks.items()):
             is_default = name == coll.default
             # Start with just the name and just the aliases, no prefixes or
             # dots.
@@ -845,7 +843,7 @@ class Program(object):
             pairs.append((full, helpline(task)))
         # Determine whether we're at max-depth or not
         truncate = self.list_depth and (len(ancestors) + 1) >= self.list_depth
-        for name, subcoll in sorted(six.iteritems(coll.collections)):
+        for name, subcoll in sorted(coll.collections.items()):
             displayname = name
             if ancestors or self.list_root:
                 displayname = ".{}".format(displayname)

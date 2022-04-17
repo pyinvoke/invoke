@@ -1,4 +1,4 @@
-from invoke.vendor.six.moves.queue import Queue
+from queue import Queue
 
 from invoke.util import ExceptionWrapper, ExceptionHandlingThread as EHThread
 

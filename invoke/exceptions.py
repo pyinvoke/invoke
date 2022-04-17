@@ -9,8 +9,6 @@ condition in a way easily told apart from other, truly unexpected errors".
 from traceback import format_exception
 from pprint import pformat
 
-from .util import six
-
 
 class CollectionNotFound(Exception):
     def __init__(self, name, start):
@@ -299,7 +297,7 @@ def _printable_kwargs(kwargs):
     those need truncating to be useful.
     """
     printable = {}
-    for key, value in six.iteritems(kwargs):
+    for key, value in kwargs.items():
         item = value
         if key == "args":
             item = []
