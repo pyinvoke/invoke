@@ -9,12 +9,9 @@ import types
 
 from .context import Context
 from .parser import Argument, translate_underscores
-from .util import six
 
-if six.PY3:
-    from itertools import zip_longest
-else:
-    from itertools import izip_longest as zip_longest
+import six
+from itertools import zip_longest
 
 
 #: Sentinel object representing a truly blank value (vs ``None``).

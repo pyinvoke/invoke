@@ -1,8 +1,9 @@
 import json
 import os
 import sys
+from io import BytesIO
 
-from invoke.util import six, Lexicon
+from invoke.util import Lexicon
 from mock import patch, Mock, ANY
 import pytest
 from pytest import skip
@@ -487,7 +488,7 @@ Stderr:
 this is also not ascii: \xe4\x8c\xa1
 
 """
-            got = six.BytesIO.getvalue(sys.stderr)
+            got = BytesIO.getvalue(sys.stderr)
             assert got == expected
 
         class Exit_:

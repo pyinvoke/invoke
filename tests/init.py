@@ -1,7 +1,5 @@
 import re
 
-import six
-
 from mock import patch
 
 import invoke
@@ -23,7 +21,7 @@ class Init:
     def dunder_version(self):
         assert hasattr(invoke, "__version__")
         ver = invoke.__version__
-        assert isinstance(ver, six.string_types)
+        assert isinstance(ver, str)
         assert re.match(r"\d+\.\d+\.\d+", ver)
 
     def dunder_version_looks_generated_from_dunder_version_info(self):

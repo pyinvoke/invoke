@@ -6,11 +6,9 @@ import sys
 import termios
 import threading
 import types
-
+from io import StringIO
 from io import BytesIO
 from itertools import chain, repeat
-
-from invoke.vendor.six import StringIO, b, PY2, iteritems
 
 from pytest import raises, skip
 from pytest_relaxed import trap
@@ -72,8 +70,8 @@ def _runner(out="", err="", **kwargs):
     runner = klass(Context(config=Config(overrides=kwargs)))
     if "exits" in kwargs:
         runner.returncode = Mock(return_value=kwargs.pop("exits"))
-    out_file = BytesIO(b(out))
-    err_file = BytesIO(b(err))
+    out_file = BytesIO(out.encode())
+    err_file = BytesIO(err.encode())
     runner.read_proc_stdout = out_file.read
     runner.read_proc_stderr = err_file.read
     return runner
@@ -408,12 +406,9 @@ class Runner_:
             with patch("invoke.runners.locale") as fake_locale:
                 fake_locale.getdefaultlocale.return_value = ("meh", "UHF-8")
                 fake_locale.getpreferredencoding.return_value = "FALLBACK"
-                expected = "UHF-8" if (PY2 and not WINDOWS) else "FALLBACK"
-                assert self._runner().default_encoding() == expected
+                assert self._runner().default_encoding() == "FALLBACK"
 
         def falls_back_to_defaultlocale_when_preferredencoding_is_None(self):
-            if PY2:
-                skip()
             with patch("invoke.runners.locale") as fake_locale:
                 fake_locale.getdefaultlocale.return_value = (None, None)
                 fake_locale.getpreferredencoding.return_value = "FALLBACK"
@@ -995,7 +990,7 @@ stderr 25
             """
             watchers = [
                 Responder(pattern=key, response=value)
-                for key, value in iteritems(kwargs.pop("responses"))
+                for key, value in kwargs.pop("responses").items()
             ]
             kwargs["klass"] = klass = self._mock_stdin_writer()
             runner = self._runner(**kwargs)
