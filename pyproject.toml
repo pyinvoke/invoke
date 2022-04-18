@@ -1,0 +1,85 @@
+[tool.poetry]
+name = "invoke"
+version = "1.4.1"
+description = "Pythonic task execution"
+authors = ["Jeff Forcier <jeff@bitprophet.org>"]
+license = "BSD"
+readme = "README.rst"
+repository = "https://github.com/pyinvoke/invoke"
+homepage = "http://www.pyinvoke.org/"
+classifiers=[
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Intended Audience :: System Administrators",
+    "License :: OSI Approved :: BSD License",
+    "Operating System :: POSIX",
+    "Operating System :: Unix",
+    "Operating System :: MacOS :: MacOS X",
+    "Operating System :: Microsoft :: Windows",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 2",
+    "Programming Language :: Python :: 2.7",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.5",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Topic :: Software Development",
+    "Topic :: Software Development :: Build Tools",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: System :: Software Distribution",
+    "Topic :: System :: Systems Administration",
+]
+
+[tool.poetry.dependencies]
+python = "2.7 || ^3.5"
+typing = {version = "^3.7.4", python = "~2.7, < 3.4"}
+importlib-metadata = "^2.1.1"
+
+[tool.poetry.dev-dependencies]
+codecov = "2.0.15"
+certifi = "2018.4.16"
+readme-renderer = "17.2"
+twine = "1.11.0"
+wheel = "0.24"
+flake8 = "3.7.8"
+mock = "1.0.1"
+pytest-cov = "2.5.1"
+pytest-relaxed = "1.1.5"
+pytest = "4.6.3"
+alabaster = "0.7.12"
+releases = "~1"
+invocations = "^1.4.0"
+semantic-version = "^2.4"
+tox = "^3.20.1"
+spec = "^1.4.1"
+
+[tool.poetry.scripts]
+invoke = "invoke.main:program.run"
+inv = "invoke.main:program.run"
+
+[tool.black]
+line-length = 79
+include = '\.pyi?$'
+exclude = '''
+(
+  /(
+    | \.eggs
+    | \.git
+    | \.mypy_cache
+    | \.tox
+    | \.pytest_cache
+    | _build
+    | buck-out
+    | build
+    | dist
+    | vendor
+  )
+)
+'''
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
