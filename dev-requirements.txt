@@ -1,7 +1,7 @@
 # Install self before invocations to save a bit of time
 -e .
 # Invocations, for all sorts of things
-invocations==2.4.0
+invocations==git+https://github.com/kuwv/invocations.git@deprecate-python2
 # Coverage!
 coverage==4.5.4
 codecov==2.1.11
