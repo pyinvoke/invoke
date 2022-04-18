@@ -2,6 +2,7 @@
 -e .
 # Invocations, for all sorts of things
 git+https://github.com/kuwv/invocations.git@deprecate-python2#egg=invocations
+# invocations==2.4.0
 # Coverage!
 coverage==4.5.4
 codecov==2.1.11
