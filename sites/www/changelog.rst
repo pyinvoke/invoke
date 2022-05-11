@@ -2,6 +2,12 @@
 Changelog
 =========
 
+- :bug:`659` Improve behavior under ``nohup``, which causes stdin to become an
+  undetectably-unreadable (but otherwise legit) file descriptor. Previously
+  this led to `OSError` even if you weren't expecting anything on stdin; we now
+  trap this specific case and silently ignore it, allowing execution to
+  continue. Thanks to ``@kingkisskill`` for initial report and to Ryan Stoner
+  for followup and workshopping.
 - :release:`1.7.0 <2022-03-18>`
 - :feature:`793` Add a new ``tasks.ignore_unknown_help`` config option for
   users who hand their tasks centrally-defined argument help dictionaries; it

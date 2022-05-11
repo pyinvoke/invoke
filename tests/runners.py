@@ -1,3 +1,4 @@
+import errno
 import os
 import signal
 import struct
@@ -621,6 +622,22 @@ class Runner_:
                 _, in_stream=StringIO("what?"), pty=True
             )
             assert not Fake.close_proc_stdin.called
+
+        @patch("invoke.runners.sys.stdin")
+        def EBADF_on_stdin_read_ignored(self, fake_stdin):
+            # Issue #659: nohup is a jerk
+            fake_stdin.read.side_effect = OSError(errno.EBADF, "Ugh")
+            # No boom == fixed
+            self._runner().run(_)
+
+        @patch("invoke.runners.sys.stdin")
+        def non_EBADF_on_stdin_read_not_ignored(self, fake_stdin):
+            # Issue #659: nohup is a jerk, inverse case
+            eio = OSError(errno.EIO, "lol")
+            fake_stdin.read.side_effect = eio
+            with raises(ThreadException) as info:
+                self._runner().run(_)
+            assert info.value.exceptions[0].value is eio
 
     class failure_handling:
         def fast_failures(self):
