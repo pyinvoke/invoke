@@ -2,6 +2,7 @@
 Changelog
 =========
 
+- :release:`1.7.1 <2022-05-11>`
 - :bug:`659` Improve behavior under ``nohup``, which causes stdin to become an
   undetectably-unreadable (but otherwise legit) file descriptor. Previously
   this led to `OSError` even if you weren't expecting anything on stdin; we now
