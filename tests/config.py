@@ -117,6 +117,7 @@ class Config_:
                     "password": None,
                     "prompt": "[sudo] password: ",
                     "user": None,
+                    "login_shell": None,
                 },
                 "tasks": {
                     "auto_dash_names": True,

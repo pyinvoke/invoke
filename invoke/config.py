@@ -496,6 +496,7 @@ class Config(DataProxy):
                 "password": None,
                 "prompt": "[sudo] password: ",
                 "user": None,
+                "login_shell": None,
             },
             "tasks": {
                 "auto_dash_names": True,
