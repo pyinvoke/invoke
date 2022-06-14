@@ -142,6 +142,8 @@ class Context(DataProxy):
           sure our auto-responder knows what to look for;
         - ``-u <user>`` if ``user`` is not ``None``, to execute the command as
           a user other than ``root``;
+        - ``-i`` if ``login_shell`` is not ``None``, to execute the command as
+          a login shell;
         - When ``-u`` is present, ``-H`` is also added, to ensure the
           subprocess has the requested user's ``$HOME`` set properly.
 
@@ -178,6 +180,7 @@ class Context(DataProxy):
         prompt = self.config.sudo.prompt
         password = kwargs.pop("password", self.config.sudo.password)
         user = kwargs.pop("user", self.config.sudo.user)
+        login_shell = kwargs.pop("login_shell", self.config.sudo.login_shell)
         env = kwargs.get("env", {})
         # TODO: allow subclassing for 'get the password' so users who REALLY
         # want lazy runtime prompting can have it easily implemented.
@@ -194,6 +197,8 @@ class Context(DataProxy):
         user_flags = ""
         if user is not None:
             user_flags = "-H -u {} ".format(user)
+        if login_shell is not None:
+            user_flags += "-i "
         env_flags = ""
         if env:
             env_flags = "--preserve-env='{}' ".format(",".join(env.keys()))
