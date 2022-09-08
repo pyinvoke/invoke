@@ -188,6 +188,15 @@ class Task_:
         t3 = Task(_func, name="bar")
         assert t1 != t3
 
+    def equality_testing_false_for_non_task_objects(self):
+        t = Task(_func, name="foo")
+        # No name attribute at all
+        assert t != object()
+        # Name attr, but not a Task
+        class Named:
+            name = "foo"
+        assert t != Named()
+
     class function_like_behavior:
         # Things that help them eg show up in autodoc easier
         def inherits_module_from_body(self):

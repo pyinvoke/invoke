@@ -2,6 +2,8 @@
 Changelog
 =========
 
+- :bug:`-` Fix errors thrown when comparing `~invoke.tasks.Task` objects to
+  non-Task objects; such comparisons are now always false.
 - :release:`1.7.1 <2022-05-11>`
 - :bug:`659` Improve behavior under ``nohup``, which causes stdin to become an
   undetectably-unreadable (but otherwise legit) file descriptor. Previously

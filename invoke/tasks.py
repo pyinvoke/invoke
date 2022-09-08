@@ -97,7 +97,7 @@ class Task(object):
         return "<Task {!r}{}>".format(self.name, aliases)
 
     def __eq__(self, other):
-        if self.name != other.name:
+        if not isinstance(other, Task) or self.name != other.name:
             return False
         # Functions do not define __eq__ but func_code objects apparently do.
         # (If we're wrapping some other callable, they will be responsible for
