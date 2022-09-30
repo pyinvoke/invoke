@@ -1,7 +1,7 @@
 import os
 import sys
 
-from invoke import Program
+from invoke import Program, Config, task, Collection
 
 import pytest
 
@@ -191,3 +191,25 @@ class ShellCompletion:
             for given in ("--ar", "--nope"):
                 completion = _complete("multiple-args {}".format(given), "foo")
                 assert flag in completion
+
+    @trap
+    def completion_given_parser_by_program(self):
+        # Trial case: means honoring config ignore_unknown_help option
+        # (i.e. not exploding when any task in the target collection has unused
+        # help keys; doesn't actually need the completion invocation to include
+        # said task!)
+        # NOTE: subclassing to mimic real world report case, and for ease of
+        # shoving in a config override
+
+        @task(help=dict(lol="nope"))
+        def noboomplz(c):
+            pass
+
+        ns = Collection(noboomplz)
+
+        class MyProgram(Program):
+            def create_config(self):
+                super(MyProgram, self).create_config()
+                self.config.tasks.ignore_unknown_help = True
+        MyProgram(namespace=ns).run("inv --complete -- inv noboom", exit=False)
+        assert sys.stdout.getvalue().strip() == "noboomplz"
