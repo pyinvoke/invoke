@@ -2,6 +2,9 @@
 Changelog
 =========
 
+- :bug:`793` Refactor CLI parser instantiation such that the
+  ``tasks.ignore_unknown_help`` feature (added in 1.7) works when Invoke is run
+  in ``--complete`` mode, i.e. in tab-completion scripts.
 - :bug:`-` Fix errors thrown when comparing `~invoke.tasks.Task` objects to
   non-Task objects; such comparisons are now always false.
 - :release:`1.7.1 <2022-05-11>`

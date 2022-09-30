@@ -523,6 +523,9 @@ class Program(object):
                 core=self.core,
                 initial_context=self.initial_context,
                 collection=self.collection,
+                # NOTE: can't reuse self.parser as it has likely been mutated
+                # between when it was set and now.
+                parser=self._make_parser(),
             )
 
         # Fallback behavior if no tasks were given & no default specified
@@ -717,6 +720,16 @@ class Program(object):
             if arg.got_value:
                 context.args[key]._value = arg._value
 
+
+    def _make_parser(self):
+        return Parser(
+            initial=self.initial_context,
+            contexts=self.collection.to_contexts(
+                ignore_unknown_help=self.config.tasks.ignore_unknown_help
+            ),
+        )
+
+
     def parse_tasks(self):
         """
         Parse leftover args, which are typically tasks & per-task args.
@@ -731,12 +744,7 @@ class Program(object):
 
         .. versionadded:: 1.0
         """
-        self.parser = Parser(
-            initial=self.initial_context,
-            contexts=self.collection.to_contexts(
-                ignore_unknown_help=self.config.tasks.ignore_unknown_help
-            ),
-        )
+        self.parser = self._make_parser()
         debug("Parsing tasks against {!r}".format(self.collection))
         result = self.parser.parse_argv(self.core.unparsed)
         self.core_via_tasks = result.pop(0)
