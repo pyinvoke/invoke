@@ -1,7 +1,7 @@
 import os
 import sys
 
-from invoke import Program, Config, task, Collection
+from invoke import Program, task, Collection
 
 import pytest
 
@@ -211,5 +211,6 @@ class ShellCompletion:
             def create_config(self):
                 super(MyProgram, self).create_config()
                 self.config.tasks.ignore_unknown_help = True
+
         MyProgram(namespace=ns).run("inv --complete -- inv noboom", exit=False)
         assert sys.stdout.getvalue().strip() == "noboomplz"

@@ -8,7 +8,6 @@ import re
 import shlex
 
 from ..exceptions import Exit, ParseError
-from ..parser import Parser
 from ..util import debug, task_name_sort_key
 
 

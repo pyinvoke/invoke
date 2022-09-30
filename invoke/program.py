@@ -720,7 +720,6 @@ class Program(object):
             if arg.got_value:
                 context.args[key]._value = arg._value
 
-
     def _make_parser(self):
         return Parser(
             initial=self.initial_context,
@@ -728,7 +727,6 @@ class Program(object):
                 ignore_unknown_help=self.config.tasks.ignore_unknown_help
             ),
         )
-
 
     def parse_tasks(self):
         """

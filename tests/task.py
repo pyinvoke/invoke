@@ -195,6 +195,7 @@ class Task_:
         # Name attr, but not a Task
         class Named:
             name = "foo"
+
         assert t != Named()
 
     class function_like_behavior:
