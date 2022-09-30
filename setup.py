@@ -23,9 +23,7 @@ long_description = """
 For a high level introduction, including example code, please see `our main
 project website <https://pyinvoke.org>`_; or for detailed API docs, see `the
 versioned API website <https://docs.pyinvoke.org>`_.
-""".format(
-    version, open("README.rst").read()
-)
+""".format(open("README.rst").read())
 
 
 setup(
