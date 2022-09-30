@@ -2,6 +2,10 @@
 Changelog
 =========
 
+- :release:`1.7.3 <2022-09-30>`
+- :support:`- backported` Fix a non-fatal bug in our setup.py
+  ``long_description`` generation causing 1.7.0-1.7.2 to have malformed
+  description text on PyPI.
 - :release:`1.7.2 <2022-09-30>`
 - :bug:`876` Refactor CLI parser instantiation such that the
   ``tasks.ignore_unknown_help`` feature (added in 1.7) works when Invoke is run
