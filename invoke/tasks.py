@@ -17,8 +17,18 @@ else:
     from itertools import izip_longest as zip_longest
 
 
+class SingletonObject:
+    def __copy__(self, *args, **kwargs):
+        return self
+    def __deepcopy__(self, *args, **kwargs):
+        return self
+
+
 #: Sentinel object representing a truly blank value (vs ``None``).
 NO_DEFAULT = object()
+#: Sentinel objects which don't change when copied
+NOT_SET = SingletonObject()
+FROM_PARENT = SingletonObject()
 
 
 class Task(object):
