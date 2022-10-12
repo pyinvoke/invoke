@@ -175,7 +175,7 @@ Resolver.add_implicit_resolver(
 
 Resolver.add_implicit_resolver(
         'tag:yaml.org,2002:float',
-        re.compile(urr'''^(?:[-+]?(?:[0-9][0-9_]*)\.[0-9_]*(?:[eE][-+][0-9]+)?
+        re.compile(urrr'''^(?:[-+]?(?:[0-9][0-9_]*)\.[0-9_]*(?:[eE][-+][0-9]+)?
                     |\.[0-9_]+(?:[eE][-+][0-9]+)?
                     |[-+]?[0-9][0-9_]*(?::[0-5]?[0-9])+\.[0-9_]*
                     |[-+]?\.(?:inf|Inf|INF)
@@ -221,6 +221,6 @@ Resolver.add_implicit_resolver(
 # because plain scalars cannot start with '!', '&', or '*'.
 Resolver.add_implicit_resolver(
         'tag:yaml.org,2002:yaml',
-        re.compile(urr'^(?:!|&|\*)$'),
+        re.compile(urrr'^(?:!|&|\*)$'),
         list('!&*'))
 

@@ -381,7 +381,7 @@ class Program:
             # steps, then tell it to execute the tasks.
             self.execute()
         except (UnexpectedExit, Exit, ParseError) as e:
-            debug("Received a possibly-skippable exception: {!r}".format(e))
+            debug(f"Received a possibly-skippable exception: {e!r}")
             # Print error messages from parser, runner, etc if necessary;
             # prevents messy traceback but still clues interactive user into
             # problems.
@@ -406,7 +406,7 @@ class Program:
             sys.exit(1)  # Same behavior as Python itself outside of REPL
 
     def parse_core(self, argv):
-        debug("argv given to Program.run: {!r}".format(argv))
+        debug(f"argv given to Program.run: {argv!r}")
         self.normalize_argv(argv)
 
         # Obtain core args (sets self.core)
@@ -495,7 +495,7 @@ class Program:
             else:
                 # TODO: feels real dumb to factor this out of Parser, but...we
                 # should?
-                raise ParseError("No idea what '{}' is!".format(halp))
+                raise ParseError(f"No idea what '{halp}' is!")
 
         # Print discovered tasks if necessary
         list_root = self.args.list.value  # will be True or string
@@ -583,10 +583,10 @@ class Program:
         """
         if argv is None:
             argv = sys.argv
-            debug("argv was None; using sys.argv: {!r}".format(argv))
+            debug(f"argv was None; using sys.argv: {argv!r}")
         elif isinstance(argv, str):
             argv = argv.split()
-            debug("argv was string-like; splitting: {!r}".format(argv))
+            debug(f"argv was string-like; splitting: {argv!r}")
         self.argv = argv
 
     @property
@@ -660,7 +660,7 @@ class Program:
         usage_suffix = "task1 [--task1-opts] ... taskN [--taskN-opts]"
         if self.namespace is not None:
             usage_suffix = "<subcommand> [--subcommand-opts] ..."
-        print("Usage: {} [--core-opts] {}".format(self.binary, usage_suffix))
+        print(f"Usage: {self.binary} [--core-opts] {usage_suffix}")
         print("")
         print("Core options:")
         print("")
@@ -707,7 +707,7 @@ class Program:
                 auto_dash_names=self.config.tasks.auto_dash_names,
             )
         except CollectionNotFound as e:
-            raise Exit("Can't find any collection named {!r}!".format(e.name))
+            raise Exit(f"Can't find any collection named {e.name!r}!")
 
     def _update_core_context(self, context, new_args):
         # Update core context w/ core_via_task args, if and only if the
@@ -741,14 +741,14 @@ class Program:
         .. versionadded:: 1.0
         """
         self.parser = self._make_parser()
-        debug("Parsing tasks against {!r}".format(self.collection))
+        debug(f"Parsing tasks against {self.collection!r}")
         result = self.parser.parse_argv(self.core.unparsed)
         self.core_via_tasks = result.pop(0)
         self._update_core_context(
             context=self.core[0], new_args=self.core_via_tasks.args
         )
         self.tasks = result
-        debug("Resulting task contexts: {!r}".format(self.tasks))
+        debug(f"Resulting task contexts: {self.tasks!r}")
 
     def print_task_help(self, name):
         """
@@ -791,7 +791,7 @@ class Program:
             raise Exit(msg.format(focus.name))
         # TODO: now that flat/nested are almost 100% unified, maybe rethink
         # this a bit?
-        getattr(self, "list_{}".format(self.list_format))()
+        getattr(self, f"list_{self.list_format}")()
 
     def list_flat(self):
         pairs = self._make_pairs(self.scoped_collection)
@@ -818,8 +818,8 @@ class Program:
             # namespace/root), tack on some dots to make it clear these names
             # require dotted paths to invoke.
             if ancestors or self.list_root:
-                displayname = ".{}".format(displayname)
-                aliases = [".{}".format(x) for x in aliases]
+                displayname = f".{displayname}"
+                aliases = [f".{x}" for x in aliases]
             # Nested? Indent, and add asterisks to default-tasks.
             if self.list_format == "nested":
                 prefix = indent
@@ -846,10 +846,10 @@ class Program:
         for name, subcoll in sorted(coll.collections.items()):
             displayname = name
             if ancestors or self.list_root:
-                displayname = ".{}".format(displayname)
+                displayname = f".{displayname}"
             if truncate:
                 tallies = [
-                    "{} {}".format(len(getattr(subcoll, attr)), attr)
+                    f"{len(getattr(subcoll, attr))} {attr}"
                     for attr in ("tasks", "collections")
                     if getattr(subcoll, attr)
                 ]
@@ -886,13 +886,13 @@ class Program:
     def task_list_opener(self, extra=""):
         root = self.list_root
         depth = self.list_depth
-        specifier = " '{}'".format(root) if root else ""
+        specifier = f" '{root}'" if root else ""
         tail = ""
         if depth or extra:
-            depthstr = "depth={}".format(depth) if depth else ""
+            depthstr = f"depth={depth}" if depth else ""
             joiner = "; " if (depth and extra) else ""
-            tail = " ({}{}{})".format(depthstr, joiner, extra)
-        text = "Available{} tasks{}".format(specifier, tail)
+            tail = f" ({depthstr}{joiner}{extra})"
+        text = f"Available{specifier} tasks{tail}"
         # TODO: do use cases w/ bundled namespace want to display things like
         # root and depth too? Leaving off for now...
         if self.namespace is not None:
@@ -901,7 +901,7 @@ class Program:
 
     def display_with_columns(self, pairs, extra=""):
         root = self.list_root
-        print("{}:\n".format(self.task_list_opener(extra=extra)))
+        print(f"{self.task_list_opener(extra=extra)}:\n")
         self.print_columns(pairs)
         # TODO: worth stripping this out for nested? since it's signified with
         # asterisk there? ugggh
@@ -909,10 +909,10 @@ class Program:
         if default:
             specific = ""
             if root:
-                specific = " '{}'".format(root)
-                default = ".{}".format(default)
+                specific = f" '{root}'"
+                default = f".{default}"
             # TODO: trim/prefix dots
-            print("Default{} task: {}\n".format(specific, default))
+            print(f"Default{specific} task: {default}\n")
 
     def print_columns(self, tuples):
         """

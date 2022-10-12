@@ -495,7 +495,7 @@ def remove_move(name):
         try:
             del moves.__dict__[name]
         except KeyError:
-            raise AttributeError("no such move, {!r}".format(name))
+            raise AttributeError(f"no such move, {name!r}")
 
 
 if PY3:

@@ -36,7 +36,7 @@ class BaseConstructor:
         deserialization"""
         if self.get_state_keys_blacklist_regexp().match(key):
             raise ConstructorError(None, None,
-                "blacklisted key '{}' in instance state found".format(key), None)
+                f"blacklisted key '{key}' in instance state found", None)
 
     def get_data(self):
         # Construct and return the next document.
@@ -530,7 +530,7 @@ class FullConstructor(SafeConstructor):
                 __import__(name)
             except ImportError as exc:
                 raise ConstructorError("while constructing a Python module", mark,
-                        "cannot find module {!r} ({})".format(name, exc), mark)
+                        f"cannot find module {name!r} ({exc})", mark)
         if name not in sys.modules:
             raise ConstructorError("while constructing a Python module", mark,
                     "module %r is not imported" % name, mark)
@@ -550,7 +550,7 @@ class FullConstructor(SafeConstructor):
                 __import__(module_name)
             except ImportError as exc:
                 raise ConstructorError("while constructing a Python object", mark,
-                        "cannot find module {!r} ({})".format(module_name, exc), mark)
+                        f"cannot find module {module_name!r} ({exc})", mark)
         if module_name not in sys.modules:
             raise ConstructorError("while constructing a Python object", mark,
                     "module %r is not imported" % module_name, mark)

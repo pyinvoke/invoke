@@ -193,7 +193,7 @@ class Context(DataProxy):
         # through to 'run'...
         user_flags = ""
         if user is not None:
-            user_flags = "-H -u {} ".format(user)
+            user_flags = f"-H -u {user} "
         env_flags = ""
         if env:
             env_flags = "--preserve-env='{}' ".format(",".join(env.keys()))
@@ -203,7 +203,7 @@ class Context(DataProxy):
         )
         watcher = FailingResponder(
             pattern=re.escape(prompt),
-            response="{}\n".format(password),
+            response=f"{password}\n",
             sentinel="Sorry, try again.\n",
         )
         # Ensure we merge any user-specified watchers with our own.
@@ -248,7 +248,7 @@ class Context(DataProxy):
         prefixes = list(self.command_prefixes)
         current_directory = self.cwd
         if current_directory:
-            prefixes.insert(0, "cd {}".format(current_directory))
+            prefixes.insert(0, f"cd {current_directory}")
 
         return " && ".join(prefixes + [command])
 
@@ -494,7 +494,7 @@ class MockContext(Context):
                 err = "Not sure how to yield results from a {!r}"
                 raise TypeError(err.format(type(results)))
             # Save results for use by the method
-            self._set("__{}".format(method), results)
+            self._set(f"__{method}", results)
             # Wrap the method in a Mock, if applicable
             if Mock is not None:
                 self._set(method, Mock(wraps=getattr(self, method)))
@@ -583,7 +583,7 @@ class MockContext(Context):
 
         .. versionadded:: 1.0
         """
-        attname = "__{}".format(attname)
+        attname = f"__{attname}"
         heck = TypeError(
             "Can't update results for non-dict or nonexistent mock results!"
         )

@@ -82,7 +82,7 @@ class Argument:
         # Argument.__init__?
         kind = ""
         if self.kind != str:
-            kind = " [{}]".format(self.kind.__name__)
+            kind = f" [{self.kind.__name__}]"
         return "<{}: {}{}{}{}>".format(
             self.__class__.__name__, self.name, nicks, kind, flags
         )

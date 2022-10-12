@@ -54,7 +54,7 @@ class DataProxy:
     """.split()
         )
         + tuple(
-            "__{}__".format(x)
+            f"__{x}__"
             for x in """
         cmp
         contains
@@ -106,12 +106,12 @@ class DataProxy:
             if key in self._proxies:
                 return getattr(self._config, key)
             # Otherwise, raise useful AttributeError to follow getattr proto.
-            err = "No attribute or config key found for {!r}".format(key)
+            err = f"No attribute or config key found for {key!r}"
             attrs = [x for x in dir(self.__class__) if not x.startswith("_")]
             err += "\n\nValid keys: {!r}".format(
                 sorted(list(self._config.keys()))
             )
-            err += "\n\nValid real attributes: {!r}".format(attrs)
+            err += f"\n\nValid real attributes: {attrs!r}"
             raise AttributeError(err)
 
     def __setattr__(self, key, value):
@@ -196,7 +196,7 @@ class DataProxy:
             object.__setattr__(self, key, value)
 
     def __repr__(self):
-        return "<{}: {}>".format(self.__class__.__name__, self._config)
+        return f"<{self.__class__.__name__}: {self._config}>"
 
     def __contains__(self, key):
         return key in self._config
@@ -613,7 +613,7 @@ class Config(DataProxy):
         env_prefix = self.env_prefix
         if env_prefix is None:
             env_prefix = self.prefix
-        env_prefix = "{}_".format(env_prefix.upper())
+        env_prefix = f"{env_prefix.upper()}_"
         self._set(_env_prefix=env_prefix)
         # Config data loaded from the shell environment.
         self._set(_env={})
@@ -838,9 +838,9 @@ class Config(DataProxy):
 
     def _load_file(self, prefix, absolute=False, merge=True):
         # Setup
-        found = "_{}_found".format(prefix)
-        path = "_{}_path".format(prefix)
-        data = "_{}".format(prefix)
+        found = f"_{prefix}_found"
+        path = f"_{prefix}_path"
+        data = f"_{prefix}"
         midfix = self.file_prefix
         if midfix is None:
             midfix = self.prefix
@@ -855,7 +855,7 @@ class Config(DataProxy):
                 return
             paths = [absolute_path]
         else:
-            path_prefix = getattr(self, "_{}_prefix".format(prefix))
+            path_prefix = getattr(self, f"_{prefix}_prefix")
             # Short circuit if loading seems unnecessary (eg for project config
             # files when not running out of a project)
             if path_prefix is None:
@@ -871,7 +871,7 @@ class Config(DataProxy):
             try:
                 try:
                     type_ = splitext(filepath)[1].lstrip(".")
-                    loader = getattr(self, "_load_{}".format(type_))
+                    loader = getattr(self, f"_load_{type_}")
                 except AttributeError:
                     msg = "Config files of type {!r} (from file {!r}) are not supported! Please use one of: {!r}"  # noqa
                     raise UnknownFileType(
@@ -934,41 +934,41 @@ class Config(DataProxy):
         """
         debug("Merging config sources in order onto new empty _config...")
         self._set(_config={})
-        debug("Defaults: {!r}".format(self._defaults))
+        debug(f"Defaults: {self._defaults!r}")
         merge_dicts(self._config, self._defaults)
-        debug("Collection-driven: {!r}".format(self._collection))
+        debug(f"Collection-driven: {self._collection!r}")
         merge_dicts(self._config, self._collection)
         self._merge_file("system", "System-wide")
         self._merge_file("user", "Per-user")
         self._merge_file("project", "Per-project")
-        debug("Environment variable config: {!r}".format(self._env))
+        debug(f"Environment variable config: {self._env!r}")
         merge_dicts(self._config, self._env)
         self._merge_file("runtime", "Runtime")
-        debug("Overrides: {!r}".format(self._overrides))
+        debug(f"Overrides: {self._overrides!r}")
         merge_dicts(self._config, self._overrides)
-        debug("Modifications: {!r}".format(self._modifications))
+        debug(f"Modifications: {self._modifications!r}")
         merge_dicts(self._config, self._modifications)
-        debug("Deletions: {!r}".format(self._deletions))
+        debug(f"Deletions: {self._deletions!r}")
         obliterate(self._config, self._deletions)
 
     def _merge_file(self, name, desc):
         # Setup
         desc += " config file"  # yup
-        found = getattr(self, "_{}_found".format(name))
-        path = getattr(self, "_{}_path".format(name))
-        data = getattr(self, "_{}".format(name))
+        found = getattr(self, f"_{name}_found")
+        path = getattr(self, f"_{name}_path")
+        data = getattr(self, f"_{name}")
         # None -> no loading occurred yet
         if found is None:
-            debug("{} has not been loaded yet, skipping".format(desc))
+            debug(f"{desc} has not been loaded yet, skipping")
         # True -> hooray
         elif found:
-            debug("{} ({}): {!r}".format(desc, path, data))
+            debug(f"{desc} ({path}): {data!r}")
             merge_dicts(self._config, data)
         # False -> did try, did not succeed
         else:
             # TODO: how to preserve what was tried for each case but only for
             # the negative? Just a branch here based on 'name'?
-            debug("{} not found, skipping".format(desc))
+            debug(f"{desc} not found, skipping")
 
     def clone(self, into=None):
         """
@@ -1047,7 +1047,7 @@ class Config(DataProxy):
             overrides
             modifications
         """.split():
-            name = "_{}".format(name)
+            name = f"_{name}"
             my_data = getattr(self, name)
             # Non-dict data gets carried over straight (via a copy())
             # NOTE: presumably someone could really screw up and change these
@@ -1225,7 +1225,7 @@ def _merge_error(orig, new_):
 
 
 def _format_mismatch(x):
-    return "{} ({!r})".format(type(x), x)
+    return f"{type(x)} ({x!r})"
 
 
 def copy_dict(source):

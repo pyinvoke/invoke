@@ -67,7 +67,7 @@ def run(invocation, program=None, invoke=True):
     if program is None:
         program = Program()
     if invoke:
-        invocation = "invoke {}".format(invocation)
+        invocation = f"invoke {invocation}"
     program.run(invocation, exit=False)
     return sys.stdout.getvalue(), sys.stderr.getvalue()
 
@@ -103,7 +103,7 @@ def expect(
     # Guard against silent failures; since we say exit=False this is the only
     # real way to tell if stuff died in a manner we didn't expect.
     elif stderr:
-        assert False, "Unexpected stderr: {}".format(stderr)
+        assert False, f"Unexpected stderr: {stderr}"
     return stdout, stderr
 
 

@@ -34,7 +34,7 @@ from _util import MockSubprocess
 # Regular settings
 project = "Invoke"
 year = datetime.now().year
-copyright = "{} Jeff Forcier".format(year)
+copyright = f"{year} Jeff Forcier"
 master_doc = "index"
 templates_path = ["_templates"]
 exclude_trees = ["_build"]

@@ -113,7 +113,7 @@ class CLIParsing:
         assert r[0].args.s.value == "value"
 
     def _flag_value_task(self, value):
-        r = self._parse("my-task -s {} my-task2".format(value))
+        r = self._parse(f"my-task -s {value} my-task2")
         assert len(r) == 2
         assert r[0].name == "my-task"
         assert r[0].args.s.value == value
@@ -146,7 +146,7 @@ class CLIParsing:
     def multiple_short_flags_adjacent(self):
         "my-task -bv (and inverse)"
         for args in ("-bv", "-vb"):
-            r = self._parse("my-task {}".format(args))
+            r = self._parse(f"my-task {args}")
             a = r[0].args
             assert a.b.value
             assert a.v.value

@@ -118,7 +118,7 @@ class FunctionMaker:
                         allargs.append('*')  # single star syntax
                     for a in self.kwonlyargs:
                         allargs.append('%s=None' % a)
-                        allshortargs.append('{}={}'.format(a, a))
+                        allshortargs.append(f'{a}={a}')
                     if self.varkw:
                         allargs.append('**' + self.varkw)
                         allshortargs.append('**' + self.varkw)
@@ -172,7 +172,7 @@ class FunctionMaker:
                               self.shortsignature.split(',')])
         for n in names:
             if n in ('_func_', '_call_'):
-                raise NameError('{} is overridden in\n{}'.format(n, src))
+                raise NameError(f'{n} is overridden in\n{src}')
 
         if not src.endswith('\n'):  # add a newline for old Pythons
             src += '\n'
@@ -354,7 +354,7 @@ def dispatch_on(*dispatch_args):
                 n_vas = len(vas)
                 if n_vas > 1:
                     raise RuntimeError(
-                        'Ambiguous dispatch for {}: {}'.format(t, vas))
+                        f'Ambiguous dispatch for {t}: {vas}')
                 elif n_vas == 1:
                     va, = vas
                     mro = type('t', (t, va), {}).mro()[1:]

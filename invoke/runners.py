@@ -1471,7 +1471,7 @@ class Result:
 
     def __str__(self):
         if self.exited is not None:
-            desc = "Command exited with status {}.".format(self.exited)
+            desc = f"Command exited with status {self.exited}."
         else:
             desc = "Command was not fully executed due to watcher error."
         ret = [desc]
@@ -1484,7 +1484,7 @@ class Result:
                     x, val.rstrip()
                 )
                 if val
-                else "(no {})".format(x)
+                else f"(no {x})"
             )
         return "\n".join(ret)
 

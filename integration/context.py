@@ -13,7 +13,7 @@ class Context_:
             user = ci_conf.user
             c.config.sudo.password = ci_conf.password
             # Safety 1: ensure configured user even exists
-            assert c.run("id {}".format(user), warn=True)
+            assert c.run(f"id {user}", warn=True)
             # Safety 2: make sure we ARE them (and not eg root already)
             assert c.run("whoami", hide=True).stdout.strip() == user
             assert c.sudo("whoami", hide=True).stdout.strip() == "root"

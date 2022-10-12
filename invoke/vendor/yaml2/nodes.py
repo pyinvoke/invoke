@@ -19,7 +19,7 @@ class Node:
         #    else:
         #        value = repr(value)
         value = repr(value)
-        return '{}(tag={!r}, value={})'.format(self.__class__.__name__, self.tag, value)
+        return f'{self.__class__.__name__}(tag={self.tag!r}, value={value})'
 
 class ScalarNode(Node):
     id = 'scalar'

@@ -152,7 +152,7 @@ Testing
             )
 
         def _expect(self, args, expected):
-            expect("-c integration {}".format(args), out=expected.lstrip())
+            expect(f"-c integration {args}", out=expected.lstrip())
 
         class adjacent_hooks:
             def deduping(self):

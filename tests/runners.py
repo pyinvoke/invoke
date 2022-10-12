@@ -460,7 +460,7 @@ class Runner_:
                 self._run(_, hide=value)
             except ValueError as e:
                 msg = "Error from run(hide=xxx) did not tell user what the bad value was!"  # noqa
-                msg += "\nException msg: {}".format(e)
+                msg += f"\nException msg: {e}"
                 assert value in str(e), msg
             else:
                 assert (
@@ -673,7 +673,7 @@ class Runner_:
             def setup(self):
                 def lines(prefix):
                     prefixed = "\n".join(
-                        "{} {}".format(prefix, x) for x in range(1, 26)
+                        f"{prefix} {x}" for x in range(1, 26)
                     )
                     return prefixed + "\n"
 
@@ -899,7 +899,7 @@ stderr 25
                         self._watcher_error()
                     except Failure as e:
                         exited = e.result.exited
-                        err = "Expected None, got {!r}".format(exited)
+                        err = f"Expected None, got {exited!r}"
                         assert exited is None, err
 
                 def ok_and_bool_still_are_falsey(self):

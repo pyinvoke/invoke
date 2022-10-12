@@ -58,7 +58,7 @@ def integration(c, opts=None, pty=True):
     # environment. Certain entirely-standalone tests will fail w/o it, even if
     # tests honoring config overrides (like the unit-test suite) don't.
     shell = c.config.global_defaults()["run"]["shell"]
-    if not c.run("which {}".format(shell), hide=True, warn=True):
+    if not c.run(f"which {shell}", hide=True, warn=True):
         err = "No {} on this system - cannot run integration tests! Try a container?"  # noqa
         raise Exit(err.format(shell))
     opts = opts or ""

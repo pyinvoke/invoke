@@ -331,16 +331,16 @@ class Representer(SafeRepresenter):
         elif data.real == 0.0:
             data = '%rj' % data.imag
         elif data.imag > 0:
-            data = '{!r}+{!r}j'.format(data.real, data.imag)
+            data = f'{data.real!r}+{data.imag!r}j'
         else:
-            data = '{!r}{!r}j'.format(data.real, data.imag)
+            data = f'{data.real!r}{data.imag!r}j'
         return self.represent_scalar('tag:yaml.org,2002:python/complex', data)
 
     def represent_tuple(self, data):
         return self.represent_sequence('tag:yaml.org,2002:python/tuple', data)
 
     def represent_name(self, data):
-        name = '{}.{}'.format(data.__module__, data.__name__)
+        name = f'{data.__module__}.{data.__name__}'
         return self.represent_scalar('tag:yaml.org,2002:python/name:'+name, '')
 
     def represent_module(self, data):
@@ -366,7 +366,7 @@ class Representer(SafeRepresenter):
         # !!python/object/new node.
 
         cls = data.__class__
-        class_name = '{}.{}'.format(cls.__module__, cls.__name__)
+        class_name = f'{cls.__module__}.{cls.__name__}'
         args = None
         state = None
         if hasattr(data, '__getinitargs__'):
@@ -431,7 +431,7 @@ class Representer(SafeRepresenter):
         else:
             tag = 'tag:yaml.org,2002:python/object/apply:'
             newobj = False
-        function_name = '{}.{}'.format(function.__module__, function.__name__)
+        function_name = f'{function.__module__}.{function.__name__}'
         if not args and not listitems and not dictitems \
                 and isinstance(state, dict) and newobj:
             return self.represent_mapping(

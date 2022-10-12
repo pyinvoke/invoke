@@ -118,12 +118,12 @@ class Collection:
         elif isinstance(obj, (Collection, types.ModuleType)):
             method = self.add_collection
         else:
-            raise TypeError("No idea how to insert {!r}!".format(type(obj)))
+            raise TypeError(f"No idea how to insert {type(obj)!r}!")
         return method(obj, name=name)
 
     def __repr__(self):
         task_names = list(self.tasks.keys())
-        collections = ["{}...".format(x) for x in self.collections.keys()]
+        collections = [f"{x}..." for x in self.collections.keys()]
         return "<Collection {!r}: {}>".format(
             self.name, ", ".join(sorted(task_names) + sorted(collections))
         )

@@ -91,7 +91,7 @@ class Task:
         aliases = ""
         if self.aliases:
             aliases = " ({})".format(", ".join(self.aliases))
-        return "<Task {!r}{}>".format(self.name, aliases)
+        return f"<Task {self.name!r}{aliases}>"
 
     def __eq__(self, other):
         if not isinstance(other, Task) or self.name != other.name:
@@ -416,7 +416,7 @@ class Call:
     def __repr__(self):
         aka = ""
         if self.called_as is not None and self.called_as != self.task.name:
-            aka = " (called as: {!r})".format(self.called_as)
+            aka = f" (called as: {self.called_as!r})"
         return "<{} {!r}{}, args: {!r}, kwargs: {!r}>".format(
             self.__class__.__name__,
             self.task.name,

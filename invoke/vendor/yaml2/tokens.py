@@ -6,9 +6,9 @@ class Token:
         attributes = [key for key in self.__dict__
                 if not key.endswith('_mark')]
         attributes.sort()
-        arguments = ', '.join(['{}={!r}'.format(key, getattr(self, key))
+        arguments = ', '.join([f'{key}={getattr(self, key)!r}'
                 for key in attributes])
-        return '{}({})'.format(self.__class__.__name__, arguments)
+        return f'{self.__class__.__name__}({arguments})'
 
 #class BOMToken(Token):
 #    id = '<byte order mark>'

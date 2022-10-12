@@ -77,5 +77,5 @@ setup(
         "Topic :: System :: Software Distribution",
         "Topic :: System :: Systems Administration",
     ],
-    python_requires='>=3',
+    python_requires='>=3.7',
 )

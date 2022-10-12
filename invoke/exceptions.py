@@ -90,7 +90,7 @@ class Failure(Exception):
         rest = ""
         if kwargs:
             rest = " " + " ".join(
-                "{}={}".format(key, value) for key, value in kwargs.items()
+                f"{key}={value}" for key, value in kwargs.items()
             )
         return template.format(
             self.__class__.__name__, self.result.command, rest
