@@ -1,4 +1,3 @@
-
 __all__ = ['BaseRepresenter', 'SafeRepresenter', 'Representer',
     'RepresenterError']
 
@@ -277,16 +276,16 @@ class Representer(SafeRepresenter):
         elif data.real == 0.0:
             data = '%rj' % data.imag
         elif data.imag > 0:
-            data = '%r+%rj' % (data.real, data.imag)
+            data = '{!r}+{!r}j'.format(data.real, data.imag)
         else:
-            data = '%r%rj' % (data.real, data.imag)
+            data = '{!r}{!r}j'.format(data.real, data.imag)
         return self.represent_scalar('tag:yaml.org,2002:python/complex', data)
 
     def represent_tuple(self, data):
         return self.represent_sequence('tag:yaml.org,2002:python/tuple', data)
 
     def represent_name(self, data):
-        name = '%s.%s' % (data.__module__, data.__name__)
+        name = '{}.{}'.format(data.__module__, data.__name__)
         return self.represent_scalar('tag:yaml.org,2002:python/name:'+name, '')
 
     def represent_module(self, data):
@@ -336,7 +335,7 @@ class Representer(SafeRepresenter):
         else:
             tag = 'tag:yaml.org,2002:python/object/apply:'
             newobj = False
-        function_name = '%s.%s' % (function.__module__, function.__name__)
+        function_name = '{}.{}'.format(function.__module__, function.__name__)
         if not args and not listitems and not dictitems \
                 and isinstance(state, dict) and newobj:
             return self.represent_mapping(

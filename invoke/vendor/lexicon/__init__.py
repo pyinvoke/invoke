@@ -20,4 +20,4 @@ class Lexicon(AttributeDict, AliasDict):
         # Alias and Attribute Dicts, so not solvable in a parent alone.)
         if key == 'aliases' and key not in self.__dict__:
             self.__dict__[key] = {}
-        return super(Lexicon, self).__getattr__(key)
+        return super().__getattr__(key)

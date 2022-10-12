@@ -19,7 +19,7 @@ class MetaStateMachine(type):
 
     def __new__(cls, name, bases, dictionary):
         global _transition_gatherer, _state_gatherer
-        Machine = super(MetaStateMachine, cls).__new__(cls, name, bases, dictionary)
+        Machine = super().__new__(cls, name, bases, dictionary)
         Machine._class_transitions = []
         Machine._class_states = {}
         for s in _state_gatherer:
@@ -47,7 +47,7 @@ class StateMachine(StateMachineBase):
         self._create_state_getters()
 
     def __new__(cls, *args, **kwargs):
-        obj = super(StateMachine, cls).__new__(cls)
+        obj = super().__new__(cls)
         obj._states = {}
         obj._transitions = []
         return obj
@@ -133,7 +133,7 @@ class StateMachine(StateMachineBase):
           lambda transition: transition.is_valid_from(self._current_state_object),
           transitions))
         if len(valid_transitions) == 0:
-            raise InvalidTransition("Cannot %s from %s" % (
+            raise InvalidTransition("Cannot {} from {}".format(
                 transitions[0].event, self.current_state))
         return valid_transitions
 
@@ -149,7 +149,7 @@ class StateMachine(StateMachineBase):
         return allowed_transitions[0]
 
 
-class _Transition(object):
+class _Transition:
 
     def __init__(self, event, from_, to, action, guard):
         self.event = event
@@ -178,7 +178,7 @@ class _Transition(object):
         _ActionRunner(machine).run(self.action, *args, **kwargs)
 
 
-class _Guard(object):
+class _Guard:
 
     def __init__(self, action):
         self.action = action
@@ -202,7 +202,7 @@ class _Guard(object):
             return guard
 
 
-class _State(object):
+class _State:
 
     def __init__(self, name, enter, exit):
         self.name = name
@@ -224,7 +224,7 @@ class _State(object):
         _ActionRunner(machine).run(self.exit)
 
 
-class _ActionRunner(object):
+class _ActionRunner:
 
     def __init__(self, machine):
         self.machine = machine

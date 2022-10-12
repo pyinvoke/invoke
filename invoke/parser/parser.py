@@ -19,7 +19,7 @@ def is_long_flag(value):
     return value.startswith("--")
 
 
-class Parser(object):
+class Parser:
     """
     Create parser conscious of ``contexts`` and optional ``initial`` context.
 
@@ -208,7 +208,7 @@ class ParseMachine(StateMachine):
         self.contexts = copy.deepcopy(contexts)
         debug("Available contexts: {!r}".format(self.contexts))
         # In case StateMachine does anything in __init__
-        super(ParseMachine, self).__init__()
+        super().__init__()
 
     @property
     def waiting_for_flag_value(self):
@@ -433,6 +433,6 @@ class ParseResult(list):
     """
 
     def __init__(self, *args, **kwargs):
-        super(ParseResult, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.remainder = ""
         self.unparsed = []

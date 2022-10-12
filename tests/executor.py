@@ -1,4 +1,4 @@
-from mock import Mock
+from unittest.mock import Mock
 import pytest
 
 from invoke import Collection, Config, Context, Executor, Task, call, task

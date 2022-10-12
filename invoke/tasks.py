@@ -11,17 +11,14 @@ from .context import Context
 from .parser import Argument, translate_underscores
 from .util import six
 
-if six.PY3:
-    from itertools import zip_longest
-else:
-    from itertools import izip_longest as zip_longest
+from itertools import zip_longest
 
 
 #: Sentinel object representing a truly blank value (vs ``None``).
 NO_DEFAULT = object()
 
 
-class Task(object):
+class Task:
     """
     Core object representing an executable task & its argument specification.
 
@@ -106,9 +103,9 @@ class Task(object):
             return True
         else:
             try:
-                return six.get_function_code(
+                return (
                     self.body
-                ) == six.get_function_code(other.body)
+                ).__code__ == other.body.__code__
             except AttributeError:
                 return False
 
@@ -376,7 +373,7 @@ def task(*args, **kwargs):
     return inner
 
 
-class Call(object):
+class Call:
     """
     Represents a call/execution of a `.Task` with given (kw)args.
 

@@ -1,4 +1,3 @@
-
 __all__ = ['BaseDumper', 'SafeDumper', 'Dumper']
 
 from emitter import *

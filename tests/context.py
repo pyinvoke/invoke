@@ -3,7 +3,7 @@ import pickle
 import re
 import sys
 
-from mock import patch, Mock, call
+from unittest.mock import patch, Mock, call
 from pytest_relaxed import trap
 from pytest import skip, raises, mark
 
@@ -209,7 +209,7 @@ class Context_:
 
         @patch(local_path)
         def cd_should_accept_any_stringable_object(self, Local):
-            class Path(object):
+            class Path:
                 def __init__(self, value):
                     self.value = value
 

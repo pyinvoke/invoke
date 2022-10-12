@@ -1,4 +1,3 @@
-
 __all__ = ['Serializer', 'SerializerError']
 
 from error import YAMLError
@@ -8,9 +7,9 @@ from nodes import *
 class SerializerError(YAMLError):
     pass
 
-class Serializer(object):
+class Serializer:
 
-    ANCHOR_TEMPLATE = u'id%03d'
+    ANCHOR_TEMPLATE = 'id%03d'
 
     def __init__(self, encoding=None,
             explicit_start=None, explicit_end=None, version=None, tags=None):

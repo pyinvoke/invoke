@@ -1,4 +1,3 @@
-
 __all__ = ['Serializer', 'SerializerError']
 
 from .error import YAMLError

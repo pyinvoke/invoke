@@ -8,7 +8,7 @@ except ImportError:
 
 class AliasDict(dict):
     def __init__(self, *args, **kwargs):
-        super(AliasDict, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.aliases = {}
 
     def alias(self, from_, to):
@@ -39,7 +39,7 @@ class AliasDict(dict):
         # itself. Filter out the original name given.
         names.extend([
             k for k,v
-            in six.iteritems(self.aliases)
+            in self.aliases.items()
             if v == key and k != name
         ])
         return names
@@ -49,7 +49,7 @@ class AliasDict(dict):
         if key in getattr(self, 'aliases', {}):
             target = self.aliases[key]
             # Single-string targets
-            if isinstance(target, six.string_types):
+            if isinstance(target, str):
                 return single(self, target, value)
             # Multi-string targets
             else:
@@ -62,7 +62,7 @@ class AliasDict(dict):
             return unaliased(self, key, value)
 
     def _single(self, target):
-        return isinstance(target, six.string_types)
+        return isinstance(target, str)
 
     def __setitem__(self, key, value):
         def single(d, target, value): d[target] = value

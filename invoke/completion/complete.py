@@ -111,7 +111,7 @@ def print_completion_script(shell, names):
     # Choose one arbitrary program name for script's own internal invocation
     # (also used to construct completion function names when necessary)
     binary = names[0]
-    with open(path, "r") as script:
+    with open(path) as script:
         print(
             script.read().format(binary=binary, spaced_names=" ".join(names))
         )

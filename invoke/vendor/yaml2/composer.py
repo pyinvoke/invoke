@@ -1,4 +1,3 @@
-
 __all__ = ['Composer', 'ComposerError']
 
 from error import MarkedYAMLError
@@ -8,7 +7,7 @@ from nodes import *
 class ComposerError(MarkedYAMLError):
     pass
 
-class Composer(object):
+class Composer:
 
     def __init__(self):
         self.anchors = {}
@@ -88,7 +87,7 @@ class Composer(object):
     def compose_scalar_node(self, anchor):
         event = self.get_event()
         tag = event.tag
-        if tag is None or tag == u'!':
+        if tag is None or tag == '!':
             tag = self.resolve(ScalarNode, event.value, event.implicit)
         node = ScalarNode(tag, event.value,
                 event.start_mark, event.end_mark, style=event.style)
@@ -99,7 +98,7 @@ class Composer(object):
     def compose_sequence_node(self, anchor):
         start_event = self.get_event()
         tag = start_event.tag
-        if tag is None or tag == u'!':
+        if tag is None or tag == '!':
             tag = self.resolve(SequenceNode, None, start_event.implicit)
         node = SequenceNode(tag, [],
                 start_event.start_mark, None,
@@ -117,7 +116,7 @@ class Composer(object):
     def compose_mapping_node(self, anchor):
         start_event = self.get_event()
         tag = start_event.tag
-        if tag is None or tag == u'!':
+        if tag is None or tag == '!':
             tag = self.resolve(MappingNode, None, start_event.implicit)
         node = MappingNode(tag, [],
                 start_event.start_mark, None,

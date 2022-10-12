@@ -31,7 +31,6 @@
 Decorator module, see http://pypi.python.org/pypi/decorator
 for the documentation.
 """
-from __future__ import print_function
 
 import re
 import sys
@@ -74,7 +73,7 @@ DEF = re.compile(r'\s*def\s*([_\w][_\w\d]*)\s*\(')
 
 
 # basic functionality
-class FunctionMaker(object):
+class FunctionMaker:
     """
     An object with the ability to create functions with a given signature.
     It has attributes name, doc, module, signature, defaults, dict and
@@ -119,7 +118,7 @@ class FunctionMaker(object):
                         allargs.append('*')  # single star syntax
                     for a in self.kwonlyargs:
                         allargs.append('%s=None' % a)
-                        allshortargs.append('%s=%s' % (a, a))
+                        allshortargs.append('{}={}'.format(a, a))
                     if self.varkw:
                         allargs.append('**' + self.varkw)
                         allshortargs.append('**' + self.varkw)
@@ -173,7 +172,7 @@ class FunctionMaker(object):
                               self.shortsignature.split(',')])
         for n in names:
             if n in ('_func_', '_call_'):
-                raise NameError('%s is overridden in\n%s' % (n, src))
+                raise NameError('{} is overridden in\n{}'.format(n, src))
 
         if not src.endswith('\n'):  # add a newline for old Pythons
             src += '\n'
@@ -355,7 +354,7 @@ def dispatch_on(*dispatch_args):
                 n_vas = len(vas)
                 if n_vas > 1:
                     raise RuntimeError(
-                        'Ambiguous dispatch for %s: %s' % (t, vas))
+                        'Ambiguous dispatch for {}: {}'.format(t, vas))
                 elif n_vas == 1:
                     va, = vas
                     mro = type('t', (t, va), {}).mro()[1:]

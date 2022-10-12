@@ -90,7 +90,7 @@ class Main:
         def setup(self):
             class BadlyBehavedStdout(io.TextIOBase):
                 def write(self, data):
-                    if six.PY2 and not isinstance(data, six.binary_type):
+                    if six.PY2 and not isinstance(data, bytes):
                         data.encode("ascii")
 
             self.bad_stdout = BadlyBehavedStdout()

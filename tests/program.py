@@ -3,7 +3,7 @@ import os
 import sys
 
 from invoke.util import six, Lexicon
-from mock import patch, Mock, ANY
+from unittest.mock import patch, Mock, ANY
 import pytest
 from pytest import skip
 from pytest_relaxed import trap
@@ -460,8 +460,8 @@ ohnoz!
                 Result(
                     command="meh",
                     exited=54,
-                    stdout=u"this is not ascii: \u1234",
-                    stderr=u"this is also not ascii: \u4321",
+                    stdout="this is not ascii: \u1234",
+                    stderr="this is also not ascii: \u4321",
                     encoding="utf-8",
                     hide=("stdout", "stderr"),
                 )

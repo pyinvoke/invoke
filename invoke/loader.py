@@ -7,7 +7,7 @@ from .exceptions import CollectionNotFound
 from .util import debug
 
 
-class Loader(object):
+class Loader:
     """
     Abstract class defining how to find/import a session's base `.Collection`.
 
@@ -100,7 +100,7 @@ class FilesystemLoader(Loader):
     # as auto-dashes, and has to grow one of those for every bit Collection
     # ever needs to know
     def __init__(self, start=None, **kwargs):
-        super(FilesystemLoader, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         if start is None:
             start = self.config.tasks.search_root
         self._start = start

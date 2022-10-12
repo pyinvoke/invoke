@@ -14,7 +14,7 @@ from invoke.vendor.six import StringIO, b, PY2, iteritems
 
 from pytest import raises, skip
 from pytest_relaxed import trap
-from mock import patch, Mock, call
+from unittest.mock import patch, Mock, call
 
 from invoke import (
     CommandTimedOut,
@@ -656,7 +656,7 @@ class Runner_:
             def subclasses_may_add_more_kv_pairs(self):
                 class TotalFailure(Failure):
                     def _repr(self, **kwargs):
-                        return super(TotalFailure, self)._repr(mood="dejected")
+                        return super()._repr(mood="dejected")
 
                 expected = "<TotalFailure: cmd='onoz' mood=dejected>"
                 assert repr(TotalFailure(Result(command="onoz"))) == expected
@@ -1134,7 +1134,7 @@ stderr 25
                     # termios & such, which is harder to mock successfully.
                     if input_is_pty is not None:
                         input_.isatty = lambda: input_is_pty
-                    return super(MyRunner, self).should_echo_stdin(
+                    return super().should_echo_stdin(
                         input_, output
                     )
 
@@ -1351,7 +1351,7 @@ stderr 25
                 mock_stdin = Mock()
                 runner.write_proc_stdin = mock_stdin
                 runner.run(_, pty=pty)
-                mock_stdin.assert_called_once_with(u"\x03")
+                mock_stdin.assert_called_once_with("\x03")
 
     class timeout:
         def start_timer_called_with_config_value(self):
@@ -1747,10 +1747,10 @@ class Result_:
         assert Result().env == {}
 
     def stdout_defaults_to_empty_string(self):
-        assert Result().stdout == u""
+        assert Result().stdout == ""
 
     def stderr_defaults_to_empty_string(self):
-        assert Result().stderr == u""
+        assert Result().stderr == ""
 
     def exited_defaults_to_zero(self):
         assert Result().exited == 0

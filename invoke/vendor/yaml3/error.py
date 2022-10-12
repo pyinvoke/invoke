@@ -1,4 +1,3 @@
-
 __all__ = ['Mark', 'YAMLError', 'MarkedYAMLError']
 
 class Mark:

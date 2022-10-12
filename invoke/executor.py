@@ -6,7 +6,7 @@ from .util import debug
 from .tasks import Call, Task
 
 
-class Executor(object):
+class Executor:
     """
     An execution strategy for Task objects.
 
@@ -145,7 +145,7 @@ class Executor(object):
         calls = []
         for task in tasks:
             name, kwargs = None, {}
-            if isinstance(task, six.string_types):
+            if isinstance(task, str):
                 name = task
             elif isinstance(task, ParserContext):
                 name = task.name

@@ -23,14 +23,11 @@ try:
     from .vendor import six
     from .vendor.six.moves import reduce  # noqa
 
-    if six.PY3:
-        from .vendor import yaml3 as yaml  # noqa
-    else:
-        from .vendor import yaml2 as yaml  # noqa
+    from .vendor import yaml3 as yaml  # noqa
 except ImportError:
     from lexicon import Lexicon  # noqa
     import six
-    from six.moves import reduce  # noqa
+    from functools import reduce  # noqa
     import yaml  # noqa
 
 
@@ -203,7 +200,7 @@ class ExceptionHandlingThread(threading.Thread):
         ``**kwargs`` for easier display of thread identity when raising
         captured exceptions.
         """
-        super(ExceptionHandlingThread, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         # No record of why, but Fabric used daemon threads ever since the
         # switch from select.select, so let's keep doing that.
         self.daemon = True
@@ -234,7 +231,7 @@ class ExceptionHandlingThread(threading.Thread):
                 # worker body, orthogonal to how exception handling works
                 self._run()
             else:
-                super(ExceptionHandlingThread, self).run()
+                super().run()
         except BaseException:
             # Store for actual reraising later
             self.exc_info = sys.exc_info()

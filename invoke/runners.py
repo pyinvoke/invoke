@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import errno
 import locale
 import os
@@ -45,7 +43,7 @@ from .terminals import (
 from .util import has_fileno, isatty, ExceptionHandlingThread, encode_output
 
 
-class Runner(object):
+class Runner:
     """
     Partially-abstract core command-running API.
 
@@ -476,7 +474,7 @@ class Runner(object):
             # Failure objects.)
             watcher_errors = []
             thread_exceptions = []
-            for target, thread in six.iteritems(self.threads):
+            for target, thread in self.threads.items():
                 thread.join(self._thread_join_timeout(target))
                 exception = thread.exception()
                 if exception is not None:
@@ -519,7 +517,7 @@ class Runner(object):
         - ``self.streams`` - map of stream names to stream target values
         """
         opts = {}
-        for key, value in six.iteritems(self.context.config.run):
+        for key, value in self.context.config.run.items():
             runtime = kwargs.pop(key, None)
             opts[key] = value if runtime is None else runtime
         # Pull in command execution timeout, which stores config elsewhere,
@@ -647,7 +645,7 @@ class Runner(object):
             }
         # Kick off IO threads
         threads = {}
-        for target, kwargs in six.iteritems(thread_args):
+        for target, kwargs in thread_args.items():
             t = ExceptionHandlingThread(target=target, kwargs=kwargs)
             threads[target] = t
         return threads, stdout, stderr
@@ -804,7 +802,7 @@ class Runner(object):
                     raise
             # Decode if it appears to be binary-type. (From real terminal
             # streams, usually yes; from file-like objects, often no.)
-            if bytes_ and isinstance(bytes_, six.binary_type):
+            if bytes_ and isinstance(bytes_, bytes):
                 # TODO: will decoding 1 byte at a time break multibyte
                 # character encodings? How to square interactivity with that?
                 bytes_ = self.decode(bytes_)
@@ -908,7 +906,7 @@ class Runner(object):
         # speed and memory use. Should that become false, consider using
         # StringIO or cStringIO (tho the latter doesn't do Unicode well?) which
         # is apparently even more efficient.
-        stream = u"".join(buffer_)
+        stream = "".join(buffer_)
         for watcher in self.watchers:
             for response in watcher.submit(stream):
                 self.write_proc_stdin(response)
@@ -1124,7 +1122,7 @@ class Runner(object):
 
         .. versionadded:: 1.0
         """
-        self.write_proc_stdin(u"\x03")
+        self.write_proc_stdin("\x03")
 
     def returncode(self):
         """
@@ -1202,7 +1200,7 @@ class Local(Runner):
     """
 
     def __init__(self, context):
-        super(Local, self).__init__(context)
+        super().__init__(context)
         # Bookkeeping var for pty use case
         self.status = None
 
@@ -1361,7 +1359,7 @@ class Local(Runner):
                 pass
 
 
-class Result(object):
+class Result:
     """
     A container for information about the result of a command execution.
 
@@ -1480,15 +1478,15 @@ class Result(object):
         for x in ("stdout", "stderr"):
             val = getattr(self, x)
             ret.append(
-                u"""=== {} ===
+                """=== {} ===
 {}
 """.format(
                     x, val.rstrip()
                 )
                 if val
-                else u"(no {})".format(x)
+                else "(no {})".format(x)
             )
-        return u"\n".join(ret)
+        return "\n".join(ret)
 
     def __repr__(self):
         # TODO: more? e.g. len of stdout/err? (how to represent cleanly in a
