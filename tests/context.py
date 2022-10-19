@@ -1,5 +1,6 @@
 import os
 import pickle
+import platform
 import re
 import sys
 
@@ -225,6 +226,20 @@ class Context_:
             cmd = "cd foo && whoami"
             assert runner.run.call_args[0][0] == cmd
 
+        @patch(local_path)
+        def cd_on_windows_must_append_flag(self, Local):
+            if platform.system() != "Windows":
+                skip()
+
+            runner = Local.return_value
+            c = Context()
+            with c.cd("foo"):
+                c.run("whoami")
+
+            cmd = "cd /d foo && whoami"
+            assert runner.run.called, "run() never called runner.run()!"
+            assert runner.run.call_args[0][0] == cmd
+
     class prefix:
         def setup(self):
             self.escaped_prompt = re.escape(Config().sudo.prompt)
@@ -259,9 +274,7 @@ class Context_:
                 with c.prefix("cd bar"):
                     c.run("whoami")
                     cmd = "cd foo && cd bar && whoami"
-                    assert (
-                        runner.run.called
-                    ), "run() never called runner.run()!"  # noqa
+                    assert runner.run.called, "run() never called runner.run()!"  # noqa
                     assert runner.run.call_args[0][0] == cmd
 
                 c.run("whoami")
@@ -495,9 +508,7 @@ class Context_:
         @patch(local_path)
         def passes_through_other_run_kwargs(self, Local):
             runner = Local.return_value
-            Context().sudo(
-                "whoami", echo=True, warn=False, hide=True, encoding="ascii"
-            )
+            Context().sudo("whoami", echo=True, warn=False, hide=True, encoding="ascii")
             assert runner.run.called, "sudo() never called runner.run()!"
             kwargs = runner.run.call_args[1]
             assert kwargs["echo"] is True
@@ -609,9 +620,7 @@ class MockContext_:
             assert mc.run("bar").stdout == "bar"
 
     class commands_injected_into_Result:
-        @mark.parametrize(
-            "kwargs", (dict(), dict(command=""), dict(command=None))
-        )
+        @mark.parametrize("kwargs", (dict(), dict(command=""), dict(command=None)))
         def when_not_set_or_falsey(self, kwargs):
             c = MockContext(run={"foo": Result("bar", **kwargs)})
             assert c.run("foo").command == "foo"
@@ -738,9 +747,7 @@ class MockContext_:
 
         # TODO: be nice if pytest-relaxed supported class level fixtures, if
         # only I knew the guy who wrote that...
-        def does_not_wrap_when_no_mock_library_present(
-            self, clean_sys_modules
-        ):
+        def does_not_wrap_when_no_mock_library_present(self, clean_sys_modules):
             for module in ("unittest.mock", "mock"):
                 sys.modules[module] = None
             mc = MockContext(**self.kwargs)
