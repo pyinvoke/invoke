@@ -363,7 +363,7 @@ class Collection(object):
 
     def _task_with_merged_config(self, coll, rest, ours):
         task, config = self.collections[coll].task_with_config(rest)
-        return task, dict(config, **ours)
+        return task, merge_dicts(config, ours)
 
     def task_with_config(self, name):
         """
