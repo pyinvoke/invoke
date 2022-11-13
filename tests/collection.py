@@ -651,14 +651,20 @@ class Collection_:
 
         def access_merges_from_subcollections(self):
             inner = Collection("inner", self.task)
-            inner.configure({"foo": "bar"})
-            self.root.configure({"biz": "baz"})
+            inner.configure({"foo": "bar", "biz": {"foo": "one"}})
+            self.root.configure({"biz": {"bar": "two"}})
             # With no inner collection
             assert set(self.root.configuration().keys()) == {"biz"}
             # With inner collection
             self.root.add_collection(inner)
-            keys = set(self.root.configuration("inner.task").keys())
+            task_config = self.root.configuration("inner.task")
+            keys = set(task_config.keys())
             assert keys == {"foo", "biz"}
+            biz_keys = set(task_config["biz"].keys())
+            assert biz_keys == {"foo", "bar"}
+            assert task_config["foo"] == "bar"
+            assert task_config["biz"]["foo"] == "one"
+            assert task_config["biz"]["bar"] == "two"
 
         def parents_overwrite_children_in_path(self):
             inner = Collection("inner", self.task)
