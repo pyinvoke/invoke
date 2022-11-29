@@ -5,7 +5,11 @@ import termios
 
 from invoke.vendor.six import iteritems
 import pytest
-from mock import patch
+
+try:
+    from unittest.mock import patch
+except ImportError:
+    from mock import patch
 
 from _util import support
 

@@ -10,7 +10,11 @@ from contextlib import contextmanager
 
 from invoke.vendor.six import BytesIO, b, wraps
 
-from mock import patch, Mock
+try:
+    from unittest.mock import patch, Mock
+except ImportError:
+    from mock import patch, Mock
+
 from pytest import skip
 from pytest_relaxed import trap
 

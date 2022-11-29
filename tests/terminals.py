@@ -1,7 +1,11 @@
 import fcntl
 import termios
 
-from mock import Mock, patch
+try:
+    from unittest.mock import Mock, patch
+except ImportError:
+    from mock import Mock, patch
+
 from pytest import skip, mark
 
 from invoke.terminals import pty_size, bytes_to_read, WINDOWS

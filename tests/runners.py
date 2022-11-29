@@ -14,7 +14,11 @@ from invoke.vendor.six import StringIO, b, PY2, iteritems
 
 from pytest import raises, skip
 from pytest_relaxed import trap
-from mock import patch, Mock, call
+
+try:
+    from unittest.mock import patch, Mock, call
+except ImportError:
+    from mock import patch, Mock, call
 
 from invoke import (
     CommandTimedOut,

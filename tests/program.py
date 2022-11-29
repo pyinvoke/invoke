@@ -3,7 +3,12 @@ import os
 import sys
 
 from invoke.util import six, Lexicon
-from mock import patch, Mock, ANY
+
+try:
+    from unittest.mock import patch, Mock, ANY
+except ImportError:
+    from mock import patch, Mock, ANY
+
 import pytest
 from pytest import skip
 from pytest_relaxed import trap

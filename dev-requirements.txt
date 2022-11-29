@@ -15,7 +15,7 @@ alabaster==0.7.12
 pytest==4.6.3
 pytest-relaxed==1.1.5
 pytest-cov==2.5.1
-mock==1.0.1
+mock==1.0.1; python_version < '3.3'
 # Formatting
 flake8==3.7.8
 black==18.6b4

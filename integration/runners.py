@@ -2,7 +2,11 @@ import os
 import platform
 import time
 
-from mock import Mock
+try:
+    from unittest.mock import Mock
+except ImportError:
+    from mock import Mock
+
 from pytest import skip, raises
 
 from invoke import (

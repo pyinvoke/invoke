@@ -3,7 +3,12 @@ import os
 from os.path import join
 
 from invoke.util import six
-from mock import patch, call, Mock
+
+try:
+    from unittest.mock import patch, call, Mock
+except ImportError:
+    from mock import patch, call, Mock
+
 import pytest
 from pytest_relaxed import raises
 

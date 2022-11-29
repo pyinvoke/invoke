@@ -3,7 +3,11 @@ import pickle
 import re
 import sys
 
-from mock import patch, Mock, call
+try:
+    from unittest.mock import patch, Mock, call
+except ImportError:
+    from mock import patch, Mock, call
+
 from pytest_relaxed import trap
 from pytest import skip, raises, mark
 
