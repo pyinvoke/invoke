@@ -2,6 +2,52 @@
 Changelog
 =========
 
+- :release:`1.7.3 <2022-09-30>`
+- :support:`- backported` Fix a non-fatal bug in our setup.py
+  ``long_description`` generation causing 1.7.0-1.7.2 to have malformed
+  description text on PyPI.
+- :release:`1.7.2 <2022-09-30>`
+- :bug:`876` Refactor CLI parser instantiation such that the
+  ``tasks.ignore_unknown_help`` feature (added in 1.7) works when Invoke is run
+  in ``--complete`` mode, i.e. in tab-completion scripts.
+- :bug:`-` Fix errors thrown when comparing `~invoke.tasks.Task` objects to
+  non-Task objects; such comparisons are now always false.
+- :release:`1.7.1 <2022-05-11>`
+- :bug:`659` Improve behavior under ``nohup``, which causes stdin to become an
+  undetectably-unreadable (but otherwise legit) file descriptor. Previously
+  this led to `OSError` even if you weren't expecting anything on stdin; we now
+  trap this specific case and silently ignore it, allowing execution to
+  continue. Thanks to ``@kingkisskill`` for initial report and to Ryan Stoner
+  for followup and workshopping.
+- :release:`1.7.0 <2022-03-18>`
+- :feature:`793` Add a new ``tasks.ignore_unknown_help`` config option for
+  users who hand their tasks centrally-defined argument help dictionaries; it
+  defaults to ``False`` but such users may set it to ``True`` to avoid
+  exceptions. Thanks to ``@Allu2`` for the report.
+- :support:`-` Switch to using ``yaml.safe_load`` for loading config files.
+  This avoids some warnings under newer PyYAML versions and is also, in a
+  shocking twist, more secure.
+- :support:`803` Upgrade our vendored PyYAML from 3.11 to 5.4.1; this should
+  both supply a number of security fixes, and address problems loading
+  project-level YAML config files under Python 3.10. Fix via Andreas Rammhold.
+- :feature:`845` Env vars explicitly supplied to `~invoke.context.Context.sudo`
+  (via its ``env`` kwarg) are now explicitly preserved via ``sudo``'s
+  ``--preserve-env`` argument. Patch courtesy of Benno Rice.
+- :support:`-` Switch our continuous integration service from Travis-CI to
+  Circle-CI, plus related and necessary updates to various administrative
+  config files, management tasks and metadata. Including but not limited to:
+
+  - Enhanced PyPI-level metadata/links
+  - Split out tool config data from ``setup.cfg``
+  - Enhance execution & coverage of unit vs integration tests under CI
+
+  .. warning::
+    Due to various factors, this release will **not** include a Python
+    2-compatible wheel archive. Users of Python 2 can still install from the
+    sdist, and are strongly encouraged to check `the roadmap
+    <https://bitprophet.org/projects/#roadmap>`_ as the next release will
+    likely be the one that removes Python 2 entirely!
+
 - :release:`1.6.0 <2021-07-09>`
 - :release:`1.5.1 <2021-07-09>`
 - :support:`- backported` (Mostly) alphabetize the list of ``run()`` params in

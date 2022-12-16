@@ -1,0 +1,63 @@
+version: 2.1
+
+
+orbs:
+  orb: invocations/orb@1.2.0
+
+
+jobs:
+  # Unit+integration tests, with coverage
+  coverage:
+    executor:
+      name: orb/default
+      version: "3.6"
+    steps:
+      - orb/setup
+      - run: inv ci.make-sudouser
+      - orb/sudo-coverage
+      - orb/debug
+
+  regression:
+    executor:
+      name: orb/default
+      version: "3.6"
+    steps:
+      - orb/setup
+      - run: inv regression
+      - orb/debug
+
+  doctests:
+    executor:
+      name: orb/default
+      version: "3.6"
+    steps:
+      - orb/setup
+      - run: inv www.doctest
+      - orb/debug
+
+
+workflows:
+  main:
+    jobs:
+      - orb/lint:
+          name: Lint
+      - orb/format:
+          name: Style check
+      - coverage:
+          name: Test
+      - regression:
+          name: Regression tests
+      - orb/test-release:
+          name: Release test
+      - orb/test:
+          name: Test << matrix.version >>
+          requires: ["Test"]
+          matrix:
+            parameters:
+              version: ["3.7", "3.8", "3.9"]
+      - orb/docs:
+          name: "Docs"
+          requires: ["Test"]
+      - doctests:
+          name: "Doctests"
+          requires: ["Docs"]

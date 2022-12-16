@@ -8,20 +8,16 @@ import re
 import shlex
 
 from ..exceptions import Exit, ParseError
-from ..parser import Parser
 from ..util import debug, task_name_sort_key
 
 
-def complete(names, core, initial_context, collection):
+def complete(names, core, initial_context, collection, parser):
     # Strip out program name (scripts give us full command line)
     # TODO: this may not handle path/to/script though?
     invocation = re.sub(r"^({}) ".format("|".join(names)), "", core.remainder)
     debug("Completing for invocation: {!r}".format(invocation))
     # Tokenize (shlex will have to do)
     tokens = shlex.split(invocation)
-    # Make ourselves a parser (can't just reuse original one as it's mutated /
-    # been overwritten)
-    parser = Parser(initial=initial_context, contexts=collection.to_contexts())
     # Handle flags (partial or otherwise)
     if tokens and tokens[-1].startswith("-"):
         tail = tokens[-1]

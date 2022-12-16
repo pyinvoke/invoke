@@ -14,10 +14,10 @@ releases_github_path = "pyinvoke/invoke"
 # under RTD.
 target = join(dirname(__file__), "..", "docs", "_build")
 if os.environ.get("READTHEDOCS") == "True":
-    target = "http://docs.pyinvoke.org/en/latest/"
+    target = "https://docs.pyinvoke.org/en/latest/"
 intersphinx_mapping["docs"] = (target, None)
 
 # Sister-site links to documentation
 html_theme_options["extra_nav_links"] = {
-    "Documentation": "http://docs.pyinvoke.org"
+    "Documentation": "https://docs.pyinvoke.org"
 }

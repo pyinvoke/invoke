@@ -97,7 +97,7 @@ class Task(object):
         return "<Task {!r}{}>".format(self.name, aliases)
 
     def __eq__(self, other):
-        if self.name != other.name:
+        if not isinstance(other, Task) or self.name != other.name:
             return False
         # Functions do not define __eq__ but func_code objects apparently do.
         # (If we're wrapping some other callable, they will be responsible for
@@ -222,11 +222,17 @@ class Task(object):
                 break
         return opts
 
-    def get_arguments(self):
+    def get_arguments(self, ignore_unknown_help=None):
         """
         Return a list of Argument objects representing this task's signature.
 
+        :param bool ignore_unknown_help:
+            Controls whether unknown help flags cause errors. See the config
+            option by the same name for details.
+
         .. versionadded:: 1.0
+        .. versionchanged:: 1.7
+            Added the ``ignore_unknown_help`` kwarg.
         """
         # Core argspec
         arg_names, spec_dict = self.argspec(self.body)
@@ -248,7 +254,7 @@ class Task(object):
             taken_names.update(set(new_arg.names))
         # If any values were leftover after consuming a 'help' dict, it implies
         # the user messed up & had a typo or similar. Let's explode.
-        if self.help:
+        if self.help and not ignore_unknown_help:
             raise ValueError(
                 "Help field was set for param(s) that don't exist: {}".format(
                     list(self.help.keys())

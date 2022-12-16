@@ -45,7 +45,7 @@ won't pass Travis' CI builds either!
 
 
 .. _go there:
-.. _contribution-guide.org: http://contribution-guide.org
+.. _contribution-guide.org: https://contribution-guide.org
 
 .. _our GitHub page:
 .. _pyinvoke/invoke: https://github.com/pyinvoke/invoke

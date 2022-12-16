@@ -178,6 +178,7 @@ class Context(DataProxy):
         prompt = self.config.sudo.prompt
         password = kwargs.pop("password", self.config.sudo.password)
         user = kwargs.pop("user", self.config.sudo.user)
+        env = kwargs.get("env", {})
         # TODO: allow subclassing for 'get the password' so users who REALLY
         # want lazy runtime prompting can have it easily implemented.
         # TODO: want to print a "cleaner" echo with just 'sudo <command>'; but
@@ -193,8 +194,13 @@ class Context(DataProxy):
         user_flags = ""
         if user is not None:
             user_flags = "-H -u {} ".format(user)
+        env_flags = ""
+        if env:
+            env_flags = "--preserve-env='{}' ".format(",".join(env.keys()))
         command = self._prefix_commands(command)
-        cmd_str = "sudo -S -p '{}' {}{}".format(prompt, user_flags, command)
+        cmd_str = "sudo -S -p '{}' {}{}{}".format(
+            prompt, env_flags, user_flags, command
+        )
         watcher = FailingResponder(
             pattern=re.escape(prompt),
             response="{}\n".format(password),

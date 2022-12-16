@@ -502,6 +502,7 @@ class Config(DataProxy):
                 "collection_name": "tasks",
                 "dedupe": True,
                 "executor_class": None,
+                "ignore_unknown_help": False,
                 "search_root": None,
             },
             "timeouts": {"command": None},
@@ -906,7 +907,7 @@ class Config(DataProxy):
 
     def _load_yaml(self, path):
         with open(path) as fd:
-            return yaml.load(fd)
+            return yaml.safe_load(fd)
 
     def _load_yml(self, path):
         return self._load_yaml(path)

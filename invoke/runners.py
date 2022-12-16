@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import errno
 import locale
 import os
 import struct
@@ -790,7 +791,17 @@ class Runner(object):
         # read instead of once per session, which could be costly (?).
         bytes_ = None
         if ready_for_reading(input_):
-            bytes_ = input_.read(bytes_to_read(input_))
+            try:
+                bytes_ = input_.read(bytes_to_read(input_))
+            except OSError as e:
+                # Assume EBADF in this situation implies running under nohup or
+                # similar, where:
+                # - we cannot reliably detect a bad FD up front
+                # - trying to read it would explode
+                # - user almost surely doesn't care about stdin anyways
+                # and ignore it (but not other OSErrors!)
+                if e.errno != errno.EBADF:
+                    raise
             # Decode if it appears to be binary-type. (From real terminal
             # streams, usually yes; from file-like objects, often no.)
             if bytes_ and isinstance(bytes_, six.binary_type):

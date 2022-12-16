@@ -188,6 +188,16 @@ class Task_:
         t3 = Task(_func, name="bar")
         assert t1 != t3
 
+    def equality_testing_false_for_non_task_objects(self):
+        t = Task(_func, name="foo")
+        # No name attribute at all
+        assert t != object()
+        # Name attr, but not a Task
+        class Named:
+            name = "foo"
+
+        assert t != Named()
+
     class function_like_behavior:
         # Things that help them eg show up in autodoc easier
         def inherits_module_from_body(self):
@@ -400,6 +410,20 @@ class Task_:
                 err = r"field was set.*don't exist:.*'non-existing-param'*"
                 with raises(ValueError, match=err):
                     no_parameters.get_arguments()
+
+            def no_ValueError_on_unfound_keys_when_configured_otherwise(self):
+                @task(
+                    help={"non-existing-param": "Help text", "param": "ganoes"}
+                )
+                def malazan(c, param):
+                    pass
+
+                arg_dict = {
+                    arg.name: arg.help
+                    for arg in malazan.get_arguments(ignore_unknown_help=True)
+                }
+                assert "non_existing_param" not in arg_dict
+                assert arg_dict["param"] == "ganoes"
 
             def arg_value_is_copied_to_avoid_state_bleed_when_shared(self):
                 # TODO: the 'real' solve here is to make sharing common

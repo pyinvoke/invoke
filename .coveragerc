@@ -1,4 +1,6 @@
 [run]
 branch = True
-include = invoke/*
+include =
+    invoke/*
+    tests/*
 omit = invoke/vendor/*

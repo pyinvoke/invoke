@@ -14,8 +14,8 @@ html_theme_options = {
     "github_user": "pyinvoke",
     "github_repo": "invoke",
     "analytics_id": "UA-18486793-3",
-    "travis_button": True,
-    "codecov_button": True,
+    "travis_button": False,  # No longer on Travis-CI; README buttons link to Circle
+    "codecov_button": False,  # Now a README button
     "tidelift_url": "https://tidelift.com/subscription/pkg/pypi-invoke?utm_source=pypi-invoke&utm_medium=referral&utm_campaign=docs",  # noqa
 }
 html_sidebars = {
