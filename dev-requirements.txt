@@ -19,3 +19,5 @@ mock==1.0.1
 # Formatting
 flake8==3.7.8
 black==18.6b4
+# Packaging
+setuptools>56
