@@ -22,6 +22,7 @@ from _util import mock_subprocess, _Dummy
 
 
 local_path = "invoke.config.Local"
+_escaped_prompt = re.escape(Config().sudo.prompt)
 
 
 class Context_:
@@ -152,8 +153,7 @@ class Context_:
             assert self.c.cwd == os.path.join("~b", "c")
 
     class cd:
-        def setup(self):
-            self.escaped_prompt = re.escape(Config().sudo.prompt)
+        _escaped_prompt = re.escape(Config().sudo.prompt)
 
         @patch(local_path)
         def should_apply_to_run(self, Local):
@@ -226,9 +226,6 @@ class Context_:
             assert runner.run.call_args[0][0] == cmd
 
     class prefix:
-        def setup(self):
-            self.escaped_prompt = re.escape(Config().sudo.prompt)
-
         @patch(local_path)
         def prefixes_should_apply_to_run(self, Local):
             runner = Local.return_value
@@ -294,9 +291,6 @@ class Context_:
             assert runner.run.call_args[0][0] == "ls"
 
     class sudo:
-        def setup(self):
-            self.escaped_prompt = re.escape(Config().sudo.prompt)
-
         @patch(local_path)
         def prefixes_command_with_sudo(self, Local):
             runner = Local.return_value
@@ -392,18 +386,18 @@ class Context_:
 
         def autoresponds_with_password_kwarg(self):
             # NOTE: technically duplicates the unitty test(s) in watcher tests.
-            expected = [(self.escaped_prompt, "secret\n")]
+            expected = [(_escaped_prompt, "secret\n")]
             self._expect_responses(expected, kwargs={"password": "secret"})
 
         def honors_configured_sudo_password(self):
             config = Config(overrides={"sudo": {"password": "secret"}})
-            expected = [(self.escaped_prompt, "secret\n")]
+            expected = [(_escaped_prompt, "secret\n")]
             self._expect_responses(expected, config=config)
 
         def sudo_password_kwarg_wins_over_config(self):
             config = Config(overrides={"sudo": {"password": "notsecret"}})
             kwargs = {"password": "secret"}
-            expected = [(self.escaped_prompt, "secret\n")]
+            expected = [(_escaped_prompt, "secret\n")]
             self._expect_responses(expected, config=config, kwargs=kwargs)
 
         class auto_response_merges_with_other_responses:
@@ -428,7 +422,7 @@ class Context_:
                 # Only remaining item in list should be our sudo responder
                 assert len(watchers) == 1
                 assert isinstance(watchers[0], FailingResponder)
-                assert watchers[0].pattern == self.escaped_prompt
+                assert watchers[0].pattern == _escaped_prompt
 
             @patch(local_path)
             def config_only(self, Local):
@@ -446,7 +440,7 @@ class Context_:
                 # Only remaining item in list should be our sudo responder
                 assert len(watchers) == 1
                 assert isinstance(watchers[0], FailingResponder)
-                assert watchers[0].pattern == self.escaped_prompt
+                assert watchers[0].pattern == _escaped_prompt
 
             @patch(local_path)
             def config_use_does_not_modify_config(self, Local):
@@ -490,7 +484,7 @@ class Context_:
                 assert len(watchers) == 1
                 assert conf_watcher not in watchers  # Extra sanity
                 assert isinstance(watchers[0], FailingResponder)
-                assert watchers[0].pattern == self.escaped_prompt
+                assert watchers[0].pattern == _escaped_prompt
 
         @patch(local_path)
         def passes_through_other_run_kwargs(self, Local):
