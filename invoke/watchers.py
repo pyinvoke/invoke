@@ -119,14 +119,14 @@ class FailingResponder(Responder):
     """
 
     def __init__(self, pattern, response, sentinel):
-        super(FailingResponder, self).__init__(pattern, response)
+        super().__init__(pattern, response)
         self.sentinel = sentinel
         self.failure_index = 0
         self.tried = False
 
     def submit(self, stream):
         # Behave like regular Responder initially
-        response = super(FailingResponder, self).submit(stream)
+        response = super().submit(stream)
         # Also check stream for our failure sentinel
         failed = self.pattern_matches(stream, self.sentinel, "failure_index")
         # Error out if we seem to have failed after a previous response.

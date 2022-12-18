@@ -1,4 +1,3 @@
-
 __all__ = [
     'CBaseLoader', 'CSafeLoader', 'CFullLoader', 'CUnsafeLoader', 'CLoader',
     'CBaseDumper', 'CSafeDumper', 'CDumper'

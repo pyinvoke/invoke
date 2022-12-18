@@ -30,7 +30,7 @@ def check(c):
         except Exception as e:
             failures.append(e)
     if failures:
-        print("run() FAILED {}/{} times!".format(len(failures), count))
+        print(f"run() FAILED {len(failures)}/{count} times!")
         sys.exit(1)
     else:
-        print("No failures detected after {} runs, A-OK".format(count))
+        print(f"No failures detected after {count} runs, A-OK")

@@ -3,7 +3,7 @@ import os
 from os.path import join
 
 from invoke.util import six
-from mock import patch, call, Mock
+from unittest.mock import patch, call, Mock
 import pytest
 from pytest_relaxed import raises
 
@@ -279,7 +279,7 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
                 assert list(c.iterkeys()) == ["foo"]
                 assert list(c.itervalues()) == ["bar"]
             assert list(c.items()) == [("foo", "bar")]
-            assert list(six.iteritems(c)) == [("foo", "bar")]
+            assert list(c.items()) == [("foo", "bar")]
             assert list(c.keys()) == ["foo"]
             assert list(c.values()) == ["bar"]
 
@@ -632,7 +632,7 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
             assert c.outer.inner.hooray == "python"
             # Real test that builtins, etc are stripped out
             for special in ("builtins", "file", "package", "name", "doc"):
-                assert "__{}__".format(special) not in c
+                assert f"__{special}__" not in c
 
         def python_modules_except_usefully_on_unpicklable_modules(self):
             # Re: #556; when bug present, a TypeError pops up instead (granted,
@@ -735,19 +735,18 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
 
         class type_casting:
             def strings_replaced_with_env_value(self):
-                os.environ["INVOKE_FOO"] = u"myvalue"
+                os.environ["INVOKE_FOO"] = "myvalue"
                 c = Config(defaults={"foo": "myoldvalue"})
                 c.load_shell_env()
-                assert c.foo == u"myvalue"
-                assert isinstance(c.foo, six.text_type)
+                assert c.foo == "myvalue"
+                assert isinstance(c.foo, str)
 
             def unicode_replaced_with_env_value(self):
                 # Python 3 doesn't allow you to put 'bytes' objects into
                 # os.environ, so the test makes no sense there.
-                if six.PY3:
-                    return
+                return
                 os.environ["INVOKE_FOO"] = "myunicode"
-                c = Config(defaults={"foo": u"myoldvalue"})
+                c = Config(defaults={"foo": "myoldvalue"})
                 c.load_shell_env()
                 assert c.foo == "myunicode"
                 assert isinstance(c.foo, str)
@@ -797,7 +796,7 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
             def arbitrary_types_work_too(self):
                 os.environ["INVOKE_FOO"] = "whatever"
 
-                class Meh(object):
+                class Meh:
                     def __init__(self, thing=None):
                         pass
 
@@ -1028,7 +1027,7 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
             # one time" (since assert_calls_with gets mad about other
             # invocations w/ different args)
             calls = load_yaml.call_args_list
-            my_call = call("{}invoke.yaml".format(path))
+            my_call = call(f"{path}invoke.yaml")
             try:
                 calls.remove(my_call)
                 assert my_call not in calls
@@ -1069,7 +1068,7 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
                 else:
                     assert False, "Non-class obj did not raise TypeError!"
 
-                class Foo(object):
+                class Foo:
                     pass
 
                 try:

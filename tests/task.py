@@ -1,4 +1,4 @@
-from mock import Mock
+from unittest.mock import Mock
 from pytest import raises, skip
 
 from invoke import Context, Config, task, Task, Call, Collection
@@ -176,10 +176,10 @@ class task_:
 class Task_:
     def has_useful_repr(self):
         i = repr(Task(_func))
-        assert "_func" in i, "'func' not found in {!r}".format(i)
+        assert "_func" in i, f"'func' not found in {i!r}"
         e = repr(Task(_func, name="funky"))
-        assert "funky" in e, "'funky' not found in {!r}".format(e)
-        assert "_func" not in e, "'_func' unexpectedly seen in {!r}".format(e)
+        assert "funky" in e, f"'funky' not found in {e!r}"
+        assert "_func" not in e, f"'_func' unexpectedly seen in {e!r}"
 
     def equality_testing(self):
         t1 = Task(_func, name="foo")
@@ -550,7 +550,7 @@ class Call_:
             class MyCall(Call):
                 def __init__(self, *args, **kwargs):
                     self.hooray = kwargs.pop("hooray")
-                    super(MyCall, self).__init__(*args, **kwargs)
+                    super().__init__(*args, **kwargs)
 
             clone = orig.clone(into=MyCall, with_={"hooray": "woo"})
             assert clone.hooray == "woo"

@@ -10,7 +10,7 @@ from contextlib import contextmanager
 
 from invoke.vendor.six import BytesIO, b, wraps
 
-from mock import patch, Mock
+from unittest.mock import patch, Mock
 from pytest import skip
 from pytest_relaxed import trap
 
@@ -67,7 +67,7 @@ def run(invocation, program=None, invoke=True):
     if program is None:
         program = Program()
     if invoke:
-        invocation = "invoke {}".format(invocation)
+        invocation = f"invoke {invocation}"
     program.run(invocation, exit=False)
     return sys.stdout.getvalue(), sys.stderr.getvalue()
 
@@ -103,11 +103,11 @@ def expect(
     # Guard against silent failures; since we say exit=False this is the only
     # real way to tell if stuff died in a manner we didn't expect.
     elif stderr:
-        assert False, "Unexpected stderr: {}".format(stderr)
+        assert False, f"Unexpected stderr: {stderr}"
     return stdout, stderr
 
 
-class MockSubprocess(object):
+class MockSubprocess:
     def __init__(self, out="", err="", exit=0, isatty=None, autostart=True):
         self.out_file = BytesIO(b(out))
         self.err_file = BytesIO(b(err))
@@ -312,7 +312,7 @@ _ = "nope"
 # Runner that fakes ^C during subprocess exec
 class _KeyboardInterruptingRunner(_Dummy):
     def __init__(self, *args, **kwargs):
-        super(_KeyboardInterruptingRunner, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self._interrupted = False
 
     # Trigger KeyboardInterrupt during wait()

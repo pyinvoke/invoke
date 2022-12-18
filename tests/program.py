@@ -3,7 +3,7 @@ import os
 import sys
 
 from invoke.util import six, Lexicon
-from mock import patch, Mock, ANY
+from unittest.mock import patch, Mock, ANY
 import pytest
 from pytest import skip
 from pytest_relaxed import trap
@@ -371,14 +371,14 @@ class Program_:
         def can_change_collection_search_root(self):
             for flag in ("-r", "--search-root"):
                 expect(
-                    "{} branch/ alt-root".format(flag),
+                    f"{flag} branch/ alt-root",
                     out="Down with the alt-root!\n",
                 )
 
         def can_change_collection_search_root_with_explicit_module_name(self):
             for flag in ("-r", "--search-root"):
                 expect(
-                    "{} branch/ -c explicit lyrics".format(flag),
+                    f"{flag} branch/ -c explicit lyrics",
                     out="Don't swear!\n",
                 )
 
@@ -390,12 +390,12 @@ class Program_:
             # that this line doesn't raise an exception and thus fail the
             # test, is what we're testing...
             nah = "nopenotvalidsorry"
-            p.run("myapp {}".format(nah))
+            p.run(f"myapp {nah}")
             # Expect that we did print the core body of the ParseError (e.g.
             # "no idea what foo is!") and exit 1. (Intent is to display that
             # info w/o a full traceback, basically.)
             stderr = sys.stderr.getvalue()
-            assert stderr == "No idea what '{}' is!\n".format(nah)
+            assert stderr == f"No idea what '{nah}' is!\n"
             mock_exit.assert_called_with(1)
 
         @trap
@@ -460,8 +460,8 @@ ohnoz!
                 Result(
                     command="meh",
                     exited=54,
-                    stdout=u"this is not ascii: \u1234",
-                    stderr=u"this is also not ascii: \u4321",
+                    stdout="this is not ascii: \u1234",
+                    stderr="this is also not ascii: \u4321",
                     encoding="utf-8",
                     hide=("stdout", "stderr"),
                 )
@@ -644,7 +644,7 @@ Options:
 
 """.lstrip()
                 for flag in ["-h", "--help"]:
-                    expect("-c decorators {} punch".format(flag), out=expected)
+                    expect(f"-c decorators {flag} punch", out=expected)
 
             def works_for_unparameterized_tasks(self):
                 expected = """
@@ -745,7 +745,7 @@ Available tasks:
             ).lstrip()
 
         def _list_eq(self, collection, listing):
-            cmd = "-c {} --list".format(collection)
+            cmd = f"-c {collection} --list"
             expect(cmd, out=self._listing(listing))
 
         def simple_output(self):
@@ -763,7 +763,7 @@ Available tasks:
                 )
             )
             for flag in ("-l", "--list"):
-                expect("-c integration {}".format(flag), out=expected)
+                expect(f"-c integration {flag}", out=expected)
 
         def namespacing(self):
             self._list_eq("namespacing", ("toplevel", "module.mytask"))
@@ -1244,7 +1244,7 @@ Default 'build' task: .all
         def _test_flag(self, flag, key, value=True):
             p = Program()
             p.execute = Mock()  # neuter
-            p.run("inv {} foo".format(flag))
+            p.run(f"inv {flag} foo")
             assert p.config.run[key] == value
 
         def warn_only(self):
@@ -1263,7 +1263,7 @@ Default 'build' task: .all
             for flag in ("-T", "--command-timeout"):
                 p = Program()
                 p.execute = Mock()  # neuter
-                p.run("inv {} 5 foo".format(flag))
+                p.run(f"inv {flag} 5 foo")
                 assert p.config.timeouts.command == 5
 
     class configuration:

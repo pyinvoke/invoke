@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 import operator
 
 from invoke.util import reduce
@@ -304,7 +302,7 @@ class Collection_:
 
         def raises_ValueError_if_no_name_found(self):
             # Can't use a lambda here as they are technically real functions.
-            class Callable(object):
+            class Callable:
                 def __call__(self):
                     pass
 
@@ -563,7 +561,7 @@ class Collection_:
                 # from_module() with explicit 'ns' objects!)
                 namespace = self._nested_underscores()
 
-                class FakeModule(object):
+                class FakeModule:
                     __name__ = "my_module"
                     ns = namespace
 

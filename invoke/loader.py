@@ -7,7 +7,7 @@ from .exceptions import CollectionNotFound
 from .util import debug
 
 
-class Loader(object):
+class Loader:
     """
     Abstract class defining how to find/import a session's base `.Collection`.
 
@@ -100,7 +100,7 @@ class FilesystemLoader(Loader):
     # as auto-dashes, and has to grow one of those for every bit Collection
     # ever needs to know
     def __init__(self, start=None, **kwargs):
-        super(FilesystemLoader, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         if start is None:
             start = self.config.tasks.search_root
         self._start = start
@@ -113,7 +113,7 @@ class FilesystemLoader(Loader):
     def find(self, name):
         # Accumulate all parent directories
         start = self.start
-        debug("FilesystemLoader find starting at {!r}".format(start))
+        debug(f"FilesystemLoader find starting at {start!r}")
         parents = [os.path.abspath(start)]
         parents.append(os.path.dirname(parents[-1]))
         while parents[-1] != parents[-2]:
@@ -126,7 +126,7 @@ class FilesystemLoader(Loader):
         # we turn it into a more obvious exception class.
         try:
             tup = imp.find_module(name, parents)
-            debug("Found module: {!r}".format(tup[1]))
+            debug(f"Found module: {tup[1]!r}")
             return tup
         except ImportError:
             msg = "ImportError loading {!r}, raising CollectionNotFound"

@@ -1,21 +1,21 @@
 # Install self before invocations to save a bit of time
 -e .
 # Invocations, for all sorts of things
-invocations==2.4.0
+invocations>=2.4.0
 # Coverage!
-coverage==4.5.4
-codecov==2.1.11
+coverage>=4.5.4
+codecov>=2.1.11
 # Gotta limit Sphinx to <1.7 for now, or releases blows up. (has to be done in
 # here since this file gets run by itself sometimes.)
 Sphinx>=1.4,<1.7
 # Docs
 releases>=0.6.1,<2.0
-alabaster==0.7.12
+alabaster>=0.7.12
 # Testing
-pytest==4.6.3
-pytest-relaxed==1.1.5
-pytest-cov==2.5.1
-mock==1.0.1
+pytest>=4.6.3
+pytest-relaxed>=1.1.5
+pytest-cov>=2.5.1
+mock>=1.0.1
 # Formatting
-flake8==3.7.8
-black==18.6b4
+flake8>=3.7.8
+black>=18.6b4

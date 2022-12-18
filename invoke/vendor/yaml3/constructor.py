@@ -1,4 +1,3 @@
-
 __all__ = [
     'BaseConstructor',
     'SafeConstructor',
@@ -37,7 +36,7 @@ class BaseConstructor:
         deserialization"""
         if self.get_state_keys_blacklist_regexp().match(key):
             raise ConstructorError(None, None,
-                "blacklisted key '%s' in instance state found" % (key,), None)
+                f"blacklisted key '{key}' in instance state found", None)
 
     def get_data(self):
         # Construct and return the next document.
@@ -531,7 +530,7 @@ class FullConstructor(SafeConstructor):
                 __import__(name)
             except ImportError as exc:
                 raise ConstructorError("while constructing a Python module", mark,
-                        "cannot find module %r (%s)" % (name, exc), mark)
+                        f"cannot find module {name!r} ({exc})", mark)
         if name not in sys.modules:
             raise ConstructorError("while constructing a Python module", mark,
                     "module %r is not imported" % name, mark)
@@ -551,7 +550,7 @@ class FullConstructor(SafeConstructor):
                 __import__(module_name)
             except ImportError as exc:
                 raise ConstructorError("while constructing a Python object", mark,
-                        "cannot find module %r (%s)" % (module_name, exc), mark)
+                        f"cannot find module {module_name!r} ({exc})", mark)
         if module_name not in sys.modules:
             raise ConstructorError("while constructing a Python object", mark,
                     "module %r is not imported" % module_name, mark)
@@ -713,17 +712,17 @@ FullConstructor.add_multi_constructor(
 class UnsafeConstructor(FullConstructor):
 
     def find_python_module(self, name, mark):
-        return super(UnsafeConstructor, self).find_python_module(name, mark, unsafe=True)
+        return super().find_python_module(name, mark, unsafe=True)
 
     def find_python_name(self, name, mark):
-        return super(UnsafeConstructor, self).find_python_name(name, mark, unsafe=True)
+        return super().find_python_name(name, mark, unsafe=True)
 
     def make_python_instance(self, suffix, node, args=None, kwds=None, newobj=False):
-        return super(UnsafeConstructor, self).make_python_instance(
+        return super().make_python_instance(
             suffix, node, args, kwds, newobj, unsafe=True)
 
     def set_python_instance_state(self, instance, state):
-        return super(UnsafeConstructor, self).set_python_instance_state(
+        return super().set_python_instance_state(
             instance, state, unsafe=True)
 
 UnsafeConstructor.add_multi_constructor(

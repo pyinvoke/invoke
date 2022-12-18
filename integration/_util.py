@@ -36,7 +36,7 @@ def assert_cpu_usage(lt, verbose=False):
     percentage = (usage_diff / time_diff) * 100.0
 
     if verbose:
-        print("Used {0:.2}% CPU over {1:.2}s".format(percentage, time_diff))
+        print(f"Used {percentage:.2}% CPU over {time_diff:.2}s")
 
     assert percentage < lt
 

@@ -20,7 +20,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from __future__ import absolute_import
 
 import functools
 import itertools
@@ -57,7 +56,7 @@ else:
         MAXSIZE = int((1 << 31) - 1)
     else:
         # It's possible to have sizeof(long) != sizeof(Py_ssize_t).
-        class X(object):
+        class X:
 
             def __len__(self):
                 return 1 << 31
@@ -83,7 +82,7 @@ def _import_module(name):
     return sys.modules[name]
 
 
-class _LazyDescr(object):
+class _LazyDescr:
 
     def __init__(self, name):
         self.name = name
@@ -103,7 +102,7 @@ class _LazyDescr(object):
 class MovedModule(_LazyDescr):
 
     def __init__(self, name, old, new=None):
-        super(MovedModule, self).__init__(name)
+        super().__init__(name)
         if PY3:
             if new is None:
                 new = name
@@ -124,7 +123,7 @@ class MovedModule(_LazyDescr):
 class _LazyModule(types.ModuleType):
 
     def __init__(self, name):
-        super(_LazyModule, self).__init__(name)
+        super().__init__(name)
         self.__doc__ = self.__class__.__doc__
 
     def __dir__(self):
@@ -139,7 +138,7 @@ class _LazyModule(types.ModuleType):
 class MovedAttribute(_LazyDescr):
 
     def __init__(self, name, old_mod, new_mod, old_attr=None, new_attr=None):
-        super(MovedAttribute, self).__init__(name)
+        super().__init__(name)
         if PY3:
             if new_mod is None:
                 new_mod = name
@@ -161,7 +160,7 @@ class MovedAttribute(_LazyDescr):
         return getattr(module, self.attr)
 
 
-class _SixMetaPathImporter(object):
+class _SixMetaPathImporter:
 
     """
     A meta path importer to import six.moves and its submodules.
@@ -496,7 +495,7 @@ def remove_move(name):
         try:
             del moves.__dict__[name]
         except KeyError:
-            raise AttributeError("no such move, %r" % (name,))
+            raise AttributeError(f"no such move, {name!r}")
 
 
 if PY3:
@@ -552,7 +551,7 @@ else:
     def create_unbound_method(func, cls):
         return types.MethodType(func, None, cls)
 
-    class Iterator(object):
+    class Iterator:
 
         def next(self):
             return type(self).__next__(self)

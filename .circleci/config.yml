@@ -2,7 +2,7 @@ version: 2.1
 
 
 orbs:
-  orb: invocations/orb@1.2.0
+  orb: invocations/orb@1.2.1
 
 
 jobs:
@@ -54,7 +54,7 @@ workflows:
           requires: ["Test"]
           matrix:
             parameters:
-              version: ["3.7", "3.8", "3.9"]
+              version: ["3.7", "3.8", "3.9", "3.10", "3.11"]
       - orb/docs:
           name: "Docs"
           requires: ["Test"]

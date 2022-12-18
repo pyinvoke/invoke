@@ -1,4 +1,3 @@
-
 # Scanner produces tokens of the following types:
 # STREAM-START
 # STREAM-END
@@ -1291,7 +1290,7 @@ class Scanner:
                 if ch in '\0 \t\r\n\x85\u2028\u2029'    \
                         or (ch == ':' and
                                 self.peek(length+1) in '\0 \t\r\n\x85\u2028\u2029'
-                                      + (u',[]{}' if self.flow_level else u''))\
+                                      + (',[]{}' if self.flow_level else ''))\
                         or (self.flow_level and ch in ',?[]{}'):
                     break
                 length += 1

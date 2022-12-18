@@ -14,7 +14,7 @@ from invoke.vendor.six import StringIO, b, PY2, iteritems
 
 from pytest import raises, skip
 from pytest_relaxed import trap
-from mock import patch, Mock, call
+from unittest.mock import patch, Mock, call
 
 from invoke import (
     CommandTimedOut,
@@ -460,7 +460,7 @@ class Runner_:
                 self._run(_, hide=value)
             except ValueError as e:
                 msg = "Error from run(hide=xxx) did not tell user what the bad value was!"  # noqa
-                msg += "\nException msg: {}".format(e)
+                msg += f"\nException msg: {e}"
                 assert value in str(e), msg
             else:
                 assert (
@@ -656,7 +656,7 @@ class Runner_:
             def subclasses_may_add_more_kv_pairs(self):
                 class TotalFailure(Failure):
                     def _repr(self, **kwargs):
-                        return super(TotalFailure, self)._repr(mood="dejected")
+                        return super()._repr(mood="dejected")
 
                 expected = "<TotalFailure: cmd='onoz' mood=dejected>"
                 assert repr(TotalFailure(Result(command="onoz"))) == expected
@@ -673,7 +673,7 @@ class Runner_:
             def setup(self):
                 def lines(prefix):
                     prefixed = "\n".join(
-                        "{} {}".format(prefix, x) for x in range(1, 26)
+                        f"{prefix} {x}" for x in range(1, 26)
                     )
                     return prefixed + "\n"
 
@@ -899,7 +899,7 @@ stderr 25
                         self._watcher_error()
                     except Failure as e:
                         exited = e.result.exited
-                        err = "Expected None, got {!r}".format(exited)
+                        err = f"Expected None, got {exited!r}"
                         assert exited is None, err
 
                 def ok_and_bool_still_are_falsey(self):
@@ -1134,7 +1134,7 @@ stderr 25
                     # termios & such, which is harder to mock successfully.
                     if input_is_pty is not None:
                         input_.isatty = lambda: input_is_pty
-                    return super(MyRunner, self).should_echo_stdin(
+                    return super().should_echo_stdin(
                         input_, output
                     )
 
@@ -1351,7 +1351,7 @@ stderr 25
                 mock_stdin = Mock()
                 runner.write_proc_stdin = mock_stdin
                 runner.run(_, pty=pty)
-                mock_stdin.assert_called_once_with(u"\x03")
+                mock_stdin.assert_called_once_with("\x03")
 
     class timeout:
         def start_timer_called_with_config_value(self):
@@ -1747,10 +1747,10 @@ class Result_:
         assert Result().env == {}
 
     def stdout_defaults_to_empty_string(self):
-        assert Result().stdout == u""
+        assert Result().stdout == ""
 
     def stderr_defaults_to_empty_string(self):
-        assert Result().stderr == u""
+        assert Result().stderr == ""
 
     def exited_defaults_to_zero(self):
         assert Result().exited == 0

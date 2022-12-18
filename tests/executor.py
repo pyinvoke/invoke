@@ -1,4 +1,4 @@
-from mock import Mock
+from unittest.mock import Mock
 import pytest
 
 from invoke import Collection, Config, Context, Executor, Task, call, task
@@ -152,7 +152,7 @@ Testing
             )
 
         def _expect(self, args, expected):
-            expect("-c integration {}".format(args), out=expected.lstrip())
+            expect(f"-c integration {args}", out=expected.lstrip())
 
         class adjacent_hooks:
             def deduping(self):

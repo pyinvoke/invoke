@@ -16,7 +16,7 @@ from .exceptions import UncastableEnvVar, AmbiguousEnvVar
 from .util import debug
 
 
-class Environment(object):
+class Environment:
     def __init__(self, config, prefix):
         self._config = config
         self._prefix = prefix
@@ -36,11 +36,11 @@ class Environment(object):
         m = "Scanning for env vars according to prefix: {!r}, mapping: {!r}"
         debug(m.format(self._prefix, env_vars))
         # Check for actual env var (honoring prefix) and try to set
-        for env_var, key_path in six.iteritems(env_vars):
+        for env_var, key_path in env_vars.items():
             real_var = (self._prefix or "") + env_var
             if real_var in os.environ:
                 self._path_set(key_path, os.environ[real_var])
-        debug("Obtained env var config: {!r}".format(self.data))
+        debug(f"Obtained env var config: {self.data!r}")
         return self.data
 
     def _crawl(self, key_path, env_vars):
@@ -107,7 +107,7 @@ class Environment(object):
     def _cast(self, old, new_):
         if isinstance(old, bool):
             return new_ not in ("0", "")
-        elif isinstance(old, six.string_types):
+        elif isinstance(old, str):
             return new_
         elif old is None:
             return new_

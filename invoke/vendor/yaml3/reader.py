@@ -42,7 +42,7 @@ class ReaderError(YAMLError):
                     % (self.character, self.reason,
                             self.name, self.position)
 
-class Reader(object):
+class Reader:
     # Reader:
     # - determines the data encoding and converts it to a unicode string,
     # - checks if characters are in allowed range,

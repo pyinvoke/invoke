@@ -69,7 +69,7 @@ class Loader_:
             def find(self, name):
                 # Sanity
                 assert name == "simple_ns_list"
-                return super(MockLoader, self).find(name)
+                return super().find(name)
 
         config = Config({"tasks": {"collection_name": "simple_ns_list"}})
         loader = MockLoader(config=config)

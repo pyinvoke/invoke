@@ -63,8 +63,6 @@ setup(
         "Operating System :: MacOS :: MacOS X",
         "Operating System :: Microsoft :: Windows",
         "Programming Language :: Python",
-        "Programming Language :: Python :: 2",
-        "Programming Language :: Python :: 2.7",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.4",
         "Programming Language :: Python :: 3.5",
@@ -79,4 +77,5 @@ setup(
         "Topic :: System :: Software Distribution",
         "Topic :: System :: Systems Administration",
     ],
+    python_requires='>=3.7',
 )

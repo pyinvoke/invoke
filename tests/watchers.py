@@ -99,9 +99,9 @@ class FailingResponder_:
         except ResponseNotAccepted as e:
             message = str(e)
             # Expect useful bits in exception text
-            err = "Didn't see pattern in {!r}".format(message)
+            err = f"Didn't see pattern in {message!r}"
             assert "ju[^ ]{2}" in message, err
-            err = "Didn't see failure sentinel in {!r}".format(message)
+            err = f"Didn't see failure sentinel in {message!r}"
             assert "lolnope" in message, err
         else:
             assert False, "Did not raise ResponseNotAccepted!"

@@ -1,4 +1,3 @@
-
 __all__ = ['BaseLoader', 'FullLoader', 'SafeLoader', 'Loader', 'UnsafeLoader']
 
 from .reader import *

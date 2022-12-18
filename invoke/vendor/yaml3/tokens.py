@@ -1,5 +1,4 @@
-
-class Token(object):
+class Token:
     def __init__(self, start_mark, end_mark):
         self.start_mark = start_mark
         self.end_mark = end_mark
@@ -7,9 +6,9 @@ class Token(object):
         attributes = [key for key in self.__dict__
                 if not key.endswith('_mark')]
         attributes.sort()
-        arguments = ', '.join(['%s=%r' % (key, getattr(self, key))
+        arguments = ', '.join([f'{key}={getattr(self, key)!r}'
                 for key in attributes])
-        return '%s(%s)' % (self.__class__.__name__, arguments)
+        return f'{self.__class__.__name__}({arguments})'
 
 #class BOMToken(Token):
 #    id = '<byte order mark>'

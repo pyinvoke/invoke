@@ -6,7 +6,7 @@ from .util import debug
 from .tasks import Call, Task
 
 
-class Executor(object):
+class Executor:
     """
     An execution strategy for Task objects.
 
@@ -84,9 +84,9 @@ class Executor(object):
         .. versionadded:: 1.0
         """
         # Normalize input
-        debug("Examining top level tasks {!r}".format([x for x in tasks]))
+        debug(f"Examining top level tasks {[x for x in tasks]!r}")
         calls = self.normalize(tasks)
-        debug("Tasks (now Calls) with kwargs: {!r}".format(calls))
+        debug(f"Tasks (now Calls) with kwargs: {calls!r}")
         # Obtain copy of directly-given tasks since they should sometimes
         # behave differently
         direct = list(calls)
@@ -109,7 +109,7 @@ class Executor(object):
         for call in calls:
             autoprint = call in direct and call.autoprint
             args = call.args
-            debug("Executing {!r}".format(call))
+            debug(f"Executing {call!r}")
             # Hand in reference to our config, which will preserve user
             # modifications across the lifetime of the session.
             config = self.config
@@ -145,7 +145,7 @@ class Executor(object):
         calls = []
         for task in tasks:
             name, kwargs = None, {}
-            if isinstance(task, six.string_types):
+            if isinstance(task, str):
                 name = task
             elif isinstance(task, ParserContext):
                 name = task.name
@@ -172,10 +172,10 @@ class Executor(object):
         debug("Deduplicating tasks...")
         for call in calls:
             if call not in deduped:
-                debug("{!r}: no duplicates found, ok".format(call))
+                debug(f"{call!r}: no duplicates found, ok")
                 deduped.append(call)
             else:
-                debug("{!r}: found in list already, skipping".format(call))
+                debug(f"{call!r}: found in list already, skipping")
         return deduped
 
     def expand_calls(self, calls):
@@ -197,7 +197,7 @@ class Executor(object):
             # task lists, which may contain 'raw' Task objects)
             if isinstance(call, Task):
                 call = Call(task=call)
-            debug("Expanding task-call {!r}".format(call))
+            debug(f"Expanding task-call {call!r}")
             # TODO: this is where we _used_ to call Executor.config_for(call,
             # config)...
             # TODO: now we may need to preserve more info like where the call

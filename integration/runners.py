@@ -2,7 +2,7 @@ import os
 import platform
 import time
 
-from mock import Mock
+from unittest.mock import Mock
 from pytest import skip, raises
 
 from invoke import (

@@ -15,7 +15,7 @@ pytestmark = pytest.mark.usefixtures("integration")
 def _complete(invocation, collection=None, **kwargs):
     colstr = ""
     if collection:
-        colstr = "-c {}".format(collection)
+        colstr = f"-c {collection}"
     command = "inv --complete {0} -- inv {0} {1}".format(colstr, invocation)
     Program(**kwargs).run(command, exit=False)
     return sys.stdout.getvalue()
@@ -115,7 +115,7 @@ class ShellCompletion:
     def aliased_custom_binary_name_completes(self):
         for used_binary in ("my", "myapp"):
             expect(
-                "{0} -c integration --complete -- ba".format(used_binary),
+                f"{used_binary} -c integration --complete -- ba",
                 program=Program(binary="my[app]"),
                 invoke=False,
                 out="bar",
@@ -133,7 +133,7 @@ class ShellCompletion:
         output = _complete("-")
         # No point mirroring all core options, just spot check a few
         for flag in ("--no-dedupe", "-d", "--debug", "-V", "--version"):
-            assert "{}\n".format(flag) in output
+            assert f"{flag}\n" in output
 
     def bare_double_dash_shows_only_long_core_options(self):
         output = _complete("--")
@@ -189,7 +189,7 @@ class ShellCompletion:
     def per_task_partial_or_invalid_flags_print_all_flags(self):
         for flag in ("--arg1", "--otherarg"):
             for given in ("--ar", "--nope"):
-                completion = _complete("multiple-args {}".format(given), "foo")
+                completion = _complete(f"multiple-args {given}", "foo")
                 assert flag in completion
 
     @trap
@@ -209,7 +209,7 @@ class ShellCompletion:
 
         class MyProgram(Program):
             def create_config(self):
-                super(MyProgram, self).create_config()
+                super().create_config()
                 self.config.tasks.ignore_unknown_help = True
 
         MyProgram(namespace=ns).run("inv --complete -- inv noboom", exit=False)

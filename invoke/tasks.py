@@ -11,17 +11,14 @@ from .context import Context
 from .parser import Argument, translate_underscores
 from .util import six
 
-if six.PY3:
-    from itertools import zip_longest
-else:
-    from itertools import izip_longest as zip_longest
+from itertools import zip_longest
 
 
 #: Sentinel object representing a truly blank value (vs ``None``).
 NO_DEFAULT = object()
 
 
-class Task(object):
+class Task:
     """
     Core object representing an executable task & its argument specification.
 
@@ -94,7 +91,7 @@ class Task(object):
         aliases = ""
         if self.aliases:
             aliases = " ({})".format(", ".join(self.aliases))
-        return "<Task {!r}{}>".format(self.name, aliases)
+        return f"<Task {self.name!r}{aliases}>"
 
     def __eq__(self, other):
         if not isinstance(other, Task) or self.name != other.name:
@@ -106,9 +103,9 @@ class Task(object):
             return True
         else:
             try:
-                return six.get_function_code(
+                return (
                     self.body
-                ) == six.get_function_code(other.body)
+                ).__code__ == other.body.__code__
             except AttributeError:
                 return False
 
@@ -376,7 +373,7 @@ def task(*args, **kwargs):
     return inner
 
 
-class Call(object):
+class Call:
     """
     Represents a call/execution of a `.Task` with given (kw)args.
 
@@ -419,7 +416,7 @@ class Call(object):
     def __repr__(self):
         aka = ""
         if self.called_as is not None and self.called_as != self.task.name:
-            aka = " (called as: {!r})".format(self.called_as)
+            aka = f" (called as: {self.called_as!r})"
         return "<{} {!r}{}, args: {!r}, kwargs: {!r}>".format(
             self.__class__.__name__,
             self.task.name,

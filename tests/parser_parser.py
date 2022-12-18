@@ -356,7 +356,7 @@ class Parser_:
                 # The one exception that proves the rule?
                 self._parser((Argument("foo", optional=True), Argument("bar")))
                 for form in ("--bar barval", "--bar=barval"):
-                    result = self._parse("--foo {}".format(form))
+                    result = self._parse(f"--foo {form}")
                     assert len(result) == 1
                     args = result[0].args
                     assert args["foo"].value is True
@@ -431,7 +431,7 @@ class Parser_:
             mylist = result[0].args.mylist.value
             assert mylist == ["val", "val2"]
             contexts = len(result)
-            err = "Got {} parse context results instead of 2!".format(contexts)
+            err = f"Got {contexts} parse context results instead of 2!"
             assert contexts == 2, err
             assert result[1].name == "othertask"
 

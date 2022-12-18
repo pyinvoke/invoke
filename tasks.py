@@ -58,7 +58,7 @@ def integration(c, opts=None, pty=True):
     # environment. Certain entirely-standalone tests will fail w/o it, even if
     # tests honoring config overrides (like the unit-test suite) don't.
     shell = c.config.global_defaults()["run"]["shell"]
-    if not c.run("which {}".format(shell), hide=True, warn=True):
+    if not c.run(f"which {shell}", hide=True, warn=True):
         err = "No {} on this system - cannot run integration tests! Try a container?"  # noqa
         raise Exit(err.format(shell))
     opts = opts or ""
@@ -117,7 +117,7 @@ ns.configure(
             # Skip vendor, build dirs when blackening.
             # TODO: this is making it seem like I really do want an explicit
             # arg/conf-opt in the blacken task for "excluded paths"...ha
-            "find_opts": "-and -not \( -path './invoke/vendor*' -or -path './build*' \)"  # noqa
+            "find_opts": r"-and -not \( -path './invoke/vendor*' -or -path './build*' \)"  # noqa
         },
         "packaging": {
             "sign": True,

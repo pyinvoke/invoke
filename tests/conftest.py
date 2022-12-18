@@ -5,7 +5,7 @@ import termios
 
 from invoke.vendor.six import iteritems
 import pytest
-from mock import patch
+from unittest.mock import patch
 
 from _util import support
 

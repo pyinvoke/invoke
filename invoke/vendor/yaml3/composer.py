@@ -1,4 +1,3 @@
-
 __all__ = ['Composer', 'ComposerError']
 
 from .error import MarkedYAMLError

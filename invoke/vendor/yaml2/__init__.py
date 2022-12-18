@@ -1,4 +1,3 @@
-
 from error import *
 
 from tokens import *
@@ -389,7 +388,7 @@ class YAMLObjectMetaclass(type):
     The metaclass for YAMLObject.
     """
     def __init__(cls, name, bases, kwds):
-        super(YAMLObjectMetaclass, cls).__init__(name, bases, kwds)
+        super().__init__(name, bases, kwds)
         if 'yaml_tag' in kwds and kwds['yaml_tag'] is not None:
             if isinstance(cls.yaml_loader, list):
                 for loader in cls.yaml_loader:
@@ -399,7 +398,7 @@ class YAMLObjectMetaclass(type):
 
             cls.yaml_dumper.add_representer(cls, cls.to_yaml)
 
-class YAMLObject(object):
+class YAMLObject:
     """
     An object that can dump itself to a YAML stream
     and load itself from a YAML stream.

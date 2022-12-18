@@ -1,4 +1,3 @@
-
 # Emitter expects events obeying the following grammar:
 # stream ::= STREAM-START document* STREAM-END
 # document ::= DOCUMENT-START node DOCUMENT-END
@@ -609,7 +608,7 @@ class Emitter:
             chunks.append(suffix[start:end])
         suffix_text = ''.join(chunks)
         if handle:
-            return '%s%s' % (handle, suffix_text)
+            return f'{handle}{suffix_text}'
         else:
             return '!<%s>' % suffix_text
 
@@ -843,7 +842,7 @@ class Emitter:
         self.write_line_break()
 
     def write_tag_directive(self, handle_text, prefix_text):
-        data = '%%TAG %s %s' % (handle_text, prefix_text)
+        data = f'%TAG {handle_text} {prefix_text}'
         if self.encoding:
             data = data.encode(self.encoding)
         self.stream.write(data)
