@@ -2,6 +2,14 @@
 Changelog
 =========
 
+- :support:`-` `Task.argspec <invoke.tasks.Task.argspec>` has changed its
+  return value; it now returns an `inspect.Signature` derived from that of the
+  task's body callable.
+
+  .. warning::
+    This change is backwards incompatible if you were using this method
+    directly.
+
 - :release:`1.7.3 <2022-09-30>`
 - :support:`- backported` Fix a non-fatal bug in our setup.py
   ``long_description`` generation causing 1.7.0-1.7.2 to have malformed
