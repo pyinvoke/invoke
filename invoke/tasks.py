@@ -11,15 +11,6 @@ from .context import Context
 from .parser import Argument, translate_underscores
 from .util import six
 
-if six.PY3:
-    from itertools import zip_longest
-else:
-    from itertools import izip_longest as zip_longest
-
-
-#: Sentinel object representing a truly blank value (vs ``None``).
-NO_DEFAULT = object()
-
 
 class Task(object):
     """
@@ -134,45 +125,40 @@ class Task(object):
 
     def argspec(self, body):
         """
-        Returns two-tuple:
+        Returns a modified `inspect.Signature` based on that of ``body``.
 
-        * First item is list of arg names, in order defined.
-
-            * I.e. we *cannot* simply use a dict's ``keys()`` method here.
-
-        * Second item is dict mapping arg names to default values or
-          `.NO_DEFAULT` (an 'empty' value distinct from None, since None
-          is a valid value on its own).
+        :returns:
+            an `inspect.Signature` matching that of ``body``, but with the
+            initial context argument removed.
+        :raises TypeError:
+            if the task lacks an initial positional `.Context` argument.
 
         .. versionadded:: 1.0
+        .. versionchanged:: 2.0
+            Changed from returning a two-tuple of ``(arg_names, spec_dict)`` to
+            returning an `inspect.Signature`.
         """
         # Handle callable-but-not-function objects
-        # TODO: __call__ exhibits the 'self' arg; do we manually nix 1st result
-        # in argspec, or is there a way to get the "really callable" spec?
         func = body if isinstance(body, types.FunctionType) else body.__call__
-        spec = inspect.getargspec(func)
-        arg_names = spec.args[:]
-        matched_args = [reversed(x) for x in [spec.args, spec.defaults or []]]
-        spec_dict = dict(zip_longest(*matched_args, fillvalue=NO_DEFAULT))
-        # Pop context argument
-        try:
-            context_arg = arg_names.pop(0)
-        except IndexError:
+        # Rebuild signature with first arg dropped, or die usefully(ish trying
+        sig = inspect.signature(func)
+        params = list(sig.parameters.values())
+        # TODO: this ought to also check if an extant 1st param _was_ a Context
+        # arg, and yell similarly if not.
+        if not len(params):
             # TODO: see TODO under __call__, this should be same type
             raise TypeError("Tasks must have an initial Context argument!")
-        del spec_dict[context_arg]
-        return arg_names, spec_dict
+        return sig.replace(parameters=params[1:])
 
     def fill_implicit_positionals(self, positional):
-        args, spec_dict = self.argspec(self.body)
         # If positionals is None, everything lacking a default
         # value will be automatically considered positional.
         if positional is None:
-            positional = []
-            for name in args:  # Go in defined order, not dict "order"
-                default = spec_dict[name]
-                if default is NO_DEFAULT:
-                    positional.append(name)
+            positional = [
+                x.name
+                for x in self.argspec(self.body).parameters.values()
+                if x.default is inspect.Signature.empty
+            ]
         return positional
 
     def arg_opts(self, name, default, taken_names):
@@ -206,7 +192,7 @@ class Task(object):
                     break
         opts["names"] = names
         # Handle default value & kind if possible
-        if default not in (None, NO_DEFAULT):
+        if default not in (None, inspect.Signature.empty):
             # TODO: allow setting 'kind' explicitly.
             # NOTE: skip setting 'kind' if optional is True + type(default) is
             # bool; that results in a nonsensical Argument which gives the
@@ -235,18 +221,17 @@ class Task(object):
             Added the ``ignore_unknown_help`` kwarg.
         """
         # Core argspec
-        arg_names, spec_dict = self.argspec(self.body)
-        # Obtain list of args + their default values (if any) in
-        # declaration/definition order (i.e. based on getargspec())
-        tuples = [(x, spec_dict[x]) for x in arg_names]
+        sig = self.argspec(self.body)
         # Prime the list of all already-taken names (mostly for help in
         # choosing auto shortflags)
-        taken_names = {x[0] for x in tuples}
+        taken_names = set(sig.parameters.keys())
         # Build arg list (arg_opts will take care of setting up shortnames,
         # etc)
         args = []
-        for name, default in tuples:
-            new_arg = Argument(**self.arg_opts(name, default, taken_names))
+        for arg in sig.parameters.values():
+            new_arg = Argument(
+                **self.arg_opts(arg.name, arg.default, taken_names)
+            )
             args.append(new_arg)
             # Update taken_names list with new argument's full name list
             # (which may include new shortflags) so subsequent Argument
