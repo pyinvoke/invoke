@@ -1359,6 +1359,11 @@ class Local(Runner):
                 # If something weird happened preventing the close, there's
                 # nothing to be done about it now...
                 pass
+        else:
+            try:
+                self.process.terminate()
+            except Exception:
+                pass
 
 
 class Result(object):
