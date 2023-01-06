@@ -2,19 +2,18 @@
 -e .
 # Invocations, for all sorts of things
 invocations>=3.0.1
-# build
-build==0.7.0
 # Coverage!
-coverage==4.5.4
-codecov==2.1.11
+coverage>=6.2,<7
+codecov==2.1.12
 # Docs
 releases>=2
 alabaster==0.7.12
 # Testing
 pytest-relaxed>=2
-pytest-cov==2.5.1
+pytest-cov>=4
 # Formatting
-flake8==3.7.8
-black==18.6b4
+# Flake8 5.x seems to have an odd importlib-metadata incompatibility?
+flake8>=4,<5
+black>=22.8,<22.9
 # Packaging
 setuptools>56
