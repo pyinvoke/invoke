@@ -3,7 +3,9 @@ Changelog
 =========
 
 - :support:`-` Remove support for, and imports related to, all Python versions
-  less than 3.6 - including Python 2.
+  less than 3.6 - including Python 2. This also includes updates to vendored
+  packages, such as removing ``six`` and upgrading ``lexicon`` to the latest
+  version.
 
   .. warning::
     This change is backwards incompatible if you were still on older Python

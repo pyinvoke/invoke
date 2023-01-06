@@ -1,6 +1,5 @@
 import sys
 
-from invoke.vendor.six.moves import input
 
 if input("standard out") != "with it":
     sys.exit(1)

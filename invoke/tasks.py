@@ -96,9 +96,7 @@ class Task(object):
             return True
         else:
             try:
-                return six.get_function_code(
-                    self.body
-                ) == six.get_function_code(other.body)
+                return self.body.__code__ == other.body.__code__
             except AttributeError:
                 return False
 
