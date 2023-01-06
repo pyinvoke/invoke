@@ -1,3 +1,4 @@
+import errno
 import locale
 import os
 import struct
