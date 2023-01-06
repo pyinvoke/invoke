@@ -5,7 +5,9 @@ Changelog
 - :support:`-` Remove support for, and imports related to, all Python versions
   less than 3.6 - including Python 2. This also includes updates to vendored
   packages, such as removing ``six`` and upgrading ``lexicon`` to the latest
-  version.
+  version; and also treatment of things like ``Mock`` use within
+  `invoke.context.MockContext` (which now expects stdlib's ``unittest.mock``
+  instead of hunting for the old standalone ``mock`` library).
 
   .. warning::
     This change is backwards incompatible if you were still on older Python

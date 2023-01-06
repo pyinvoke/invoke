@@ -1,4 +1,4 @@
-from mock import Mock
+from unittest.mock import Mock
 from pytest import raises, skip
 
 from invoke import Context, Config, task, Task, Call, Collection

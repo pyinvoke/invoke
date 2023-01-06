@@ -1,6 +1,6 @@
 import re
 
-from mock import patch
+from unittest.mock import patch
 
 import invoke
 import invoke.collection

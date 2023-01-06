@@ -4,7 +4,7 @@ import sys
 from io import BytesIO
 
 from invoke.util import Lexicon
-from mock import patch, Mock, ANY
+from unittest.mock import patch, Mock, ANY
 import pytest
 from pytest import skip
 from pytest_relaxed import trap

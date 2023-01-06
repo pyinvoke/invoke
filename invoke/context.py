@@ -2,6 +2,7 @@ import os
 import re
 from contextlib import contextmanager
 from itertools import cycle
+from unittest.mock import Mock
 
 from .config import Config, DataProxy
 from .exceptions import Failure, AuthFailure, ResponseNotAccepted
@@ -388,11 +389,9 @@ class MockContext(Context):
     Primarily useful for testing Invoke-using codebases.
 
     .. note::
-        If this class' constructor is able to import the ``Mock`` class at
-        runtime (via the ``mock`` or ``unittest.mock`` modules, in that order)
-        it will wraps its ``run``, etc methods in ``Mock`` objects. This allows
-        you to easily assert that the methods (still returning the values you
-        prepare them with) were actually called.
+        This class wraps its ``run``, etc methods in `unittest.mock.Mock`
+        objects. This allows you to easily assert that the methods (still
+        returning the values you prepare them with) were actually called.
 
     .. note::
         Methods not given `Results <.Result>` to yield will raise
@@ -457,15 +456,6 @@ class MockContext(Context):
         .. versionchanged:: 1.5
             Added the ``repeat`` keyword argument.
         """
-        # Figure out if we can support Mock in the current environment
-        Mock = None
-        try:
-            from mock import Mock
-        except ImportError:
-            try:
-                from unittest.mock import Mock
-            except ImportError:
-                pass
         # Set up like any other Context would, with the config
         super(MockContext, self).__init__(config)
         # Pull out behavioral kwargs
@@ -490,9 +480,8 @@ class MockContext(Context):
                 raise TypeError(err.format(type(results)))
             # Save results for use by the method
             self._set("__{}".format(method), results)
-            # Wrap the method in a Mock, if applicable
-            if Mock is not None:
-                self._set(method, Mock(wraps=getattr(self, method)))
+            # Wrap the method in a Mock
+            self._set(method, Mock(wraps=getattr(self, method)))
 
     def _normalize(self, value):
         # First turn everything into an iterable

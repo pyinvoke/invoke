@@ -2,7 +2,7 @@ import pickle
 import os
 from os.path import join
 
-from mock import patch, call, Mock
+from unittest.mock import patch, call, Mock
 import pytest
 from pytest_relaxed import raises
 

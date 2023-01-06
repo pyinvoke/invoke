@@ -10,7 +10,7 @@ except ImportError:
     termios = None
 from contextlib import contextmanager
 
-from mock import patch, Mock
+from unittest.mock import patch, Mock
 from pytest import skip
 from pytest_relaxed import trap
 

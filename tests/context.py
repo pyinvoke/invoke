@@ -3,7 +3,7 @@ import pickle
 import re
 import sys
 
-from mock import patch, Mock, call
+from unittest.mock import patch, Mock, call
 from pytest_relaxed import trap
 from pytest import skip, raises, mark
 
@@ -730,34 +730,9 @@ class MockContext_:
             self.kwargs = dict(run=results, sudo=results)
             self.mock_module = Mock(Mock=Mock)  # buffalo buffalo
 
-        # TODO: be nice if pytest-relaxed supported class level fixtures, if
-        # only I knew the guy who wrote that...
-        def does_not_wrap_when_no_mock_library_present(
-            self, clean_sys_modules
-        ):
-            for module in ("unittest.mock", "mock"):
-                sys.modules[module] = None
-            mc = MockContext(**self.kwargs)
-            assert not isinstance(mc.run, Mock)
-
-        def wraps_when_mock_importable(self, clean_sys_modules):
-            sys.modules["mock"] = self.mock_module
-            sys.modules["unittest.mock"] = None
-            mc = MockContext(**self.kwargs)
-            assert isinstance(mc.run, Mock)
-            assert isinstance(mc.sudo, Mock)
-
         def wraps_when_unittest_mock_importable(self, clean_sys_modules):
             sys.modules["mock"] = None
             sys.modules["unittest.mock"] = self.mock_module
             mc = MockContext(**self.kwargs)
             assert isinstance(mc.run, Mock)
             assert isinstance(mc.sudo, Mock)
-
-        def prefers_direct_mock_over_stdlib(self, clean_sys_modules):
-            preferred, other = Mock(), Mock()
-            sys.modules["mock"] = preferred
-            sys.modules["unittest.mock"] = other
-            MockContext(**self.kwargs)
-            assert preferred.Mock.call_count == 2
-            assert other.Mock.call_count == 0

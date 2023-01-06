@@ -12,7 +12,7 @@ from itertools import chain, repeat
 
 from pytest import raises, skip
 from pytest_relaxed import trap
-from mock import patch, Mock, call
+from unittest.mock import patch, Mock, call
 
 from invoke import (
     CommandTimedOut,

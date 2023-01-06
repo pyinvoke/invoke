@@ -4,7 +4,7 @@ import sys
 import termios
 
 import pytest
-from mock import patch
+from unittest.mock import patch
 
 from _util import support
 
