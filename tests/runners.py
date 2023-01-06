@@ -1346,7 +1346,7 @@ stderr 25
                 mock_stdin = Mock()
                 runner.write_proc_stdin = mock_stdin
                 runner.run(_, pty=pty)
-                mock_stdin.assert_called_once_with(u"\x03")
+                mock_stdin.assert_called_once_with("\x03")
 
     class timeout:
         def start_timer_called_with_config_value(self):
@@ -1742,10 +1742,10 @@ class Result_:
         assert Result().env == {}
 
     def stdout_defaults_to_empty_string(self):
-        assert Result().stdout == u""
+        assert Result().stdout == ""
 
     def stderr_defaults_to_empty_string(self):
-        assert Result().stderr == u""
+        assert Result().stderr == ""
 
     def exited_defaults_to_zero(self):
         assert Result().exited == 0

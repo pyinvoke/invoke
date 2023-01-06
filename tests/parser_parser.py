@@ -111,7 +111,7 @@ class Parser_:
             assert r[0].args["myarg"].value is False
 
         def arguments_which_take_values_get_defaults_overridden_correctly(
-            self
+            self,
         ):  # noqa
             args = (Argument("arg", kind=str), Argument("arg2", kind=int))
             c = Context("mytask", args=args)

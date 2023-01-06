@@ -729,10 +729,10 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
 
         class type_casting:
             def strings_replaced_with_env_value(self):
-                os.environ["INVOKE_FOO"] = u"myvalue"
+                os.environ["INVOKE_FOO"] = "myvalue"
                 c = Config(defaults={"foo": "myoldvalue"})
                 c.load_shell_env()
-                assert c.foo == u"myvalue"
+                assert c.foo == "myvalue"
                 assert isinstance(c.foo, str)
 
             def None_replaced(self):

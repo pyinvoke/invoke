@@ -136,9 +136,7 @@ class Parser(object):
                         mutations.append((index + 1, rest))
                     else:
                         rest = ["-{}".format(x) for x in rest]
-                        msg = (
-                            "Splitting multi-flag glob {!r} into {!r} and {!r}"
-                        )  # noqa
+                        msg = "Splitting multi-flag glob {!r} into {!r} and {!r}"  # noqa
                         debug(msg.format(orig, token, rest))
                         for item in reversed(rest):
                             mutations.append((index + 1, item))

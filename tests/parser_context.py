@@ -269,7 +269,7 @@ class Context_:
             )
 
         def sorts_heterogenous_help_output_with_longflag_only_options_first(
-            self
+            self,
         ):  # noqa
             # When both of the above mix, long-flag-only options come first.
             # E.g.:

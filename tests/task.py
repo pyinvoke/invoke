@@ -351,7 +351,7 @@ class Task_:
             # I.e. "task --foo -f" => --foo should NOT get to pick '-f' for its
             # shortflag or '-f' is totally fucked.
             @task
-            def mytask(c, longarg, l):
+            def mytask(c, longarg, l):  # noqa
                 pass
 
             args = self._task_to_dict(mytask)

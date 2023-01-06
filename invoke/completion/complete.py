@@ -29,9 +29,7 @@ def complete(names, core, initial_context, collection, parser):
             debug("Seeking context name in tokens: {!r}".format(tokens))
             contexts = parser.parse_argv(tokens)
         except ParseError as e:
-            msg = (
-                "Got parser error ({!r}), grabbing its last-seen context {!r}"
-            )  # noqa
+            msg = "Got parser error ({!r}), grabbing its last-seen context {!r}"  # noqa
             debug(msg.format(e, e.context))
             contexts = [e.context]
         # Fall back to core context if no context seen.

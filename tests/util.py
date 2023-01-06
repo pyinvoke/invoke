@@ -11,8 +11,7 @@ class util:
 
         def is_None_if_whitespace_only_docstring(self):
             def foo(c):
-                """
-                """
+                """ """
                 pass
 
             assert helpline(foo) is None

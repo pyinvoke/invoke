@@ -303,9 +303,7 @@ class Collection(object):
         name = self.transform(name)
         # Test for conflict
         if name in self.tasks:
-            err = (
-                "Name conflict: this collection has a task named {!r} already"
-            )  # noqa
+            err = "Name conflict: this collection has a task named {!r} already"  # noqa
             raise ValueError(err.format(name))
         # Insert
         self.collections[name] = coll

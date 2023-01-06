@@ -461,8 +461,8 @@ ohnoz!
                 Result(
                     command="meh",
                     exited=54,
-                    stdout=u"this is not ascii: \u1234",
-                    stderr=u"this is also not ascii: \u4321",
+                    stdout="this is not ascii: \u1234",
+                    stderr="this is also not ascii: \u4321",
                     encoding="utf-8",
                     hide=("stdout", "stderr"),
                 )

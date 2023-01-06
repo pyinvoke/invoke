@@ -8,8 +8,7 @@ def no_docstring(c):
 
 @task
 def one_line(c):
-    """foo
-    """
+    """foo"""
 
 
 @task
@@ -28,5 +27,4 @@ def leading_whitespace(c):
 
 @task(aliases=("a", "b"))
 def with_aliases(c):
-    """foo
-    """
+    """foo"""

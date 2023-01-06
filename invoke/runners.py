@@ -904,7 +904,7 @@ class Runner(object):
         # speed and memory use. Should that become false, consider using
         # StringIO or cStringIO (tho the latter doesn't do Unicode well?) which
         # is apparently even more efficient.
-        stream = u"".join(buffer_)
+        stream = "".join(buffer_)
         for watcher in self.watchers:
             for response in watcher.submit(stream):
                 self.write_proc_stdin(response)
@@ -1120,7 +1120,7 @@ class Runner(object):
 
         .. versionadded:: 1.0
         """
-        self.write_proc_stdin(u"\x03")
+        self.write_proc_stdin("\x03")
 
     def returncode(self):
         """
@@ -1476,15 +1476,15 @@ class Result(object):
         for x in ("stdout", "stderr"):
             val = getattr(self, x)
             ret.append(
-                u"""=== {} ===
+                """=== {} ===
 {}
 """.format(
                     x, val.rstrip()
                 )
                 if val
-                else u"(no {})".format(x)
+                else "(no {})".format(x)
             )
-        return u"\n".join(ret)
+        return "\n".join(ret)
 
     def __repr__(self):
         # TODO: more? e.g. len of stdout/err? (how to represent cleanly in a
