@@ -1,4 +1,3 @@
-import io
 import os
 import sys
 
@@ -103,11 +102,7 @@ class Main:
             if WINDOWS:
                 return
             # PTY use adds another utf-8 decode spot which can also fail.
-            run(
-                "echo '\xff'",
-                pty=True,
-                hide="stderr",
-            )
+            run("echo '\xff'", pty=True, hide="stderr")
 
     class ptys:
         def complex_nesting_under_ptys_doesnt_break(self):
