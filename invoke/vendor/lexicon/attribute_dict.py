@@ -11,3 +11,6 @@ class AttributeDict(dict):
 
     def __delattr__(self, key):
         del self[key]
+
+    def __dir__(self):
+        return dir(type(self)) + list(self.keys())

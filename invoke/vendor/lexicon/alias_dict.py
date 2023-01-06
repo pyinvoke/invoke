@@ -1,11 +1,3 @@
-# Normal import
-try:
-    import six
-# Horrible, awful hack to work when vendorized
-except ImportError:
-    from .. import six
-
-
 class AliasDict(dict):
     def __init__(self, *args, **kwargs):
         super(AliasDict, self).__init__(*args, **kwargs)
@@ -37,19 +29,17 @@ class AliasDict(dict):
             names.append(key)
         # 'key' is now a realkey, whose aliases are all keys whose value is
         # itself. Filter out the original name given.
-        names.extend([
-            k for k,v
-            in six.iteritems(self.aliases)
-            if v == key and k != name
-        ])
+        names.extend(
+            [k for k, v in self.aliases.items() if v == key and k != name]
+        )
         return names
 
     def _handle(self, key, value, single, multi, unaliased):
         # Attribute existence test required to not blow up when deepcopy'd
-        if key in getattr(self, 'aliases', {}):
+        if key in getattr(self, "aliases", {}):
             target = self.aliases[key]
             # Single-string targets
-            if isinstance(target, six.string_types):
+            if isinstance(target, str):
                 return single(self, target, value)
             # Multi-string targets
             else:
@@ -61,26 +51,31 @@ class AliasDict(dict):
         else:
             return unaliased(self, key, value)
 
-    def _single(self, target):
-        return isinstance(target, six.string_types)
-
     def __setitem__(self, key, value):
-        def single(d, target, value): d[target] = value
-        def unaliased(d, key, value): super(AliasDict, d).__setitem__(key, value)
+        def single(d, target, value):
+            d[target] = value
+
+        def unaliased(d, key, value):
+            super(AliasDict, d).__setitem__(key, value)
+
         return self._handle(key, value, single, None, unaliased)
 
     def __getitem__(self, key):
-        def single(d, target, value): return d[target]
-        def unaliased(d, key, value): return super(AliasDict, d).__getitem__(key)
+        def single(d, target, value):
+            return d[target]
+
+        def unaliased(d, key, value):
+            return super(AliasDict, d).__getitem__(key)
 
         def multi(d, target, value):
-            msg = "Multi-target aliases have no well-defined value and can't be read."
+            msg = "Multi-target aliases have no well-defined value and can't be read."  # noqa
             raise ValueError(msg)
 
         return self._handle(key, None, single, multi, unaliased)
 
     def __contains__(self, key):
-        def single(d, target, value): return target in d
+        def single(d, target, value):
+            return target in d
 
         def multi(d, target, value):
             return all(subkey in self for subkey in self.aliases[key])
@@ -91,7 +86,8 @@ class AliasDict(dict):
         return self._handle(key, None, single, multi, unaliased)
 
     def __delitem__(self, key):
-        def single(d, target, value): del d[target]
+        def single(d, target, value):
+            del d[target]
 
         def unaliased(d, key, value):
             return super(AliasDict, d).__delitem__(key)
