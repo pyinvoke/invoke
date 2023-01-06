@@ -40,6 +40,7 @@ setup(
         "Changelog": "https://www.pyinvoke.org/changelog.html",
         "CI": "https://app.circleci.com/pipelines/github/pyinvoke/invoke",
     },
+    python_requires=">=3.6",
     packages=find_packages(exclude=exclude),
     include_package_data=True,
     entry_points={
@@ -49,7 +50,7 @@ setup(
         ]
     },
     classifiers=[
-        "Development Status :: 1 - Planning",
+        "Development Status :: 5 - Production/Stable",
         "Environment :: Console",
         "Intended Audience :: Developers",
         "Intended Audience :: System Administrators",
@@ -60,12 +61,12 @@ setup(
         "Operating System :: Microsoft :: Windows",
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.4",
-        "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
         "Topic :: Software Development",
         "Topic :: Software Development :: Build Tools",
         "Topic :: Software Development :: Libraries",

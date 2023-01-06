@@ -2,6 +2,14 @@
 Changelog
 =========
 
+- :support:`-` Remove support for, and imports related to, all Python versions
+  less than 3.6 - including Python 2.
+
+  .. warning::
+    This change is backwards incompatible if you were still on older Python
+    versions. However, as we have also added ``python_requires`` to our
+    packaging metadata, this shouldn't cause too many problems!
+
 - :support:`-` `Task.argspec <invoke.tasks.Task.argspec>` has changed its
   return value; it now returns an `inspect.Signature` derived from that of the
   task's body callable.
