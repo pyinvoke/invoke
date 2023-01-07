@@ -59,16 +59,16 @@ dev = [
     "pytest>=7",
     "pytest-relaxed>=2",
     "pytest-cov>=4",
-    # linting
-    # Formatting
+    # Linting
     "pylint>=2.9.5",
+    # Formatting
     # Flake8 5.x seems to have an odd importlib-metadata incompatibility?
     "flake8>=4,<5",
     "isort>=5.10.1",
     "black>=22.8,<22.9",
     # Debuggery
     "icecream>=2.1",
-    # publish
+    # Publish
     "twine>=1.15",
 ]
 
