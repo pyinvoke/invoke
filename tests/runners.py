@@ -91,7 +91,7 @@ def make_tcattrs(cc_is_ints=True, echo=False):
     # the 'cc' members...docs say ints, reality says one-byte
     # bytestrings...
     cc_base = [None] * (max(termios.VMIN, termios.VTIME) + 1)
-    cc_ints, cc_bytes = cc_base[:], cc_base[:]
+    cc_ints, cc_bytes = cc_base.copy(), cc_base.copy()
     cc_ints[termios.VMIN], cc_ints[termios.VTIME] = 1, 0
     cc_bytes[termios.VMIN], cc_bytes[termios.VTIME] = b"\x01", b"\x00"
     # Set tcgetattr to look like it's already cbroken...
