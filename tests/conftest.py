@@ -8,6 +8,10 @@ from unittest.mock import patch
 
 from _util import support
 
+# Set up icecream globally for convenience.
+from icecream import install
+install()
+
 
 # pytest seems to tweak logging such that Invoke's debug logs go to stderr,
 # which is then hella spammy if one is using --capture=no (which one must in

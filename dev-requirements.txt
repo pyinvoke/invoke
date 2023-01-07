@@ -17,3 +17,5 @@ flake8>=4,<5
 black>=22.8,<22.9
 # Packaging
 setuptools>56
+# Debuggery
+icecream>=2.1
