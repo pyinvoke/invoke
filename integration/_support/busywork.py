@@ -15,9 +15,7 @@ num_cycles = int(sys.argv[1])
 
 for i in range(num_cycles):
     out = "[{}] This is my stdout, there are many like it, but...\n".format(i)
-    sys.stdout.write(out)
-    sys.stdout.flush()
+    print(out, file=sys.stdout, flush=True)
     err = "[{}] To err is human, to stderr is superhuman\n".format(i)
-    sys.stderr.write(err)
-    sys.stderr.flush()
+    print(out, file=sys.stderr, flush=True)
     time.sleep(0.1)
