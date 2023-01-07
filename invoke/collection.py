@@ -513,8 +513,6 @@ class Collection(object):
         # Subcollection tasks get both name + aliases prefixed
         for coll_name, coll in self.collections.items():
             for task_name, aliases in coll.task_names.items():
-                # Cast to list to handle Py3 map() 'map' return value,
-                # so we can add to it down below if necessary.
                 aliases = list(
                     map(lambda x: self.subtask_name(coll_name, x), aliases)
                 )

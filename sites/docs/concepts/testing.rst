@@ -61,9 +61,7 @@ library at instantiation time and wrap its methods within ``Mock`` objects.
 This lets you not only present realistic return values to your code, but make
 test assertions about what commands your code is running.
 
-Here's another "platform sensitive" task, being tested with the assumption that
-the test environment has some flavor of ``mock`` installed (here we'll pretend
-it's Python 3.6 or later, and also use some f-strings for brevity)::
+Here's another "platform sensitive" task::
 
     from invoke import task
 

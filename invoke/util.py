@@ -126,24 +126,6 @@ def isatty(stream):
     return False
 
 
-def encode_output(string, encoding):
-    """
-    Transform string-like object ``string`` into bytes via ``encoding``.
-
-    :returns: A byte-string (``str`` on Python 2, ``bytes`` on Python 3.)
-
-    .. versionadded:: 1.0
-    """
-    # Encode under Python 2 only, because of the common problem where
-    # sys.stdout/err on Python 2 end up using sys.getdefaultencoding(), which
-    # is frequently NOT the same thing as the real local terminal encoding
-    # (reflected as sys.stdout.encoding). I.e. even when sys.stdout.encoding is
-    # UTF-8, ascii is still actually used, and explodes.
-    # Python 3 doesn't have this problem, so we delegate encoding to the
-    # io.*Writer classes involved.
-    return string
-
-
 def helpline(obj):
     """
     Yield an object's first docstring line, or None if there was no docstring.

@@ -765,10 +765,7 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
                 tests = [
                     (int, "5", 5),
                     (float, "5.5", 5.5),
-                    # TODO: more?
                 ]
-                # Can't use '5L' in Python 3, even having it in a branch makes
-                # it upset.
                 for old, new_, result in tests:
                     os.environ["INVOKE_FOO"] = new_
                     c = Config(defaults={"foo": old()})

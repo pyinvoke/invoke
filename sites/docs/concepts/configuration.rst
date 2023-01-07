@@ -240,15 +240,8 @@ Since env vars can only be used to override existing settings, the previous
 value of a given setting is used as a guide in casting the strings we get back
 from the shell:
 
-- If the current value is a string or Unicode object, it is replaced with the
+- If the current value is a Unicode string, it is replaced with the
   value from the environment, with no casting whatsoever;
-
-    * Depending on interpreter and environment, this means that a setting
-      defaulting to a non-Unicode string type (eg a ``str`` on Python 2) may
-      end up replaced with a Unicode string, or vice versa. This is intentional
-      as it prevents users from accidentally limiting themselves to non-Unicode
-      strings.
-
 - If the current value is ``None``, it too is replaced with the string from the
   environment;
 - Booleans are set as follows: ``0`` and the empty value/string (e.g.

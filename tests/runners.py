@@ -1031,11 +1031,6 @@ stderr 25
 
         def multiple_patterns_works_as_expected(self):
             calls = [call("betty"), call("carnival")]
-            # Technically, I'd expect 'betty' to get called before 'carnival',
-            # but under Python 3 it's reliably backwards from Python 2.
-            # In real world situations where each prompt sits & waits for its
-            # response, this probably wouldn't be an issue, so using
-            # any_order=True for now. Thanks again Python 3.
             self._expect_response(
                 out="beep boop I am a robot",
                 responses={"boop": "betty", "robot": "carnival"},
@@ -1791,11 +1786,6 @@ class Result_:
 24"""
             tail = Result(stderr=self.sample).tail("stderr", count=2)
             assert tail == expected
-
-        @patch("invoke.runners.encode_output")
-        def encodes_with_result_encoding(self, encode):
-            Result(stdout="foo", encoding="utf-16").tail("stdout")
-            encode.assert_called_once_with("\n\nfoo", "utf-16")
 
 
 class Promise_:

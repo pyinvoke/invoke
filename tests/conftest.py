@@ -14,8 +14,8 @@ from _util import support
 # order to test low level terminal IO stuff, as we do!)
 # So, we explicitly turn default logging back down.
 # NOTE: no real better place to put this than here
-# TODO: once pytest-relaxed works with pytest 3.3, see if we can use its new
-# logging functionality to remove the need for this.
+# TODO: see if we can use modern pytest's logging functionality to remove the
+# need for this, now that pytest-relaxed was modernized
 logging.basicConfig(level=logging.INFO)
 
 

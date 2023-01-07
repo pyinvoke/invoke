@@ -223,8 +223,6 @@ class Context(DataProxy):
             # For now that has been judged unnecessary complexity.
             if isinstance(failure.reason, ResponseNotAccepted):
                 # NOTE: not bothering with 'reason' here, it's pointless.
-                # NOTE: previously used raise_from(..., None) to suppress Py3
-                # "helpful" multi-exception output. It's confusing here.
                 error = AuthFailure(result=failure.result, prompt=prompt)
                 raise error
             # Reraise for any other error so it bubbles up normally.

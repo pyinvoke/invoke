@@ -14,6 +14,10 @@ Changelog
     versions. However, as we have also added ``python_requires`` to our
     packaging metadata, this shouldn't cause too many problems!
 
+  .. warning::
+    Some Python 2-specific API helpers such as ``invoke.util.encode_output``
+    have been removed.
+
 - :support:`-` `Task.argspec <invoke.tasks.Task.argspec>` has changed its
   return value; it now returns an `inspect.Signature` derived from that of the
   task's body callable.

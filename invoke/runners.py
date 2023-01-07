@@ -38,7 +38,7 @@ from .terminals import (
     ready_for_reading,
     bytes_to_read,
 )
-from .util import has_fileno, isatty, ExceptionHandlingThread, encode_output
+from .util import has_fileno, isatty, ExceptionHandlingThread
 
 
 class Runner(object):
@@ -674,8 +674,7 @@ class Runner(object):
             specific read calls.
 
         :returns:
-            A generator yielding Unicode strings (`unicode` on Python 2; `str`
-            on Python 3).
+            A generator yielding strings.
 
             Specifically, each resulting string is the result of decoding
             `read_chunk_size` bytes read from the subprocess' out/err stream.
@@ -711,7 +710,7 @@ class Runner(object):
 
         .. versionadded:: 1.0
         """
-        stream.write(encode_output(string, self.encoding))
+        stream.write(string)
         stream.flush()
 
     def _handle_output(self, buffer_, hide, output, reader):
@@ -841,10 +840,9 @@ class Runner(object):
                 data = self.read_our_stdin(input_)
                 if data:
                     # Mirror what we just read to process' stdin.
-                    # We perform an encode so Python 3 gets bytes (streams +
-                    # str's in Python 3 == no bueno) but skip the decode step,
-                    # since there's presumably no need (nobody's interacting
-                    # with this data programmatically).
+                    # We encode to ensure bytes, but skip the decode step since
+                    # there's presumably no need (nobody's interacting with
+                    # this data programmatically).
                     self.write_proc_stdin(data)
                     # Also echo it back to local stdout (or whatever
                     # out_stream is set to) when necessary.
@@ -1457,15 +1455,8 @@ class Result(object):
         """
         return self.exited
 
-    def __nonzero__(self):
-        # NOTE: This is the method that (under Python 2) determines Boolean
-        # behavior for objects.
-        return self.ok
-
     def __bool__(self):
-        # NOTE: And this is the Python 3 equivalent of __nonzero__. Much better
-        # name...
-        return self.__nonzero__()
+        return self.ok
 
     def __str__(self):
         if self.exited is not None:
@@ -1528,8 +1519,7 @@ class Result(object):
         # TODO: preserve alternate line endings? Mehhhh
         # NOTE: no trailing \n preservation; easier for below display if
         # normalized
-        text = "\n\n" + "\n".join(getattr(self, stream).splitlines()[-count:])
-        return encode_output(text, self.encoding)
+        return "\n\n" + "\n".join(getattr(self, stream).splitlines()[-count:])
 
 
 class Promise(Result):
@@ -1624,9 +1614,5 @@ def default_encoding():
     unknown-but-presumably-text bytes, and the user has not specified an
     override.
     """
-    # Based on some experiments there is an issue with
-    # `locale.getpreferredencoding(do_setlocale=False)` in Python 2.x on
-    # Linux and OS X, and `locale.getpreferredencoding(do_setlocale=True)`
-    # triggers some global state changes. (See #274 for discussion.)
     encoding = locale.getpreferredencoding(False)
     return encoding

@@ -142,11 +142,6 @@ class DataProxy(object):
             other_val = other
         return self._config == other_val
 
-    # Make unhashable, because our entire raison d'etre is to be somewhat
-    # mutable. Subclasses with mutable attributes may override this.
-    # NOTE: this is mostly a concession to Python 2, v3 does it automatically.
-    __hash__ = None
-
     def __len__(self):
         return len(self._config)
 
