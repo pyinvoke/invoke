@@ -257,7 +257,7 @@ class Program(object):
         self.version = "unknown" if version is None else version
         self.namespace = namespace
         self._name = name
-        # TODO 2.0: rename binary to binary_help_name or similar. (Or write
+        # TODO 3.0: rename binary to binary_help_name or similar. (Or write
         # code to autogenerate it from binary_names.)
         self._binary = binary
         self._binary_names = binary_names
@@ -626,7 +626,7 @@ class Program(object):
         """
         return self._binary_names or [self.called_as]
 
-    # TODO 2.0: ugh rename this or core_args, they are too confusing
+    # TODO 3.0: ugh rename this or core_args, they are too confusing
     @property
     def args(self):
         """
