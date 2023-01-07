@@ -376,13 +376,7 @@ class Runner(object):
             return self._run_body(command, **kwargs)
         finally:
             if not (self._asynchronous or self._disowned):
-                self._stop_everything()
-
-    def _stop_everything(self):
-        # TODO 2.0: as probably noted elsewhere, stop_timer should become part
-        # of stop() and then we can nix this. Ugh!
-        self.stop()
-        self.stop_timer()
+                self.stop()
 
     def echo(self, command):
         print(self.opts["echo_format"].format(command=command))
@@ -1142,15 +1136,6 @@ class Runner(object):
 
         .. versionadded:: 1.0
         """
-        raise NotImplementedError
-
-    def stop_timer(self):
-        """
-        Cancel an open timeout timer, if required.
-        """
-        # TODO 2.0: merge with stop() (i.e. make stop() something users extend
-        # and call super() in, instead of completely overriding, then just move
-        # this into the default implementation of stop().
         if self._timer:
             self._timer.cancel()
 
@@ -1573,7 +1558,7 @@ class Promise(Result):
         try:
             return self.runner._finish()
         finally:
-            self.runner._stop_everything()
+            self.runner.stop()
 
     def __enter__(self):
         return self

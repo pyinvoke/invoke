@@ -297,9 +297,6 @@ class _Dummy(Runner):
     def returncode(self):
         return 0
 
-    def stop(self):
-        pass
-
     @property
     def timed_out(self):
         return False

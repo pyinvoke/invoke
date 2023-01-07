@@ -20,6 +20,10 @@ Changelog
       its default value from ``False`` to ``True``. This probably won't bite
       you, but we mention it just in case you somehow relied upon the legacy
       behavior.
+    - You subclass `invoke.runners.Runner` and/or have had to interact with its
+      ``stop`` or ``stop_timer`` methods. The latter has been merged into the
+      former, and if you are overriding ``stop``, you'll want to make sure you
+      now call ``super()`` somewhere if you were not already.
 
 - :support:`-` `Task.argspec <invoke.tasks.Task.argspec>` has changed its
   return value; it now returns an `inspect.Signature` derived from that of the

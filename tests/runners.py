@@ -121,7 +121,7 @@ class _TimingOutRunner(_Dummy):
 
 
 class Runner_:
-    _stop_methods = ["generate_result", "stop", "stop_timer"]
+    _stop_methods = ["generate_result", "stop"]
 
     # NOTE: these copies of _run and _runner form the base case of "test Runner
     # subclasses via self._run/_runner helpers" functionality. See how e.g.
@@ -1399,14 +1399,14 @@ Stderr: already printed
 
         def run_always_stops_timer(self):
             runner = _GenericExceptingRunner(Context())
-            runner.stop_timer = Mock()
+            runner._timer = Mock()
             with raises(_GenericException):
                 runner.run(_)
-            runner.stop_timer.assert_called_once_with()
+            runner._timer.cancel.assert_called_once_with()
 
-        def stop_timer_cancels_timer(self):
+        def stop_cancels_timer(self):
             runner = self._mocked_timer()
-            runner.stop_timer()
+            runner.stop()
             runner._timer.cancel.assert_called_once_with()
 
         def timer_aliveness_is_test_of_timing_out(self):
