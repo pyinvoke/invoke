@@ -619,9 +619,8 @@ class MockContext_:
         with raises(NotImplementedError):
             MockContext().run("onoz I did not anticipate this would happen")
 
-    def repeat_True_does_not_consume_results(self):
+    def does_not_consume_results_by_default(self):
         mc = MockContext(
-            repeat=True,
             run=dict(
                 singleton=True,  # will repeat
                 wassup=Result("yo"),  # ditto
@@ -637,6 +636,26 @@ class MockContext_:
         assert mc.run("iterable").stdout == "tick"  # not consumed
         assert mc.run("iterable").stdout == "tock"
 
+    def consumes_singleton_results_when_repeat_False(self):
+        mc = MockContext(
+            repeat=False,
+            run=dict(
+                singleton=True,
+                wassup=Result("yo"),
+                iterable=[Result("tick"), Result("tock")],
+            ),
+        )
+        assert mc.run("singleton").ok
+        with raises(NotImplementedError):  # was consumed
+            mc.run("singleton")
+        assert mc.run("wassup").ok
+        with raises(NotImplementedError):  # was consumed
+            mc.run("wassup")
+        assert mc.run("iterable").stdout == "tick"
+        assert mc.run("iterable").stdout == "tock"
+        with raises(NotImplementedError):  # was consumed
+            assert mc.run("iterable")
+
     def sudo_also_covered(self):
         c = MockContext(sudo=Result(stderr="super duper"))
         assert c.sudo("doesn't mattress").stderr == "super duper"
@@ -647,7 +666,7 @@ class MockContext_:
         else:
             assert False, "Did not get a NotImplementedError for sudo!"
 
-    class exhausted_return_values_also_raise_NotImplementedError:
+    class exhausted_nonrepeating_return_values_also_raise_NotImplementedError:
         def _expect_NotImplementedError(self, context):
             context.run("something")
             try:
@@ -658,19 +677,19 @@ class MockContext_:
                 assert False, "Didn't raise NotImplementedError"
 
         def single_value(self):
-            self._expect_NotImplementedError(MockContext(run=Result("meh")))
+            self._expect_NotImplementedError(MockContext(run=Result("meh"), repeat=False))
 
         def iterable(self):
-            self._expect_NotImplementedError(MockContext(run=[Result("meh")]))
+            self._expect_NotImplementedError(MockContext(run=[Result("meh")], repeat=False))
 
         def mapping_to_single_value(self):
             self._expect_NotImplementedError(
-                MockContext(run={"something": Result("meh")})
+                MockContext(run={"something": Result("meh")}, repeat=False)
             )
 
         def mapping_to_iterable(self):
             self._expect_NotImplementedError(
-                MockContext(run={"something": [Result("meh")]})
+                MockContext(run={"something": [Result("meh")]}, repeat=False)
             )
 
     def unexpected_kwarg_type_yields_TypeError(self):
@@ -724,15 +743,9 @@ class MockContext_:
             mc.set_result_for("sudo", "foo", Result("biz"))
             assert mc.sudo("foo").stdout == "biz"
 
-    class mock_wrapping:
-        def setup(self):
-            results = {"foo": Result("bar")}
-            self.kwargs = dict(run=results, sudo=results)
-            self.mock_module = Mock(Mock=Mock)  # buffalo buffalo
-
-        def wraps_when_unittest_mock_importable(self, clean_sys_modules):
-            sys.modules["mock"] = None
-            sys.modules["unittest.mock"] = self.mock_module
-            mc = MockContext(**self.kwargs)
-            assert isinstance(mc.run, Mock)
-            assert isinstance(mc.sudo, Mock)
+    def wraps_run_and_sudo_with_Mock(self, clean_sys_modules):
+        sys.modules["mock"] = None  # legacy
+        sys.modules["unittest.mock"] =  Mock(Mock=Mock)  # buffalo buffalo
+        mc = MockContext(run={"foo": Result("bar")}, sudo={"foo": Result("bar")})
+        assert isinstance(mc.run, Mock)
+        assert isinstance(mc.sudo, Mock)

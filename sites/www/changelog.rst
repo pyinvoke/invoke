@@ -10,13 +10,16 @@ Changelog
   instead of hunting for the old standalone ``mock`` library).
 
   .. warning::
-    This change is backwards incompatible if you were still on older Python
-    versions. However, as we have also added ``python_requires`` to our
-    packaging metadata, this shouldn't cause too many problems!
+    This change is backwards incompatible in the following scenarios:
 
-  .. warning::
-    Some Python 2-specific API helpers such as ``invoke.util.encode_output``
-    have been removed.
+    - You use Python <3.6. Shouldn't be an issue as we now specify
+      ``python_requires`` in packaging metadata.
+    - You call ``invoke.util.encode_output`` manually for some reason. (This
+      became a noop under Python 3, so just...remove it!)
+    - You use `invoke.context.MockContext`; its ``repeat`` init kwarg changed
+      its default value from ``False`` to ``True``. This probably won't bite
+      you, but we mention it just in case you somehow relied upon the legacy
+      behavior.
 
 - :support:`-` `Task.argspec <invoke.tasks.Task.argspec>` has changed its
   return value; it now returns an `inspect.Signature` derived from that of the

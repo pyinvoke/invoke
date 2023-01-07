@@ -398,7 +398,7 @@ class MockContext(Context):
 
     .. versionadded:: 1.0
     .. versionchanged:: 1.5
-        Added conditional ``Mock`` wrapping of ``run`` and ``sudo``.
+        Added ``Mock`` wrapping of ``run`` and ``sudo``.
     """
 
     def __init__(self, config=None, **kwargs):
@@ -441,7 +441,7 @@ class MockContext(Context):
             Similarly, iterable results are normally exhausted once, but when
             this setting is enabled, they are wrapped in `itertools.cycle`.
 
-            Default: ``False`` (for backwards compatibility reasons).
+            Default: ``True``.
 
         :raises:
             ``TypeError``, if the values given to ``run`` or other kwargs
@@ -453,18 +453,18 @@ class MockContext(Context):
             Added support for regex dict keys.
         .. versionchanged:: 1.5
             Added the ``repeat`` keyword argument.
+        .. versionchanged:: 2.0
+            Changed ``repeat`` default value from ``False`` to ``True``.
         """
         # Set up like any other Context would, with the config
         super(MockContext, self).__init__(config)
         # Pull out behavioral kwargs
-        # TODO 2.0: Jesus tap-dancing Christ this needs to default to True, it
-        # gets me every single time
-        self._set("__repeat", kwargs.pop("repeat", False))
+        self._set("__repeat", kwargs.pop("repeat", True))
         # The rest must be things like run/sudo - mock Context method info
         for method, results in kwargs.items():
             # For each possible value type, normalize to iterable of Result
             # objects (possibly repeating).
-            singletons = tuple([Result, bool] + [str])
+            singletons = (Result, bool, str)
             if isinstance(results, dict):
                 for key, value in results.items():
                     results[key] = self._normalize(value)
