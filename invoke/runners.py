@@ -348,8 +348,8 @@ class Runner(object):
         :param watchers:
             A list of `.StreamWatcher` instances which will be used to scan the
             program's ``stdout`` or ``stderr`` and may write into its ``stdin``
-            (typically ``str`` or ``bytes`` objects depending on Python
-            version) in response to patterns or other heuristics.
+            (typically ``bytes`` objects) in response to patterns or other
+            heuristics.
 
             See :doc:`/concepts/watchers` for details on this functionality.
 

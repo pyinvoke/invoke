@@ -182,7 +182,7 @@ type inside ``@task``::
         if log:
             log_file = '/var/log/my.log'
             # Value was given, vs just-True
-            if isinstance(log, unicode):
+            if isinstance(log, str):
                 log_file = log
             # Replace w/ your actual log setup...
             set_log_destination(log_file)
