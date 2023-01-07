@@ -677,10 +677,14 @@ class MockContext_:
                 assert False, "Didn't raise NotImplementedError"
 
         def single_value(self):
-            self._expect_NotImplementedError(MockContext(run=Result("meh"), repeat=False))
+            self._expect_NotImplementedError(
+                MockContext(run=Result("meh"), repeat=False)
+            )
 
         def iterable(self):
-            self._expect_NotImplementedError(MockContext(run=[Result("meh")], repeat=False))
+            self._expect_NotImplementedError(
+                MockContext(run=[Result("meh")], repeat=False)
+            )
 
         def mapping_to_single_value(self):
             self._expect_NotImplementedError(
@@ -745,7 +749,9 @@ class MockContext_:
 
     def wraps_run_and_sudo_with_Mock(self, clean_sys_modules):
         sys.modules["mock"] = None  # legacy
-        sys.modules["unittest.mock"] =  Mock(Mock=Mock)  # buffalo buffalo
-        mc = MockContext(run={"foo": Result("bar")}, sudo={"foo": Result("bar")})
+        sys.modules["unittest.mock"] = Mock(Mock=Mock)  # buffalo buffalo
+        mc = MockContext(
+            run={"foo": Result("bar")}, sudo={"foo": Result("bar")}
+        )
         assert isinstance(mc.run, Mock)
         assert isinstance(mc.sudo, Mock)
