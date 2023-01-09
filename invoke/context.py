@@ -1,8 +1,25 @@
 import os
 import re
+import shlex
 from contextlib import contextmanager
 from itertools import cycle
 from unittest.mock import Mock
+
+try:
+    shlex.quote
+except AttributeError:
+    # Copied from CPython 3's implementation of shlex.quote
+    _shlex_find_unsafe = re.compile(r"[^\w@%+=:,./-]").search
+
+    def _shlex_quote(s):
+        if not s:
+            return "''"
+        if _shlex_find_unsafe(s) is None:
+            return s
+
+        return "'" + s.replace("'", "'\"'\"'") + "'"
+
+    shlex.quote = _shlex_quote
 
 from .config import Config, DataProxy
 from .exceptions import Failure, AuthFailure, ResponseNotAccepted
@@ -320,10 +337,22 @@ class Context(DataProxy):
             if path.startswith("~") or path.startswith("/"):
                 break
 
-        # TODO: see if there's a stronger "escape this path" function somewhere
-        # we can reuse. e.g., escaping tildes or slashes in filenames.
-        paths = [path.replace(" ", r"\ ") for path in self.command_cwds[i:]]
-        return os.path.join(*paths)
+        path = os.path.join(*self.command_cwds[i:])
+        if path.startswith("~"):
+            # Ensure that tilde expansion continues to work after quoting; this
+            # requires the first path component starting with a tilde to not be
+            # inside quotes. For example, the path `~a/b(c)` needs to become,
+            # after quoting, ~a/'b(c)'.
+            # This means that the user name must not contain special
+            # characters. This should be fine, since user names generally
+            # follow NAME_REGEX, which is usually equivalent to:
+            # "^[a-z][-a-z0-9_]*$".
+            quotestart = path.find("/") + 1
+            if quotestart == 0:
+                quotestart = len(path)
+        else:
+            quotestart = 0
+        return path[:quotestart] + shlex.quote(path[quotestart:])
 
     @contextmanager
     def cd(self, path):
