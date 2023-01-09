@@ -59,6 +59,34 @@ class Main:
             _output_eq("inv print-name --name whatevs", "whatevs\n")
 
         @trap
+        def invocation_with_optional_positional_arg_as_positional(self):
+            _output_eq("inv -d print-hello Olivier", "Hello, Olivier!\n")
+
+        @trap
+        def invocation_with_optional_positional_arg_as_flag(self):
+            _output_eq("inv print-hello --name Olivier", "Hello, Olivier!\n")
+
+        @trap
+        def invocation_with_optional_positional_arg_no_value(self):
+            _output_eq("inv print-hello", "Hello, World!\n")
+
+        @trap
+        def invocation_with_multiple_positional_arg_single_optional(self):
+            _output_eq("inv print-addition 3 3", "6\n")
+
+        @trap
+        def invocation_with_multiple_positional_arg_single_optional_no_value(
+            self
+        ):
+            _output_eq("inv print-addition 3", "5\n")
+
+        @trap
+        def invocation_with_multiple_positional_arg_single_optional_as_flag(
+            self
+        ):
+            _output_eq("inv print-addition 3 --second 5", "8\n")
+
+        @trap
         def bad_collection_exits_nonzero(self):
             result = run("inv -c nope -l", warn=True)
             assert result.exited == 1
