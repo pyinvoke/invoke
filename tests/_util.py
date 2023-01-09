@@ -129,6 +129,8 @@ class MockSubprocess(object):
         process.returncode = self.exit
         process.stdout.fileno.return_value = 1
         process.stderr.fileno.return_value = 2
+        process.stdout = self.out_file
+        process.stderr = self.err_file
         # If requested, mock isatty to fake out pty detection
         if self.isatty is not None:
             sys_stdin.isatty = Mock(return_value=self.isatty)
