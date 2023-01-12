@@ -11,6 +11,6 @@ The command-line parsing framework is split up into a handful of sub-modules:
 API docs for all are below.
 
 .. automodule:: invoke.parser.parser
-    :member-order: by-source
+    :member-order: bysource
 .. automodule:: invoke.parser.context
 .. automodule:: invoke.parser.argument
