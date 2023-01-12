@@ -15,9 +15,10 @@ class StreamWatcher(threading.local):
       subclasses *of* subclasses should be careful to make use of `super` where
       appropriate.
     * `submit` must accept the entire current contents of the stream being
-    watched, as a string, and may optionally return an iterable of strings (or
-    act as a generator iterator, i.e. multiple calls to ``yield <string>``),
-    which will each be written to the subprocess' standard input.
+      watched, as a string, and may optionally return an iterable of strings
+      (or act as a generator iterator, i.e. multiple calls to ``yield
+      <string>``), which will each be written to the subprocess' standard
+      input.
 
     .. note::
         `StreamWatcher` subclasses exist in part to enable state tracking, such
