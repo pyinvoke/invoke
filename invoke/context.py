@@ -457,7 +457,7 @@ class MockContext(Context):
             Changed ``repeat`` default value from ``False`` to ``True``.
         """
         # Set up like any other Context would, with the config
-        super(MockContext, self).__init__(config)
+        super().__init__(config)
         # Pull out behavioral kwargs
         self._set("__repeat", kwargs.pop("repeat", True))
         # The rest must be things like run/sudo - mock Context method info

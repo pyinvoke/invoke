@@ -14,7 +14,7 @@ from .exceptions import UncastableEnvVar, AmbiguousEnvVar
 from .util import debug
 
 
-class Environment(object):
+class Environment:
     def __init__(self, config, prefix):
         self._config = config
         self._prefix = prefix

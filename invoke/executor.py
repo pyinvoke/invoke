@@ -4,7 +4,7 @@ from .util import debug
 from .tasks import Call, Task
 
 
-class Executor(object):
+class Executor:
     """
     An execution strategy for Task objects.
 
