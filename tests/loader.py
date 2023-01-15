@@ -79,7 +79,7 @@ class Loader_:
 
 
 class FilesystemLoader_:
-    def setup(self):
+    def setup_method(self):
         self.loader = FSLoader(start=support)
 
     def discovery_start_point_defaults_to_cwd(self):

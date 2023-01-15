@@ -63,7 +63,7 @@ class Context_:
     class configuration_proxy:
         "Dict-like proxy for self.config"
 
-        def setup(self):
+        def setup_method(self):
             config = Config(defaults={"foo": "bar", "biz": {"baz": "boz"}})
             self.c = Context(config=config)
 
@@ -133,7 +133,7 @@ class Context_:
             assert self.c.biz.otherbaz == "otherboz"
 
     class cwd:
-        def setup(self):
+        def setup_method(self):
             self.c = Context()
 
         def simple(self):
@@ -401,7 +401,7 @@ class Context_:
             self._expect_responses(expected, config=config, kwargs=kwargs)
 
         class auto_response_merges_with_other_responses:
-            def setup(self):
+            def setup_method(self):
                 class DummyWatcher(StreamWatcher):
                     def submit(self, stream):
                         pass

@@ -84,7 +84,7 @@ def _expect_platform_shell(shell):
         assert shell == "/bin/bash"
 
 
-def make_tcattrs(cc_is_ints=True, echo=False):
+def _make_tcattrs(cc_is_ints=True, echo=False):
     # Set up the control character sub-array; it's technically platform
     # dependent so we need to be dynamic.
     # NOTE: setting this up so we can test both potential values for
@@ -665,7 +665,7 @@ class Runner_:
                     assert repr(e) == expected.format(_)
 
         class UnexpectedExit_str:
-            def setup(self):
+            def setup_method(self):
                 def lines(prefix):
                     prefixed = "\n".join(
                         "{} {}".format(prefix, x) for x in range(1, 26)
@@ -1238,7 +1238,7 @@ stderr 25
         @skip_if_windows
         @patch("invoke.terminals.tty")
         def setcbreak_called_on_tty_stdins(self, mock_tty, mock_termios):
-            mock_termios.tcgetattr.return_value = make_tcattrs(echo=True)
+            mock_termios.tcgetattr.return_value = _make_tcattrs(echo=True)
             self._run(_)
             mock_tty.setcbreak.assert_called_with(sys.stdin)
 
@@ -1269,7 +1269,7 @@ stderr 25
         ):
             # Get already-cbroken attrs since that's an easy way to get the
             # right format/layout
-            attrs = make_tcattrs(echo=True)
+            attrs = _make_tcattrs(echo=True)
             mock_termios.tcgetattr.return_value = attrs
             self._run(_)
             # Ensure those old settings are being restored
@@ -1283,7 +1283,7 @@ stderr 25
             self, mock_tty, mock_termios
         ):
             # This test is re: GH issue #303
-            sentinel = make_tcattrs(echo=True)
+            sentinel = _make_tcattrs(echo=True)
             mock_termios.tcgetattr.return_value = sentinel
             # Don't actually bubble up the KeyboardInterrupt...
             try:
@@ -1307,7 +1307,7 @@ stderr 25
             # Test both bytes and ints versions of CC values, since docs
             # disagree with at least some platforms' realities on that.
             for is_ints in (True, False):
-                mock_termios.tcgetattr.return_value = make_tcattrs(
+                mock_termios.tcgetattr.return_value = _make_tcattrs(
                     cc_is_ints=is_ints
                 )
                 self._run(_)
@@ -1752,7 +1752,7 @@ class Result_:
         assert repr(Result(command="foo")) == "<Result cmd='foo' exited=0>"
 
     class tail:
-        def setup(self):
+        def setup_method(self):
             self.sample = "\n".join(str(x) for x in range(25))
 
         def returns_last_10_lines_of_given_stream_plus_whitespace(self):

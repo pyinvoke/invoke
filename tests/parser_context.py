@@ -28,7 +28,7 @@ class Context_:
     # tests within 'add_arg'.  Some of this behavior is technically driven by
     # add_arg.
     class args:
-        def setup(self):
+        def setup_method(self):
             self.c = Context(
                 args=(
                     Argument("foo"),
@@ -56,7 +56,7 @@ class Context_:
             assert "wat" not in self.c.flags
 
     class add_arg:
-        def setup(self):
+        def setup_method(self):
             self.c = Context()
 
         def can_take_Argument_instance(self):
@@ -134,7 +134,7 @@ class Context_:
     class deepcopy:
         "__deepcopy__"
 
-        def setup(self):
+        def setup_method(self):
             self.arg = Argument("--boolean")
             self.orig = Context(
                 name="mytask", args=(self.arg,), aliases=("othername",)
@@ -157,7 +157,7 @@ class Context_:
             assert not self.arg.value
 
     class help_for:
-        def setup(self):
+        def setup_method(self):
             # Normal, non-task/collection related Context
             self.vanilla = Context(
                 args=(Argument("foo"), Argument("bar", help="bar the baz"))

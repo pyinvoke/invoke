@@ -6,7 +6,7 @@ from invoke.util import ExceptionWrapper, ExceptionHandlingThread as EHThread
 # TODO: rename
 class ExceptionHandlingThread_:
     class via_target:
-        def setup(self):
+        def setup_method(self):
             def worker(q):
                 q.put(7)
 
@@ -48,7 +48,7 @@ class ExceptionHandlingThread_:
             assert not t.is_dead
 
     class via_subclassing:
-        def setup(self):
+        def setup_method(self):
             class MyThread(EHThread):
                 def __init__(self, *args, **kwargs):
                     self.queue = kwargs.pop("queue")

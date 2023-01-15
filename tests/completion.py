@@ -32,13 +32,13 @@ class CompletionScriptPrinter:
     Printing the completion script
     """
 
-    def setup(self):
+    def setup_method(self):
         self.prev_cwd = os.getcwd()
         # Chdir to system root to (hopefully) avoid any tasks.py. This will
         # prove that --print-completion-script works w/o nearby tasks.
         os.chdir(ROOT)
 
-    def teardown(self):
+    def teardown_method(self):
         os.chdir(self.prev_cwd)
 
     def only_accepts_certain_shells(self):

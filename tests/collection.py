@@ -102,7 +102,7 @@ class Collection_:
             submeh = Collection("submeh", task3)
             return Collection("meh", task1, task2, submeh)
 
-        def setup(self):
+        def setup_method(self):
             self.c = self._meh()
 
         def repr_(self):
@@ -148,11 +148,11 @@ class Collection_:
             assert not Collection(foo=Collection())
 
     class from_module:
-        def setup(self):
+        def setup_method(self):
             self.c = Collection.from_module(load("integration"))
 
         class parameters:
-            def setup(self):
+            def setup_method(self):
                 self.mod = load("integration")
                 self.from_module = Collection.from_module
 
@@ -232,7 +232,7 @@ class Collection_:
             assert c3 is not c4
 
         class explicit_root_ns:
-            def setup(self):
+            def setup_method(self):
                 mod = load("explicit_root")
                 mod.ns.configure(
                     {
@@ -278,7 +278,7 @@ class Collection_:
                 assert self.changed.__doc__.strip() == expected
 
     class add_task:
-        def setup(self):
+        def setup_method(self):
             self.c = Collection()
 
         def associates_given_callable_with_given_name(self):
@@ -350,7 +350,7 @@ class Collection_:
                 assert self.c[x] is self.c["biz"]
 
     class add_collection:
-        def setup(self):
+        def setup_method(self):
             self.c = Collection()
 
         def adds_collection_as_subcollection_of_self(self):
@@ -394,7 +394,7 @@ class Collection_:
     class getitem:
         "__getitem__"
 
-        def setup(self):
+        def setup_method(self):
             self.c = Collection()
 
         def finds_own_tasks_by_name(self):
@@ -447,7 +447,7 @@ class Collection_:
                 self.c["whatever"]
 
     class to_contexts:
-        def setup(self):
+        def setup_method(self):
             @task
             def mytask(c, text, boolean=False, number=5):
                 print(text)
@@ -598,7 +598,7 @@ class Collection_:
             assert "mytask27" in self.aliases
 
     class task_names:
-        def setup(self):
+        def setup_method(self):
             self.c = Collection.from_module(load("explicit_root"))
 
         def returns_all_task_names_including_subtasks(self):
@@ -614,7 +614,7 @@ class Collection_:
     class configuration:
         "Configuration methods"
 
-        def setup(self):
+        def setup_method(self):
             self.root = Collection()
             self.task = Task(_func, name="task")
 

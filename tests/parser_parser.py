@@ -168,7 +168,7 @@ class Parser_:
             assert a2.value == "val"
 
         class parsing_errors:
-            def setup(self):
+            def setup_method(self):
                 self.p = Parser([Context(name="foo", args=[Argument("bar")])])
 
             def missing_flag_values_raise_ParseError(self):
@@ -280,7 +280,7 @@ class Parser_:
             assert a.bar.value is True
 
     class optional_arg_values:
-        def setup(self):
+        def setup_method(self):
             self.parser = self._parser()
 
         def _parser(self, arguments=None):
@@ -525,7 +525,7 @@ class Parser_:
 class ParseResult_:
     "ParseResult"
 
-    def setup(self):
+    def setup_method(self):
         self.context = Context(
             "mytask", args=(Argument("foo", kind=str), Argument("bar"))
         )

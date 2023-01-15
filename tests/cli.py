@@ -8,7 +8,7 @@ class CLIParsing:
     High level parsing tests
     """
 
-    def setup(self):
+    def setup_method(self):
         @task(positional=[], iterable=["my_list"], incrementable=["verbose"])
         def my_task(
             c,

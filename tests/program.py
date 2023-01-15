@@ -1193,7 +1193,7 @@ Default 'build' task: .all
                     )
 
             class json:
-                def setup(self):
+                def setup_method(self):
                     # Stored expected data as an actual JSON file cuz it's big
                     # & looks like crap if inlined. Plus by round-tripping it
                     # we remove the pretty-printing. Win-win?

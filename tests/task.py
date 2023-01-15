@@ -25,7 +25,7 @@ class task_:
         mod, _ = self.loader.load(name)
         return Collection.from_module(mod)
 
-    def setup(self):
+    def setup_method(self):
         self.loader = Loader(start=support)
         self.vanilla = self._load("decorators")
 
@@ -215,7 +215,7 @@ class Task_:
             assert Task(_func, name="foo").name == "foo"
 
     class callability:
-        def setup(self):
+        def setup_method(self):
             @task
             def foo(c):
                 "My docstring"
@@ -258,7 +258,7 @@ class Task_:
             assert self.task.__name__ == "foo"
 
     class get_arguments:
-        def setup(self):
+        def setup_method(self):
             @task(positional=["arg_3", "arg1"], optional=["arg1"])
             def mytask(c, arg1, arg2=False, arg_3=5):
                 pass
@@ -378,7 +378,7 @@ class Task_:
             assert arg.name == "longer_arg"
 
         class help:
-            def setup(self):
+            def setup_method(self):
                 @task(
                     help={
                         "simple": "key",
@@ -450,7 +450,7 @@ _ = object()
 
 
 class Call_:
-    def setup(self):
+    def setup_method(self):
         self.task = Task(Mock(__name__="mytask"))
 
     class init:
