@@ -5,7 +5,6 @@ dist/
 .tox
 *.egg-info
 *.py[cod]
-src/
 htmlcov
 coverage.xml
 .cache
