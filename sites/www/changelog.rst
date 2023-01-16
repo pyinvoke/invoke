@@ -9,6 +9,9 @@ Changelog
   `invoke.context.MockContext` (which now expects stdlib's ``unittest.mock``
   instead of hunting for the old standalone ``mock`` library).
 
+  Thanks to various folks for patches related to some of this work, including
+  Jesse P. Johnson who supplied multiple PRs whose commits made it in.
+
   .. warning::
     This change is backwards incompatible in the following scenarios:
 
