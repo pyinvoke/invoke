@@ -2,6 +2,7 @@
 Changelog
 =========
 
+- :release:`2.0.0 <2023-01-16>`
 - :support:`-` Remove support for, and imports related to, all Python versions
   less than 3.6 - including Python 2. This also includes updates to vendored
   packages, such as removing ``six`` and upgrading ``lexicon`` to the latest
