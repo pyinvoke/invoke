@@ -2,7 +2,6 @@ import copy
 import json
 import os
 import types
-from os import PathLike
 from os.path import join, splitext, expanduser
 from typing import Any, Dict, Iterator, Optional, Tuple
 
@@ -10,16 +9,18 @@ from .env import Environment
 from .exceptions import UnknownFileType, UnpicklableConfigMember
 from .runners import Local
 from .terminals import WINDOWS
-from .util import debug, yaml
+from .util import debug, yaml  # type: ignore
 
 
 try:
     from importlib.machinery import SourceFileLoader
 except ImportError:  # PyPy3
-    from importlib._bootstrap import _SourceFileLoader as SourceFileLoader
+    from importlib._bootstrap import (  # type: ignore
+        _SourceFileLoader as SourceFileLoader,
+    )
 
 
-def load_source(name, path):
+def load_source(name: str, path: str) -> Dict[str, Any]:
     if not os.path.exists(path):
         return {}
     return vars(SourceFileLoader("mod", path).load_module())
@@ -67,7 +68,10 @@ class DataProxy:
 
     @classmethod
     def from_data(
-        cls, data: Dict[str, Any], root: Optional[str] = None, keypath=tuple()
+        cls,
+        data: Dict[str, Any],
+        root: Optional[str] = None,
+        keypath: Tuple[str, ...] = tuple(),
     ):
         """
         Alternate constructor for 'baby' DataProxies used as sub-dict values.
@@ -133,7 +137,7 @@ class DataProxy:
         # whether we support __iter__. BOO
         return iter(self._config)
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: object) -> bool:
         # NOTE: Can't proxy __eq__ because the RHS will always be an obj of the
         # current class, not the proxied-to class, and that causes
         # NotImplemented.
@@ -910,7 +914,7 @@ class Config(DataProxy):
         with open(path) as fd:
             return json.load(fd)
 
-    def _load_py(self, path: PathLike) -> Dict[str, Any]:
+    def _load_py(self, path: str) -> Dict[str, Any]:
         data = {}
         for key, value in (load_source("mod", path)).items():
             # Strip special members, as these are always going to be builtins
@@ -972,7 +976,7 @@ class Config(DataProxy):
             # the negative? Just a branch here based on 'name'?
             debug("{} not found, skipping".format(desc))
 
-    def clone(self, into=None):
+    def clone(self, into: Optional["Config"] = None) -> "Config":
         """
         Return a copy of this configuration object.
 
@@ -1025,7 +1029,7 @@ class Config(DataProxy):
         # instantiation" and "I want cloning to not trigger certain things like
         # external data source loading".
         # NOTE: this will include lazy=True, see end of method
-        new = klass(**self._clone_init_kwargs(into=into))
+        new = klass(**self._clone_init_kwargs(into=into))  # type: ignore
         # Copy/merge/etc all 'private' data sources and attributes
         for name in """
             collection
@@ -1068,7 +1072,9 @@ class Config(DataProxy):
         new.merge()
         return new
 
-    def _clone_init_kwargs(self, into=None) -> Dict[str, Any]:
+    def _clone_init_kwargs(
+        self, into: Optional["Config"] = None
+    ) -> Dict[str, Any]:
         """
         Supply kwargs suitable for initializing a new clone of this object.
 
@@ -1263,7 +1269,7 @@ def excise(dict_: Dict[str, Any], keypath: Tuple[str, ...]) -> None:
         del data[leaf_key]
 
 
-def obliterate(base: Dict[str, Any], deletions: Tuple[str, ...]) -> None:
+def obliterate(base: Dict[str, Any], deletions: Dict[str, Any]) -> None:
     """
     Remove all (nested) keys mentioned in ``deletions``, from ``base``.
 
