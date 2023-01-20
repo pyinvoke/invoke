@@ -2,6 +2,7 @@ import copy
 import json
 import os
 import types
+from os import PathLike
 from os.path import join, splitext, expanduser
 from typing import Any, Dict, Iterator, Optional, Tuple
 
