@@ -8,24 +8,24 @@ import time
 import signal
 from subprocess import Popen, PIPE
 from types import TracebackType
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
 
 # Import some platform-specific things at top level so they can be mocked for
 # tests.
 try:
     import pty
 except ImportError:
-    pty = None
+    pty = None  # type: ignore
 try:
     import fcntl
 except ImportError:
-    fcntl = None
+    fcntl = None  # type: ignore
 try:
     import termios
 except ImportError:
-    termios = None
+    termios = None  # type: ignore
 
-from invoke.exceptions import (
+from .exceptions import (
     UnexpectedExit,
     Failure,
     ThreadException,
@@ -33,7 +33,7 @@ from invoke.exceptions import (
     SubprocessPipeError,
     CommandTimedOut,
 )
-from invoke.terminals import (
+from .terminals import (
     WINDOWS,
     pty_size,
     character_buffered,
@@ -1044,7 +1044,7 @@ class Runner:
             self._timer = threading.Timer(timeout, self.kill)
             self._timer.start()
 
-    def read_proc_stdout(self, num_bytes -> int) -> Union[bytes, str]:
+    def read_proc_stdout(self, num_bytes: int) -> Union[bytes, str]:
         """
         Read ``num_bytes`` from the running process' stdout stream.
 
@@ -1068,7 +1068,7 @@ class Runner:
         """
         raise NotImplementedError
 
-    def _write_proc_stdin(self, data -> str) -> None:
+    def _write_proc_stdin(self, data: str) -> None:
         """
         Write ``data`` to running process' stdin.
 
@@ -1123,7 +1123,7 @@ class Runner:
         """
         self.write_proc_stdin("\x03")
 
-    def returncode(self) > int:
+    def returncode(self) -> int:
         """
         Return the numeric return/exit code resulting from command execution.
 
@@ -1449,15 +1449,8 @@ class Result:
         """
         return self.exited
 
-    def __nonzero__(self) -> Any:
-        # NOTE: This is the method that (under Python 2) determines Boolean
-        # behavior for objects.
+    def __bool__(self):
         return self.ok
-
-    def __bool__(self) -> Any:
-        # NOTE: And this is the Python 3 equivalent of __nonzero__. Much better
-        # name...
-        return self.__nonzero__()
 
     def __str__(self) -> str:
         if self.exited is not None:
@@ -1468,15 +1461,15 @@ class Result:
         for x in ("stdout", "stderr"):
             val = getattr(self, x)
             ret.append(
-                u"""=== {} ===
+                """=== {} ===
 {}
 """.format(
                     x, val.rstrip()
                 )
                 if val
-                else u"(no {})".format(x)
+                else "(no {})".format(x)
             )
-        return u"\n".join(ret)
+        return "\n".join(ret)
 
     def __repr__(self) -> str:
         # TODO: more? e.g. len of stdout/err? (how to represent cleanly in a
@@ -1574,7 +1567,7 @@ class Promise(Result):
         try:
             return self.runner._finish()
         finally:
-            self.runner._stop_everything()
+            self.runner.stop()
 
     def __enter__(self) -> "Promise":
         return self

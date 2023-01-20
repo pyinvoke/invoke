@@ -92,7 +92,7 @@ def complete(
     raise Exit
 
 
-def print_task_names(collection: Collection) -> None:
+def print_task_names(collection: "Collection") -> None:
     for name in sorted(collection.task_names, key=task_name_sort_key):
         print(name)
         # Just stick aliases after the thing they're aliased to. Sorting isn't
