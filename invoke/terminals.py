@@ -8,6 +8,7 @@ logic-flow interruptions.
 """
 
 from contextlib import contextmanager
+from typing import Any, Optional, Tuple
 import os
 import select
 import sys
@@ -38,7 +39,7 @@ else:
     import tty
 
 
-def pty_size():
+def pty_size() -> Tuple[int, int]:
     """
     Determine current local pseudoterminal dimensions.
 
@@ -50,10 +51,10 @@ def pty_size():
     """
     cols, rows = _pty_size() if not WINDOWS else _win_pty_size()
     # TODO: make defaults configurable?
-    return ((cols or 80), (rows or 24))
+    return (int(cols or 80), int(rows or 24))
 
 
-def _pty_size():
+def _pty_size() -> Tuple[Optional[int], Optional[int]]:
     """
     Suitable for most POSIX platforms.
 
@@ -85,7 +86,7 @@ def _pty_size():
     return size
 
 
-def _win_pty_size():
+def _win_pty_size() -> Tuple[Optional[str], Optional[str]]:
     class CONSOLE_SCREEN_BUFFER_INFO(Structure):
         _fields_ = [
             ("dwSize", _COORD),
@@ -115,7 +116,7 @@ def _win_pty_size():
         return (None, None)
 
 
-def stdin_is_foregrounded_tty(stream):
+def stdin_is_foregrounded_tty(stream) -> bool:
     """
     Detect if given stdin ``stream`` seems to be in the foreground of a TTY.
 
@@ -139,7 +140,7 @@ def stdin_is_foregrounded_tty(stream):
     return os.getpgrp() == os.tcgetpgrp(stream.fileno())
 
 
-def cbreak_already_set(stream):
+def cbreak_already_set(stream) -> bool:
     # Explicitly not docstringed to remain private, for now. Eh.
     # Checks whether tty.setcbreak appears to have already been run against
     # ``stream`` (or if it would otherwise just not do anything).
@@ -186,7 +187,7 @@ def character_buffered(stream):
             termios.tcsetattr(stream, termios.TCSADRAIN, old_settings)
 
 
-def ready_for_reading(input_):
+def ready_for_reading(input_) -> bool:
     """
     Test ``input_`` to determine whether a read action will succeed.
 
@@ -209,7 +210,7 @@ def ready_for_reading(input_):
         return bool(reads and reads[0] is input_)
 
 
-def bytes_to_read(input_):
+def bytes_to_read(input_) -> int:
     """
     Query stream ``input_`` to see how many bytes may be readable.
 

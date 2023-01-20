@@ -1,5 +1,8 @@
 from collections import namedtuple
 from contextlib import contextmanager
+
+# from os import PathLike
+from typing import Any, List, Optional, Tuple, Union
 import io
 import logging
 import os
@@ -19,14 +22,14 @@ try:
     from .vendor.lexicon import Lexicon  # noqa
     from .vendor import yaml  # noqa
 except ImportError:
-    from lexicon import Lexicon  # noqa
-    import yaml  # noqa
+    from lexicon import Lexicon  # type: ignore # noqa
+    import yaml  # type: ignore # noqa
 
 
 LOG_FORMAT = "%(name)s.%(module)s.%(funcName)s: %(message)s"
 
 
-def enable_logging():
+def enable_logging() -> None:
     logging.basicConfig(level=logging.DEBUG, format=LOG_FORMAT)
 
 
@@ -41,7 +44,7 @@ for x in ("debug",):
     globals()[x] = getattr(log, x)
 
 
-def task_name_sort_key(name):
+def task_name_sort_key(name: str) -> Tuple[List[str], str]:
     """
     Return key tuple for use sorting dotted task names, via e.g. `sorted`.
 
@@ -60,7 +63,7 @@ def task_name_sort_key(name):
 
 # TODO: Make part of public API sometime
 @contextmanager
-def cd(where):
+def cd(where: str):
     cwd = os.getcwd()
     os.chdir(where)
     try:
@@ -69,7 +72,7 @@ def cd(where):
         os.chdir(cwd)
 
 
-def has_fileno(stream):
+def has_fileno(stream) -> bool:
     """
     Cleanly determine whether ``stream`` has a useful ``.fileno()``.
 
@@ -93,7 +96,7 @@ def has_fileno(stream):
         return False
 
 
-def isatty(stream):
+def isatty(stream) -> Union[bool, Any]:
     """
     Cleanly determine whether ``stream`` is a TTY.
 
@@ -126,7 +129,7 @@ def isatty(stream):
     return False
 
 
-def helpline(obj):
+def helpline(obj: object) -> Optional[str]:
     """
     Yield an object's first docstring line, or None if there was no docstring.
 
@@ -161,7 +164,7 @@ class ExceptionHandlingThread(threading.Thread):
     .. versionadded:: 1.0
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: Any) -> None:
         """
         Create a new exception-handling thread instance.
 
@@ -177,7 +180,7 @@ class ExceptionHandlingThread(threading.Thread):
         self.kwargs = kwargs
         self.exc_info = None
 
-    def run(self):
+    def run(self) -> None:
         try:
             # Allow subclasses implemented using the "override run()'s body"
             # approach to work, by using _run() instead of run(). If that
@@ -214,7 +217,7 @@ class ExceptionHandlingThread(threading.Thread):
                 name = self.kwargs["target"].__name__
             debug(msg.format(self.exc_info[1], name))  # noqa
 
-    def exception(self):
+    def exception(self) -> Optional['ExceptionWrapper']:
         """
         If an exception occurred, return an `.ExceptionWrapper` around it.
 
@@ -230,7 +233,7 @@ class ExceptionHandlingThread(threading.Thread):
         return ExceptionWrapper(self.kwargs, *self.exc_info)
 
     @property
-    def is_dead(self):
+    def is_dead(self) -> bool:
         """
         Returns ``True`` if not alive and has a stored exception.
 
@@ -243,9 +246,9 @@ class ExceptionHandlingThread(threading.Thread):
         # be thorough?
         return (not self.is_alive()) and self.exc_info is not None
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         # TODO: beef this up more
-        return self.kwargs["target"].__name__
+        return str(self.kwargs["target"].__name__)
 
 
 # NOTE: ExceptionWrapper defined here, not in exceptions.py, to avoid circular

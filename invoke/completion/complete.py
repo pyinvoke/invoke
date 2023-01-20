@@ -2,16 +2,28 @@
 Command-line completion mechanisms, executed by the core ``--complete`` flag.
 """
 
+from typing import List
 import glob
 import os
 import re
 import shlex
+from typing import TYPE_CHECKING
 
 from ..exceptions import Exit, ParseError
 from ..util import debug, task_name_sort_key
 
+if TYPE_CHECKING:
+    from ..collection import Collection
+    from ..parser import Parser, Context
 
-def complete(names, core, initial_context, collection, parser):
+
+def complete(
+    names: List[str],
+    core,
+    initial_context: "Context",
+    collection: "Collection",
+    parser: "Parser",
+):
     # Strip out program name (scripts give us full command line)
     # TODO: this may not handle path/to/script though?
     invocation = re.sub(r"^({}) ".format("|".join(names)), "", core.remainder)
@@ -80,7 +92,7 @@ def complete(names, core, initial_context, collection, parser):
     raise Exit
 
 
-def print_task_names(collection):
+def print_task_names(collection: Collection) -> None:
     for name in sorted(collection.task_names, key=task_name_sort_key):
         print(name)
         # Just stick aliases after the thing they're aliased to. Sorting isn't
@@ -89,7 +101,7 @@ def print_task_names(collection):
             print(alias)
 
 
-def print_completion_script(shell, names):
+def print_completion_script(shell: str, names: List[str]) -> None:
     # Grab all .completion files in invoke/completion/. (These used to have no
     # suffix, but surprise, that's super fragile.
     completions = {

@@ -9,18 +9,22 @@ not be included in the Sphinx API documentation.
 """
 
 import os
+from typing import TYPE_CHECKING, Any, Dict, List
 
 from .exceptions import UncastableEnvVar, AmbiguousEnvVar
 from .util import debug
 
+if TYPE_CHECKING:
+    from .config import Config
+
 
 class Environment:
-    def __init__(self, config, prefix):
+    def __init__(self, config: 'Config', prefix: str) -> None:
         self._config = config
         self._prefix = prefix
-        self.data = {}  # Accumulator
+        self.data: Dict[str, Any] = {}  # Accumulator
 
-    def load(self):
+    def load(self) -> Dict[str, Any]:
         """
         Return a nested dict containing values from `os.environ`.
 
@@ -41,7 +45,9 @@ class Environment:
         debug("Obtained env var config: {!r}".format(self.data))
         return self.data
 
-    def _crawl(self, key_path, env_vars):
+    def _crawl(
+        self, key_path: List[str], env_vars: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """
         Examine config at location ``key_path`` & return potential env vars.
 
@@ -55,7 +61,7 @@ class Environment:
 
         Returns another dictionary of new keypairs as per above.
         """
-        new_vars = {}
+        new_vars: Dict[str, Any] = {}
         obj = self._path_get(key_path)
         # Sub-dict -> recurse
         if (
@@ -79,10 +85,10 @@ class Environment:
             new_vars[self._to_env_var(key_path)] = key_path
         return new_vars
 
-    def _to_env_var(self, key_path):
+    def _to_env_var(self, key_path: List[str]) -> str:
         return "_".join(key_path).upper()
 
-    def _path_get(self, key_path):
+    def _path_get(self, key_path: List[str]):  # -> Config:
         # Gets are from self._config because that's what determines valid env
         # vars and/or values for typecasting.
         obj = self._config
@@ -90,7 +96,7 @@ class Environment:
             obj = obj[key]
         return obj
 
-    def _path_set(self, key_path, value):
+    def _path_set(self, key_path: List[str], value: str) -> None:
         # Sets are to self.data since that's what we are presenting to the
         # outer config object and debugging.
         obj = self.data
@@ -102,7 +108,7 @@ class Environment:
         new_ = self._cast(old, value)
         obj[key_path[-1]] = new_
 
-    def _cast(self, old, new_):
+    def _cast(self, old: Any, new_: Any) -> Any:
         if isinstance(old, bool):
             return new_ not in ("0", "")
         elif isinstance(old, str):

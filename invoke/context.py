@@ -2,6 +2,8 @@ import os
 import re
 from contextlib import contextmanager
 from itertools import cycle
+from os import PathLike
+from typing import Any, Iterator, List, Optional, Union
 from unittest.mock import Mock
 
 from .config import Config, DataProxy
@@ -30,7 +32,7 @@ class Context(DataProxy):
     .. versionadded:: 1.0
     """
 
-    def __init__(self, config=None):
+    def __init__(self, config: Optional[Config] = None) -> None:
         """
         :param config:
             `.Config` object to use as the base configuration.
@@ -51,22 +53,22 @@ class Context(DataProxy):
         #: A list of commands to run (via "&&") before the main argument to any
         #: `run` or `sudo` calls. Note that the primary API for manipulating
         #: this list is `prefix`; see its docs for details.
-        command_prefixes = list()
+        command_prefixes: List[str] = list()
         self._set(command_prefixes=command_prefixes)
         #: A list of directories to 'cd' into before running commands with
         #: `run` or `sudo`; intended for management via `cd`, please see its
         #: docs for details.
-        command_cwds = list()
+        command_cwds: List[str] = list()
         self._set(command_cwds=command_cwds)
 
     @property
-    def config(self):
+    def config(self) -> Any:
         # Allows Context to expose a .config attribute even though DataProxy
         # otherwise considers it a config key.
         return self._config
 
     @config.setter
-    def config(self, value):
+    def config(self, value: Any) -> None:
         # NOTE: mostly used by client libraries needing to tweak a Context's
         # config at execution time; i.e. a Context subclass that bears its own
         # unique data may want to be stood up when parameterizing/expanding a
@@ -74,7 +76,7 @@ class Context(DataProxy):
         # runtime.
         self._set(_config=value)
 
-    def run(self, command, **kwargs):
+    def run(self, command: str, **kwargs: Any):
         """
         Execute a local shell command, honoring config options.
 
@@ -93,11 +95,11 @@ class Context(DataProxy):
     # NOTE: broken out of run() to allow for runner class injection in
     # Fabric/etc, which needs to juggle multiple runner class types (local and
     # remote).
-    def _run(self, runner, command, **kwargs):
+    def _run(self, runner, command: str, **kwargs: Any):
         command = self._prefix_commands(command)
         return runner.run(command, **kwargs)
 
-    def sudo(self, command, **kwargs):
+    def sudo(self, command: str, **kwargs: Any):
         """
         Execute a shell command via ``sudo`` with password auto-response.
 
@@ -170,7 +172,7 @@ class Context(DataProxy):
         return self._sudo(runner, command, **kwargs)
 
     # NOTE: this is for runner injection; see NOTE above _run().
-    def _sudo(self, runner, command, **kwargs):
+    def _sudo(self, runner, command: str, **kwargs: Any):
         prompt = self.config.sudo.prompt
         password = kwargs.pop("password", self.config.sudo.password)
         user = kwargs.pop("user", self.config.sudo.user)
@@ -232,7 +234,7 @@ class Context(DataProxy):
     # TODO: wonder if it makes sense to move this part of things inside Runner,
     # which would grow a `prefixes` and `cwd` init kwargs or similar. The less
     # that's stuffed into Context, probably the better.
-    def _prefix_commands(self, command):
+    def _prefix_commands(self, command: str) -> str:
         """
         Prefixes ``command`` with all prefixes found in ``command_prefixes``.
 
@@ -247,7 +249,7 @@ class Context(DataProxy):
         return " && ".join(prefixes + [command])
 
     @contextmanager
-    def prefix(self, command):
+    def prefix(self, command: str):
         """
         Prefix all nested `run`/`sudo` commands with given command plus ``&&``.
 
@@ -303,7 +305,7 @@ class Context(DataProxy):
             self.command_prefixes.pop()
 
     @property
-    def cwd(self):
+    def cwd(self) -> Union[PathLike, str]:
         """
         Return the current working directory, accounting for uses of `cd`.
 
@@ -326,7 +328,7 @@ class Context(DataProxy):
         return os.path.join(*paths)
 
     @contextmanager
-    def cd(self, path):
+    def cd(self, path: PathLike):
         """
         Context manager that keeps directory state when executing commands.
 
@@ -401,7 +403,7 @@ class MockContext(Context):
         Added ``Mock`` wrapping of ``run`` and ``sudo``.
     """
 
-    def __init__(self, config=None, **kwargs):
+    def __init__(self, config: Optional[Config] = None, **kwargs: Any) -> None:
         """
         Create a ``Context``-like object whose methods yield `.Result` objects.
 
@@ -481,7 +483,7 @@ class MockContext(Context):
             # Wrap the method in a Mock
             self._set(method, Mock(wraps=getattr(self, method)))
 
-    def _normalize(self, value):
+    def _normalize(self, value: Any) -> Iterator[Any]:
         # First turn everything into an iterable
         if not hasattr(value, "__iter__") or isinstance(value, str):
             value = [value]
@@ -501,7 +503,7 @@ class MockContext(Context):
     # worth. Maybe in situations where Context grows a _lot_ of methods (e.g.
     # in Fabric 2; though Fabric could do its own sub-subclass in that case...)
 
-    def _yield_result(self, attname, command):
+    def _yield_result(self, attname: str, command: str):
         try:
             obj = getattr(self, attname)
             # Dicts need to try direct lookup or regex matching
@@ -531,21 +533,21 @@ class MockContext(Context):
             # raise_from(NotImplementedError(command), None)
             raise NotImplementedError(command)
 
-    def run(self, command, *args, **kwargs):
+    def run(self, command: str, *args: Any, **kwargs: Any):
         # TODO: perform more convenience stuff associating args/kwargs with the
         # result? E.g. filling in .command, etc? Possibly useful for debugging
         # if one hits unexpected-order problems with what they passed in to
         # __init__.
         return self._yield_result("__run", command)
 
-    def sudo(self, command, *args, **kwargs):
+    def sudo(self, command: str, *args: Any, **kwargs: Any):
         # TODO: this completely nukes the top-level behavior of sudo(), which
         # could be good or bad, depending. Most of the time I think it's good.
         # No need to supply dummy password config, etc.
         # TODO: see the TODO from run() re: injecting arg/kwarg values
         return self._yield_result("__sudo", command)
 
-    def set_result_for(self, attname, command, result):
+    def set_result_for(self, attname: str, command: str, result) -> None:
         """
         Modify the stored mock results for given ``attname`` (e.g. ``run``).
 
