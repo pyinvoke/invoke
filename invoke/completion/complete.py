@@ -10,16 +10,16 @@ import shlex
 from typing import TYPE_CHECKING
 
 from ..exceptions import Exit, ParseError
-from ..util import debug, task_name_sort_key
+from ..util import debug, task_name_sort_key  # type: ignore
 
 if TYPE_CHECKING:
     from ..collection import Collection
-    from ..parser import Parser, Context
+    from ..parser import Parser, ParseResult, Context
 
 
 def complete(
     names: List[str],
-    core,
+    core: "ParseResult",
     initial_context: "Context",
     collection: "Collection",
     parser: "Parser",

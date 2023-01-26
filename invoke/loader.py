@@ -29,7 +29,7 @@ class Loader:
             config = Config()
         self.config = config
 
-    def find(self, name: str) -> Tuple[str, str, str]:
+    def find(self, name: str) -> Tuple[IO[Any], str, Tuple[str, str, int]]:
         """
         Implementation-specific finder method seeking collection ``name``.
 

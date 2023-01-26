@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 
 
 class Environment:
-    def __init__(self, config: 'Config', prefix: str) -> None:
+    def __init__(self, config: "Config", prefix: str) -> None:
         self._config = config
         self._prefix = prefix
         self.data: Dict[str, Any] = {}  # Accumulator
@@ -88,7 +88,7 @@ class Environment:
     def _to_env_var(self, key_path: List[str]) -> str:
         return "_".join(key_path).upper()
 
-    def _path_get(self, key_path: List[str]):  # -> Config:
+    def _path_get(self, key_path: List[str]) -> "Config":
         # Gets are from self._config because that's what determines valid env
         # vars and/or values for typecasting.
         obj = self._config

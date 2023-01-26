@@ -3,13 +3,25 @@ import re
 from contextlib import contextmanager
 from itertools import cycle
 from os import PathLike
-from typing import Any, Iterator, List, Optional, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Generator,
+    Iterator,
+    List,
+    Optional,
+    Type,
+    Union,
+)
 from unittest.mock import Mock
 
 from .config import Config, DataProxy
 from .exceptions import Failure, AuthFailure, ResponseNotAccepted
 from .runners import Result
 from .watchers import FailingResponder
+
+if TYPE_CHECKING:
+    from invoke.runners import Runner
 
 
 class Context(DataProxy):
@@ -76,7 +88,7 @@ class Context(DataProxy):
         # runtime.
         self._set(_config=value)
 
-    def run(self, command: str, **kwargs: Any):
+    def run(self, command: str, **kwargs: Any) -> Result:
         """
         Execute a local shell command, honoring config options.
 
@@ -95,11 +107,13 @@ class Context(DataProxy):
     # NOTE: broken out of run() to allow for runner class injection in
     # Fabric/etc, which needs to juggle multiple runner class types (local and
     # remote).
-    def _run(self, runner, command: str, **kwargs: Any):
+    def _run(
+        self, runner: Type["Runner"], command: str, **kwargs: Any
+    ) -> Result:
         command = self._prefix_commands(command)
         return runner.run(command, **kwargs)
 
-    def sudo(self, command: str, **kwargs: Any):
+    def sudo(self, command: str, **kwargs: Any) -> Result:
         """
         Execute a shell command via ``sudo`` with password auto-response.
 
@@ -172,7 +186,9 @@ class Context(DataProxy):
         return self._sudo(runner, command, **kwargs)
 
     # NOTE: this is for runner injection; see NOTE above _run().
-    def _sudo(self, runner, command: str, **kwargs: Any):
+    def _sudo(
+        self, runner: Type["Runner"], command: str, **kwargs: Any
+    ) -> Result:
         prompt = self.config.sudo.prompt
         password = kwargs.pop("password", self.config.sudo.password)
         user = kwargs.pop("user", self.config.sudo.user)
@@ -249,7 +265,7 @@ class Context(DataProxy):
         return " && ".join(prefixes + [command])
 
     @contextmanager
-    def prefix(self, command: str):
+    def prefix(self, command: str) -> Generator[None, None, None]:
         """
         Prefix all nested `run`/`sudo` commands with given command plus ``&&``.
 
@@ -328,7 +344,7 @@ class Context(DataProxy):
         return os.path.join(*paths)
 
     @contextmanager
-    def cd(self, path: PathLike):
+    def cd(self, path: PathLike) -> Generator[None, None, None]:
         """
         Context manager that keeps directory state when executing commands.
 
@@ -503,7 +519,7 @@ class MockContext(Context):
     # worth. Maybe in situations where Context grows a _lot_ of methods (e.g.
     # in Fabric 2; though Fabric could do its own sub-subclass in that case...)
 
-    def _yield_result(self, attname: str, command: str):
+    def _yield_result(self, attname: str, command: str) -> Result:
         try:
             obj = getattr(self, attname)
             # Dicts need to try direct lookup or regex matching
@@ -533,14 +549,14 @@ class MockContext(Context):
             # raise_from(NotImplementedError(command), None)
             raise NotImplementedError(command)
 
-    def run(self, command: str, *args: Any, **kwargs: Any):
+    def run(self, command: str, *args: Any, **kwargs: Any) -> Result:
         # TODO: perform more convenience stuff associating args/kwargs with the
         # result? E.g. filling in .command, etc? Possibly useful for debugging
         # if one hits unexpected-order problems with what they passed in to
         # __init__.
         return self._yield_result("__run", command)
 
-    def sudo(self, command: str, *args: Any, **kwargs: Any):
+    def sudo(self, command: str, *args: Any, **kwargs: Any) -> Result:
         # TODO: this completely nukes the top-level behavior of sudo(), which
         # could be good or bad, depending. Most of the time I think it's good.
         # No need to supply dummy password config, etc.

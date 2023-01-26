@@ -4,7 +4,7 @@ import os
 import types
 from os import PathLike
 from os.path import join, splitext, expanduser
-from typing import Any, Dict, Iterator, Optional, Tuple
+from typing import Any, Dict, Iterator, Optional, Tuple, Type
 
 from .env import Environment
 from .exceptions import UnknownFileType, UnpicklableConfigMember
@@ -71,7 +71,7 @@ class DataProxy:
     def from_data(
         cls,
         data: Dict[str, Any],
-        root: Optional[str] = None,
+        root: Optional['DataProxy'] = None,
         keypath: Tuple[str, ...] = tuple(),
     ):
         """
@@ -288,7 +288,7 @@ class DataProxy:
         self._track_modification_of(key, default)
         return ret
 
-    def update(self, *args: Any, **kwargs: Dict[str, Any]) -> None:
+    def update(self, *args: Any, **kwargs: Any) -> None:
         if kwargs:
             for key, value in kwargs.items():
                 self[key] = value
@@ -819,7 +819,7 @@ class Config(DataProxy):
         if merge:
             self.merge()
 
-    def set_project_location(self, path: PathLike) -> None:
+    def set_project_location(self, path: Optional[PathLike]) -> None:
         """
         Set the directory path where a project-level config file may be found.
 
@@ -977,7 +977,7 @@ class Config(DataProxy):
             # the negative? Just a branch here based on 'name'?
             debug("{} not found, skipping".format(desc))
 
-    def clone(self, into: Optional["Config"] = None) -> "Config":
+    def clone(self, into: Optional[Type["Config"]] = None) -> "Config":
         """
         Return a copy of this configuration object.
 

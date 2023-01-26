@@ -8,7 +8,17 @@ import time
 import signal
 from subprocess import Popen, PIPE
 from types import TracebackType
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Dict,
+    Generator,
+    List,
+    Optional,
+    Tuple,
+    Union,
+)
 
 # Import some platform-specific things at top level so they can be mocked for
 # tests.
@@ -43,6 +53,7 @@ from .terminals import (
 from .util import has_fileno, isatty, ExceptionHandlingThread
 
 if TYPE_CHECKING:
+    from io import StringIO, TextIOWrapper
     from .context import Context
 
 
@@ -57,6 +68,8 @@ class Runner:
     .. versionadded:: 1.0
     """
 
+    opts: Dict[str, Any]
+    using_pty: bool
     read_chunk_size = 1000
     input_sleep = 0.01
 
@@ -108,7 +121,7 @@ class Runner:
         self._asynchronous = False
         self._disowned = False
 
-    def run(self, command: str, **kwargs: Any) -> Any:
+    def run(self, command: str, **kwargs: Any) -> Optional["Result"]:
         """
         Execute ``command``, returning an instance of `Result` once complete.
 
@@ -414,7 +427,7 @@ class Runner:
             encoding=self.encoding,
         )
 
-    def _run_body(self, command: str, **kwargs: Any) -> Any:
+    def _run_body(self, command: str, **kwargs: Any) -> Optional["Result"]:
         # Prepare all the bits n bobs.
         self._setup(command, kwargs)
         # If dry-run, stop here.
@@ -427,7 +440,7 @@ class Runner:
         # If disowned, we just stop here - no threads, no timer, no error
         # checking, nada.
         if self._disowned:
-            return
+            return None
         # Stand up & kick off IO, timer threads
         self.start_timer(self.opts["timeout"])
         self.threads, self.stdout, self.stderr = self.create_io_threads()
@@ -564,7 +577,7 @@ class Runner:
         self.opts = opts
         self.streams = {"out": out_stream, "err": err_stream, "in": in_stream}
 
-    def _collate_result(self, watcher_errors) -> Any:
+    def _collate_result(self, watcher_errors: List[WatcherError]) -> "Result":
         # At this point, we had enough success that we want to be returning or
         # raising detailed info about our execution; so we generate a Result.
         stdout = "".join(self.stdout)
@@ -592,7 +605,7 @@ class Runner:
         )
         return result
 
-    def _thread_join_timeout(self, target) -> Optional[int]:
+    def _thread_join_timeout(self, target: Callable) -> Optional[int]:
         # Add a timeout to out/err thread joins when it looks like they're not
         # dead but their counterpart is dead; this indicates issue #351 (fixed
         # by #432) where the subproc may hang because its stdout (or stderr) is
@@ -661,7 +674,7 @@ class Runner:
         """
         return Result(**kwargs)
 
-    def read_proc_output(self, reader):
+    def read_proc_output(self, reader: Callable) -> Generator[str, None, None]:
         """
         Iteratively read & decode bytes from a subprocess' out/err stream.
 
@@ -694,7 +707,7 @@ class Runner:
                 break
             yield self.decode(data)
 
-    def write_our_output(self, stream, string: str) -> None:
+    def write_our_output(self, stream: "TextIOWrapper", string: str) -> None:
         """
         Write ``string`` to ``stream``.
 
@@ -714,7 +727,13 @@ class Runner:
         stream.write(string)
         stream.flush()
 
-    def _handle_output(self, buffer_, hide, output, reader):
+    def _handle_output(
+        self,
+        buffer_: List["StringIO"],
+        hide: bool,
+        output: "TextIOWrapper",
+        reader: Callable,
+    ) -> None:
         # TODO: store un-decoded/raw bytes somewhere as well...
         for data in self.read_proc_output(reader):
             # Echo to local stdout if necessary
@@ -732,7 +751,9 @@ class Runner:
             # Run our specific buffer through the autoresponder framework
             self.respond(buffer_)
 
-    def handle_stdout(self, buffer_, hide, output):
+    def handle_stdout(
+        self, buffer_: List["StringIO"], hide: bool, output: "TextIOWrapper"
+    ) -> None:
         """
         Read process' stdout, storing into a buffer & printing/parsing.
 
@@ -753,7 +774,9 @@ class Runner:
             buffer_, hide, output, reader=self.read_proc_stdout
         )
 
-    def handle_stderr(self, buffer_, hide, output) -> None:
+    def handle_stderr(
+        self, buffer_: List["StringIO"], hide: bool, output: "TextIOWrapper"
+    ) -> None:
         """
         Read process' stderr, storing into a buffer & printing/parsing.
 
@@ -766,7 +789,7 @@ class Runner:
             buffer_, hide, output, reader=self.read_proc_stderr
         )
 
-    def read_our_stdin(self, input_):
+    def read_our_stdin(self, input_: "TextIOWrapper") -> Optional[str]:
         """
         Read & decode bytes from a local stdin stream.
 
@@ -806,7 +829,12 @@ class Runner:
                 bytes_ = self.decode(bytes_)
         return bytes_
 
-    def handle_stdin(self, input_, output, echo) -> None:
+    def handle_stdin(
+        self,
+        input_: "TextIOWrapper",
+        output: "TextIOWrapper",
+        echo: bool = False,
+    ) -> None:
         """
         Read local stdin, copying into process' stdin as necessary.
 
@@ -867,7 +895,9 @@ class Runner:
                 # Take a nap so we're not chewing CPU.
                 time.sleep(self.input_sleep)
 
-    def should_echo_stdin(self, input_, output):
+    def should_echo_stdin(
+        self, input_: "StringIO", output: "TextIOWrapper"
+    ) -> bool:
         """
         Determine whether data read from ``input_`` should echo to ``output``.
 
@@ -881,7 +911,7 @@ class Runner:
         """
         return (not self.using_pty) and isatty(input_)
 
-    def respond(self, buffer_) -> None:
+    def respond(self, buffer_: List[str]) -> None:
         """
         Write to the program's stdin in response to patterns in ``buffer_``.
 
@@ -1068,7 +1098,7 @@ class Runner:
         """
         raise NotImplementedError
 
-    def _write_proc_stdin(self, data: str) -> None:
+    def _write_proc_stdin(self, data: bytes) -> None:
         """
         Write ``data`` to running process' stdin.
 
@@ -1105,7 +1135,7 @@ class Runner:
         # subprocess. For now, good enough to assume both are the same.
         return default_encoding()
 
-    def send_interrupt(self, interrupt) -> None:
+    def send_interrupt(self, interrupt: "KeyboardInterrupt") -> None:
         """
         Submit an interrupt signal to the running subprocess.
 
@@ -1237,7 +1267,7 @@ class Local(Runner):
         # TODO: do we ever get those OSErrors on stderr? Feels like we could?
         return os.read(self.process.stderr.fileno(), num_bytes)
 
-    def _write_proc_stdin(self, data) -> int:
+    def _write_proc_stdin(self, data: bytes) -> int:
         # NOTE: parent_fd from os.fork() is a read/write pipe attached to our
         # forked process' stdout/stdin, respectively.
         fd = self.parent_fd if self.using_pty else self.process.stdin.fileno()
@@ -1323,7 +1353,7 @@ class Local(Runner):
             # return whichever one of them is nondefault"? Probably not?
             # NOTE: doing this in an arbitrary order should be safe since only
             # one of the WIF* methods ought to ever return True.
-            code = None
+            code = 0
             if os.WIFEXITED(self.status):
                 code = os.WEXITSTATUS(self.status)
             elif os.WIFSIGNALED(self.status):
@@ -1449,7 +1479,7 @@ class Result:
         """
         return self.exited
 
-    def __bool__(self):
+    def __bool__(self) -> bool:
         return self.ok
 
     def __str__(self) -> str:

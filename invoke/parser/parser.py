@@ -1,5 +1,5 @@
 import copy
-from typing import Any, List
+from typing import TYPE_CHECKING, Any, List, Optional, Tuple
 
 try:
     from invoke.vendor.lexicon import Lexicon
@@ -8,9 +8,11 @@ except ImportError:
     from lexicon import Lexicon  # type: ignore
     from fluidity import StateMachine, state, transition  # type: ignore
 
-# from invoke.parser import Context
 from invoke.exceptions import ParseError
 from invoke.util import debug  # type: ignore
+
+if TYPE_CHECKING:
+    from .context import ParserContext
 
 
 def is_flag(value: str) -> bool:
@@ -33,7 +35,7 @@ class ParseResult(list):
     """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        super(ParseResult, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.remainder = ""
         self.unparsed: List[str] = []
 
@@ -61,8 +63,8 @@ class Parser:
 
     def __init__(
         self,
-        contexts=(),  # : Tuple[Context, ...] = (),
-        initial=None,  #: Optional[Context] = None,
+        contexts: Tuple["Lexicon", ...] = (),
+        initial: Optional["ParserContext"] = None,
         ignore_unknown: bool = False,
     ) -> None:
         self.initial = initial
@@ -159,10 +161,10 @@ class Parser:
                         debug(msg.format(token, rest))
                         mutations.append((index + 1, rest))
                     else:
-                        rest = ["-{}".format(x) for x in rest]
+                        _rest = ["-{}".format(x) for x in rest]
                         msg = "Splitting multi-flag glob {!r} into {!r} and {!r}"  # noqa
-                        debug(msg.format(orig, token, rest))
-                        for item in reversed(rest):
+                        debug(msg.format(orig, token, _rest))
+                        for item in reversed(_rest):
                             mutations.append((index + 1, item))
             # Here, we've got some possible mutations queued up, and 'token'
             # may have been overwritten as well. Whether we apply those and
@@ -219,7 +221,12 @@ class ParseMachine(StateMachine):
     def changing_state(self, from_: str, to: str) -> None:
         debug("ParseMachine: {!r} => {!r}".format(from_, to))
 
-    def __init__(self, initial, contexts, ignore_unknown) -> None:
+    def __init__(
+        self,
+        initial: "ParserContext",
+        contexts: Lexicon,
+        ignore_unknown: bool,
+    ) -> None:
         # Initialize
         self.ignore_unknown = ignore_unknown
         self.initial = self.context = copy.deepcopy(initial)
@@ -391,7 +398,7 @@ class ParseMachine(StateMachine):
             msg = "{!r} is ambiguous when given after an optional-value flag"
             raise ParseError(msg.format(value))
 
-    def switch_to_flag(self, flag, inverse: bool = False) -> None:
+    def switch_to_flag(self, flag: str, inverse: bool = False) -> None:
         # Sanity check for ambiguity w/ prior optional-value flag
         self.check_ambiguity(flag)
         # Also tie it off, in case prior had optional value or etc. Seems to be
@@ -433,7 +440,7 @@ class ParseMachine(StateMachine):
         else:
             self.error("Flag {!r} doesn't take any value!".format(self.flag))
 
-    def see_positional_arg(self, value) -> None:
+    def see_positional_arg(self, value: Any) -> None:
         for arg in self.context.positional_args:
             if arg.value is None:
                 arg.value = value

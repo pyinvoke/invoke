@@ -8,11 +8,11 @@ condition in a way easily told apart from other, truly unexpected errors".
 
 from pprint import pformat
 from traceback import format_exception
-from typing import TYPE_CHECKING, Any, Dict, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 
 if TYPE_CHECKING:
-    from invoke.context import Context
-    from invoke.runners import Result
+    from .parser import ParserContext
+    from .runners import Result
 
 
 class CollectionNotFound(Exception):
@@ -176,7 +176,7 @@ class AuthFailure(Failure):
     .. versionadded:: 1.0
     """
 
-    def __init__(self, result, prompt: str) -> None:
+    def __init__(self, result: "Result", prompt: str) -> None:
         self.result = result
         self.prompt = prompt
 
@@ -194,7 +194,9 @@ class ParseError(Exception):
     .. versionadded:: 1.0
     """
 
-    def __init__(self, msg: str, context: Optional["Context"] = None) -> None:
+    def __init__(
+        self, msg: str, context: Optional["ParserContext"] = None
+    ) -> None:
         super().__init__(msg)
         self.context = context
 
@@ -344,12 +346,12 @@ class ThreadException(Exception):
     #:     Thread kwargs which appear to be very long (e.g. IO
     #:     buffers) will be truncated when printed, to avoid huge
     #:     unreadable error display.
-    exceptions: Tuple[str, ...] = tuple()
+    exceptions: Tuple[Exception, ...] = tuple()
 
-    def __init__(self, exceptions):
+    def __init__(self, exceptions: List[Exception]) -> None:
         self.exceptions = tuple(exceptions)
 
-    def __str__(self):
+    def __str__(self) -> str:
         details = []
         for x in self.exceptions:
             # Build useful display

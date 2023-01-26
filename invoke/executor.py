@@ -1,7 +1,14 @@
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
+
 from .config import Config
 from .parser import ParserContext
-from .util import debug
+from .util import debug  # type: ignore
 from .tasks import Call, Task
+
+if TYPE_CHECKING:
+    from .collection import Collection
+    from .runners import Result
+    from .parser import ParseResult
 
 
 class Executor:
@@ -14,7 +21,12 @@ class Executor:
     .. versionadded:: 1.0
     """
 
-    def __init__(self, collection, config=None, core=None):
+    def __init__(
+        self,
+        collection: "Collection",
+        config: Optional["Config"] = None,
+        core: Optional["ParseResult"] = None,
+    ) -> None:
         """
         Initialize executor with handles to necessary data structures.
 
@@ -34,7 +46,9 @@ class Executor:
         self.config = config if config is not None else Config()
         self.core = core
 
-    def execute(self, *tasks):
+    def execute(
+        self, *tasks: Union[str, Tuple[str, Dict[str, Any]], ParserContext]
+    ) -> Dict["Task", "Result"]:
         """
         Execute one or more ``tasks`` in sequence.
 
@@ -132,7 +146,12 @@ class Executor:
             results[call.task] = result
         return results
 
-    def normalize(self, tasks):
+    def normalize(
+        self,
+        tasks: Tuple[
+            Union[str, Tuple[str, Dict[str, Any]], ParserContext], ...
+        ],
+    ) -> List["Call"]:
         """
         Transform arbitrary task list w/ various types, into `.Call` objects.
 
@@ -142,9 +161,9 @@ class Executor:
         """
         calls = []
         for task in tasks:
-            name, kwargs = None, {}
             if isinstance(task, str):
                 name = task
+                kwargs = {}
             elif isinstance(task, ParserContext):
                 name = task.name
                 kwargs = task.as_kwargs
@@ -156,7 +175,7 @@ class Executor:
             calls = [Call(task=self.collection[self.collection.default])]
         return calls
 
-    def dedupe(self, calls):
+    def dedupe(self, calls: List["Call"]) -> List["Call"]:
         """
         Deduplicate a list of `tasks <.Call>`.
 
@@ -176,7 +195,7 @@ class Executor:
                 debug("{!r}: found in list already, skipping".format(call))
         return deduped
 
-    def expand_calls(self, calls):
+    def expand_calls(self, calls: List["Call"]) -> List["Call"]:
         """
         Expand a list of `.Call` objects into a near-final list of same.
 
