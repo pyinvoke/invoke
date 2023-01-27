@@ -14,7 +14,7 @@ from .terminals import pty_size
 from .util import debug, enable_logging, helpline
 
 
-class Program(object):
+class Program:
     """
     Manages top-level CLI invocation, typically via ``setup.py`` entrypoints.
 

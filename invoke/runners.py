@@ -41,7 +41,7 @@ from .terminals import (
 from .util import has_fileno, isatty, ExceptionHandlingThread
 
 
-class Runner(object):
+class Runner:
     """
     Partially-abstract core command-running API.
 
@@ -1181,7 +1181,7 @@ class Local(Runner):
     """
 
     def __init__(self, context):
-        super(Local, self).__init__(context)
+        super().__init__(context)
         # Bookkeeping var for pty use case
         self.status = None
 
@@ -1340,7 +1340,7 @@ class Local(Runner):
                 pass
 
 
-class Result(object):
+class Result:
     """
     A container for information about the result of a command execution.
 

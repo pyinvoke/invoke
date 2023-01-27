@@ -11,7 +11,7 @@ from .context import Context
 from .parser import Argument, translate_underscores
 
 
-class Task(object):
+class Task:
     """
     Core object representing an executable task & its argument specification.
 
@@ -358,7 +358,7 @@ def task(*args, **kwargs):
     return inner
 
 
-class Call(object):
+class Call:
     """
     Represents a call/execution of a `.Task` with given (kw)args.
 

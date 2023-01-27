@@ -129,7 +129,7 @@ Stderr:{}
 
     def _repr(self, **kwargs):
         kwargs.setdefault("exited", self.result.exited)
-        return super(UnexpectedExit, self)._repr(**kwargs)
+        return super()._repr(**kwargs)
 
 
 class CommandTimedOut(Failure):
@@ -138,7 +138,7 @@ class CommandTimedOut(Failure):
     """
 
     def __init__(self, result, timeout):
-        super(CommandTimedOut, self).__init__(result)
+        super().__init__(result)
         self.timeout = timeout
 
     def __repr__(self):
@@ -190,7 +190,7 @@ class ParseError(Exception):
     """
 
     def __init__(self, msg, context=None):
-        super(ParseError, self).__init__(msg)
+        super().__init__(msg)
         self.context = context
 
 

@@ -8,7 +8,7 @@ from .parser import Context as ParserContext
 from .tasks import Task
 
 
-class Collection(object):
+class Collection:
     """
     A collection of executable tasks. See :doc:`/concepts/namespaces`.
 

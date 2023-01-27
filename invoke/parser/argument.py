@@ -1,4 +1,4 @@
-class Argument(object):
+class Argument:
     """
     A command-line argument/flag.
 

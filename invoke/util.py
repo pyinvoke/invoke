@@ -169,7 +169,7 @@ class ExceptionHandlingThread(threading.Thread):
         ``**kwargs`` for easier display of thread identity when raising
         captured exceptions.
         """
-        super(ExceptionHandlingThread, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         # No record of why, but Fabric used daemon threads ever since the
         # switch from select.select, so let's keep doing that.
         self.daemon = True
@@ -200,7 +200,7 @@ class ExceptionHandlingThread(threading.Thread):
                 # worker body, orthogonal to how exception handling works
                 self._run()
             else:
-                super(ExceptionHandlingThread, self).run()
+                super().run()
         except BaseException:
             # Store for actual reraising later
             self.exc_info = sys.exc_info()

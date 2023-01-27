@@ -23,7 +23,7 @@ def load_source(name, path):
     return vars(SourceFileLoader("mod", path).load_module())
 
 
-class DataProxy(object):
+class DataProxy:
     """
     Helper class implementing nested dict+attr access for `.Config`.
 
@@ -122,7 +122,7 @@ class DataProxy(object):
             # to our internal dict/cache
             self[key] = value
         else:
-            super(DataProxy, self).__setattr__(key, value)
+            super().__setattr__(key, value)
 
     def __iter__(self):
         # For some reason Python is ignoring our __hasattr__ when determining

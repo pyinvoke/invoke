@@ -55,7 +55,7 @@ def flag_key(x):
 
 # Named slightly more verbose so Sphinx references can be unambiguous.
 # Got real sick of fully qualified paths.
-class ParserContext(object):
+class ParserContext:
     """
     Parsing context with knowledge of flags & their format.
 
