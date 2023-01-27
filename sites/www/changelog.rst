@@ -2,6 +2,9 @@
 Changelog
 =========
 
+- :support:`901 backported` (via :issue:`903`) Tweak test suite ``setup``
+  methods to be named ``setup_method`` so pytest stops whining about it. Patch
+  via Jesse P. Johnson.
 - :release:`2.0.0 <2023-01-16>`
 - :support:`-` Remove support for, and imports related to, all Python versions
   less than 3.6 - including Python 2. This also includes updates to vendored
