@@ -1331,6 +1331,7 @@ class Local(Runner):
         # If we opened a PTY for child communications, make sure to close() it,
         # otherwise long-running Invoke-using processes exhaust their file
         # descriptors eventually.
+        super().stop()
         if self.using_pty:
             try:
                 os.close(self.parent_fd)
