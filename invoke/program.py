@@ -170,6 +170,7 @@ class Program:
             ),
         ]
 
+    argv: List[str]
     # Other class-level global variables a subclass might override sometime
     # maybe?
     leading_indent_width = 2
@@ -270,7 +271,7 @@ class Program:
         # code to autogenerate it from binary_names.)
         self._binary = binary
         self._binary_names = binary_names
-        self.argv: Optional[List[str]] = None
+        self.argv = []
         self.loader_class = loader_class or FilesystemLoader
         self.executor_class = executor_class or Executor
         self.config_class = config_class or Config
@@ -471,8 +472,8 @@ class Program:
         # Set these up for potential use later when listing tasks
         # TODO: be nice if these came from the config...! Users would love to
         # say they default to nested for example. Easy 2.x feature-add.
-        self.list_root = None
-        self.list_depth = None
+        self.list_root: Optional[str] = None
+        self.list_depth: Optional[int] = None
         self.list_format = "flat"
         self.scoped_collection = self.collection
 
@@ -506,6 +507,10 @@ class Program:
 
         # Print discovered tasks if necessary
         list_root = self.args.list.value  # will be True or string
+        # print('list_root', type(list_root), self.args.list.value)
+        # print('args', self.args)
+        # print('args.list', self.args.list)
+        # print('args.list.value', self.args.list.value)
         self.list_format = self.args["list-format"].value
         self.list_depth = self.args["list-depth"].value
         if list_root:
@@ -819,7 +824,7 @@ class Program:
         self,
         coll: "Collection",
         ancestors: Optional[List[str]] = None,
-    ) -> Tuple[str, Optional[str]]:
+    ) -> List[Tuple[str, Optional[str]]]:
         if ancestors is None:
             ancestors = []
         pairs = []
@@ -917,7 +922,7 @@ class Program:
         return text
 
     def display_with_columns(
-        self, pairs: Tuple[str, Optional[str]], extra: str = ""
+        self, pairs: List[Tuple[str, Optional[str]]], extra: str = ""
     ) -> None:
         root = self.list_root
         print("{}:\n".format(self.task_list_opener(extra=extra)))

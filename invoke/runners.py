@@ -14,9 +14,11 @@ from typing import (
     Callable,
     Dict,
     Generator,
+    IO,
     List,
     Optional,
     Tuple,
+    Type,
     Union,
 )
 
@@ -53,7 +55,7 @@ from .terminals import (
 from .util import has_fileno, isatty, ExceptionHandlingThread
 
 if TYPE_CHECKING:
-    from io import StringIO, TextIOWrapper
+    # from io import BytesIO, StringIO, TextIOWrapper
     from .context import Context
     from .watchers import StreamWatcher
 
@@ -116,7 +118,7 @@ class Runner:
         #: in at runtime by `run`.
         self.watchers: List["StreamWatcher"] = []
         # Optional timeout timer placeholder
-        self._timer = None
+        self._timer: Optional[threading.Timer] = None
         # Async flags (initialized for 'finally' referencing in case something
         # goes REAL bad during options parsing)
         self._asynchronous = False
@@ -709,7 +711,7 @@ class Runner:
                 break
             yield self.decode(data)
 
-    def write_our_output(self, stream: "TextIOWrapper", string: str) -> None:
+    def write_our_output(self, stream: IO, string: str) -> None:
         """
         Write ``string`` to ``stream``.
 
@@ -731,9 +733,9 @@ class Runner:
 
     def _handle_output(
         self,
-        buffer_: List["StringIO"],
+        buffer_: List[str],
         hide: bool,
-        output: "TextIOWrapper",
+        output: IO,
         reader: Callable,
     ) -> None:
         # TODO: store un-decoded/raw bytes somewhere as well...
@@ -754,7 +756,7 @@ class Runner:
             self.respond(buffer_)
 
     def handle_stdout(
-        self, buffer_: List["StringIO"], hide: bool, output: "TextIOWrapper"
+        self, buffer_: List[str], hide: bool, output: IO
     ) -> None:
         """
         Read process' stdout, storing into a buffer & printing/parsing.
@@ -777,7 +779,7 @@ class Runner:
         )
 
     def handle_stderr(
-        self, buffer_: List["StringIO"], hide: bool, output: "TextIOWrapper"
+        self, buffer_: List[str], hide: bool, output: IO
     ) -> None:
         """
         Read process' stderr, storing into a buffer & printing/parsing.
@@ -791,7 +793,7 @@ class Runner:
             buffer_, hide, output, reader=self.read_proc_stderr
         )
 
-    def read_our_stdin(self, input_: "TextIOWrapper") -> Optional[str]:
+    def read_our_stdin(self, input_: IO) -> Optional[str]:
         """
         Read & decode bytes from a local stdin stream.
 
@@ -833,8 +835,8 @@ class Runner:
 
     def handle_stdin(
         self,
-        input_: "TextIOWrapper",
-        output: "TextIOWrapper",
+        input_: IO,
+        output: IO,
         echo: bool = False,
     ) -> None:
         """
@@ -897,9 +899,7 @@ class Runner:
                 # Take a nap so we're not chewing CPU.
                 time.sleep(self.input_sleep)
 
-    def should_echo_stdin(
-        self, input_: "StringIO", output: "TextIOWrapper"
-    ) -> bool:
+    def should_echo_stdin(self, input_: IO, output: IO) -> bool:
         """
         Determine whether data read from ``input_`` should echo to ``output``.
 
@@ -1045,7 +1045,7 @@ class Runner:
         """
         raise NotImplementedError
 
-    def start(self, command: str, shell: str, env: Dict[str, Any]):
+    def start(self, command: str, shell: str, env: Dict[str, Any]) -> None:
         """
         Initiate execution of ``command`` (via ``shell``, with ``env``).
 
@@ -1076,7 +1076,7 @@ class Runner:
             self._timer = threading.Timer(timeout, self.kill)
             self._timer.start()
 
-    def read_proc_stdout(self, num_bytes: int) -> Union[bytes, str]:
+    def read_proc_stdout(self, num_bytes: int) -> Optional[Union[bytes, str]]:
         """
         Read ``num_bytes`` from the running process' stdout stream.
 
@@ -1088,7 +1088,7 @@ class Runner:
         """
         raise NotImplementedError
 
-    def read_proc_stderr(self, num_bytes: int) -> Union[bytes, str]:
+    def read_proc_stderr(self, num_bytes: int) -> Optional[Union[bytes, str]]:
         """
         Read ``num_bytes`` from the running process' stderr stream.
 
@@ -1201,7 +1201,7 @@ class Runner:
         """
         # Timer expiry implies we did time out. (The timer itself will have
         # killed the subprocess, allowing us to even get to this point.)
-        return self._timer and not self._timer.is_alive()
+        return True if self._timer and not self._timer.is_alive() else False
 
 
 class Local(Runner):
@@ -1224,7 +1224,7 @@ class Local(Runner):
     def __init__(self, context: "Context") -> None:
         super().__init__(context)
         # Bookkeeping var for pty use case
-        self.status = None
+        self.status = 0
 
     def should_use_pty(self, pty: bool = False, fallback: bool = True) -> bool:
         use_pty = False
@@ -1239,7 +1239,7 @@ class Local(Runner):
                 use_pty = False
         return use_pty
 
-    def read_proc_stdout(self, num_bytes: int):
+    def read_proc_stdout(self, num_bytes: int) -> Optional[Union[bytes, str]]:
         # Obtain useful read-some-bytes function
         if self.using_pty:
             # Need to handle spurious OSErrors on some Linux platforms.
@@ -1260,24 +1260,33 @@ class Local(Runner):
                 # appeared, so we return a falsey value, which triggers the
                 # "end of output" logic in code using reader functions.
                 data = None
-        else:
+        elif self.process and self.process.stdout:
             data = os.read(self.process.stdout.fileno(), num_bytes)
+        else:
+            data = None
         return data
 
-    def read_proc_stderr(self, num_bytes: int):
+    def read_proc_stderr(self, num_bytes: int) -> Optional[Union[bytes, str]]:
         # NOTE: when using a pty, this will never be called.
         # TODO: do we ever get those OSErrors on stderr? Feels like we could?
-        return os.read(self.process.stderr.fileno(), num_bytes)
+        if self.process and self.process.stderr:
+            return os.read(self.process.stderr.fileno(), num_bytes)
+        return None
 
-    def _write_proc_stdin(self, data: bytes) -> int:
+    def _write_proc_stdin(self, data: bytes) -> None:
         # NOTE: parent_fd from os.fork() is a read/write pipe attached to our
         # forked process' stdout/stdin, respectively.
-        fd = self.parent_fd if self.using_pty else self.process.stdin.fileno()
+        if self.using_pty:
+            fd = self.parent_fd
+        elif self.process and self.process.stdin:
+            fd = self.process.stdin.fileno()
+        else:
+            raise SubprocessPipeError("No stdin process exists")
         # Try to write, ignoring broken pipes if encountered (implies child
         # process exited before the process piping stdin to us finished;
         # there's nothing we can do about that!)
         try:
-            return os.write(fd, data)
+            os.write(fd, data)
         except OSError as e:
             if "Broken pipe" not in str(e):
                 raise
@@ -1287,7 +1296,10 @@ class Local(Runner):
             # there is no working scenario to tell the process that stdin
             # closed when using pty
             raise SubprocessPipeError("Cannot close stdin when pty=True")
-        self.process.stdin.close()
+        elif self.process and self.process.stdin:
+            self.process.stdin.close()
+        else:
+            raise SubprocessPipeError("No stdin process exists")
 
     def start(self, command: str, shell: str, env: Dict[str, Any]) -> None:
         if self.using_pty:
@@ -1605,7 +1617,10 @@ class Promise(Result):
         return self
 
     def __exit__(
-        self, exc_type, exc_value, exc_tb: Optional[TracebackType]
+        self,
+        exc_type: Optional[Type[BaseException]],
+        exc_value: BaseException,
+        exc_tb: Optional[TracebackType],
     ) -> None:
         self.join()
 

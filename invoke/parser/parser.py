@@ -1,5 +1,5 @@
 import copy
-from typing import TYPE_CHECKING, Any, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Iterable, List, Optional
 
 try:
     from invoke.vendor.lexicon import Lexicon
@@ -63,7 +63,7 @@ class Parser:
 
     def __init__(
         self,
-        contexts: Tuple["Lexicon", ...] = (),
+        contexts: Iterable["ParserContext"] = (),
         initial: Optional["ParserContext"] = None,
         ignore_unknown: bool = False,
     ) -> None:

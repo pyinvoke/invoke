@@ -4,7 +4,7 @@ import os
 import types
 from os import PathLike
 from os.path import join, splitext, expanduser
-from typing import Any, Dict, Iterator, Optional, Tuple, Type
+from typing import Any, Dict, Iterator, Optional, Tuple, Type, Union
 
 from .env import Environment
 from .exceptions import UnknownFileType, UnpicklableConfigMember
@@ -819,7 +819,9 @@ class Config(DataProxy):
         if merge:
             self.merge()
 
-    def set_project_location(self, path: Optional[PathLike]) -> None:
+    def set_project_location(
+        self, path: Optional[Union[PathLike, str]]
+    ) -> None:
         """
         Set the directory path where a project-level config file may be found.
 

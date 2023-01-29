@@ -1,8 +1,7 @@
 from collections import namedtuple
 from contextlib import contextmanager
-from io import BytesIO, StringIO, TextIOWrapper
 from types import TracebackType
-from typing import Any, Generator, List, Optional, Tuple, Type, Union
+from typing import Any, Generator, List, IO, Optional, Tuple, Type, Union
 import io
 import logging
 import os
@@ -72,7 +71,7 @@ def cd(where: str) -> Generator[None, None, None]:
         os.chdir(cwd)
 
 
-def has_fileno(stream: Union[BytesIO, TextIOWrapper]) -> bool:
+def has_fileno(stream: IO) -> bool:
     """
     Cleanly determine whether ``stream`` has a useful ``.fileno()``.
 
@@ -96,9 +95,7 @@ def has_fileno(stream: Union[BytesIO, TextIOWrapper]) -> bool:
         return False
 
 
-def isatty(
-    stream: Union[BytesIO, StringIO, TextIOWrapper]
-) -> Union[bool, Any]:
+def isatty(stream: IO) -> Union[bool, Any]:
     """
     Cleanly determine whether ``stream`` is a TTY.
 

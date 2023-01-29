@@ -55,7 +55,7 @@ class Task:
         self,
         body: Callable,
         name: Optional[str] = None,
-        aliases: Tuple[str, ...] = (),
+        aliases: Iterable[str] = (),
         positional: Optional[Iterable[str]] = None,
         optional: Iterable[str] = (),
         default: bool = False,

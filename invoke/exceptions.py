@@ -47,7 +47,9 @@ class Failure(Exception):
     .. versionadded:: 1.0
     """
 
-    def __init__(self, result: "Result", reason: Optional[str] = None) -> None:
+    def __init__(
+        self, result: "Result", reason: Optional["WatcherError"] = None
+    ) -> None:
         self.result = result
         self.reason = reason
 
