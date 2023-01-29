@@ -1,8 +1,13 @@
 import re
 import threading
-from typing import Generator, Iterable, Literal
+from typing import Generator, Iterable
 
 from .exceptions import ResponseNotAccepted
+
+try:
+    from .vendor.typing_extensions import Literal
+except ImportError:
+    from typing_extensions import Literal  # type: ignore
 
 
 class StreamWatcher(threading.local):
