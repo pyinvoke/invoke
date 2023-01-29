@@ -9,7 +9,12 @@
 # disallow_untyped_calls = true
 # disallow_untyped_decorators = true
 disallow_untyped_defs = true
-# enable_error_code = redundant-expr, truthy-bool, ignore-without-code, unused-awaitable
+# enable_error_code = [
+#     "redundant-expr",
+#     "truthy-bool",
+#     "ignore-without-code",
+#     "unused-awaitable",
+#
 # implicit_reexport = False
 exclude = [
     "integration/", "tests/", "setup.py", "tasks.py", "sites/www/conf.py"
@@ -29,9 +34,3 @@ warn_unused_ignores = true
 [[tool.mypy.overrides]]
 module = "invoke.vendor.*"
 ignore_errors = true
-
-# [[tool.mypy.overrides]]
-# module = "mypy-tests.*"
-# disallow_any_decorated = False
-# disallow_untyped_calls = False
-# disallow_untyped_defs = False

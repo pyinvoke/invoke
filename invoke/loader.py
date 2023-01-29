@@ -29,7 +29,7 @@ class Loader:
             config = Config()
         self.config = config
 
-    def find(self, name: str) -> Tuple[IO[Any], str, Tuple[str, str, int]]:
+    def find(self, name: str) -> Tuple[IO, str, Tuple[str, str, int]]:
         """
         Implementation-specific finder method seeking collection ``name``.
 
@@ -113,7 +113,7 @@ class FilesystemLoader(Loader):
         # Lazily determine default CWD if configured value is falsey
         return self._start or os.getcwd()
 
-    def find(self, name: str) -> Tuple[IO[Any], str, Tuple[str, str, int]]:
+    def find(self, name: str) -> Tuple[IO, str, Tuple[str, str, int]]:
         # Accumulate all parent directories
         start = self.start
         debug("FilesystemLoader find starting at {!r}".format(start))
