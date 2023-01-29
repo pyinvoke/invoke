@@ -397,10 +397,11 @@ class Call:
     """
 
     def __init__(
-        self, task: "Task",
+        self,
+        task: "Task",
         called_as: Optional[str] = None,
         args: Optional[Tuple[str, ...]] = None,
-        kwargs: Optional[Dict[str, Any]] = None
+        kwargs: Optional[Dict[str, Any]] = None,
     ) -> None:
         """
         Create a new `.Call` object.
@@ -476,7 +477,7 @@ class Call:
     def clone(
         self,
         into: Optional[Type["Call"]] = None,
-        with_: Optional[Dict[str, Any]] = None
+        with_: Optional[Dict[str, Any]] = None,
     ) -> "Call":
         """
         Return a standalone copy of this Call.

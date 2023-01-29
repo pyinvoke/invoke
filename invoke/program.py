@@ -622,7 +622,7 @@ class Program:
 
         .. versionadded:: 1.2
         """
-        return os.path.basename(self.argv[0]) if self.argv else 'invoke'
+        return os.path.basename(self.argv[0]) if self.argv else "invoke"
 
     @property
     def binary(self) -> str:

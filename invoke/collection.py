@@ -248,7 +248,7 @@ class Collection:
         task: "Task",
         name: Optional[str] = None,
         aliases: Optional[Tuple[str, ...]] = None,
-        default: Optional[bool] = None
+        default: Optional[bool] = None,
     ) -> None:
         """
         Add `.Task` ``task`` to this collection.
@@ -293,7 +293,7 @@ class Collection:
         self,
         coll: "Collection",
         name: Optional[str] = None,
-        default: Optional[bool] = None
+        default: Optional[bool] = None,
     ) -> None:
         """
         Add `.Collection` ``coll`` as a sub-collection of this one.
