@@ -20,6 +20,6 @@ setuptools>56
 # Debuggery
 icecream>=2.1
 # typing
-mypy==0.991
+mypy>=0.942
 typed-ast>=1.4.3
 types-PyYAML>=5.4.3
