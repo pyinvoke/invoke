@@ -120,7 +120,6 @@ class Executor:
         # moment...
         for call in calls:
             autoprint = call in direct and call.autoprint
-            args = call.args
             debug("Executing {!r}".format(call))
             # Hand in reference to our config, which will preserve user
             # modifications across the lifetime of the session.
@@ -137,7 +136,7 @@ class Executor:
             # an appropriate one; e.g. subclasses might use extra data from
             # being parameterized), handing in this config for use there.
             context = call.make_context(config)
-            args = (context,) + args
+            args = (context,) + call.args
             result = call.task(*args, **call.kwargs)
             if autoprint:
                 print(result)
@@ -165,7 +164,8 @@ class Executor:
                 name = task
                 kwargs = {}
             elif isinstance(task, ParserContext):
-                name = task.name
+                # FIXME: task.name can be none here
+                name = task.name  # type: ignore
                 kwargs = task.as_kwargs
             else:
                 name, kwargs = task

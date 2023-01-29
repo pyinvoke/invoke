@@ -5,7 +5,7 @@ import os
 import sys
 import textwrap
 from importlib import import_module  # buffalo buffalo
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 
 from . import Collection, Config, Executor, FilesystemLoader
 from .completion.complete import complete, print_completion_script
@@ -343,9 +343,7 @@ class Program:
         if merge:
             self.config.merge()
 
-    def run(
-        self, argv: Optional[Union[List[str], str]] = None, exit: bool = True
-    ) -> None:
+    def run(self, argv: Optional[List[str]] = None, exit: bool = True) -> None:
         """
         Execute main CLI logic, based on ``argv``.
 
@@ -619,7 +617,7 @@ class Program:
 
         .. versionadded:: 1.2
         """
-        return os.path.basename(self.argv[0])
+        return os.path.basename(self.argv[0]) if self.argv else 'invoke'
 
     @property
     def binary(self) -> str:
@@ -935,7 +933,7 @@ class Program:
             # TODO: trim/prefix dots
             print("Default{} task: {}\n".format(specific, default))
 
-    def print_columns(self, tuples: Tuple[str, Optional[str]]) -> None:
+    def print_columns(self, tuples: List[Tuple[str, Optional[str]]]) -> None:
         """
         Print tabbed columns from (name, help) ``tuples``.
 

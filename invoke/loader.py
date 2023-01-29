@@ -74,8 +74,9 @@ class Loader:
             parent = os.path.dirname(path)
             if parent not in sys.path:
                 sys.path.insert(0, parent)
+            # FIXME: deprecated capability that needs replacement
             # Actual import
-            module = imp.load_module(name, fd, path, desc)
+            module = imp.load_module(name, fd, path, desc)  # type: ignore
             # Return module + path.
             # TODO: is there a reason we're not simply having clients refer to
             # os.path.dirname(module.__file__)?

@@ -108,7 +108,7 @@ class Parser:
         .. versionadded:: 1.0
         """
         machine = ParseMachine(
-            initial=self.initial,
+            initial=self.initial,  # type: ignore # FIXME: should not be none
             contexts=self.contexts,
             ignore_unknown=self.ignore_unknown,
         )

@@ -8,13 +8,16 @@ logic-flow interruptions.
 """
 
 from contextlib import contextmanager
-from typing import Any, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Generator, IO, Optional, Tuple, Union
 import os
 import select
 import sys
 
 # TODO: move in here? They're currently platform-agnostic...
 from .util import has_fileno, isatty
+
+if TYPE_CHECKING:
+    from io import BytesIO, StringIO, TextIOWrapper
 
 
 WINDOWS = sys.platform == "win32"
@@ -30,13 +33,21 @@ setups (vanilla Python, ActiveState etc) here.
 
 if WINDOWS:
     import msvcrt
-    from ctypes import Structure, c_ushort, windll, POINTER, byref
+    from ctypes import (  # type: ignore
+        Structure,
+        c_ushort,
+        windll,
+        POINTER,
+        byref,
+    )
     from ctypes.wintypes import HANDLE, _COORD, _SMALL_RECT
 else:
     import fcntl
     import struct
     import termios
     import tty
+
+StreamTypes = Union["BytesIO", "StringIO", "TextIOWrapper"]
 
 
 def pty_size() -> Tuple[int, int]:
@@ -116,7 +127,7 @@ def _win_pty_size() -> Tuple[Optional[str], Optional[str]]:
         return (None, None)
 
 
-def stdin_is_foregrounded_tty(stream) -> bool:
+def stdin_is_foregrounded_tty(stream: StreamTypes) -> bool:
     """
     Detect if given stdin ``stream`` seems to be in the foreground of a TTY.
 
@@ -140,7 +151,7 @@ def stdin_is_foregrounded_tty(stream) -> bool:
     return os.getpgrp() == os.tcgetpgrp(stream.fileno())
 
 
-def cbreak_already_set(stream) -> bool:
+def cbreak_already_set(stream: StreamTypes) -> bool:
     # Explicitly not docstringed to remain private, for now. Eh.
     # Checks whether tty.setcbreak appears to have already been run against
     # ``stream`` (or if it would otherwise just not do anything).
@@ -163,7 +174,10 @@ def cbreak_already_set(stream) -> bool:
 
 
 @contextmanager
-def character_buffered(stream):
+def character_buffered(
+    stream: Union[int, IO[str]],
+    # Union[BytesIO, StringIO, TextIOWrapper],
+) -> Generator[None, None, None]:
     """
     Force local terminal ``stream`` be character, not line, buffered.
 
@@ -173,9 +187,9 @@ def character_buffered(stream):
     """
     if (
         WINDOWS
-        or not isatty(stream)
-        or not stdin_is_foregrounded_tty(stream)
-        or cbreak_already_set(stream)
+        or not isatty(stream)  # type: ignore
+        or not stdin_is_foregrounded_tty(stream)  # type: ignore
+        or cbreak_already_set(stream)  # type: ignore
     ):
         yield
     else:
@@ -187,7 +201,7 @@ def character_buffered(stream):
             termios.tcsetattr(stream, termios.TCSADRAIN, old_settings)
 
 
-def ready_for_reading(input_) -> bool:
+def ready_for_reading(input_: StreamTypes) -> bool:
     """
     Test ``input_`` to determine whether a read action will succeed.
 
@@ -204,13 +218,16 @@ def ready_for_reading(input_) -> bool:
     if not has_fileno(input_):
         return True
     if WINDOWS:
-        return msvcrt.kbhit()
+        return msvcrt.kbhit()  # type: ignore
     else:
         reads, _, _ = select.select([input_], [], [], 0.0)
         return bool(reads and reads[0] is input_)
 
 
-def bytes_to_read(input_) -> int:
+def bytes_to_read(
+    input_: StreamTypes,
+    # Union["BytesIO", "StringIO", "TextIOWrapper"]
+) -> int:
     """
     Query stream ``input_`` to see how many bytes may be readable.
 
@@ -230,5 +247,5 @@ def bytes_to_read(input_) -> int:
     # going to work re: ioctl().
     if not WINDOWS and isatty(input_) and has_fileno(input_):
         fionread = fcntl.ioctl(input_, termios.FIONREAD, "  ")
-        return struct.unpack("h", fionread)[0]
+        return int(struct.unpack("h", fionread)[0])
     return 1

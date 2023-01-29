@@ -10,7 +10,6 @@ from typing import (
     Iterator,
     List,
     Optional,
-    Type,
     Union,
 )
 from unittest.mock import Mock
@@ -88,7 +87,7 @@ class Context(DataProxy):
         # runtime.
         self._set(_config=value)
 
-    def run(self, command: str, **kwargs: Any) -> Result:
+    def run(self, command: str, **kwargs: Any) -> Optional[Result]:
         """
         Execute a local shell command, honoring config options.
 
@@ -108,12 +107,12 @@ class Context(DataProxy):
     # Fabric/etc, which needs to juggle multiple runner class types (local and
     # remote).
     def _run(
-        self, runner: Type["Runner"], command: str, **kwargs: Any
-    ) -> Result:
+        self, runner: "Runner", command: str, **kwargs: Any
+    ) -> Optional[Result]:
         command = self._prefix_commands(command)
         return runner.run(command, **kwargs)
 
-    def sudo(self, command: str, **kwargs: Any) -> Result:
+    def sudo(self, command: str, **kwargs: Any) -> Optional[Result]:
         """
         Execute a shell command via ``sudo`` with password auto-response.
 
@@ -187,8 +186,8 @@ class Context(DataProxy):
 
     # NOTE: this is for runner injection; see NOTE above _run().
     def _sudo(
-        self, runner: Type["Runner"], command: str, **kwargs: Any
-    ) -> Result:
+        self, runner: "Runner", command: str, **kwargs: Any
+    ) -> Optional[Result]:
         prompt = self.config.sudo.prompt
         password = kwargs.pop("password", self.config.sudo.password)
         user = kwargs.pop("user", self.config.sudo.user)
@@ -215,8 +214,9 @@ class Context(DataProxy):
         cmd_str = "sudo -S -p '{}' {}{}{}".format(
             prompt, env_flags, user_flags, command
         )
+        # FIXME pattern should be raw string prompt.encode('unicode_escape')
         watcher = FailingResponder(
-            pattern=re.escape(prompt),
+            pattern=re.escape(prompt),  # type: ignore
             response="{}\n".format(password),
             sentinel="Sorry, try again.\n",
         )
@@ -321,7 +321,7 @@ class Context(DataProxy):
             self.command_prefixes.pop()
 
     @property
-    def cwd(self) -> Union[PathLike, str]:
+    def cwd(self) -> str:
         """
         Return the current working directory, accounting for uses of `cd`.
 
@@ -341,10 +341,10 @@ class Context(DataProxy):
         # TODO: see if there's a stronger "escape this path" function somewhere
         # we can reuse. e.g., escaping tildes or slashes in filenames.
         paths = [path.replace(" ", r"\ ") for path in self.command_cwds[i:]]
-        return os.path.join(*paths)
+        return str(os.path.join(*paths))
 
     @contextmanager
-    def cd(self, path: PathLike) -> Generator[None, None, None]:
+    def cd(self, path: Union[PathLike, str]) -> Generator[None, None, None]:
         """
         Context manager that keeps directory state when executing commands.
 
@@ -539,7 +539,7 @@ class MockContext(Context):
             # Here, the value was either never a dict or has been extracted
             # from one, so we can assume it's an iterable of Result objects due
             # to work done by __init__.
-            result = next(obj)
+            result: Result = next(obj)
             # Populate Result's command string with what matched unless
             # explicitly given
             if not result.command:
@@ -563,7 +563,9 @@ class MockContext(Context):
         # TODO: see the TODO from run() re: injecting arg/kwarg values
         return self._yield_result("__sudo", command)
 
-    def set_result_for(self, attname: str, command: str, result) -> None:
+    def set_result_for(
+        self, attname: str, command: str, result: Result
+    ) -> None:
         """
         Modify the stored mock results for given ``attname`` (e.g. ``run``).
 

@@ -55,6 +55,7 @@ from .util import has_fileno, isatty, ExceptionHandlingThread
 if TYPE_CHECKING:
     from io import StringIO, TextIOWrapper
     from .context import Context
+    from .watchers import StreamWatcher
 
 
 class Runner:
@@ -113,7 +114,7 @@ class Runner:
         self.warned_about_pty_fallback = False
         #: A list of `.StreamWatcher` instances for use by `respond`. Is filled
         #: in at runtime by `run`.
-        self.watchers: List[str] = []
+        self.watchers: List["StreamWatcher"] = []
         # Optional timeout timer placeholder
         self._timer = None
         # Async flags (initialized for 'finally' referencing in case something
@@ -630,9 +631,10 @@ class Runner:
         Caller is expected to handle persisting and/or starting the wrapped
         threads.
         """
-        stdout, stderr = [], []
+        stdout: List[str] = []
+        stderr: List[str] = []
         # Set up IO thread parameters (format - body_func: {kwargs})
-        thread_args = {
+        thread_args: Dict[Callable[..., Any], Any] = {
             self.handle_stdout: {
                 "buffer_": stdout,
                 "hide": "stdout" in self.opts["hide"],

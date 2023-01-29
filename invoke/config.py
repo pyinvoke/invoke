@@ -71,9 +71,9 @@ class DataProxy:
     def from_data(
         cls,
         data: Dict[str, Any],
-        root: Optional['DataProxy'] = None,
+        root: Optional["DataProxy"] = None,
         keypath: Tuple[str, ...] = tuple(),
-    ):
+    ) -> "DataProxy":
         """
         Alternate constructor for 'baby' DataProxies used as sub-dict values.
 
@@ -122,7 +122,7 @@ class DataProxy:
             err += "\n\nValid real attributes: {!r}".format(attrs)
             raise AttributeError(err)
 
-    def __setattr__(self, key: str, value: str) -> None:
+    def __setattr__(self, key: str, value: Any) -> None:
         # Turn attribute-sets into config updates anytime we don't have a real
         # attribute with the given name/key.
         has_real_attr = key in dir(self)
@@ -158,7 +158,7 @@ class DataProxy:
         self._config[key] = value
         self._track_modification_of(key, value)
 
-    def __getitem__(self, key: str):
+    def __getitem__(self, key: str) -> Any:
         return self._get(key)
 
     def _get(self, key: str) -> Any:
@@ -212,7 +212,7 @@ class DataProxy:
     def _is_root(self) -> bool:
         return hasattr(self, "_modify")
 
-    def _track_removal_of(self, key: str):
+    def _track_removal_of(self, key: str) -> None:
         # Grab the root object responsible for tracking removals; either the
         # referenced root (if we're a leaf) or ourselves (if we're not).
         # (Intermediate nodes never have anything but __getitem__ called on

@@ -1,8 +1,8 @@
 from collections import namedtuple
 from contextlib import contextmanager
-
-# from os import PathLike
-from typing import Any, List, Optional, Tuple, Union
+from io import BytesIO, StringIO, TextIOWrapper
+from types import TracebackType
+from typing import Any, Generator, List, Optional, Tuple, Type, Union
 import io
 import logging
 import os
@@ -63,7 +63,7 @@ def task_name_sort_key(name: str) -> Tuple[List[str], str]:
 
 # TODO: Make part of public API sometime
 @contextmanager
-def cd(where: str):
+def cd(where: str) -> Generator[None, None, None]:
     cwd = os.getcwd()
     os.chdir(where)
     try:
@@ -72,7 +72,7 @@ def cd(where: str):
         os.chdir(cwd)
 
 
-def has_fileno(stream) -> bool:
+def has_fileno(stream: Union[BytesIO, TextIOWrapper]) -> bool:
     """
     Cleanly determine whether ``stream`` has a useful ``.fileno()``.
 
@@ -96,7 +96,9 @@ def has_fileno(stream) -> bool:
         return False
 
 
-def isatty(stream) -> Union[bool, Any]:
+def isatty(
+    stream: Union[BytesIO, StringIO, TextIOWrapper]
+) -> Union[bool, Any]:
     """
     Cleanly determine whether ``stream`` is a TTY.
 
@@ -164,6 +166,14 @@ class ExceptionHandlingThread(threading.Thread):
     .. versionadded:: 1.0
     """
 
+    # TODO: legacy cruft that needs to be removed
+    exc_info: Optional[
+        Union[
+            Tuple[Type[BaseException], BaseException, TracebackType],
+            Tuple[None, None, None],
+        ]
+    ]
+
     def __init__(self, **kwargs: Any) -> None:
         """
         Create a new exception-handling thread instance.
@@ -215,9 +225,9 @@ class ExceptionHandlingThread(threading.Thread):
             name = "_run"
             if "target" in self.kwargs:
                 name = self.kwargs["target"].__name__
-            debug(msg.format(self.exc_info[1], name))  # noqa
+            debug(msg.format(self.exc_info[1], name))  # type: ignore # noqa
 
-    def exception(self) -> Optional['ExceptionWrapper']:
+    def exception(self) -> Optional["ExceptionWrapper"]:
         """
         If an exception occurred, return an `.ExceptionWrapper` around it.
 

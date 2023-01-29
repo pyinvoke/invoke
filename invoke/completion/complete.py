@@ -14,16 +14,16 @@ from ..util import debug, task_name_sort_key  # type: ignore
 
 if TYPE_CHECKING:
     from ..collection import Collection
-    from ..parser import Parser, ParseResult, Context
+    from ..parser import Parser, ParseResult, ParserContext
 
 
 def complete(
     names: List[str],
     core: "ParseResult",
-    initial_context: "Context",
+    initial_context: "ParserContext",
     collection: "Collection",
     parser: "Parser",
-):
+) -> Exit:
     # Strip out program name (scripts give us full command line)
     # TODO: this may not handle path/to/script though?
     invocation = re.sub(r"^({}) ".format("|".join(names)), "", core.remainder)
@@ -37,13 +37,15 @@ def complete(
         # Gently parse invocation to obtain 'current' context.
         # Use last seen context in case of failure (required for
         # otherwise-invalid partial invocations being completed).
+
+        # contexts: List[ParserContext, ParseResult]
         try:
             debug("Seeking context name in tokens: {!r}".format(tokens))
             contexts = parser.parse_argv(tokens)
         except ParseError as e:
             msg = "Got parser error ({!r}), grabbing its last-seen context {!r}"  # noqa
             debug(msg.format(e, e.context))
-            contexts = [e.context]
+            contexts = [e.context] if e.context is not None else []
         # Fall back to core context if no context seen.
         debug("Parsed invocation, contexts: {!r}".format(contexts))
         if not contexts or not contexts[-1]:

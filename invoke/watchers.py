@@ -1,5 +1,6 @@
 import re
 import threading
+from typing import Generator, Iterable, Literal
 
 from .exceptions import ResponseNotAccepted
 
@@ -34,7 +35,7 @@ class StreamWatcher(threading.local):
     .. versionadded:: 1.0
     """
 
-    def submit(self, stream):
+    def submit(self, stream: str) -> Iterable[str]:
         """
         Act on ``stream`` data, potentially returning responses.
 
@@ -58,7 +59,7 @@ class Responder(StreamWatcher):
     .. versionadded:: 1.0
     """
 
-    def __init__(self, pattern, response):
+    def __init__(self, pattern: Literal["pattern"], response: str) -> None:
         r"""
         Imprint this `Responder` with necessary parameters.
 
@@ -75,7 +76,9 @@ class Responder(StreamWatcher):
         self.response = response
         self.index = 0
 
-    def pattern_matches(self, stream, pattern, index_attr):
+    def pattern_matches(
+        self, stream: str, pattern: str, index_attr: str
+    ) -> Iterable[str]:
         """
         Generic "search for pattern in stream, using index" behavior.
 
@@ -101,7 +104,7 @@ class Responder(StreamWatcher):
             setattr(self, index_attr, index + len(new_))
         return matches
 
-    def submit(self, stream):
+    def submit(self, stream: str) -> Generator[str, None, None]:
         # Iterate over findall() response in case >1 match occurred.
         for _ in self.pattern_matches(stream, self.pattern, "index"):
             yield self.response
@@ -118,13 +121,15 @@ class FailingResponder(Responder):
     .. versionadded:: 1.0
     """
 
-    def __init__(self, pattern, response, sentinel):
+    def __init__(
+        self, pattern: Literal["pattern"], response: str, sentinel: str
+    ) -> None:
         super().__init__(pattern, response)
         self.sentinel = sentinel
         self.failure_index = 0
         self.tried = False
 
-    def submit(self, stream):
+    def submit(self, stream: str) -> Generator[str, None, None]:
         # Behave like regular Responder initially
         response = super().submit(stream)
         # Also check stream for our failure sentinel

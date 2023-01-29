@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 if TYPE_CHECKING:
     from .parser import ParserContext
     from .runners import Result
+    from .util import ExceptionWrapper
 
 
 class CollectionNotFound(Exception):
@@ -298,7 +299,7 @@ class UnpicklableConfigMember(Exception):
     pass
 
 
-def _printable_kwargs(kwargs: Any) -> Dict[Any, Any]:
+def _printable_kwargs(kwargs: Any) -> Dict[str, Any]:
     """
     Return print-friendly version of a thread-related ``kwargs`` dict.
 
@@ -346,9 +347,9 @@ class ThreadException(Exception):
     #:     Thread kwargs which appear to be very long (e.g. IO
     #:     buffers) will be truncated when printed, to avoid huge
     #:     unreadable error display.
-    exceptions: Tuple[Exception, ...] = tuple()
+    exceptions: Tuple["ExceptionWrapper", ...] = tuple()
 
-    def __init__(self, exceptions: List[Exception]) -> None:
+    def __init__(self, exceptions: List["ExceptionWrapper"]) -> None:
         self.exceptions = tuple(exceptions)
 
     def __str__(self) -> str:
