@@ -4,6 +4,33 @@ version = "1.5.0"
 description = "Pythonic task execution"
 authors = ["Jeff Forcier <jeff@bitprophet.org>"]
 license = "BSD"
+readme = "README.rst"
+repository = "https://github.com/pyinvoke/invoke"
+homepage = "http://www.pyinvoke.org/"
+classifiers=[
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Intended Audience :: System Administrators",
+    "License :: OSI Approved :: BSD License",
+    "Operating System :: POSIX",
+    "Operating System :: Unix",
+    "Operating System :: MacOS :: MacOS X",
+    "Operating System :: Microsoft :: Windows",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 2",
+    "Programming Language :: Python :: 2.7",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.4",
+    "Programming Language :: Python :: 3.5",
+    "Programming Language :: Python :: 3.6",
+    "Topic :: Software Development",
+    "Topic :: Software Development :: Build Tools",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: System :: Software Distribution",
+    "Topic :: System :: Systems Administration",
+]
 
 [tool.poetry.dependencies]
 python = "2.7 || ^3.4"
@@ -23,6 +50,10 @@ alabaster = "0.7.12"
 releases = "~1"
 invocations = "^1.4.0"
 semantic-version = "^2.4"
+
+[tool.poetry.scripts]
+invoke = "invoke.main:program.run"
+inv = "invoke.main:program.run"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
