@@ -26,9 +26,10 @@ classifiers=[
     "Programming Language :: Python :: 2",
     "Programming Language :: Python :: 2.7",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.4",
     "Programming Language :: Python :: 3.5",
     "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
     "Topic :: Software Development",
     "Topic :: Software Development :: Build Tools",
     "Topic :: Software Development :: Libraries",
@@ -54,6 +55,8 @@ pytest = "4.6.3"
 alabaster = "0.7.12"
 releases = "~1"
 invocations = "^1.4.0"
+tox = "^3.20.1"
+spec = "^1.4.1"
 
 [tool.poetry.scripts]
 invoke = "invoke.main:program.run"
