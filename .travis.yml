@@ -1,0 +1,68 @@
+---
+language: python
+sudo: required
+dist: xenial
+cache:
+  directories:
+    - $HOME/.cache/pip
+python:
+  - "2.7"
+  - "3.4"
+  - "3.5"
+  - "3.6"
+  - "3.7"
+  - "3.8-dev"
+  - "pypy"
+  - "pypy3"
+matrix:
+  allow_failures:
+    - python: "3.8-dev"
+# Setup package management image layer
+before_install:
+  # Used by 'inv regression' (more performant/safe/likely to expose real issues
+  # than in-Python threads...)
+  - sudo apt-get -y install parallel
+  - pip uninstall pipenv numpy -y
+  - pip install poetry
+install:
+  - poetry install --no-root
+before_script:
+  # Create 'sudouser' w/ sudo password & perms on Travis' homedir
+  - inv travis.make-sudouser
+  # Blacken and flake8 before running any tests, it's a faster fail
+  - inv travis.blacken
+  - flake8
+script:
+  # Execute full test suite + coverage, as the new sudo-capable user
+  - inv travis.sudo-coverage
+  # Perform extra "not feasible inside pytest for no obvious reason" tests
+  - inv regression
+  # Websites build OK? (Not on PyPy3, Sphinx is all "who the hell are you?" =/
+  - "if [[ $TRAVIS_PYTHON_VERSION != 'pypy3' ]]; then inv sites; fi"
+  # Doctests in websites OK? (Same caveat as above...)
+  - "if [[ $TRAVIS_PYTHON_VERSION != 'pypy3' ]]; then inv www.doctest; fi"
+  # Did we break setup.py?
+  # NOTE: sometime in 2019 travis grew a bizarre EnvironmentError problem
+  # around inability to overwrite/remote __pycache__ dirs...this attempts to
+  # workaround
+  - "find . -type d -name __pycache__ | sudo xargs rm -rf"
+  - inv travis.test-installation --package=invoke --sanity="inv --list"
+  # Test distribution builds, including some package_data based stuff
+  # (completion script printing)
+  - |
+    inv travis.test-packaging \
+      --package=invoke \
+      --sanity="inv --list && inv --print-completion-script zsh" \
+      --alt-python=alt_env/bin/python
+after_success:
+  # Upload coverage data to codecov
+  - codecov
+notifications:
+  irc:
+    channels: "irc.freenode.org#invoke"
+    template:
+      - "%{repository_name}@%{branch}: %{message} (%{build_url})"
+    on_success: change
+    on_failure: change
+    on_error: change
+  email: false

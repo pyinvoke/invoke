@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "invoke"
-version = "1.5.0"
+version = "1.4.1"
 description = "Pythonic task execution"
 authors = ["Jeff Forcier <jeff@bitprophet.org>"]
 maintainers = ["Jeff Forcier <jeff@bitprophet.org>"]
@@ -54,8 +54,6 @@ pytest = "4.6.3"
 alabaster = "0.7.12"
 releases = "~1"
 invocations = "^1.4.0"
-semantic-version = "^2.4"
-black = {version = "18.5b0", allow-prereleases = true, python = "^3.6"}
 
 [tool.poetry.scripts]
 invoke = "invoke.main:program.run"
