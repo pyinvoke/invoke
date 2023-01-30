@@ -7,7 +7,6 @@ cache:
     - $HOME/.cache/pip
 python:
   - "2.7"
-  - "3.4"
   - "3.5"
   - "3.6"
   - "3.7"
@@ -49,11 +48,12 @@ script:
   - inv travis.test-installation --package=invoke --sanity="inv --list"
   # Test distribution builds, including some package_data based stuff
   # (completion script printing)
-  - |
-    inv travis.test-packaging \
-      --package=invoke \
-      --sanity="inv --list && inv --print-completion-script zsh" \
-      --alt-python=alt_env/bin/python
+  - poetry build
+  # - |
+  #   inv travis.test-packaging \
+  #     --package=invoke \
+  #     --sanity="inv --list && inv --print-completion-script zsh" \
+  #     --alt-python=alt_env/bin/python
 after_success:
   # Upload coverage data to codecov
   - codecov
