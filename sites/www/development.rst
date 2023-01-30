@@ -10,7 +10,7 @@ follow their instructions for cloning (or forking, then cloning, which is best
 if you intend to contribute back) the repository there.
 
 Once downloaded, install the repo itself + its development dependencies by
-running ``pip install -r dev-requirements.txt``.
+running ``pip install -e .[dev]``.
 
 
 Submitting bug reports or patches

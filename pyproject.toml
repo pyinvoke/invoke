@@ -1,0 +1,121 @@
+[build-system]
+requires = ["setuptools>=61.0.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "invoke"
+version = "2.0.0"
+description = "Pythonic task execution"
+# keywords = ["automation", "task runner"]
+authors = [{author="Jeff Forcier", email="jeff@bitprophet.org"}]
+maintainers = [{author="Jeff Forcier", email="jeff@bitprophet.org"}]
+requires-python = ">=3.6.2"
+readme = "README.rst"
+license = {file = "LICENSE"}
+classifiers=[
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Intended Audience :: System Administrators",
+    "License :: OSI Approved :: BSD License",
+    "Operating System :: POSIX",
+    "Operating System :: Unix",
+    "Operating System :: MacOS :: MacOS X",
+    "Operating System :: Microsoft :: Windows",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Software Development",
+    "Topic :: Software Development :: Build Tools",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: System :: Software Distribution",
+    "Topic :: System :: Systems Administration",
+]
+
+dependencies = [
+    "importlib-metadata>=2.1.1"
+]
+
+[project.optional-dependencies]
+dev = [
+    # build
+    "build",
+    # Invocations, for all sorts of things
+    "invocations>=3.0.1",
+    # Coverage!
+    "coverage[toml]>=6.2,<7",
+    "codecov==2.1.12",
+    # Docs
+    "releases>=2",
+    "alabaster==0.7.12",
+    # Testing
+    "tox>=3.20.1",
+    "pytest>=7",
+    "pytest-relaxed>=2",
+    "pytest-cov>=4",
+    # Linting
+    "pylint>=2.9.5",
+    # Formatting
+    # Flake8 5.x seems to have an odd importlib-metadata incompatibility?
+    "flake8>=4,<5",
+    "isort>=5.10.1",
+    "black>=22.8,<22.9",
+    # Debuggery
+    "icecream>=2.1",
+    # Publish
+    "twine>=1.15",
+]
+
+[project.scripts]
+invoke = "invoke.main:program.run"
+inv = "invoke.main:program.run"
+
+[project.urls]
+homepage = "http://www.pyinvoke.org/"
+changelog = "https://www.pyinvoke.org/changelog.html"
+documentation = "https://docs.pyinvoke.org"
+repository = "https://github.com/pyinvoke/invoke"
+issues = "https://github.com/pyinvoke/invoke/issues"
+ci = "https://app.circleci.com/pipelines/github/pyinvoke/invoke"
+
+[tool.isort]
+profile = "black"
+line_length = 79
+
+[tool.black]
+line-length = 79
+include = '\.pyi?$'
+exclude = '''
+(
+  /(
+    | \.eggs
+    | \.git
+    | \.tox
+    | \.pytest_cache
+    | _build
+    | buck-out
+    | build
+    | dist
+    | vendor
+  )
+)
+'''
+
+[tool.pytest.ini_options]
+testpaths = "tests"
+python_files = "*"
+# addopts = "--doctest-modules"
+
+[tool.coverage]
+branch = true
+include = [
+    "invoke/*",
+    "tests/*",
+]
+omit = "invoke/vendor/*"
