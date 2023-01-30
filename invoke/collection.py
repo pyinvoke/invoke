@@ -144,9 +144,6 @@ class Collection:
     def __ne__(self, other: object) -> bool:
         return not self == other
 
-    def __nonzero__(self) -> bool:
-        return self.__bool__()
-
     def __bool__(self) -> bool:
         return bool(self.task_names)
 
