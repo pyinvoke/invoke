@@ -507,10 +507,6 @@ class Program:
 
         # Print discovered tasks if necessary
         list_root = self.args.list.value  # will be True or string
-        # print('list_root', type(list_root), self.args.list.value)
-        # print('args', self.args)
-        # print('args.list', self.args.list)
-        # print('args.list.value', self.args.list.value)
         self.list_format = self.args["list-format"].value
         self.list_depth = self.args["list-depth"].value
         if list_root:
