@@ -1,6 +1,25 @@
+# Log files for debug
+*.log
+# Vim Swap
+[._]*.s[a-v][a-z]
+[._]*.sw[a-p]
+[._]s[a-rt-v][a-z]
+[._]ss[a-gi-z]
+[._]sw[a-p]
+# Vim Session
+Session.vim
+Sessionx.vim
+# Vim Net RW
+.netrwhist
+*~
+# Auto-generated tag files
+tags
+# Persistent undo
+[._]*.un~
 _build
 build/
 dist/
+.mypy_cache/
 .coverage
 .tox
 *.egg-info
