@@ -1,6 +1,7 @@
 _build
 build/
 dist/
+.mypy_cache/
 .coverage
 .tox
 *.egg-info

@@ -1,8 +1,13 @@
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
 [tool.poetry]
 name = "invoke"
 version = "1.5.0"
 description = "Pythonic task execution"
 authors = ["Jeff Forcier <jeff@bitprophet.org>"]
+maintainers = ["Jeff Forcier <jeff@bitprophet.org>"]
 license = "BSD"
 readme = "README.rst"
 repository = "https://github.com/pyinvoke/invoke"
@@ -33,7 +38,7 @@ classifiers=[
 ]
 
 [tool.poetry.dependencies]
-python = "2.7 || ^3.4"
+python = "^3.6"
 
 [tool.poetry.dev-dependencies]
 codecov = "2.0.15"
@@ -50,11 +55,28 @@ alabaster = "0.7.12"
 releases = "~1"
 invocations = "^1.4.0"
 semantic-version = "^2.4"
+black = {version = "18.5b0", allow-prereleases = true, python = "^3.6"}
 
 [tool.poetry.scripts]
 invoke = "invoke.main:program.run"
 inv = "invoke.main:program.run"
 
-[build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+[tool.black]
+line-length = 79
+include = '\.pyi?$'
+exclude = '''
+(
+  /(
+    | \.git
+    | \.mypy_cache
+    | \.pytest_cache
+    | _build
+    | build
+    | dist
+  )
+)
+'''
+
+[tool.pytest.ini_options]
+testpaths = "tests"
+python_files = "*"
