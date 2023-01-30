@@ -1,6 +1,6 @@
 from typing import Any, Iterable, Optional, Tuple
 
-# TODO: dynamic map kind
+# TODO: dynamic type for kind
 # T = TypeVar('T')
 
 
