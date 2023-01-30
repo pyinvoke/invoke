@@ -2,14 +2,14 @@ import copy
 from typing import TYPE_CHECKING, Any, Iterable, List, Optional
 
 try:
-    from invoke.vendor.lexicon import Lexicon
-    from invoke.vendor.fluidity import StateMachine, state, transition
+    from ..vendor.lexicon import Lexicon
+    from ..vendor.fluidity import StateMachine, state, transition
 except ImportError:
     from lexicon import Lexicon  # type: ignore
     from fluidity import StateMachine, state, transition  # type: ignore
 
-from invoke.exceptions import ParseError
-from invoke.util import debug  # type: ignore
+from ..exceptions import ParseError
+from ..util import debug  # type: ignore
 
 if TYPE_CHECKING:
     from .context import ParserContext
