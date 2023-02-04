@@ -4,12 +4,6 @@ from typing import Generator, Iterable
 
 from .exceptions import ResponseNotAccepted
 
-# TODO: update imports so that Litaral is used as type
-try:
-    from .vendor.typing_extensions import Literal
-except ImportError:
-    from typing_extensions import Literal  # type: ignore
-
 
 class StreamWatcher(threading.local):
     """
@@ -65,7 +59,7 @@ class Responder(StreamWatcher):
     .. versionadded:: 1.0
     """
 
-    def __init__(self, pattern: Literal["pattern"], response: str) -> None:
+    def __init__(self, pattern: str, response: str) -> None:
         r"""
         Imprint this `Responder` with necessary parameters.
 
@@ -127,9 +121,7 @@ class FailingResponder(Responder):
     .. versionadded:: 1.0
     """
 
-    def __init__(
-        self, pattern: Literal["pattern"], response: str, sentinel: str
-    ) -> None:
+    def __init__(self, pattern: str, response: str, sentinel: str) -> None:
         super().__init__(pattern, response)
         self.sentinel = sentinel
         self.failure_index = 0

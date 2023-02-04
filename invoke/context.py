@@ -216,7 +216,7 @@ class Context(DataProxy):
         )
         # FIXME pattern should be raw string prompt.encode('unicode_escape')
         watcher = FailingResponder(
-            pattern=re.escape(prompt),  # type: ignore
+            pattern=re.escape(prompt),
             response="{}\n".format(password),
             sentinel="Sorry, try again.\n",
         )
