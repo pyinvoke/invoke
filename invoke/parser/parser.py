@@ -16,11 +16,11 @@ if TYPE_CHECKING:
 
 
 def is_flag(value: str) -> bool:
-    return bool(value.startswith("-"))
+    return value.startswith("-")
 
 
 def is_long_flag(value: str) -> bool:
-    return bool(value.startswith("--"))
+    return value.startswith("--")
 
 
 class ParseResult(list):

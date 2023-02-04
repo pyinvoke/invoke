@@ -618,6 +618,7 @@ class Program:
 
         .. versionadded:: 1.2
         """
+        # FIXME: need to return a string here but argv is optional
         return os.path.basename(self.argv[0]) if self.argv else "invoke"
 
     @property

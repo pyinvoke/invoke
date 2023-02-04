@@ -1076,7 +1076,7 @@ class Runner:
             self._timer = threading.Timer(timeout, self.kill)
             self._timer.start()
 
-    def read_proc_stdout(self, num_bytes: int) -> Optional[Union[bytes, str]]:
+    def read_proc_stdout(self, num_bytes: int) -> Union[bytes, str, None]:
         """
         Read ``num_bytes`` from the running process' stdout stream.
 
@@ -1088,7 +1088,7 @@ class Runner:
         """
         raise NotImplementedError
 
-    def read_proc_stderr(self, num_bytes: int) -> Optional[Union[bytes, str]]:
+    def read_proc_stderr(self, num_bytes: int) -> Union[bytes, str, None]:
         """
         Read ``num_bytes`` from the running process' stderr stream.
 
@@ -1239,7 +1239,7 @@ class Local(Runner):
                 use_pty = False
         return use_pty
 
-    def read_proc_stdout(self, num_bytes: int) -> Optional[Union[bytes, str]]:
+    def read_proc_stdout(self, num_bytes: int) -> Union[bytes, str, None]:
         # Obtain useful read-some-bytes function
         if self.using_pty:
             # Need to handle spurious OSErrors on some Linux platforms.
@@ -1266,7 +1266,7 @@ class Local(Runner):
             data = None
         return data
 
-    def read_proc_stderr(self, num_bytes: int) -> Optional[Union[bytes, str]]:
+    def read_proc_stderr(self, num_bytes: int) -> Union[bytes, str, None]:
         # NOTE: when using a pty, this will never be called.
         # TODO: do we ever get those OSErrors on stderr? Feels like we could?
         if self.process and self.process.stderr:

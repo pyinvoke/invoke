@@ -15,11 +15,11 @@ disallow_untyped_defs = true
 #     "ignore-without-code",
 #     "unused-awaitable",
 #
-# implicit_reexport = False
 exclude = [
     "integration/", "tests/", "setup.py", "tasks.py", "sites/www/conf.py"
 ]
 ignore_missing_imports = true
+# implicit_reexport = False
 # no_implicit_optional = true
 # pretty = true
 # show_column_numbers = true

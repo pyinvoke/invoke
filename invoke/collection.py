@@ -141,9 +141,6 @@ class Collection:
             )
         return False
 
-    def __ne__(self, other: object) -> bool:
-        return not self == other
-
     def __bool__(self) -> bool:
         return bool(self.task_names)
 

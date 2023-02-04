@@ -819,9 +819,7 @@ class Config(DataProxy):
         if merge:
             self.merge()
 
-    def set_project_location(
-        self, path: Optional[Union[PathLike, str]]
-    ) -> None:
+    def set_project_location(self, path: Union[PathLike, str, None]) -> None:
         """
         Set the directory path where a project-level config file may be found.
 

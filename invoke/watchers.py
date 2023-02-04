@@ -4,6 +4,7 @@ from typing import Generator, Iterable
 
 from .exceptions import ResponseNotAccepted
 
+# TODO: update imports so that Litaral is used as type
 try:
     from .vendor.typing_extensions import Literal
 except ImportError:

@@ -163,14 +163,6 @@ class ExceptionHandlingThread(threading.Thread):
     .. versionadded:: 1.0
     """
 
-    # TODO: legacy cruft that needs to be removed
-    exc_info: Optional[
-        Union[
-            Tuple[Type[BaseException], BaseException, TracebackType],
-            Tuple[None, None, None],
-        ]
-    ]
-
     def __init__(self, **kwargs: Any) -> None:
         """
         Create a new exception-handling thread instance.
@@ -185,7 +177,13 @@ class ExceptionHandlingThread(threading.Thread):
         self.daemon = True
         # Track exceptions raised in run()
         self.kwargs = kwargs
-        self.exc_info = None
+        # TODO: legacy cruft that needs to be removed
+        self.exc_info: Optional[
+            Union[
+                Tuple[Type[BaseException], BaseException, TracebackType],
+                Tuple[None, None, None],
+            ]
+        ] = None
 
     def run(self) -> None:
         try:
