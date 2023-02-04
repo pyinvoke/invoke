@@ -618,8 +618,8 @@ class Program:
 
         .. versionadded:: 1.2
         """
-        # FIXME: need to return a string here but argv is optional
-        return os.path.basename(self.argv[0]) if self.argv else "invoke"
+        # XXX: defaults to empty string if 'argv' is '[]' or 'None'
+        return os.path.basename(self.argv[0]) if self.argv else ""
 
     @property
     def binary(self) -> str:

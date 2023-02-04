@@ -23,4 +23,3 @@ icecream>=2.1
 mypy==0.971
 typed-ast==1.5.4
 types-PyYAML==6
-pytest-mypy==0.10.3
