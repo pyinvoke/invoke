@@ -264,8 +264,9 @@ class Collection:
         if name is None:
             if task.name:
                 name = task.name
+            # XXX https://github.com/python/mypy/issues/1424
             elif hasattr(task.body, "func_name"):
-                name = task.body.func_name
+                name = task.body.func_name  # type: ignore
             elif hasattr(task.body, "__name__"):
                 name = task.__name__
             else:
