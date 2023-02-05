@@ -1,4 +1,5 @@
 import copy
+from collections import UserList
 from typing import TYPE_CHECKING, Any, Iterable, List, Optional
 
 try:
@@ -23,7 +24,7 @@ def is_long_flag(value: str) -> bool:
     return value.startswith("--")
 
 
-class ParseResult(list):
+class ParseResult(UserList):
     """
     List-like object with some extra parse-related attributes.
 
