@@ -113,10 +113,8 @@ class Collection:
         for name, obj in kwargs.items():
             self._add_object(obj, name)
 
-    def _add_object(
-        self, obj: Any, name: Optional[str] = None
-    ) -> Callable[..., Any]:
-        method: Callable[..., Any]
+    def _add_object(self, obj: Any, name: Optional[str] = None) -> Callable:
+        method: Callable
         if isinstance(obj, Task):
             method = self.add_task
         elif isinstance(obj, (Collection, ModuleType)):

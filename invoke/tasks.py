@@ -137,7 +137,7 @@ class Task:
     def called(self) -> bool:
         return self.times_called > 0
 
-    def argspec(self, body: Callable[..., Any]) -> "Signature":
+    def argspec(self, body: Callable) -> "Signature":
         """
         Returns a modified `inspect.Signature` based on that of ``body``.
 
@@ -280,7 +280,7 @@ class Task:
         return args
 
 
-def task(*args: Any, **kwargs: Any) -> Callable[..., Any]:
+def task(*args: Any, **kwargs: Any) -> Callable:
     """
     Marks wrapped callable object as a valid Invoke task.
 

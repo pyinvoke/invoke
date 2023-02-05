@@ -636,7 +636,7 @@ class Runner:
         stdout: List[str] = []
         stderr: List[str] = []
         # Set up IO thread parameters (format - body_func: {kwargs})
-        thread_args: Dict[Callable[..., Any], Any] = {
+        thread_args: Dict[Callable, Any] = {
             self.handle_stdout: {
                 "buffer_": stdout,
                 "hide": "stdout" in self.opts["hide"],
