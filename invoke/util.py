@@ -39,8 +39,7 @@ if os.environ.get("INVOKE_DEBUG"):
 
 # Add top level logger functions to global namespace. Meh.
 log = logging.getLogger("invoke")
-for x in ("debug",):
-    globals()[x] = getattr(log, x)
+debug = log.debug
 
 
 def task_name_sort_key(name: str) -> Tuple[List[str], str]:
@@ -221,7 +220,7 @@ class ExceptionHandlingThread(threading.Thread):
             name = "_run"
             if "target" in self.kwargs:
                 name = self.kwargs["target"].__name__
-            debug(msg.format(self.exc_info[1], name))  # type: ignore # noqa
+            debug(msg.format(self.exc_info[1], name))  # noqa
 
     def exception(self) -> Optional["ExceptionWrapper"]:
         """

@@ -6,7 +6,7 @@ from typing import Any, IO, Optional, Tuple
 
 from . import Config
 from .exceptions import CollectionNotFound
-from .util import debug  # type: ignore
+from .util import debug
 
 
 class Loader:

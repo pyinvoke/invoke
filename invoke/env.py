@@ -12,7 +12,7 @@ import os
 from typing import TYPE_CHECKING, Any, Dict, List
 
 from .exceptions import UncastableEnvVar, AmbiguousEnvVar
-from .util import debug  # type: ignore
+from .util import debug
 
 if TYPE_CHECKING:
     from .config import Config

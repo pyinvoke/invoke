@@ -12,7 +12,7 @@ from .completion.complete import complete, print_completion_script
 from .parser import Parser, ParserContext, Argument
 from .exceptions import UnexpectedExit, CollectionNotFound, ParseError, Exit
 from .terminals import pty_size
-from .util import debug, enable_logging, helpline  # type: ignore
+from .util import debug, enable_logging, helpline
 
 if TYPE_CHECKING:
     from .context import Context

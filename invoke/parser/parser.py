@@ -9,7 +9,7 @@ except ImportError:
     from fluidity import StateMachine, state, transition  # type: ignore
 
 from ..exceptions import ParseError
-from ..util import debug  # type: ignore
+from ..util import debug
 
 if TYPE_CHECKING:
     from .context import ParserContext

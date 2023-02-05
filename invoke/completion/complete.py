@@ -10,7 +10,7 @@ import shlex
 from typing import TYPE_CHECKING, Union
 
 from ..exceptions import Exit, ParseError
-from ..util import debug, task_name_sort_key  # type: ignore
+from ..util import debug, task_name_sort_key
 
 if TYPE_CHECKING:
     from ..collection import Collection

@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
 
 from .config import Config
 from .parser import ParserContext
-from .util import debug  # type: ignore
+from .util import debug
 from .tasks import Call, Task
 
 if TYPE_CHECKING:

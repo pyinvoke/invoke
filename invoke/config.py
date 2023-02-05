@@ -10,7 +10,7 @@ from .env import Environment
 from .exceptions import UnknownFileType, UnpicklableConfigMember
 from .runners import Local
 from .terminals import WINDOWS
-from .util import debug, yaml  # type: ignore
+from .util import debug, yaml
 
 
 try:
