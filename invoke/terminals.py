@@ -8,7 +8,7 @@ logic-flow interruptions.
 """
 
 from contextlib import contextmanager
-from typing import Generator, IO, Optional, Tuple
+from typing import IO, Iterator, Optional, Tuple
 import os
 import select
 import sys
@@ -28,9 +28,9 @@ setups (vanilla Python, ActiveState etc) here.
 .. versionadded:: 1.0
 """
 
-if WINDOWS:
+if sys.platform == "win32":  # https://github.com/python/mypy/issues/14604
     import msvcrt
-    from ctypes import (  # type: ignore
+    from ctypes import (
         Structure,
         c_ushort,
         windll,
@@ -43,6 +43,9 @@ else:
     import struct
     import termios
     import tty
+
+# Mypy bug: https://github.com/python/mypy/issues/14605
+# mypy: disable_error_code=name-defined
 
 
 def pty_size() -> Tuple[int, int]:
@@ -57,7 +60,7 @@ def pty_size() -> Tuple[int, int]:
     """
     cols, rows = _pty_size() if not WINDOWS else _win_pty_size()
     # TODO: make defaults configurable?
-    return (int(cols or 80), int(rows or 24))
+    return (cols or 80, rows or 24)
 
 
 def _pty_size() -> Tuple[Optional[int], Optional[int]]:
@@ -92,8 +95,8 @@ def _pty_size() -> Tuple[Optional[int], Optional[int]]:
     return size
 
 
-def _win_pty_size() -> Tuple[Optional[str], Optional[str]]:
-    class CONSOLE_SCREEN_BUFFER_INFO(Structure):
+def _win_pty_size() -> Tuple[Optional[int], Optional[int]]:
+    class CONSOLE_SCREEN_BUFFER_INFO(Structure):  # type: ignore[misc]
         _fields_ = [
             ("dwSize", _COORD),
             ("dwCursorPosition", _COORD),
@@ -169,9 +172,7 @@ def cbreak_already_set(stream: IO) -> bool:
 
 
 @contextmanager
-def character_buffered(
-    stream: IO,
-) -> Generator[None, None, None]:
+def character_buffered(stream: IO) -> Iterator[None]:
     """
     Force local terminal ``stream`` be character, not line, buffered.
 
@@ -212,7 +213,7 @@ def ready_for_reading(input_: IO) -> bool:
     if not has_fileno(input_):
         return True
     if WINDOWS:
-        return msvcrt.kbhit()  # type: ignore
+        return msvcrt.kbhit()
     else:
         reads, _, _ = select.select([input_], [], [], 0.0)
         return bool(reads and reads[0] is input_)
@@ -238,5 +239,5 @@ def bytes_to_read(input_: IO) -> int:
     # going to work re: ioctl().
     if not WINDOWS and isatty(input_) and has_fileno(input_):
         fionread = fcntl.ioctl(input_, termios.FIONREAD, b"  ")
-        return int(struct.unpack("h", fionread)[0])
+        return struct.unpack("h", fionread)[0]
     return 1

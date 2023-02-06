@@ -314,7 +314,7 @@ def IntVar(name):
 
 
 # 3.8+:
-if hasattr(typing, 'Literal'):
+if sys.version_info >= (3, 8):
     Literal = typing.Literal
 # 3.7:
 elif sys.version_info[:2] >= (3, 7):

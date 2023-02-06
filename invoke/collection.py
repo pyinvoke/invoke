@@ -115,15 +115,15 @@ class Collection:
 
     def _add_object(
         self, obj: Any, name: Optional[str] = None
-    ) -> Callable[..., Any]:
-        method: Callable[..., Any]
+    ) -> None:
+        method: Callable[[Any, Optional[str]], None]
         if isinstance(obj, Task):
             method = self.add_task
         elif isinstance(obj, (Collection, ModuleType)):
             method = self.add_collection
         else:
             raise TypeError("No idea how to insert {!r}!".format(type(obj)))
-        return method(obj, name=name)
+        method(obj, name)
 
     def __repr__(self) -> str:
         task_names = list(self.tasks.keys())
@@ -155,7 +155,7 @@ class Collection:
         config: Optional[Dict[str, Any]] = None,
         loaded_from: Optional[str] = None,
         auto_dash_names: Optional[bool] = None,
-    ) -> "Collection":
+    ) -> "Collection":  # TODO(PY311): Use Self
         """
         Return a new `.Collection` created from ``module``.
 
@@ -242,7 +242,7 @@ class Collection:
 
     def add_task(
         self,
-        task: "Task",
+        task: Task[Any],
         name: Optional[str] = None,
         aliases: Optional[Tuple[str, ...]] = None,
         default: Optional[bool] = None,
@@ -514,7 +514,7 @@ class Collection:
         return new
 
     @property
-    def task_names(self) -> Dict[str, Any]:
+    def task_names(self) -> Dict[str, List[str]]:
         """
         Return all task identifiers for this collection as a one-level dict.
 

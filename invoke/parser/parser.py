@@ -1,18 +1,16 @@
 import copy
-from typing import TYPE_CHECKING, Any, Iterable, List, Optional
+from typing import Any, Iterable, List, Optional, overload
 
 try:
     from ..vendor.lexicon import Lexicon
     from ..vendor.fluidity import StateMachine, state, transition
 except ImportError:
-    from lexicon import Lexicon  # type: ignore
-    from fluidity import StateMachine, state, transition  # type: ignore
+    from lexicon import Lexicon  # type: ignore[no-redef]
+    from fluidity import StateMachine, state, transition  # type: ignore[no-redef]
 
+from .context import ParserContext
 from ..exceptions import ParseError
-from ..util import debug  # type: ignore
-
-if TYPE_CHECKING:
-    from .context import ParserContext
+from ..util import debug
 
 
 def is_flag(value: str) -> bool:
@@ -23,7 +21,7 @@ def is_long_flag(value: str) -> bool:
     return bool(value.startswith("--"))
 
 
-class ParseResult(list):
+class ParseResult(List[ParserContext]):
     """
     List-like object with some extra parse-related attributes.
 
@@ -34,8 +32,17 @@ class ParseResult(list):
     .. versionadded:: 1.0
     """
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        super().__init__(*args, **kwargs)
+    @overload
+    def __init__(self) -> None:
+        ...
+    @overload
+    def __init__(self, iterable: Iterable[ParserContext], /):
+        ...
+    def __init__(self, iterable: Optional[Iterable[ParserContext]] = None, /):  # type: ignore[misc]
+        if iterable is None:
+            super().__init__()
+        else:
+            super().__init__(iterable)
         self.remainder = ""
         self.unparsed: List[str] = []
 
@@ -108,7 +115,7 @@ class Parser:
         .. versionadded:: 1.0
         """
         machine = ParseMachine(
-            initial=self.initial,  # type: ignore # FIXME: should not be none
+            initial=self.initial,  # type: ignore[arg-type] # FIXME: should not be none
             contexts=self.contexts,
             ignore_unknown=self.ignore_unknown,
         )
@@ -373,7 +380,7 @@ class ParseMachine(StateMachine):
             # Skip casting so the bool gets preserved
             self.flag.set_value(True, cast=False)
 
-    def check_ambiguity(self, value: Any) -> bool:
+    def check_ambiguity(self, value: str) -> bool:
         """
         Guard against ambiguity when current flag takes an optional value.
 
@@ -431,7 +438,7 @@ class ParseMachine(StateMachine):
             debug("Marking seen flag {!r} as {}".format(self.flag, val))
             self.flag.value = val
 
-    def see_value(self, value: Any) -> None:
+    def see_value(self, value: str) -> None:
         self.check_ambiguity(value)
         if self.flag and self.flag.takes_value:
             debug("Setting flag {!r} to value {!r}".format(self.flag, value))
@@ -440,7 +447,7 @@ class ParseMachine(StateMachine):
         else:
             self.error("Flag {!r} doesn't take any value!".format(self.flag))
 
-    def see_positional_arg(self, value: Any) -> None:
+    def see_positional_arg(self, value: str) -> None:
         for arg in self.context.positional_args:
             if arg.value is None:
                 arg.value = value

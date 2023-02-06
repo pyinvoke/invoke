@@ -1,7 +1,7 @@
 from collections import namedtuple
 from contextlib import contextmanager
 from types import TracebackType
-from typing import Any, Generator, List, IO, Optional, Tuple, Type, Union
+from typing import Any, Iterator, List, IO, Optional, Tuple, Type, Union
 import io
 import logging
 import os
@@ -21,8 +21,8 @@ try:
     from .vendor.lexicon import Lexicon  # noqa
     from .vendor import yaml  # noqa
 except ImportError:
-    from lexicon import Lexicon  # type: ignore # noqa
-    import yaml  # type: ignore # noqa
+    from lexicon import Lexicon  # type: ignore[no-redef]  # noqa
+    import yaml  # type: ignore[no-redef]  # noqa
 
 
 LOG_FORMAT = "%(name)s.%(module)s.%(funcName)s: %(message)s"
@@ -39,8 +39,7 @@ if os.environ.get("INVOKE_DEBUG"):
 
 # Add top level logger functions to global namespace. Meh.
 log = logging.getLogger("invoke")
-for x in ("debug",):
-    globals()[x] = getattr(log, x)
+debug = log.debug
 
 
 def task_name_sort_key(name: str) -> Tuple[List[str], str]:
@@ -62,7 +61,7 @@ def task_name_sort_key(name: str) -> Tuple[List[str], str]:
 
 # TODO: Make part of public API sometime
 @contextmanager
-def cd(where: str) -> Generator[None, None, None]:
+def cd(where: str) -> Iterator[None]:
     cwd = os.getcwd()
     os.chdir(where)
     try:
@@ -95,7 +94,7 @@ def has_fileno(stream: IO) -> bool:
         return False
 
 
-def isatty(stream: IO) -> Union[bool, Any]:
+def isatty(stream: IO) -> bool:
     """
     Cleanly determine whether ``stream`` is a TTY.
 
@@ -171,6 +170,7 @@ class ExceptionHandlingThread(threading.Thread):
         ]
     ]
 
+    # TODO(PY312): https://peps.python.org/pep-0692/
     def __init__(self, **kwargs: Any) -> None:
         """
         Create a new exception-handling thread instance.
@@ -222,7 +222,7 @@ class ExceptionHandlingThread(threading.Thread):
             name = "_run"
             if "target" in self.kwargs:
                 name = self.kwargs["target"].__name__
-            debug(msg.format(self.exc_info[1], name))  # type: ignore # noqa
+            debug(msg.format(self.exc_info[1], name))  # noqa
 
     def exception(self) -> Optional["ExceptionWrapper"]:
         """
@@ -255,7 +255,7 @@ class ExceptionHandlingThread(threading.Thread):
 
     def __repr__(self) -> str:
         # TODO: beef this up more
-        return str(self.kwargs["target"].__name__)
+        return self.kwargs["target"].__name__
 
 
 # NOTE: ExceptionWrapper defined here, not in exceptions.py, to avoid circular

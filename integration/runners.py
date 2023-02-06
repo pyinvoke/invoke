@@ -2,7 +2,7 @@ import os
 import platform
 import time
 
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 from pytest import skip, raises
 
 from invoke import (
@@ -17,18 +17,18 @@ from invoke import (
     CommandTimedOut,
 )
 
-from _util import assert_cpu_usage
+from ._util import assert_cpu_usage
 
 
 PYPY = platform.python_implementation() == "PyPy"
 
 
 class Runner_:
-    def setup(self):
+    def setup(self) -> None:
         os.chdir(os.path.join(os.path.dirname(__file__), "_support"))
 
     class responding:
-        def base_case(self):
+        def base_case(self) -> None:
             # Basic "doesn't explode" test: respond.py will exit nonzero unless
             # this works, causing a Failure.
             watcher = Responder(r"What's the password\?", "Rosebud\n")
@@ -41,7 +41,7 @@ class Runner_:
                 timeout=5,
             )
 
-        def both_streams(self):
+        def both_streams(self) -> None:
             watchers = [
                 Responder("standard out", "with it\n"),
                 Responder("standard error", "between chair and keyboard\n"),
@@ -53,7 +53,7 @@ class Runner_:
                 timeout=5,
             )
 
-        def watcher_errors_become_Failures(self):
+        def watcher_errors_become_Failures(self) -> None:
             watcher = FailingResponder(
                 pattern=r"What's the password\?",
                 response="Rosebud\n",
@@ -73,16 +73,16 @@ class Runner_:
                 assert False, "Did not raise Failure!"
 
     class stdin_mirroring:
-        def piped_stdin_is_not_conflated_with_mocked_stdin(self):
+        def piped_stdin_is_not_conflated_with_mocked_stdin(self) -> None:
             # Re: GH issue #308
             # Will die on broken-pipe OSError if bug is present.
             run("echo 'lollerskates' | inv -c nested_or_piped foo", hide=True)
 
-        def nested_invoke_sessions_not_conflated_with_mocked_stdin(self):
+        def nested_invoke_sessions_not_conflated_with_mocked_stdin(self) -> None:
             # Also re: GH issue #308. This one will just hang forever. Woo!
             run("inv -c nested_or_piped calls-foo", hide=True)
 
-        def isnt_cpu_heavy(self):
+        def isnt_cpu_heavy(self) -> None:
             "stdin mirroring isn't CPU-heavy"
             # CPU measurement under PyPy is...rather different. NBD.
             if PYPY:
@@ -91,14 +91,14 @@ class Runner_:
             with assert_cpu_usage(lt=7.0):
                 run("python -u busywork.py 10", pty=True, hide=True)
 
-        def doesnt_break_when_stdin_exists_but_null(self):
+        def doesnt_break_when_stdin_exists_but_null(self) -> None:
             # Re: #425 - IOError occurs when bug present
             run("inv -c nested_or_piped foo < /dev/null", hide=True)
 
     class IO_hangs:
         "IO hangs"
 
-        def _hang_on_full_pipe(self, pty):
+        def _hang_on_full_pipe(self, pty: bool) -> None:
             class Whoops(Exception):
                 pass
 
@@ -106,29 +106,29 @@ class Runner_:
             # Force runner IO thread-body method to raise an exception to mimic
             # real world encoding explosions/etc. When bug is present, this
             # will make the test hang until forcibly terminated.
-            runner.handle_stdout = Mock(side_effect=Whoops, __name__="sigh")
-            # NOTE: both Darwin (10.10) and Linux (Travis' docker image) have
-            # this file. It's plenty large enough to fill most pipe buffers,
-            # which is the triggering behavior.
-            try:
-                runner.run("cat /usr/share/dict/words", pty=pty)
-            except ThreadException as e:
-                assert len(e.exceptions) == 1
-                assert e.exceptions[0].type is Whoops
-            else:
-                assert False, "Did not receive expected ThreadException!"
+            with patch.object(runner, "handle_stdout", side_effect=Whoops, __name__="sigh"):
+                # NOTE: both Darwin (10.10) and Linux (Travis' docker image) have
+                # this file. It's plenty large enough to fill most pipe buffers,
+                # which is the triggering behavior.
+                try:
+                    runner.run("cat /usr/share/dict/words", pty=pty)
+                except ThreadException as e:
+                    assert len(e.exceptions) == 1
+                    assert e.exceptions[0].type is Whoops
+                else:
+                    assert False, "Did not receive expected ThreadException!"
 
-        def pty_subproc_should_not_hang_if_IO_thread_has_an_exception(self):
+        def pty_subproc_should_not_hang_if_IO_thread_has_an_exception(self) -> None:
             self._hang_on_full_pipe(pty=True)
 
-        def nonpty_subproc_should_not_hang_if_IO_thread_has_an_exception(self):
+        def nonpty_subproc_should_not_hang_if_IO_thread_has_an_exception(self) -> None:
             self._hang_on_full_pipe(pty=False)
 
     class timeouts:
-        def does_not_fire_when_command_quick(self):
+        def does_not_fire_when_command_quick(self) -> None:
             assert run("sleep 1", timeout=5)
 
-        def triggers_exception_when_command_slow(self):
+        def triggers_exception_when_command_slow(self) -> None:
             before = time.time()
             with raises(CommandTimedOut) as info:
                 run("sleep 5", timeout=0.5)

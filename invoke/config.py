@@ -4,21 +4,24 @@ import os
 import types
 from os import PathLike
 from os.path import join, splitext, expanduser
-from typing import Any, Dict, Iterator, Optional, Tuple, Type, Union
+from typing import Any, Dict, Iterator, Optional, Tuple, Type, TypeVar, Union, cast
 
 from .env import Environment
 from .exceptions import UnknownFileType, UnpicklableConfigMember
 from .runners import Local
 from .terminals import WINDOWS
-from .util import debug, yaml  # type: ignore
+from .util import debug, yaml
 
 
 try:
     from importlib.machinery import SourceFileLoader
 except ImportError:  # PyPy3
-    from importlib._bootstrap import (  # type: ignore
+    from importlib._bootstrap import (  # type: ignore[import, no-redef]
         _SourceFileLoader as SourceFileLoader,
     )
+
+_T = TypeVar("_T")
+_U = TypeVar("_U")
 
 
 def load_source(name: str, path: str) -> Dict[str, Any]:
@@ -73,7 +76,7 @@ class DataProxy:
         data: Dict[str, Any],
         root: Optional["DataProxy"] = None,
         keypath: Tuple[str, ...] = tuple(),
-    ) -> "DataProxy":
+    ) -> "DataProxy":  # TODO(PY311): Self
         """
         Alternate constructor for 'baby' DataProxies used as sub-dict values.
 
@@ -1032,7 +1035,7 @@ class Config(DataProxy):
         # instantiation" and "I want cloning to not trigger certain things like
         # external data source loading".
         # NOTE: this will include lazy=True, see end of method
-        new = klass(**self._clone_init_kwargs(into=into))  # type: ignore
+        new = klass(**self._clone_init_kwargs(into=into))
         # Copy/merge/etc all 'private' data sources and attributes
         for name in """
             collection
@@ -1076,7 +1079,7 @@ class Config(DataProxy):
         return new
 
     def _clone_init_kwargs(
-        self, into: Optional["Config"] = None
+        self, into: Optional[Type["Config"]] = None
     ) -> Dict[str, Any]:
         """
         Supply kwargs suitable for initializing a new clone of this object.
@@ -1171,8 +1174,8 @@ class AmbiguousMergeError(ValueError):
 
 
 def merge_dicts(
-    base: Dict[str, Any], updates: Dict[str, Any]
-) -> Dict[str, Any]:
+    base: Dict[str, _T], updates: Optional[Dict[str, _T]]
+) -> Dict[str, Union[_T]]:
     """
     Recursively merge dict ``updates`` into dict ``base`` (mutating ``base``.)
 
@@ -1201,7 +1204,7 @@ def merge_dicts(
         if key in base:
             if isinstance(value, dict):
                 if isinstance(base[key], dict):
-                    merge_dicts(base[key], value)
+                    merge_dicts(cast(Dict[str, Any], base[key]), value)
                 else:
                     raise _merge_error(base[key], value)
             else:
@@ -1218,7 +1221,7 @@ def merge_dicts(
             # Dict values get reconstructed to avoid being references to the
             # updates dict, which can lead to nasty state-bleed bugs otherwise
             if isinstance(value, dict):
-                base[key] = copy_dict(value)
+                base[key] = copy_dict(value)  # type: ignore[assignment]
             # Fileno-bearing objects are probably 'real' files which do not
             # copy well & must be passed by reference. Meh.
             elif hasattr(value, "fileno"):
@@ -1229,7 +1232,7 @@ def merge_dicts(
     return base
 
 
-def _merge_error(orig: str, new_: Any) -> AmbiguousMergeError:
+def _merge_error(orig: object, new_: object) -> AmbiguousMergeError:
     return AmbiguousMergeError(
         "Can't cleanly merge {} with {}".format(
             _format_mismatch(orig), _format_mismatch(new_)
@@ -1237,11 +1240,11 @@ def _merge_error(orig: str, new_: Any) -> AmbiguousMergeError:
     )
 
 
-def _format_mismatch(x: Any) -> str:
+def _format_mismatch(x: object) -> str:
     return "{} ({!r})".format(type(x), x)
 
 
-def copy_dict(source: Dict[str, Any]) -> Dict[str, Any]:
+def copy_dict(source: Dict[str, _T]) -> Dict[str, _T]:
     """
     Return a fresh copy of ``source`` with as little shared state as possible.
 

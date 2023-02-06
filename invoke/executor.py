@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
 
 from .config import Config
 from .parser import ParserContext
-from .util import debug  # type: ignore
+from .util import debug
 from .tasks import Call, Task
 
 if TYPE_CHECKING:
@@ -136,7 +136,7 @@ class Executor:
             # an appropriate one; e.g. subclasses might use extra data from
             # being parameterized), handing in this config for use there.
             context = call.make_context(config)
-            args = (context,) + call.args
+            args = (context, *call.args)
             result = call.task(*args, **call.kwargs)
             if autoprint:
                 print(result)
@@ -161,11 +161,10 @@ class Executor:
         calls = []
         for task in tasks:
             if isinstance(task, str):
-                name = task
+                name: Optional[str] = task
                 kwargs = {}
             elif isinstance(task, ParserContext):
-                # FIXME: task.name can be none here
-                name = task.name  # type: ignore
+                name = task.name
                 kwargs = task.as_kwargs
             else:
                 name, kwargs = task

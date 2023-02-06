@@ -13,8 +13,8 @@ from typing import (
     Any,
     Callable,
     Dict,
-    Generator,
     IO,
+    Iterator,
     List,
     Optional,
     Tuple,
@@ -27,15 +27,15 @@ from typing import (
 try:
     import pty
 except ImportError:
-    pty = None  # type: ignore
+    pty = None  # type: ignore[assignment]
 try:
     import fcntl
 except ImportError:
-    fcntl = None  # type: ignore
+    fcntl = None  # type: ignore[assignment]
 try:
     import termios
 except ImportError:
-    termios = None  # type: ignore
+    termios = None  # type: ignore[assignment]
 
 from .exceptions import (
     UnexpectedExit,
@@ -58,6 +58,8 @@ if TYPE_CHECKING:
     # from io import BytesIO, StringIO, TextIOWrapper
     from .context import Context
     from .watchers import StreamWatcher
+
+_HandleIO = Callable[..., None]
 
 
 class Runner:
@@ -460,7 +462,7 @@ class Runner:
         """
         return Promise(self)
 
-    def _finish(self) -> Any:
+    def _finish(self) -> "Result":
         # Wait for subprocess to run, forwarding signals as we get them.
         try:
             while True:
@@ -608,7 +610,7 @@ class Runner:
         )
         return result
 
-    def _thread_join_timeout(self, target: Callable) -> Optional[int]:
+    def _thread_join_timeout(self, target: _HandleIO) -> Optional[int]:
         # Add a timeout to out/err thread joins when it looks like they're not
         # dead but their counterpart is dead; this indicates issue #351 (fixed
         # by #432) where the subproc may hang because its stdout (or stderr) is
@@ -626,7 +628,7 @@ class Runner:
 
     def create_io_threads(
         self,
-    ) -> Tuple[Dict[Any, ExceptionHandlingThread], List[Any], List[Any]]:
+    ) -> Tuple[Dict[_HandleIO, ExceptionHandlingThread], List[str], List[str]]:
         """
         Create and return a dictionary of IO thread worker objects.
 
@@ -636,7 +638,7 @@ class Runner:
         stdout: List[str] = []
         stderr: List[str] = []
         # Set up IO thread parameters (format - body_func: {kwargs})
-        thread_args: Dict[Callable[..., Any], Any] = {
+        thread_args: Dict[_HandleIO, Any] = {
             self.handle_stdout: {
                 "buffer_": stdout,
                 "hide": "stdout" in self.opts["hide"],
@@ -678,7 +680,7 @@ class Runner:
         """
         return Result(**kwargs)
 
-    def read_proc_output(self, reader: Callable) -> Generator[str, None, None]:
+    def read_proc_output(self, reader: Callable[[int], bytes]) -> Iterator[str]:
         """
         Iteratively read & decode bytes from a subprocess' out/err stream.
 
@@ -1201,7 +1203,7 @@ class Runner:
         """
         # Timer expiry implies we did time out. (The timer itself will have
         # killed the subprocess, allowing us to even get to this point.)
-        return True if self._timer and not self._timer.is_alive() else False
+        return bool(self._timer and not self._timer.is_alive())
 
 
 class Local(Runner):
@@ -1485,7 +1487,7 @@ class Result:
         self.hide = hide
 
     @property
-    def return_code(self) -> Any:
+    def return_code(self) -> int:
         """
         An alias for ``.exited``.
 
@@ -1529,7 +1531,7 @@ class Result:
 
         .. versionadded:: 1.0
         """
-        return bool(self.exited == 0)
+        return self.exited == 0
 
     @property
     def failed(self) -> bool:
@@ -1591,7 +1593,7 @@ class Promise(Result):
         for key, value in self.runner.result_kwargs.items():
             setattr(self, key, value)
 
-    def join(self) -> Any:
+    def join(self) -> Result:
         """
         Block until associated subprocess exits, returning/raising the result.
 
@@ -1613,7 +1615,7 @@ class Promise(Result):
         finally:
             self.runner.stop()
 
-    def __enter__(self) -> "Promise":
+    def __enter__(self) -> "Promise":  # TODO(PY311): Use Self
         return self
 
     def __exit__(
@@ -1626,7 +1628,7 @@ class Promise(Result):
 
 
 def normalize_hide(
-    val: Any,
+    val: Union[str, bool, None],
     out_stream: Optional[str] = None,
     err_stream: Optional[str] = None,
 ) -> Tuple[str, ...]:
@@ -1644,6 +1646,7 @@ def normalize_hide(
     elif val == "err":
         hide = ["stderr"]
     else:
+        assert val is not None and not isinstance(val, bool)
         hide = [val]
     # Revert any streams that have been overridden from the default value
     if out_stream is not None and "stdout" in hide:

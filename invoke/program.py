@@ -5,14 +5,14 @@ import os
 import sys
 import textwrap
 from importlib import import_module  # buffalo buffalo
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Sequence, Tuple, Type, Union
 
 from . import Collection, Config, Executor, FilesystemLoader
 from .completion.complete import complete, print_completion_script
 from .parser import Parser, ParserContext, Argument
 from .exceptions import UnexpectedExit, CollectionNotFound, ParseError, Exit
 from .terminals import pty_size
-from .util import debug, enable_logging, helpline  # type: ignore
+from .util import debug, enable_logging, helpline
 
 if TYPE_CHECKING:
     from .context import Context
@@ -182,12 +182,12 @@ class Program:
     def __init__(
         self,
         version: Optional[str] = None,
-        namespace: Optional["Collection"] = None,
+        namespace: Optional[Collection] = None,
         name: Optional[str] = None,
         binary: Optional[str] = None,
-        loader_class: Optional["Loader"] = None,
-        executor_class: Optional["Executor"] = None,
-        config_class: Optional["Config"] = None,
+        loader_class: Optional[Type["Loader"]] = None,
+        executor_class: Optional[Type[Executor]] = None,
+        config_class: Optional[Type[Config]] = None,
         binary_names: Optional[List[str]] = None,
     ) -> None:
         """
@@ -289,7 +289,7 @@ class Program:
 
         .. versionadded:: 1.0
         """
-        self.config = self.config_class()  # type: ignore
+        self.config = self.config_class()
 
     def update_config(self, merge: bool = True) -> None:
         """
@@ -344,7 +344,7 @@ class Program:
         if merge:
             self.config.merge()
 
-    def run(self, argv: Optional[List[str]] = None, exit: bool = True) -> None:
+    def run(self, argv: Union[List[str], str, None] = None, exit: bool = True) -> None:
         """
         Execute main CLI logic, based on ``argv``.
 
@@ -413,7 +413,7 @@ class Program:
         except KeyboardInterrupt:
             sys.exit(1)  # Same behavior as Python itself outside of REPL
 
-    def parse_core(self, argv: Optional[List[str]]) -> None:
+    def parse_core(self, argv: Union[List[str], str, None]) -> None:
         debug("argv given to Program.run: {!r}".format(argv))
         self.normalize_argv(argv)
 
@@ -571,12 +571,12 @@ class Program:
             # "normal" but also its own possible source of bugs/confusion...
             module = import_module(module_path)
             klass = getattr(module, class_name)
-        executor = klass(  # type: ignore
+        executor = klass(
             self.collection, self.config, self.core
         )
         executor.execute(*self.tasks)
 
-    def normalize_argv(self, argv: Optional[List[str]]) -> None:
+    def normalize_argv(self, argv: Union[List[str], str, None]) -> None:
         """
         Massages ``argv`` into a useful list of strings.
 
@@ -701,7 +701,7 @@ class Program:
         # NOTE: start, coll_name both fall back to configuration values within
         # Loader (which may, however, get them from our config.)
         start = self.args["search-root"].value
-        loader = self.loader_class(  # type: ignore
+        loader = self.loader_class(
             config=self.config, start=start
         )
         coll_name = self.args.collection.value
@@ -722,7 +722,7 @@ class Program:
             raise Exit("Can't find any collection named {!r}!".format(e.name))
 
     def _update_core_context(
-        self, context: "Context", new_args: Dict[str, Any]
+        self, context: ParserContext, new_args: Dict[str, Any]
     ) -> None:
         # Update core context w/ core_via_task args, if and only if the
         # via-task version of the arg was truly given a value.
@@ -918,7 +918,7 @@ class Program:
         return text
 
     def display_with_columns(
-        self, pairs: List[Tuple[str, Optional[str]]], extra: str = ""
+        self, pairs: Sequence[Tuple[str, Optional[str]]], extra: str = ""
     ) -> None:
         root = self.list_root
         print("{}:\n".format(self.task_list_opener(extra=extra)))
@@ -934,7 +934,7 @@ class Program:
             # TODO: trim/prefix dots
             print("Default{} task: {}\n".format(specific, default))
 
-    def print_columns(self, tuples: List[Tuple[str, Optional[str]]]) -> None:
+    def print_columns(self, tuples: Sequence[Tuple[str, Optional[str]]]) -> None:
         """
         Print tabbed columns from (name, help) ``tuples``.
 

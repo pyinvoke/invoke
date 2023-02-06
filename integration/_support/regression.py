@@ -12,11 +12,11 @@ ideal world this would be truly part of the integration test suite, but:
 
 import sys
 
-from invoke import task
+from invoke import Config, task
 
 
 @task
-def check(c):
+def check(c: Config) -> None:
     count = 0
     failures = []
     for _ in range(0, 1000):
