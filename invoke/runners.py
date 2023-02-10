@@ -1154,11 +1154,13 @@ class Runner:
         """
         self.write_proc_stdin("\x03")
 
-    def returncode(self) -> int:
+    def returncode(self) -> Optional[int]:
         """
         Return the numeric return/exit code resulting from command execution.
 
-        :returns: `int`
+        :returns:
+            `int`, if any reasonable return code could be determined, or
+            ``None`` in corner cases where that was not possible.
 
         .. versionadded:: 1.0
         """
@@ -1358,7 +1360,7 @@ class Local(Runner):
         else:
             return self.process.poll() is not None
 
-    def returncode(self) -> int:
+    def returncode(self) -> Optional[int]:
         if self.using_pty:
             # No subprocess.returncode available; use WIFEXITED/WIFSIGNALED to
             # determine whch of WEXITSTATUS / WTERMSIG to use.
@@ -1366,7 +1368,7 @@ class Local(Runner):
             # return whichever one of them is nondefault"? Probably not?
             # NOTE: doing this in an arbitrary order should be safe since only
             # one of the WIF* methods ought to ever return True.
-            code = 0
+            code = None
             if os.WIFEXITED(self.status):
                 code = os.WEXITSTATUS(self.status)
             elif os.WIFSIGNALED(self.status):
