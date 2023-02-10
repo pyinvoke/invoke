@@ -16,7 +16,7 @@ disallow_untyped_defs = true
 #     "unused-awaitable",
 #
 exclude = [
-    "integration/", "tests/", "setup.py", "sites/www/conf.py"
+    "integration/", "tests/", "setup.py", "tasks.py", "sites/www/conf.py", "build/",
 ]
 ignore_missing_imports = true
 # implicit_reexport = False
