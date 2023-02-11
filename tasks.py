@@ -51,9 +51,6 @@ def test(
     )
 
 
-print('test', vars(test), type(test))
-
-
 # TODO: replace with invocations' once the "call truly local tester" problem is
 # solved (see other TODOs). For now this is just a copy/paste/modify.
 @task(help=test.help)  # type: ignore

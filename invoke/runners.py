@@ -19,7 +19,6 @@ from typing import (
     Optional,
     Tuple,
     Type,
-    Union,
 )
 
 # Import some platform-specific things at top level so they can be mocked for
@@ -1282,7 +1281,9 @@ class Local(Runner):
         elif self.process and self.process.stdin:
             fd = self.process.stdin.fileno()
         else:
-            raise SubprocessPipeError("Unable to write to missing subprocess or stdin!")
+            raise SubprocessPipeError(
+                "Unable to write to missing subprocess or stdin!"
+            )
         # Try to write, ignoring broken pipes if encountered (implies child
         # process exited before the process piping stdin to us finished;
         # there's nothing we can do about that!)
@@ -1300,7 +1301,9 @@ class Local(Runner):
         elif self.process and self.process.stdin:
             self.process.stdin.close()
         else:
-            raise SubprocessPipeError("Unable to close missing subprocess or stdin!")
+            raise SubprocessPipeError(
+                "Unable to close missing subprocess or stdin!"
+            )
 
     def start(self, command: str, shell: str, env: Dict[str, Any]) -> None:
         if self.using_pty:
