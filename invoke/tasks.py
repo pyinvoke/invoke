@@ -59,7 +59,6 @@ class Task(Generic[T]):
     def __init__(
         self,
         body: Callable,
-        /,
         name: Optional[str] = None,
         aliases: Iterable[str] = (),
         positional: Optional[Iterable[str]] = None,
@@ -484,7 +483,7 @@ class Call:
         return klass(**data)
 
 
-def call(task: "Task", /, *args: Any, **kwargs: Any) -> "Call":
+def call(task: "Task", *args: Any, **kwargs: Any) -> "Call":
     """
     Describes execution of a `.Task`, typically with pre-supplied arguments.
 
