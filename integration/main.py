@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 import sys
 
 import pytest
@@ -15,18 +16,13 @@ def _output_eq(cmd, expected):
     assert run(cmd, hide=True).stdout == expected
 
 
-def _setup(self):
-    self.cwd = os.getcwd()
-    # Enter integration/ so Invoke loads its local tasks.py
-    os.chdir(os.path.dirname(__file__))
-
-
 class Main:
-    def setup(self):
-        # MEH
-        _setup(self)
+    def setup_method(self):
+        self.cwd = os.getcwd()
+        # Enter integration/_support as all support files are in there now
+        os.chdir(Path(__file__).parent / "_support")
 
-    def teardown(self):
+    def teardown_method(self):
         os.chdir(self.cwd)
 
     class basics:
@@ -86,7 +82,6 @@ class Main:
     class funky_characters_in_stdout:
         @only_utf8
         def basic_nonstandard_characters(self):
-            os.chdir("_support")
             # Crummy "doesn't explode with decode errors" test
             cmd = ("type" if WINDOWS else "cat") + " tree.out"
             run(cmd, hide="stderr")
@@ -117,7 +112,6 @@ class Main:
         def pty_puts_both_streams_in_stdout(self):
             if WINDOWS:
                 return
-            os.chdir("_support")
             err_echo = "{} err.py".format(sys.executable)
             command = "echo foo && {} bar".format(err_echo)
             r = run(command, hide="both", pty=True)
@@ -152,7 +146,6 @@ class Main:
             # (Dis)proves #416. When bug present, parser gets very confused,
             # asks "what the hell is 'whee'?". See also a unit test for
             # Task.get_arguments.
-            os.chdir("_support")
             for argstr, expected in (
                 ("", "False"),
                 ("--meh", "True"),
