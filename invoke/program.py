@@ -5,7 +5,16 @@ import os
 import sys
 import textwrap
 from importlib import import_module  # buffalo buffalo
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    List,
+    Optional,
+    Sequence,
+    Tuple,
+    Type,
+)
 
 from . import Collection, Config, Executor, FilesystemLoader
 from .completion.complete import complete, print_completion_script
@@ -15,7 +24,6 @@ from .terminals import pty_size
 from .util import debug, enable_logging, helpline
 
 if TYPE_CHECKING:
-    from .context import Context
     from .loader import Loader
     from .parser import ParseResult
     from .util import Lexicon
@@ -185,9 +193,9 @@ class Program:
         namespace: Optional["Collection"] = None,
         name: Optional[str] = None,
         binary: Optional[str] = None,
-        loader_class: Optional["Loader"] = None,
-        executor_class: Optional["Executor"] = None,
-        config_class: Optional["Config"] = None,
+        loader_class: Optional[Type["Loader"]] = None,
+        executor_class: Optional[Type["Executor"]] = None,
+        config_class: Optional[Type["Config"]] = None,
         binary_names: Optional[List[str]] = None,
     ) -> None:
         """
@@ -289,7 +297,7 @@ class Program:
 
         .. versionadded:: 1.0
         """
-        self.config = self.config_class()  # type: ignore
+        self.config = self.config_class()
 
     def update_config(self, merge: bool = True) -> None:
         """
@@ -571,9 +579,7 @@ class Program:
             # "normal" but also its own possible source of bugs/confusion...
             module = import_module(module_path)
             klass = getattr(module, class_name)
-        executor = klass(  # type: ignore
-            self.collection, self.config, self.core
-        )
+        executor = klass(self.collection, self.config, self.core)
         executor.execute(*self.tasks)
 
     def normalize_argv(self, argv: Optional[List[str]]) -> None:
@@ -723,7 +729,7 @@ class Program:
             raise Exit("Can't find any collection named {!r}!".format(e.name))
 
     def _update_core_context(
-        self, context: "Context", new_args: Dict[str, Any]
+        self, context: ParserContext, new_args: Dict[str, Any]
     ) -> None:
         # Update core context w/ core_via_task args, if and only if the
         # via-task version of the arg was truly given a value.
@@ -919,7 +925,7 @@ class Program:
         return text
 
     def display_with_columns(
-        self, pairs: List[Tuple[str, Optional[str]]], extra: str = ""
+        self, pairs: Sequence[Tuple[str, Optional[str]]], extra: str = ""
     ) -> None:
         root = self.list_root
         print("{}:\n".format(self.task_list_opener(extra=extra)))
@@ -935,7 +941,9 @@ class Program:
             # TODO: trim/prefix dots
             print("Default{} task: {}\n".format(specific, default))
 
-    def print_columns(self, tuples: List[Tuple[str, Optional[str]]]) -> None:
+    def print_columns(
+        self, tuples: Sequence[Tuple[str, Optional[str]]]
+    ) -> None:
         """
         Print tabbed columns from (name, help) ``tuples``.
 

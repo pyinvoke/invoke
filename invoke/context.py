@@ -73,13 +73,13 @@ class Context(DataProxy):
         self._set(command_cwds=command_cwds)
 
     @property
-    def config(self) -> Any:
+    def config(self) -> Config:
         # Allows Context to expose a .config attribute even though DataProxy
         # otherwise considers it a config key.
         return self._config
 
     @config.setter
-    def config(self, value: Any) -> None:
+    def config(self, value: Config) -> None:
         # NOTE: mostly used by client libraries needing to tweak a Context's
         # config at execution time; i.e. a Context subclass that bears its own
         # unique data may want to be stood up when parameterizing/expanding a

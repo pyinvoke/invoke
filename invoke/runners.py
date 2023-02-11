@@ -27,15 +27,15 @@ from typing import (
 try:
     import pty
 except ImportError:
-    pty = None  # type: ignore
+    pty = None  # type: ignore[assignment]
 try:
     import fcntl
 except ImportError:
-    fcntl = None  # type: ignore
+    fcntl = None  # type: ignore[assignment]
 try:
     import termios
 except ImportError:
-    termios = None  # type: ignore
+    termios = None  # type: ignore[assignment]
 
 from .exceptions import (
     UnexpectedExit,
@@ -55,7 +55,6 @@ from .terminals import (
 from .util import has_fileno, isatty, ExceptionHandlingThread
 
 if TYPE_CHECKING:
-    # from io import BytesIO, StringIO, TextIOWrapper
     from .context import Context
     from .watchers import StreamWatcher
 
@@ -460,7 +459,7 @@ class Runner:
         """
         return Promise(self)
 
-    def _finish(self) -> Any:
+    def _finish(self) -> "Result":
         # Wait for subprocess to run, forwarding signals as we get them.
         try:
             while True:
@@ -626,7 +625,7 @@ class Runner:
 
     def create_io_threads(
         self,
-    ) -> Tuple[Dict[Any, ExceptionHandlingThread], List[Any], List[Any]]:
+    ) -> Tuple[Dict[Callable, ExceptionHandlingThread], List[str], List[str]]:
         """
         Create and return a dictionary of IO thread worker objects.
 
@@ -1201,7 +1200,7 @@ class Runner:
         """
         # Timer expiry implies we did time out. (The timer itself will have
         # killed the subprocess, allowing us to even get to this point.)
-        return True if self._timer and not self._timer.is_alive() else False
+        return bool(self._timer and not self._timer.is_alive())
 
 
 class Local(Runner):
@@ -1485,7 +1484,7 @@ class Result:
         self.hide = hide
 
     @property
-    def return_code(self) -> Any:
+    def return_code(self) -> int:
         """
         An alias for ``.exited``.
 
@@ -1591,7 +1590,7 @@ class Promise(Result):
         for key, value in self.runner.result_kwargs.items():
             setattr(self, key, value)
 
-    def join(self) -> Any:
+    def join(self) -> Result:
         """
         Block until associated subprocess exits, returning/raising the result.
 

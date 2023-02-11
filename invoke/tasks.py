@@ -3,20 +3,23 @@ This module contains the core `.Task` class & convenience decorators used to
 generate new tasks.
 """
 
-from copy import deepcopy
 import inspect
 import types
+from copy import deepcopy
+from functools import update_wrapper
 from typing import (
     TYPE_CHECKING,
     Any,
     Callable,
     Dict,
     List,
+    Generic,
     Iterable,
     Optional,
     Set,
     Tuple,
     Type,
+    TypeVar,
     Union,
 )
 
@@ -27,8 +30,10 @@ if TYPE_CHECKING:
     from inspect import Signature
     from .config import Config
 
+T = TypeVar("T", bound=Callable)
 
-class Task:
+
+class Task(Generic[T]):
     """
     Core object representing an executable task & its argument specification.
 
@@ -54,6 +59,7 @@ class Task:
     def __init__(
         self,
         body: Callable,
+        /,
         name: Optional[str] = None,
         aliases: Iterable[str] = (),
         positional: Optional[Iterable[str]] = None,
@@ -69,6 +75,7 @@ class Task:
     ) -> None:
         # Real callable
         self.body = body
+        update_wrapper(self, self.body)
         # Copy a bunch of special properties from the body for the benefit of
         # Sphinx autodoc or other introspectors.
         self.__doc__ = getattr(body, "__doc__", "")
@@ -81,7 +88,7 @@ class Task:
         self.is_default = default
         # Arg/flag/parser hints
         self.positional = self.fill_implicit_positionals(positional)
-        self.optional = optional
+        self.optional = tuple(optional)
         self.iterable = iterable or []
         self.incrementable = incrementable or []
         self.auto_shortflags = auto_shortflags
@@ -123,7 +130,7 @@ class Task:
         # this for now.
         return hash(self.name) + hash(self.body)
 
-    def __call__(self, *args: Any, **kwargs: Any) -> Any:
+    def __call__(self, *args: Any, **kwargs: Any) -> T:
         # Guard against calling tasks with no context.
         if not isinstance(args[0], Context):
             err = "Task expected a Context as its first arg, got {} instead!"
@@ -334,7 +341,7 @@ def task(*args: Any, **kwargs: Any) -> Callable:
     .. versionchanged:: 1.1
         Added the ``klass`` keyword argument.
     """
-    klass = kwargs.pop("klass", Task)
+    klass: Type[Task] = kwargs.pop("klass", Task)
     # @task -- no options were (probably) given.
     if len(args) == 1 and callable(args[0]) and not isinstance(args[0], Task):
         return klass(args[0], **kwargs)
@@ -345,43 +352,12 @@ def task(*args: Any, **kwargs: Any) -> Callable:
                 "May not give *args and 'pre' kwarg simultaneously!"
             )
         kwargs["pre"] = args
-    # @task(options)
-    # TODO: why the heck did we originally do this in this manner instead of
-    # simply delegating to Task?! Let's just remove all this sometime & see
-    # what, if anything, breaks.
-    name = kwargs.pop("name", None)
-    aliases = kwargs.pop("aliases", ())
-    positional = kwargs.pop("positional", None)
-    optional = tuple(kwargs.pop("optional", ()))
-    iterable = kwargs.pop("iterable", None)
-    incrementable = kwargs.pop("incrementable", None)
-    default = kwargs.pop("default", False)
-    auto_shortflags = kwargs.pop("auto_shortflags", True)
-    help = kwargs.pop("help", {})
-    pre = kwargs.pop("pre", [])
-    post = kwargs.pop("post", [])
-    autoprint = kwargs.pop("autoprint", False)
 
-    def inner(obj: Callable) -> Task:
-        _obj = klass(
-            obj,
-            name=name,
-            aliases=aliases,
-            positional=positional,
-            optional=optional,
-            iterable=iterable,
-            incrementable=incrementable,
-            default=default,
-            auto_shortflags=auto_shortflags,
-            help=help,
-            pre=pre,
-            post=post,
-            autoprint=autoprint,
-            # Pass in any remaining kwargs as-is.
-            **kwargs
-        )
-        return _obj
+    def inner(body: Callable) -> Task[T]:
+        _task = klass(body, **kwargs)
+        return _task
 
+    # update_wrapper(inner, klass)
     return inner
 
 
@@ -508,7 +484,7 @@ class Call:
         return klass(**data)
 
 
-def call(task: Task, *args: Any, **kwargs: Any) -> "Call":
+def call(task: "Task", /, *args: Any, **kwargs: Any) -> "Call":
     """
     Describes execution of a `.Task`, typically with pre-supplied arguments.
 
@@ -541,4 +517,4 @@ def call(task: Task, *args: Any, **kwargs: Any) -> "Call":
 
     .. versionadded:: 1.0
     """
-    return Call(task=task, args=args, kwargs=kwargs)
+    return Call(task, args=args, kwargs=kwargs)

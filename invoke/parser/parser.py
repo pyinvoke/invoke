@@ -1,13 +1,16 @@
 import copy
-from collections import UserList
 from typing import TYPE_CHECKING, Any, Iterable, List, Optional
 
 try:
     from ..vendor.lexicon import Lexicon
     from ..vendor.fluidity import StateMachine, state, transition
 except ImportError:
-    from lexicon import Lexicon  # type: ignore
-    from fluidity import StateMachine, state, transition  # type: ignore
+    from lexicon import Lexicon  # type: ignore[no-redef]
+    from fluidity import (  # type: ignore[no-redef]
+        StateMachine,
+        state,
+        transition,
+    )
 
 from ..exceptions import ParseError
 from ..util import debug
@@ -24,7 +27,7 @@ def is_long_flag(value: str) -> bool:
     return value.startswith("--")
 
 
-class ParseResult(UserList):
+class ParseResult(List["ParserContext"]):
     """
     List-like object with some extra parse-related attributes.
 
@@ -109,7 +112,8 @@ class Parser:
         .. versionadded:: 1.0
         """
         machine = ParseMachine(
-            initial=self.initial,  # type: ignore # FIXME: should not be none
+            # FIXME: initial should not be none
+            initial=self.initial,  # type: ignore[arg-type]
             contexts=self.contexts,
             ignore_unknown=self.ignore_unknown,
         )

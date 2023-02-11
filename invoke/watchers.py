@@ -96,12 +96,12 @@ class Responder(StreamWatcher):
         # once, e.g. in FailingResponder.
         # Only look at stream contents we haven't seen yet, to avoid dupes.
         index = getattr(self, index_attr)
-        new_ = stream[index:]
+        new = stream[index:]
         # Search, across lines if necessary
-        matches = re.findall(pattern, new_, re.S)
+        matches = re.findall(pattern, new, re.S)
         # Update seek index if we've matched
         if matches:
-            setattr(self, index_attr, index + len(new_))
+            setattr(self, index_attr, index + len(new))
         return matches
 
     def submit(self, stream: str) -> Generator[str, None, None]:

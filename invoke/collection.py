@@ -113,7 +113,7 @@ class Collection:
         for name, obj in kwargs.items():
             self._add_object(obj, name)
 
-    def _add_object(self, obj: Any, name: Optional[str] = None) -> Callable:
+    def _add_object(self, obj: Any, name: Optional[str] = None) -> None:
         method: Callable
         if isinstance(obj, Task):
             method = self.add_task
@@ -121,7 +121,7 @@ class Collection:
             method = self.add_collection
         else:
             raise TypeError("No idea how to insert {!r}!".format(type(obj)))
-        return method(obj, name=name)
+        method(obj, name=name)
 
     def __repr__(self) -> str:
         task_names = list(self.tasks.keys())
@@ -510,7 +510,7 @@ class Collection:
         return new
 
     @property
-    def task_names(self) -> Dict[str, Any]:
+    def task_names(self) -> Dict[str, List[str]]:
         """
         Return all task identifiers for this collection as a one-level dict.
 

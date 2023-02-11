@@ -7,7 +7,7 @@ import glob
 import os
 import re
 import shlex
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING
 
 from ..exceptions import Exit, ParseError
 from ..util import debug, task_name_sort_key
@@ -38,8 +38,7 @@ def complete(
         # Use last seen context in case of failure (required for
         # otherwise-invalid partial invocations being completed).
 
-        # FIXME: this seems wonky
-        contexts: Union[List[ParserContext], ParseResult]
+        contexts: List[ParserContext]
         try:
             debug("Seeking context name in tokens: {!r}".format(tokens))
             contexts = parser.parse_argv(tokens)

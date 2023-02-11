@@ -21,8 +21,8 @@ try:
     from .vendor.lexicon import Lexicon  # noqa
     from .vendor import yaml  # noqa
 except ImportError:
-    from lexicon import Lexicon  # type: ignore # noqa
-    import yaml  # type: ignore # noqa
+    from lexicon import Lexicon  # type: ignore[no-redef] # noqa
+    import yaml  # type: ignore[no-redef] # noqa
 
 
 LOG_FORMAT = "%(name)s.%(module)s.%(funcName)s: %(message)s"
