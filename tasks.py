@@ -1,4 +1,5 @@
 import os
+from typing import TYPE_CHECKING, Optional
 
 from invoke import Collection, task, Exit
 
@@ -7,19 +8,22 @@ from invocations.docs import docs, www, sites, watch_docs
 from invocations.pytest import coverage as coverage_, test as test_
 from invocations.packaging import vendorize, release
 
+if TYPE_CHECKING:
+    from invoke import Context
+
 
 @task
 def test(
-    c,
-    verbose=False,
-    color=True,
-    capture="no",
-    module=None,
-    k=None,
-    x=False,
-    opts="",
-    pty=True,
-):
+    c: "Context",
+    verbose: bool = False,
+    color: bool = True,
+    capture: str = "no",
+    module: Optional[str] = None,
+    k: Optional[str] = None,
+    x: bool = False,
+    opts: str = "",
+    pty: bool = True,
+) -> None:
     """
     Run pytest. See `invocations.pytest.test` for details.
 
@@ -34,7 +38,7 @@ def test(
     """
     # TODO: update test suite to use c.config.run.in_stream = False globally.
     # somehow.
-    return test_(
+    test_(
         c,
         verbose=verbose,
         color=color,
@@ -47,10 +51,15 @@ def test(
     )
 
 
+print('test', vars(test), type(test))
+
+
 # TODO: replace with invocations' once the "call truly local tester" problem is
 # solved (see other TODOs). For now this is just a copy/paste/modify.
-@task(help=test.help)
-def integration(c, opts=None, pty=True):
+@task(help=test.help)  # type: ignore
+def integration(
+    c: "Context", opts: Optional[str] = None, pty: bool = True
+) -> None:
     """
     Run the integration test suite. May be slow!
     """
@@ -67,7 +76,9 @@ def integration(c, opts=None, pty=True):
 
 
 @task
-def coverage(c, report="term", opts="", codecov=False):
+def coverage(
+    c: "Context", report: str = "term", opts: str = "", codecov: bool = False
+) -> None:
     """
     Run pytest in coverage mode. See `invocations.pytest.coverage` for details.
     """
@@ -86,7 +97,7 @@ def coverage(c, report="term", opts="", codecov=False):
 
 
 @task
-def regression(c, jobs=8):
+def regression(c: "Context", jobs: int = 8) -> None:
     """
     Run an expensive, hard-to-test-in-pytest run() regression checker.
 

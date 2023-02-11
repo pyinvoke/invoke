@@ -16,7 +16,7 @@ from .util import debug, yaml
 try:
     from importlib.machinery import SourceFileLoader
 except ImportError:  # PyPy3
-    from importlib._bootstrap import (  # type: ignore
+    from importlib._bootstrap import (  # type: ignore[no-redef]
         _SourceFileLoader as SourceFileLoader,
     )
 
@@ -1030,7 +1030,7 @@ class Config(DataProxy):
         # instantiation" and "I want cloning to not trigger certain things like
         # external data source loading".
         # NOTE: this will include lazy=True, see end of method
-        new = klass(**self._clone_init_kwargs(into=into))  # type: ignore
+        new = klass(**self._clone_init_kwargs(into=into))
         # Copy/merge/etc all 'private' data sources and attributes
         for name in """
             collection
@@ -1074,7 +1074,7 @@ class Config(DataProxy):
         return new
 
     def _clone_init_kwargs(
-        self, into: Optional["Config"] = None
+        self, into: Optional[Type["Config"]] = None
     ) -> Dict[str, Any]:
         """
         Supply kwargs suitable for initializing a new clone of this object.
@@ -1227,15 +1227,15 @@ def merge_dicts(
     return base
 
 
-def _merge_error(orig: str, new_: Any) -> AmbiguousMergeError:
+def _merge_error(orig: object, new: object) -> AmbiguousMergeError:
     return AmbiguousMergeError(
         "Can't cleanly merge {} with {}".format(
-            _format_mismatch(orig), _format_mismatch(new_)
+            _format_mismatch(orig), _format_mismatch(new)
         )
     )
 
 
-def _format_mismatch(x: Any) -> str:
+def _format_mismatch(x: object) -> str:
     return "{} ({!r})".format(type(x), x)
 
 
