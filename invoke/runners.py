@@ -19,6 +19,7 @@ from typing import (
     Optional,
     Tuple,
     Type,
+    Union,
 )
 
 # Import some platform-specific things at top level so they can be mocked for

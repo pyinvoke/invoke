@@ -88,12 +88,7 @@ class Main:
 
     class funky_characters_in_stdout:
         @only_utf8
-<<<<<<< HEAD
         def basic_nonstandard_characters(self) -> None:
-            os.chdir("_support")
-=======
-        def basic_nonstandard_characters(self):
->>>>>>> upstream/main
             # Crummy "doesn't explode with decode errors" test
             cmd = ("type" if WINDOWS else "cat") + " tree.out"
             run(cmd, hide="stderr")

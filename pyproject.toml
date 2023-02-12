@@ -12,8 +12,11 @@ disallow_subclassing_any = true
 disallow_untyped_defs = true
 enable_error_code = [
     "redundant-expr",
+    "redundant-self",
 #    "truthy-bool",
+#    "truthy-iterable",
     "ignore-without-code",
+#    "possibly-undefined",
     "unused-awaitable",
 ]
 # implicit_reexport = false

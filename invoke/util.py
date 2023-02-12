@@ -192,7 +192,7 @@ class ExceptionHandlingThread(threading.Thread):
             # doesn't appear to be the case, then assume we're being used
             # directly and just use super() ourselves.
             # XXX https://github.com/python/mypy/issues/1424
-            if hasattr(self, "_run") and callable(self._run):  # type: ignore
+            if hasattr(self, "_run") and callable(self._run):
                 # TODO: this could be:
                 # - io worker with no 'result' (always local)
                 # - tunnel worker, also with no 'result' (also always local)
@@ -207,7 +207,7 @@ class ExceptionHandlingThread(threading.Thread):
                 # and let it continue acting like a normal thread (meh)
                 # - assume the run/sudo/etc case will use a queue inside its
                 # worker body, orthogonal to how exception handling works
-                self._run()  # type: ignore
+                self._run()
             else:
                 super().run()
         except BaseException:

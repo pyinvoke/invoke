@@ -162,7 +162,7 @@ class Executor:
         for task in tasks:
             name: Optional[str]
             if isinstance(task, str):
-                name: Optional[str] = task
+                name = task
                 kwargs = {}
             elif isinstance(task, ParserContext):
                 name = task.name
