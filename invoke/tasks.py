@@ -3,15 +3,37 @@ This module contains the core `.Task` class & convenience decorators used to
 generate new tasks.
 """
 
-from copy import deepcopy
 import inspect
 import types
+from copy import deepcopy
+from functools import update_wrapper
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Dict,
+    List,
+    Generic,
+    Iterable,
+    Optional,
+    Set,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+)
 
 from .context import Context
 from .parser import Argument, translate_underscores
 
+if TYPE_CHECKING:
+    from inspect import Signature
+    from .config import Config
 
-class Task:
+T = TypeVar("T", bound=Callable)
+
+
+class Task(Generic[T]):
     """
     Core object representing an executable task & its argument specification.
 
@@ -36,22 +58,24 @@ class Task:
     # except a debug shell whose frame is exactly inside this class.
     def __init__(
         self,
-        body,
-        name=None,
-        aliases=(),
-        positional=None,
-        optional=(),
-        default=False,
-        auto_shortflags=True,
-        help=None,
-        pre=None,
-        post=None,
-        autoprint=False,
-        iterable=None,
-        incrementable=None,
-    ):
+        body: Callable,
+        /,
+        name: Optional[str] = None,
+        aliases: Iterable[str] = (),
+        positional: Optional[Iterable[str]] = None,
+        optional: Iterable[str] = (),
+        default: bool = False,
+        auto_shortflags: bool = True,
+        help: Optional[Dict[str, Any]] = None,
+        pre: Optional[Union[List[str], str]] = None,
+        post: Optional[Union[List[str], str]] = None,
+        autoprint: bool = False,
+        iterable: Optional[Iterable[str]] = None,
+        incrementable: Optional[Iterable[str]] = None,
+    ) -> None:
         # Real callable
         self.body = body
+        update_wrapper(self, self.body)
         # Copy a bunch of special properties from the body for the benefit of
         # Sphinx autodoc or other introspectors.
         self.__doc__ = getattr(body, "__doc__", "")
@@ -64,7 +88,7 @@ class Task:
         self.is_default = default
         # Arg/flag/parser hints
         self.positional = self.fill_implicit_positionals(positional)
-        self.optional = optional
+        self.optional = tuple(optional)
         self.iterable = iterable or []
         self.incrementable = incrementable or []
         self.auto_shortflags = auto_shortflags
@@ -77,16 +101,16 @@ class Task:
         self.autoprint = autoprint
 
     @property
-    def name(self):
+    def name(self) -> str:
         return self._name or self.__name__
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         aliases = ""
         if self.aliases:
             aliases = " ({})".format(", ".join(self.aliases))
         return "<Task {!r}{}>".format(self.name, aliases)
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, Task) or self.name != other.name:
             return False
         # Functions do not define __eq__ but func_code objects apparently do.
@@ -100,13 +124,13 @@ class Task:
             except AttributeError:
                 return False
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         # Presumes name and body will never be changed. Hrm.
         # Potentially cleaner to just not use Tasks as hash keys, but let's do
         # this for now.
         return hash(self.name) + hash(self.body)
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self, *args: Any, **kwargs: Any) -> T:
         # Guard against calling tasks with no context.
         if not isinstance(args[0], Context):
             err = "Task expected a Context as its first arg, got {} instead!"
@@ -117,10 +141,10 @@ class Task:
         return result
 
     @property
-    def called(self):
+    def called(self) -> bool:
         return self.times_called > 0
 
-    def argspec(self, body):
+    def argspec(self, body: Callable) -> "Signature":
         """
         Returns a modified `inspect.Signature` based on that of ``body``.
 
@@ -136,7 +160,11 @@ class Task:
             returning an `inspect.Signature`.
         """
         # Handle callable-but-not-function objects
-        func = body if isinstance(body, types.FunctionType) else body.__call__
+        func = (
+            body
+            if isinstance(body, types.FunctionType)
+            else body.__call__  # type: ignore
+        )
         # Rebuild signature with first arg dropped, or die usefully(ish trying
         sig = inspect.signature(func)
         params = list(sig.parameters.values())
@@ -147,7 +175,9 @@ class Task:
             raise TypeError("Tasks must have an initial Context argument!")
         return sig.replace(parameters=params[1:])
 
-    def fill_implicit_positionals(self, positional):
+    def fill_implicit_positionals(
+        self, positional: Optional[Iterable[str]]
+    ) -> Iterable[str]:
         # If positionals is None, everything lacking a default
         # value will be automatically considered positional.
         if positional is None:
@@ -158,8 +188,10 @@ class Task:
             ]
         return positional
 
-    def arg_opts(self, name, default, taken_names):
-        opts = {}
+    def arg_opts(
+        self, name: str, default: str, taken_names: Set[str]
+    ) -> Dict[str, Any]:
+        opts: Dict[str, Any] = {}
         # Whether it's positional or not
         opts["positional"] = name in self.positional
         # Whether it is a value-optional flag
@@ -205,7 +237,9 @@ class Task:
                 break
         return opts
 
-    def get_arguments(self, ignore_unknown_help=None):
+    def get_arguments(
+        self, ignore_unknown_help: Optional[bool] = None
+    ) -> List[Argument]:
         """
         Return a list of Argument objects representing this task's signature.
 
@@ -225,9 +259,9 @@ class Task:
         # Build arg list (arg_opts will take care of setting up shortnames,
         # etc)
         args = []
-        for arg in sig.parameters.values():
+        for param in sig.parameters.values():
             new_arg = Argument(
-                **self.arg_opts(arg.name, arg.default, taken_names)
+                **self.arg_opts(param.name, param.default, taken_names)
             )
             args.append(new_arg)
             # Update taken_names list with new argument's full name list
@@ -245,7 +279,7 @@ class Task:
         # Now we need to ensure positionals end up in the front of the list, in
         # order given in self.positionals, so that when Context consumes them,
         # this order is preserved.
-        for posarg in reversed(self.positional):
+        for posarg in reversed(list(self.positional)):
             for i, arg in enumerate(args):
                 if arg.name == posarg:
                     args.insert(0, args.pop(i))
@@ -253,7 +287,7 @@ class Task:
         return args
 
 
-def task(*args, **kwargs):
+def task(*args: Any, **kwargs: Any) -> Callable:
     """
     Marks wrapped callable object as a valid Invoke task.
 
@@ -307,7 +341,7 @@ def task(*args, **kwargs):
     .. versionchanged:: 1.1
         Added the ``klass`` keyword argument.
     """
-    klass = kwargs.pop("klass", Task)
+    klass: Type[Task] = kwargs.pop("klass", Task)
     # @task -- no options were (probably) given.
     if len(args) == 1 and callable(args[0]) and not isinstance(args[0], Task):
         return klass(args[0], **kwargs)
@@ -318,43 +352,12 @@ def task(*args, **kwargs):
                 "May not give *args and 'pre' kwarg simultaneously!"
             )
         kwargs["pre"] = args
-    # @task(options)
-    # TODO: why the heck did we originally do this in this manner instead of
-    # simply delegating to Task?! Let's just remove all this sometime & see
-    # what, if anything, breaks.
-    name = kwargs.pop("name", None)
-    aliases = kwargs.pop("aliases", ())
-    positional = kwargs.pop("positional", None)
-    optional = tuple(kwargs.pop("optional", ()))
-    iterable = kwargs.pop("iterable", None)
-    incrementable = kwargs.pop("incrementable", None)
-    default = kwargs.pop("default", False)
-    auto_shortflags = kwargs.pop("auto_shortflags", True)
-    help = kwargs.pop("help", {})
-    pre = kwargs.pop("pre", [])
-    post = kwargs.pop("post", [])
-    autoprint = kwargs.pop("autoprint", False)
 
-    def inner(obj):
-        obj = klass(
-            obj,
-            name=name,
-            aliases=aliases,
-            positional=positional,
-            optional=optional,
-            iterable=iterable,
-            incrementable=incrementable,
-            default=default,
-            auto_shortflags=auto_shortflags,
-            help=help,
-            pre=pre,
-            post=post,
-            autoprint=autoprint,
-            # Pass in any remaining kwargs as-is.
-            **kwargs
-        )
-        return obj
+    def inner(body: Callable) -> Task[T]:
+        _task = klass(body, **kwargs)
+        return _task
 
+    # update_wrapper(inner, klass)
     return inner
 
 
@@ -369,7 +372,13 @@ class Call:
     .. versionadded:: 1.0
     """
 
-    def __init__(self, task, called_as=None, args=None, kwargs=None):
+    def __init__(
+        self,
+        task: "Task",
+        called_as: Optional[str] = None,
+        args: Optional[Tuple[str, ...]] = None,
+        kwargs: Optional[Dict[str, Any]] = None,
+    ) -> None:
         """
         Create a new `.Call` object.
 
@@ -392,13 +401,13 @@ class Call:
         self.kwargs = kwargs or dict()
 
     # TODO: just how useful is this? feels like maybe overkill magic
-    def __getattr__(self, name):
+    def __getattr__(self, name: str) -> Any:
         return getattr(self.task, name)
 
-    def __deepcopy__(self, memo):
+    def __deepcopy__(self, memo: object) -> "Call":
         return self.clone()
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         aka = ""
         if self.called_as is not None and self.called_as != self.task.name:
             aka = " (called as: {!r})".format(self.called_as)
@@ -410,7 +419,7 @@ class Call:
             self.kwargs,
         )
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         # NOTE: Not comparing 'called_as'; a named call of a given Task with
         # same args/kwargs should be considered same as an unnamed call of the
         # same Task with the same args/kwargs (e.g. pre/post task specified w/o
@@ -420,7 +429,7 @@ class Call:
                 return False
         return True
 
-    def make_context(self, config):
+    def make_context(self, config: "Config") -> Context:
         """
         Generate a `.Context` appropriate for this call, with given config.
 
@@ -428,7 +437,7 @@ class Call:
         """
         return Context(config=config)
 
-    def clone_data(self):
+    def clone_data(self) -> Dict[str, Any]:
         """
         Return keyword args suitable for cloning this call into another.
 
@@ -441,7 +450,11 @@ class Call:
             kwargs=deepcopy(self.kwargs),
         )
 
-    def clone(self, into=None, with_=None):
+    def clone(
+        self,
+        into: Optional[Type["Call"]] = None,
+        with_: Optional[Dict[str, Any]] = None,
+    ) -> "Call":
         """
         Return a standalone copy of this Call.
 
@@ -471,7 +484,7 @@ class Call:
         return klass(**data)
 
 
-def call(task, *args, **kwargs):
+def call(task: "Task", /, *args: Any, **kwargs: Any) -> "Call":
     """
     Describes execution of a `.Task`, typically with pre-supplied arguments.
 
@@ -504,4 +517,4 @@ def call(task, *args, **kwargs):
 
     .. versionadded:: 1.0
     """
-    return Call(task=task, args=args, kwargs=kwargs)
+    return Call(task, args=args, kwargs=kwargs)

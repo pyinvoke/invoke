@@ -2,7 +2,9 @@ import copy
 import json
 import os
 import types
+from os import PathLike
 from os.path import join, splitext, expanduser
+from typing import Any, Dict, Iterator, Optional, Tuple, Type, Union
 
 from .env import Environment
 from .exceptions import UnknownFileType, UnpicklableConfigMember
@@ -14,10 +16,12 @@ from .util import debug, yaml
 try:
     from importlib.machinery import SourceFileLoader
 except ImportError:  # PyPy3
-    from importlib._bootstrap import _SourceFileLoader as SourceFileLoader
+    from importlib._bootstrap import (  # type: ignore[no-redef]
+        _SourceFileLoader as SourceFileLoader,
+    )
 
 
-def load_source(name, path):
+def load_source(name: str, path: str) -> Dict[str, Any]:
     if not os.path.exists(path):
         return {}
     return vars(SourceFileLoader("mod", path).load_module())
@@ -64,7 +68,12 @@ class DataProxy:
     )
 
     @classmethod
-    def from_data(cls, data, root=None, keypath=tuple()):
+    def from_data(
+        cls,
+        data: Dict[str, Any],
+        root: Optional["DataProxy"] = None,
+        keypath: Tuple[str, ...] = tuple(),
+    ) -> "DataProxy":
         """
         Alternate constructor for 'baby' DataProxies used as sub-dict values.
 
@@ -93,7 +102,7 @@ class DataProxy:
         obj._set(_keypath=keypath)
         return obj
 
-    def __getattr__(self, key):
+    def __getattr__(self, key: str) -> Any:
         # NOTE: due to default Python attribute-lookup semantics, "real"
         # attributes will always be yielded on attribute access and this method
         # is skipped. That behavior is good for us (it's more intuitive than
@@ -113,7 +122,7 @@ class DataProxy:
             err += "\n\nValid real attributes: {!r}".format(attrs)
             raise AttributeError(err)
 
-    def __setattr__(self, key, value):
+    def __setattr__(self, key: str, value: Any) -> None:
         # Turn attribute-sets into config updates anytime we don't have a real
         # attribute with the given name/key.
         has_real_attr = key in dir(self)
@@ -124,12 +133,12 @@ class DataProxy:
         else:
             super().__setattr__(key, value)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Dict[str, Any]]:
         # For some reason Python is ignoring our __hasattr__ when determining
         # whether we support __iter__. BOO
         return iter(self._config)
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         # NOTE: Can't proxy __eq__ because the RHS will always be an obj of the
         # current class, not the proxied-to class, and that causes
         # NotImplemented.
@@ -140,19 +149,19 @@ class DataProxy:
         # itself just a dict.
         if isinstance(other, dict):
             other_val = other
-        return self._config == other_val
+        return bool(self._config == other_val)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._config)
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key: str, value: str) -> None:
         self._config[key] = value
         self._track_modification_of(key, value)
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: str) -> Any:
         return self._get(key)
 
-    def _get(self, key):
+    def _get(self, key: str) -> Any:
         # Short-circuit if pickling/copying mechanisms are asking if we've got
         # __setstate__ etc; they'll ask this w/o calling our __init__ first, so
         # we'd be in a RecursionError-causing catch-22 otherwise.
@@ -172,7 +181,7 @@ class DataProxy:
             value = DataProxy.from_data(data=value, root=root, keypath=keypath)
         return value
 
-    def _set(self, *args, **kwargs):
+    def _set(self, *args: Any, **kwargs: Any) -> None:
         """
         Convenience workaround of default 'attrs are config keys' behavior.
 
@@ -189,21 +198,21 @@ class DataProxy:
         for key, value in kwargs.items():
             object.__setattr__(self, key, value)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "<{}: {}>".format(self.__class__.__name__, self._config)
 
-    def __contains__(self, key):
+    def __contains__(self, key: str) -> bool:
         return key in self._config
 
     @property
-    def _is_leaf(self):
+    def _is_leaf(self) -> bool:
         return hasattr(self, "_root")
 
     @property
-    def _is_root(self):
+    def _is_root(self) -> bool:
         return hasattr(self, "_modify")
 
-    def _track_removal_of(self, key):
+    def _track_removal_of(self, key: str) -> None:
         # Grab the root object responsible for tracking removals; either the
         # referenced root (if we're a leaf) or ourselves (if we're not).
         # (Intermediate nodes never have anything but __getitem__ called on
@@ -216,7 +225,7 @@ class DataProxy:
         if target is not None:
             target._remove(getattr(self, "_keypath", tuple()), key)
 
-    def _track_modification_of(self, key, value):
+    def _track_modification_of(self, key: str, value: str) -> None:
         target = None
         if self._is_leaf:
             target = self._root
@@ -225,11 +234,11 @@ class DataProxy:
         if target is not None:
             target._modify(getattr(self, "_keypath", tuple()), key, value)
 
-    def __delitem__(self, key):
+    def __delitem__(self, key: str) -> None:
         del self._config[key]
         self._track_removal_of(key)
 
-    def __delattr__(self, name):
+    def __delattr__(self, name: str) -> None:
         # Make sure we don't screw up true attribute deletion for the
         # situations that actually want it. (Uncommon, but not rare.)
         if name in self:
@@ -237,12 +246,12 @@ class DataProxy:
         else:
             object.__delattr__(self, name)
 
-    def clear(self):
+    def clear(self) -> None:
         keys = list(self.keys())
         for key in keys:
             del self[key]
 
-    def pop(self, *args):
+    def pop(self, *args: Any) -> Any:
         # Must test this up front before (possibly) mutating self._config
         key_existed = args and args[0] in self._config
         # We always have a _config (whether it's a real dict or a cache of
@@ -259,12 +268,12 @@ class DataProxy:
         # In all cases, return the popped value.
         return ret
 
-    def popitem(self):
+    def popitem(self) -> Any:
         ret = self._config.popitem()
         self._track_removal_of(ret[0])
         return ret
 
-    def setdefault(self, *args):
+    def setdefault(self, *args: Any) -> Any:
         # Must test up front whether the key existed beforehand
         key_existed = args and args[0] in self._config
         # Run locally
@@ -279,7 +288,7 @@ class DataProxy:
         self._track_modification_of(key, default)
         return ret
 
-    def update(self, *args, **kwargs):
+    def update(self, *args: Any, **kwargs: Any) -> None:
         if kwargs:
             for key, value in kwargs.items():
                 self[key] = value
@@ -412,7 +421,7 @@ class Config(DataProxy):
     env_prefix = None
 
     @staticmethod
-    def global_defaults():
+    def global_defaults() -> Dict[str, Any]:
         """
         Return the core default settings for Invoke.
 
@@ -496,13 +505,13 @@ class Config(DataProxy):
 
     def __init__(
         self,
-        overrides=None,
-        defaults=None,
-        system_prefix=None,
-        user_prefix=None,
-        project_location=None,
-        runtime_path=None,
-        lazy=False,
+        overrides: Optional[Dict[str, Any]] = None,
+        defaults: Optional[Dict[str, Any]] = None,
+        system_prefix: Optional[str] = None,
+        user_prefix: Optional[str] = None,
+        project_location: Optional[PathLike] = None,
+        runtime_path: Optional[PathLike] = None,
+        lazy: bool = False,
     ):
         """
         Creates a new config object.
@@ -639,12 +648,12 @@ class Config(DataProxy):
         # a subroutine does so.
         self.merge()
 
-    def load_base_conf_files(self):
+    def load_base_conf_files(self) -> None:
         # Just a refactor of something done in unlazy init or in clone()
         self.load_system(merge=False)
         self.load_user(merge=False)
 
-    def load_defaults(self, data, merge=True):
+    def load_defaults(self, data: Dict[str, Any], merge: bool = True) -> None:
         """
         Set or replace the 'defaults' configuration level, from ``data``.
 
@@ -662,7 +671,7 @@ class Config(DataProxy):
         if merge:
             self.merge()
 
-    def load_overrides(self, data, merge=True):
+    def load_overrides(self, data: Dict[str, Any], merge: bool = True) -> None:
         """
         Set or replace the 'overrides' configuration level, from ``data``.
 
@@ -680,7 +689,7 @@ class Config(DataProxy):
         if merge:
             self.merge()
 
-    def load_system(self, merge=True):
+    def load_system(self, merge: bool = True) -> None:
         """
         Load a system-level config file, if possible.
 
@@ -697,7 +706,7 @@ class Config(DataProxy):
         """
         self._load_file(prefix="system", merge=merge)
 
-    def load_user(self, merge=True):
+    def load_user(self, merge: bool = True) -> None:
         """
         Load a user-level config file, if possible.
 
@@ -714,7 +723,7 @@ class Config(DataProxy):
         """
         self._load_file(prefix="user", merge=merge)
 
-    def load_project(self, merge=True):
+    def load_project(self, merge: bool = True) -> None:
         """
         Load a project-level config file, if possible.
 
@@ -736,7 +745,7 @@ class Config(DataProxy):
         """
         self._load_file(prefix="project", merge=merge)
 
-    def set_runtime_path(self, path):
+    def set_runtime_path(self, path: Optional[PathLike]) -> None:
         """
         Set the runtime config file path.
 
@@ -750,7 +759,7 @@ class Config(DataProxy):
         # if no loading has been attempted yet.)
         self._set(_runtime_found=None)
 
-    def load_runtime(self, merge=True):
+    def load_runtime(self, merge: bool = True) -> None:
         """
         Load a runtime-level config file, if one was specified.
 
@@ -768,7 +777,7 @@ class Config(DataProxy):
         """
         self._load_file(prefix="runtime", absolute=True, merge=merge)
 
-    def load_shell_env(self):
+    def load_shell_env(self) -> None:
         """
         Load values from the shell environment.
 
@@ -793,7 +802,9 @@ class Config(DataProxy):
         debug("Loaded shell environment, triggering final merge")
         self.merge()
 
-    def load_collection(self, data, merge=True):
+    def load_collection(
+        self, data: Dict[str, Any], merge: bool = True
+    ) -> None:
         """
         Update collection-driven config data.
 
@@ -808,7 +819,7 @@ class Config(DataProxy):
         if merge:
             self.merge()
 
-    def set_project_location(self, path):
+    def set_project_location(self, path: Union[PathLike, str, None]) -> None:
         """
         Set the directory path where a project-level config file may be found.
 
@@ -830,7 +841,9 @@ class Config(DataProxy):
         # Data loaded from the per-project config file.
         self._set(_project={})
 
-    def _load_file(self, prefix, absolute=False, merge=True):
+    def _load_file(
+        self, prefix: str, absolute: bool = False, merge: bool = True
+    ) -> None:
         # Setup
         found = "_{}_found".format(prefix)
         path = "_{}_path".format(prefix)
@@ -891,18 +904,18 @@ class Config(DataProxy):
         elif merge:
             self.merge()
 
-    def _load_yaml(self, path):
+    def _load_yaml(self, path: PathLike) -> Any:
         with open(path) as fd:
             return yaml.safe_load(fd)
 
-    def _load_yml(self, path):
+    def _load_yml(self, path: PathLike) -> Any:
         return self._load_yaml(path)
 
-    def _load_json(self, path):
+    def _load_json(self, path: PathLike) -> Any:
         with open(path) as fd:
             return json.load(fd)
 
-    def _load_py(self, path):
+    def _load_py(self, path: str) -> Dict[str, Any]:
         data = {}
         for key, value in (load_source("mod", path)).items():
             # Strip special members, as these are always going to be builtins
@@ -920,7 +933,7 @@ class Config(DataProxy):
             data[key] = value
         return data
 
-    def merge(self):
+    def merge(self) -> None:
         """
         Merge all config sources, in order.
 
@@ -945,7 +958,7 @@ class Config(DataProxy):
         debug("Deletions: {!r}".format(self._deletions))
         obliterate(self._config, self._deletions)
 
-    def _merge_file(self, name, desc):
+    def _merge_file(self, name: str, desc: str) -> None:
         # Setup
         desc += " config file"  # yup
         found = getattr(self, "_{}_found".format(name))
@@ -964,7 +977,7 @@ class Config(DataProxy):
             # the negative? Just a branch here based on 'name'?
             debug("{} not found, skipping".format(desc))
 
-    def clone(self, into=None):
+    def clone(self, into: Optional[Type["Config"]] = None) -> "Config":
         """
         Return a copy of this configuration object.
 
@@ -1060,7 +1073,9 @@ class Config(DataProxy):
         new.merge()
         return new
 
-    def _clone_init_kwargs(self, into=None):
+    def _clone_init_kwargs(
+        self, into: Optional[Type["Config"]] = None
+    ) -> Dict[str, Any]:
         """
         Supply kwargs suitable for initializing a new clone of this object.
 
@@ -1087,7 +1102,7 @@ class Config(DataProxy):
             lazy=True,
         )
 
-    def _modify(self, keypath, key, value):
+    def _modify(self, keypath: Tuple[str, ...], key: str, value: str) -> None:
         """
         Update our user-modifications config level with new data.
 
@@ -1106,9 +1121,9 @@ class Config(DataProxy):
         excise(self._deletions, keypath + (key,))
         # Now we can add it to the modifications structure.
         data = self._modifications
-        keypath = list(keypath)
-        while keypath:
-            subkey = keypath.pop(0)
+        keypath_list = list(keypath)
+        while keypath_list:
+            subkey = keypath_list.pop(0)
             # TODO: could use defaultdict here, but...meh?
             if subkey not in data:
                 # TODO: generify this and the subsequent 3 lines...
@@ -1117,7 +1132,7 @@ class Config(DataProxy):
         data[key] = value
         self.merge()
 
-    def _remove(self, keypath, key):
+    def _remove(self, keypath: Tuple[str, ...], key: str) -> None:
         """
         Like `._modify`, but for removal.
         """
@@ -1126,9 +1141,9 @@ class Config(DataProxy):
         # inverse - remove from _deletions on modification.
         # TODO: may be sane to push this step up to callers?
         data = self._deletions
-        keypath = list(keypath)
-        while keypath:
-            subkey = keypath.pop(0)
+        keypath_list = list(keypath)
+        while keypath_list:
+            subkey = keypath_list.pop(0)
             if subkey in data:
                 data = data[subkey]
                 # If we encounter None, it means something higher up than our
@@ -1153,7 +1168,9 @@ class AmbiguousMergeError(ValueError):
     pass
 
 
-def merge_dicts(base, updates):
+def merge_dicts(
+    base: Dict[str, Any], updates: Dict[str, Any]
+) -> Dict[str, Any]:
     """
     Recursively merge dict ``updates`` into dict ``base`` (mutating ``base``.)
 
@@ -1210,19 +1227,19 @@ def merge_dicts(base, updates):
     return base
 
 
-def _merge_error(orig, new_):
+def _merge_error(orig: object, new: object) -> AmbiguousMergeError:
     return AmbiguousMergeError(
         "Can't cleanly merge {} with {}".format(
-            _format_mismatch(orig), _format_mismatch(new_)
+            _format_mismatch(orig), _format_mismatch(new)
         )
     )
 
 
-def _format_mismatch(x):
+def _format_mismatch(x: object) -> str:
     return "{} ({!r})".format(type(x), x)
 
 
-def copy_dict(source):
+def copy_dict(source: Dict[str, Any]) -> Dict[str, Any]:
     """
     Return a fresh copy of ``source`` with as little shared state as possible.
 
@@ -1234,17 +1251,17 @@ def copy_dict(source):
     return merge_dicts({}, source)
 
 
-def excise(dict_, keypath):
+def excise(dict_: Dict[str, Any], keypath: Tuple[str, ...]) -> None:
     """
     Remove key pointed at by ``keypath`` from nested dict ``dict_``, if exists.
 
     .. versionadded:: 1.0
     """
     data = dict_
-    keypath = list(keypath)
-    leaf_key = keypath.pop()
-    while keypath:
-        key = keypath.pop(0)
+    keypath_list = list(keypath)
+    leaf_key = keypath_list.pop()
+    while keypath_list:
+        key = keypath_list.pop(0)
         if key not in data:
             # Not there, nothing to excise
             return
@@ -1253,7 +1270,7 @@ def excise(dict_, keypath):
         del data[leaf_key]
 
 
-def obliterate(base, deletions):
+def obliterate(base: Dict[str, Any], deletions: Dict[str, Any]) -> None:
     """
     Remove all (nested) keys mentioned in ``deletions``, from ``base``.
 

@@ -2,26 +2,40 @@ import errno
 import locale
 import os
 import struct
-from subprocess import Popen, PIPE
 import sys
 import threading
 import time
 import signal
+from subprocess import Popen, PIPE
+from types import TracebackType
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Dict,
+    Generator,
+    IO,
+    List,
+    Optional,
+    Tuple,
+    Type,
+    Union,
+)
 
 # Import some platform-specific things at top level so they can be mocked for
 # tests.
 try:
     import pty
 except ImportError:
-    pty = None
+    pty = None  # type: ignore[assignment]
 try:
     import fcntl
 except ImportError:
-    fcntl = None
+    fcntl = None  # type: ignore[assignment]
 try:
     import termios
 except ImportError:
-    termios = None
+    termios = None  # type: ignore[assignment]
 
 from .exceptions import (
     UnexpectedExit,
@@ -40,6 +54,10 @@ from .terminals import (
 )
 from .util import has_fileno, isatty, ExceptionHandlingThread
 
+if TYPE_CHECKING:
+    from .context import Context
+    from .watchers import StreamWatcher
+
 
 class Runner:
     """
@@ -52,10 +70,12 @@ class Runner:
     .. versionadded:: 1.0
     """
 
+    opts: Dict[str, Any]
+    using_pty: bool
     read_chunk_size = 1000
     input_sleep = 0.01
 
-    def __init__(self, context):
+    def __init__(self, context: "Context") -> None:
         """
         Create a new runner with a handle on some `.Context`.
 
@@ -95,15 +115,15 @@ class Runner:
         self.warned_about_pty_fallback = False
         #: A list of `.StreamWatcher` instances for use by `respond`. Is filled
         #: in at runtime by `run`.
-        self.watchers = []
+        self.watchers: List["StreamWatcher"] = []
         # Optional timeout timer placeholder
-        self._timer = None
+        self._timer: Optional[threading.Timer] = None
         # Async flags (initialized for 'finally' referencing in case something
         # goes REAL bad during options parsing)
         self._asynchronous = False
         self._disowned = False
 
-    def run(self, command, **kwargs):
+    def run(self, command: str, **kwargs: Any) -> Optional["Result"]:
         """
         Execute ``command``, returning an instance of `Result` once complete.
 
@@ -378,10 +398,10 @@ class Runner:
             if not (self._asynchronous or self._disowned):
                 self.stop()
 
-    def echo(self, command):
+    def echo(self, command: str) -> None:
         print(self.opts["echo_format"].format(command=command))
 
-    def _setup(self, command, kwargs):
+    def _setup(self, command: str, kwargs: Any) -> None:
         """
         Prepare data on ``self`` so we're ready to start running.
         """
@@ -409,7 +429,7 @@ class Runner:
             encoding=self.encoding,
         )
 
-    def _run_body(self, command, **kwargs):
+    def _run_body(self, command: str, **kwargs: Any) -> Optional["Result"]:
         # Prepare all the bits n bobs.
         self._setup(command, kwargs)
         # If dry-run, stop here.
@@ -422,7 +442,7 @@ class Runner:
         # If disowned, we just stop here - no threads, no timer, no error
         # checking, nada.
         if self._disowned:
-            return
+            return None
         # Stand up & kick off IO, timer threads
         self.start_timer(self.opts["timeout"])
         self.threads, self.stdout, self.stderr = self.create_io_threads()
@@ -431,7 +451,7 @@ class Runner:
         # Wrap up or promise that we will, depending
         return self.make_promise() if self._asynchronous else self._finish()
 
-    def make_promise(self):
+    def make_promise(self) -> "Promise":
         """
         Return a `Promise` allowing async control of the rest of lifecycle.
 
@@ -439,7 +459,7 @@ class Runner:
         """
         return Promise(self)
 
-    def _finish(self):
+    def _finish(self) -> "Result":
         # Wait for subprocess to run, forwarding signals as we get them.
         try:
             while True:
@@ -499,7 +519,7 @@ class Runner:
             raise UnexpectedExit(result)
         return result
 
-    def _unify_kwargs_with_config(self, kwargs):
+    def _unify_kwargs_with_config(self, kwargs: Any) -> None:
         """
         Unify `run` kwargs with config options to arrive at local options.
 
@@ -559,7 +579,7 @@ class Runner:
         self.opts = opts
         self.streams = {"out": out_stream, "err": err_stream, "in": in_stream}
 
-    def _collate_result(self, watcher_errors):
+    def _collate_result(self, watcher_errors: List[WatcherError]) -> "Result":
         # At this point, we had enough success that we want to be returning or
         # raising detailed info about our execution; so we generate a Result.
         stdout = "".join(self.stdout)
@@ -587,7 +607,7 @@ class Runner:
         )
         return result
 
-    def _thread_join_timeout(self, target):
+    def _thread_join_timeout(self, target: Callable) -> Optional[int]:
         # Add a timeout to out/err thread joins when it looks like they're not
         # dead but their counterpart is dead; this indicates issue #351 (fixed
         # by #432) where the subproc may hang because its stdout (or stderr) is
@@ -603,16 +623,19 @@ class Runner:
             return 1
         return None
 
-    def create_io_threads(self):
+    def create_io_threads(
+        self,
+    ) -> Tuple[Dict[Callable, ExceptionHandlingThread], List[str], List[str]]:
         """
         Create and return a dictionary of IO thread worker objects.
 
         Caller is expected to handle persisting and/or starting the wrapped
         threads.
         """
-        stdout, stderr = [], []
+        stdout: List[str] = []
+        stderr: List[str] = []
         # Set up IO thread parameters (format - body_func: {kwargs})
-        thread_args = {
+        thread_args: Dict[Callable, Any] = {
             self.handle_stdout: {
                 "buffer_": stdout,
                 "hide": "stdout" in self.opts["hide"],
@@ -642,7 +665,7 @@ class Runner:
             threads[target] = t
         return threads, stdout, stderr
 
-    def generate_result(self, **kwargs):
+    def generate_result(self, **kwargs: Any) -> "Result":
         """
         Create & return a suitable `Result` instance from the given ``kwargs``.
 
@@ -654,7 +677,7 @@ class Runner:
         """
         return Result(**kwargs)
 
-    def read_proc_output(self, reader):
+    def read_proc_output(self, reader: Callable) -> Generator[str, None, None]:
         """
         Iteratively read & decode bytes from a subprocess' out/err stream.
 
@@ -687,7 +710,7 @@ class Runner:
                 break
             yield self.decode(data)
 
-    def write_our_output(self, stream, string):
+    def write_our_output(self, stream: IO, string: str) -> None:
         """
         Write ``string`` to ``stream``.
 
@@ -707,7 +730,13 @@ class Runner:
         stream.write(string)
         stream.flush()
 
-    def _handle_output(self, buffer_, hide, output, reader):
+    def _handle_output(
+        self,
+        buffer_: List[str],
+        hide: bool,
+        output: IO,
+        reader: Callable,
+    ) -> None:
         # TODO: store un-decoded/raw bytes somewhere as well...
         for data in self.read_proc_output(reader):
             # Echo to local stdout if necessary
@@ -725,7 +754,9 @@ class Runner:
             # Run our specific buffer through the autoresponder framework
             self.respond(buffer_)
 
-    def handle_stdout(self, buffer_, hide, output):
+    def handle_stdout(
+        self, buffer_: List[str], hide: bool, output: IO
+    ) -> None:
         """
         Read process' stdout, storing into a buffer & printing/parsing.
 
@@ -746,7 +777,9 @@ class Runner:
             buffer_, hide, output, reader=self.read_proc_stdout
         )
 
-    def handle_stderr(self, buffer_, hide, output):
+    def handle_stderr(
+        self, buffer_: List[str], hide: bool, output: IO
+    ) -> None:
         """
         Read process' stderr, storing into a buffer & printing/parsing.
 
@@ -759,7 +792,7 @@ class Runner:
             buffer_, hide, output, reader=self.read_proc_stderr
         )
 
-    def read_our_stdin(self, input_):
+    def read_our_stdin(self, input_: IO) -> Optional[str]:
         """
         Read & decode bytes from a local stdin stream.
 
@@ -799,7 +832,12 @@ class Runner:
                 bytes_ = self.decode(bytes_)
         return bytes_
 
-    def handle_stdin(self, input_, output, echo):
+    def handle_stdin(
+        self,
+        input_: IO,
+        output: IO,
+        echo: bool = False,
+    ) -> None:
         """
         Read local stdin, copying into process' stdin as necessary.
 
@@ -860,7 +898,7 @@ class Runner:
                 # Take a nap so we're not chewing CPU.
                 time.sleep(self.input_sleep)
 
-    def should_echo_stdin(self, input_, output):
+    def should_echo_stdin(self, input_: IO, output: IO) -> bool:
         """
         Determine whether data read from ``input_`` should echo to ``output``.
 
@@ -874,7 +912,7 @@ class Runner:
         """
         return (not self.using_pty) and isatty(input_)
 
-    def respond(self, buffer_):
+    def respond(self, buffer_: List[str]) -> None:
         """
         Write to the program's stdin in response to patterns in ``buffer_``.
 
@@ -901,7 +939,9 @@ class Runner:
             for response in watcher.submit(stream):
                 self.write_proc_stdin(response)
 
-    def generate_env(self, env, replace_env):
+    def generate_env(
+        self, env: Dict[str, Any], replace_env: bool
+    ) -> Dict[str, Any]:
         """
         Return a suitable environment dict based on user input & behavior.
 
@@ -916,7 +956,7 @@ class Runner:
         """
         return env if replace_env else dict(os.environ, **env)
 
-    def should_use_pty(self, pty, fallback):
+    def should_use_pty(self, pty: bool, fallback: bool) -> bool:
         """
         Should execution attempt to use a pseudo-terminal?
 
@@ -932,7 +972,7 @@ class Runner:
         return pty
 
     @property
-    def has_dead_threads(self):
+    def has_dead_threads(self) -> bool:
         """
         Detect whether any IO threads appear to have terminated unexpectedly.
 
@@ -948,7 +988,7 @@ class Runner:
         """
         return any(x.is_dead for x in self.threads.values())
 
-    def wait(self):
+    def wait(self) -> None:
         """
         Block until the running command appears to have exited.
 
@@ -963,7 +1003,7 @@ class Runner:
                 break
             time.sleep(self.input_sleep)
 
-    def write_proc_stdin(self, data):
+    def write_proc_stdin(self, data: str) -> None:
         """
         Write encoded ``data`` to the running process' stdin.
 
@@ -977,7 +1017,7 @@ class Runner:
         # actual write to subprocess' stdin.
         self._write_proc_stdin(data.encode(self.encoding))
 
-    def decode(self, data):
+    def decode(self, data: bytes) -> str:
         """
         Decode some ``data`` bytes, returning Unicode.
 
@@ -988,7 +1028,7 @@ class Runner:
         return data.decode(self.encoding, "replace")
 
     @property
-    def process_is_finished(self):
+    def process_is_finished(self) -> bool:
         """
         Determine whether our subprocess has terminated.
 
@@ -1004,7 +1044,7 @@ class Runner:
         """
         raise NotImplementedError
 
-    def start(self, command, shell, env):
+    def start(self, command: str, shell: str, env: Dict[str, Any]) -> None:
         """
         Initiate execution of ``command`` (via ``shell``, with ``env``).
 
@@ -1027,7 +1067,7 @@ class Runner:
         """
         raise NotImplementedError
 
-    def start_timer(self, timeout):
+    def start_timer(self, timeout: int) -> None:
         """
         Start a timer to `kill` our subprocess after ``timeout`` seconds.
         """
@@ -1035,7 +1075,7 @@ class Runner:
             self._timer = threading.Timer(timeout, self.kill)
             self._timer.start()
 
-    def read_proc_stdout(self, num_bytes):
+    def read_proc_stdout(self, num_bytes: int) -> Union[bytes, str, None]:
         """
         Read ``num_bytes`` from the running process' stdout stream.
 
@@ -1047,7 +1087,7 @@ class Runner:
         """
         raise NotImplementedError
 
-    def read_proc_stderr(self, num_bytes):
+    def read_proc_stderr(self, num_bytes: int) -> Union[bytes, str, None]:
         """
         Read ``num_bytes`` from the running process' stderr stream.
 
@@ -1059,7 +1099,7 @@ class Runner:
         """
         raise NotImplementedError
 
-    def _write_proc_stdin(self, data):
+    def _write_proc_stdin(self, data: bytes) -> None:
         """
         Write ``data`` to running process' stdin.
 
@@ -1074,7 +1114,7 @@ class Runner:
         """
         raise NotImplementedError
 
-    def close_proc_stdin(self):
+    def close_proc_stdin(self) -> None:
         """
         Close running process' stdin.
 
@@ -1084,7 +1124,7 @@ class Runner:
         """
         raise NotImplementedError
 
-    def default_encoding(self):
+    def default_encoding(self) -> str:
         """
         Return a string naming the expected encoding of subprocess streams.
 
@@ -1096,7 +1136,7 @@ class Runner:
         # subprocess. For now, good enough to assume both are the same.
         return default_encoding()
 
-    def send_interrupt(self, interrupt):
+    def send_interrupt(self, interrupt: "KeyboardInterrupt") -> None:
         """
         Submit an interrupt signal to the running subprocess.
 
@@ -1114,7 +1154,7 @@ class Runner:
         """
         self.write_proc_stdin("\x03")
 
-    def returncode(self):
+    def returncode(self) -> int:
         """
         Return the numeric return/exit code resulting from command execution.
 
@@ -1124,7 +1164,7 @@ class Runner:
         """
         raise NotImplementedError
 
-    def stop(self):
+    def stop(self) -> None:
         """
         Perform final cleanup, if necessary.
 
@@ -1139,7 +1179,7 @@ class Runner:
         if self._timer:
             self._timer.cancel()
 
-    def kill(self):
+    def kill(self) -> None:
         """
         Forcibly terminate the subprocess.
 
@@ -1152,7 +1192,7 @@ class Runner:
         raise NotImplementedError
 
     @property
-    def timed_out(self):
+    def timed_out(self) -> bool:
         """
         Returns ``True`` if the subprocess stopped because it timed out.
 
@@ -1160,7 +1200,7 @@ class Runner:
         """
         # Timer expiry implies we did time out. (The timer itself will have
         # killed the subprocess, allowing us to even get to this point.)
-        return self._timer and not self._timer.is_alive()
+        return bool(self._timer and not self._timer.is_alive())
 
 
 class Local(Runner):
@@ -1180,12 +1220,12 @@ class Local(Runner):
     .. versionadded:: 1.0
     """
 
-    def __init__(self, context):
+    def __init__(self, context: "Context") -> None:
         super().__init__(context)
         # Bookkeeping var for pty use case
-        self.status = None
+        self.status = 0
 
-    def should_use_pty(self, pty=False, fallback=True):
+    def should_use_pty(self, pty: bool = False, fallback: bool = True) -> bool:
         use_pty = False
         if pty:
             use_pty = True
@@ -1198,7 +1238,7 @@ class Local(Runner):
                 use_pty = False
         return use_pty
 
-    def read_proc_stdout(self, num_bytes):
+    def read_proc_stdout(self, num_bytes: int) -> Union[bytes, str, None]:
         # Obtain useful read-some-bytes function
         if self.using_pty:
             # Need to handle spurious OSErrors on some Linux platforms.
@@ -1219,36 +1259,48 @@ class Local(Runner):
                 # appeared, so we return a falsey value, which triggers the
                 # "end of output" logic in code using reader functions.
                 data = None
-        else:
+        elif self.process and self.process.stdout:
             data = os.read(self.process.stdout.fileno(), num_bytes)
+        else:
+            data = None
         return data
 
-    def read_proc_stderr(self, num_bytes):
+    def read_proc_stderr(self, num_bytes: int) -> Union[bytes, str, None]:
         # NOTE: when using a pty, this will never be called.
         # TODO: do we ever get those OSErrors on stderr? Feels like we could?
-        return os.read(self.process.stderr.fileno(), num_bytes)
+        if self.process and self.process.stderr:
+            return os.read(self.process.stderr.fileno(), num_bytes)
+        return None
 
-    def _write_proc_stdin(self, data):
+    def _write_proc_stdin(self, data: bytes) -> None:
         # NOTE: parent_fd from os.fork() is a read/write pipe attached to our
         # forked process' stdout/stdin, respectively.
-        fd = self.parent_fd if self.using_pty else self.process.stdin.fileno()
+        if self.using_pty:
+            fd = self.parent_fd
+        elif self.process and self.process.stdin:
+            fd = self.process.stdin.fileno()
+        else:
+            raise SubprocessPipeError("No stdin process exists")
         # Try to write, ignoring broken pipes if encountered (implies child
         # process exited before the process piping stdin to us finished;
         # there's nothing we can do about that!)
         try:
-            return os.write(fd, data)
+            os.write(fd, data)
         except OSError as e:
             if "Broken pipe" not in str(e):
                 raise
 
-    def close_proc_stdin(self):
+    def close_proc_stdin(self) -> None:
         if self.using_pty:
             # there is no working scenario to tell the process that stdin
             # closed when using pty
             raise SubprocessPipeError("Cannot close stdin when pty=True")
-        self.process.stdin.close()
+        elif self.process and self.process.stdin:
+            self.process.stdin.close()
+        else:
+            raise SubprocessPipeError("No stdin process exists")
 
-    def start(self, command, shell, env):
+    def start(self, command: str, shell: str, env: Dict[str, Any]) -> None:
         if self.using_pty:
             if pty is None:  # Encountered ImportError
                 err = "You indicated pty=True, but your platform doesn't support the 'pty' module!"  # noqa
@@ -1287,12 +1339,12 @@ class Local(Runner):
                 stdin=PIPE,
             )
 
-    def kill(self):
+    def kill(self) -> None:
         pid = self.pid if self.using_pty else self.process.pid
         os.kill(pid, signal.SIGKILL)
 
     @property
-    def process_is_finished(self):
+    def process_is_finished(self) -> bool:
         if self.using_pty:
             # NOTE:
             # https://github.com/pexpect/ptyprocess/blob/4058faa05e2940662ab6da1330aa0586c6f9cd9c/ptyprocess/ptyprocess.py#L680-L687
@@ -1306,7 +1358,7 @@ class Local(Runner):
         else:
             return self.process.poll() is not None
 
-    def returncode(self):
+    def returncode(self) -> int:
         if self.using_pty:
             # No subprocess.returncode available; use WIFEXITED/WIFSIGNALED to
             # determine whch of WEXITSTATUS / WTERMSIG to use.
@@ -1314,7 +1366,7 @@ class Local(Runner):
             # return whichever one of them is nondefault"? Probably not?
             # NOTE: doing this in an arbitrary order should be safe since only
             # one of the WIF* methods ought to ever return True.
-            code = None
+            code = 0
             if os.WIFEXITED(self.status):
                 code = os.WEXITSTATUS(self.status)
             elif os.WIFSIGNALED(self.status):
@@ -1327,7 +1379,7 @@ class Local(Runner):
         else:
             return self.process.returncode
 
-    def stop(self):
+    def stop(self) -> None:
         # If we opened a PTY for child communications, make sure to close() it,
         # otherwise long-running Invoke-using processes exhaust their file
         # descriptors eventually.
@@ -1409,15 +1461,15 @@ class Result:
     # TODO: inherit from namedtuple instead? heh (or: use attrs from pypi)
     def __init__(
         self,
-        stdout="",
-        stderr="",
-        encoding=None,
-        command="",
-        shell="",
-        env=None,
-        exited=0,
-        pty=False,
-        hide=tuple(),
+        stdout: str = "",
+        stderr: str = "",
+        encoding: Optional[str] = None,
+        command: str = "",
+        shell: str = "",
+        env: Optional[Dict[str, Any]] = None,
+        exited: int = 0,
+        pty: bool = False,
+        hide: Tuple[str, ...] = tuple(),
     ):
         self.stdout = stdout
         self.stderr = stderr
@@ -1432,7 +1484,7 @@ class Result:
         self.hide = hide
 
     @property
-    def return_code(self):
+    def return_code(self) -> int:
         """
         An alias for ``.exited``.
 
@@ -1440,10 +1492,10 @@ class Result:
         """
         return self.exited
 
-    def __bool__(self):
+    def __bool__(self) -> bool:
         return self.ok
 
-    def __str__(self):
+    def __str__(self) -> str:
         if self.exited is not None:
             desc = "Command exited with status {}.".format(self.exited)
         else:
@@ -1462,7 +1514,7 @@ class Result:
             )
         return "\n".join(ret)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         # TODO: more? e.g. len of stdout/err? (how to represent cleanly in a
         # 'x=y' format like this? e.g. '4b' is ambiguous as to what it
         # represents
@@ -1470,16 +1522,16 @@ class Result:
         return template.format(self.command, self.exited)
 
     @property
-    def ok(self):
+    def ok(self) -> bool:
         """
         A boolean equivalent to ``exited == 0``.
 
         .. versionadded:: 1.0
         """
-        return self.exited == 0
+        return bool(self.exited == 0)
 
     @property
-    def failed(self):
+    def failed(self) -> bool:
         """
         The inverse of ``ok``.
 
@@ -1490,7 +1542,7 @@ class Result:
         """
         return not self.ok
 
-    def tail(self, stream, count=10):
+    def tail(self, stream: str, count: int = 10) -> str:
         """
         Return the last ``count`` lines of ``stream``, plus leading whitespace.
 
@@ -1523,7 +1575,7 @@ class Promise(Result):
     .. versionadded:: 1.4
     """
 
-    def __init__(self, runner):
+    def __init__(self, runner: "Runner") -> None:
         """
         Create a new promise.
 
@@ -1538,7 +1590,7 @@ class Promise(Result):
         for key, value in self.runner.result_kwargs.items():
             setattr(self, key, value)
 
-    def join(self):
+    def join(self) -> Result:
         """
         Block until associated subprocess exits, returning/raising the result.
 
@@ -1560,14 +1612,23 @@ class Promise(Result):
         finally:
             self.runner.stop()
 
-    def __enter__(self):
+    def __enter__(self) -> "Promise":
         return self
 
-    def __exit__(self, exc_type, exc_value, traceback):
+    def __exit__(
+        self,
+        exc_type: Optional[Type[BaseException]],
+        exc_value: BaseException,
+        exc_tb: Optional[TracebackType],
+    ) -> None:
         self.join()
 
 
-def normalize_hide(val, out_stream=None, err_stream=None):
+def normalize_hide(
+    val: Any,
+    out_stream: Optional[str] = None,
+    err_stream: Optional[str] = None,
+) -> Tuple[str, ...]:
     # Normalize to list-of-stream-names
     hide_vals = (None, False, "out", "stdout", "err", "stderr", "both", True)
     if val not in hide_vals:
@@ -1591,7 +1652,7 @@ def normalize_hide(val, out_stream=None, err_stream=None):
     return tuple(hide)
 
 
-def default_encoding():
+def default_encoding() -> str:
     """
     Obtain apparent interpreter-local default text encoding.
 

@@ -1,22 +1,47 @@
 import copy
+from typing import TYPE_CHECKING, Any, Iterable, List, Optional
 
 try:
     from ..vendor.lexicon import Lexicon
     from ..vendor.fluidity import StateMachine, state, transition
 except ImportError:
-    from lexicon import Lexicon
-    from fluidity import StateMachine, state, transition
+    from lexicon import Lexicon  # type: ignore[no-redef]
+    from fluidity import (  # type: ignore[no-redef]
+        StateMachine,
+        state,
+        transition,
+    )
 
-from ..util import debug
 from ..exceptions import ParseError
+from ..util import debug
+
+if TYPE_CHECKING:
+    from .context import ParserContext
 
 
-def is_flag(value):
+def is_flag(value: str) -> bool:
     return value.startswith("-")
 
 
-def is_long_flag(value):
+def is_long_flag(value: str) -> bool:
     return value.startswith("--")
+
+
+class ParseResult(List["ParserContext"]):
+    """
+    List-like object with some extra parse-related attributes.
+
+    Specifically, a ``.remainder`` attribute, which is the string found after a
+    ``--`` in any parsed argv list; and an ``.unparsed`` attribute, a list of
+    tokens that were unable to be parsed.
+
+    .. versionadded:: 1.0
+    """
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        self.remainder = ""
+        self.unparsed: List[str] = []
 
 
 class Parser:
@@ -40,7 +65,12 @@ class Parser:
     .. versionadded:: 1.0
     """
 
-    def __init__(self, contexts=(), initial=None, ignore_unknown=False):
+    def __init__(
+        self,
+        contexts: Iterable["ParserContext"] = (),
+        initial: Optional["ParserContext"] = None,
+        ignore_unknown: bool = False,
+    ) -> None:
         self.initial = initial
         self.contexts = Lexicon()
         self.ignore_unknown = ignore_unknown
@@ -57,7 +87,7 @@ class Parser:
                     raise ValueError(exists.format(alias))
                 self.contexts.alias(alias, to=context.name)
 
-    def parse_argv(self, argv):
+    def parse_argv(self, argv: List[str]) -> ParseResult:
         """
         Parse an argv-style token list ``argv``.
 
@@ -82,7 +112,8 @@ class Parser:
         .. versionadded:: 1.0
         """
         machine = ParseMachine(
-            initial=self.initial,
+            # FIXME: initial should not be none
+            initial=self.initial,  # type: ignore[arg-type]
             contexts=self.contexts,
             ignore_unknown=self.ignore_unknown,
         )
@@ -135,10 +166,10 @@ class Parser:
                         debug(msg.format(token, rest))
                         mutations.append((index + 1, rest))
                     else:
-                        rest = ["-{}".format(x) for x in rest]
+                        _rest = ["-{}".format(x) for x in rest]
                         msg = "Splitting multi-flag glob {!r} into {!r} and {!r}"  # noqa
-                        debug(msg.format(orig, token, rest))
-                        for item in reversed(rest):
+                        debug(msg.format(orig, token, _rest))
+                        for item in reversed(_rest):
                             mutations.append((index + 1, item))
             # Here, we've got some possible mutations queued up, and 'token'
             # may have been overwritten as well. Whether we apply those and
@@ -192,10 +223,15 @@ class ParseMachine(StateMachine):
         to="unknown",
     )
 
-    def changing_state(self, from_, to):
+    def changing_state(self, from_: str, to: str) -> None:
         debug("ParseMachine: {!r} => {!r}".format(from_, to))
 
-    def __init__(self, initial, contexts, ignore_unknown):
+    def __init__(
+        self,
+        initial: "ParserContext",
+        contexts: Lexicon,
+        ignore_unknown: bool,
+    ) -> None:
         # Initialize
         self.ignore_unknown = ignore_unknown
         self.initial = self.context = copy.deepcopy(initial)
@@ -209,7 +245,7 @@ class ParseMachine(StateMachine):
         super().__init__()
 
     @property
-    def waiting_for_flag_value(self):
+    def waiting_for_flag_value(self) -> bool:
         # Do we have a current flag, and does it expect a value (vs being a
         # bool/toggle)?
         takes_value = self.flag and self.flag.takes_value
@@ -233,7 +269,7 @@ class ParseMachine(StateMachine):
         # Argument that can be queried, e.g. "arg.is_iterable"?)
         return not has_value
 
-    def handle(self, token):
+    def handle(self, token: str) -> None:
         debug("Handling token: {!r}".format(token))
         # Handle unknown state at the top: we don't care about even
         # possibly-valid input if we've encountered unknown input.
@@ -291,12 +327,12 @@ class ParseMachine(StateMachine):
                 debug("Bottom-of-handle() see_unknown({!r})".format(token))
                 self.see_unknown(token)
 
-    def store_only(self, token):
+    def store_only(self, token: str) -> None:
         # Start off the unparsed list
         debug("Storing unknown token {!r}".format(token))
         self.result.unparsed.append(token)
 
-    def complete_context(self):
+    def complete_context(self) -> None:
         debug(
             "Wrapping up context {!r}".format(
                 self.context.name if self.context else self.context
@@ -313,14 +349,14 @@ class ParseMachine(StateMachine):
         if self.context and self.context not in self.result:
             self.result.append(self.context)
 
-    def switch_to_context(self, name):
+    def switch_to_context(self, name: str) -> None:
         self.context = copy.deepcopy(self.contexts[name])
         debug("Moving to context {!r}".format(name))
         debug("Context args: {!r}".format(self.context.args))
         debug("Context flags: {!r}".format(self.context.flags))
         debug("Context inverse_flags: {!r}".format(self.context.inverse_flags))
 
-    def complete_flag(self):
+    def complete_flag(self) -> None:
         if self.flag:
             msg = "Completing current flag {} before moving on"
             debug(msg.format(self.flag))
@@ -342,7 +378,7 @@ class ParseMachine(StateMachine):
             # Skip casting so the bool gets preserved
             self.flag.set_value(True, cast=False)
 
-    def check_ambiguity(self, value):
+    def check_ambiguity(self, value: Any) -> bool:
         """
         Guard against ambiguity when current flag takes an optional value.
 
@@ -367,7 +403,7 @@ class ParseMachine(StateMachine):
             msg = "{!r} is ambiguous when given after an optional-value flag"
             raise ParseError(msg.format(value))
 
-    def switch_to_flag(self, flag, inverse=False):
+    def switch_to_flag(self, flag: str, inverse: bool = False) -> None:
         # Sanity check for ambiguity w/ prior optional-value flag
         self.check_ambiguity(flag)
         # Also tie it off, in case prior had optional value or etc. Seems to be
@@ -395,42 +431,25 @@ class ParseMachine(StateMachine):
         # insufficient)
         self.flag_got_value = False
         # Handle boolean flags (which can immediately be updated)
-        if not self.flag.takes_value:
+        if self.flag and not self.flag.takes_value:
             val = not inverse
             debug("Marking seen flag {!r} as {}".format(self.flag, val))
             self.flag.value = val
 
-    def see_value(self, value):
+    def see_value(self, value: Any) -> None:
         self.check_ambiguity(value)
-        if self.flag.takes_value:
+        if self.flag and self.flag.takes_value:
             debug("Setting flag {!r} to value {!r}".format(self.flag, value))
             self.flag.value = value
             self.flag_got_value = True
         else:
             self.error("Flag {!r} doesn't take any value!".format(self.flag))
 
-    def see_positional_arg(self, value):
+    def see_positional_arg(self, value: Any) -> None:
         for arg in self.context.positional_args:
             if arg.value is None:
                 arg.value = value
                 break
 
-    def error(self, msg):
+    def error(self, msg: str) -> None:
         raise ParseError(msg, self.context)
-
-
-class ParseResult(list):
-    """
-    List-like object with some extra parse-related attributes.
-
-    Specifically, a ``.remainder`` attribute, which is the string found after a
-    ``--`` in any parsed argv list; and an ``.unparsed`` attribute, a list of
-    tokens that were unable to be parsed.
-
-    .. versionadded:: 1.0
-    """
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.remainder = ""
-        self.unparsed = []

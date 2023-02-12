@@ -1,6 +1,8 @@
 import os
 import sys
 import imp
+from types import ModuleType
+from typing import Any, IO, Optional, Tuple
 
 from . import Config
 from .exceptions import CollectionNotFound
@@ -14,7 +16,7 @@ class Loader:
     .. versionadded:: 1.0
     """
 
-    def __init__(self, config=None):
+    def __init__(self, config: Optional["Config"] = None) -> None:
         """
         Set up a new loader with some `.Config`.
 
@@ -27,7 +29,7 @@ class Loader:
             config = Config()
         self.config = config
 
-    def find(self, name):
+    def find(self, name: str) -> Tuple[IO, str, Tuple[str, str, int]]:
         """
         Implementation-specific finder method seeking collection ``name``.
 
@@ -42,7 +44,7 @@ class Loader:
         """
         raise NotImplementedError
 
-    def load(self, name=None):
+    def load(self, name: Optional[str] = None) -> Tuple[ModuleType, str]:
         """
         Load and return collection module identified by ``name``.
 
@@ -72,8 +74,9 @@ class Loader:
             parent = os.path.dirname(path)
             if parent not in sys.path:
                 sys.path.insert(0, parent)
+            # FIXME: deprecated capability that needs replacement
             # Actual import
-            module = imp.load_module(name, fd, path, desc)
+            module = imp.load_module(name, fd, path, desc)  # type: ignore
             # Return module + path.
             # TODO: is there a reason we're not simply having clients refer to
             # os.path.dirname(module.__file__)?
@@ -99,18 +102,18 @@ class FilesystemLoader(Loader):
     # TODO: otherwise Loader has to know about specific bits to transmit, such
     # as auto-dashes, and has to grow one of those for every bit Collection
     # ever needs to know
-    def __init__(self, start=None, **kwargs):
+    def __init__(self, start: Optional[str] = None, **kwargs: Any) -> None:
         super().__init__(**kwargs)
         if start is None:
             start = self.config.tasks.search_root
         self._start = start
 
     @property
-    def start(self):
+    def start(self) -> str:
         # Lazily determine default CWD if configured value is falsey
         return self._start or os.getcwd()
 
-    def find(self, name):
+    def find(self, name: str) -> Tuple[IO, str, Tuple[str, str, int]]:
         # Accumulate all parent directories
         start = self.start
         debug("FilesystemLoader find starting at {!r}".format(start))

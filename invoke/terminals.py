@@ -8,6 +8,7 @@ logic-flow interruptions.
 """
 
 from contextlib import contextmanager
+from typing import Generator, IO, Optional, Tuple
 import os
 import select
 import sys
@@ -27,9 +28,15 @@ setups (vanilla Python, ActiveState etc) here.
 .. versionadded:: 1.0
 """
 
-if WINDOWS:
+if sys.platform == "win32":
     import msvcrt
-    from ctypes import Structure, c_ushort, windll, POINTER, byref
+    from ctypes import (
+        Structure,
+        c_ushort,
+        windll,
+        POINTER,
+        byref,
+    )
     from ctypes.wintypes import HANDLE, _COORD, _SMALL_RECT
 else:
     import fcntl
@@ -38,7 +45,74 @@ else:
     import tty
 
 
-def pty_size():
+if sys.platform == "win32":
+
+    def _pty_size() -> Tuple[Optional[int], Optional[int]]:
+        class CONSOLE_SCREEN_BUFFER_INFO(Structure):
+            _fields_ = [
+                ("dwSize", _COORD),
+                ("dwCursorPosition", _COORD),
+                ("wAttributes", c_ushort),
+                ("srWindow", _SMALL_RECT),
+                ("dwMaximumWindowSize", _COORD),
+            ]
+
+        GetStdHandle = windll.kernel32.GetStdHandle
+        GetConsoleScreenBufferInfo = windll.kernel32.GetConsoleScreenBufferInfo
+        GetStdHandle.restype = HANDLE
+        GetConsoleScreenBufferInfo.argtypes = [
+            HANDLE,
+            POINTER(CONSOLE_SCREEN_BUFFER_INFO),
+        ]
+
+        hstd = GetStdHandle(-11)  # STD_OUTPUT_HANDLE = -11
+        csbi = CONSOLE_SCREEN_BUFFER_INFO()
+        ret = GetConsoleScreenBufferInfo(hstd, byref(csbi))
+
+        if ret:
+            sizex = csbi.srWindow.Right - csbi.srWindow.Left + 1
+            sizey = csbi.srWindow.Bottom - csbi.srWindow.Top + 1
+            return sizex, sizey
+        else:
+            return (None, None)
+
+else:
+
+    def _pty_size() -> Tuple[Optional[int], Optional[int]]:
+        """
+        Suitable for most POSIX platforms.
+
+        .. versionadded:: 1.0
+        """
+        # Sentinel values to be replaced w/ defaults by caller
+        size = (None, None)
+        # We want two short unsigned integers (rows, cols)
+        fmt = "HH"
+        # Create an empty (zeroed) buffer for ioctl to map onto. Yay for C!
+        buf = struct.pack(fmt, 0, 0)
+        # Call TIOCGWINSZ to get window size of stdout, returns our filled
+        # buffer
+        try:
+            result = fcntl.ioctl(sys.stdout, termios.TIOCGWINSZ, buf)
+            # Unpack buffer back into Python data types
+            # NOTE: this unpack gives us rows x cols, but we return the
+            # inverse.
+            rows, cols = struct.unpack(fmt, result)
+            return (cols, rows)
+        # Fallback to emptyish return value in various failure cases:
+        # * sys.stdout being monkeypatched, such as in testing, and lacking
+        # * .fileno
+        # * sys.stdout having a .fileno but not actually being attached to a
+        # * TTY
+        # * termios not having a TIOCGWINSZ attribute (happens sometimes...)
+        # * other situations where ioctl doesn't explode but the result isn't
+        #   something unpack can deal with
+        except (struct.error, TypeError, IOError, AttributeError):
+            pass
+        return size
+
+
+def pty_size() -> Tuple[int, int]:
     """
     Determine current local pseudoterminal dimensions.
 
@@ -48,74 +122,12 @@ def pty_size():
 
     .. versionadded:: 1.0
     """
-    cols, rows = _pty_size() if not WINDOWS else _win_pty_size()
+    cols, rows = _pty_size()
     # TODO: make defaults configurable?
-    return ((cols or 80), (rows or 24))
+    return (cols or 80, rows or 24)
 
 
-def _pty_size():
-    """
-    Suitable for most POSIX platforms.
-
-    .. versionadded:: 1.0
-    """
-    # Sentinel values to be replaced w/ defaults by caller
-    size = (None, None)
-    # We want two short unsigned integers (rows, cols)
-    fmt = "HH"
-    # Create an empty (zeroed) buffer for ioctl to map onto. Yay for C!
-    buf = struct.pack(fmt, 0, 0)
-    # Call TIOCGWINSZ to get window size of stdout, returns our filled
-    # buffer
-    try:
-        result = fcntl.ioctl(sys.stdout, termios.TIOCGWINSZ, buf)
-        # Unpack buffer back into Python data types
-        # NOTE: this unpack gives us rows x cols, but we return the
-        # inverse.
-        rows, cols = struct.unpack(fmt, result)
-        return (cols, rows)
-    # Fallback to emptyish return value in various failure cases:
-    # * sys.stdout being monkeypatched, such as in testing, and lacking .fileno
-    # * sys.stdout having a .fileno but not actually being attached to a TTY
-    # * termios not having a TIOCGWINSZ attribute (happens sometimes...)
-    # * other situations where ioctl doesn't explode but the result isn't
-    #   something unpack can deal with
-    except (struct.error, TypeError, IOError, AttributeError):
-        pass
-    return size
-
-
-def _win_pty_size():
-    class CONSOLE_SCREEN_BUFFER_INFO(Structure):
-        _fields_ = [
-            ("dwSize", _COORD),
-            ("dwCursorPosition", _COORD),
-            ("wAttributes", c_ushort),
-            ("srWindow", _SMALL_RECT),
-            ("dwMaximumWindowSize", _COORD),
-        ]
-
-    GetStdHandle = windll.kernel32.GetStdHandle
-    GetConsoleScreenBufferInfo = windll.kernel32.GetConsoleScreenBufferInfo
-    GetStdHandle.restype = HANDLE
-    GetConsoleScreenBufferInfo.argtypes = [
-        HANDLE,
-        POINTER(CONSOLE_SCREEN_BUFFER_INFO),
-    ]
-
-    hstd = GetStdHandle(-11)  # STD_OUTPUT_HANDLE = -11
-    csbi = CONSOLE_SCREEN_BUFFER_INFO()
-    ret = GetConsoleScreenBufferInfo(hstd, byref(csbi))
-
-    if ret:
-        sizex = csbi.srWindow.Right - csbi.srWindow.Left + 1
-        sizey = csbi.srWindow.Bottom - csbi.srWindow.Top + 1
-        return sizex, sizey
-    else:
-        return (None, None)
-
-
-def stdin_is_foregrounded_tty(stream):
+def stdin_is_foregrounded_tty(stream: IO) -> bool:
     """
     Detect if given stdin ``stream`` seems to be in the foreground of a TTY.
 
@@ -139,7 +151,7 @@ def stdin_is_foregrounded_tty(stream):
     return os.getpgrp() == os.tcgetpgrp(stream.fileno())
 
 
-def cbreak_already_set(stream):
+def cbreak_already_set(stream: IO) -> bool:
     # Explicitly not docstringed to remain private, for now. Eh.
     # Checks whether tty.setcbreak appears to have already been run against
     # ``stream`` (or if it would otherwise just not do anything).
@@ -162,7 +174,9 @@ def cbreak_already_set(stream):
 
 
 @contextmanager
-def character_buffered(stream):
+def character_buffered(
+    stream: IO,
+) -> Generator[None, None, None]:
     """
     Force local terminal ``stream`` be character, not line, buffered.
 
@@ -186,7 +200,7 @@ def character_buffered(stream):
             termios.tcsetattr(stream, termios.TCSADRAIN, old_settings)
 
 
-def ready_for_reading(input_):
+def ready_for_reading(input_: IO) -> bool:
     """
     Test ``input_`` to determine whether a read action will succeed.
 
@@ -202,14 +216,14 @@ def ready_for_reading(input_):
     # nonblocking fashion (e.g. a StringIO or regular file).
     if not has_fileno(input_):
         return True
-    if WINDOWS:
+    if sys.platform == "win32":
         return msvcrt.kbhit()
     else:
         reads, _, _ = select.select([input_], [], [], 0.0)
         return bool(reads and reads[0] is input_)
 
 
-def bytes_to_read(input_):
+def bytes_to_read(input_: IO) -> int:
     """
     Query stream ``input_`` to see how many bytes may be readable.
 
@@ -228,6 +242,6 @@ def bytes_to_read(input_):
     # it's not a tty but has a fileno, or vice versa; neither is typically
     # going to work re: ioctl().
     if not WINDOWS and isatty(input_) and has_fileno(input_):
-        fionread = fcntl.ioctl(input_, termios.FIONREAD, "  ")
-        return struct.unpack("h", fionread)[0]
+        fionread = fcntl.ioctl(input_, termios.FIONREAD, b"  ")
+        return int(struct.unpack("h", fionread)[0])
     return 1

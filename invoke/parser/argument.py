@@ -1,3 +1,9 @@
+from typing import Any, Iterable, Optional, Tuple
+
+# TODO: dynamic type for kind
+# T = TypeVar('T')
+
+
 class Argument:
     """
     A command-line argument/flag.
@@ -35,24 +41,28 @@ class Argument:
 
     def __init__(
         self,
-        name=None,
-        names=(),
-        kind=str,
-        default=None,
-        help=None,
-        positional=False,
-        optional=False,
-        incrementable=False,
-        attr_name=None,
-    ):
+        name: Optional[str] = None,
+        names: Iterable[str] = (),
+        kind: Any = str,
+        default: Optional[Any] = None,
+        help: Optional[str] = None,
+        positional: bool = False,
+        optional: bool = False,
+        incrementable: bool = False,
+        attr_name: Optional[str] = None,
+    ) -> None:
         if name and names:
-            msg = "Cannot give both 'name' and 'names' arguments! Pick one."
-            raise TypeError(msg)
+            raise TypeError(
+                "Cannot give both 'name' and 'names' arguments! Pick one."
+            )
         if not (name or names):
             raise TypeError("An Argument must have at least one name.")
-        self.names = tuple(names if names else (name,))
+        if names:
+            self.names = tuple(names)
+        elif name and not names:
+            self.names = (name,)
         self.kind = kind
-        initial_value = None
+        initial_value: Optional[Any] = None
         # Special case: list-type args start out as empty list, not None.
         if kind is list:
             initial_value = []
@@ -67,7 +77,7 @@ class Argument:
         self.incrementable = incrementable
         self.attr_name = attr_name
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         nicks = ""
         if self.nicknames:
             nicks = " ({})".format(", ".join(self.nicknames))
@@ -88,7 +98,7 @@ class Argument:
         )
 
     @property
-    def name(self):
+    def name(self) -> Optional[str]:
         """
         The canonical attribute-friendly name for this argument.
 
@@ -100,11 +110,11 @@ class Argument:
         return self.attr_name or self.names[0]
 
     @property
-    def nicknames(self):
+    def nicknames(self) -> Tuple[str, ...]:
         return self.names[1:]
 
     @property
-    def takes_value(self):
+    def takes_value(self) -> bool:
         if self.kind is bool:
             return False
         if self.incrementable:
@@ -112,14 +122,15 @@ class Argument:
         return True
 
     @property
-    def value(self):
+    def value(self) -> Any:
+        # TODO: should probably be optional instead
         return self._value if self._value is not None else self.default
 
     @value.setter
-    def value(self, arg):
+    def value(self, arg: str) -> None:
         self.set_value(arg, cast=True)
 
-    def set_value(self, value, cast=True):
+    def set_value(self, value: Any, cast: bool = True) -> None:
         """
         Actual explicit value-setting API call.
 
@@ -143,15 +154,16 @@ class Argument:
             func = self.kind
         # If self.kind is a list, append instead of using cast func.
         if self.kind is list:
-            func = lambda x: self._value + [x]
+            func = lambda x: self.value + [x]
         # If incrementable, just increment.
         if self.incrementable:
-            # TODO: explode nicely if self._value was not an int to start with
-            func = lambda x: self._value + 1
+            # TODO: explode nicely if self.value was not an int to start
+            # with
+            func = lambda x: self.value + 1
         self._value = func(value)
 
     @property
-    def got_value(self):
+    def got_value(self) -> bool:
         """
         Returns whether the argument was ever given a (non-default) value.
 

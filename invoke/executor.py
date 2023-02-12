@@ -1,7 +1,14 @@
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
+
 from .config import Config
 from .parser import ParserContext
 from .util import debug
 from .tasks import Call, Task
+
+if TYPE_CHECKING:
+    from .collection import Collection
+    from .runners import Result
+    from .parser import ParseResult
 
 
 class Executor:
@@ -14,7 +21,12 @@ class Executor:
     .. versionadded:: 1.0
     """
 
-    def __init__(self, collection, config=None, core=None):
+    def __init__(
+        self,
+        collection: "Collection",
+        config: Optional["Config"] = None,
+        core: Optional["ParseResult"] = None,
+    ) -> None:
         """
         Initialize executor with handles to necessary data structures.
 
@@ -34,7 +46,9 @@ class Executor:
         self.config = config if config is not None else Config()
         self.core = core
 
-    def execute(self, *tasks):
+    def execute(
+        self, *tasks: Union[str, Tuple[str, Dict[str, Any]], ParserContext]
+    ) -> Dict["Task", "Result"]:
         """
         Execute one or more ``tasks`` in sequence.
 
@@ -106,7 +120,6 @@ class Executor:
         # moment...
         for call in calls:
             autoprint = call in direct and call.autoprint
-            args = call.args
             debug("Executing {!r}".format(call))
             # Hand in reference to our config, which will preserve user
             # modifications across the lifetime of the session.
@@ -123,7 +136,7 @@ class Executor:
             # an appropriate one; e.g. subclasses might use extra data from
             # being parameterized), handing in this config for use there.
             context = call.make_context(config)
-            args = (context,) + args
+            args = (context, *call.args)
             result = call.task(*args, **call.kwargs)
             if autoprint:
                 print(result)
@@ -132,7 +145,12 @@ class Executor:
             results[call.task] = result
         return results
 
-    def normalize(self, tasks):
+    def normalize(
+        self,
+        tasks: Tuple[
+            Union[str, Tuple[str, Dict[str, Any]], ParserContext], ...
+        ],
+    ) -> List["Call"]:
         """
         Transform arbitrary task list w/ various types, into `.Call` objects.
 
@@ -142,21 +160,22 @@ class Executor:
         """
         calls = []
         for task in tasks:
-            name, kwargs = None, {}
+            name: Optional[str]
             if isinstance(task, str):
                 name = task
+                kwargs = {}
             elif isinstance(task, ParserContext):
                 name = task.name
                 kwargs = task.as_kwargs
             else:
                 name, kwargs = task
-            c = Call(task=self.collection[name], kwargs=kwargs, called_as=name)
+            c = Call(self.collection[name], kwargs=kwargs, called_as=name)
             calls.append(c)
         if not tasks and self.collection.default is not None:
-            calls = [Call(task=self.collection[self.collection.default])]
+            calls = [Call(self.collection[self.collection.default])]
         return calls
 
-    def dedupe(self, calls):
+    def dedupe(self, calls: List["Call"]) -> List["Call"]:
         """
         Deduplicate a list of `tasks <.Call>`.
 
@@ -176,7 +195,7 @@ class Executor:
                 debug("{!r}: found in list already, skipping".format(call))
         return deduped
 
-    def expand_calls(self, calls):
+    def expand_calls(self, calls: List["Call"]) -> List["Call"]:
         """
         Expand a list of `.Call` objects into a near-final list of same.
 
@@ -194,7 +213,7 @@ class Executor:
             # Normalize to Call (this method is sometimes called with pre/post
             # task lists, which may contain 'raw' Task objects)
             if isinstance(call, Task):
-                call = Call(task=call)
+                call = Call(call)
             debug("Expanding task-call {!r}".format(call))
             # TODO: this is where we _used_ to call Executor.config_for(call,
             # config)...
