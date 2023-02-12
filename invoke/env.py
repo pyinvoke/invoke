@@ -105,19 +105,19 @@ class Environment:
                 obj[key] = {}
             obj = obj[key]
         old = self._path_get(key_path)
-        new_ = self._cast(old, value)
-        obj[key_path[-1]] = new_
+        new = self._cast(old, value)
+        obj[key_path[-1]] = new
 
-    def _cast(self, old: Any, new_: Any) -> Any:
+    def _cast(self, old: Any, new: Any) -> Any:
         if isinstance(old, bool):
-            return new_ not in ("0", "")
+            return new not in ("0", "")
         elif isinstance(old, str):
-            return new_
+            return new
         elif old is None:
-            return new_
+            return new
         elif isinstance(old, (list, tuple)):
             err = "Can't adapt an environment string into a {}!"
             err = err.format(type(old))
             raise UncastableEnvVar(err)
         else:
-            return old.__class__(new_)
+            return old.__class__(new)

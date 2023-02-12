@@ -7,6 +7,7 @@ import inspect
 import sys
 import types
 from copy import deepcopy
+from functools import update_wrapper
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -14,6 +15,7 @@ from typing import (
     Dict,
     Generic,
     List,
+    Generic,
     Iterable,
     Optional,
     Set,
@@ -75,6 +77,7 @@ class Task(Generic[_T]):
     ) -> None:
         # Real callable
         self.body = body
+        update_wrapper(self, self.body)
         # Copy a bunch of special properties from the body for the benefit of
         # Sphinx autodoc or other introspectors.
         self.__doc__ = getattr(body, "__doc__", "")
@@ -87,7 +90,7 @@ class Task(Generic[_T]):
         self.is_default = default
         # Arg/flag/parser hints
         self.positional = self.fill_implicit_positionals(positional)
-        self.optional = optional
+        self.optional = tuple(optional)
         self.iterable = iterable or []
         self.incrementable = incrementable or []
         self.auto_shortflags = auto_shortflags
@@ -144,7 +147,7 @@ class Task(Generic[_T]):
     def called(self) -> bool:
         return self.times_called > 0
 
-    def argspec(self, body: Callable[..., Any]) -> "Signature":
+    def argspec(self, body: Callable) -> "Signature":
         """
         Returns a modified `inspect.Signature` based on that of ``body``.
 
@@ -347,7 +350,7 @@ def task(*args: Any, **kwargs: Any) -> Any:
     .. versionchanged:: 1.1
         Added the ``klass`` keyword argument.
     """
-    klass = kwargs.pop("klass", Task)
+    klass: Type[Task] = kwargs.pop("klass", Task)
     # @task -- no options were (probably) given.
     if len(args) == 1 and callable(args[0]) and not isinstance(args[0], Task):
         return klass(args[0], **kwargs)
@@ -358,43 +361,12 @@ def task(*args: Any, **kwargs: Any) -> Any:
                 "May not give *args and 'pre' kwarg simultaneously!"
             )
         kwargs["pre"] = args
-    # @task(options)
-    # TODO: why the heck did we originally do this in this manner instead of
-    # simply delegating to Task?! Let's just remove all this sometime & see
-    # what, if anything, breaks.
-    name = kwargs.pop("name", None)
-    aliases = kwargs.pop("aliases", ())
-    positional = kwargs.pop("positional", None)
-    optional = tuple(kwargs.pop("optional", ()))
-    iterable = kwargs.pop("iterable", None)
-    incrementable = kwargs.pop("incrementable", None)
-    default = kwargs.pop("default", False)
-    auto_shortflags = kwargs.pop("auto_shortflags", True)
-    help = kwargs.pop("help", {})
-    pre = kwargs.pop("pre", [])
-    post = kwargs.pop("post", [])
-    autoprint = kwargs.pop("autoprint", False)
 
-    def inner(obj: Callable[..., _T]) -> Task[_T]:
-        _obj = klass(
-            obj,
-            name=name,
-            aliases=aliases,
-            positional=positional,
-            optional=optional,
-            iterable=iterable,
-            incrementable=incrementable,
-            default=default,
-            auto_shortflags=auto_shortflags,
-            help=help,
-            pre=pre,
-            post=post,
-            autoprint=autoprint,
-            # Pass in any remaining kwargs as-is.
-            **kwargs
-        )
-        return _obj
+    def inner(body: Callable[..., _T]) -> Task[_T]:
+        _task = klass(body, **kwargs)
+        return _task
 
+    # update_wrapper(inner, klass)
     return inner
 
 
@@ -554,4 +526,4 @@ def call(task: Task[_T], *args: Any, **kwargs: Any) -> Call[_T]:
 
     .. versionadded:: 1.0
     """
-    return Call(task=task, args=args, kwargs=kwargs)
+    return Call(task, args=args, kwargs=kwargs)

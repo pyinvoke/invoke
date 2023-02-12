@@ -97,12 +97,12 @@ class Responder(StreamWatcher):
         # once, e.g. in FailingResponder.
         # Only look at stream contents we haven't seen yet, to avoid dupes.
         index = getattr(self, index_attr)
-        new_ = stream[index:]
+        new = stream[index:]
         # Search, across lines if necessary
-        matches = re.findall(pattern, new_, re.S)
+        matches = re.findall(pattern, new, re.S)
         # Update seek index if we've matched
         if matches:
-            setattr(self, index_attr, index + len(new_))
+            setattr(self, index_attr, index + len(new))
         return matches
 
     def submit(self, stream: str) -> Iterator[str]:
@@ -122,9 +122,7 @@ class FailingResponder(Responder):
     .. versionadded:: 1.0
     """
 
-    def __init__(
-        self, pattern: str, response: str, sentinel: str
-    ) -> None:
+    def __init__(self, pattern: str, response: str, sentinel: str) -> None:
         super().__init__(pattern, response)
         self.sentinel = sentinel
         self.failure_index = 0

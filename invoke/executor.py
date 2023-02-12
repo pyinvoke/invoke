@@ -160,6 +160,7 @@ class Executor:
         """
         calls = []
         for task in tasks:
+            name: Optional[str]
             if isinstance(task, str):
                 name: Optional[str] = task
                 kwargs = {}
@@ -168,10 +169,10 @@ class Executor:
                 kwargs = task.as_kwargs
             else:
                 name, kwargs = task
-            c = Call(task=self.collection[name], kwargs=kwargs, called_as=name)
+            c = Call(self.collection[name], kwargs=kwargs, called_as=name)
             calls.append(c)
         if not tasks and self.collection.default is not None:
-            calls = [Call(task=self.collection[self.collection.default])]
+            calls = [Call(self.collection[self.collection.default])]
         return calls
 
     def dedupe(self, calls: List["Call"]) -> List["Call"]:
@@ -212,7 +213,7 @@ class Executor:
             # Normalize to Call (this method is sometimes called with pre/post
             # task lists, which may contain 'raw' Task objects)
             if isinstance(call, Task):
-                call = Call(task=call)
+                call = Call(call)
             debug("Expanding task-call {!r}".format(call))
             # TODO: this is where we _used_ to call Executor.config_for(call,
             # config)...

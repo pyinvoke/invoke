@@ -21,8 +21,8 @@ try:
     from .vendor.lexicon import Lexicon  # noqa
     from .vendor import yaml  # noqa
 except ImportError:
-    from lexicon import Lexicon  # type: ignore[no-redef]  # noqa
-    import yaml  # type: ignore[no-redef]  # noqa
+    from lexicon import Lexicon  # type: ignore[no-redef] # noqa
+    import yaml  # type: ignore[no-redef] # noqa
 
 
 LOG_FORMAT = "%(name)s.%(module)s.%(funcName)s: %(message)s"
@@ -162,14 +162,6 @@ class ExceptionHandlingThread(threading.Thread):
     .. versionadded:: 1.0
     """
 
-    # TODO: legacy cruft that needs to be removed
-    exc_info: Optional[
-        Union[
-            Tuple[Type[BaseException], BaseException, TracebackType],
-            Tuple[None, None, None],
-        ]
-    ]
-
     # TODO(PY312): https://peps.python.org/pep-0692/
     def __init__(self, **kwargs: Any) -> None:
         """
@@ -185,7 +177,13 @@ class ExceptionHandlingThread(threading.Thread):
         self.daemon = True
         # Track exceptions raised in run()
         self.kwargs = kwargs
-        self.exc_info = None
+        # TODO: legacy cruft that needs to be removed
+        self.exc_info: Optional[
+            Union[
+                Tuple[Type[BaseException], BaseException, TracebackType],
+                Tuple[None, None, None],
+            ]
+        ] = None
 
     def run(self) -> None:
         try:
@@ -193,7 +191,8 @@ class ExceptionHandlingThread(threading.Thread):
             # approach to work, by using _run() instead of run(). If that
             # doesn't appear to be the case, then assume we're being used
             # directly and just use super() ourselves.
-            if hasattr(self, "_run") and callable(self._run):
+            # XXX https://github.com/python/mypy/issues/1424
+            if hasattr(self, "_run") and callable(self._run):  # type: ignore
                 # TODO: this could be:
                 # - io worker with no 'result' (always local)
                 # - tunnel worker, also with no 'result' (also always local)
@@ -208,7 +207,7 @@ class ExceptionHandlingThread(threading.Thread):
                 # and let it continue acting like a normal thread (meh)
                 # - assume the run/sudo/etc case will use a queue inside its
                 # worker body, orthogonal to how exception handling works
-                self._run()
+                self._run()  # type: ignore
             else:
                 super().run()
         except BaseException:

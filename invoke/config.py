@@ -822,9 +822,7 @@ class Config(DataProxy):
         if merge:
             self.merge()
 
-    def set_project_location(
-        self, path: Optional[Union[PathLike, str]]
-    ) -> None:
+    def set_project_location(self, path: Union[PathLike, str, None]) -> None:
         """
         Set the directory path where a project-level config file may be found.
 
@@ -1232,10 +1230,10 @@ def merge_dicts(
     return base
 
 
-def _merge_error(orig: object, new_: object) -> AmbiguousMergeError:
+def _merge_error(orig: object, new: object) -> AmbiguousMergeError:
     return AmbiguousMergeError(
         "Can't cleanly merge {} with {}".format(
-            _format_mismatch(orig), _format_mismatch(new_)
+            _format_mismatch(orig), _format_mismatch(new)
         )
     )
 

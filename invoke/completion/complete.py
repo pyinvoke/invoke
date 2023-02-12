@@ -7,7 +7,7 @@ import glob
 import os
 import re
 import shlex
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING
 
 from ..collection import Collection
 from ..exceptions import Exit, ParseError

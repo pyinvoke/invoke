@@ -111,8 +111,9 @@ class Argument(Generic[_T, _U]):
         attr_name: Optional[str] = None,
     ) -> None:
         if name and names:
-            msg = "Cannot give both 'name' and 'names' arguments! Pick one."
-            raise TypeError(msg)
+            raise TypeError(
+                "Cannot give both 'name' and 'names' arguments! Pick one."
+            )
         if not (name or names):
             raise TypeError("An Argument must have at least one name.")
         if names:

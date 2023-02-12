@@ -214,7 +214,6 @@ class Context(DataProxy):
         cmd_str = "sudo -S -p '{}' {}{}{}".format(
             prompt, env_flags, user_flags, command
         )
-        # FIXME pattern should be raw string prompt.encode('unicode_escape')
         watcher = FailingResponder(
             pattern=re.escape(prompt),
             response="{}\n".format(password),

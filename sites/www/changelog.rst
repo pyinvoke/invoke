@@ -2,6 +2,11 @@
 Changelog
 =========
 
+- :bug:`376` Resolve equality comparison bug for non-collections. Patch via
+  Jesse P. Johnson
+- :support:`906` Implement type hints and type checking tests with mypy to
+  reduce errors and impove code documentation. Patches by Jesse P. Johnson and
+  review by Sam Bull.
 - :support:`901 backported` (via :issue:`903`) Tweak test suite ``setup``
   methods to be named ``setup_method`` so pytest stops whining about it. Patch
   via Jesse P. Johnson.

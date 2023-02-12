@@ -14,11 +14,11 @@ from ..util import debug
 
 
 def is_flag(value: str) -> bool:
-    return bool(value.startswith("-"))
+    return value.startswith("-")
 
 
 def is_long_flag(value: str) -> bool:
-    return bool(value.startswith("--"))
+    return value.startswith("--")
 
 
 class ParseResult(List[ParserContext]):

@@ -15,7 +15,6 @@ from .terminals import pty_size
 from .util import debug, enable_logging, helpline
 
 if TYPE_CHECKING:
-    from .context import Context
     from .loader import Loader
     from .parser import ParseResult
     from .util import Lexicon
@@ -571,9 +570,7 @@ class Program:
             # "normal" but also its own possible source of bugs/confusion...
             module = import_module(module_path)
             klass = getattr(module, class_name)
-        executor = klass(
-            self.collection, self.config, self.core
-        )
+        executor = klass(self.collection, self.config, self.core)
         executor.execute(*self.tasks)
 
     def normalize_argv(self, argv: Union[List[str], str, None]) -> None:
@@ -618,7 +615,8 @@ class Program:
 
         .. versionadded:: 1.2
         """
-        return os.path.basename(self.argv[0]) if self.argv else "invoke"
+        # XXX: defaults to empty string if 'argv' is '[]' or 'None'
+        return os.path.basename(self.argv[0]) if self.argv else ""
 
     @property
     def binary(self) -> str:

@@ -35,6 +35,15 @@ jobs:
       - run: inv www.doctest
       - orb/debug
 
+  typecheck:
+    executor:
+      name: orb/default
+      version: "3.6"
+    steps:
+      - orb/setup
+      - run: mypy .
+      - orb/debug
+
 
 workflows:
   main:
@@ -43,6 +52,8 @@ workflows:
           name: Lint
       - orb/format:
           name: Style check
+      - typecheck:
+          name: Types check
       - coverage:
           name: Test
       - regression:
