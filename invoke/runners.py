@@ -338,6 +338,10 @@ class Runner:
             Which shell binary to use. Default: ``/bin/bash`` (on Unix;
             ``COMSPEC`` or ``cmd.exe`` on Windows.)
 
+        :param bool stdin_bytes:
+            If ``True``, stdin should be treated as raw binary data and will
+            therefore skip any encode/decode steps.
+
         :param timeout:
             Cause the runner to submit an interrupt to the subprocess and raise
             `.CommandTimedOut`, if the command takes longer than ``timeout``
