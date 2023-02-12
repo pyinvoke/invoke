@@ -21,5 +21,4 @@ setuptools>56
 icecream>=2.1
 # typing
 mypy==0.971
-typed-ast==1.5.4
 types-PyYAML==6.0.12.4

@@ -19,7 +19,6 @@ from typing import (
     Optional,
     Tuple,
     Type,
-    Union,
 )
 
 # Import some platform-specific things at top level so they can be mocked for
@@ -1075,7 +1074,7 @@ class Runner:
             self._timer = threading.Timer(timeout, self.kill)
             self._timer.start()
 
-    def read_proc_stdout(self, num_bytes: int) -> Union[bytes, str, None]:
+    def read_proc_stdout(self, num_bytes: int) -> Optional[bytes]:
         """
         Read ``num_bytes`` from the running process' stdout stream.
 
@@ -1087,7 +1086,7 @@ class Runner:
         """
         raise NotImplementedError
 
-    def read_proc_stderr(self, num_bytes: int) -> Union[bytes, str, None]:
+    def read_proc_stderr(self, num_bytes: int) -> Optional[bytes]:
         """
         Read ``num_bytes`` from the running process' stderr stream.
 
@@ -1154,11 +1153,13 @@ class Runner:
         """
         self.write_proc_stdin("\x03")
 
-    def returncode(self) -> int:
+    def returncode(self) -> Optional[int]:
         """
         Return the numeric return/exit code resulting from command execution.
 
-        :returns: `int`
+        :returns:
+            `int`, if any reasonable return code could be determined, or
+            ``None`` in corner cases where that was not possible.
 
         .. versionadded:: 1.0
         """
@@ -1238,7 +1239,7 @@ class Local(Runner):
                 use_pty = False
         return use_pty
 
-    def read_proc_stdout(self, num_bytes: int) -> Union[bytes, str, None]:
+    def read_proc_stdout(self, num_bytes: int) -> Optional[bytes]:
         # Obtain useful read-some-bytes function
         if self.using_pty:
             # Need to handle spurious OSErrors on some Linux platforms.
@@ -1265,7 +1266,7 @@ class Local(Runner):
             data = None
         return data
 
-    def read_proc_stderr(self, num_bytes: int) -> Union[bytes, str, None]:
+    def read_proc_stderr(self, num_bytes: int) -> Optional[bytes]:
         # NOTE: when using a pty, this will never be called.
         # TODO: do we ever get those OSErrors on stderr? Feels like we could?
         if self.process and self.process.stderr:
@@ -1280,7 +1281,9 @@ class Local(Runner):
         elif self.process and self.process.stdin:
             fd = self.process.stdin.fileno()
         else:
-            raise SubprocessPipeError("No stdin process exists")
+            raise SubprocessPipeError(
+                "Unable to write to missing subprocess or stdin!"
+            )
         # Try to write, ignoring broken pipes if encountered (implies child
         # process exited before the process piping stdin to us finished;
         # there's nothing we can do about that!)
@@ -1298,7 +1301,9 @@ class Local(Runner):
         elif self.process and self.process.stdin:
             self.process.stdin.close()
         else:
-            raise SubprocessPipeError("No stdin process exists")
+            raise SubprocessPipeError(
+                "Unable to close missing subprocess or stdin!"
+            )
 
     def start(self, command: str, shell: str, env: Dict[str, Any]) -> None:
         if self.using_pty:
@@ -1358,7 +1363,7 @@ class Local(Runner):
         else:
             return self.process.poll() is not None
 
-    def returncode(self) -> int:
+    def returncode(self) -> Optional[int]:
         if self.using_pty:
             # No subprocess.returncode available; use WIFEXITED/WIFSIGNALED to
             # determine whch of WEXITSTATUS / WTERMSIG to use.
@@ -1366,7 +1371,7 @@ class Local(Runner):
             # return whichever one of them is nondefault"? Probably not?
             # NOTE: doing this in an arbitrary order should be safe since only
             # one of the WIF* methods ought to ever return True.
-            code = 0
+            code = None
             if os.WIFEXITED(self.status):
                 code = os.WEXITSTATUS(self.status)
             elif os.WIFSIGNALED(self.status):
