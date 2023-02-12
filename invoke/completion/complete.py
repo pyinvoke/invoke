@@ -9,18 +9,20 @@ import re
 import shlex
 from typing import TYPE_CHECKING
 
-from ..collection import Collection
 from ..exceptions import Exit, ParseError
-from ..parser import Parser, ParseResult, ParserContext
 from ..util import debug, task_name_sort_key
+
+if TYPE_CHECKING:
+    from ..collection import Collection
+    from ..parser import Parser, ParseResult, ParserContext
 
 
 def complete(
     names: List[str],
-    core: ParseResult,
-    initial_context: ParserContext,
-    collection: Collection,
-    parser: Parser,
+    core: "ParseResult",
+    initial_context: "ParserContext",
+    collection: "Collection",
+    parser: "Parser",
 ) -> Exit:
     # Strip out program name (scripts give us full command line)
     # TODO: this may not handle path/to/script though?
@@ -36,7 +38,7 @@ def complete(
         # Use last seen context in case of failure (required for
         # otherwise-invalid partial invocations being completed).
 
-        contexts: List[ParserContext]
+        contexts: List["ParserContext"]
         try:
             debug("Seeking context name in tokens: {!r}".format(tokens))
             contexts = parser.parse_argv(tokens)
@@ -92,7 +94,7 @@ def complete(
     raise Exit
 
 
-def print_task_names(collection: Collection) -> None:
+def print_task_names(collection: "Collection") -> None:
     for name in sorted(collection.task_names, key=task_name_sort_key):
         print(name)
         # Just stick aliases after the thing they're aliased to. Sorting isn't
