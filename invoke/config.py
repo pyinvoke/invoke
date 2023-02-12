@@ -1173,7 +1173,7 @@ class AmbiguousMergeError(ValueError):
 
 def merge_dicts(
     base: Dict[str, _T], updates: Optional[Dict[str, _T]]
-) -> Dict[str, Union[_T]]:
+) -> Dict[str, _T]:
     """
     Recursively merge dict ``updates`` into dict ``base`` (mutating ``base``.)
 

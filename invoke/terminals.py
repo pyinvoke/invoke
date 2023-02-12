@@ -44,9 +44,6 @@ else:
     import termios
     import tty
 
-# Mypy bug: https://github.com/python/mypy/issues/14605
-# mypy: disable_error_code=name-defined
-
 
 if sys.platform == "win32":
 
