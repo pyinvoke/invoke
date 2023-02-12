@@ -825,7 +825,7 @@ class Runner:
                     raise
             # Decode if it appears to be binary-type. (From real terminal
             # streams, usually yes; from file-like objects, often no.)
-            if bytes_ and isinstance(bytes_, bytes):
+            if not self.opts["stdin_bytes"] and bytes_ and isinstance(bytes_, bytes):
                 # TODO: will decoding 1 byte at a time break multibyte
                 # character encodings? How to square interactivity with that?
                 bytes_ = self.decode(bytes_)
@@ -1014,7 +1014,8 @@ class Runner:
         """
         # Encode always, then request implementing subclass to perform the
         # actual write to subprocess' stdin.
-        self._write_proc_stdin(data.encode(self.encoding))
+        d = data if self.opts["stdin_bytes"] else data.encode(self.encoding)
+        self._write_proc_stdin(d)
 
     def decode(self, data: bytes) -> str:
         """
