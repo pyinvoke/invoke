@@ -1,5 +1,5 @@
 import copy
-from typing import Any, Iterable, List, Optional, overload
+from typing import TYPE_CHECKING, Any, Iterable, List, Optional, overload
 
 try:
     from ..vendor.lexicon import Lexicon
@@ -8,9 +8,11 @@ except ImportError:
     from lexicon import Lexicon  # type: ignore[no-redef]
     from fluidity import StateMachine, state, transition  # type: ignore[no-redef]
 
-from .context import ParserContext
 from ..exceptions import ParseError
 from ..util import debug
+
+if TYPE_CHECKING:
+    from .context import ParserContext
 
 
 def is_flag(value: str) -> bool:
@@ -21,7 +23,7 @@ def is_long_flag(value: str) -> bool:
     return value.startswith("--")
 
 
-class ParseResult(List[ParserContext]):
+class ParseResult(List["ParserContext"]):
     """
     List-like object with some extra parse-related attributes.
 
@@ -36,9 +38,9 @@ class ParseResult(List[ParserContext]):
     def __init__(self) -> None:
         ...
     @overload
-    def __init__(self, iterable: Iterable[ParserContext], /):
+    def __init__(self, iterable: Iterable["ParserContext"], /):
         ...
-    def __init__(self, iterable: Optional[Iterable[ParserContext]] = None, /):  # type: ignore[misc]
+    def __init__(self, iterable: Optional[Iterable["ParserContext"]] = None, /):  # type: ignore[misc]
         if iterable is None:
             super().__init__()
         else:
