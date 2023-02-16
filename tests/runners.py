@@ -1124,9 +1124,7 @@ stderr 25
                     # termios & such, which is harder to mock successfully.
                     if input_is_pty is not None:
                         input_.isatty = lambda: input_is_pty
-                    return super().should_echo_stdin(
-                        input_, output
-                    )
+                    return super().should_echo_stdin(input_, output)
 
             # Execute basic command with given parameters
             self._run(
