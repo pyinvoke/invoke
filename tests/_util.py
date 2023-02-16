@@ -107,7 +107,7 @@ def expect(
     return stdout, stderr
 
 
-class MockSubprocess(object):
+class MockSubprocess:
     def __init__(self, out="", err="", exit=0, isatty=None, autostart=True):
         self.out_file = BytesIO(out.encode())
         self.err_file = BytesIO(err.encode())

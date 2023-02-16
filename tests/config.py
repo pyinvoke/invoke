@@ -775,7 +775,7 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
             def arbitrary_types_work_too(self):
                 os.environ["INVOKE_FOO"] = "whatever"
 
-                class Meh(object):
+                class Meh:
                     def __init__(self, thing=None):
                         pass
 
@@ -1047,7 +1047,7 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
                 else:
                     assert False, "Non-class obj did not raise TypeError!"
 
-                class Foo(object):
+                class Foo:
                     pass
 
                 try:
