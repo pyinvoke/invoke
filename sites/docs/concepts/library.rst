@@ -166,7 +166,7 @@ you're done::
 
     class MyProgram(Program):
         def core_args(self):
-            core_args = super(MyProgram, self).core_args()
+            core_args = super().core_args()
             extra_args = [
                 Argument(names=('foo', 'f'), help="Foo the bars"),
                 # ...

@@ -309,7 +309,7 @@ _ = "nope"
 # Runner that fakes ^C during subprocess exec
 class _KeyboardInterruptingRunner(_Dummy):
     def __init__(self, *args, **kwargs):
-        super(_KeyboardInterruptingRunner, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self._interrupted = False
 
     # Trigger KeyboardInterrupt during wait()
