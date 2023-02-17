@@ -52,7 +52,7 @@ class ExceptionHandlingThread_:
             class MyThread(EHThread):
                 def __init__(self, *args, **kwargs):
                     self.queue = kwargs.pop("queue")
-                    super(MyThread, self).__init__(*args, **kwargs)
+                    super().__init__(*args, **kwargs)
 
                 def _run(self):
                     self.queue.put(7)

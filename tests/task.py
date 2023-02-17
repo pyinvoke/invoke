@@ -550,7 +550,7 @@ class Call_:
             class MyCall(Call):
                 def __init__(self, *args, **kwargs):
                     self.hooray = kwargs.pop("hooray")
-                    super(MyCall, self).__init__(*args, **kwargs)
+                    super().__init__(*args, **kwargs)
 
             clone = orig.clone(into=MyCall, with_={"hooray": "woo"})
             assert clone.hooray == "woo"

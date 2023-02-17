@@ -651,7 +651,7 @@ class Runner_:
             def subclasses_may_add_more_kv_pairs(self):
                 class TotalFailure(Failure):
                     def _repr(self, **kwargs):
-                        return super(TotalFailure, self)._repr(mood="dejected")
+                        return super()._repr(mood="dejected")
 
                 expected = "<TotalFailure: cmd='onoz' mood=dejected>"
                 assert repr(TotalFailure(Result(command="onoz"))) == expected
@@ -1124,9 +1124,7 @@ stderr 25
                     # termios & such, which is harder to mock successfully.
                     if input_is_pty is not None:
                         input_.isatty = lambda: input_is_pty
-                    return super(MyRunner, self).should_echo_stdin(
-                        input_, output
-                    )
+                    return super().should_echo_stdin(input_, output)
 
             # Execute basic command with given parameters
             self._run(

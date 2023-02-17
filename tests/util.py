@@ -46,7 +46,7 @@ class util:
         def is_None_if_docstring_matches_object_type(self):
             # I.e. we don't want a docstring that is coming from the class
             # instead of the instance.
-            class Foo(object):
+            class Foo:
                 "I am Foo"
                 pass
 
@@ -56,7 +56,7 @@ class util:
         def instance_attached_docstring_is_still_displayed(self):
             # This is actually a property of regular object semantics, but
             # whatever, why not have a test for it.
-            class Foo(object):
+            class Foo:
                 "I am Foo"
                 pass
 

@@ -209,7 +209,7 @@ class ShellCompletion:
 
         class MyProgram(Program):
             def create_config(self):
-                super(MyProgram, self).create_config()
+                super().create_config()
                 self.config.tasks.ignore_unknown_help = True
 
         MyProgram(namespace=ns).run("inv --complete -- inv noboom", exit=False)

@@ -107,7 +107,7 @@ def expect(
     return stdout, stderr
 
 
-class MockSubprocess(object):
+class MockSubprocess:
     def __init__(self, out="", err="", exit=0, isatty=None, autostart=True):
         self.out_file = BytesIO(out.encode())
         self.err_file = BytesIO(err.encode())
@@ -309,7 +309,7 @@ _ = "nope"
 # Runner that fakes ^C during subprocess exec
 class _KeyboardInterruptingRunner(_Dummy):
     def __init__(self, *args, **kwargs):
-        super(_KeyboardInterruptingRunner, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self._interrupted = False
 
     # Trigger KeyboardInterrupt during wait()
