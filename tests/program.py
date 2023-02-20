@@ -844,6 +844,7 @@ Default task: test
 
 """
             stdout, _ = run("-c tree --list")
+            print('--------', stdout)
             assert expected == stdout
 
         class namespace_limiting:
