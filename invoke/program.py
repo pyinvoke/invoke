@@ -5,16 +5,7 @@ import os
 import sys
 import textwrap
 from importlib import import_module  # buffalo buffalo
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Dict,
-    List,
-    Optional,
-    Sequence,
-    Tuple,
-    Type,
-)
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Sequence, Tuple, Type, Union
 
 from . import Collection, Config, Executor, FilesystemLoader
 from .completion.complete import complete, print_completion_script
@@ -190,12 +181,12 @@ class Program:
     def __init__(
         self,
         version: Optional[str] = None,
-        namespace: Optional["Collection"] = None,
+        namespace: Optional[Collection] = None,
         name: Optional[str] = None,
         binary: Optional[str] = None,
         loader_class: Optional[Type["Loader"]] = None,
-        executor_class: Optional[Type["Executor"]] = None,
-        config_class: Optional[Type["Config"]] = None,
+        executor_class: Optional[Type[Executor]] = None,
+        config_class: Optional[Type[Config]] = None,
         binary_names: Optional[List[str]] = None,
     ) -> None:
         """
@@ -352,7 +343,7 @@ class Program:
         if merge:
             self.config.merge()
 
-    def run(self, argv: Optional[List[str]] = None, exit: bool = True) -> None:
+    def run(self, argv: Union[List[str], str, None] = None, exit: bool = True) -> None:
         """
         Execute main CLI logic, based on ``argv``.
 
@@ -421,7 +412,7 @@ class Program:
         except KeyboardInterrupt:
             sys.exit(1)  # Same behavior as Python itself outside of REPL
 
-    def parse_core(self, argv: Optional[List[str]]) -> None:
+    def parse_core(self, argv: Union[List[str], str, None]) -> None:
         debug("argv given to Program.run: {!r}".format(argv))
         self.normalize_argv(argv)
 
@@ -582,7 +573,7 @@ class Program:
         executor = klass(self.collection, self.config, self.core)
         executor.execute(*self.tasks)
 
-    def normalize_argv(self, argv: Optional[List[str]]) -> None:
+    def normalize_argv(self, argv: Union[List[str], str, None]) -> None:
         """
         Massages ``argv`` into a useful list of strings.
 
@@ -708,7 +699,7 @@ class Program:
         # NOTE: start, coll_name both fall back to configuration values within
         # Loader (which may, however, get them from our config.)
         start = self.args["search-root"].value
-        loader = self.loader_class(  # type: ignore
+        loader = self.loader_class(
             config=self.config, start=start
         )
         coll_name = self.args.collection.value
@@ -941,9 +932,7 @@ class Program:
             # TODO: trim/prefix dots
             print("Default{} task: {}\n".format(specific, default))
 
-    def print_columns(
-        self, tuples: Sequence[Tuple[str, Optional[str]]]
-    ) -> None:
+    def print_columns(self, tuples: Sequence[Tuple[str, Optional[str]]]) -> None:
         """
         Print tabbed columns from (name, help) ``tuples``.
 

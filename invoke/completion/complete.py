@@ -38,7 +38,7 @@ def complete(
         # Use last seen context in case of failure (required for
         # otherwise-invalid partial invocations being completed).
 
-        contexts: List[ParserContext]
+        contexts: List["ParserContext"]
         try:
             debug("Seeking context name in tokens: {!r}".format(tokens))
             contexts = parser.parse_argv(tokens)

@@ -2,7 +2,7 @@ from invoke import task
 
 
 @task
-def foo(c):
+def foo(c: object) -> None:
     """
     Frobazz
     """

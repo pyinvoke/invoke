@@ -6,7 +6,6 @@ from os import PathLike
 from typing import (
     TYPE_CHECKING,
     Any,
-    Generator,
     Iterator,
     List,
     Optional,
@@ -16,11 +15,8 @@ from unittest.mock import Mock
 
 from .config import Config, DataProxy
 from .exceptions import Failure, AuthFailure, ResponseNotAccepted
-from .runners import Result
+from .runners import Result, Runner
 from .watchers import FailingResponder
-
-if TYPE_CHECKING:
-    from invoke.runners import Runner
 
 
 class Context(DataProxy):
@@ -42,6 +38,10 @@ class Context(DataProxy):
 
     .. versionadded:: 1.0
     """
+
+    _config: Config
+    command_prefixes: List[str]
+    command_cwds: List[str]
 
     def __init__(self, config: Optional[Config] = None) -> None:
         """
@@ -107,7 +107,7 @@ class Context(DataProxy):
     # Fabric/etc, which needs to juggle multiple runner class types (local and
     # remote).
     def _run(
-        self, runner: "Runner", command: str, **kwargs: Any
+        self, runner: Runner, command: str, **kwargs: Any
     ) -> Optional[Result]:
         command = self._prefix_commands(command)
         return runner.run(command, **kwargs)
@@ -186,7 +186,7 @@ class Context(DataProxy):
 
     # NOTE: this is for runner injection; see NOTE above _run().
     def _sudo(
-        self, runner: "Runner", command: str, **kwargs: Any
+        self, runner: Runner, command: str, **kwargs: Any
     ) -> Optional[Result]:
         prompt = self.config.sudo.prompt
         password = kwargs.pop("password", self.config.sudo.password)
@@ -264,7 +264,7 @@ class Context(DataProxy):
         return " && ".join(prefixes + [command])
 
     @contextmanager
-    def prefix(self, command: str) -> Generator[None, None, None]:
+    def prefix(self, command: str) -> Iterator[None]:
         """
         Prefix all nested `run`/`sudo` commands with given command plus ``&&``.
 
@@ -340,10 +340,10 @@ class Context(DataProxy):
         # TODO: see if there's a stronger "escape this path" function somewhere
         # we can reuse. e.g., escaping tildes or slashes in filenames.
         paths = [path.replace(" ", r"\ ") for path in self.command_cwds[i:]]
-        return str(os.path.join(*paths))
+        return os.path.join(*paths)
 
     @contextmanager
-    def cd(self, path: Union[PathLike, str]) -> Generator[None, None, None]:
+    def cd(self, path: Union[PathLike, str]) -> Iterator[None]:
         """
         Context manager that keeps directory state when executing commands.
 

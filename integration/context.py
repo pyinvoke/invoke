@@ -4,7 +4,7 @@ from invocations import ci as ci_mod
 
 class Context_:
     class sudo:
-        def base_case(self):
+        def base_case(self) -> None:
             c = Context()
             # Grab CI-oriented sudo user/pass direct from invocations.ci
             # TODO: might be nice to give Collection a way to get a Config
@@ -15,5 +15,9 @@ class Context_:
             # Safety 1: ensure configured user even exists
             assert c.run("id {}".format(user), warn=True)
             # Safety 2: make sure we ARE them (and not eg root already)
-            assert c.run("whoami", hide=True).stdout.strip() == user
-            assert c.sudo("whoami", hide=True).stdout.strip() == "root"
+            result = c.run("whoami", hide=True)
+            assert result is not None
+            assert result.stdout.strip() == user
+            result = c.sudo("whoami", hide=True)
+            assert result is not None
+            assert result.stdout.strip() == "root"

@@ -8,7 +8,7 @@ logic-flow interruptions.
 """
 
 from contextlib import contextmanager
-from typing import Generator, IO, Optional, Tuple
+from typing import IO, Iterator, Optional, Tuple
 import os
 import select
 import sys
@@ -28,7 +28,7 @@ setups (vanilla Python, ActiveState etc) here.
 .. versionadded:: 1.0
 """
 
-if sys.platform == "win32":
+if sys.platform == "win32":  # https://github.com/python/mypy/issues/14604
     import msvcrt
     from ctypes import (
         Structure,
@@ -174,9 +174,7 @@ def cbreak_already_set(stream: IO) -> bool:
 
 
 @contextmanager
-def character_buffered(
-    stream: IO,
-) -> Generator[None, None, None]:
+def character_buffered(stream: IO) -> Iterator[None]:
     """
     Force local terminal ``stream`` be character, not line, buffered.
 
@@ -243,5 +241,5 @@ def bytes_to_read(input_: IO) -> int:
     # going to work re: ioctl().
     if not WINDOWS and isatty(input_) and has_fileno(input_):
         fionread = fcntl.ioctl(input_, termios.FIONREAD, b"  ")
-        return int(struct.unpack("h", fionread)[0])
+        return struct.unpack("h", fionread)[0]
     return 1

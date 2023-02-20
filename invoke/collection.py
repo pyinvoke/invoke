@@ -114,14 +114,14 @@ class Collection:
             self._add_object(obj, name)
 
     def _add_object(self, obj: Any, name: Optional[str] = None) -> None:
-        method: Callable
+        method: Callable[[Any, Optional[str]], None]
         if isinstance(obj, Task):
             method = self.add_task
         elif isinstance(obj, (Collection, ModuleType)):
             method = self.add_collection
         else:
             raise TypeError("No idea how to insert {!r}!".format(type(obj)))
-        method(obj, name=name)
+        method(obj, name)
 
     def __repr__(self) -> str:
         task_names = list(self.tasks.keys())
@@ -150,7 +150,7 @@ class Collection:
         config: Optional[Dict[str, Any]] = None,
         loaded_from: Optional[str] = None,
         auto_dash_names: Optional[bool] = None,
-    ) -> "Collection":
+    ) -> "Collection":  # TODO(PY311): Use Self
         """
         Return a new `.Collection` created from ``module``.
 
@@ -237,7 +237,7 @@ class Collection:
 
     def add_task(
         self,
-        task: "Task",
+        task: Task[Any],
         name: Optional[str] = None,
         aliases: Optional[Tuple[str, ...]] = None,
         default: Optional[bool] = None,
@@ -266,7 +266,7 @@ class Collection:
                 name = task.name
             # XXX https://github.com/python/mypy/issues/1424
             elif hasattr(task.body, "func_name"):
-                name = task.body.func_name  # type: ignore
+                name = task.body.func_name
             elif hasattr(task.body, "__name__"):
                 name = task.__name__
             else:

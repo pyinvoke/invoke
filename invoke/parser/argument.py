@@ -1,10 +1,10 @@
-from typing import Any, Iterable, Optional, Tuple
+from typing import Any, Generic, Iterable, List, Optional, Tuple, Type, TypeVar, Union, cast as cast_, overload
 
-# TODO: dynamic type for kind
-# T = TypeVar('T')
+_T = TypeVar("_T")
+_U = TypeVar("_U")
 
 
-class Argument:
+class Argument(Generic[_T, _U]):
     """
     A command-line argument/flag.
 
@@ -39,12 +39,71 @@ class Argument:
     .. versionadded:: 1.0
     """
 
+    # TODO(PY312): Use TypeVar("_T", default=str) and remove overloads
+    @overload
+    def __init__(
+        self: Argument[str, _U],
+        name: Optional[str] = ...,
+        names: Iterable[str] = ...,
+        *,
+        default: _U,
+        help: Optional[str] = ...,
+        positional: bool = ...,
+        optional: bool = ...,
+        incrementable: bool = ...,
+        attr_name: Optional[str] = ...,
+    ) -> None:
+        ...
+    @overload
+    def __init__(
+        self,
+        name: Optional[str] = ...,
+        names: Iterable[str] = ...,
+        kind: Type[_T] = ...,
+        *,
+        default: _U,
+        help: Optional[str] = ...,
+        positional: bool = ...,
+        optional: bool = ...,
+        incrementable: bool = ...,
+        attr_name: Optional[str] = ...,
+    ) -> None:
+        ...
+    @overload
+    def __init__(
+        self: Argument[str, None],
+        name: Optional[str] = ...,
+        names: Iterable[str] = ...,
+        *,
+        default: _U = ...,
+        help: Optional[str] = ...,
+        positional: bool = ...,
+        optional: bool = ...,
+        incrementable: bool = ...,
+        attr_name: Optional[str] = ...,
+    ) -> None:
+        ...
+    @overload
+    def __init__(
+        self: Argument[_T, None],
+        name: Optional[str] = ...,
+        names: Iterable[str] = ...,
+        kind: Type[_T] = ...,
+        *,
+        default: _U = ...,
+        help: Optional[str] = ...,
+        positional: bool = ...,
+        optional: bool = ...,
+        incrementable: bool = ...,
+        attr_name: Optional[str] = ...,
+    ) -> None:
+        ...
     def __init__(
         self,
         name: Optional[str] = None,
         names: Iterable[str] = (),
-        kind: Any = str,
-        default: Optional[Any] = None,
+        kind: Type[Any] = str,
+        default: _U = None,  # type: ignore[assignment]
         help: Optional[str] = None,
         positional: bool = False,
         optional: bool = False,
@@ -62,14 +121,15 @@ class Argument:
         elif name and not names:
             self.names = (name,)
         self.kind = kind
-        initial_value: Optional[Any] = None
+        initial_value: Union[_T, _U, None] = None
         # Special case: list-type args start out as empty list, not None.
         if kind is list:
-            initial_value = []
+            initial_value = []  # type: ignore[assignment]
         # Another: incrementable args start out as their default value.
         if incrementable:
             initial_value = default
-        self.raw_value = self._value = initial_value
+        self.raw_value: Union[_T, _U, str, None] = initial_value
+        self._value = initial_value
         self.default = default
         self.help = help
         self.positional = positional
@@ -122,7 +182,7 @@ class Argument:
         return True
 
     @property
-    def value(self) -> Any:
+    def value(self) -> _T | _U:
         # TODO: should probably be optional instead
         return self._value if self._value is not None else self.default
 
@@ -154,12 +214,12 @@ class Argument:
             func = self.kind
         # If self.kind is a list, append instead of using cast func.
         if self.kind is list:
-            func = lambda x: self.value + [x]
+            func = lambda x: cast_(List[Any], self.value) + [x]
         # If incrementable, just increment.
         if self.incrementable:
             # TODO: explode nicely if self.value was not an int to start
             # with
-            func = lambda x: self.value + 1
+            func = lambda x: self.value + 1  # type: ignore[operator]
         self._value = func(value)
 
     @property

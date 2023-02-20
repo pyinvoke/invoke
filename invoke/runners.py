@@ -13,12 +13,13 @@ from typing import (
     Any,
     Callable,
     Dict,
-    Generator,
     IO,
+    Iterator,
     List,
     Optional,
     Tuple,
     Type,
+    Union,
 )
 
 # Import some platform-specific things at top level so they can be mocked for
@@ -56,6 +57,8 @@ from .util import has_fileno, isatty, ExceptionHandlingThread
 if TYPE_CHECKING:
     from .context import Context
     from .watchers import StreamWatcher
+
+_HandleIO = Callable[..., None]
 
 
 class Runner:
@@ -606,7 +609,7 @@ class Runner:
         )
         return result
 
-    def _thread_join_timeout(self, target: Callable) -> Optional[int]:
+    def _thread_join_timeout(self, target: _HandleIO) -> Optional[int]:
         # Add a timeout to out/err thread joins when it looks like they're not
         # dead but their counterpart is dead; this indicates issue #351 (fixed
         # by #432) where the subproc may hang because its stdout (or stderr) is
@@ -624,7 +627,7 @@ class Runner:
 
     def create_io_threads(
         self,
-    ) -> Tuple[Dict[Callable, ExceptionHandlingThread], List[str], List[str]]:
+    ) -> Tuple[Dict[_HandleIO, ExceptionHandlingThread], List[str], List[str]]:
         """
         Create and return a dictionary of IO thread worker objects.
 
@@ -634,7 +637,7 @@ class Runner:
         stdout: List[str] = []
         stderr: List[str] = []
         # Set up IO thread parameters (format - body_func: {kwargs})
-        thread_args: Dict[Callable, Any] = {
+        thread_args: Dict[_HandleIO, Any] = {
             self.handle_stdout: {
                 "buffer_": stdout,
                 "hide": "stdout" in self.opts["hide"],
@@ -676,7 +679,7 @@ class Runner:
         """
         return Result(**kwargs)
 
-    def read_proc_output(self, reader: Callable) -> Generator[str, None, None]:
+    def read_proc_output(self, reader: Callable[[int], bytes]) -> Iterator[str]:
         """
         Iteratively read & decode bytes from a subprocess' out/err stream.
 
@@ -1533,7 +1536,7 @@ class Result:
 
         .. versionadded:: 1.0
         """
-        return bool(self.exited == 0)
+        return self.exited == 0
 
     @property
     def failed(self) -> bool:
@@ -1617,7 +1620,7 @@ class Promise(Result):
         finally:
             self.runner.stop()
 
-    def __enter__(self) -> "Promise":
+    def __enter__(self) -> "Promise":  # TODO(PY311): Use Self
         return self
 
     def __exit__(
@@ -1630,7 +1633,7 @@ class Promise(Result):
 
 
 def normalize_hide(
-    val: Any,
+    val: Union[str, bool, None],
     out_stream: Optional[str] = None,
     err_stream: Optional[str] = None,
 ) -> Tuple[str, ...]:
@@ -1648,6 +1651,7 @@ def normalize_hide(
     elif val == "err":
         hide = ["stderr"]
     else:
+        assert val is not None and not isinstance(val, bool)
         hide = [val]
     # Revert any streams that have been overridden from the default value
     if out_stream is not None and "stdout" in hide:

@@ -16,7 +16,7 @@ class Loader:
     .. versionadded:: 1.0
     """
 
-    def __init__(self, config: Optional["Config"] = None) -> None:
+    def __init__(self, *, config: Optional["Config"] = None, **kwargs: Any) -> None:
         """
         Set up a new loader with some `.Config`.
 
@@ -29,7 +29,7 @@ class Loader:
             config = Config()
         self.config = config
 
-    def find(self, name: str) -> Tuple[IO, str, Tuple[str, str, int]]:
+    def find(self, name: str) -> Tuple[IO[Any], str, Tuple[str, str, int]]:
         """
         Implementation-specific finder method seeking collection ``name``.
 
@@ -76,7 +76,7 @@ class Loader:
                 sys.path.insert(0, parent)
             # FIXME: deprecated capability that needs replacement
             # Actual import
-            module = imp.load_module(name, fd, path, desc)  # type: ignore
+            module = imp.load_module(name, fd, path, desc)  # type: ignore[arg-type]
             # Return module + path.
             # TODO: is there a reason we're not simply having clients refer to
             # os.path.dirname(module.__file__)?
@@ -102,7 +102,7 @@ class FilesystemLoader(Loader):
     # TODO: otherwise Loader has to know about specific bits to transmit, such
     # as auto-dashes, and has to grow one of those for every bit Collection
     # ever needs to know
-    def __init__(self, start: Optional[str] = None, **kwargs: Any) -> None:
+    def __init__(self, *, start: Optional[str] = None, **kwargs: Any) -> None:
         super().__init__(**kwargs)
         if start is None:
             start = self.config.tasks.search_root
@@ -113,7 +113,7 @@ class FilesystemLoader(Loader):
         # Lazily determine default CWD if configured value is falsey
         return self._start or os.getcwd()
 
-    def find(self, name: str) -> Tuple[IO, str, Tuple[str, str, int]]:
+    def find(self, name: str) -> Tuple[IO[Any], str, Tuple[str, str, int]]:
         # Accumulate all parent directories
         start = self.start
         debug("FilesystemLoader find starting at {!r}".format(start))

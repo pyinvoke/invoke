@@ -1,7 +1,7 @@
 from collections import namedtuple
 from contextlib import contextmanager
 from types import TracebackType
-from typing import Any, Generator, List, IO, Optional, Tuple, Type, Union
+from typing import Any, Iterator, List, IO, Optional, Tuple, Type, Union
 import io
 import logging
 import os
@@ -61,7 +61,7 @@ def task_name_sort_key(name: str) -> Tuple[List[str], str]:
 
 # TODO: Make part of public API sometime
 @contextmanager
-def cd(where: str) -> Generator[None, None, None]:
+def cd(where: str) -> Iterator[None]:
     cwd = os.getcwd()
     os.chdir(where)
     try:
@@ -94,7 +94,7 @@ def has_fileno(stream: IO) -> bool:
         return False
 
 
-def isatty(stream: IO) -> Union[bool, Any]:
+def isatty(stream: IO) -> bool:
     """
     Cleanly determine whether ``stream`` is a TTY.
 
@@ -162,6 +162,7 @@ class ExceptionHandlingThread(threading.Thread):
     .. versionadded:: 1.0
     """
 
+    # TODO(PY312): https://peps.python.org/pep-0692/
     def __init__(self, **kwargs: Any) -> None:
         """
         Create a new exception-handling thread instance.
@@ -191,7 +192,7 @@ class ExceptionHandlingThread(threading.Thread):
             # doesn't appear to be the case, then assume we're being used
             # directly and just use super() ourselves.
             # XXX https://github.com/python/mypy/issues/1424
-            if hasattr(self, "_run") and callable(self._run):  # type: ignore
+            if hasattr(self, "_run") and callable(self._run):
                 # TODO: this could be:
                 # - io worker with no 'result' (always local)
                 # - tunnel worker, also with no 'result' (also always local)
@@ -206,7 +207,7 @@ class ExceptionHandlingThread(threading.Thread):
                 # and let it continue acting like a normal thread (meh)
                 # - assume the run/sudo/etc case will use a queue inside its
                 # worker body, orthogonal to how exception handling works
-                self._run()  # type: ignore
+                self._run()
             else:
                 super().run()
         except BaseException:
@@ -253,7 +254,7 @@ class ExceptionHandlingThread(threading.Thread):
 
     def __repr__(self) -> str:
         # TODO: beef this up more
-        return str(self.kwargs["target"].__name__)
+        return self.kwargs["target"].__name__
 
 
 # NOTE: ExceptionWrapper defined here, not in exceptions.py, to avoid circular

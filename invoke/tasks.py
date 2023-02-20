@@ -4,6 +4,7 @@ generate new tasks.
 """
 
 import inspect
+import sys
 import types
 from copy import deepcopy
 from functools import update_wrapper
@@ -12,6 +13,7 @@ from typing import (
     Any,
     Callable,
     Dict,
+    Generic,
     List,
     Generic,
     Iterable,
@@ -21,6 +23,7 @@ from typing import (
     Type,
     TypeVar,
     Union,
+    overload
 )
 
 from .context import Context
@@ -30,10 +33,10 @@ if TYPE_CHECKING:
     from inspect import Signature
     from .config import Config
 
-T = TypeVar("T", bound=Callable)
+_T = TypeVar("_T")
 
 
-class Task(Generic[T]):
+class Task(Generic[_T]):
     """
     Core object representing an executable task & its argument specification.
 
@@ -58,14 +61,14 @@ class Task(Generic[T]):
     # except a debug shell whose frame is exactly inside this class.
     def __init__(
         self,
-        body: Callable,
+        body: Callable[..., _T],
         name: Optional[str] = None,
         aliases: Iterable[str] = (),
         positional: Optional[Iterable[str]] = None,
         optional: Iterable[str] = (),
         default: bool = False,
         auto_shortflags: bool = True,
-        help: Optional[Dict[str, Any]] = None,
+        help: Optional[Dict[str, str]] = None,
         pre: Optional[Union[List[str], str]] = None,
         post: Optional[Union[List[str], str]] = None,
         autoprint: bool = False,
@@ -129,7 +132,8 @@ class Task(Generic[T]):
         # this for now.
         return hash(self.name) + hash(self.body)
 
-    def __call__(self, *args: Any, **kwargs: Any) -> T:
+    # TODO(PY310): Use ParamSpec here and in Generic above.
+    def __call__(self, *args: Any, **kwargs: Any) -> _T:
         # Guard against calling tasks with no context.
         if not isinstance(args[0], Context):
             err = "Task expected a Context as its first arg, got {} instead!"
@@ -162,7 +166,7 @@ class Task(Generic[T]):
         func = (
             body
             if isinstance(body, types.FunctionType)
-            else body.__call__  # type: ignore
+            else body.__call__  # type: ignore[operator]
         )
         # Rebuild signature with first arg dropped, or die usefully(ish trying
         sig = inspect.signature(func)
@@ -188,7 +192,7 @@ class Task(Generic[T]):
         return positional
 
     def arg_opts(
-        self, name: str, default: str, taken_names: Set[str]
+        self, name: str, default: object, taken_names: Set[str]
     ) -> Dict[str, Any]:
         opts: Dict[str, Any] = {}
         # Whether it's positional or not
@@ -286,7 +290,13 @@ class Task(Generic[T]):
         return args
 
 
-def task(*args: Any, **kwargs: Any) -> Callable:
+@overload
+def task(arg1: Callable[..., _T], /) -> Task[_T]:
+    ...
+@overload
+def task(arg1: Any = ..., *args: Any, **kwargs: Any) -> Callable[[Callable[..., _T]], Task[_T]]:
+    ...
+def task(*args: Any, **kwargs: Any) -> Any:
     """
     Marks wrapped callable object as a valid Invoke task.
 
@@ -352,7 +362,7 @@ def task(*args: Any, **kwargs: Any) -> Callable:
             )
         kwargs["pre"] = args
 
-    def inner(body: Callable) -> Task[T]:
+    def inner(body: Callable[..., _T]) -> Task[_T]:
         _task = klass(body, **kwargs)
         return _task
 
@@ -360,7 +370,7 @@ def task(*args: Any, **kwargs: Any) -> Callable:
     return inner
 
 
-class Call:
+class Call(Generic[_T]):
     """
     Represents a call/execution of a `.Task` with given (kw)args.
 
@@ -373,9 +383,9 @@ class Call:
 
     def __init__(
         self,
-        task: "Task",
+        task: Task[_T],
         called_as: Optional[str] = None,
-        args: Optional[Tuple[str, ...]] = None,
+        args: Optional[Tuple[Any, ...]] = None,
         kwargs: Optional[Dict[str, Any]] = None,
     ) -> None:
         """
@@ -403,7 +413,7 @@ class Call:
     def __getattr__(self, name: str) -> Any:
         return getattr(self.task, name)
 
-    def __deepcopy__(self, memo: object) -> "Call":
+    def __deepcopy__(self, memo: object) -> "Call[_T]":
         return self.clone()
 
     def __repr__(self) -> str:
@@ -453,7 +463,7 @@ class Call:
         self,
         into: Optional[Type["Call"]] = None,
         with_: Optional[Dict[str, Any]] = None,
-    ) -> "Call":
+    ) -> "Call[_T]":
         """
         Return a standalone copy of this Call.
 
@@ -483,7 +493,7 @@ class Call:
         return klass(**data)
 
 
-def call(task: "Task", *args: Any, **kwargs: Any) -> "Call":
+def call(task: Task[_T], *args: Any, **kwargs: Any) -> Call[_T]:
     """
     Describes execution of a `.Task`, typically with pre-supplied arguments.
 

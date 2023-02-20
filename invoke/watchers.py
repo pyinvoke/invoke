@@ -1,6 +1,7 @@
 import re
+import sys
 import threading
-from typing import Generator, Iterable
+from typing import Iterable, Iterator
 
 from .exceptions import ResponseNotAccepted
 
@@ -104,7 +105,7 @@ class Responder(StreamWatcher):
             setattr(self, index_attr, index + len(new))
         return matches
 
-    def submit(self, stream: str) -> Generator[str, None, None]:
+    def submit(self, stream: str) -> Iterator[str]:
         # Iterate over findall() response in case >1 match occurred.
         for _ in self.pattern_matches(stream, self.pattern, "index"):
             yield self.response
@@ -127,7 +128,7 @@ class FailingResponder(Responder):
         self.failure_index = 0
         self.tried = False
 
-    def submit(self, stream: str) -> Generator[str, None, None]:
+    def submit(self, stream: str) -> Iterator[str]:
         # Behave like regular Responder initially
         response = super().submit(stream)
         # Also check stream for our failure sentinel

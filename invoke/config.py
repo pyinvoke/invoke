@@ -4,7 +4,7 @@ import os
 import types
 from os import PathLike
 from os.path import join, splitext, expanduser
-from typing import Any, Dict, Iterator, Optional, Tuple, Type, Union
+from typing import Any, Dict, Iterator, Optional, Tuple, Type, TypeVar, Union, cast
 
 from .env import Environment
 from .exceptions import UnknownFileType, UnpicklableConfigMember
@@ -16,9 +16,12 @@ from .util import debug, yaml
 try:
     from importlib.machinery import SourceFileLoader
 except ImportError:  # PyPy3
-    from importlib._bootstrap import (  # type: ignore[no-redef]
+    from importlib._bootstrap import (  # type: ignore[import, no-redef]
         _SourceFileLoader as SourceFileLoader,
     )
+
+_T = TypeVar("_T")
+_U = TypeVar("_U")
 
 
 def load_source(name: str, path: str) -> Dict[str, Any]:
@@ -73,7 +76,7 @@ class DataProxy:
         data: Dict[str, Any],
         root: Optional["DataProxy"] = None,
         keypath: Tuple[str, ...] = tuple(),
-    ) -> "DataProxy":
+    ) -> "DataProxy":  # TODO(PY311): Self
         """
         Alternate constructor for 'baby' DataProxies used as sub-dict values.
 
@@ -1169,8 +1172,8 @@ class AmbiguousMergeError(ValueError):
 
 
 def merge_dicts(
-    base: Dict[str, Any], updates: Dict[str, Any]
-) -> Dict[str, Any]:
+    base: Dict[str, _T], updates: Optional[Dict[str, _T]]
+) -> Dict[str, _T]:
     """
     Recursively merge dict ``updates`` into dict ``base`` (mutating ``base``.)
 
@@ -1199,7 +1202,7 @@ def merge_dicts(
         if key in base:
             if isinstance(value, dict):
                 if isinstance(base[key], dict):
-                    merge_dicts(base[key], value)
+                    merge_dicts(cast(Dict[str, Any], base[key]), value)
                 else:
                     raise _merge_error(base[key], value)
             else:
@@ -1216,7 +1219,7 @@ def merge_dicts(
             # Dict values get reconstructed to avoid being references to the
             # updates dict, which can lead to nasty state-bleed bugs otherwise
             if isinstance(value, dict):
-                base[key] = copy_dict(value)
+                base[key] = copy_dict(value)  # type: ignore[assignment]
             # Fileno-bearing objects are probably 'real' files which do not
             # copy well & must be passed by reference. Meh.
             elif hasattr(value, "fileno"):
@@ -1239,7 +1242,7 @@ def _format_mismatch(x: object) -> str:
     return "{} ({!r})".format(type(x), x)
 
 
-def copy_dict(source: Dict[str, Any]) -> Dict[str, Any]:
+def copy_dict(source: Dict[str, _T]) -> Dict[str, _T]:
     """
     Return a fresh copy of ``source`` with as little shared state as possible.
 

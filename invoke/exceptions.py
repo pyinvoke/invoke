@@ -86,7 +86,7 @@ class Failure(Exception):
     def __repr__(self) -> str:
         return self._repr()
 
-    def _repr(self, **kwargs: Any) -> str:
+    def _repr(self, **kwargs: object) -> str:
         """
         Return ``__repr__``-like value from inner result + any kwargs.
         """

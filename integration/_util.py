@@ -1,20 +1,21 @@
 from contextlib import contextmanager
 from functools import wraps
 from resource import getrusage, RUSAGE_SELF
+from typing import Any, Callable, Iterator, Optional, TypeVar
 import sys
 import time
 
-
 from pytest import skip
 
+_T = TypeVar("_T")
 
-def current_cpu_usage():
+def current_cpu_usage() -> float:
     rusage = getrusage(RUSAGE_SELF)
     return rusage.ru_utime + rusage.ru_stime
 
 
 @contextmanager
-def assert_cpu_usage(lt, verbose=False):
+def assert_cpu_usage(lt: float, verbose: bool = False) -> Iterator[None]:
     """
     Execute wrapped block, asserting CPU utilization was less than ``lt``%.
 
@@ -41,13 +42,14 @@ def assert_cpu_usage(lt, verbose=False):
     assert percentage < lt
 
 
-def only_utf8(f):
+def only_utf8(f: Callable[..., _T]) -> Callable[..., Optional[_T]]:
     """
     Decorator causing tests to skip if local shell pipes aren't UTF-8.
     """
     # TODO: use actual test selection labels or whatever nose has
+    # TODO(PY310): Use ParamSpec.
     @wraps(f)
-    def inner(*args, **kwargs):
+    def inner(*args: Any, **kwargs: Any) -> _T:
         if getattr(sys.stdout, "encoding", None) == "UTF-8":
             return f(*args, **kwargs)
         # TODO: could remove this so they show green, but figure yellow is more
