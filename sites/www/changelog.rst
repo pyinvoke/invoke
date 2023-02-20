@@ -2,6 +2,8 @@
 Changelog
 =========
 
+- :support:`675` Implement `importlib` and deprecate `imp` module. Patches
+  provided by Jesse P. Johnson
 - :bug:`376` Resolve equality comparison bug for non-collections. Patch via
   Jesse P. Johnson
 - :support:`906` Implement type hints and type checking tests with mypy to

@@ -1,8 +1,9 @@
 import os
 import sys
-import imp
+from importlib.machinery import ModuleSpec
+from importlib.util import module_from_spec, spec_from_file_location
 from types import ModuleType
-from typing import Any, IO, Optional, Tuple
+from typing import Any, Optional, Tuple
 
 from . import Config
 from .exceptions import CollectionNotFound
@@ -29,7 +30,7 @@ class Loader:
             config = Config()
         self.config = config
 
-    def find(self, name: str) -> Tuple[IO, str, Tuple[str, str, int]]:
+    def find(self, name: str) -> Optional[ModuleSpec]:
         """
         Implementation-specific finder method seeking collection ``name``.
 
@@ -65,28 +66,19 @@ class Loader:
         """
         if name is None:
             name = self.config.tasks.collection_name
-        # Find the named tasks module, depending on implementation.
-        # Will raise an exception if not found.
-        fd, path, desc = self.find(name)
-        try:
-            # Ensure containing directory is on sys.path in case the module
-            # being imported is trying to load local-to-it names.
-            parent = os.path.dirname(path)
-            if parent not in sys.path:
-                sys.path.insert(0, parent)
-            # FIXME: deprecated capability that needs replacement
-            # Actual import
-            module = imp.load_module(name, fd, path, desc)  # type: ignore
-            # Return module + path.
-            # TODO: is there a reason we're not simply having clients refer to
-            # os.path.dirname(module.__file__)?
-            return module, parent
-        finally:
-            # Ensure we clean up the opened file object returned by find(), if
-            # there was one (eg found packages, vs modules, don't open any
-            # file.)
-            if fd:
-                fd.close()
+        spec = self.find(name)
+        if spec and spec.loader and spec.origin:
+            path = spec.origin
+            if os.path.isfile(spec.origin):
+                path = os.path.dirname(spec.origin)
+            if path not in sys.path:
+                sys.path.insert(0, path)
+            module = module_from_spec(spec)
+            spec.loader.exec_module(module)
+            return module, os.path.dirname(spec.origin)
+        msg = "ImportError loading {!r}, raising ImportError"
+        debug(msg.format(name))
+        raise ImportError
 
 
 class FilesystemLoader(Loader):
@@ -103,6 +95,8 @@ class FilesystemLoader(Loader):
     # as auto-dashes, and has to grow one of those for every bit Collection
     # ever needs to know
     def __init__(self, start: Optional[str] = None, **kwargs: Any) -> None:
+        # finder = kwargs.pop("finder_class", CollectionFinder)
+        # sys.meta_path.append(finder)
         super().__init__(**kwargs)
         if start is None:
             start = self.config.tasks.search_root
@@ -113,25 +107,31 @@ class FilesystemLoader(Loader):
         # Lazily determine default CWD if configured value is falsey
         return self._start or os.getcwd()
 
-    def find(self, name: str) -> Tuple[IO, str, Tuple[str, str, int]]:
-        # Accumulate all parent directories
-        start = self.start
-        debug("FilesystemLoader find starting at {!r}".format(start))
-        parents = [os.path.abspath(start)]
-        parents.append(os.path.dirname(parents[-1]))
-        while parents[-1] != parents[-2]:
-            parents.append(os.path.dirname(parents[-1]))
-        # Make sure we haven't got duplicates on the end
-        if parents[-1] == parents[-2]:
-            parents = parents[:-1]
-        # Use find_module with our list of parents. ImportError from
-        # find_module means "couldn't find" not "found and couldn't import" so
-        # we turn it into a more obvious exception class.
+    def find(self, name: str) -> Optional[ModuleSpec]:
+        debug("FilesystemLoader find starting at {!r}".format(self.start))
+        spec = None
+        module = "{}.py".format(name)
+        paths = self.start.split(os.sep)
         try:
-            tup = imp.find_module(name, parents)
-            debug("Found module: {!r}".format(tup[1]))
-            return tup
-        except ImportError:
+            for x in reversed(range(len(paths) + 1)):
+                path = os.sep.join(paths[0:x])
+                if module in os.listdir(path):
+                    spec = spec_from_file_location(
+                        name, os.path.join(path, module)
+                    )
+                    break
+                elif name in os.listdir(path) and os.path.exists(
+                    os.path.join(path, "__init__.py")
+                ):
+                    spec = spec_from_file_location(
+                        name, os.path.join(path, "__init__.py")
+                    )
+                    break
+            if spec:
+                debug("Found module: {!r}".format(spec))
+                return spec
+        except (FileNotFoundError, ModuleNotFoundError):
             msg = "ImportError loading {!r}, raising CollectionNotFound"
             debug(msg.format(name))
-            raise CollectionNotFound(name=name, start=start)
+            raise CollectionNotFound(name=name, start=self.start)
+        return None

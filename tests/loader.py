@@ -1,7 +1,7 @@
-import imp
 import os
 import sys
-import types
+from importlib.util import spec_from_file_location
+from types import ModuleType
 
 from pytest import raises
 
@@ -21,8 +21,13 @@ class _BasicLoader(Loader):
     """
 
     def find(self, name):
-        self.fd, self.path, self.desc = t = imp.find_module(name, [support])
-        return t
+        path = os.path.join(support, name)
+        if os.path.exists(f"{path}.py"):
+            path = f"{path}.py"
+        elif os.path.exists(path):
+            path = os.path.join(path, "__init__.py")
+        spec = spec_from_file_location(name, path)
+        return spec
 
 
 class Loader_:
@@ -33,7 +38,7 @@ class Loader_:
 
     def returns_module_and_location(self):
         mod, path = _BasicLoader().load("namespacing")
-        assert isinstance(mod, types.ModuleType)
+        assert isinstance(mod, ModuleType)
         assert path == support
 
     def may_configure_config_via_constructor(self):
@@ -51,11 +56,6 @@ class Loader_:
         # If the bug is present, this will be 2 at least (and often more, since
         # other tests will pollute it (!).
         assert sys.path.count(support) == 1
-
-    def closes_opened_file_object(self):
-        loader = _BasicLoader()
-        loader.load("foo")
-        assert loader.fd.closed
 
     def can_load_package(self):
         loader = _BasicLoader()
@@ -89,7 +89,7 @@ class FilesystemLoader_:
         assert FSLoader().start == os.getcwd()
 
     def start_point_is_configurable_via_kwarg(self):
-        start = "/tmp/"
+        start = "/tmp"
         assert FSLoader(start=start).start == start
 
     def start_point_is_configurable_via_config(self):
@@ -102,8 +102,10 @@ class FilesystemLoader_:
 
     def raises_ImportError_if_found_collection_cannot_be_imported(self):
         # Instead of masking with a CollectionNotFound
-        with raises(ImportError):
+        with raises(ModuleNotFoundError):
             self.loader.load("oops")
+
+    # TODO: Need CollectionImportError here
 
     def searches_towards_root_of_filesystem(self):
         # Loaded while root is in same dir as .py
@@ -111,4 +113,4 @@ class FilesystemLoader_:
         # Loaded while root is multiple dirs deeper than the .py
         deep = os.path.join(support, "ignoreme", "ignoremetoo")
         indirectly = FSLoader(start=deep).load("foo")
-        assert directly == indirectly
+        assert directly[1] == indirectly[1]

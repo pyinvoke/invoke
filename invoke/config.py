@@ -908,8 +908,7 @@ class Config(DataProxy):
         with open(path) as fd:
             return yaml.safe_load(fd)
 
-    def _load_yml(self, path: PathLike) -> Any:
-        return self._load_yaml(path)
+    _load_yml = _load_yaml
 
     def _load_json(self, path: PathLike) -> Any:
         with open(path) as fd:

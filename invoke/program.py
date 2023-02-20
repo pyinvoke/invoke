@@ -577,6 +577,7 @@ class Program:
             # TODO: worth trying to wrap both of these and raising ImportError
             # for cases where module exists but class name does not? More
             # "normal" but also its own possible source of bugs/confusion...
+            print(module_path, class_name)
             module = import_module(module_path)
             klass = getattr(module, class_name)
         executor = klass(self.collection, self.config, self.core)
