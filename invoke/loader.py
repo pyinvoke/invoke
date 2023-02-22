@@ -120,11 +120,15 @@ class FilesystemLoader(Loader):
                         name, os.path.join(path, module)
                     )
                     break
-                elif name in os.listdir(path) and os.path.exists(
-                    os.path.join(path, "__init__.py")
-                ):
+                elif name in os.listdir(path):
+                    #  and os.path.exists(
+                    #     os.path.join(path, name, "__init__.py")
+                    # ):
+                    basepath = os.path.join(path, name)
                     spec = spec_from_file_location(
-                        name, os.path.join(path, "__init__.py")
+                        name,
+                        os.path.join(basepath, "__init__.py"),
+                        submodule_search_locations=[basepath],
                     )
                     break
             if spec:
