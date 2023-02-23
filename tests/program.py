@@ -848,7 +848,7 @@ Default task: test
 
         class namespace_limiting:
             def argument_limits_display_to_given_namespace(self):
-                stdout, a = run("-c tree --list build")
+                stdout, _ = run("-c tree --list build")
                 expected = """Available 'build' tasks:
 
   .all (.everything)      Build all necessary artifacts.
