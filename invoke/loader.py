@@ -36,8 +36,8 @@ class Loader:
 
         Must return a ModuleSpec valid for use by `importlib`, which is
         typically a name string followed by the contents of the 3-tuple
-        returned by `imp.find_module` (``file``, ``pathname``,
-        ``description``.)
+        returned by `importlib.module_from_spec` (``name``, ``loader``,
+        ``origin``.)
 
         For a sample implementation, see `.FilesystemLoader`.
 
@@ -113,6 +113,7 @@ class FilesystemLoader(Loader):
         module = "{}.py".format(name)
         paths = self.start.split(os.sep)
         try:
+            # walk the path upwards to check for dynamic import
             for x in reversed(range(len(paths) + 1)):
                 path = os.sep.join(paths[0:x])
                 if module in os.listdir(path):
