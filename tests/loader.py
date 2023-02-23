@@ -113,4 +113,5 @@ class FilesystemLoader_:
         # Loaded while root is multiple dirs deeper than the .py
         deep = os.path.join(support, "ignoreme", "ignoremetoo")
         indirectly = FSLoader(start=deep).load("foo")
+        assert directly[0].__spec__ == indirectly[0].__spec__
         assert directly[1] == indirectly[1]
