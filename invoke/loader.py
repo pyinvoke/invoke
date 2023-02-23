@@ -69,10 +69,13 @@ class Loader:
         spec = self.find(name)
         if spec and spec.loader and spec.origin:
             path = spec.origin
+            # Ensure containing directory is on sys.path in case the module
+            # being imported is trying to load local-to-it names.
             if os.path.isfile(spec.origin):
                 path = os.path.dirname(spec.origin)
             if path not in sys.path:
                 sys.path.insert(0, path)
+            # Actual import
             module = module_from_spec(spec)
             spec.loader.exec_module(module)
             return module, os.path.dirname(spec.origin)
