@@ -2,8 +2,10 @@ import copy
 import json
 import os
 import types
+from importlib.util import spec_from_loader
 from os import PathLike
 from os.path import join, splitext, expanduser
+from types import ModuleType
 from typing import Any, Dict, Iterator, Optional, Tuple, Type, Union
 
 from .env import Environment
@@ -24,7 +26,11 @@ except ImportError:  # PyPy3
 def load_source(name: str, path: str) -> Dict[str, Any]:
     if not os.path.exists(path):
         return {}
-    return vars(SourceFileLoader("mod", path).load_module())
+    loader = SourceFileLoader("mod", path)
+    mod = ModuleType("mod")
+    mod.__spec__ = spec_from_loader("mod", loader)
+    loader.exec_module(mod)
+    return vars(mod)
 
 
 class DataProxy:

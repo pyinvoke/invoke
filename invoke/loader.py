@@ -34,7 +34,7 @@ class Loader:
         """
         Implementation-specific finder method seeking collection ``name``.
 
-        Must return a 4-tuple valid for use by `imp.load_module`, which is
+        Must return a ModuleSpec valid for use by `importlib`, which is
         typically a name string followed by the contents of the 3-tuple
         returned by `imp.find_module` (``file``, ``pathname``,
         ``description``.)
@@ -120,10 +120,9 @@ class FilesystemLoader(Loader):
                         name, os.path.join(path, module)
                     )
                     break
-                elif name in os.listdir(path):
-                    #  and os.path.exists(
-                    #     os.path.join(path, name, "__init__.py")
-                    # ):
+                elif name in os.listdir(path) and os.path.exists(
+                    os.path.join(path, name, "__init__.py")
+                ):
                     basepath = os.path.join(path, name)
                     spec = spec_from_file_location(
                         name,
