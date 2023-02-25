@@ -35,14 +35,14 @@ class Environment:
         """
         # Obtain allowed env var -> existing value map
         env_vars = self._crawl(key_path=[], env_vars={})
-        m = "Scanning for env vars according to prefix: {!r}, mapping: {!r}"
-        debug(m.format(self._prefix, env_vars))
+        m = "Scanning for env vars according to prefix: %r, mapping: %r"
+        debug(m, self._prefix, env_vars)
         # Check for actual env var (honoring prefix) and try to set
         for env_var, key_path in env_vars.items():
             real_var = (self._prefix or "") + env_var
             if real_var in os.environ:
                 self._path_set(key_path, os.environ[real_var])
-        debug("Obtained env var config: {!r}".format(self.data))
+        debug("Obtained env var config: %r", self.data)
         return self.data
 
     def _crawl(

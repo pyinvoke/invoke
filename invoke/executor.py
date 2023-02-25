@@ -96,9 +96,9 @@ class Executor:
         .. versionadded:: 1.0
         """
         # Normalize input
-        debug("Examining top level tasks {!r}".format([x for x in tasks]))
+        debug("Examining top level tasks %r", [x for x in tasks])
         calls = self.normalize(tasks)
-        debug("Tasks (now Calls) with kwargs: {!r}".format(calls))
+        debug("Tasks (now Calls) with kwargs: %r", calls)
         # Obtain copy of directly-given tasks since they should sometimes
         # behave differently
         direct = list(calls)
@@ -120,7 +120,7 @@ class Executor:
         # moment...
         for call in calls:
             autoprint = call in direct and call.autoprint
-            debug("Executing {!r}".format(call))
+            debug("Executing %r", call)
             # Hand in reference to our config, which will preserve user
             # modifications across the lifetime of the session.
             config = self.config
@@ -189,10 +189,10 @@ class Executor:
         debug("Deduplicating tasks...")
         for call in calls:
             if call not in deduped:
-                debug("{!r}: no duplicates found, ok".format(call))
+                debug("%r: no duplicates found, ok", call)
                 deduped.append(call)
             else:
-                debug("{!r}: found in list already, skipping".format(call))
+                debug("%r: found in list already, skipping", call)
         return deduped
 
     def expand_calls(self, calls: List["Call"]) -> List["Call"]:
@@ -214,7 +214,7 @@ class Executor:
             # task lists, which may contain 'raw' Task objects)
             if isinstance(call, Task):
                 call = Call(call)
-            debug("Expanding task-call {!r}".format(call))
+            debug("Expanding task-call %r", call)
             # TODO: this is where we _used_ to call Executor.config_for(call,
             # config)...
             # TODO: now we may need to preserve more info like where the call

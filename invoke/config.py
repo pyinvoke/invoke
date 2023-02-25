@@ -893,8 +893,8 @@ class Config(DataProxy):
             # Typically means 'no such file', so just note & skip past.
             except IOError as e:
                 if e.errno == 2:
-                    err = "Didn't see any {}, skipping."
-                    debug(err.format(filepath))
+                    err = "Didn't see any %s, skipping."
+                    debug(err, filepath)
                 else:
                     raise
         # Still None -> no suffixed paths were found, record this fact
@@ -941,21 +941,21 @@ class Config(DataProxy):
         """
         debug("Merging config sources in order onto new empty _config...")
         self._set(_config={})
-        debug("Defaults: {!r}".format(self._defaults))
+        debug("Defaults: %r", self._defaults)
         merge_dicts(self._config, self._defaults)
-        debug("Collection-driven: {!r}".format(self._collection))
+        debug("Collection-driven: %r", self._collection)
         merge_dicts(self._config, self._collection)
         self._merge_file("system", "System-wide")
         self._merge_file("user", "Per-user")
         self._merge_file("project", "Per-project")
-        debug("Environment variable config: {!r}".format(self._env))
+        debug("Environment variable config: %r", self._env)
         merge_dicts(self._config, self._env)
         self._merge_file("runtime", "Runtime")
-        debug("Overrides: {!r}".format(self._overrides))
+        debug("Overrides: %r", self._overrides)
         merge_dicts(self._config, self._overrides)
-        debug("Modifications: {!r}".format(self._modifications))
+        debug("Modifications: %r", self._modifications)
         merge_dicts(self._config, self._modifications)
-        debug("Deletions: {!r}".format(self._deletions))
+        debug("Deletions: %r", self._deletions)
         obliterate(self._config, self._deletions)
 
     def _merge_file(self, name: str, desc: str) -> None:
@@ -966,16 +966,16 @@ class Config(DataProxy):
         data = getattr(self, "_{}".format(name))
         # None -> no loading occurred yet
         if found is None:
-            debug("{} has not been loaded yet, skipping".format(desc))
+            debug("%s has not been loaded yet, skipping", desc)
         # True -> hooray
         elif found:
-            debug("{} ({}): {!r}".format(desc, path, data))
+            debug("%s (%s): %r", desc, path, data)
             merge_dicts(self._config, data)
         # False -> did try, did not succeed
         else:
             # TODO: how to preserve what was tried for each case but only for
             # the negative? Just a branch here based on 'name'?
-            debug("{} not found, skipping".format(desc))
+            debug("%s not found, skipping", desc)
 
     def clone(self, into: Optional[Type["Config"]] = None) -> "Config":
         """

@@ -397,7 +397,7 @@ class Program:
             # steps, then tell it to execute the tasks.
             self.execute()
         except (UnexpectedExit, Exit, ParseError) as e:
-            debug("Received a possibly-skippable exception: {!r}".format(e))
+            debug("Received a possibly-skippable exception: %r", e)
             # Print error messages from parser, runner, etc if necessary;
             # prevents messy traceback but still clues interactive user into
             # problems.
@@ -422,7 +422,7 @@ class Program:
             sys.exit(1)  # Same behavior as Python itself outside of REPL
 
     def parse_core(self, argv: Optional[List[str]]) -> None:
-        debug("argv given to Program.run: {!r}".format(argv))
+        debug("argv given to Program.run: %r", argv)
         self.normalize_argv(argv)
 
         # Obtain core args (sets self.core)
@@ -504,8 +504,9 @@ class Program:
         # Print per-task help, if necessary
         if halp:
             if halp in self.parser.contexts:
-                msg = "Saw --help <taskname>, printing per-task help & exiting"
-                debug(msg)
+                debug(
+                    "Saw --help <taskname>, printing per-task help & exiting"
+                )
                 self.print_task_help(halp)
                 raise Exit
             else:
@@ -599,10 +600,10 @@ class Program:
         """
         if argv is None:
             argv = sys.argv
-            debug("argv was None; using sys.argv: {!r}".format(argv))
+            debug("argv was None; using sys.argv: %r", argv)
         elif isinstance(argv, str):
             argv = argv.split()
-            debug("argv was string-like; splitting: {!r}".format(argv))
+            debug("argv was string-like; splitting: %r", argv)
         self.argv = argv
 
     @property
@@ -696,8 +697,8 @@ class Program:
         debug("Parsing initial context (core args)")
         parser = Parser(initial=self.initial_context, ignore_unknown=True)
         self.core = parser.parse_argv(self.argv[1:])
-        msg = "Core-args parse result: {!r} & unparsed: {!r}"
-        debug(msg.format(self.core, self.core.unparsed))
+        msg = "Core-args parse result: %r & unparsed: %r"
+        debug(msg, self.core, self.core.unparsed)
 
     def load_collection(self) -> None:
         """
@@ -762,14 +763,14 @@ class Program:
         .. versionadded:: 1.0
         """
         self.parser = self._make_parser()
-        debug("Parsing tasks against {!r}".format(self.collection))
+        ("Parsing tasks against {!r}".format(self.collection))
         result = self.parser.parse_argv(self.core.unparsed)
         self.core_via_tasks = result.pop(0)
         self._update_core_context(
             context=self.core[0], new_args=self.core_via_tasks.args
         )
         self.tasks = result
-        debug("Resulting task contexts: {!r}".format(self.tasks))
+        debug("Resulting task contexts: %r", self.tasks)
 
     def print_task_help(self, name: str) -> None:
         """
