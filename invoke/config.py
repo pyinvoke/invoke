@@ -893,8 +893,7 @@ class Config(DataProxy):
             # Typically means 'no such file', so just note & skip past.
             except IOError as e:
                 if e.errno == 2:
-                    err = "Didn't see any %s, skipping."
-                    debug(err, filepath)
+                    debug("Didn't see any %s, skipping.", filepath)
                 else:
                     raise
         # Still None -> no suffixed paths were found, record this fact
