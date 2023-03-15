@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=61.0.0"]
+requires = ["setuptools>=51.0.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -7,8 +7,8 @@ name = "invoke"
 version = "2.0.0"
 description = "Pythonic task execution"
 # keywords = ["automation", "task runner"]
-authors = [{author="Jeff Forcier", email="jeff@bitprophet.org"}]
-maintainers = [{author="Jeff Forcier", email="jeff@bitprophet.org"}]
+authors = [{name="Jeff Forcier", email="jeff@bitprophet.org"}]
+maintainers = [{name="Jeff Forcier", email="jeff@bitprophet.org"}]
 requires-python = ">=3.6.2"
 readme = "README.rst"
 license = {file = "LICENSE"}
@@ -38,14 +38,8 @@ classifiers=[
     "Topic :: System :: Systems Administration",
 ]
 
-dependencies = [
-    "importlib-metadata>=2.1.1"
-]
-
 [project.optional-dependencies]
 dev = [
-    # build
-    "build",
     # Invocations, for all sorts of things
     "invocations>=3.0.1",
     # Coverage!
@@ -108,14 +102,14 @@ exclude = '''
 '''
 
 [tool.pytest.ini_options]
-testpaths = "tests"
+testpaths = ["tests"]
 python_files = "*"
 # addopts = "--doctest-modules"
 
 [tool.coverage]
 branch = true
 include = [
-    "invoke/*",
+    "src/invoke/*",
     "tests/*",
 ]
-omit = "invoke/vendor/*"
+omit = "src/invoke/vendor/*"
