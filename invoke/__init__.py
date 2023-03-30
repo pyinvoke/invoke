@@ -20,6 +20,8 @@ from .exceptions import (  # noqa
     UnpicklableConfigMember,
     WatcherError,
     CommandTimedOut,
+    InvalidUsageException,
+    TaskInvalidUsageException,
 )
 from .executor import Executor  # noqa
 from .loader import FilesystemLoader  # noqa

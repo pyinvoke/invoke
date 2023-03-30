@@ -4,6 +4,8 @@ from .config import Config
 from .parser import ParserContext
 from .util import debug
 from .tasks import Call, Task
+from .exceptions import InvalidUsageException, TaskInvalidUsageException
+
 
 if TYPE_CHECKING:
     from .collection import Collection
@@ -137,7 +139,10 @@ class Executor:
             # being parameterized), handing in this config for use there.
             context = call.make_context(config)
             args = (context, *call.args)
-            result = call.task(*args, **call.kwargs)
+            try:
+                result = call.task(*args, **call.kwargs)
+            except InvalidUsageException as e:
+                raise TaskInvalidUsageException(task=call.task, exception=e)
             if autoprint:
                 print(result)
             # TODO: handle the non-dedupe case / the same-task-different-args

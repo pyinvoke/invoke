@@ -19,7 +19,13 @@ from typing import (
 from . import Collection, Config, Executor, FilesystemLoader
 from .completion.complete import complete, print_completion_script
 from .parser import Parser, ParserContext, Argument
-from .exceptions import UnexpectedExit, CollectionNotFound, ParseError, Exit
+from .exceptions import (
+    UnexpectedExit,
+    CollectionNotFound,
+    ParseError,
+    Exit,
+    TaskInvalidUsageException,
+)
 from .terminals import pty_size
 from .util import debug, enable_logging, helpline
 
@@ -401,6 +407,14 @@ class Program:
             # Print error messages from parser, runner, etc if necessary;
             # prevents messy traceback but still clues interactive user into
             # problems.
+            if (
+                isinstance(e, ParseError)
+                and e.context is not None
+                and hasattr(self, "collection")
+            ):
+                name = self.collection.transform(e.context.name)
+                if e.context is not None and name in self.collection.tasks:
+                    self.print_task_help(name)
             if isinstance(e, ParseError):
                 print(e, file=sys.stderr)
             if isinstance(e, Exit) and e.message:
@@ -580,7 +594,11 @@ class Program:
             module = import_module(module_path)
             klass = getattr(module, class_name)
         executor = klass(self.collection, self.config, self.core)
-        executor.execute(*self.tasks)
+        try:
+            executor.execute(*self.tasks)
+        except TaskInvalidUsageException as e:
+            print("{}\n".format(e))
+            self.print_task_help(self.collection.transform(e.task.name))
 
     def normalize_argv(self, argv: Optional[List[str]]) -> None:
         """

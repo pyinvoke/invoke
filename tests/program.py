@@ -308,6 +308,7 @@ class Program_:
             # .value = <default value> actually ends up creating a
             # list-of-lists.
             p = Program()
+
             # Set up core-args parser context with an iterable arg that hasn't
             # seen any value yet
             def filename_args():
@@ -646,6 +647,53 @@ Options:
 """.lstrip()
                 for flag in ["-h", "--help"]:
                     expect("-c decorators {} punch".format(flag), out=expected)
+
+            def prints_help_for_task_that_rises_invalid_usage_exception(self):
+                expected = """
+Task invalid_usage_exception usage error: Invalid task usage!
+
+Usage: invoke [--core-opts] invalid-usage-exception [other tasks here ...]
+
+Docstring:
+  none
+
+Options:
+  none
+
+""".lstrip()
+
+                #                 err_expected = """
+                # Task raise_invalid_usage_exception usage error: Invalid task usage!
+                # """.lstrip()
+                expect(
+                    "-c decorators invalid-usage-exception",
+                    out=expected,
+                    # err=err_expected,
+                )
+
+            def prints_help_for_with_invalid_parameters(self):
+                out_expected = """
+Usage: invoke [--core-opts] two-positionals [--options] [other tasks here ...]
+
+Docstring:
+  none
+
+Options:
+  -n STRING, --nonpos=STRING
+  -o STRING, --pos2=STRING
+  -p STRING, --pos1=STRING
+
+""".lstrip()
+
+                err_expected = """
+'two-positionals' did not receive required positional arguments: 'pos1', 'pos2'
+""".lstrip()  # noqa
+
+                expect(
+                    "-c decorators two-positionals",
+                    out=out_expected,
+                    err=err_expected,
+                )
 
             def works_for_unparameterized_tasks(self):
                 expected = """
@@ -1374,6 +1422,7 @@ post2
 
         def env_var_prefix_can_be_overridden(self, monkeypatch):
             monkeypatch.setenv("MYAPP_RUN_HIDE", "both")
+
             # This forces the execution stuff, including Executor, to run
             # NOTE: it's not really possible to rework the impl so this test is
             # cleaner - tasks require per-task/per-collection config, which can
