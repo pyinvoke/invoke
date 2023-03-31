@@ -412,7 +412,7 @@ class Program:
                 and e.context is not None
                 and hasattr(self, "collection")
             ):
-                name = self.collection.transform(e.context.name)
+                name = self.collection.transform(e.context.name or "")
                 if e.context is not None and name in self.collection.tasks:
                     self.print_task_help(name)
             if isinstance(e, ParseError):

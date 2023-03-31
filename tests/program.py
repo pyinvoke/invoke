@@ -662,13 +662,9 @@ Options:
 
 """.lstrip()
 
-                #                 err_expected = """
-                # Task raise_invalid_usage_exception usage error: Invalid task usage!
-                # """.lstrip()
                 expect(
                     "-c decorators invalid-usage-exception",
                     out=expected,
-                    # err=err_expected,
                 )
 
             def prints_help_for_with_invalid_parameters(self):
