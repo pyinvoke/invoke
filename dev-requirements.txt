@@ -4,7 +4,6 @@
 invocations>=3.0.1
 # Coverage!
 coverage>=6.2,<7
-codecov==2.1.12
 # Docs
 releases>=2
 alabaster==0.7.12
