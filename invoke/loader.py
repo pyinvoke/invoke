@@ -98,8 +98,6 @@ class FilesystemLoader(Loader):
     # as auto-dashes, and has to grow one of those for every bit Collection
     # ever needs to know
     def __init__(self, start: Optional[str] = None, **kwargs: Any) -> None:
-        # finder = kwargs.pop("finder_class", CollectionFinder)
-        # sys.meta_path.append(finder)
         super().__init__(**kwargs)
         if start is None:
             start = self.config.tasks.search_root
