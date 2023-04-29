@@ -1,6 +1,6 @@
 from invoke import Collection, task, call
 
-from package import module
+from subspace import module
 
 
 @task

@@ -65,6 +65,12 @@ class Main:
             assert not result.stdout
             assert result.stderr
 
+        @trap
+        def package_style_collections_internally_importable(self):
+            # After merging #919 blew this up and unit tests did not detect!
+            result = run("cd _support/package && inv -l")
+            assert "mytask" in result.stdout
+
         def loads_real_user_config(self):
             path = os.path.expanduser("~/.invoke.yaml")
             try:
