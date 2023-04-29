@@ -2,6 +2,10 @@
 Changelog
 =========
 
+- :release:`2.0.1 <2023-04-29>`
+- :bug:`910` Add more rigor around subprocess/runner shutdown to avoid spurious
+  exceptions & also fix downstream issues in libraries like Fabric. Reported by
+  Orlando Rodríguez.
 - :release:`2.1.0 <2023-04-28>`
 - :support:`675` Implement `importlib` and deprecate `imp` module. Patches
   provided by Jesse P. Johnson
