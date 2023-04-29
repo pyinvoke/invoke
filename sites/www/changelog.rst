@@ -2,6 +2,9 @@
 Changelog
 =========
 
+- :bug:`910` Add more rigor around subprocess/runner shutdown to avoid spurious
+  exceptions & also fix downstream issues in libraries like Fabric. Reported by
+  Orlando Rodríguez.
 - :support:`901 backported` (via :issue:`903`) Tweak test suite ``setup``
   methods to be named ``setup_method`` so pytest stops whining about it. Patch
   via Jesse P. Johnson.
