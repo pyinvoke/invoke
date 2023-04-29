@@ -346,6 +346,11 @@ class Runner_:
             )
             assert sys.stdout.getvalue() == "AAmy commandZZ\n"
 
+        @trap
+        def concats(self):
+            self._run(["my", "command"], echo=True)
+            assert "my command" in sys.stdout.getvalue()
+
     class dry_running:
         @trap
         def sets_echo_to_True(self):
@@ -1533,6 +1538,17 @@ class Local_:
 
     def _runner(self, *args, **kwargs):
         return _runner(*args, **dict(kwargs, klass=_FastLocal))
+
+    class run:
+        @mock_subprocess(insert_Popen=True)
+        def supports_string_as_command(self, mock_Popen):
+            self._run("echo hello")
+            assert mock_Popen.call_args_list[0][0][0] == "echo hello"
+
+        @mock_subprocess(insert_Popen=True)
+        def supports_list_as_command(self, mock_Popen):
+            self._run(["echo", "hello"])
+            assert mock_Popen.call_args_list[0][0][0] == ["echo", "hello"]
 
     class pty:
         @mock_pty()
