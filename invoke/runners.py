@@ -1385,6 +1385,11 @@ class Local(Runner):
             return self.process.returncode
 
     def stop(self) -> None:
+        for fd in ['stdout', 'stderr', 'stdin']:
+            try:
+                getattr(self.process, fd).close()
+            except:
+                pass # We tried 🤷
         # If we opened a PTY for child communications, make sure to close() it,
         # otherwise long-running Invoke-using processes exhaust their file
         # descriptors eventually.
