@@ -42,6 +42,7 @@ setup(
     },
     python_requires=">=3.6",
     packages=find_packages(exclude=exclude),
+    package_data={"invoke": ["py.typed"]},
     include_package_data=True,
     entry_points={
         "console_scripts": [
