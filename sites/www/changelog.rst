@@ -2,6 +2,7 @@
 Changelog
 =========
 
+- :release:`2.1.1 <2023-05-01>`
 - :bug:`934` The `importlib` upgrade in 2.1 had a corner case bug (regarding
   ``from . import <submodule>`` functionality within package-like task trees)
   which in turn exposed a false-pass in our test suite. Both have now been
