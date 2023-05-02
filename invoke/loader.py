@@ -77,6 +77,7 @@ class Loader:
                 sys.path.insert(0, path)
             # Actual import
             module = module_from_spec(spec)
+            sys.modules[spec.name] = module  # so 'from . import xxx' works
             spec.loader.exec_module(module)
             return module, os.path.dirname(spec.origin)
         msg = "ImportError loading {!r}, raising ImportError"
