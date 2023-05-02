@@ -2,6 +2,10 @@
 Changelog
 =========
 
+- :bug:`934` The `importlib` upgrade in 2.1 had a corner case bug (regarding
+  ``from . import <submodule>`` functionality within package-like task trees)
+  which in turn exposed a false-pass in our test suite. Both have now been
+  fixed. Thanks to Greg Meyer and Robert J. Berger for the bug reports.
 - :release:`2.0.1 <2023-04-29>`
 - :bug:`910` Add more rigor around subprocess/runner shutdown to avoid spurious
   exceptions & also fix downstream issues in libraries like Fabric. Reported by
