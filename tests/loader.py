@@ -2,6 +2,7 @@ import os
 import sys
 from importlib.util import spec_from_file_location
 from types import ModuleType
+from pathlib import Path
 
 from pytest import raises
 
@@ -50,7 +51,7 @@ class Loader_:
         # Crummy doesn't-explode test.
         _BasicLoader().load("namespacing")
 
-    def doesnt_dupliate_parent_dir_addition(self):
+    def doesnt_duplicate_parent_dir_addition(self):
         _BasicLoader().load("namespacing")
         _BasicLoader().load("namespacing")
         # If the bug is present, this will be 2 at least (and often more, since
@@ -59,8 +60,12 @@ class Loader_:
 
     def can_load_package(self):
         loader = _BasicLoader()
-        # make sure it doesn't explode
-        loader.load("package")
+        # Load itself doesn't explode (tests 'from . import xxx' internally)
+        mod, loc = loader.load("package")
+        # Properties of returned values look as expected
+        package = Path(support) / "package"
+        assert loc == str(package)
+        assert mod.__file__ == str(package / "__init__.py")
 
     def load_name_defaults_to_config_tasks_collection_name(self):
         "load() name defaults to config.tasks.collection_name"
