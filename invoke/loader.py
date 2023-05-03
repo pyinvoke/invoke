@@ -73,6 +73,8 @@ class Loader:
             # being imported is trying to load local-to-it names.
             if os.path.isfile(spec.origin):
                 path = os.path.dirname(spec.origin)
+                if spec.origin.endswith("__init__.py"):
+                    path = os.path.dirname(path)
             if path not in sys.path:
                 sys.path.insert(0, path)
             # Actual import

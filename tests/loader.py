@@ -51,6 +51,12 @@ class Loader_:
         # Crummy doesn't-explode test.
         _BasicLoader().load("namespacing")
 
+    def adds_package_dir_to_sys_path(self):
+        config = Config({"tasks": {"collection_name": "module"}})
+        _BasicLoader(config).load("package")
+        package = Path(support) / "package"
+        assert str(package) not in sys.path
+
     def doesnt_duplicate_parent_dir_addition(self):
         _BasicLoader().load("namespacing")
         _BasicLoader().load("namespacing")
