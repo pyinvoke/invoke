@@ -121,7 +121,9 @@ class FilesystemLoader(Loader):
     def find(self, name: str) -> Optional[ModuleSpec]:
         debug("FilesystemLoader find starting at {!r}".format(self.start))
         spec = None
-        modules = ["{}{}".format(name, suffix) for suffix in self.POSSIBLE_SUFFIXES]
+        modules = [
+            "{}{}".format(name, suffix) for suffix in self.POSSIBLE_SUFFIXES
+        ]
         paths = self.start.split(os.sep)
         try:
             # walk the path upwards to check for dynamic import
@@ -134,7 +136,9 @@ class FilesystemLoader(Loader):
                             name, os.path.join(path, module)
                         )
                         break
-                    elif name in possible_modules and self._is_package(os.path.join(path, name)):
+                    elif name in possible_modules and self._is_package(
+                        os.path.join(path, name)
+                    ):
                         basepath = os.path.join(path, name)
                         spec = spec_from_file_location(
                             name,
