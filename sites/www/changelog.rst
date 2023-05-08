@@ -2,6 +2,9 @@
 Changelog
 =========
 
+- :support:`936 backported` Make sure ``py.typed`` is in our packaging
+  manifest; without it, users working from a regular installation
+  can't perform type checks. Thanks to Nikita Sobolev for catch & patch.
 - :release:`2.1.0 <2023-04-28>`
 - :support:`675` Implement `importlib` and deprecate `imp` module. Patches
   provided by Jesse P. Johnson
