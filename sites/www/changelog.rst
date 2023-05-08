@@ -5,6 +5,15 @@ Changelog
 - :support:`936 backported` Make sure ``py.typed`` is in our packaging
   manifest; without it, users working from a regular installation
   can't perform type checks. Thanks to Nikita Sobolev for catch & patch.
+- :release:`2.1.1 <2023-05-01>`
+- :bug:`934` The `importlib` upgrade in 2.1 had a corner case bug (regarding
+  ``from . import <submodule>`` functionality within package-like task trees)
+  which in turn exposed a false-pass in our test suite. Both have now been
+  fixed. Thanks to Greg Meyer and Robert J. Berger for the bug reports.
+- :release:`2.0.1 <2023-04-29>`
+- :bug:`910` Add more rigor around subprocess/runner shutdown to avoid spurious
+  exceptions & also fix downstream issues in libraries like Fabric. Reported by
+  Orlando Rodríguez.
 - :release:`2.1.0 <2023-04-28>`
 - :support:`675` Implement `importlib` and deprecate `imp` module. Patches
   provided by Jesse P. Johnson

@@ -1402,11 +1402,6 @@ Stderr: already printed
                 runner.run(_)
             runner._timer.cancel.assert_called_once_with()
 
-        def stop_cancels_timer(self):
-            runner = self._mocked_timer()
-            runner.stop()
-            runner._timer.cancel.assert_called_once_with()
-
         def timer_aliveness_is_test_of_timing_out(self):
             # Might be redundant, but easy enough to unit test
             runner = Runner(Context())
@@ -1429,6 +1424,12 @@ Stderr: already printed
             with raises(_GenericException):
                 runner.run(_)
             runner.stop.assert_called_once_with()
+
+        def cancels_timer(self):
+            runner = self._runner()
+            runner._timer = Mock()
+            runner.stop()
+            runner._timer.cancel.assert_called_once_with()
 
     class asynchronous:
         def returns_Promise_immediately_and_finishes_on_join(self):
@@ -1533,6 +1534,15 @@ class Local_:
 
     def _runner(self, *args, **kwargs):
         return _runner(*args, **dict(kwargs, klass=_FastLocal))
+
+    class stop:
+        @mock_subprocess()
+        def calls_super(self):
+            # Re #910
+            runner = self._runner()
+            runner._timer = Mock()  # twiddled by parent class stop()
+            runner.run(_)
+            runner._timer.cancel.assert_called_once_with()
 
     class pty:
         @mock_pty()

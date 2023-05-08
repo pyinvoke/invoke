@@ -1346,7 +1346,12 @@ class Local(Runner):
 
     def kill(self) -> None:
         pid = self.pid if self.using_pty else self.process.pid
-        os.kill(pid, signal.SIGKILL)
+        try:
+            os.kill(pid, signal.SIGKILL)
+        except ProcessLookupError:
+            # In odd situations where our subprocess is already dead, don't
+            # throw this upwards.
+            pass
 
     @property
     def process_is_finished(self) -> bool:
@@ -1385,6 +1390,7 @@ class Local(Runner):
             return self.process.returncode
 
     def stop(self) -> None:
+        super().stop()
         # If we opened a PTY for child communications, make sure to close() it,
         # otherwise long-running Invoke-using processes exhaust their file
         # descriptors eventually.
