@@ -338,8 +338,8 @@ class Runner:
             Which shell binary to use. Default: ``/bin/bash`` (on Unix;
             ``COMSPEC`` or ``cmd.exe`` on Windows.)
 
-        :param bool stdin_bytes:
-            If ``True``, stdin should be treated as raw binary data and will
+        :param bool decode_stdin:
+            If ``False``, stdin should be treated as raw binary data and will
             therefore skip any encode/decode steps.
 
         :param timeout:
@@ -829,7 +829,7 @@ class Runner:
                     raise
             # Decode if it appears to be binary-type. (From real terminal
             # streams, usually yes; from file-like objects, often no.)
-            if not self.opts["stdin_bytes"] and bytes_ and isinstance(bytes_, bytes):
+            if self.opts["decode_stdin"] and bytes_ and isinstance(bytes_, bytes):
                 # TODO: will decoding 1 byte at a time break multibyte
                 # character encodings? How to square interactivity with that?
                 bytes_ = self.decode(bytes_)
@@ -1018,7 +1018,7 @@ class Runner:
         """
         # Encode always, then request implementing subclass to perform the
         # actual write to subprocess' stdin.
-        d = data if self.opts["stdin_bytes"] else data.encode(self.encoding)
+        d = data.encode(self.encoding) if self.opts["decode_stdin"] else data
         self._write_proc_stdin(d)
 
     def decode(self, data: bytes) -> str:
