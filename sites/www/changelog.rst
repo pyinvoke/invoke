@@ -2,6 +2,7 @@
 Changelog
 =========
 
+- :release:`2.1.2 <2023-05-15>`
 - :support:`936 backported` Make sure ``py.typed`` is in our packaging
   manifest; without it, users working from a regular installation
   can't perform type checks. Thanks to Nikita Sobolev for catch & patch.
