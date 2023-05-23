@@ -1,7 +1,7 @@
 # Install self before invocations to save a bit of time
 -e .
 # Invocations, for all sorts of things
-invocations>=3.0.1
+invocations>=3.3
 # Coverage!
 coverage>=6.2,<7
 # Docs

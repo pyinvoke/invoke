@@ -110,6 +110,7 @@ ns = Collection(
     watch_docs,
     ci,
     checks.blacken,
+    checks,
 )
 ns.configure(
     {
