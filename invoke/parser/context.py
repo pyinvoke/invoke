@@ -91,7 +91,7 @@ class ParserContext:
         self.args = Lexicon()
         self.positional_args: List[Argument] = []
         self.flags = Lexicon()
-        self.inverse_flags: Dict[str, str] = {}  # No need for Lexicon here
+        self.inverse_flags: Dict[str, Any] = {}  # No need for Lexicon here
         self.name = name
         self.aliases = aliases
         for arg in args:
