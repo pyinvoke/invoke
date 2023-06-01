@@ -718,7 +718,7 @@ class Program:
             # allows project config to affect the task parsing step!
             # TODO: is it worth merging these set- and load- methods? May
             # require more tweaking of how things behave in/after __init__.
-            self.config.set_project_location(parent)
+            self.config.set_project_location(os.getcwd())
             self.config.load_project()
             self.collection = Collection.from_module(
                 module,
