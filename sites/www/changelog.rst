@@ -2,6 +2,7 @@
 Changelog
 =========
 
+- :release:`2.1.3 <2023-06-14>`
 - :bug:`944` After the release of 2.1, package-style task modules started
   looking in the wrong place for project-level config files (inside one's eg
   ``tasks/`` dir, instead of *next to* that dir) due to a subtlety in the new
