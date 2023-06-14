@@ -2,6 +2,7 @@ import json
 import os
 import sys
 from io import BytesIO
+from pathlib import Path
 
 from invoke.util import Lexicon
 from unittest.mock import patch, Mock, ANY
@@ -35,6 +36,7 @@ from _util import (
     skip_if_windows,
     support_file,
     support_path,
+    support,
 )
 
 
@@ -240,6 +242,10 @@ class Program_:
             klass = Mock(side_effect=FilesystemLoader)
             Program(loader_class=klass).run("myapp --help foo", exit=False)
             klass.assert_called_with(start=ANY, config=ANY)
+
+        def config_location_correct_for_package_type_task_trees(self):
+            with cd(Path(support) / "configs" / "package"):
+                expect("mytask")  # will assert if config not loaded right
 
     class execute:
         def uses_executor_class_given(self):
