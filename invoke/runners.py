@@ -131,9 +131,7 @@ class Runner:
     def run(self, command: str, *, disowned: bool, **kwargs: Any) -> None:
         ...
 
-    def run(
-        self, command: str, *, disowned: Optional[bool] = None, **kwargs: Any
-    ) -> Optional["Result"]:
+    def run(self, command: str, **kwargs: Any) -> Optional["Result"]:
         """
         Execute ``command``, returning an instance of `Result` once complete.
 
@@ -402,8 +400,6 @@ class Runner:
 
         .. versionadded:: 1.0
         """
-        if disowned is not None:
-            kwargs["disowned"] = disowned
         try:
             return self._run_body(command, **kwargs)
         finally:
