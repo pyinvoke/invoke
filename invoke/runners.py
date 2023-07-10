@@ -124,9 +124,7 @@ class Runner:
         self._disowned = False
 
     @overload
-    def run(
-        self, command: str, *, disowned: None, **kwargs: Any
-    ) -> "Result":
+    def run(self, command: str, *, disowned: None, **kwargs: Any) -> "Result":
         ...
 
     @overload
