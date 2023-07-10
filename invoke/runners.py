@@ -405,7 +405,7 @@ class Runner:
         .. versionadded:: 1.0
         """
         if disowned is not None:
-            kwargs['disowned'] = disowned
+            kwargs["disowned"] = disowned
         try:
             return self._run_body(command, **kwargs)
         finally:
