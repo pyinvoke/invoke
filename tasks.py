@@ -53,7 +53,7 @@ def test(
 
 # TODO: replace with invocations' once the "call truly local tester" problem is
 # solved (see other TODOs). For now this is just a copy/paste/modify.
-@task(help=test.help)  # type: ignore
+@task(help=test.help)
 def integration(
     c: "Context", opts: Optional[str] = None, pty: bool = True
 ) -> None:
