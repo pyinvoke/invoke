@@ -19,5 +19,5 @@ setuptools>56
 # Debuggery
 icecream>=2.1
 # typing
-mypy==0.971
+mypy==1.4.1
 types-PyYAML==6.0.12.4

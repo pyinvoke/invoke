@@ -1,6 +1,6 @@
 import copy
 from types import ModuleType
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 from .util import Lexicon, helpline
 
@@ -266,7 +266,7 @@ class Collection:
                 name = task.name
             # XXX https://github.com/python/mypy/issues/1424
             elif hasattr(task.body, "func_name"):
-                name = task.body.func_name  # type: ignore
+                name = task.body.func_name
             elif hasattr(task.body, "__name__"):
                 name = task.__name__
             else:
@@ -284,7 +284,7 @@ class Collection:
 
     def add_collection(
         self,
-        coll: "Collection",
+        coll: Union["Collection", ModuleType],
         name: Optional[str] = None,
         default: Optional[bool] = None,
     ) -> None:
