@@ -128,7 +128,9 @@ class Runner:
         ...
 
     @overload
-    def run(self, command: str, *, disowned: bool, **kwargs: Any) -> None:
+    def run(
+        self, command: str, *, disowned: bool, **kwargs: Any
+    ) -> Optional["Result"]:
         ...
 
     def run(self, command: str, **kwargs: Any) -> Optional["Result"]:
