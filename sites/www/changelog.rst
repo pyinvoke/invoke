@@ -2,6 +2,7 @@
 Changelog
 =========
 
+- :release:`2.2.0 <2023-07-12>`
 - :feature:`-` Remove the somewhat inaccurate subclass requirement around
   `~invoke.config.Config`'s ``.clone(into=...)`` constructor call. It was
   broken for certain use cases (such as trying to clone one subclass into a
