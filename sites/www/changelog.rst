@@ -2,6 +2,11 @@
 Changelog
 =========
 
+- :feature:`-` Remove the somewhat inaccurate subclass requirement around
+  `~invoke.config.Config`'s ``.clone(into=...)`` constructor call. It was
+  broken for certain use cases (such as trying to clone one subclass into a
+  sibling subclass, which would yield a ``TypeError``) and is irrelevant if one
+  is using the new type annotations.
 - :release:`2.1.3 <2023-06-14>`
 - :bug:`944` After the release of 2.1, package-style task modules started
   looking in the wrong place for project-level config files (inside one's eg
