@@ -1249,7 +1249,19 @@ class Local(Runner):
                 try:
                     data = os.read(self.parent_fd, num_bytes)
                 except OSError as e:
-                    # Error handling as before...
+                    # Only eat I/O specific OSErrors so we don't hide others
+                    stringified = str(e)
+                    io_errors = (
+                        # The typical default
+                        "Input/output error",
+                        # Some less common platforms phrase it this way
+                        "I/O error",
+                    )
+                    if not any(error in stringified for error in io_errors):
+                        raise
+                    # The bad OSErrors happen after all expected output has
+                    # appeared, so we return a falsey value, which triggers the
+                    # "end of output" logic in code using reader functions.
                     data = None
             else:
                 # Windows-specific code using pywinpty's read method
@@ -1314,9 +1326,26 @@ class Local(Runner):
             if UNIX:
                 cols, rows = pty_size()
                 self.pid, self.parent_fd = pty.fork()
-                if self.pid == 0:  # Child process
+                # If we're the child process, load up the actual command in a
+                # shell, just as subprocess does; this replaces our process - whose
+                # pipes are all hooked up to the PTY - with the "real" one.
+                if self.pid == 0:
+                    # TODO: both pty.spawn() and pexpect.spawn() do a lot of
+                    # setup/teardown involving tty.setraw, getrlimit, signal.
+                    # Ostensibly we'll want some of that eventually, but if
+                    # possible write tests - integration-level if necessary -
+                    # before adding it!
+                    #
+                    # Set pty window size based on what our own controlling
+                    # terminal's window size appears to be.
+                    # TODO: make subroutine?
                     winsize = struct.pack("HHHH", rows, cols, 0, 0)
                     fcntl.ioctl(sys.stdout.fileno(), termios.TIOCSWINSZ, winsize)
+                    # Use execve for bare-minimum "exec w/ variable # args + env"
+                    # behavior. No need for the 'p' (use PATH to find executable)
+                    # for now.
+                    # NOTE: stdlib subprocess (actually its posix flavor, which is
+                    # written in C) uses either execve or execv, depending.
                     os.execve(shell, [shell, "-c", command], env)
             else:  # Windows
                 cols, rows = pty_size()
@@ -1349,7 +1378,13 @@ class Local(Runner):
     def process_is_finished(self) -> bool:
         if self.using_pty:
             if UNIX:
-                # Unix-like system; use waitpid
+                # NOTE:
+                # https://github.com/pexpect/ptyprocess/blob/4058faa05e2940662ab6da1330aa0586c6f9cd9c/ptyprocess/ptyprocess.py#L680-L687
+                # implies that Linux "requires" use of the blocking, non-WNOHANG
+                # version of this call. Our testing doesn't verify this, however,
+                # so...
+                # NOTE: It does appear to be totally blocking on Windows, so our
+                # issue #351 may be totally unsolvable there. Unclear.
                 try:
                     pid_val, self.status = os.waitpid(self.pid, os.WNOHANG)
                     return pid_val != 0
