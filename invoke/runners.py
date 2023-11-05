@@ -27,6 +27,7 @@ try:
     import pty
     import fcntl
     import termios
+
     UNIX = True
 except ImportError:
     pty = None
@@ -408,9 +409,7 @@ class Runner:
         # Normalize kwargs w/ config; sets self.opts, self.streams
         self._unify_kwargs_with_config(kwargs)
         # Environment setup
-        self.env = self.generate_env(
-            self.opts["env"], self.opts["replace_env"]
-        )
+        self.env = self.generate_env(self.opts["env"], self.opts["replace_env"])
         # Arrive at final encoding if neither config nor kwargs had one
         self.encoding = self.opts["encoding"] or self.default_encoding()
         # Echo running command (wants to be early to be included in dry-run)
@@ -601,9 +600,7 @@ class Runner:
         # TODO: as noted elsewhere, I kinda hate this. Consider changing
         # generate_result()'s API in next major rev so we can tidy up.
         result = self.generate_result(
-            **dict(
-                self.result_kwargs, stdout=stdout, stderr=stderr, exited=exited
-            )
+            **dict(self.result_kwargs, stdout=stdout, stderr=stderr, exited=exited)
         )
         return result
 
@@ -754,9 +751,7 @@ class Runner:
             # Run our specific buffer through the autoresponder framework
             self.respond(buffer_)
 
-    def handle_stdout(
-        self, buffer_: List[str], hide: bool, output: IO
-    ) -> None:
+    def handle_stdout(self, buffer_: List[str], hide: bool, output: IO) -> None:
         """
         Read process' stdout, storing into a buffer & printing/parsing.
 
@@ -773,13 +768,9 @@ class Runner:
 
         .. versionadded:: 1.0
         """
-        self._handle_output(
-            buffer_, hide, output, reader=self.read_proc_stdout
-        )
+        self._handle_output(buffer_, hide, output, reader=self.read_proc_stdout)
 
-    def handle_stderr(
-        self, buffer_: List[str], hide: bool, output: IO
-    ) -> None:
+    def handle_stderr(self, buffer_: List[str], hide: bool, output: IO) -> None:
         """
         Read process' stderr, storing into a buffer & printing/parsing.
 
@@ -788,9 +779,7 @@ class Runner:
 
         .. versionadded:: 1.0
         """
-        self._handle_output(
-            buffer_, hide, output, reader=self.read_proc_stderr
-        )
+        self._handle_output(buffer_, hide, output, reader=self.read_proc_stderr)
 
     def read_our_stdin(self, input_: IO) -> Optional[str]:
         """
@@ -939,9 +928,7 @@ class Runner:
             for response in watcher.submit(stream):
                 self.write_proc_stdin(response)
 
-    def generate_env(
-        self, env: Dict[str, Any], replace_env: bool
-    ) -> Dict[str, Any]:
+    def generate_env(self, env: Dict[str, Any], replace_env: bool) -> Dict[str, Any]:
         """
         Return a suitable environment dict based on user input & behavior.
 
@@ -1297,9 +1284,7 @@ class Local(Runner):
         elif self.process and self.process.stdin:
             fd = self.process.stdin.fileno()
         else:
-            raise SubprocessPipeError(
-                "Unable to write to missing subprocess or stdin!"
-            )
+            raise SubprocessPipeError("Unable to write to missing subprocess or stdin!")
         # Try to write, ignoring broken pipes if encountered (implies child
         # process exited before the process piping stdin to us finished;
         # there's nothing we can do about that!)
@@ -1317,9 +1302,7 @@ class Local(Runner):
         elif self.process and self.process.stdin:
             self.process.stdin.close()
         else:
-            raise SubprocessPipeError(
-                "Unable to close missing subprocess or stdin!"
-            )
+            raise SubprocessPipeError("Unable to close missing subprocess or stdin!")
 
     def start(self, command: str, shell: str, env: Dict[str, Any]) -> None:
         if self.using_pty:
@@ -1363,7 +1346,6 @@ class Local(Runner):
                 stderr=PIPE,
                 stdin=PIPE,
             )
-
 
     def kill(self) -> None:
         pid = self.pid if self.using_pty else self.process.pid
