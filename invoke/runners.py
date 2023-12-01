@@ -25,16 +25,18 @@ from typing import (
 # tests.
 try:
     import pty
-except ImportError:
-    pty = None  # type: ignore[assignment]
-try:
     import fcntl
-except ImportError:
-    fcntl = None  # type: ignore[assignment]
-try:
     import termios
+
+    UNIX = True
 except ImportError:
-    termios = None  # type: ignore[assignment]
+    pty = None
+    fcntl = None
+    termios = None
+    UNIX = False
+
+if not UNIX:
+    from winpty import PtyProcess
 
 from .exceptions import (
     UnexpectedExit,
@@ -407,9 +409,7 @@ class Runner:
         # Normalize kwargs w/ config; sets self.opts, self.streams
         self._unify_kwargs_with_config(kwargs)
         # Environment setup
-        self.env = self.generate_env(
-            self.opts["env"], self.opts["replace_env"]
-        )
+        self.env = self.generate_env(self.opts["env"], self.opts["replace_env"])
         # Arrive at final encoding if neither config nor kwargs had one
         self.encoding = self.opts["encoding"] or self.default_encoding()
         # Echo running command (wants to be early to be included in dry-run)
@@ -600,9 +600,7 @@ class Runner:
         # TODO: as noted elsewhere, I kinda hate this. Consider changing
         # generate_result()'s API in next major rev so we can tidy up.
         result = self.generate_result(
-            **dict(
-                self.result_kwargs, stdout=stdout, stderr=stderr, exited=exited
-            )
+            **dict(self.result_kwargs, stdout=stdout, stderr=stderr, exited=exited)
         )
         return result
 
@@ -753,9 +751,7 @@ class Runner:
             # Run our specific buffer through the autoresponder framework
             self.respond(buffer_)
 
-    def handle_stdout(
-        self, buffer_: List[str], hide: bool, output: IO
-    ) -> None:
+    def handle_stdout(self, buffer_: List[str], hide: bool, output: IO) -> None:
         """
         Read process' stdout, storing into a buffer & printing/parsing.
 
@@ -772,13 +768,9 @@ class Runner:
 
         .. versionadded:: 1.0
         """
-        self._handle_output(
-            buffer_, hide, output, reader=self.read_proc_stdout
-        )
+        self._handle_output(buffer_, hide, output, reader=self.read_proc_stdout)
 
-    def handle_stderr(
-        self, buffer_: List[str], hide: bool, output: IO
-    ) -> None:
+    def handle_stderr(self, buffer_: List[str], hide: bool, output: IO) -> None:
         """
         Read process' stderr, storing into a buffer & printing/parsing.
 
@@ -787,9 +779,7 @@ class Runner:
 
         .. versionadded:: 1.0
         """
-        self._handle_output(
-            buffer_, hide, output, reader=self.read_proc_stderr
-        )
+        self._handle_output(buffer_, hide, output, reader=self.read_proc_stderr)
 
     def read_our_stdin(self, input_: IO) -> Optional[str]:
         """
@@ -938,9 +928,7 @@ class Runner:
             for response in watcher.submit(stream):
                 self.write_proc_stdin(response)
 
-    def generate_env(
-        self, env: Dict[str, Any], replace_env: bool
-    ) -> Dict[str, Any]:
+    def generate_env(self, env: Dict[str, Any], replace_env: bool) -> Dict[str, Any]:
         """
         Return a suitable environment dict based on user input & behavior.
 
@@ -1024,7 +1012,8 @@ class Runner:
         """
         # NOTE: yes, this is a 1-liner. The point is to make it much harder to
         # forget to use 'replace' when decoding :)
-        return data.decode(self.encoding, "replace")
+        return data.decode(self.encoding, "replace") if isinstance(data, bytes) else data
+
 
     @property
     def process_is_finished(self) -> bool:
@@ -1242,24 +1231,38 @@ class Local(Runner):
     def read_proc_stdout(self, num_bytes: int) -> Optional[bytes]:
         # Obtain useful read-some-bytes function
         if self.using_pty:
-            # Need to handle spurious OSErrors on some Linux platforms.
-            try:
-                data = os.read(self.parent_fd, num_bytes)
-            except OSError as e:
-                # Only eat I/O specific OSErrors so we don't hide others
-                stringified = str(e)
-                io_errors = (
-                    # The typical default
-                    "Input/output error",
-                    # Some less common platforms phrase it this way
-                    "I/O error",
-                )
-                if not any(error in stringified for error in io_errors):
-                    raise
-                # The bad OSErrors happen after all expected output has
-                # appeared, so we return a falsey value, which triggers the
-                # "end of output" logic in code using reader functions.
-                data = None
+            if UNIX:
+                # Unix-specific code using os.read
+                try:
+                    data = os.read(self.parent_fd, num_bytes)
+                except OSError as e:
+                    # Only eat I/O specific OSErrors so we don't hide others
+                    stringified = str(e)
+                    io_errors = (
+                        # The typical default
+                        "Input/output error",
+                        # Some less common platforms phrase it this way
+                        "I/O error",
+                    )
+                    if not any(error in stringified for error in io_errors):
+                        raise
+                    # The bad OSErrors happen after all expected output has
+                    # appeared, so we return a falsey value, which triggers the
+                    # "end of output" logic in code using reader functions.
+                    data = None
+            else:
+                # Windows-specific code using pywinpty's read method
+                try:
+                    data = self.pty_process.read(num_bytes)
+                    # If no data is available, pywinpty.read() will block unless
+                    # nonblocking mode is set. You can check if data is available
+                    # with pty_process.available().
+                    if not data:
+                        # Translate this to the same behavior as the Unix branch.
+                        data = None
+                except EOFError:
+                    # pywinpty raises EOFError when the process ends
+                    data = None
         elif self.process and self.process.stdout:
             data = os.read(self.process.stdout.fileno(), num_bytes)
         else:
@@ -1281,9 +1284,7 @@ class Local(Runner):
         elif self.process and self.process.stdin:
             fd = self.process.stdin.fileno()
         else:
-            raise SubprocessPipeError(
-                "Unable to write to missing subprocess or stdin!"
-            )
+            raise SubprocessPipeError("Unable to write to missing subprocess or stdin!")
         # Try to write, ignoring broken pipes if encountered (implies child
         # process exited before the process piping stdin to us finished;
         # there's nothing we can do about that!)
@@ -1301,38 +1302,40 @@ class Local(Runner):
         elif self.process and self.process.stdin:
             self.process.stdin.close()
         else:
-            raise SubprocessPipeError(
-                "Unable to close missing subprocess or stdin!"
-            )
+            raise SubprocessPipeError("Unable to close missing subprocess or stdin!")
 
     def start(self, command: str, shell: str, env: Dict[str, Any]) -> None:
         if self.using_pty:
-            if pty is None:  # Encountered ImportError
-                err = "You indicated pty=True, but your platform doesn't support the 'pty' module!"  # noqa
-                sys.exit(err)
-            cols, rows = pty_size()
-            self.pid, self.parent_fd = pty.fork()
-            # If we're the child process, load up the actual command in a
-            # shell, just as subprocess does; this replaces our process - whose
-            # pipes are all hooked up to the PTY - with the "real" one.
-            if self.pid == 0:
-                # TODO: both pty.spawn() and pexpect.spawn() do a lot of
-                # setup/teardown involving tty.setraw, getrlimit, signal.
-                # Ostensibly we'll want some of that eventually, but if
-                # possible write tests - integration-level if necessary -
-                # before adding it!
-                #
-                # Set pty window size based on what our own controlling
-                # terminal's window size appears to be.
-                # TODO: make subroutine?
-                winsize = struct.pack("HHHH", rows, cols, 0, 0)
-                fcntl.ioctl(sys.stdout.fileno(), termios.TIOCSWINSZ, winsize)
-                # Use execve for bare-minimum "exec w/ variable # args + env"
-                # behavior. No need for the 'p' (use PATH to find executable)
-                # for now.
-                # NOTE: stdlib subprocess (actually its posix flavor, which is
-                # written in C) uses either execve or execv, depending.
-                os.execve(shell, [shell, "-c", command], env)
+            if UNIX:
+                cols, rows = pty_size()
+                self.pid, self.parent_fd = pty.fork()
+                # If we're the child process, load up the actual command in a
+                # shell, just as subprocess does; this replaces our process - whose
+                # pipes are all hooked up to the PTY - with the "real" one.
+                if self.pid == 0:
+                    # TODO: both pty.spawn() and pexpect.spawn() do a lot of
+                    # setup/teardown involving tty.setraw, getrlimit, signal.
+                    # Ostensibly we'll want some of that eventually, but if
+                    # possible write tests - integration-level if necessary -
+                    # before adding it!
+                    #
+                    # Set pty window size based on what our own controlling
+                    # terminal's window size appears to be.
+                    # TODO: make subroutine?
+                    winsize = struct.pack("HHHH", rows, cols, 0, 0)
+                    fcntl.ioctl(sys.stdout.fileno(), termios.TIOCSWINSZ, winsize)
+                    # Use execve for bare-minimum "exec w/ variable # args + env"
+                    # behavior. No need for the 'p' (use PATH to find executable)
+                    # for now.
+                    # NOTE: stdlib subprocess (actually its posix flavor, which is
+                    # written in C) uses either execve or execv, depending.
+                    os.execve(shell, [shell, "-c", command], env)
+            else:  # Windows
+                cols, rows = pty_size()
+                self.pty_process = PtyProcess.spawn(shell, dimensions=(rows, cols))
+                self.pty_process.write(f"{command}\r\n")
+                # Note: On Windows, you don't replace the current process with execve.
+                # Instead, you can directly interact with the pty_process object to read/write.
         else:
             self.process = Popen(
                 command,
@@ -1356,16 +1359,25 @@ class Local(Runner):
     @property
     def process_is_finished(self) -> bool:
         if self.using_pty:
-            # NOTE:
-            # https://github.com/pexpect/ptyprocess/blob/4058faa05e2940662ab6da1330aa0586c6f9cd9c/ptyprocess/ptyprocess.py#L680-L687
-            # implies that Linux "requires" use of the blocking, non-WNOHANG
-            # version of this call. Our testing doesn't verify this, however,
-            # so...
-            # NOTE: It does appear to be totally blocking on Windows, so our
-            # issue #351 may be totally unsolvable there. Unclear.
-            pid_val, self.status = os.waitpid(self.pid, os.WNOHANG)
-            return pid_val != 0
+            if UNIX:
+                # NOTE:
+                # https://github.com/pexpect/ptyprocess/blob/4058faa05e2940662ab6da1330aa0586c6f9cd9c/ptyprocess/ptyprocess.py#L680-L687
+                # implies that Linux "requires" use of the blocking, non-WNOHANG
+                # version of this call. Our testing doesn't verify this, however,
+                # so...
+                # NOTE: It does appear to be totally blocking on Windows, so our
+                # issue #351 may be totally unsolvable there. Unclear.
+                try:
+                    pid_val, self.status = os.waitpid(self.pid, os.WNOHANG)
+                    return pid_val != 0
+                except ChildProcessError:
+                    # No child processes (happens if already waited for)
+                    return True
+            else:
+                # Windows; use isalive from pywinpty
+                return not self.pty_process.isalive()
         else:
+            # Not using pty, check the subprocess status
             return self.process.poll() is not None
 
     def returncode(self) -> Optional[int]:

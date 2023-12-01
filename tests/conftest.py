@@ -1,7 +1,6 @@
 import logging
 import os
 import sys
-import termios
 
 import pytest
 from unittest.mock import patch
@@ -10,6 +9,12 @@ from _util import support
 
 # Set up icecream globally for convenience.
 from icecream import install
+
+try:
+    import termios
+except ImportError:
+    termios = None
+    
 
 install()
 
@@ -82,6 +87,8 @@ def integration(reset_environ, chdir_support, clean_sys_modules):
 
 @pytest.fixture
 def mock_termios():
+    if termios is None:
+        pytest.skip("termios not available on this platform")
     with patch("invoke.terminals.termios") as mocked:
         # Ensure mocked termios has 'real' values for constants...otherwise
         # doing bit arithmetic on Mocks kinda defeats the point.
