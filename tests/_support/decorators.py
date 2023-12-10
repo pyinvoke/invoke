@@ -70,3 +70,10 @@ def iterable_values(c, mylist=None):
 @task(incrementable=["verbose"])
 def incrementable_values(c, verbose=None):
     pass
+
+
+@task
+def invalid_usage_exception(c):
+    from invoke import InvalidUsageException
+
+    raise InvalidUsageException("Invalid task usage!")
