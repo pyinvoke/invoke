@@ -283,6 +283,28 @@ class Runner_:
             runner = self._runner(exits=1)
             assert runner.run(_, warn=True).failed is True
 
+        def accept_custom_return_code(self):
+            runner = self._runner(exits=42, run=dict(ok_ret_codes=42))
+            r = runner.run(_)
+            assert r.return_code == 42
+            assert r.ok is True
+
+        def accept_custom_return_code_list(self):
+            runner = self._runner(
+                exits=42, run=dict(ok_ret_codes=(23, 42, 48))
+            )
+            r = runner.run(_)
+            assert r.return_code == 42
+            assert r.ok is True
+
+        def accept_custom_return_code_None(self):
+            runner = self._runner(exits=0, run=dict(ok_ret_codes=None))
+            assert runner.run(_).ok is True
+
+        def accept_custom_return_code_not_null(self):
+            runner = self._runner(exits=0, run=dict(ok_ret_codes=(23, 42)))
+            assert runner.run(_, warn=True).ok is False
+
         @trap
         def stdout_attribute_contains_stdout(self):
             runner = self._runner(out="foo")
