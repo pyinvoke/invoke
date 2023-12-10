@@ -335,7 +335,7 @@ class Runner:
             Default: ``False``.
 
         :param str shell:
-            Which shell binary to use. Default: ``/bin/bash`` (on Unix;
+            Which shell binary to use. Default: ``/bin/sh`` (on Unix;
             ``COMSPEC`` or ``cmd.exe`` on Windows.)
 
         :param timeout:

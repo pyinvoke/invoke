@@ -81,7 +81,7 @@ def _expect_platform_shell(shell):
     if WINDOWS:
         assert shell.endswith("cmd.exe")
     else:
-        assert shell == "/bin/bash"
+        assert shell == "/bin/sh"
 
 
 def _make_tcattrs(cc_is_ints=True, echo=False):
@@ -218,10 +218,10 @@ class Runner_:
             assert runner.run(_, pty=True).pty is True
 
     class shell:
-        def defaults_to_bash_or_cmdexe_when_pty_True(self):
+        def defaults_to_sh_or_cmdexe_when_pty_True(self):
             _expect_platform_shell(self._run(_, pty=True).shell)
 
-        def defaults_to_bash_or_cmdexe_when_pty_False(self):
+        def defaults_to_sh_or_cmdexe_when_pty_False(self):
             _expect_platform_shell(self._run(_, pty=False).shell)
 
         def may_be_overridden(self):
@@ -1651,14 +1651,14 @@ class Local_:
 
     class shell:
         @mock_pty(insert_os=True)
-        def defaults_to_bash_or_cmdexe_when_pty_True(self, mock_os):
+        def defaults_to_sh_or_cmdexe_when_pty_True(self, mock_os):
             # NOTE: yea, windows can't run pty is true, but this is really
             # testing config behavior, so...meh
             self._run(_, pty=True)
             _expect_platform_shell(mock_os.execve.call_args_list[0][0][0])
 
         @mock_subprocess(insert_Popen=True)
-        def defaults_to_bash_or_cmdexe_when_pty_False(self, mock_Popen):
+        def defaults_to_sh_or_cmdexe_when_pty_False(self, mock_Popen):
             self._run(_, pty=False)
             _expect_platform_shell(
                 mock_Popen.call_args_list[0][1]["executable"]
