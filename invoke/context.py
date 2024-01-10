@@ -1,4 +1,5 @@
 import os
+import platform
 import re
 from contextlib import contextmanager
 from itertools import cycle
@@ -259,7 +260,16 @@ class Context(DataProxy):
         prefixes = list(self.command_prefixes)
         current_directory = self.cwd
         if current_directory:
-            prefixes.insert(0, "cd {}".format(current_directory))
+            cd_command = "cd"
+            if platform.system() == "Windows":
+                # On Windows when switching between different drives like C:\
+                # or E:\ the /d flag must be specified.
+                # To avoid the command failing when a drive must be changed we
+                # always add the flag. It would be too convoluted and
+                # complicated to add it only in case the drive changes, also
+                # the flag has no ill side effects.
+                cd_command += " /d"
+            prefixes.insert(0, "{} {}".format(cd_command, current_directory))
 
         return " && ".join(prefixes + [command])
 
