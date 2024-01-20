@@ -894,8 +894,10 @@ class Runner:
                 # race conditions re: unread stdin.)
                 if self.program_finished.is_set() and not data:
                     break
+                # When data is None, we're waiting for input on stdin.
                 # Take a nap so we're not chewing CPU.
-                time.sleep(self.input_sleep)
+                if data is None:
+                    time.sleep(self.input_sleep)
 
     def should_echo_stdin(self, input_: IO, output: IO) -> bool:
         """
