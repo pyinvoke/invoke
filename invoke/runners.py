@@ -1,5 +1,6 @@
 import errno
 import locale
+import io
 import os
 import signal
 import struct
@@ -72,7 +73,7 @@ class Runner:
 
     opts: Dict[str, Any]
     using_pty: bool
-    read_chunk_size = 1000
+    read_chunk_size = io.DEFAULT_BUFFER_SIZE
     input_sleep = 0.01
 
     def __init__(self, context: "Context") -> None:
