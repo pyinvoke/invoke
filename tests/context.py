@@ -57,8 +57,27 @@ class Context_:
                 c.run("foo")
                 assert runner_class.mock_calls == [call(c), call().run("foo")]
 
-        def sudo(self):
-            self._expect_attr("sudo")
+            @patch(local_path)
+            def converts_command_list_to_str(self, Local):
+                runner = Local.return_value
+                c = Context()
+                c.run(["foo", "bar", "baz"])
+                cmd = "foo bar baz"
+                assert runner.run.called, "run() never called runner.run()!"
+                assert runner.run.call_args[0][0] == cmd
+
+        class sudo:
+            def exists(self):
+                self._expect_attr("sudo")
+
+            @patch(local_path)
+            def converts_command_list_to_str(self, Local):
+                runner = Local.return_value
+                c = Context()
+                c.sudo(["foo", "bar", "baz"])
+                cmd = "sudo -S -p '[sudo] password: ' foo bar baz"
+                assert runner.run.called, "run() never called runner.run()!"
+                assert runner.run.call_args[0][0] == cmd
 
     class configuration_proxy:
         "Dict-like proxy for self.config"

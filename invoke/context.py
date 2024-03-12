@@ -1,5 +1,6 @@
 import os
 import re
+import shlex
 from contextlib import contextmanager
 from itertools import cycle
 from os import PathLike
@@ -87,7 +88,7 @@ class Context(DataProxy):
         # runtime.
         self._set(_config=value)
 
-    def run(self, command: str, **kwargs: Any) -> Optional[Result]:
+    def run(self, command: Union[str, List[str]], **kwargs: Any) -> Optional[Result]:
         """
         Execute a local shell command, honoring config options.
 
@@ -101,6 +102,8 @@ class Context(DataProxy):
         .. versionadded:: 1.0
         """
         runner = self.config.runners.local(self)
+        if isinstance(command, list):
+            command = shlex.join(command)
         return self._run(runner, command, **kwargs)
 
     # NOTE: broken out of run() to allow for runner class injection in
@@ -112,7 +115,7 @@ class Context(DataProxy):
         command = self._prefix_commands(command)
         return runner.run(command, **kwargs)
 
-    def sudo(self, command: str, **kwargs: Any) -> Optional[Result]:
+    def sudo(self, command: Union[str, List[str]], **kwargs: Any) -> Optional[Result]:
         """
         Execute a shell command via ``sudo`` with password auto-response.
 
@@ -182,6 +185,8 @@ class Context(DataProxy):
         .. versionadded:: 1.0
         """
         runner = self.config.runners.local(self)
+        if isinstance(command, list):
+            command = shlex.join(command)
         return self._sudo(runner, command, **kwargs)
 
     # NOTE: this is for runner injection; see NOTE above _run().
