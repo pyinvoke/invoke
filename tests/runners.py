@@ -231,6 +231,14 @@ class Runner_:
             runner = self._runner(run={"shell": "/bin/tcsh"})
             assert runner.run(_).shell == "/bin/tcsh"
 
+        def may_be_configured_with_short_path_on_windows(self):
+            skip()
+
+        @skip_if_windows
+        def may_be_configured_with_passthru_on_posix(self):
+            runner = self._runner(run={"shell": "/foo/bar/baz  /bang"})
+            assert runner.run(_).shell == "/foo/bar/baz  /bang"
+
         def kwarg_beats_config(self):
             runner = self._runner(run={"shell": "/bin/tcsh"})
             assert runner.run(_, shell="/bin/zsh").shell == "/bin/zsh"
