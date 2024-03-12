@@ -62,7 +62,7 @@ class Context_:
                 runner = Local.return_value
                 c = Context()
                 c.run(["foo", "bar", "baz"])
-                cmd = "foo bar baz"
+                cmd = "'foo bar baz'"
                 assert runner.run.called, "run() never called runner.run()!"
                 assert runner.run.call_args[0][0] == cmd
 
@@ -75,7 +75,7 @@ class Context_:
                 runner = Local.return_value
                 c = Context()
                 c.sudo(["foo", "bar", "baz"])
-                cmd = "sudo -S -p '[sudo] password: ' foo bar baz"
+                cmd = "sudo -S -p '[sudo] password: ' 'foo bar baz'"
                 assert runner.run.called, "sudo() never called runner.run()!"
                 assert runner.run.call_args[0][0] == cmd
 
