@@ -76,7 +76,7 @@ class Context_:
                 c = Context()
                 c.sudo(["foo", "bar", "baz"])
                 cmd = "sudo -S -p '[sudo] password: ' foo bar baz"
-                assert runner.run.called, "run() never called runner.run()!"
+                assert runner.run.called, "sudo() never called runner.run()!"
                 assert runner.run.call_args[0][0] == cmd
 
     class configuration_proxy:
