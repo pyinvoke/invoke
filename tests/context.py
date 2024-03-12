@@ -754,17 +754,31 @@ class MockContext_:
                     with raises(TypeError):
                         mc.set_result_for("sudo", "whatever", Result("bar"))
 
-        def run(self):
-            mc = MockContext(run={"foo": Result("bar")})
-            assert mc.run("foo").stdout == "bar"
-            mc.set_result_for("run", "foo", Result("biz"))
-            assert mc.run("foo").stdout == "biz"
+        class run:
+            def sets_result_for_command_str(self):
+                mc = MockContext(run={"foo": Result("bar")})
+                assert mc.run("foo").stdout == "bar"
+                mc.set_result_for("run", "foo", Result("biz"))
+                assert mc.run("foo").stdout == "biz"
 
-        def sudo(self):
-            mc = MockContext(sudo={"foo": Result("bar")})
-            assert mc.sudo("foo").stdout == "bar"
-            mc.set_result_for("sudo", "foo", Result("biz"))
-            assert mc.sudo("foo").stdout == "biz"
+            def sets_result_for_command_list(self):
+                mc = MockContext(run={"foo fpp fqq": Result("bar")})
+                assert mc.run(["foo", "fpp", "fqq"]).stdout == "bar"
+                mc.set_result_for("run", "foo fpp fqq", Result("biz"))
+                assert mc.run(["foo", "fpp", "fqq"]).stdout == "biz"
+
+        class sudo:
+            def sets_result_for_command_str(self):
+                mc = MockContext(sudo={"foo": Result("bar")})
+                assert mc.sudo("foo").stdout == "bar"
+                mc.set_result_for("sudo", "foo", Result("biz"))
+                assert mc.sudo("foo").stdout == "biz"
+
+            def sets_result_for_command_list(self):
+                mc = MockContext(sudo={"foo fpp fqq": Result("bar")})
+                assert mc.sudo(["foo", "fpp", "fqq"]).stdout == "bar"
+                mc.set_result_for("sudo", "foo fpp fqq", Result("biz"))
+                assert mc.sudo(["foo", "fpp", "fqq"]).stdout == "biz"
 
     def wraps_run_and_sudo_with_Mock(self, clean_sys_modules):
         sys.modules["mock"] = None  # legacy
