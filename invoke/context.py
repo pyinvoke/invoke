@@ -1,7 +1,5 @@
 import os
 import re
-import shlex
-import sys
 from contextlib import contextmanager
 from itertools import cycle
 from os import PathLike
@@ -19,23 +17,11 @@ from unittest.mock import Mock
 from .config import Config, DataProxy
 from .exceptions import Failure, AuthFailure, ResponseNotAccepted
 from .runners import Result
+from .shims import shlex_join
 from .watchers import FailingResponder
 
 if TYPE_CHECKING:
     from invoke.runners import Runner
-
-
-if sys.version_info >= (3, 8):
-
-    def shlex_join(split_command: List) -> str:
-        """Convert command from list to str."""
-        return shlex.join(split_command)
-
-else:
-
-    def shlex_join(split_command: List) -> str:
-        """Convert command from list to str."""
-        return shlex.quote(" ".join(split_command))[1:-1]
 
 
 class Context(DataProxy):
