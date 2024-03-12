@@ -249,6 +249,36 @@ def bytes_to_read(input_: IO) -> int:
     return 1
 
 
+if sys.platform == "win32":
+
+    def _get_short_path_name(long_path: str) -> str:
+        # Access `GetShortPathNameW()` function from `kernel32.dll`.
+        GetShortPathNameW = windll.kernel32.GetShortPathNameW
+        GetShortPathNameW.argtypes = [
+            wintypes.LPCWSTR,
+            wintypes.LPWSTR,
+            wintypes.DWORD,
+        ]
+        GetShortPathNameW.restype = wintypes.DWORD
+        # Call function to get short path form.
+        buffer_size = 0
+        while True:
+            buffer_array = create_unicode_buffer(buffer_size)
+            required_size = GetShortPathNameW(
+                long_path,
+                buffer_array,
+                buffer_size,
+            )
+            if required_size > buffer_size:
+                buffer_size = required_size
+            else:
+                return buffer_array.value
+
+else:
+
+    def _get_short_path_name(long_path: str) -> str:
+        return long_path
+
 def get_short_path_name(long_path: str) -> str:
     """
     Get short path form for long path.
@@ -263,22 +293,4 @@ def get_short_path_name(long_path: str) -> str:
 
     :returns: `str` Short path form of the long path.
     """
-    if not WINDOWS:
-        return long_path
-    # Access `GetShortPathNameW()` function from `kernel32.dll`.
-    GetShortPathNameW = windll.kernel32.GetShortPathNameW
-    GetShortPathNameW.argtypes = [
-        wintypes.LPCWSTR,
-        wintypes.LPWSTR,
-        wintypes.DWORD,
-    ]
-    GetShortPathNameW.restype = wintypes.DWORD
-    # Call function to get short path form.
-    buffer_size = 0
-    while True:
-        buffer_array = create_unicode_buffer(buffer_size)
-        required_size = GetShortPathNameW(long_path, buffer_array, buffer_size)
-        if required_size > buffer_size:
-            buffer_size = required_size
-        else:
-            return buffer_array.value
+    return _get_short_path_name(long_path)
