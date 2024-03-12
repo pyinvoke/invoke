@@ -1,6 +1,7 @@
 import os
 import re
 import shlex
+import sys
 from contextlib import contextmanager
 from itertools import cycle
 from os import PathLike
@@ -22,6 +23,16 @@ from .watchers import FailingResponder
 
 if TYPE_CHECKING:
     from invoke.runners import Runner
+
+
+if sys.version_info >= (3,8):
+    def shlex_join(split_command: List) -> str:
+        """Convert command from list to str."""
+        return shlex.join(split_command)
+else:
+    def shlex_join(split_command: List) -> str:
+        """Convert command from list to str."""
+        return shlex.quote(" ".join(split_command))
 
 
 class Context(DataProxy):
@@ -103,7 +114,7 @@ class Context(DataProxy):
         """
         runner = self.config.runners.local(self)
         if isinstance(command, list):
-            command = shlex.join(command)
+            command = shlex_join(command)
         return self._run(runner, command, **kwargs)
 
     # NOTE: broken out of run() to allow for runner class injection in
@@ -186,7 +197,7 @@ class Context(DataProxy):
         """
         runner = self.config.runners.local(self)
         if isinstance(command, list):
-            command = shlex.join(command)
+            command = shlex_join(command)
         return self._sudo(runner, command, **kwargs)
 
     # NOTE: this is for runner injection; see NOTE above _run().
@@ -553,18 +564,22 @@ class MockContext(Context):
             # raise_from(NotImplementedError(command), None)
             raise NotImplementedError(command)
 
-    def run(self, command: str, *args: Any, **kwargs: Any) -> Result:
+    def run(self, command: Union[str, List[str]], *args: Any, **kwargs: Any) -> Result:
         # TODO: perform more convenience stuff associating args/kwargs with the
         # result? E.g. filling in .command, etc? Possibly useful for debugging
         # if one hits unexpected-order problems with what they passed in to
         # __init__.
+        if isinstance(command, list):
+            command = shlex_join(command)
         return self._yield_result("__run", command)
 
-    def sudo(self, command: str, *args: Any, **kwargs: Any) -> Result:
+    def sudo(self, command: Union[str, List[str]] , *args: Any, **kwargs: Any) -> Result:
         # TODO: this completely nukes the top-level behavior of sudo(), which
         # could be good or bad, depending. Most of the time I think it's good.
         # No need to supply dummy password config, etc.
         # TODO: see the TODO from run() re: injecting arg/kwarg values
+        if isinstance(command, list):
+            command = shlex_join(command)
         return self._yield_result("__sudo", command)
 
     def set_result_for(
