@@ -36,6 +36,7 @@ from invoke.terminals import WINDOWS
 from _util import (
     mock_subprocess,
     mock_pty,
+    skip_if_posix,
     skip_if_windows,
     _Dummy,
     _KeyboardInterruptingRunner,
@@ -230,6 +231,16 @@ class Runner_:
         def may_be_configured(self):
             runner = self._runner(run={"shell": "/bin/tcsh"})
             assert runner.run(_).shell == "/bin/tcsh"
+
+        @skip_if_posix
+        def may_be_configured_with_short_path_on_windows(self):
+            runner = self._runner(run={"shell": "C:\\Program Files\\PowerShell\\7\\pwsh.exe"})
+            assert runner.run(_).shell == "C:\\PROGRA~1\\POWERS~1\\7\\pwsh.exe"
+
+        @skip_if_windows
+        def may_be_configured_with_passthru_on_posix(self):
+            runner = self._runner(run={"shell": "/foo/bar/baz  /bang"})
+            assert runner.run(_).shell == "/foo/bar/baz  /bang"
 
         def kwarg_beats_config(self):
             runner = self._runner(run={"shell": "/bin/tcsh"})

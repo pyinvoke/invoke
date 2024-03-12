@@ -4,7 +4,7 @@ import termios
 from unittest.mock import Mock, patch
 from pytest import skip, mark
 
-from invoke.terminals import pty_size, bytes_to_read, WINDOWS
+from invoke.terminals import pty_size, bytes_to_read, get_short_path_name, WINDOWS
 
 # Skip on Windows CI, it may blow up on one of these tests
 pytestmark = mark.skipif(
@@ -75,4 +75,12 @@ class terminals:
             skip()
 
         def returns_1_on_windows(self):
+            skip()
+
+    class get_short_path_name_:
+        def returns_passthru_on_posix(self):
+            short_path = "/foo/bar/baz"
+            assert get_short_path_name(short_path) == short_path
+
+        def returns_shortpath_on_windows(self):
             skip()

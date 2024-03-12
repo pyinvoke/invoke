@@ -50,6 +50,7 @@ from .terminals import (
     character_buffered,
     ready_for_reading,
     bytes_to_read,
+    get_short_path_name,
 )
 from .util import has_fileno, isatty, ExceptionHandlingThread
 
@@ -415,6 +416,8 @@ class Runner:
         # Echo running command (wants to be early to be included in dry-run)
         if self.opts["echo"]:
             self.echo(command)
+        if WINDOWS:
+            self.opts["shell"] = get_short_path_name(self.opts["shell"])
         # Prepare common result args.
         # TODO: I hate this. Needs a deeper separate think about tweaking
         # Runner.generate_result in a way that isn't literally just this same
