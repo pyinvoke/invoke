@@ -25,11 +25,14 @@ if TYPE_CHECKING:
     from invoke.runners import Runner
 
 
-if sys.version_info >= (3,8):
+if sys.version_info >= (3, 8):
+
     def shlex_join(split_command: List) -> str:
         """Convert command from list to str."""
         return shlex.join(split_command)
+
 else:
+
     def shlex_join(split_command: List) -> str:
         """Convert command from list to str."""
         return shlex.quote(" ".join(split_command))
@@ -99,7 +102,9 @@ class Context(DataProxy):
         # runtime.
         self._set(_config=value)
 
-    def run(self, command: Union[str, List[str]], **kwargs: Any) -> Optional[Result]:
+    def run(
+        self, command: Union[str, List[str]], **kwargs: Any
+    ) -> Optional[Result]:
         """
         Execute a local shell command, honoring config options.
 
@@ -126,7 +131,9 @@ class Context(DataProxy):
         command = self._prefix_commands(command)
         return runner.run(command, **kwargs)
 
-    def sudo(self, command: Union[str, List[str]], **kwargs: Any) -> Optional[Result]:
+    def sudo(
+        self, command: Union[str, List[str]], **kwargs: Any
+    ) -> Optional[Result]:
         """
         Execute a shell command via ``sudo`` with password auto-response.
 
@@ -564,7 +571,9 @@ class MockContext(Context):
             # raise_from(NotImplementedError(command), None)
             raise NotImplementedError(command)
 
-    def run(self, command: Union[str, List[str]], *args: Any, **kwargs: Any) -> Result:
+    def run(
+        self, command: Union[str, List[str]], *args: Any, **kwargs: Any
+    ) -> Result:
         # TODO: perform more convenience stuff associating args/kwargs with the
         # result? E.g. filling in .command, etc? Possibly useful for debugging
         # if one hits unexpected-order problems with what they passed in to
@@ -573,7 +582,9 @@ class MockContext(Context):
             command = shlex_join(command)
         return self._yield_result("__run", command)
 
-    def sudo(self, command: Union[str, List[str]] , *args: Any, **kwargs: Any) -> Result:
+    def sudo(
+        self, command: Union[str, List[str]], *args: Any, **kwargs: Any
+    ) -> Result:
         # TODO: this completely nukes the top-level behavior of sudo(), which
         # could be good or bad, depending. Most of the time I think it's good.
         # No need to supply dummy password config, etc.
