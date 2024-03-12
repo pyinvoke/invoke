@@ -234,7 +234,9 @@ class Runner_:
 
         @skip_if_posix
         def may_be_configured_with_short_path_on_windows(self):
-            runner = self._runner(run={"shell": "C:\\Program Files\\PowerShell\\7\\pwsh.exe"})
+            runner = self._runner(
+                run={"shell": "C:\\Program Files\\PowerShell\\7\\pwsh.exe"}
+            )
             assert runner.run(_).shell == "C:\\PROGRA~1\\POWERS~1\\7\\pwsh.exe"
 
         @skip_if_windows
