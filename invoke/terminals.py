@@ -279,6 +279,7 @@ else:
     def _get_short_path_name(long_path: str) -> str:
         return long_path
 
+
 def get_short_path_name(long_path: str) -> str:
     """
     Get short path form for long path.
