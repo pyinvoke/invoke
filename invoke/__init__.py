@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Any, List, Optional, Union
 
 from ._version import __version_info__, __version__  # noqa
 from .collection import Collection  # noqa
@@ -31,7 +31,7 @@ from .terminals import pty_size  # noqa
 from .watchers import FailingResponder, Responder, StreamWatcher  # noqa
 
 
-def run(command: str, **kwargs: Any) -> Optional[Result]:
+def run(command: Union[str, List[str]], **kwargs: Any) -> Optional[Result]:
     """
     Run ``command`` in a subprocess and return a `.Result` object.
 
@@ -50,7 +50,7 @@ def run(command: str, **kwargs: Any) -> Optional[Result]:
     return Context().run(command, **kwargs)
 
 
-def sudo(command: str, **kwargs: Any) -> Optional[Result]:
+def sudo(command: Union[str, List[str]], **kwargs: Any) -> Optional[Result]:
     """
     Run ``command`` in a ``sudo`` subprocess and return a `.Result` object.
 
