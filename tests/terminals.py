@@ -4,10 +4,10 @@ import termios
 from unittest.mock import Mock, patch
 from pytest import skip, mark
 
+from invoke.shims import get_short_path_name
 from invoke.terminals import (
     pty_size,
     bytes_to_read,
-    get_short_path_name,
     WINDOWS,
 )
 

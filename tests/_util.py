@@ -32,16 +32,6 @@ def skip_if_windows(fn):
     return wrapper
 
 
-def skip_if_posix(fn):
-    @wraps(fn)
-    def wrapper(*args, **kwargs):
-        if not WINDOWS:
-            skip()
-        return fn(*args, **kwargs)
-
-    return wrapper
-
-
 @contextmanager
 def support_path():
     sys.path.insert(0, support)

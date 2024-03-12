@@ -6,3 +6,4 @@ include =
 omit =
     invoke/shims.py
     invoke/vendor/*
+    tests/_shims.py

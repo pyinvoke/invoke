@@ -33,10 +33,10 @@ from invoke import (
 from invoke.runners import default_encoding
 from invoke.terminals import WINDOWS
 
+from _shims import skip_if_posix
 from _util import (
     mock_subprocess,
     mock_pty,
-    skip_if_posix,
     skip_if_windows,
     _Dummy,
     _KeyboardInterruptingRunner,
