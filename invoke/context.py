@@ -35,7 +35,7 @@ else:
 
     def shlex_join(split_command: List) -> str:
         """Convert command from list to str."""
-        return shlex.quote(" ".join(split_command))
+        return shlex.quote(" ".join(split_command))[1:-1]
 
 
 class Context(DataProxy):
