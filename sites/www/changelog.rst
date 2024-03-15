@@ -2,6 +2,10 @@
 Changelog
 =========
 
+- :bug:`xxx major` (as well as yyy, plus many more) Positional args in tasks
+  needed a lot of love: there were multiple edge cases and bugs relating to
+  them, as well as a lack of documentation. These have mostly been squashed or
+  :ref:`rectified <positional-arguments>`.
 - :release:`2.2.0 <2023-07-12>`
 - :feature:`-` Remove the somewhat inaccurate subclass requirement around
   `~invoke.config.Config`'s ``.clone(into=...)`` constructor call. It was

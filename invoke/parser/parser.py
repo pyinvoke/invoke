@@ -295,8 +295,15 @@ class ParseMachine(StateMachine):
         # Positional args (must come above context-name check in case we still
         # need a posarg and the user legitimately wants to give it a value that
         # just happens to be a valid context name.)
+        # TODO: also needs to check for resolve'able corner case:
+        # - context has any positional args whose RAW values are still None
+        # - token being looked at is NOT a valid context name
         elif self.context and self.context.missing_positional_args:
             msg = "Context {!r} requires positional args, eating {!r}"
+            debug(msg.format(self.context, token))
+            self.see_positional_arg(token)
+        elif (self.context and self.context.unfilled_positional_args and token not in self.contexts):
+            msg = "Context {!r} has unfilled positional args, eating {!r}"
             debug(msg.format(self.context, token))
             self.see_positional_arg(token)
         # New context
@@ -447,6 +454,8 @@ class ParseMachine(StateMachine):
 
     def see_positional_arg(self, value: Any) -> None:
         for arg in self.context.positional_args:
+            # TODO: this needs to be more subtle now, or _maybe_ just needs to
+            # change its check to .got_value / check .raw_value
             if arg.value is None:
                 arg.value = value
                 break

@@ -42,8 +42,24 @@ class CLIParsing:
         def sub_task(c):
             pass
 
+        @task
+        def implicit_positionals(c, pos1, pos2, nonpos="default"):
+            pass
+
+        @task(positional=["pos1", "pos2"])
+        def explicit_positionals(c, pos1=1, pos2=2, nonpos="default"):
+            pass
+
         sub_coll = Collection("sub_coll", sub_task)
-        self.c = Collection(my_task, my_task2, my_task3, my_task4, sub_coll)
+        self.c = Collection(
+            my_task,
+            my_task2,
+            my_task3,
+            my_task4,
+            sub_coll,
+            implicit_positionals,
+            explicit_positionals,
+        )
 
     def _parser(self):
         return Parser(self.c.to_contexts())
@@ -162,3 +178,47 @@ class CLIParsing:
         self._compare("", "verbose", 0)
         self._compare("--verbose", "verbose", 1)
         self._compare("--verbose --verbose --verbose", "verbose", 3)
+
+    # TODO:
+    # - implicit posargs:
+    #   - not given: boom
+    #   - given solo
+    #   - given before a flag
+    #   - given after a flag
+    #   - given /as/ a flag instead
+    #   - ambiguity with optional-value flags (should be another test that can
+    #   be cloned/modified?)
+    # - explicit posargs:
+    #   - all of the above repeated...
+    #   - explicitly-given-as-positional-but-is-kwarg-with-default:
+    #       - should work if not given (supplies default)
+    #       - work if given positionally
+    #       - AND work if given as a flag
+    #   - same as above, but with MORE THAN ONE posarg-as-kwarg in a row:
+    #       - all given positionally: fine
+    #       - all given as flags: fine
+    #       - first posarg given positionally only: fine
+    #       - the weird one: first posarg given as flag, second posarg given as
+    #       positional - this should still work, right? the parser side of
+    #       "what was I given positionally?" should just look at "what
+    #       remaining task-level posargs remain after parsing all the flags?"
+    #           - but also, how does this intersect with eg true-flags/bools?
+    #   - implicit-and-not-listed-explicitly posargs, not given as
+    #   explicit-flag format: boom
+    #   - "  " but given as explicit-flag format: works ok
+
+    def explicit_positionals_may_have_default_values(self):
+        # TODO: reuse this as one of above cases when debugged lol
+        # TODO: or rename the test I guess, it's confusing
+        r = self._parse("explicit-positionals 7 8 --nonpos custom")
+        assert r[0].args.pos1.value == 7
+        assert r[0].args.pos2.value == 8
+        assert r[0].args.nonpos.value == "custom"
+
+    def explicit_positionals_with_defaults_may_not_mask_other_tasks(self):
+        r = self._parse("explicit-positionals 7 sub-task")
+        assert len(r) == 2  # two tasks!
+        assert r[0].args.pos1.value == 7  # given on CLI positionally
+        assert r[0].args.pos2.value == 2  # default kwarg value
+        assert r[0].args.nonpos.value == "default"  # default kwarg value
+        assert r[1].name == "sub-task"

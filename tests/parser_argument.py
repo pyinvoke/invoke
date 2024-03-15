@@ -179,6 +179,9 @@ class Argument_:
             a = Argument("a", kind=int)
             assert a.raw_value is None
 
+        # TODO: is this sufficient signal for the parser level re: positionals
+        # w/ defaults? feels like yes??
+
     class got_value:
         def non_list_kind_tests_for_None_value(self):
             arg = Argument("a")

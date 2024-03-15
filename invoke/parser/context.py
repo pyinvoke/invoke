@@ -8,6 +8,8 @@ except ImportError:
 
 from .argument import Argument
 
+from ..util import debug
+
 
 def translate_underscores(name: str) -> str:
     return name.lstrip("_").rstrip("_").replace("_", "-")
@@ -156,7 +158,21 @@ class ParserContext:
 
     @property
     def missing_positional_args(self) -> List[Argument]:
+        """
+        Member arguments which are positional in nature and have no value set.
+
+        These MUST be filled in by the user, or it's an error.
+        """
         return [x for x in self.positional_args if x.value is None]
+
+    @property
+    def unfilled_positional_args(self) -> List[Argument]:
+        """
+        Positional arguments with default values but no parsed values.
+
+        These MAY be filled in by the user, but may fallback to their default.
+        """
+        return [x for x in self.positional_args if not x.got_value]
 
     @property
     def as_kwargs(self) -> Dict[str, Any]:

@@ -56,9 +56,11 @@ Invocations::
     $ invoke build --clean
 
 Naturally, other default argument values will allow giving string or integer
-values. Arguments with no default values are assumed to take strings, and can
-also be given as positional arguments. Take this incredibly contrived snippet
-for example::
+values. Positional function arguments are assumed to take string values, and
+may also be given on the command-line as positional arguments (but they can
+also still be given as explicit flags, if desired).
+
+Take this contrived snippet::
 
     @task
     def hi(c, name):

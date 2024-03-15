@@ -198,6 +198,8 @@ rules:
 * If the flag is given with no value (``invoke compile --log``), it is treated
   as if it were a ``bool`` and set to ``True``.
 
+.. _resolving-ambiguity:
+
 Resolving ambiguity
 ~~~~~~~~~~~~~~~~~~~
 
@@ -235,6 +237,81 @@ context is checked to resolve the ambiguity:
       ``"--verbose"`` as the value given to ``--log``. (This will probably
       cause other problems in our contrived use case, but it illustrates our
       point.)
+
+.. _positional-arguments:
+
+Positional arguments
+--------------------
+
+As seen in :doc:`../../getting-started`, task arguments defined in Python as
+positional arguments (ones with no default value) can behave like any other
+arguments, becoming flags. Imagine a ``deploy`` task wanting a target
+``host``::
+
+    @task
+    def deploy(c, host, dry_run=False):
+        print(f"Deploying to: {host}")
+        if dry_run:
+            print("Just kidding!")
+
+It may be executed like so, supplying an explicit CLI flag named after the
+Python function argument::
+
+    $ inv deploy --host=myhostname
+    Deploying to: myhostname
+
+However, similar to how function calls are made in Python, you may *also* give
+these arguments positionally, without any flag::
+
+    $ inv deploy myhostname
+    Deploying to: myhostname
+
+Such tokens will be picked up regardless of overall position (barring positions
+that are expected to contain flag values; see :ref:`resolving-ambiguity`
+elsewhere on this page) - eg we can give the ``dry_run`` boolean argument as a
+CLI toggle, ``--dry-run``, before the positional ``host`` value::
+
+    $ inv deploy --dry-run myhostname
+    Deploying to: myhostname
+    Just kidding!
+
+Or after it::
+
+    $ inv deploy myhostname --dry-run
+    Deploying to: myhostname
+    Just kidding!
+
+Finally, you may want to explicitly declare certain task args as being
+positional for command line purposes, even if they are keyword arguments in
+Python; this can be done with the ``positional`` decorator argument::
+
+    @task(positional=["host"])
+    def deploy(c, host="localhost", dry_run=False):
+        print(f"Deploying to: {host}")
+        if dry_run:
+            print("Just kidding!")
+
+Notice how we gave ``host`` a default value in this version, allowing the task
+to be invoked with no args::
+
+    $ inv deploy
+    Deploying to: localhost
+
+With the positional argument as before::
+
+    $ inv deploy myhostname
+    Deploying to: myhostname
+
+Or, again, completely explicitly::
+
+    $ inv deploy --host=myhostname
+    Deploying to: myhostname
+
+Due to how this feature is implemented, ``positional`` is taken as the sole
+authority on which task args the parser will accept positionally. This means
+that other Python-positional function arguments will still need to be given on
+the command line (since, at the Python level, they are not optional!) and must
+be given as explicit short or long flag values.
 
 .. _iterable-flag-values:
 
