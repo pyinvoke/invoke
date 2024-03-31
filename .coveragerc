@@ -3,6 +3,4 @@ branch = True
 include =
     invoke/*
     tests/*
-omit =
-    invoke/shims.py
-    invoke/vendor/*
+omit = invoke/vendor/*

@@ -6,9 +6,9 @@ from pytest import skip, mark
 
 from invoke.shims import get_short_path_name
 from invoke.terminals import (
-    pty_size,
-    bytes_to_read,
     WINDOWS,
+    bytes_to_read,
+    pty_size,
 )
 
 # Skip on Windows CI, it may blow up on one of these tests
