@@ -413,6 +413,10 @@ class SafeConstructor(BaseConstructor):
         value = self.construct_mapping(node)
         data.update(value)
 
+    def construct_yaml_join(self, node):
+        seq = self.construct_sequence(node)
+        return ''.join([str(i) for i in seq])
+
     def construct_yaml_object(self, node, cls):
         data = cls.__new__(cls)
         yield data
@@ -475,6 +479,10 @@ SafeConstructor.add_constructor(
 SafeConstructor.add_constructor(
         'tag:yaml.org,2002:map',
         SafeConstructor.construct_yaml_map)
+
+SafeConstructor.add_constructor(
+        '!join',
+        SafeConstructor.construct_yaml_join)
 
 SafeConstructor.add_constructor(None,
         SafeConstructor.construct_undefined)
