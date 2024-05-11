@@ -61,11 +61,11 @@ class Loader_:
     def can_load_package(self):
         loader = _BasicLoader()
         # Load itself doesn't explode (tests 'from . import xxx' internally)
-        mod, loc = loader.load("package")
+        mod, enclosing_dir = loader.load("package")
         # Properties of returned values look as expected
-        package = Path(support) / "package"
-        assert loc == str(package)
-        assert mod.__file__ == str(package / "__init__.py")
+        # (enclosing dir is always the one above the module-or-package)
+        assert enclosing_dir == support
+        assert mod.__file__ == str(Path(support) / "package" / "__init__.py")
 
     def load_name_defaults_to_config_tasks_collection_name(self):
         "load() name defaults to config.tasks.collection_name"

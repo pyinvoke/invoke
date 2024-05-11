@@ -118,6 +118,7 @@ ns = Collection(
     watch_docs,
     ci,
     checks.blacken,
+    checks,
 )
 ns.configure(
     {
@@ -128,7 +129,6 @@ ns.configure(
             "find_opts": "-and -not \( -path './invoke/vendor*' -or -path './build*' \)"  # noqa
         },
         "packaging": {
-            "sign": True,
             "wheel": True,
             "check_desc": True,
             "changelog_file": os.path.join(

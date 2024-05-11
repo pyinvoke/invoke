@@ -2,6 +2,7 @@ import os
 import sys
 from importlib.machinery import ModuleSpec
 from importlib.util import module_from_spec, spec_from_file_location
+from pathlib import Path
 from types import ModuleType
 from typing import Any, Optional, Tuple
 
@@ -68,18 +69,28 @@ class Loader:
             name = self.config.tasks.collection_name
         spec = self.find(name)
         if spec and spec.loader and spec.origin:
-            path = spec.origin
-            # Ensure containing directory is on sys.path in case the module
-            # being imported is trying to load local-to-it names.
-            if os.path.isfile(spec.origin):
-                path = os.path.dirname(spec.origin)
-            if path not in sys.path:
-                sys.path.insert(0, path)
+            # Typically either tasks.py or tasks/__init__.py
+            source_file = Path(spec.origin)
+            # Will be 'the dir tasks.py is in', or 'tasks/', in both cases this
+            # is what wants to be in sys.path for "from . import sibling"
+            enclosing_dir = source_file.parent
+            # Will be "the directory above the spot that 'import tasks' found",
+            # namely the parent of "your task tree", i.e. "where project level
+            # config files are looked for". So, same as enclosing_dir for
+            # tasks.py, but one more level up for tasks/__init__.py...
+            module_parent = enclosing_dir
+            if spec.parent:  # it's a package, so we have to go up again
+                module_parent = module_parent.parent
+            # Get the enclosing dir on the path
+            enclosing_str = str(enclosing_dir)
+            if enclosing_str not in sys.path:
+                sys.path.insert(0, enclosing_str)
             # Actual import
             module = module_from_spec(spec)
             sys.modules[spec.name] = module  # so 'from . import xxx' works
             spec.loader.exec_module(module)
-            return module, os.path.dirname(spec.origin)
+            # Return the module and the folder it was found in
+            return module, str(module_parent)
         msg = "ImportError loading {!r}, raising ImportError"
         debug(msg.format(name))
         raise ImportError

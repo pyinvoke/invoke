@@ -2,6 +2,23 @@
 Changelog
 =========
 
+- :release:`2.2.0 <2023-07-12>`
+- :feature:`-` Remove the somewhat inaccurate subclass requirement around
+  `~invoke.config.Config`'s ``.clone(into=...)`` constructor call. It was
+  broken for certain use cases (such as trying to clone one subclass into a
+  sibling subclass, which would yield a ``TypeError``) and is irrelevant if one
+  is using the new type annotations.
+- :release:`2.1.3 <2023-06-14>`
+- :bug:`944` After the release of 2.1, package-style task modules started
+  looking in the wrong place for project-level config files (inside one's eg
+  ``tasks/`` dir, instead of *next to* that dir) due to a subtlety in the new
+  import/discovery mechanism used. This has been fixed. Thanks to Arnaud V. and
+  Hunter Kelly for the reports and to Jesse P. Johnson for initial
+  debugging/diagnosis.
+- :release:`2.1.2 <2023-05-15>`
+- :support:`936 backported` Make sure ``py.typed`` is in our packaging
+  manifest; without it, users working from a regular installation
+  can't perform type checks. Thanks to Nikita Sobolev for catch & patch.
 - :release:`2.1.1 <2023-05-01>`
 - :bug:`934` The `importlib` upgrade in 2.1 had a corner case bug (regarding
   ``from . import <submodule>`` functionality within package-like task trees)
