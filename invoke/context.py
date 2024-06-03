@@ -14,6 +14,7 @@ from typing import (
 )
 from unittest.mock import Mock
 
+from ._types import annotate_run_function
 from .config import Config, DataProxy
 from .exceptions import Failure, AuthFailure, ResponseNotAccepted
 from .runners import Result
@@ -87,6 +88,7 @@ class Context(DataProxy):
         # runtime.
         self._set(_config=value)
 
+    @annotate_run_function
     def run(self, command: str, **kwargs: Any) -> Optional[Result]:
         """
         Execute a local shell command, honoring config options.
@@ -112,6 +114,7 @@ class Context(DataProxy):
         command = self._prefix_commands(command)
         return runner.run(command, **kwargs)
 
+    @annotate_run_function
     def sudo(self, command: str, **kwargs: Any) -> Optional[Result]:
         """
         Execute a shell command via ``sudo`` with password auto-response.

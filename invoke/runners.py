@@ -36,6 +36,7 @@ try:
 except ImportError:
     termios = None  # type: ignore[assignment]
 
+from ._types import annotate_run_function
 from .exceptions import (
     UnexpectedExit,
     Failure,
@@ -122,6 +123,7 @@ class Runner:
         self._asynchronous = False
         self._disowned = False
 
+    @annotate_run_function
     def run(self, command: str, **kwargs: Any) -> Optional["Result"]:
         """
         Execute ``command``, returning an instance of `Result` once complete.
