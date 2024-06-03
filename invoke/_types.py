@@ -1,4 +1,13 @@
-from typing import IO, TYPE_CHECKING, Union, Sequence, overload, cast, Optional, Dict
+from typing import (
+    IO,
+    TYPE_CHECKING,
+    Union,
+    Sequence,
+    overload,
+    cast,
+    Optional,
+    Dict,
+)
 from typing_extensions import Protocol, TypedDict, Unpack, Literal
 
 
@@ -13,7 +22,6 @@ def annotate_run_function(func: "_RunFunctionImpl") -> "RunFunction":
 
 
 class _RunFunctionImpl(Protocol):
-
     def __call__(
         self, command: str, **kwargs: Unpack["RunParams"]
     ) -> Optional["Result"]:
