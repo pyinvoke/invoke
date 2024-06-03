@@ -1,6 +1,8 @@
 from typing import (
     IO,
     TYPE_CHECKING,
+    Any,
+    Callable,
     Union,
     Sequence,
     overload,
@@ -16,16 +18,9 @@ if TYPE_CHECKING:
     from invoke.watchers import StreamWatcher
 
 
-def annotate_run_function(func: "_RunFunctionImpl") -> "RunFunction":
+def annotate_run_function(func: Callable[..., Any]) -> "RunFunction":
     """Add standard run function annotations to a function."""
     return cast(RunFunction, func)
-
-
-class _RunFunctionImpl(Protocol):
-    def __call__(
-        self, command: str, **kwargs: Unpack["RunParams"]
-    ) -> Optional["Result"]:
-        ...
 
 
 class _BaseRunParams(TypedDict, total=False):
