@@ -16,7 +16,8 @@ class _RunFunctionImpl(Protocol):
 
     def __call__(
         self, command: str, **kwargs: Unpack["RunParams"]
-    ) -> Optional["Result"]: ...
+    ) -> Optional["Result"]:
+        ...
 
 
 class _BaseRunParams(TypedDict, total=False):
@@ -56,7 +57,8 @@ class RunFunction(Protocol):
         *,
         disown: Literal[True],
         **kwargs: Unpack[_BaseRunParams],
-    ) -> None: ...
+    ) -> None:
+        ...
 
     @overload
     def __call__(
@@ -65,7 +67,8 @@ class RunFunction(Protocol):
         *,
         disown: bool,
         **kwargs: Unpack[_BaseRunParams],
-    ) -> Optional["Result"]: ...
+    ) -> Optional["Result"]:
+        ...
 
     @overload
     def __call__(
@@ -74,7 +77,8 @@ class RunFunction(Protocol):
         *,
         asynchronous: Literal[True],
         **kwargs: Unpack[_BaseRunParams],
-    ) -> "Promise": ...
+    ) -> "Promise":
+        ...
 
     @overload
     def __call__(
@@ -83,17 +87,20 @@ class RunFunction(Protocol):
         *,
         asynchronous: bool,
         **kwargs: Unpack[_BaseRunParams],
-    ) -> Union["Promise", "Result"]: ...
+    ) -> Union["Promise", "Result"]:
+        ...
 
     @overload
     def __call__(
         self,
         command: str,
         **kwargs: Unpack[_BaseRunParams],
-    ) -> "Result": ...
+    ) -> "Result":
+        ...
 
     def __call__(
         self,
         command: str,
         **kwargs: Unpack[RunParams],
-    ) -> Optional["Result"]: ...
+    ) -> Optional["Result"]:
+        ...
