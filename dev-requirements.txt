@@ -21,3 +21,4 @@ icecream>=2.1
 # typing
 mypy==0.971
 types-PyYAML==6.0.12.4
+typing-extensions>=4,<5
