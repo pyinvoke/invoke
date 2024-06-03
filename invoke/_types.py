@@ -1,4 +1,4 @@
-from typing import IO, TYPE_CHECKING, Union, overload, cast, Optional, Dict
+from typing import IO, TYPE_CHECKING, Union, Sequence, overload, cast, Optional, Dict
 from typing_extensions import Protocol, TypedDict, Unpack, Literal
 
 
@@ -37,7 +37,7 @@ class _BaseRunParams(TypedDict, total=False):
     shell: str
     timeout: Optional[int]
     warn: bool
-    watchers: list["StreamWatcher"]
+    watchers: Sequence["StreamWatcher"]
 
 
 class RunParams(_BaseRunParams, total=False):
