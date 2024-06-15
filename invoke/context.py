@@ -189,7 +189,9 @@ class Context(DataProxy):
         runner = self.config.runners.local(self)
         return self._sudo(runner, command, **kwargs)
 
-    def _get_sudo_command(self, command: str, prompt: str, user: str, env: Dict[str, str]) -> str:
+    def _get_sudo_command(
+        self, command: str, prompt: str, user: str, env: Dict[str, str]
+    ) -> str:
         """
         Create the command prefixed by sudo from the arguments within kwargs.
         """

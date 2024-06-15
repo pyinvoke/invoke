@@ -567,27 +567,21 @@ class Context_:
         def sudo_user_should_apply_to_run_two_times(self, Local):
             runner = Local.return_value
             c = Context()
-            with c.sudo_scope(user='Joseph'):
+            with c.sudo_scope(user="Joseph"):
                 c.run("whoami")
                 assert runner.run.called, "run() never called runner.run()!"
-                assert (
-                    "-H -u Joseph"
-                    in runner.run.call_args[0][0]
-                )
+                assert "-H -u Joseph" in runner.run.call_args[0][0]
 
                 c.run("whoami")
                 assert runner.run.called, "run() never called runner.run()!"
-                assert (
-                    "-H -u Joseph"
-                    in runner.run.call_args[0][0]
-                )
+                assert "-H -u Joseph" in runner.run.call_args[0][0]
 
         @patch(local_path)
         def sudo_should_use_last_context(self, Local):
             runner = Local.return_value
             c = Context()
-            with c.sudo_scope(user='Joseph'):
-                with c.sudo_scope(user='Marchand'):
+            with c.sudo_scope(user="Joseph"):
+                with c.sudo_scope(user="Marchand"):
                     c.run("whoami")
 
             cmd = "sudo -S -p '[sudo] password: ' -H -u Marchand whoami"
@@ -599,20 +593,19 @@ class Context_:
         def sudo_user_should_apply_to_run(self, Local):
             runner = Local.return_value
             c = Context()
-            with c.sudo_scope(user='Joseph'):
+            with c.sudo_scope(user="Joseph"):
                 c.run("whoami")
 
             assert runner.run.called, "run() never called runner.run()!"
-            assert (
-                "-H -u Joseph"
-                in runner.run.call_args[0][0]
-            )
+            assert "-H -u Joseph" in runner.run.call_args[0][0]
 
         @patch(local_path)
         def sudo_env_should_apply_to_run(self, Local):
             runner = Local.return_value
             c = Context()
-            with c.sudo_scope(env={"GRATUITOUS_ENVIRONMENT_VARIABLE": "arbitrary value"}):
+            with c.sudo_scope(
+                env={"GRATUITOUS_ENVIRONMENT_VARIABLE": "arbitrary value"}
+            ):
                 c.run("whoami")
 
             assert runner.run.called, "run() never called runner.run()!"
@@ -620,6 +613,7 @@ class Context_:
                 "--preserve-env='GRATUITOUS_ENVIRONMENT_VARIABLE'"
                 in runner.run.call_args[0][0]
             )
+
 
 class MockContext_:
     def init_still_acts_like_superclass_init(self):
