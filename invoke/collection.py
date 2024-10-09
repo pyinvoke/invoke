@@ -5,6 +5,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 from .util import Lexicon, helpline
 
 from .config import merge_dicts, copy_dict
+from .loader import EntryPointLoader
 from .parser import Context as ParserContext
 from .tasks import Task
 
@@ -123,6 +124,9 @@ class Collection:
             raise TypeError("No idea how to insert {!r}!".format(type(obj)))
         method(obj, name=name)
 
+    def __str__(self) -> str:
+        return self.name or 'root'
+
     def __repr__(self) -> str:
         task_names = list(self.tasks.keys())
         collections = ["{}...".format(x) for x in self.collections.keys()]
@@ -141,6 +145,19 @@ class Collection:
 
     def __bool__(self) -> bool:
         return bool(self.task_names)
+
+    @classmethod
+    def from_entry_point(
+        cls, group: str, name: str, **kwargs: Any
+    ) -> 'Collection':
+        """Load collection stack from entrypoint."""
+        loader = EntryPointLoader(group=group)
+        collection = loader.load(name)[0]
+        if collection.name is None:
+            collection.name = name
+        if kwargs:
+            collection.configure(kwargs)
+        return collection
 
     @classmethod
     def from_module(

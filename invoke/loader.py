@@ -1,12 +1,11 @@
 import os
 import sys
-from importlib.machinery import ModuleSpec
+from importlib.metadata import entry_points
 from importlib.util import module_from_spec, spec_from_file_location
 from pathlib import Path
-from types import ModuleType
-from typing import Any, Optional, Tuple
+from typing import Any, Iterable, Optional, Tuple, Union
 
-from . import Config
+from .config import Config
 from .exceptions import CollectionNotFound
 from .util import debug
 
@@ -27,11 +26,9 @@ class Loader:
             config options. Defaults to an anonymous ``Config()`` if none is
             given.
         """
-        if config is None:
-            config = Config()
-        self.config = config
+        self.config = Config() if config is None else config
 
-    def find(self, name: str) -> Optional[ModuleSpec]:
+    def find(self, name: str) -> Optional[Union[Iterable[Any], Any]]:
         """
         Implementation-specific finder method seeking collection ``name``.
 
@@ -46,7 +43,7 @@ class Loader:
         """
         raise NotImplementedError
 
-    def load(self, name: Optional[str] = None) -> Tuple[ModuleType, str]:
+    def load(self, name: Optional[str] = None) -> Tuple[Any, str]:
         """
         Load and return collection module identified by ``name``.
 
@@ -65,40 +62,12 @@ class Loader:
 
         .. versionadded:: 1.0
         """
-        if name is None:
-            name = self.config.tasks.collection_name
-        spec = self.find(name)
-        if spec and spec.loader and spec.origin:
-            # Typically either tasks.py or tasks/__init__.py
-            source_file = Path(spec.origin)
-            # Will be 'the dir tasks.py is in', or 'tasks/', in both cases this
-            # is what wants to be in sys.path for "from . import sibling"
-            enclosing_dir = source_file.parent
-            # Will be "the directory above the spot that 'import tasks' found",
-            # namely the parent of "your task tree", i.e. "where project level
-            # config files are looked for". So, same as enclosing_dir for
-            # tasks.py, but one more level up for tasks/__init__.py...
-            module_parent = enclosing_dir
-            if spec.parent:  # it's a package, so we have to go up again
-                module_parent = module_parent.parent
-            # Get the enclosing dir on the path
-            enclosing_str = str(enclosing_dir)
-            if enclosing_str not in sys.path:
-                sys.path.insert(0, enclosing_str)
-            # Actual import
-            module = module_from_spec(spec)
-            sys.modules[spec.name] = module  # so 'from . import xxx' works
-            spec.loader.exec_module(module)
-            # Return the module and the folder it was found in
-            return module, str(module_parent)
-        msg = "ImportError loading {!r}, raising ImportError"
-        debug(msg.format(name))
-        raise ImportError
+        raise NotImplementedError
 
 
 class FilesystemLoader(Loader):
     """
-    Loads Python files from the filesystem (e.g. ``tasks.py``.)
+    Loads Python files from the filesystem (e.g. ``tasks.py``).
 
     Searches recursively towards filesystem root from a given start point.
 
@@ -120,7 +89,7 @@ class FilesystemLoader(Loader):
         # Lazily determine default CWD if configured value is falsey
         return self._start or os.getcwd()
 
-    def find(self, name: str) -> Optional[ModuleSpec]:
+    def find(self, name: str) -> Optional[Any]:
         debug("FilesystemLoader find starting at {!r}".format(self.start))
         spec = None
         module = "{}.py".format(name)
@@ -152,3 +121,73 @@ class FilesystemLoader(Loader):
             debug(msg.format(name))
             raise CollectionNotFound(name=name, start=self.start)
         return None
+
+    def load(self, name: Optional[str] = None) -> Tuple[Any, str]:
+        if name is None:
+            name = self.config.tasks.collection_name
+        spec = self.find(name)
+        if spec and spec.loader and spec.origin:
+            # Typically either tasks.py or tasks/__init__.py
+            source_file = Path(spec.origin)
+            # Will be 'the dir tasks.py is in', or 'tasks/', in both cases this
+            # is what wants to be in sys.path for "from . import sibling"
+            enclosing_dir = source_file.parent
+            # Will be "the directory above the spot that 'import tasks' found",
+            # namely the parent of "your task tree", i.e. "where project level
+            # config files are looked for". So, same as enclosing_dir for
+            # tasks.py, but one more level up for tasks/__init__.py...
+            module_parent = enclosing_dir
+            if spec.parent:  # it is a package, so we have to go up again
+                module_parent = module_parent.parent
+            # Get the enclosing dir on the path
+            enclosing_str = str(enclosing_dir)
+            if enclosing_str not in sys.path:
+                sys.path.insert(0, enclosing_str)
+            # Actual import
+            module = module_from_spec(spec)
+            sys.modules[spec.name] = module  # so 'from . import xxx' works
+            spec.loader.exec_module(module)
+            # Return the module and the folder it was found in
+            return module, str(module_parent)
+        msg = "ImportError loading {!r}, raising ImportError"
+        debug(msg.format(name))
+        raise ImportError
+
+
+class EntryPointLoader(Loader):
+    """Load collections from entry point."""
+
+    def __init__(self, config: Optional[Config] = None, **kwargs: Any) -> None:
+        """Initialize entry point plugins for invoke."""
+        self.group = kwargs.pop('group', None)
+        super().__init__(config, **kwargs)
+
+    def find(
+        self, name: Optional[str] = None
+    ) -> Optional[Union[Iterable[Any], Any]]:
+        """Find entrypoints for invoke."""
+        params = {}
+        if name:
+            params['name'] = name
+        if self.group:
+            params['group'] = self.group
+        modules = entry_points(**params)
+        if modules:
+            return modules
+        if self.group:
+            if name:
+                raise CollectionNotFound(
+                    name=name or 'entry_point', start=self.group
+                )
+            else:
+                raise ModuleNotFoundError(
+                    'no module matching %r found',
+                    self.group,
+                )
+
+    def load(self, name: Optional[str] = None) -> Tuple[Any, str]:
+        """Load entrypoints for invoke."""
+        modules = self.find(name)
+        for module in modules or []:
+            return (module.load(), os.getcwd())
+        raise ImportError
