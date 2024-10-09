@@ -10,6 +10,7 @@ alabaster==0.7.12
 # Testing
 pytest-relaxed>=2
 pytest-cov>=4
+./tests/_support/entry_point
 # Formatting
 # Flake8 5.x seems to have an odd importlib-metadata incompatibility?
 flake8>=4,<5

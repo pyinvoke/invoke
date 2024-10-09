@@ -47,9 +47,6 @@ class FSLoader:
 
 
 def use_eploader_directly():
-    basedir = os.path.dirname(__file__)
-    source_path = os.path.join(basedir, '_support', 'entry_point')
-    os.chdir(source_path)
     loader = EntryPointLoader(group='invoke')
     collection = loader.load('test')[0]
     assert isinstance(collection, Collection)
@@ -58,9 +55,6 @@ def use_eploader_directly():
 
 
 def use_eploader_from_collection():
-    basedir = os.path.dirname(__file__)
-    source_path = os.path.join(basedir, '_support', 'entry_point')
-    os.chdir(source_path)
     collection = Collection.from_entry_point(group='invoke', name='test')
     assert isinstance(collection, Collection)
     assert collection.name == 'test'
@@ -69,9 +63,6 @@ def use_eploader_from_collection():
 
 
 def raises_ImportError_if_eploader_cannot_import_module():
-    basedir = os.path.dirname(__file__)
-    source_path = os.path.join(basedir, '_support', 'entry_point')
-    os.chdir(source_path)
     # Instead of masking with a CollectionNotFound
     with raises(ModuleNotFoundError):
         loader = EntryPointLoader(group='oops')
@@ -79,10 +70,6 @@ def raises_ImportError_if_eploader_cannot_import_module():
 
 
 def raises_CollectionNotFound_is_eploader_cannot_find_collection():
-    basedir = os.path.dirname(__file__)
-    source_path = os.path.join(basedir, '_support', 'entry_point')
-    os.chdir(source_path)
-    # Instead of masking with a CollectionNotFound
     with raises(CollectionNotFound):
         loader = EntryPointLoader(group='invoke')
         loader.find(name='nope')
