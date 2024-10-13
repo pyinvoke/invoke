@@ -11,7 +11,7 @@ alabaster==0.7.12
 pytest-relaxed>=2
 pytest-cov>=4
 # XXX due to find_packages
-importlib-metadata>=8.5.0;python_version=='3.6'
+importlib-metadata>=8.5.0;python_version<='3.7'
 ./tests/_support/entry_point
 # Formatting
 # Flake8 5.x seems to have an odd importlib-metadata incompatibility?
