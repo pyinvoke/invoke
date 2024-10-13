@@ -17,7 +17,9 @@ class Loader:
     .. versionadded:: 1.0
     """
 
-    def __init__(self, config: Optional["Config"] = None) -> None:
+    def __init__(
+        self, config: Optional["Config"] = None, **kwargs: Any
+    ) -> None:
         """
         Set up a new loader with some `.Config`.
 
@@ -32,9 +34,9 @@ class Loader:
         """
         Implementation-specific finder method seeking collection ``name``.
 
-        Must return a ModuleSpec valid for use by `importlib`, which is
-        typically a name string followed by the contents of the 3-tuple
-        returned by `importlib.module_from_spec` (``name``, ``loader``,
+        Must return module valid for use by repsective ``load`` implementation,
+        which is typically a name string followed by the contents of the
+        3-tuple returned by `importlib.module_from_spec` (``name``, ``loader``,
         ``origin``.)
 
         For a sample implementation, see `.FilesystemLoader`.
@@ -164,7 +166,7 @@ class EntryPointLoader(Loader):
 
     def find(
         self, name: Optional[str] = None
-    ) -> Optional[Union[Iterable[Any], Any]]:
+    ) -> Union[Iterable[Any], Any]:
         """Find entrypoints for invoke."""
         params = {}
         if name:
@@ -174,20 +176,21 @@ class EntryPointLoader(Loader):
         modules = entry_points(**params)
         if modules:
             return modules
-        if self.group:
+        elif self.group:
             if name:
                 raise CollectionNotFound(
                     name=name or 'entry_point', start=self.group
                 )
             else:
                 raise ModuleNotFoundError(
-                    'no module matching %r found',
+                    'no entry point matching group %r found',
                     self.group,
                 )
+        raise ModuleNotFoundError('no entry points found')
 
     def load(self, name: Optional[str] = None) -> Tuple[Any, str]:
         """Load entrypoints for invoke."""
         modules = self.find(name)
-        for module in modules or []:
+        for module in modules:
             return (module.load(), os.getcwd())
         raise ImportError
