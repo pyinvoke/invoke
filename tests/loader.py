@@ -1,5 +1,7 @@
 import os
+import sys
 
+import pytest
 from pytest import raises
 
 from invoke import Config, Collection
@@ -46,6 +48,10 @@ class FSLoader:
         assert directly[1] == indirectly[1]
 
 
+@pytest.mark.skipif(
+    sys.version_info < (3, 7),
+    reason="requires python3.7 or higher",
+)
 def use_eploader_directly():
     loader = EntryPointLoader(group='invoke')
     collection = loader.load('test')[0]
@@ -54,6 +60,10 @@ def use_eploader_directly():
     assert collection.collections == {}
 
 
+@pytest.mark.skipif(
+    sys.version_info < (3, 7),
+    reason="requires python3.7 or higher",
+)
 def use_eploader_from_collection():
     collection = Collection.from_entry_point(group='invoke', name='test')
     assert isinstance(collection, Collection)
@@ -62,6 +72,10 @@ def use_eploader_from_collection():
     assert collection.collections == {}
 
 
+@pytest.mark.skipif(
+    sys.version_info < (3, 7),
+    reason="requires python3.7 or higher",
+)
 def raises_ImportError_if_eploader_cannot_import_module():
     # Instead of masking with a CollectionNotFound
     with raises(ModuleNotFoundError):
@@ -69,6 +83,10 @@ def raises_ImportError_if_eploader_cannot_import_module():
         loader.find()
 
 
+@pytest.mark.skipif(
+    sys.version_info < (3, 7),
+    reason="requires python3.7 or higher",
+)
 def raises_CollectionNotFound_is_eploader_cannot_find_collection():
     with raises(CollectionNotFound):
         loader = EntryPointLoader(group='invoke')
