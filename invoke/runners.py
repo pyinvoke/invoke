@@ -1623,6 +1623,9 @@ class Promise(Result):
         finally:
             self.runner.stop()
 
+    # TODO: what about forever subprocs we need to shutdown ourselves? I bet
+    # there are tickets for this.
+
     def __enter__(self) -> "Promise":
         return self
 
@@ -1632,6 +1635,18 @@ class Promise(Result):
         exc_value: BaseException,
         exc_tb: Optional[TracebackType],
     ) -> None:
+        # TODO: so erm. what to do with exc_*? heh. this just swallows
+        # exceptions otherwise. I bet there's bug reports for this.
+        # TODO: and what of the situation where an async subprocess would have
+        # required something within the block before it exits (example: running
+        # iperf server async and client in the block)? then this "hangs"
+        # forever. Can we safely raise that exception AND try to join?
+        # TODO: at the very least we should display the TB as normally as
+        # possible...
+        from traceback import print_tb
+
+        if exc_tb:
+            print_tb(exc_tb)
         self.join()
 
 
