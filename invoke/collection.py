@@ -291,7 +291,9 @@ class Collection:
         """
         Add `.Collection` ``coll`` as a sub-collection of this one.
 
-        :param coll: The `.Collection` to add or `ModuleType` to add as a collection.
+        :param coll:
+            The `.Collection` to add. A `ModuleType` will be converted to a
+            `.Collection` using `.Collection.from_module`.
 
         :param str name:
             The name to attach the collection as. Defaults to the collection's
