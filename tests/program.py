@@ -41,6 +41,13 @@ from _util import (
 
 
 pytestmark = pytest.mark.usefixtures("integration")
+no_idea_what_template = """
+No idea what '{0}' is!
+'{0}' is not an invoke command. See 'invoke --list'.
+
+No suggestions was found.
+
+""".lstrip()
 
 
 class Program_:
@@ -360,7 +367,7 @@ class Program_:
         def does_not_seek_tasks_module_if_namespace_was_given(self):
             expect(
                 "foo",
-                err="No idea what 'foo' is!\n",
+                err=no_idea_what_template.format("foo"),
                 program=Program(namespace=Collection("blank")),
             )
 
@@ -402,7 +409,7 @@ class Program_:
             # "no idea what foo is!") and exit 1. (Intent is to display that
             # info w/o a full traceback, basically.)
             stderr = sys.stderr.getvalue()
-            assert stderr == "No idea what '{}' is!\n".format(nah)
+            assert stderr == no_idea_what_template.format(nah)
             mock_exit.assert_called_with(1)
 
         @trap
@@ -599,6 +606,7 @@ Core options:
   -r STRING, --search-root=STRING    Change root directory used for finding
                                      task modules.
   -R, --dry                          Echo commands instead of running.
+  -s, --[no-]suggestions             Show possible commands suggestions.
   -T INT, --command-timeout=INT      Specify a global command execution
                                      timeout, in seconds.
   -V, --version                      Show version and exit.
@@ -736,7 +744,8 @@ Options:
                 expect("-c decorators -h punch --list", out=expected)
 
             def complains_if_given_invalid_task_name(self):
-                expect("-h this", err="No idea what 'this' is!\n")
+                expected = no_idea_what_template.format("this")
+                expect("-h this", err=expected)
 
     class task_list:
         "--list"

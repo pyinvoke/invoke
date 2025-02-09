@@ -1,3 +1,4 @@
+import difflib
 import getpass
 import inspect
 import json
@@ -85,6 +86,12 @@ class Program:
                 kind=bool,
                 default=False,
                 help="Echo executed commands before running.",
+            ),
+            Argument(
+                names=("suggestions", "s"),
+                kind=bool,
+                default=True,
+                help="Show possible commands suggestions.",
             ),
             Argument(
                 names=("help", "h"),
@@ -403,6 +410,11 @@ class Program:
             # problems.
             if isinstance(e, ParseError):
                 print(e, file=sys.stderr)
+                if self.args.suggestions.value:
+                    unrecognised_cmd = str(e).replace("No idea what '", "")
+                    unrecognised_cmd = unrecognised_cmd.replace("' is!", "")
+                    msg = self._possible_commands_msg(unrecognised_cmd)
+                    print(msg, file=sys.stderr)
             if isinstance(e, Exit) and e.message:
                 print(e.message, file=sys.stderr)
             if isinstance(e, UnexpectedExit) and e.result.hide:
@@ -985,3 +997,23 @@ class Program:
             else:
                 print(spec.rstrip())
         print("")
+
+    def _possible_commands_msg(self, unknown_cmd: str) -> str:
+        try:
+            all_tasks = self.scoped_collection.task_names
+        except AttributeError:
+            all_tasks = {}
+
+        possible_cmds = list(all_tasks.keys())
+        suggestions = difflib.get_close_matches(
+            unknown_cmd, possible_cmds, n=3, cutoff=0.7
+        )
+        output_message = f"'{unknown_cmd}' is not an invoke command. "
+        output_message += "See 'invoke --list'.\n"
+        if suggestions:
+            output_message += "\nThe most similar command(s):\n"
+            for cmd in suggestions:
+                output_message += f"    {cmd}\n"
+        else:
+            output_message += "\nNo suggestions was found.\n"
+        return output_message
