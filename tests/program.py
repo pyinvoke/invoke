@@ -599,6 +599,7 @@ Core options:
   -r STRING, --search-root=STRING    Change root directory used for finding
                                      task modules.
   -R, --dry                          Echo commands instead of running.
+  -s, --suggestions                  Show possible commands suggestions.
   -T INT, --command-timeout=INT      Specify a global command execution
                                      timeout, in seconds.
   -V, --version                      Show version and exit.
