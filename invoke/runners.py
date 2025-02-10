@@ -1,5 +1,6 @@
 import errno
 import locale
+import io
 import os
 import struct
 import sys
@@ -71,7 +72,7 @@ class Runner:
 
     opts: Dict[str, Any]
     using_pty: bool
-    read_chunk_size = 1000
+    read_chunk_size = io.DEFAULT_BUFFER_SIZE
     input_sleep = 0.01
 
     def __init__(self, context: "Context") -> None:
@@ -894,8 +895,10 @@ class Runner:
                 # race conditions re: unread stdin.)
                 if self.program_finished.is_set() and not data:
                     break
+                # When data is None, we're waiting for input on stdin.
                 # Take a nap so we're not chewing CPU.
-                time.sleep(self.input_sleep)
+                if data is None:
+                    time.sleep(self.input_sleep)
 
     def should_echo_stdin(self, input_: IO, output: IO) -> bool:
         """
