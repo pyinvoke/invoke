@@ -17,6 +17,7 @@ from unittest.mock import Mock
 from .config import Config, DataProxy
 from .exceptions import Failure, AuthFailure, ResponseNotAccepted
 from .runners import Result
+from .shims import shlex_join
 from .watchers import FailingResponder
 
 if TYPE_CHECKING:
@@ -87,7 +88,9 @@ class Context(DataProxy):
         # runtime.
         self._set(_config=value)
 
-    def run(self, command: str, **kwargs: Any) -> Optional[Result]:
+    def run(
+        self, command: Union[str, List[str]], **kwargs: Any
+    ) -> Optional[Result]:
         """
         Execute a local shell command, honoring config options.
 
@@ -101,6 +104,8 @@ class Context(DataProxy):
         .. versionadded:: 1.0
         """
         runner = self.config.runners.local(self)
+        if isinstance(command, list):
+            command = shlex_join(command)
         return self._run(runner, command, **kwargs)
 
     # NOTE: broken out of run() to allow for runner class injection in
@@ -112,7 +117,9 @@ class Context(DataProxy):
         command = self._prefix_commands(command)
         return runner.run(command, **kwargs)
 
-    def sudo(self, command: str, **kwargs: Any) -> Optional[Result]:
+    def sudo(
+        self, command: Union[str, List[str]], **kwargs: Any
+    ) -> Optional[Result]:
         """
         Execute a shell command via ``sudo`` with password auto-response.
 
@@ -182,6 +189,8 @@ class Context(DataProxy):
         .. versionadded:: 1.0
         """
         runner = self.config.runners.local(self)
+        if isinstance(command, list):
+            command = shlex_join(command)
         return self._sudo(runner, command, **kwargs)
 
     # NOTE: this is for runner injection; see NOTE above _run().
@@ -548,18 +557,26 @@ class MockContext(Context):
             # raise_from(NotImplementedError(command), None)
             raise NotImplementedError(command)
 
-    def run(self, command: str, *args: Any, **kwargs: Any) -> Result:
+    def run(
+        self, command: Union[str, List[str]], *args: Any, **kwargs: Any
+    ) -> Result:
         # TODO: perform more convenience stuff associating args/kwargs with the
         # result? E.g. filling in .command, etc? Possibly useful for debugging
         # if one hits unexpected-order problems with what they passed in to
         # __init__.
+        if isinstance(command, list):
+            command = shlex_join(command)
         return self._yield_result("__run", command)
 
-    def sudo(self, command: str, *args: Any, **kwargs: Any) -> Result:
+    def sudo(
+        self, command: Union[str, List[str]], *args: Any, **kwargs: Any
+    ) -> Result:
         # TODO: this completely nukes the top-level behavior of sudo(), which
         # could be good or bad, depending. Most of the time I think it's good.
         # No need to supply dummy password config, etc.
         # TODO: see the TODO from run() re: injecting arg/kwarg values
+        if isinstance(command, list):
+            command = shlex_join(command)
         return self._yield_result("__sudo", command)
 
     def set_result_for(

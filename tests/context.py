@@ -57,8 +57,27 @@ class Context_:
                 c.run("foo")
                 assert runner_class.mock_calls == [call(c), call().run("foo")]
 
-        def sudo(self):
-            self._expect_attr("sudo")
+            @patch(local_path)
+            def converts_command_list_to_str(self, Local):
+                runner = Local.return_value
+                c = Context()
+                c.run(["foo", "bar", "baz"])
+                cmd = "foo bar baz"
+                assert runner.run.called, "run() never called runner.run()!"
+                assert runner.run.call_args[0][0] == cmd
+
+        class sudo:
+            def exists(self):
+                self._expect_attr("sudo")
+
+            @patch(local_path)
+            def converts_command_list_to_str(self, Local):
+                runner = Local.return_value
+                c = Context()
+                c.sudo(["foo", "bar", "baz"])
+                cmd = "sudo -S -p '[sudo] password: ' foo bar baz"
+                assert runner.run.called, "sudo() never called runner.run()!"
+                assert runner.run.call_args[0][0] == cmd
 
     class configuration_proxy:
         "Dict-like proxy for self.config"
@@ -735,17 +754,31 @@ class MockContext_:
                     with raises(TypeError):
                         mc.set_result_for("sudo", "whatever", Result("bar"))
 
-        def run(self):
-            mc = MockContext(run={"foo": Result("bar")})
-            assert mc.run("foo").stdout == "bar"
-            mc.set_result_for("run", "foo", Result("biz"))
-            assert mc.run("foo").stdout == "biz"
+        class run:
+            def sets_result_for_command_str(self):
+                mc = MockContext(run={"foo": Result("bar")})
+                assert mc.run("foo").stdout == "bar"
+                mc.set_result_for("run", "foo", Result("biz"))
+                assert mc.run("foo").stdout == "biz"
 
-        def sudo(self):
-            mc = MockContext(sudo={"foo": Result("bar")})
-            assert mc.sudo("foo").stdout == "bar"
-            mc.set_result_for("sudo", "foo", Result("biz"))
-            assert mc.sudo("foo").stdout == "biz"
+            def sets_result_for_command_list(self):
+                mc = MockContext(run={"foo fpp fqq": Result("bar")})
+                assert mc.run(["foo", "fpp", "fqq"]).stdout == "bar"
+                mc.set_result_for("run", "foo fpp fqq", Result("biz"))
+                assert mc.run(["foo", "fpp", "fqq"]).stdout == "biz"
+
+        class sudo:
+            def sets_result_for_command_str(self):
+                mc = MockContext(sudo={"foo": Result("bar")})
+                assert mc.sudo("foo").stdout == "bar"
+                mc.set_result_for("sudo", "foo", Result("biz"))
+                assert mc.sudo("foo").stdout == "biz"
+
+            def sets_result_for_command_list(self):
+                mc = MockContext(sudo={"foo fpp fqq": Result("bar")})
+                assert mc.sudo(["foo", "fpp", "fqq"]).stdout == "bar"
+                mc.set_result_for("sudo", "foo fpp fqq", Result("biz"))
+                assert mc.sudo(["foo", "fpp", "fqq"]).stdout == "biz"
 
     def wraps_run_and_sudo_with_Mock(self, clean_sys_modules):
         sys.modules["mock"] = None  # legacy
