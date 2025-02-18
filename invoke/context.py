@@ -389,7 +389,7 @@ class Context(DataProxy):
             (such as the various ``Path`` objects out there), and not just
             string literals.
         """
-        path = str(path)
+        path = os.fspath(path)
         self.command_cwds.append(path)
         try:
             yield
