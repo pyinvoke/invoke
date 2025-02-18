@@ -51,6 +51,7 @@ from .terminals import (
     ready_for_reading,
     bytes_to_read,
 )
+from .shims import get_short_path_name
 from .util import has_fileno, isatty, ExceptionHandlingThread
 
 if TYPE_CHECKING:
@@ -415,6 +416,7 @@ class Runner:
         # Echo running command (wants to be early to be included in dry-run)
         if self.opts["echo"]:
             self.echo(command)
+        self.opts["shell"] = get_short_path_name(self.opts["shell"])
         # Prepare common result args.
         # TODO: I hate this. Needs a deeper separate think about tweaking
         # Runner.generate_result in a way that isn't literally just this same
