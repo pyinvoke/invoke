@@ -166,7 +166,7 @@ For each configuration file location mentioned in the previous section, we
 search for files ending in ``.yaml``, ``.yml``, ``.json`` or ``.py`` (**in that
 order!**), load the first one we find, and ignore any others that might exist.
 
-For example, if Invoke is run on a system containing both ``/etc/invoke.yml``
+For example, if Invoke is run on a system containing both ``/etc/invoke.yaml``
 *and* ``/etc/invoke.json``, **only the YAML file will be loaded**. This helps
 keep things simple, both conceptually and in the implementation.
 
