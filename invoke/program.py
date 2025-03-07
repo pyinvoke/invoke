@@ -999,13 +999,11 @@ class Program:
         print("")
 
     def _possible_commands_msg(self, unknown_cmd: str) -> str:
-        try:
+        all_tasks = {}
+        if hasattr(self, "scoped_collection"):
             all_tasks = self.scoped_collection.task_names
-        except AttributeError:
-            all_tasks = {}
-
         possible_cmds = list(all_tasks.keys())
-        suggestions = difflib.get_close_matches(
+        suggestions = _get_best_match(
             unknown_cmd, possible_cmds, n=3, cutoff=0.7
         )
         output_message = f"'{unknown_cmd}' is not an invoke command. "
@@ -1017,3 +1015,35 @@ class Program:
         else:
             output_message += "\nNo suggestions was found.\n"
         return output_message
+
+
+def _get_best_match(
+    word: str, possibilities: List[str], n: int = 3, cutoff: float = 0.7
+) -> List[str]:
+    """Return a list of the top `n` best-matching commands for a given word.
+
+    This function accounts for dot-separated commands by normalizing them—
+    splitting them into parts, sorting them alphabetically, and rejoining them.
+    This allows for matching commands that contain the same elements but in
+    different orders.
+
+    For example, 'task1.task2' and 'task2.task1' will have a similarity score
+    of 0.98.
+    """
+    normalized_unknown_cmd = ".".join(sorted(word.split(".")))
+    matches = []
+    for cmd in possibilities:
+        normalized_cmd = ".".join(sorted(cmd.split(".")))
+        similarity_normalized = difflib.SequenceMatcher(
+            None, normalized_unknown_cmd, normalized_cmd
+        ).ratio()
+        similarity_raw = difflib.SequenceMatcher(None, word, cmd).ratio()
+        # The idea here is to decrease the similarity score if we have
+        # reordered the given word
+        similarity = max(similarity_normalized * 0.98, similarity_raw)
+        if similarity >= cutoff:
+            matches.append((similarity, cmd))
+
+    matches.sort(reverse=True)
+
+    return [match[1] for match in matches[:n]]
