@@ -410,7 +410,7 @@ class Program:
             # problems.
             if isinstance(e, ParseError):
                 print(e, file=sys.stderr)
-                if self.args.suggestions.value:
+                if "No idea what " in str(e) and self.args.suggestions.value:
                     unrecognised_cmd = str(e).replace("No idea what '", "")
                     unrecognised_cmd = unrecognised_cmd.replace("' is!", "")
                     msg = self._possible_commands_msg(unrecognised_cmd)
