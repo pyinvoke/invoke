@@ -376,6 +376,22 @@ class Program_:
             ns = Collection.from_module(load("integration"))
             expect("print-foo", out="foo\n", program=Program(namespace=ns))
 
+        def correctly_suggest_most_simillart_command(self):
+            ns = Collection.from_module(load("integration"))
+            expected = """
+No idea what '{0}' is!
+'{0}' is not an invoke command. See 'invoke --list'.
+
+The most similar command(s):
+    print-foo
+
+""".lstrip()
+            expect(
+                "print-fo",
+                err=expected.format("print-fo"),
+                program=Program(namespace=ns),
+            )
+
         def allows_explicit_task_module_specification(self):
             expect("-c integration print-foo", out="foo\n")
 
