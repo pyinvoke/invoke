@@ -19,6 +19,7 @@ from typing import (
     Optional,
     Tuple,
     Type,
+    Union,
 )
 
 # Import some platform-specific things at top level so they can be mocked for
@@ -122,7 +123,7 @@ class Runner:
         self._asynchronous = False
         self._disowned = False
 
-    def run(self, command: str | List[str], **kwargs: Any) -> Optional["Result"]:
+    def run(self, command: Union[str, List[str]], **kwargs: Any) -> Optional["Result"]:
         """
         Execute ``command``, returning an instance of `Result` once complete.
 
@@ -144,7 +145,7 @@ class Runner:
             the ``echo`` keyword, etc). The base default values are described
             in the parameter list below.
 
-        :param str | List[str] command: The shell command to execute.
+        :param Union[str, List[str]] command: The shell command to execute.
 
         :param bool asynchronous:
             When set to ``True`` (default ``False``), enables asynchronous
@@ -400,7 +401,7 @@ class Runner:
     def echo(self, command: str) -> None:
         print(self.opts["echo_format"].format(command=command))
 
-    def _setup(self, command: str, kwargs: Any) -> None:
+    def _setup(self, command: Union[str, List[str]], kwargs: Any) -> None:
         """
         Prepare data on ``self`` so we're ready to start running.
         """
@@ -428,7 +429,7 @@ class Runner:
             encoding=self.encoding,
         )
 
-    def _run_body(self, command: str | List[str], **kwargs: Any) -> Optional["Result"]:
+    def _run_body(self, command: Union[str, List[str]], **kwargs: Any) -> Optional["Result"]:
         # Prepare all the bits n bobs.
         self._setup(command, kwargs)
         # If dry-run, stop here.
