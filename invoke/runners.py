@@ -1045,7 +1045,7 @@ class Runner:
         """
         raise NotImplementedError
 
-    def start(self, command: str | List[str], shell: str, env: Dict[str, Any]) -> None:
+    def start(self, command: Union[str, List[str]], shell: str, env: Dict[str, Any]) -> None:
         """
         Initiate execution of ``command`` (via ``shell``, with ``env``).
 
@@ -1307,7 +1307,7 @@ class Local(Runner):
                 "Unable to close missing subprocess or stdin!"
             )
 
-    def start(self, command: str | List[str], shell: str, env: Dict[str, Any]) -> None:
+    def start(self, command: Union[str, List[str]], shell: str, env: Dict[str, Any]) -> None:
         if self.using_pty:
             if pty is None:  # Encountered ImportError
                 err = "You indicated pty=True, but your platform doesn't support the 'pty' module!"  # noqa
