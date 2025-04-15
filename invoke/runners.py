@@ -1334,7 +1334,8 @@ class Local(Runner):
                 # for now.
                 # NOTE: stdlib subprocess (actually its posix flavor, which is
                 # written in C) uses either execve or execv, depending.
-                os.execve(shell, [shell, "-c", command], env)
+                command_parts = [command] if isinstance(command, str) else command
+                os.execve(shell, [shell, "-c", *command_parts], env)
         else:
             self.process = Popen(
                 command,
