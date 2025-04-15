@@ -398,8 +398,9 @@ class Runner:
             if not (self._asynchronous or self._disowned):
                 self.stop()
 
-    def echo(self, command: str) -> None:
-        print(self.opts["echo_format"].format(command=command))
+    def echo(self, command: Union[str, List[str]]) -> None:
+        command_string = command if isinstance(command, str) else " ".join(command)
+        print(self.opts["echo_format"].format(command=command_string))
 
     def _setup(self, command: Union[str, List[str]], kwargs: Any) -> None:
         """
