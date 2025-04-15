@@ -123,7 +123,9 @@ class Runner:
         self._asynchronous = False
         self._disowned = False
 
-    def run(self, command: Union[str, List[str]], **kwargs: Any) -> Optional["Result"]:
+    def run(
+        self, command: Union[str, List[str]], **kwargs: Any
+    ) -> Optional["Result"]:
         """
         Execute ``command``, returning an instance of `Result` once complete.
 
@@ -399,7 +401,9 @@ class Runner:
                 self.stop()
 
     def echo(self, command: Union[str, List[str]]) -> None:
-        command_string = command if isinstance(command, str) else " ".join(command)
+        command_string = (
+            command if isinstance(command, str) else " ".join(command)
+        )
         print(self.opts["echo_format"].format(command=command_string))
 
     def _setup(self, command: Union[str, List[str]], kwargs: Any) -> None:
@@ -430,7 +434,9 @@ class Runner:
             encoding=self.encoding,
         )
 
-    def _run_body(self, command: Union[str, List[str]], **kwargs: Any) -> Optional["Result"]:
+    def _run_body(
+        self, command: Union[str, List[str]], **kwargs: Any
+    ) -> Optional["Result"]:
         # Prepare all the bits n bobs.
         self._setup(command, kwargs)
         # If dry-run, stop here.
@@ -1045,7 +1051,9 @@ class Runner:
         """
         raise NotImplementedError
 
-    def start(self, command: Union[str, List[str]], shell: str, env: Dict[str, Any]) -> None:
+    def start(
+        self, command: Union[str, List[str]], shell: str, env: Dict[str, Any]
+    ) -> None:
         """
         Initiate execution of ``command`` (via ``shell``, with ``env``).
 
@@ -1307,7 +1315,9 @@ class Local(Runner):
                 "Unable to close missing subprocess or stdin!"
             )
 
-    def start(self, command: Union[str, List[str]], shell: str, env: Dict[str, Any]) -> None:
+    def start(
+        self, command: Union[str, List[str]], shell: str, env: Dict[str, Any]
+    ) -> None:
         if self.using_pty:
             if pty is None:  # Encountered ImportError
                 err = "You indicated pty=True, but your platform doesn't support the 'pty' module!"  # noqa
@@ -1334,7 +1344,9 @@ class Local(Runner):
                 # for now.
                 # NOTE: stdlib subprocess (actually its posix flavor, which is
                 # written in C) uses either execve or execv, depending.
-                command_parts = [command] if isinstance(command, str) else command
+                command_parts = (
+                    [command] if isinstance(command, str) else command
+                )
                 os.execve(shell, [shell, "-c", *command_parts], env)
         else:
             self.process = Popen(
