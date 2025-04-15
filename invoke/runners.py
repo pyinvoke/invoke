@@ -19,6 +19,7 @@ from typing import (
     Optional,
     Tuple,
     Type,
+    Union,
 )
 
 # Import some platform-specific things at top level so they can be mocked for
@@ -122,7 +123,9 @@ class Runner:
         self._asynchronous = False
         self._disowned = False
 
-    def run(self, command: str, **kwargs: Any) -> Optional["Result"]:
+    def run(
+        self, command: Union[str, List[str]], **kwargs: Any
+    ) -> Optional["Result"]:
         """
         Execute ``command``, returning an instance of `Result` once complete.
 
@@ -144,7 +147,7 @@ class Runner:
             the ``echo`` keyword, etc). The base default values are described
             in the parameter list below.
 
-        :param str command: The shell command to execute.
+        :param Union[str, List[str]] command: The shell command to execute.
 
         :param bool asynchronous:
             When set to ``True`` (default ``False``), enables asynchronous
@@ -397,10 +400,13 @@ class Runner:
             if not (self._asynchronous or self._disowned):
                 self.stop()
 
-    def echo(self, command: str) -> None:
-        print(self.opts["echo_format"].format(command=command))
+    def echo(self, command: Union[str, List[str]]) -> None:
+        command_string = (
+            command if isinstance(command, str) else " ".join(command)
+        )
+        print(self.opts["echo_format"].format(command=command_string))
 
-    def _setup(self, command: str, kwargs: Any) -> None:
+    def _setup(self, command: Union[str, List[str]], kwargs: Any) -> None:
         """
         Prepare data on ``self`` so we're ready to start running.
         """
@@ -428,7 +434,9 @@ class Runner:
             encoding=self.encoding,
         )
 
-    def _run_body(self, command: str, **kwargs: Any) -> Optional["Result"]:
+    def _run_body(
+        self, command: Union[str, List[str]], **kwargs: Any
+    ) -> Optional["Result"]:
         # Prepare all the bits n bobs.
         self._setup(command, kwargs)
         # If dry-run, stop here.
@@ -1043,7 +1051,9 @@ class Runner:
         """
         raise NotImplementedError
 
-    def start(self, command: str, shell: str, env: Dict[str, Any]) -> None:
+    def start(
+        self, command: Union[str, List[str]], shell: str, env: Dict[str, Any]
+    ) -> None:
         """
         Initiate execution of ``command`` (via ``shell``, with ``env``).
 
@@ -1305,7 +1315,9 @@ class Local(Runner):
                 "Unable to close missing subprocess or stdin!"
             )
 
-    def start(self, command: str, shell: str, env: Dict[str, Any]) -> None:
+    def start(
+        self, command: Union[str, List[str]], shell: str, env: Dict[str, Any]
+    ) -> None:
         if self.using_pty:
             if pty is None:  # Encountered ImportError
                 err = "You indicated pty=True, but your platform doesn't support the 'pty' module!"  # noqa
@@ -1332,7 +1344,10 @@ class Local(Runner):
                 # for now.
                 # NOTE: stdlib subprocess (actually its posix flavor, which is
                 # written in C) uses either execve or execv, depending.
-                os.execve(shell, [shell, "-c", command], env)
+                command_parts = (
+                    [command] if isinstance(command, str) else command
+                )
+                os.execve(shell, [shell, "-c", *command_parts], env)
         else:
             self.process = Popen(
                 command,
