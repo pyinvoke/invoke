@@ -1,11 +1,12 @@
+import codecs
 import errno
 import locale
 import os
+import signal
 import struct
 import sys
 import threading
 import time
-import signal
 from subprocess import Popen, PIPE
 from types import TracebackType
 from typing import (
@@ -692,8 +693,9 @@ class Runner:
         :returns:
             A generator yielding strings.
 
-            Specifically, each resulting string is the result of decoding
-            `read_chunk_size` bytes read from the subprocess' out/err stream.
+            Specifically, each resulting string is the result of incrementally
+            decoding up to `read_chunk_size` bytes from the subprocess' out/err
+            stream. The decoder ensures that encoding boundaries are respected.
 
         .. versionadded:: 1.0
         """
@@ -703,11 +705,18 @@ class Runner:
         # process is done running" because sometimes that signal will appear
         # before we've actually read all the data in the stream (i.e.: a race
         # condition).
+        decoder_cls = codecs.getincrementaldecoder(self.encoding)
+        decoder = decoder_cls("replace")
         while True:
             data = reader(self.read_chunk_size)
             if not data:
                 break
-            yield self.decode(data)
+            # The incremental decoder will deal with partial characters.
+            yield decoder.decode(data)
+        pending_buf, _ = decoder.getstate()
+        if pending_buf:
+            # Emit the final chunk of data
+            yield decoder.decode(b"", True)
 
     def write_our_output(self, stream: IO, string: str) -> None:
         """
@@ -1019,6 +1028,13 @@ class Runner:
     def decode(self, data: bytes) -> str:
         """
         Decode some ``data`` bytes, returning Unicode.
+
+        .. warning::
+            This function should not be used for streaming data. When data is
+            streamed in chunks, one chunk can end with only parts of a
+            multi-byte codepoint. This function will return a replacement
+            character for the incomplete byte sequence.
+            Use a ``codecs.IncrementalDecoder`` instead.
 
         .. versionadded:: 1.0
         """
