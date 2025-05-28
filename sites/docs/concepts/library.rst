@@ -140,7 +140,7 @@ The result?
       integration
 
     $ tester --list
-    No idea what '--list' is!
+    Unknown what '--list' is.
     $ tester unit
     Running unit tests!
 

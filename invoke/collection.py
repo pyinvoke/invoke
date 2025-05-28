@@ -120,7 +120,7 @@ class Collection:
         elif isinstance(obj, (Collection, ModuleType)):
             method = self.add_collection
         else:
-            raise TypeError("No idea how to insert {!r}!".format(type(obj)))
+            raise TypeError("Unknown how to insert {!r}.".format(type(obj)))
         method(obj, name=name)
 
     def __repr__(self) -> str:
