@@ -1327,12 +1327,11 @@ class Local(Runner):
                 # TODO: make subroutine?
                 winsize = struct.pack("HHHH", rows, cols, 0, 0)
                 fcntl.ioctl(sys.stdout.fileno(), termios.TIOCSWINSZ, winsize)
-                # Use execve for bare-minimum "exec w/ variable # args + env"
-                # behavior. No need for the 'p' (use PATH to find executable)
-                # for now.
+                # Use execvpe for bare-minimum "exec w/ variable # args + env"
+                # behavior.
                 # NOTE: stdlib subprocess (actually its posix flavor, which is
                 # written in C) uses either execve or execv, depending.
-                os.execve(shell, [shell, "-c", command], env)
+                os.execvpe(shell, [shell, "-c", command], env)
         else:
             self.process = Popen(
                 command,

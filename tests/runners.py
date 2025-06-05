@@ -81,7 +81,7 @@ def _expect_platform_shell(shell):
     if WINDOWS:
         assert shell.endswith("cmd.exe")
     else:
-        assert shell == "/bin/bash"
+        assert shell == "bash"
 
 
 def _make_tcattrs(cc_is_ints=True, echo=False):
@@ -1655,7 +1655,7 @@ class Local_:
             # NOTE: yea, windows can't run pty is true, but this is really
             # testing config behavior, so...meh
             self._run(_, pty=True)
-            _expect_platform_shell(mock_os.execve.call_args_list[0][0][0])
+            _expect_platform_shell(mock_os.execvpe.call_args_list[0][0][0])
 
         @mock_subprocess(insert_Popen=True)
         def defaults_to_bash_or_cmdexe_when_pty_False(self, mock_Popen):
@@ -1667,7 +1667,7 @@ class Local_:
         @mock_pty(insert_os=True)
         def may_be_overridden_when_pty_True(self, mock_os):
             self._run(_, pty=True, shell="/bin/zsh")
-            assert mock_os.execve.call_args_list[0][0][0] == "/bin/zsh"
+            assert mock_os.execvpe.call_args_list[0][0][0] == "/bin/zsh"
 
         @mock_subprocess(insert_Popen=True)
         def may_be_overridden_when_pty_False(self, mock_Popen):
@@ -1690,7 +1690,7 @@ class Local_:
             type(mock_os).environ = {"OTHERVAR": "OTHERVAL"}
             self._run(_, pty=True, env={"FOO": "BAR"})
             expected = {"OTHERVAR": "OTHERVAL", "FOO": "BAR"}
-            env = mock_os.execve.call_args_list[0][0][2]
+            env = mock_os.execvpe.call_args_list[0][0][2]
             assert env == expected
 
     class close_proc_stdin:

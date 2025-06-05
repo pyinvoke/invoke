@@ -449,7 +449,7 @@ class Config(DataProxy):
         # TODO: consider an automatic fallback to /bin/sh for systems lacking
         # /bin/bash; however users may configure run.shell quite easily, so...
         else:
-            shell = "/bin/bash"
+            shell = "bash"
 
         return {
             # TODO: we document 'debug' but it's not truly implemented outside

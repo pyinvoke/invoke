@@ -107,7 +107,7 @@ class Config_:
                     "out_stream": None,
                     "pty": False,
                     "replace_env": False,
-                    "shell": "/bin/bash",
+                    "shell": "bash",
                     "warn": False,
                     "watchers": [],
                 },

@@ -250,7 +250,7 @@ def mock_pty(
             assert ioctl.call_args_list[0][0][1] == termios.TIOCGWINSZ
             assert ioctl.call_args_list[1][0][1] == termios.TIOCSWINSZ
             if not skip_asserts:
-                for name in ("execve", "waitpid"):
+                for name in ("execvpe", "waitpid"):
                     assert getattr(os, name).called
                 # Ensure at least one of the exit status getters was called
                 assert os.WEXITSTATUS.called or os.WTERMSIG.called
