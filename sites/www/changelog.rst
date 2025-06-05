@@ -2,6 +2,11 @@
 Changelog
 =========
 
+- :bug:`1011`: On some systems, the default configuration for the shell
+  to use provoked a crash, due to the shell binary being in a different
+  path. A fix has been introduced to switch to execution with `$PATH`
+  binary search (execvpe). Previous custom shell configurations are unaffected.
+  Thanks to Lou Lecrivain for the patch.
 - :release:`2.2.0 <2023-07-12>`
 - :feature:`-` Remove the somewhat inaccurate subclass requirement around
   `~invoke.config.Config`'s ``.clone(into=...)`` constructor call. It was
