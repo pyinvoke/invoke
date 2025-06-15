@@ -84,10 +84,14 @@ dev = [
   "types-PyYAML==6.0.12.4",
 ]
 
+
 [tool.mypy]
+# If I assign to a method, I darn well mean to. (but usually it's tests)
+disable_error_code = ["assignment"]
 disallow_untyped_defs = true
-exclude = ["integration/", "tests/", "setup.py", "sites/www/conf.py", "build/"]
+exclude = ["_support"]
 ignore_missing_imports = true
+show_error_codes = true
 warn_incomplete_stub = true
 warn_redundant_casts = true
 warn_unused_ignores = true
@@ -98,6 +102,7 @@ overrides = [
   { module = "invoke.vendor.*", ignore_errors = true },
   { module = "pytest_relaxed", ignore_missing_imports = true },
 ]
+
 
 [tool.ruff]
 line-length = 79
