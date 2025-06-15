@@ -213,7 +213,7 @@ class Context_:
                 def __init__(self, value):
                     self.value = value
 
-                def __str__(self):
+                def __fspath__(self):
                     return self.value
 
             runner = Local.return_value
