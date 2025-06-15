@@ -103,19 +103,22 @@ def regression(c: Context, jobs: int = 8) -> None:
 
 
 ns = Collection(
-    test,
-    coverage,
+    # Local
     integration,
+    lint,
     regression,
-    vendorize,
-    release,
-    www,
-    docs,
-    sites,
-    watch_docs,
-    ci,
-    checks.blacken,
+    test,
+    # Imported
     checks,
+    checks.blacken,
+    ci,
+    coverage,
+    docs,
+    release,
+    sites,
+    vendorize,
+    watch_docs,
+    www,
 )
 ns.configure(
     {
