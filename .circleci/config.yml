@@ -41,7 +41,7 @@ jobs:
       version: "3.9"
     steps:
       - orb/setup
-      - run: mypy .
+      - run: inv typecheck
       - orb/debug
 
 

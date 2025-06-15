@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 from typing import Optional
 
 from invocations import checks, ci
@@ -103,8 +104,41 @@ def regression(c: Context, jobs: int = 8) -> None:
     c.run(cmd.format(jobs))
 
 
+# TODO: hoist up into invocations.checks once proven/needed elsewhere
+@task
+def typecheck(c: Context, opts: str = "") -> None:
+    """
+    Run type checking against the project.
+    """
+    # For now it seems easiest to just run a series of checks on the subtrees
+    # instead of forcing mypy to think about all the "duplicate" files across
+    # test vs integration vs main codebase (think _util.py or test fixtures)
+    # See also the exclude= key in pyproject.toml/mypy.ini.
+    root = Path(__file__).parent
+    exclude = ("sites", "docs", "build", "tests")
+    for path in root.iterdir():
+        if path.name in exclude:
+            continue
+        if not path.is_dir() and path.suffix != ".py":
+            continue
+        if path.is_dir():
+            if path.name.startswith("."):
+                continue
+            if not list(path.rglob("**/*.py")):
+                continue
+        c.run(f"mypy {opts} {path}", pty=True, echo=True)
+
+
 ns = Collection(
+    # Local
+    integration,
+    regression,
     test,
+    typecheck,
+    # Imported
+    checks,
+    checks.blacken,
+    ci,
     coverage,
     integration,
     regression,
