@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 from typing import TYPE_CHECKING, Optional
 
 from invoke import Collection, Context, task, Exit
@@ -100,6 +101,24 @@ def regression(c: Context, jobs: int = 8) -> None:
     os.chdir("integration/_support")
     cmd = "seq {} | parallel -n0 --halt=now,fail=1 inv -c regression check"
     c.run(cmd.format(jobs))
+
+
+# TODO: hoist up into invocations.checks once proven/needed elsewhere
+@task
+def lint(c: Context, opts: str = "") -> None:
+    """
+    Run linting against the project.
+    """
+    # For now it seems easiest to just run a series of lints on the subtrees
+    # instead of forcing mypy to think about all the "duplicate" files across
+    # test vs integration vs main codebase (think _util.py or test fixtures)
+    # See also the exclude= key in pyproject.toml/mypy.ini.
+    root = Path(__file__).parent
+    exclude = (root / x for x in ("sites", "docs", "build"))
+    for path in root.iterdir():
+        if not (path.is_dir() or path.suffix == ".py") or path in exclude:
+            continue
+        c.run(f"mypy {opts} {path}", pty=True, echo=True)
 
 
 ns = Collection(

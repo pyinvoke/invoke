@@ -41,7 +41,7 @@ jobs:
       version: "3.6"
     steps:
       - orb/setup
-      - run: mypy .
+      - run: inv lint
       - orb/debug
 
 
