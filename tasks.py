@@ -126,7 +126,7 @@ ns.configure(
             # Skip vendor, build dirs when blackening.
             # TODO: this is making it seem like I really do want an explicit
             # arg/conf-opt in the blacken task for "excluded paths"...ha
-            "find_opts": "-and -not \( -path './invoke/vendor*' -or -path './build*' \)"  # noqa
+            r"find_opts": "-and -not \\( -path './invoke/vendor*' -or -path './build*' \\)"  # noqa
         },
         "packaging": {
             "wheel": True,
