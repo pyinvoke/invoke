@@ -1,8 +1,8 @@
-from invoke import task
+from invoke import Context, task
 
 
 @task
-def foo(c):
+def foo(c: Context) -> None:
     """
     Frobazz
     """

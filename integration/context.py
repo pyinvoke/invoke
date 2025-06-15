@@ -4,7 +4,7 @@ from invocations import ci as ci_mod
 
 class Context_:
     class sudo:
-        def base_case(self):
+        def base_case(self) -> None:
             c = Context()
             # Grab CI-oriented sudo user/pass direct from invocations.ci
             # TODO: might be nice to give Collection a way to get a Config

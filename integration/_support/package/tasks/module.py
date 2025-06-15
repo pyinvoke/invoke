@@ -2,5 +2,5 @@ from invoke import task
 
 
 @task
-def mytask(c):
+def mytask(c) -> None:
     print("hi!")

@@ -15,7 +15,7 @@ from invoke import task
 
 
 @task
-def check(c):
+def check(c) -> None:
     count = 0
     failures = []
     for _ in range(0, 1000):
