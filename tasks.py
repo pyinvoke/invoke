@@ -140,17 +140,15 @@ ns = Collection(
     checks.blacken,
     ci,
     coverage,
+    docs,
     integration,
     regression,
-    vendorize,
     release,
-    www,
-    docs,
     sites,
+    test,
+    vendorize,
     watch_docs,
-    ci,
-    checks.blacken,
-    checks,
+    www,
 )
 ns.configure(
     {
