@@ -1,5 +1,5 @@
 import os
-from typing import TYPE_CHECKING, Optional
+from typing import Optional
 
 from invocations import checks, ci
 from invocations.docs import docs, sites, watch_docs, www
@@ -7,15 +7,12 @@ from invocations.packaging import release, vendorize
 from invocations.pytest import coverage as coverage_
 from invocations.pytest import test as test_
 
-from invoke import Collection, Exit, task
-
-if TYPE_CHECKING:
-    from invoke import Context
+from invoke import Collection, Context, Exit, task
 
 
 @task
 def test(
-    c: "Context",
+    c: Context,
     verbose: bool = False,
     color: bool = True,
     capture: str = "no",
@@ -56,7 +53,7 @@ def test(
 # solved (see other TODOs). For now this is just a copy/paste/modify.
 @task(help=test.help)  # type: ignore
 def integration(
-    c: "Context", opts: Optional[str] = None, pty: bool = True
+    c: Context, opts: Optional[str] = None, pty: bool = True
 ) -> None:
     """
     Run the integration test suite. May be slow!
@@ -75,7 +72,7 @@ def integration(
 
 @task
 def coverage(
-    c: "Context", report: str = "term", opts: str = "", codecov: bool = False
+    c: Context, report: str = "term", opts: str = "", codecov: bool = False
 ) -> None:
     """
     Run pytest in coverage mode. See `invocations.pytest.coverage` for details.
@@ -95,7 +92,7 @@ def coverage(
 
 
 @task
-def regression(c: "Context", jobs: int = 8) -> None:
+def regression(c: Context, jobs: int = 8) -> None:
     """
     Run an expensive, hard-to-test-in-pytest run() regression checker.
 
