@@ -2,11 +2,18 @@
 Changelog
 =========
 
-- :bug:`1011`: On some systems, the default configuration for the shell
-  to use provoked a crash, due to the shell binary being in a different
-  path. A fix has been introduced to switch to execution with `$PATH`
-  binary search (execvpe). Previous custom shell configurations are unaffected.
-  Thanks to Lou Lecrivain for the patch.
+- :bug:`1011 major`: `~invoke.run`'s ``shell`` argument/config option
+  originally defaulted to ``/bin/bash``, which unsurprisingly causes a hard
+  fail on systems where this path is not present (eg, NixOS, embedded systems,
+  etc).
+
+  As of this release, we now use ``execvpe`` to leverage ``$PATH`` binary
+  search, and changed the ``run.shell`` config option's value to just
+  ``bash``. This should be backwards compatible in nearly all cases, and
+  provides a much more robust default.
+
+  Thanks to Lou Lecrivain for the patch, and to Jorge Araya Navarro for the
+  original report,
 - :release:`2.2.0 <2023-07-12>`
 - :feature:`-` Remove the somewhat inaccurate subclass requirement around
   `~invoke.config.Config`'s ``.clone(into=...)`` constructor call. It was
