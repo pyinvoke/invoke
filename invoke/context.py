@@ -4,7 +4,6 @@ from contextlib import contextmanager
 from itertools import cycle
 from os import PathLike
 from typing import (
-    TYPE_CHECKING,
     Any,
     Generator,
     Iterator,
@@ -16,11 +15,8 @@ from unittest.mock import Mock
 
 from .config import Config, DataProxy
 from .exceptions import Failure, AuthFailure, ResponseNotAccepted
-from .runners import Result
+from .runners import Result, Runner
 from .watchers import FailingResponder
-
-if TYPE_CHECKING:
-    from invoke.runners import Runner
 
 
 class Context(DataProxy):
@@ -87,7 +83,7 @@ class Context(DataProxy):
         # runtime.
         self._set(_config=value)
 
-    def run(self, command: str, **kwargs: Any) -> Optional[Result]:
+    def run(self, command: str, **kwargs: Any) -> Result:
         """
         Execute a local shell command, honoring config options.
 
