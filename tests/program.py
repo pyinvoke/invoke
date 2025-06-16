@@ -314,6 +314,7 @@ class Program_:
             # .value = <default value> actually ends up creating a
             # list-of-lists.
             p = Program()
+
             # Set up core-args parser context with an iterable arg that hasn't
             # seen any value yet
             def filename_args():
@@ -649,6 +650,12 @@ Options:
   -h STRING, --why=STRING   Motive
   -w STRING, --who=STRING   Who to punch
 
+Pre-tasks:
+  none
+
+Post-tasks:
+  none
+
 """.lstrip()
                 for flag in ["-h", "--help"]:
                     expect("-c decorators {} punch".format(flag), out=expected)
@@ -661,6 +668,12 @@ Docstring:
   none
 
 Options:
+  none
+
+Pre-tasks:
+  foo3
+
+Post-tasks:
   none
 
 """.lstrip()
@@ -682,6 +695,12 @@ Docstring:
 Options:
   none
 
+Pre-tasks:
+  none
+
+Post-tasks:
+  none
+
 """.lstrip()
                 expect("-c decorators -h foo", out=expected)
 
@@ -697,6 +716,12 @@ Docstring:
   Added in 1.0
 
 Options:
+  none
+
+Pre-tasks:
+  none
+
+Post-tasks:
   none
 
 """.lstrip()
@@ -716,6 +741,12 @@ Docstring:
 Options:
   none
 
+Pre-tasks:
+  none
+
+Post-tasks:
+  foo2
+
 """.lstrip()
                 expect("-c decorators -h foo3", out=expected)
 
@@ -731,6 +762,12 @@ Docstring:
 Options:
   -h STRING, --why=STRING   Motive
   -w STRING, --who=STRING   Who to punch
+
+Pre-tasks:
+  none
+
+Post-tasks:
+  none
 
 """.lstrip()
                 expect("-c decorators -h punch --list", out=expected)
@@ -1380,6 +1417,7 @@ post2
 
         def env_var_prefix_can_be_overridden(self, monkeypatch):
             monkeypatch.setenv("MYAPP_RUN_HIDE", "both")
+
             # This forces the execution stuff, including Executor, to run
             # NOTE: it's not really possible to rework the impl so this test is
             # cleaner - tasks require per-task/per-collection config, which can
