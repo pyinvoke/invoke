@@ -122,7 +122,7 @@ class Runner:
         self._asynchronous = False
         self._disowned = False
 
-    def run(self, command: str, **kwargs: Any) -> Optional["Result"]:
+    def run(self, command: str, **kwargs: Any) -> "Result":
         """
         Execute ``command``, returning an instance of `Result` once complete.
 
@@ -188,19 +188,26 @@ class Runner:
 
             Specifically, ``disown=True`` has the following behaviors:
 
-            - The return value is ``None`` instead of a `Result` or subclass.
+            - The return value is still a `Result`, but it is severely limited
+              in functionality & data, per below.
             - No I/O worker threads are spun up, so you will have no access to
-              the subprocess' stdout/stderr, your stdin will not be forwarded,
+              the subprocess' stdout/stderr (those attributes on the result
+              will be empty strings), your stdin will not be forwarded,
               ``(out|err|in)_stream`` will be ignored, and features like
               ``watchers`` will not function.
             - No exit code is checked for, so you will not receive any errors
-              if the subprocess fails to exit cleanly.
+              if the subprocess fails to exit cleanly, the result's ``exited``
+              will be ``None``, and convenience properties like `ok` and
+              `failed` will not be reliable.
             - ``pty=True`` may not function correctly (subprocesses may not run
               at all; this seems to be a potential bug in Python's
               ``pty.fork``) unless your command line includes tools such as
               ``nohup`` or (the shell builtin) ``disown``.
 
             .. versionadded:: 1.4
+            .. versionchanged:: 2.3
+                The return value when ``disown=True`` changed from `None` to
+                `Result`.
 
         :param bool dry:
             Whether to dry-run instead of truly invoking the given command. See
@@ -428,7 +435,7 @@ class Runner:
             encoding=self.encoding,
         )
 
-    def _run_body(self, command: str, **kwargs: Any) -> Optional["Result"]:
+    def _run_body(self, command: str, **kwargs: Any) -> "Result":
         # Prepare all the bits n bobs.
         self._setup(command, kwargs)
         # If dry-run, stop here.
@@ -438,10 +445,20 @@ class Runner:
             )
         # Start executing the actual command (runs in background)
         self.start(command, self.opts["shell"], self.env)
+        # Update result data with anything only obtainable post-start.
+        self.result_kwargs["pid"] = self.get_pid()
         # If disowned, we just stop here - no threads, no timer, no error
         # checking, nada.
         if self._disowned:
-            return None
+            return self.generate_result(
+                **dict(
+                    self.result_kwargs,
+                    stdout="",
+                    stderr="",
+                    exited=None,
+                    disowned=True,
+                )
+            )
         # Stand up & kick off IO, timer threads
         self.start_timer(self.opts["timeout"])
         self.threads, self.stdout, self.stderr = self.create_io_threads()
@@ -1203,6 +1220,15 @@ class Runner:
         # killed the subprocess, allowing us to even get to this point.)
         return bool(self._timer and not self._timer.is_alive())
 
+    def get_pid(self) -> int | None:
+        """
+        When possible, obtain the subprocess PID.
+
+        The default implementation returns None; subclasses may return useful
+        integers.
+        """
+        return None
+
 
 class Local(Runner):
     """
@@ -1343,10 +1369,12 @@ class Local(Runner):
                 stdin=PIPE,
             )
 
+    def get_pid(self) -> int:
+        return self.pid if self.using_pty else self.process.pid
+
     def kill(self) -> None:
-        pid = self.pid if self.using_pty else self.process.pid
         try:
-            os.kill(pid, signal.SIGKILL)
+            os.kill(self.get_pid(), signal.SIGKILL)
         except ProcessLookupError:
             # In odd situations where our subprocess is already dead, don't
             # throw this upwards.
@@ -1452,6 +1480,20 @@ class Result:
         results in ``result.hide == ('stdout', 'stderr')``; and ``hide=False``
         (the default) generates ``result.hide == ()`` (the empty tuple.)
 
+    :param int pid:
+        The process ID of the subprocess that was executed (normally) or is executing (when asynchronous or disowned).
+
+        .. versionadded:: 2.3
+
+    :param bool disowned:
+        Whether the subprocess was 'disowned' or detached from ourselves; in
+        this mode may other attributes or methods of this `Result` will be
+        unreliable, see `Runner.run` docs for details. You may want to use your
+        own methods to interrogate your operating system about this object's
+        ``pid``, however, which will usually be valid.
+
+        .. versionadded:: 2.3
+
     .. note::
         `Result` objects' truth evaluation is equivalent to their `.ok`
         attribute's value. Therefore, quick-and-dirty expressions like the
@@ -1480,6 +1522,8 @@ class Result:
         exited: int = 0,
         pty: bool = False,
         hide: Tuple[str, ...] = tuple(),
+        pid: Optional[int] = None,
+        disowned: bool = False,
     ):
         self.stdout = stdout
         self.stderr = stderr
@@ -1492,6 +1536,8 @@ class Result:
         self.exited = exited
         self.pty = pty
         self.hide = hide
+        self.pid = pid
+        self.disowned = disowned
 
     @property
     def return_code(self) -> int:

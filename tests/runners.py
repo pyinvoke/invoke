@@ -120,9 +120,11 @@ class _TimingOutRunner(_Dummy):
         return True
 
 
-class Runner_:
-    _stop_methods = ["generate_result", "stop"]
+_async_skipped_methods = ["generate_result", "stop"]
+_disown_skipped_methods = ["wait", "stop"]
 
+
+class Runner_:
     # NOTE: these copies of _run and _runner form the base case of "test Runner
     # subclasses via self._run/_runner helpers" functionality. See how e.g.
     # Local_ uses the same approach but bakes in the dummy class used.
@@ -1445,19 +1447,19 @@ Stderr: already printed
             runner = _Finisher(Context())
             # Set up mocks and go
             runner.start = Mock()
-            for method in self._stop_methods:
+            for method in _async_skipped_methods:
                 setattr(runner, method, Mock())
             result = runner.run(_, asynchronous=True)
             # Got a Promise (its attrs etc are in its own test subsuite)
             assert isinstance(result, Promise)
             # Started, but did not stop (as would've happened for disown)
             assert runner.start.called
-            for method in self._stop_methods:
+            for method in _async_skipped_methods:
                 assert not getattr(runner, method).called
             # Set proc completion flag to truthy and join()
             runner._finished = True
             result.join()
-            for method in self._stop_methods:
+            for method in _async_skipped_methods:
                 assert getattr(runner, method).called
 
         @trap
@@ -1500,21 +1502,24 @@ Stderr: already printed
 
     class disown:
         @patch.object(threading.Thread, "start")
-        def starts_and_returns_None_but_does_nothing_else(self, thread_start):
+        def starts_but_does_nothing_else_and_returns_emptyish_Result(
+            self, thread_start
+        ):
             runner = Runner(Context())
             runner.start = Mock()
-            not_called = self._stop_methods + ["wait"]
-            for method in not_called:
+            runner.get_pid = Mock()
+            for method in _disown_skipped_methods:
                 setattr(runner, method, Mock())
             result = runner.run(_, disown=True)
-            # No Result object!
-            assert result is None
+            # Result contains the pid but not much else
+            assert result.command == _
+            assert result.pid == runner.get_pid.return_value
             # Subprocess kicked off
             assert runner.start.called
             # No timer or IO threads started
             assert not thread_start.called
             # No wait or shutdown related Runner methods called
-            for method in not_called:
+            for method in _disown_skipped_methods:
                 assert not getattr(runner, method).called
 
         def cannot_be_given_alongside_asynchronous(self):
@@ -1522,6 +1527,12 @@ Stderr: already printed
                 self._runner().run(_, asynchronous=True, disown=True)
             sentinel = "Cannot give both 'asynchronous' and 'disown'"
             assert sentinel in str(info.value)
+
+    class get_pid:
+        def returns_None_by_default(self):
+            runner = self._runner()
+            runner.run(_)
+            assert runner.get_pid() is None
 
 
 class _FastLocal(Local):
@@ -1725,6 +1736,20 @@ class Local_:
             runner.kill()
             mock_os.kill.assert_called_once_with(30, signal.SIGKILL)
 
+    class get_pid:
+        @mock_pty(insert_os=True)
+        def is_top_level_pid_when_using_pty(self, mock_os):
+            runner = self._runner()
+            runner.run(_, pty=True)
+            # exitstatus = mock_os.waitpid.return_value[1]
+            assert runner.get_pid() is runner.pid
+
+        @mock_subprocess()
+        def is_process_attribute_pid_when_no_pty(self):
+            runner = self._runner()
+            runner.run(_, pty=False)
+            assert runner.get_pid() is runner.process.pid
+
 
 class Result_:
     def nothing_is_required(self):
@@ -1756,6 +1781,9 @@ class Result_:
 
     def pty_defaults_to_False(self):
         assert Result().pty is False
+
+    def pid_defaults_to_None(self):
+        assert Result().pid is None
 
     def repr_contains_useful_info(self):
         assert repr(Result(command="foo")) == "<Result cmd='foo' exited=0>"
