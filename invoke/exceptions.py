@@ -14,6 +14,7 @@ if TYPE_CHECKING:
     from .parser import ParserContext
     from .runners import Result
     from .util import ExceptionWrapper
+    from .tasks import Task
 
 
 class CollectionNotFound(Exception):
@@ -423,3 +424,32 @@ class SubprocessPipeError(Exception):
     """
 
     pass
+
+
+class InvalidUsageException(Exception):
+    """
+    Some problem was encountered during parameter validation while in a task.
+
+    Should be raised by the task itself.
+
+    .. versionadded:: 2.1
+    """
+
+    pass
+
+
+class TaskInvalidUsageException(Exception):
+    """
+    Wraper for InvalidUsageException when is's raised to throw it upper.
+
+    Should be raised by the executor.
+
+    .. versionadded:: 2.1
+    """
+
+    def __init__(self, task: "Task", exception: InvalidUsageException) -> None:
+        self.task = task
+        self.exception = exception
+
+    def __str__(self) -> str:
+        return "Task {} usage error: {}".format(self.task.name, self.exception)
