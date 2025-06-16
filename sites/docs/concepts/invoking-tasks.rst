@@ -537,6 +537,7 @@ doesn't make a ton of real-world sense, let's imagine we wanted to apply
     $ inv --no-dedupe build package
     Cleaning
     Building
+    Cleaning
     Building
     Packaging
 
