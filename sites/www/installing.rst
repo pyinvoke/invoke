@@ -10,7 +10,7 @@ via `pip <https://pip.pypa.io>`_::
 
     $ pip install invoke
 
-We currently support **Python 3.6+**. Users still on Python 3.5 or older are
+We currently support **Python 3.9+**. Users still on Python 3.8 or older are
 urged to upgrade.
 
 As long as you have a supported Python interpreter, **there are no other
