@@ -2,6 +2,36 @@
 Changelog
 =========
 
+- :feature:`779` `~invoke.runners.Runner.run` now includes local subprocess
+  PIDs in `~invoke.runners.Result` objects (as ``.pid``), via the new
+  `Runner.get_pid <invoke.runners.Runner.get_pid>` method. This may be
+  generally useful for auditing or similar tasks, but is primarily intended for
+  users of ``disown=True`` who want to perform their own subprocess management.
+  Thanks to Matt J Williams for the feature request.
+- :feature:`947` Update the return value, and type hint, of `~invoke.run` and
+  friends to be `~invoke.runners.Result` instead of ``Optional[Result]``.
+  Specifically:
+
+    - The only scenario where the return value was `None` was when
+      ``disown=True``, but with hindsight (and a few years of working with
+      typed Python) it's clear we should have done what we did for
+      ``asynchronous=True`` and still returned *some* Result-y object, even if
+      it wouldn't have all the normal fields populated.
+    - We determined that the behavior of ``disowned`` is such that it can live
+      within regular `~invoke.runners.Result` without too many headaches (i.e.
+      no need for a subclass like `~invoke.runners.Promise`) and have gone that
+      route, with option to expand the class tree at Invoke 3.0 time.
+      `~invoke.runners.Runner.run`'s docstring has been updated to reflect what
+      this variant of `~invoke.runners.Result` looks like.
+    - While this change is technically **backwards incompatible**, ``disown``
+      is a very niche use case, and this type of change (going from a largely
+      unusable value to a usable one) seems worth the turbulence, especially
+      since...
+    - The main driver for this change (besides :issue:`779` elsewhere in this
+      release) was that the previous return value of ``Optional[Result]``
+      causes frustrating static analysis 'bug' (analyzers can't assume you have
+      a `~invoke.runners.Result` in hand even though it's the vastly more
+      common case).
 - :release:`2.2.1 <2025-10-10>`
 - :release:`2.1.4 <2025-10-10>`
 - :bug:`1038` (fixed in :issue:`1040`) Python 3.14 tweaked the behavior of
@@ -13,17 +43,17 @@ Changelog
 
   Thanks to ``@kasium`` for the original bug report and to ``@rathann`` and
   ``@BradleyKirton`` for workshopping the patch into its final shape.
-- :bug:`1011 major`: `~invoke.run`'s ``shell`` argument/config option
-  originally defaulted to ``/bin/bash``, which unsurprisingly causes a hard
-  fail on systems where this path is not present (eg, NixOS, embedded systems,
-  etc).
+- :bug:`1011 major`: `~invoke.runners.Runner.run`'s ``shell`` argument/config
+  option originally defaulted to ``/bin/bash``, which unsurprisingly causes a
+  hard fail on systems where this path is not present (eg, NixOS, embedded
+  systems, etc).
 
   As of this release, we now use ``execvpe`` to leverage ``$PATH`` binary
   search, and changed the ``run.shell`` config option's value to just
   ``bash``. This should be backwards compatible in nearly all cases, and
   provides a much more robust default.
 
-  Thanks to Lou Lecrivain for the patch, and to Jorge Araya Navarro for the
+  Props to Lou Lecrivain for the patch, and to Jorge Araya Navarro for the
   original report,
 - :release:`2.2.0 <2023-07-12>`
 - :feature:`-` Remove the somewhat inaccurate subclass requirement around

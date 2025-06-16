@@ -4,7 +4,6 @@ from contextlib import contextmanager
 from itertools import cycle
 from os import PathLike
 from typing import (
-    TYPE_CHECKING,
     Any,
     Generator,
     Iterator,
@@ -15,12 +14,9 @@ from typing import (
 from unittest.mock import Mock
 
 from .config import Config, DataProxy
-from .exceptions import Failure, AuthFailure, ResponseNotAccepted
-from .runners import Result
+from .exceptions import AuthFailure, Failure, ResponseNotAccepted
+from .runners import Result, Runner
 from .watchers import FailingResponder
-
-if TYPE_CHECKING:
-    from invoke.runners import Runner
 
 
 class Context(DataProxy):
@@ -87,7 +83,7 @@ class Context(DataProxy):
         # runtime.
         self._set(_config=value)
 
-    def run(self, command: str, **kwargs: Any) -> Optional[Result]:
+    def run(self, command: str, **kwargs: Any) -> Result:
         """
         Execute a local shell command, honoring config options.
 
@@ -106,13 +102,11 @@ class Context(DataProxy):
     # NOTE: broken out of run() to allow for runner class injection in
     # Fabric/etc, which needs to juggle multiple runner class types (local and
     # remote).
-    def _run(
-        self, runner: "Runner", command: str, **kwargs: Any
-    ) -> Optional[Result]:
+    def _run(self, runner: "Runner", command: str, **kwargs: Any) -> Result:
         command = self._prefix_commands(command)
         return runner.run(command, **kwargs)
 
-    def sudo(self, command: str, **kwargs: Any) -> Optional[Result]:
+    def sudo(self, command: str, **kwargs: Any) -> Result:
         """
         Execute a shell command via ``sudo`` with password auto-response.
 
@@ -185,9 +179,7 @@ class Context(DataProxy):
         return self._sudo(runner, command, **kwargs)
 
     # NOTE: this is for runner injection; see NOTE above _run().
-    def _sudo(
-        self, runner: "Runner", command: str, **kwargs: Any
-    ) -> Optional[Result]:
+    def _sudo(self, runner: "Runner", command: str, **kwargs: Any) -> Result:
         prompt = self.config.sudo.prompt
         password = kwargs.pop("password", self.config.sudo.password)
         user = kwargs.pop("user", self.config.sudo.user)
