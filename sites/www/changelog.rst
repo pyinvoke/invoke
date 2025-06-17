@@ -2,6 +2,9 @@
 Changelog
 =========
 
+- :support:`-` Expanded mypy type hint checking to more of the codebase &
+  generally touched up some type hints here and there. More of this is planned
+  to occur after we drop a few older Python versions as well.
 - :feature:`779` `~invoke.runners.Runner.run` now includes local subprocess
   PIDs in `~invoke.runners.Result` objects (as ``.pid``), via the new
   `Runner.get_pid <invoke.runners.Runner.get_pid>` method. This may be
