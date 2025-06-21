@@ -107,7 +107,7 @@ else:
         # * termios not having a TIOCGWINSZ attribute (happens sometimes...)
         # * other situations where ioctl doesn't explode but the result isn't
         #   something unpack can deal with
-        except (struct.error, TypeError, IOError, AttributeError):
+        except (struct.error, TypeError, IOError, AttributeError, SystemError):
             pass
         return size
 
