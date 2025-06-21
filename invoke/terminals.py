@@ -87,9 +87,10 @@ else:
         # Sentinel values to be replaced w/ defaults by caller
         size = (None, None)
         # We want two short unsigned integers (rows, cols)
-        fmt = "HH"
+        # Note: TIOCGWINSZ struct contains 4 unsigned shorts, 2 unused
+        fmt = "HHHH"
         # Create an empty (zeroed) buffer for ioctl to map onto. Yay for C!
-        buf = struct.pack(fmt, 0, 0)
+        buf = struct.pack(fmt, 0, 0, 0, 0)
         # Call TIOCGWINSZ to get window size of stdout, returns our filled
         # buffer
         try:
@@ -97,7 +98,7 @@ else:
             # Unpack buffer back into Python data types
             # NOTE: this unpack gives us rows x cols, but we return the
             # inverse.
-            rows, cols = struct.unpack(fmt, result)
+            rows, cols, *_ = struct.unpack(fmt, result)
             return (cols, rows)
         # Fallback to emptyish return value in various failure cases:
         # * sys.stdout being monkeypatched, such as in testing, and lacking
