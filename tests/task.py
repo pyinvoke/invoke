@@ -92,6 +92,33 @@ class task_:
 
         assert func.pre == [whatever]
 
+    def task_and_pre_tasks_binding(self):
+
+        @task
+        def pre_task(c):
+            pass
+
+        @task(pre=[pre_task])
+        def my_task(c):
+            pass
+
+        assert all([hasattr(p, "_is_pre_of") for p in my_task.pre])
+        assert pre_task._is_pre_of == my_task
+
+    def create_call_and_context_form_pre_task_has_access_to_parent_task(self):
+
+        @task
+        def pre_task(c):
+            pass
+
+        @task(pre=[pre_task])
+        def my_task(c):
+            pass
+
+        call = Call(pre_task)
+        c = call.make_context(Config(defaults={}))
+        assert getattr(c, "_is_pre_of") == my_task
+
     def allows_star_args_as_shortcut_for_pre(self):
         @task
         def pre1(c):
