@@ -1,3 +1,61 @@
+[project]
+name = "invoke"
+description = "Pythonic task execution"
+readme = "README.rst"
+
+# Don't forget to also update invoke/_version.py!
+version = "2.2.0"
+
+license = "BSD-3-Clause"
+license-files = [ "LICENSE" ]
+authors = [
+    { name = "Jeff Forcier", email="jeff@bitprophet.org" },
+    { name = "Jaroslav Henner", email = "jaroslav.henner@gmail.com" }
+]
+requires-python = ">=3.6.2"
+classifiers = [
+        "Development Status :: 5 - Production/Stable",
+        "Environment :: Console",
+        "Intended Audience :: Developers",
+        "Intended Audience :: System Administrators",
+        "Operating System :: POSIX",
+        "Operating System :: Unix",
+        "Operating System :: MacOS :: MacOS X",
+        "Operating System :: Microsoft :: Windows",
+        "Programming Language :: Python",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3 :: Only",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
+        "Topic :: Software Development",
+        "Topic :: Software Development :: Build Tools",
+        "Topic :: Software Development :: Libraries",
+        "Topic :: Software Development :: Libraries :: Python Modules",
+        "Topic :: System :: Software Distribution",
+        "Topic :: System :: Systems Administration"
+]
+
+[project.urls]
+Homepage = "https://pyinvoke.org/"
+Docs = "https://docs.pyinvoke.org/"
+Repository = "https://github.com/pyinvoke/invoke"
+Issues = "https://github.com/pyinvoke/invoke/issues"
+Changelog = "https://www.pyinvoke.org/changelog.html"
+CI = "https://app.circleci.com/pipelines/github/pyinvoke/invoke"
+
+
+[build-system]
+requires = ["uv_build >= 0.7.19, <0.9.0"]
+build-backend = "uv_build"
+
+[project.scripts]
+invoke = "invoke.main:program.run"
+inv = "invoke.main:program.run"
+
 [tool.mypy]
 # check_untyped_defs = true
 # follow_imports_for_stubs = true
@@ -50,3 +108,23 @@ ignore_missing_imports = true
 [[tool.mypy.overrides]]
 module = "pytest_relaxed"
 ignore_missing_imports = true
+
+[tool.uv.sources]
+invoke = { workspace = true }
+
+[dependency-groups]
+dev = [
+    "alabaster==0.7.12",
+    "black>=22.8,<22.9",
+    "coverage>=6.2,<7",
+    "flake8>=4,<5",
+    "icecream>=2.1",
+    "invocations>=3.3",
+    "invoke",
+    "mypy==0.971",
+    "pytest-cov>=4",
+    "pytest-relaxed>=2",
+    "releases>=2",
+    "setuptools>56",
+    "types-pyyaml==6.0.12.4",
+]
