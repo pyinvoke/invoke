@@ -47,10 +47,9 @@ Issues = "https://github.com/pyinvoke/invoke/issues"
 Changelog = "https://www.pyinvoke.org/changelog.html"
 CI = "https://app.circleci.com/pipelines/github/pyinvoke/invoke"
 
-
 [build-system]
-requires = ["uv_build >= 0.7.19, <0.9.0"]
-build-backend = "uv_build"
+requires = ["setuptools >= 77.0.3"]
+build-backend = "setuptools.build_meta"
 
 [project.scripts]
 invoke = "invoke.main:program.run"
@@ -109,8 +108,6 @@ ignore_missing_imports = true
 module = "pytest_relaxed"
 ignore_missing_imports = true
 
-[tool.uv.sources]
-invoke = { workspace = true }
 
 [dependency-groups]
 dev = [
@@ -125,7 +122,6 @@ dev = [
     "pytest-cov>=4",
     "pytest-relaxed>=2",
     "releases>=2",
-    "setuptools>56",
     "types-pyyaml==6.0.12.4",
     "uv"
 ]
