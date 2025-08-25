@@ -127,4 +127,5 @@ dev = [
     "releases>=2",
     "setuptools>56",
     "types-pyyaml==6.0.12.4",
+    "uv"
 ]
