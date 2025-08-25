@@ -10,7 +10,7 @@ jobs:
   coverage:
     executor:
       name: orb/default
-      version: "3.6"
+      version: "3.9"
     steps:
       - orb/setup
       - run: inv ci.make-sudouser
@@ -20,7 +20,7 @@ jobs:
   regression:
     executor:
       name: orb/default
-      version: "3.6"
+      version: "3.9"
     steps:
       - orb/setup
       - run: inv regression
@@ -29,7 +29,7 @@ jobs:
   doctests:
     executor:
       name: orb/default
-      version: "3.6"
+      version: "3.9"
     steps:
       - orb/setup
       - run: inv www.doctest
@@ -38,7 +38,7 @@ jobs:
   typecheck:
     executor:
       name: orb/default
-      version: "3.6"
+      version: "3.9"
     steps:
       - orb/setup
       - run: mypy .
@@ -65,7 +65,7 @@ workflows:
           requires: ["Test"]
           matrix:
             parameters:
-              version: ["3.7", "3.8", "3.9", "3.10", "3.11"]
+              version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
       - orb/docs:
           name: "Docs"
           requires: ["Test"]
