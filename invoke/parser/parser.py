@@ -345,8 +345,10 @@ class ParseMachine(StateMachine):
             return
 
         # Ensure all of context's positional args have been given
-        if not self.context.skip_checks \
-           and self.context.missing_positional_args:
+        if (
+            not self.context.skip_checks
+            and self.context.missing_positional_args
+        ):
             err = "'{}' did not receive required positional arguments: {}"
             names = ", ".join(
                 "'{}'".format(x.name)
