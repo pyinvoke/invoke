@@ -309,7 +309,6 @@ class ParseMachine(StateMachine):
         # Initial-context flag being given as per-task flag (e.g. --help)
         elif self.initial and token in self.initial.flags:
             debug("Saw (initial-context) flag {!r}".format(token))
-            flag = self.initial.flags[token]
             # Special-case for core --help flag: context name is used as value.
             if self._is_token_help(token):
                 debug("--help passed")
