@@ -96,6 +96,7 @@ class ParserContext:
         self.aliases = aliases
         for arg in args:
             self.add_arg(arg)
+        self.skip_checks = False
 
     def __repr__(self) -> str:
         aliases = ""
