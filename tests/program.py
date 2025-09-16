@@ -665,7 +665,7 @@ Options:
   -w STRING, --who=STRING   Who to punch
 
 """.lstrip()
-                expected_error= """
+                expected_error = """
 'punch' did not receive required positional arguments: 'who', 'why'
 """.lstrip()
                 expect("-c decorators punch", out=expected, err=expected_error)
