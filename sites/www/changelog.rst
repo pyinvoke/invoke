@@ -2,6 +2,7 @@
 Changelog
 =========
 
+- :release:`2.1.4 <2025-10-10>`
 - :bug:`1038` (fixed in :issue:`1040`) Python 3.14 tweaked the behavior of
   `fcntl` to raise `SystemError` on buffer overflows, which our interpretation
   of `termios.TIOCGWINSZ` technically was (we care only about the first two
