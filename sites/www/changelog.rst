@@ -2,6 +2,15 @@
 Changelog
 =========
 
+- :bug:`1038` (fixed in :issue:`1040`) Python 3.14 tweaked the behavior of
+  `fcntl` to raise `SystemError` on buffer overflows, which our interpretation
+  of `termios.TIOCGWINSZ` technically was (we care only about the first two
+  fields in what is technically a four-field struct with half the fields
+  unused). This has been fixed by unpacking all 4 fields and then discarding
+  the unused fields during processing.
+
+  Thanks to ``@kasium`` for the original bug report and to ``@rathann`` and
+  ``@BradleyKirton`` for workshopping the patch into its final shape.
 - :release:`2.2.0 <2023-07-12>`
 - :feature:`-` Remove the somewhat inaccurate subclass requirement around
   `~invoke.config.Config`'s ``.clone(into=...)`` constructor call. It was
