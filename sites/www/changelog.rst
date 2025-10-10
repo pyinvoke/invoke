@@ -2,6 +2,15 @@
 Changelog
 =========
 
+- :bug:`1038` (fixed in :issue:`1040`) Python 3.14 tweaked the behavior of
+  `fcntl` to raise `SystemError` on buffer overflows, which our interpretation
+  of `termios.TIOCGWINSZ` technically was (we care only about the first two
+  fields in what is technically a four-field struct with half the fields
+  unused). This has been fixed by unpacking all 4 fields and then discarding
+  the unused fields during processing.
+
+  Thanks to ``@kasium`` for the original bug report and to ``@rathann`` and
+  ``@BradleyKirton`` for workshopping the patch into its final shape.
 - :release:`2.1.3 <2023-06-14>`
 - :bug:`944` After the release of 2.1, package-style task modules started
   looking in the wrong place for project-level config files (inside one's eg
