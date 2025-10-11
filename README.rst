@@ -27,5 +27,9 @@ at a powerful & clean feature set.
 To find out what's new in this version of Invoke, please see `the changelog
 <https://pyinvoke.org/changelog.html#{}>`_.
 
+For a high level introduction, including example code, please see `our main
+project website <https://pyinvoke.org>`_; or for detailed API docs, see `the
+versioned API website <https://docs.pyinvoke.org>`_.
+
 The project maintainer keeps a `roadmap
 <https://bitprophet.org/projects#roadmap>`_ on his website.
