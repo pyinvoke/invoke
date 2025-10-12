@@ -14,6 +14,7 @@ from typing import (
 )
 from unittest.mock import Mock
 
+from ._types import annotate_run_function
 from .config import Config, DataProxy
 from .exceptions import Failure, AuthFailure, ResponseNotAccepted
 from .runners import Result
@@ -87,6 +88,7 @@ class Context(DataProxy):
         # runtime.
         self._set(_config=value)
 
+    @annotate_run_function
     def run(self, command: str, **kwargs: Any) -> Optional[Result]:
         """
         Execute a local shell command, honoring config options.
@@ -106,12 +108,11 @@ class Context(DataProxy):
     # NOTE: broken out of run() to allow for runner class injection in
     # Fabric/etc, which needs to juggle multiple runner class types (local and
     # remote).
-    def _run(
-        self, runner: "Runner", command: str, **kwargs: Any
-    ) -> Optional[Result]:
+    def _run(self, runner: "Runner", command: str, **kwargs: Any) -> Optional[Result]:
         command = self._prefix_commands(command)
         return runner.run(command, **kwargs)
 
+    @annotate_run_function
     def sudo(self, command: str, **kwargs: Any) -> Optional[Result]:
         """
         Execute a shell command via ``sudo`` with password auto-response.
@@ -185,9 +186,7 @@ class Context(DataProxy):
         return self._sudo(runner, command, **kwargs)
 
     # NOTE: this is for runner injection; see NOTE above _run().
-    def _sudo(
-        self, runner: "Runner", command: str, **kwargs: Any
-    ) -> Optional[Result]:
+    def _sudo(self, runner: "Runner", command: str, **kwargs: Any) -> Optional[Result]:
         prompt = self.config.sudo.prompt
         password = kwargs.pop("password", self.config.sudo.password)
         user = kwargs.pop("user", self.config.sudo.user)
@@ -485,9 +484,7 @@ class MockContext(Context):
             if isinstance(results, dict):
                 for key, value in results.items():
                     results[key] = self._normalize(value)
-            elif isinstance(results, singletons) or hasattr(
-                results, "__iter__"
-            ):
+            elif isinstance(results, singletons) or hasattr(results, "__iter__"):
                 results = self._normalize(results)
             # Unknown input value: cry
             else:
@@ -548,23 +545,23 @@ class MockContext(Context):
             # raise_from(NotImplementedError(command), None)
             raise NotImplementedError(command)
 
-    def run(self, command: str, *args: Any, **kwargs: Any) -> Result:
+    @annotate_run_function
+    def run(self, command: str, **kwargs: Any) -> Result:
         # TODO: perform more convenience stuff associating args/kwargs with the
         # result? E.g. filling in .command, etc? Possibly useful for debugging
         # if one hits unexpected-order problems with what they passed in to
         # __init__.
         return self._yield_result("__run", command)
 
-    def sudo(self, command: str, *args: Any, **kwargs: Any) -> Result:
+    @annotate_run_function
+    def sudo(self, command: str, **kwargs: Any) -> Result:
         # TODO: this completely nukes the top-level behavior of sudo(), which
         # could be good or bad, depending. Most of the time I think it's good.
         # No need to supply dummy password config, etc.
         # TODO: see the TODO from run() re: injecting arg/kwarg values
         return self._yield_result("__sudo", command)
 
-    def set_result_for(
-        self, attname: str, command: str, result: Result
-    ) -> None:
+    def set_result_for(self, attname: str, command: str, result: Result) -> None:
         """
         Modify the stored mock results for given ``attname`` (e.g. ``run``).
 
