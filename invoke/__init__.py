@@ -8,6 +8,7 @@ from .exceptions import (  # noqa
     AmbiguousEnvVar,
     AuthFailure,
     CollectionNotFound,
+    CommandTimedOut,
     Exit,
     ParseError,
     PlatformError,
@@ -19,14 +20,13 @@ from .exceptions import (  # noqa
     UnknownFileType,
     UnpicklableConfigMember,
     WatcherError,
-    CommandTimedOut,
 )
 from .executor import Executor  # noqa
 from .loader import FilesystemLoader  # noqa
 from .parser import Argument, Parser, ParserContext, ParseResult  # noqa
 from .program import Program  # noqa
-from .runners import Runner, Local, Failure, Result, Promise  # noqa
-from .tasks import task, call, Call, Task  # noqa
+from .runners import Failure, Local, Promise, Result, Runner  # noqa
+from .tasks import Call, Task, call, task  # noqa
 from .terminals import pty_size  # noqa
 from .watchers import FailingResponder, Responder, StreamWatcher  # noqa
 
