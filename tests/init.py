@@ -1,34 +1,21 @@
 import re
-
 from unittest.mock import patch
 
 import invoke
 import invoke.collection
 import invoke.exceptions
-import invoke.tasks
 import invoke.program
+import invoke.tasks
 
 
 class Init:
     "__init__"
-
-    def dunder_version_info(self):
-        assert hasattr(invoke, "__version_info__")
-        ver = invoke.__version_info__
-        assert isinstance(ver, tuple)
-        assert all(isinstance(x, int) for x in ver)
 
     def dunder_version(self):
         assert hasattr(invoke, "__version__")
         ver = invoke.__version__
         assert isinstance(ver, str)
         assert re.match(r"\d+\.\d+\.\d+", ver)
-
-    def dunder_version_looks_generated_from_dunder_version_info(self):
-        # Meh.
-        ver_part = invoke.__version__.split(".")[0]
-        ver_info_part = invoke.__version_info__[0]
-        assert ver_part == str(ver_info_part)
 
     class exposes_bindings:
         def task_decorator(self):

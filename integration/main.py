@@ -5,8 +5,7 @@ import sys
 import pytest
 from pytest_relaxed import trap
 
-from invoke import run
-from invoke._version import __version__
+from invoke import run, __version__
 from invoke.terminals import WINDOWS
 
 from _util import only_utf8

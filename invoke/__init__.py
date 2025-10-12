@@ -1,6 +1,6 @@
+from importlib import metadata
 from typing import Any, Optional
 
-from ._version import __version_info__, __version__  # noqa
 from .collection import Collection  # noqa
 from .config import Config  # noqa
 from .context import Context, MockContext  # noqa
@@ -29,6 +29,8 @@ from .runners import Failure, Local, Promise, Result, Runner  # noqa
 from .tasks import Call, Task, call, task  # noqa
 from .terminals import pty_size  # noqa
 from .watchers import FailingResponder, Responder, StreamWatcher  # noqa
+
+__version__ = metadata.version("invoke")
 
 
 def run(command: str, **kwargs: Any) -> Optional[Result]:
