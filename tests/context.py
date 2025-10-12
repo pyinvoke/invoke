@@ -1,5 +1,6 @@
 import os
 import pickle
+import platform
 import re
 import sys
 
@@ -223,6 +224,20 @@ class Context_:
                 c.run("whoami")
 
             cmd = "cd foo && whoami"
+            assert runner.run.call_args[0][0] == cmd
+
+        @patch(local_path)
+        def cd_on_windows_must_append_flag(self, Local):
+            if platform.system() != "Windows":
+                skip()
+
+            runner = Local.return_value
+            c = Context()
+            with c.cd("foo"):
+                c.run("whoami")
+
+            cmd = "cd /d foo && whoami"
+            assert runner.run.called, "run() never called runner.run()!"
             assert runner.run.call_args[0][0] == cmd
 
     class prefix:
