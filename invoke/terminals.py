@@ -149,7 +149,10 @@ def stdin_is_foregrounded_tty(stream: IO) -> bool:
     """
     if not has_fileno(stream):
         return False
-    return os.getpgrp() == os.tcgetpgrp(stream.fileno())
+    try:
+        return os.getpgrp() == os.tcgetpgrp(stream.fileno())
+    except OSError:
+        return False
 
 
 def cbreak_already_set(stream: IO) -> bool:
