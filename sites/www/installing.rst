@@ -6,16 +6,15 @@ Basic installation
 ==================
 
 The recommended way to get Invoke is to **install the latest stable release**
-via `pip <https://pip.pypa.io>`_::
+via `pip <https://pip.pypa.io>`_ or `uv <https://docs.astral.sh/uv/>`_, eg::
 
     $ pip install invoke
 
-We currently support **Python 3.6+**. Users still on Python 3.5 or older are
-urged to upgrade.
-
-As long as you have a supported Python interpreter, **there are no other
-dependencies**.  Invoke is pure-Python, and contains copies of its few
-dependencies within its source tree.
+As long as you have a supported Python interpreter (defined in the repository's
+`pyproject.toml <https://github.com/pyinvoke/invoke/tree/main/pyproject.toml>`_
+and reflected on our `PyPI page <https://pypi.org/project/invoke/>`_), **there
+are no other dependencies**.  Invoke is pure-Python, and contains copies of its
+few dependencies within its source tree.
 
 .. note:: 
     See `this blog post
