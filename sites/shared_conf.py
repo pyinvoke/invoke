@@ -22,7 +22,7 @@ html_sidebars = {
 }
 
 # Everything intersphinx's to Python
-intersphinx_mapping = {"python": ("https://docs.python.org/2.7/", None)}
+intersphinx_mapping = {"python": ("https://docs.python.org/3/", None)}
 
 # Doctest settings
 doctest_path = [abspath(join(dirname(__file__), "..", "tests"))]
