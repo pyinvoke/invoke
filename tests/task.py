@@ -192,6 +192,7 @@ class Task_:
         t = Task(_func, name="foo")
         # No name attribute at all
         assert t != object()
+
         # Name attr, but not a Task
         class Named:
             name = "foo"

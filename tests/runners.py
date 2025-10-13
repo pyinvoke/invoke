@@ -1132,7 +1132,7 @@ stderr 25
                 klass=MyRunner,
                 in_stream=input_,
                 out_stream=output,
-                **kwargs
+                **kwargs,
             )
             # Examine mocked output stream to see if it was mirrored to
             if expect_mirroring:
@@ -1217,6 +1217,7 @@ stderr 25
             select.select.side_effect = chain(
                 [([stdin], [], [])], repeat(([], [], []))
             )
+
             # Have ioctl yield our multiple number of bytes when called with
             # FIONREAD
             def fake_ioctl(fd, cmd, buf):

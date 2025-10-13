@@ -45,6 +45,7 @@ def only_utf8(f):
     """
     Decorator causing tests to skip if local shell pipes aren't UTF-8.
     """
+
     # TODO: use actual test selection labels or whatever nose has
     @wraps(f)
     def inner(*args, **kwargs):

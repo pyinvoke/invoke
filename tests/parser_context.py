@@ -162,6 +162,7 @@ class Context_:
             self.vanilla = Context(
                 args=(Argument("foo"), Argument("bar", help="bar the baz"))
             )
+
             # Task/Collection generated Context
             # (will expose flags n such)
             @task(help={"otherarg": "other help"}, optional=["optval"])

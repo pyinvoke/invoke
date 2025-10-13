@@ -63,7 +63,7 @@ include = ["invoke*"]
 [dependency-groups]
 dev = [
   # Invocations, for all sorts of things
-  "invocations>=3.3",
+  "invocations>=4",
   # Coverage!
   "coverage>=6.2,<7",
   # Docs
@@ -73,9 +73,8 @@ dev = [
   "pytest-relaxed>=2",
   "pytest-cov>=4",
   # Formatting
-  # Flake8 5.x seems to have an odd importlib-metadata incompatibility?
-  "flake8>=4,<5",
-  "black>=22.8,<22.9",
+  "flake8~=7.3.0",
+  "black>=23.3.0",
   # Packaging
   "setuptools>56",
   # Debuggery

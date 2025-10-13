@@ -9,7 +9,6 @@ ideal world this would be truly part of the integration test suite, but:
 - it can take quite a while to run, even compared to other integration tests.
 """
 
-
 import sys
 
 from invoke import task

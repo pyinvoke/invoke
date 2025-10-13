@@ -48,6 +48,7 @@ class util:
             # instead of the instance.
             class Foo:
                 "I am Foo"
+
                 pass
 
             foo = Foo()
@@ -58,6 +59,7 @@ class util:
             # whatever, why not have a test for it.
             class Foo:
                 "I am Foo"
+
                 pass
 
             foo = Foo()

@@ -12,6 +12,7 @@ class Responder_:
     def keeps_track_of_seen_index_per_thread(self):
         # Instantiate a single object which will be used in >1 thread
         r = Responder(pattern="foo", response="bar fight")  # meh
+
         # Thread body func allowing us to mimic actual IO thread behavior, with
         # Queues used in place of actual pipes/files
         def body(responder, in_q, out_q, finished):

@@ -132,6 +132,7 @@ class Collection_:
         def boolean_is_equivalent_to_tasks_and_or_collections(self):
             # No tasks or colls? Empty/false
             assert not Collection()
+
             # Tasks but no colls? True
             @task
             def foo(c):

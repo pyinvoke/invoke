@@ -314,6 +314,7 @@ class Program_:
             # .value = <default value> actually ends up creating a
             # list-of-lists.
             p = Program()
+
             # Set up core-args parser context with an iterable arg that hasn't
             # seen any value yet
             def filename_args():
@@ -1380,6 +1381,7 @@ post2
 
         def env_var_prefix_can_be_overridden(self, monkeypatch):
             monkeypatch.setenv("MYAPP_RUN_HIDE", "both")
+
             # This forces the execution stuff, including Executor, to run
             # NOTE: it's not really possible to rework the impl so this test is
             # cleaner - tasks require per-task/per-collection config, which can

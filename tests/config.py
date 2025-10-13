@@ -449,6 +449,7 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
             assert callable(c.mymethod)
             assert c.mymethod() == 7
             assert c["mymethod"] == "bar"
+
             # And same after setattr
             def monkeys():
                 return 13
