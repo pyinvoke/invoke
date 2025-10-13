@@ -98,3 +98,6 @@ overrides = [
   { module = "invoke.vendor.*", ignore_errors = true },
   { module = "pytest_relaxed", ignore_missing_imports = true },
 ]
+
+[tool.ruff]
+line-length = 79
