@@ -9,8 +9,11 @@ Our Git repository is maintained on Github at `pyinvoke/invoke`_. Please
 follow their instructions for cloning (or forking, then cloning, which is best
 if you intend to contribute back) the repository there.
 
-Once downloaded, install the repo itself + its development dependencies by
-running ``pip install -r dev-requirements.txt``.
+Once downloaded or checked out, you can enter the root of the repository and
+run any command that will read our ``dev`` dependency-group, eg:
+
+- ``pip install . --group dev`` (requires ``pip`` 25.1+)
+- ``uv sync`` (any version of ``uv`` should work)
 
 
 Submitting bug reports or patches
@@ -39,9 +42,9 @@ see with ``inv --list``. Some specific tasks of note:
     * ``www`` and ``docs`` (and their subtasks like ``docs.browse``): Builds
       the WWW site and the API docs, respectively.
 
-Another good resource is to skim our ``.travis.yml`` file for the commands it
-executes - if submissions don't pass all of those commands to some degree, they
-won't pass Travis' CI builds either!
+Another good resource is to skim our ``.circleci/config.yml`` file for the
+commands it executes - if submissions don't pass all of those commands to some
+degree, they won't pass CI builds either!
 
 
 .. _go there:
