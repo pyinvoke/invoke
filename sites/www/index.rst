@@ -20,16 +20,16 @@ What is Invoke?
     from invoke import task
 
     @task
-    def clean(c, docs=False, bytecode=False, extra=''):
-        patterns = ['build']
+    def clean(c, docs=False, bytecode=False, extra=""):
+        patterns = ["build"]
         if docs:
-            patterns.append('docs/_build')
+            patterns.append("docs/_build")
         if bytecode:
-            patterns.append('**/*.pyc')
+            patterns.append("**/*.pyc")
         if extra:
             patterns.append(extra)
         for pattern in patterns:
-            c.run("rm -rf {}".format(pattern))
+            c.run(f"rm -rf {pattern}")
 
     @task
     def build(c, docs=False):
