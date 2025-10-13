@@ -1,8 +1,7 @@
 from datetime import datetime
-from os.path import abspath, join, dirname
+from os.path import abspath, dirname, join
 
 import alabaster
-
 
 # Alabaster theme + mini-extension
 html_theme_path = [alabaster.get_path()]
