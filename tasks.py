@@ -1,12 +1,13 @@
 import os
 from typing import TYPE_CHECKING, Optional
 
-from invoke import Collection, task, Exit
+from invocations import checks, ci
+from invocations.docs import docs, sites, watch_docs, www
+from invocations.packaging import release, vendorize
+from invocations.pytest import coverage as coverage_
+from invocations.pytest import test as test_
 
-from invocations import ci, checks
-from invocations.docs import docs, www, sites, watch_docs
-from invocations.pytest import coverage as coverage_, test as test_
-from invocations.packaging import vendorize, release
+from invoke import Collection, Exit, task
 
 if TYPE_CHECKING:
     from invoke import Context
