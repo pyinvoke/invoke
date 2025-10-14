@@ -1560,11 +1560,9 @@ class Result:
         for x in ("stdout", "stderr"):
             val = getattr(self, x)
             ret.append(
-                """=== {} ===
-{}
-""".format(
-                    x, val.rstrip()
-                )
+                f"""=== {x} ===
+{val.rstrip()}
+"""
                 if val
                 else "(no {})".format(x)
             )
