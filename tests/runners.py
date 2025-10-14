@@ -8,6 +8,7 @@ import threading
 import types
 from io import StringIO
 from io import BytesIO
+from io import TextIOBase
 from itertools import chain, repeat
 
 from pytest import raises, skip
@@ -1098,16 +1099,52 @@ stderr 25
             class MyRunner(_Dummy):
                 input_sleep = 0.007
 
+            def fake_stdin_stream():
+                # The value "foo" is eventually returned.
+                yield "f"
+                # None values simulate waiting for input on stdin.
+                yield None
+                yield "o"
+                yield None
+                yield "o"
+                yield None
+                # Once the stream is closed, stdin returns empty strings.
+                while True:
+                    yield ""
+
+            class FakeStdin(TextIOBase):
+                def __init__(self, stdin):
+                    self.stream = stdin
+
+                def read(self, size):
+                    return next(self.stream)
+
             with patch("invoke.runners.time") as mock_time:
                 MyRunner(Context()).run(
                     _,
-                    in_stream=StringIO("foo"),
+                    in_stream=FakeStdin(fake_stdin_stream()),
                     out_stream=StringIO(),  # null output to not pollute tests
                 )
-            # Just make sure the first few sleeps all look good. Can't know
-            # exact length of list due to stdin worker hanging out til end of
-            # process. Still worth testing more than the first tho.
-            assert mock_time.sleep.call_args_list[:3] == [call(0.007)] * 3
+            # Just make sure the sleeps all look good.
+            # There are three calls because of the Nones in fake_stdin_stream.
+            assert mock_time.sleep.call_args_list == [call(0.007)] * 3
+
+        @mock_subprocess()
+        def populated_streams_do_not_sleep(self):
+            class MyRunner(_Dummy):
+                read_chunk_size = 1
+
+            runner = MyRunner(Context())
+            with patch("invoke.runners.time") as mock_time:
+                with patch.object(runner, "wait"):
+                    runner.run(
+                        _,
+                        in_stream=StringIO("lots of bytes to read"),
+                        # null output to not pollute tests
+                        out_stream=StringIO(),
+                    )
+            # Sleep should not be called before we break.
+            assert len(mock_time.sleep.call_args_list) == 0
 
     class stdin_mirroring:
         def _test_mirroring(self, expect_mirroring, **kwargs):
