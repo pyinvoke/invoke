@@ -1220,7 +1220,7 @@ class Runner:
         # killed the subprocess, allowing us to even get to this point.)
         return bool(self._timer and not self._timer.is_alive())
 
-    def get_pid(self) -> int | None:
+    def get_pid(self) -> Optional[int]:
         """
         When possible, obtain the subprocess PID.
 
