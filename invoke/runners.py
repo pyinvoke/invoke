@@ -1481,7 +1481,8 @@ class Result:
         (the default) generates ``result.hide == ()`` (the empty tuple.)
 
     :param int pid:
-        The process ID of the subprocess that was executed (normally) or is executing (when asynchronous or disowned).
+        The process ID of the subprocess that was executed (normally) or is
+        executing (when asynchronous or disowned).
 
         .. versionadded:: 2.3
 
