@@ -1,20 +1,20 @@
 import errno
 import locale
 import os
+import signal
 import struct
 import sys
 import threading
 import time
-import signal
-from subprocess import Popen, PIPE
+from subprocess import PIPE, Popen
 from types import TracebackType
 from typing import (
+    IO,
     TYPE_CHECKING,
     Any,
     Callable,
     Dict,
     Generator,
-    IO,
     List,
     Optional,
     Tuple,
@@ -37,21 +37,21 @@ except ImportError:
     termios = None  # type: ignore[assignment]
 
 from .exceptions import (
-    UnexpectedExit,
-    Failure,
-    ThreadException,
-    WatcherError,
-    SubprocessPipeError,
     CommandTimedOut,
+    Failure,
+    SubprocessPipeError,
+    ThreadException,
+    UnexpectedExit,
+    WatcherError,
 )
 from .terminals import (
     WINDOWS,
-    pty_size,
-    character_buffered,
-    ready_for_reading,
     bytes_to_read,
+    character_buffered,
+    pty_size,
+    ready_for_reading,
 )
-from .util import has_fileno, isatty, ExceptionHandlingThread
+from .util import ExceptionHandlingThread, has_fileno, isatty
 
 if TYPE_CHECKING:
     from .context import Context
