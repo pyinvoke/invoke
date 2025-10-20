@@ -700,7 +700,7 @@ class Config(DataProxy):
         Load a system-level config file, if possible.
 
         Checks the configured ``_system_prefix`` path, which defaults to
-        ``/etc``, and will thus load files like ``/etc/invoke.yml``.
+        ``/etc``, and will thus load files like ``/etc/invoke.yaml``.
 
         :param bool merge:
             Whether to merge the loaded data into the central config. Default:
@@ -717,7 +717,7 @@ class Config(DataProxy):
         Load a user-level config file, if possible.
 
         Checks the configured ``_user_prefix`` path, which defaults to ``~/.``,
-        and will thus load files like ``~/.invoke.yml``.
+        and will thus load files like ``~/.invoke.yaml``.
 
         :param bool merge:
             Whether to merge the loaded data into the central config. Default:
@@ -739,7 +739,7 @@ class Config(DataProxy):
 
         Thus, if one were to run the CLI tool against a tasks collection
         ``/home/myuser/code/tasks.py``, `load_project` would seek out files
-        like ``/home/myuser/code/invoke.yml``.
+        like ``/home/myuser/code/invoke.yaml``.
 
         :param bool merge:
             Whether to merge the loaded data into the central config. Default:
