@@ -501,6 +501,45 @@ class Parser_:
                 assert result[0].args.hide.value is False
                 assert result[1].args.hide.value == "both"
 
+            def help_passed_when_task_expects_one_positional_arg(self):
+                init = Context(
+                    args=[Argument(names=("help", "h"), optional=True)]
+                )
+                task1 = Context(
+                    "mytask",
+                    args=[
+                        Argument(
+                            names=("name", "n"), kind=str, positional=True
+                        )
+                    ],
+                )
+                parser = Parser(initial=init, contexts=[task1])
+                result = parser.parse_argv(["mytask", "--help"])
+                assert result[0].flags["--help"].value == "mytask"
+
+            def help_passed_when_task_expects_multiple_positional_arg(self):
+                init = Context(
+                    args=[Argument(names=("help", "h"), optional=True)]
+                )
+                task1 = Context(
+                    "mytask",
+                    args=[
+                        Argument(
+                            names=("pos_arg_one", "o"),
+                            kind=str,
+                            positional=True,
+                        ),
+                        Argument(
+                            names=("pos_arg_two", "t"),
+                            kind=str,
+                            positional=True,
+                        ),
+                    ],
+                )
+                parser = Parser(initial=init, contexts=[task1])
+                result = parser.parse_argv(["mytask", "--help"])
+                assert result[0].flags["--help"].value == "mytask"
+
         class help_treats_context_name_as_its_value:
             def by_itself_base_case(self):
                 task1 = Context("mytask")

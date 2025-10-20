@@ -651,6 +651,23 @@ Options:
                 for flag in ["-h", "--help"]:
                     expect("-c decorators {} punch".format(flag), out=expected)
 
+            def prints_help_if_no_mandatory_arg(self):
+                expected = """
+Usage: invoke [--core-opts] punch [--options] [other tasks here ...]
+
+Docstring:
+  none
+
+Options:
+  -h STRING, --why=STRING   Motive
+  -w STRING, --who=STRING   Who to punch
+
+""".lstrip()
+                expected_error = """
+'punch' did not receive required positional arguments: 'who', 'why'
+""".lstrip()
+                expect("-c decorators punch", out=expected, err=expected_error)
+
             def works_for_unparameterized_tasks(self):
                 expected = """
 Usage: invoke [--core-opts] biz [other tasks here ...]
