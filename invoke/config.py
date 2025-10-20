@@ -486,6 +486,7 @@ class Config(DataProxy):
                 "pty": False,
                 "replace_env": False,
                 "shell": shell,
+                "decode_stdin": True,
                 "warn": False,
                 "watchers": [],
             },
