@@ -70,8 +70,8 @@ def _runner(out="", err="", **kwargs):
     runner = klass(Context(config=Config(overrides=kwargs)))
     if "exits" in kwargs:
         runner.returncode = Mock(return_value=kwargs.pop("exits"))
-    out_file = BytesIO(out.encode())
-    err_file = BytesIO(err.encode())
+    out_file = BytesIO(out.encode() if isinstance(out, str) else out)
+    err_file = BytesIO(err.encode() if isinstance(err, str) else err)
     runner.read_proc_stdout = out_file.read
     runner.read_proc_stderr = err_file.read
     return runner
@@ -538,6 +538,23 @@ class Runner_:
             self._runner(err="whatever").run(_, err_stream=err)
             err.write.assert_called_once_with("whatever")
             err.flush.assert_called_once_with()
+
+        def handles_incremental_decoding(self):
+            # 𠜎 is 4 bytes in utf-8
+            expected_out = "𠜎" * 50
+            runner = self._runner(out=expected_out)
+            # Make sure every read returns a partial character.
+            runner.read_chunk_size = 3
+            out = StringIO()
+            runner.run(_, out_stream=out)
+            assert out.getvalue() == expected_out
+
+        def handles_trailing_partial_character(self):
+            out = StringIO()
+            # Only output the first 3 out of the 4 bytes in 𠜎
+            self._runner(out=b"\xf0\xa0\x9c").run(_, out_stream=out)
+            # Should produce a single unicode replacement character
+            assert out.getvalue() == "�"
 
     class input_stream_handling:
         # NOTE: actual autoresponder tests are elsewhere. These just test that
