@@ -375,7 +375,7 @@ class Collection:
         self, coll: str, rest: str, ours: Dict[str, Any]
     ) -> Tuple[str, Dict[str, Any]]:
         task, config = self.collections[coll].task_with_config(rest)
-        return task, dict(config, **ours)
+        return task, merge_dicts(config, ours)
 
     def task_with_config(
         self, name: Optional[str]
