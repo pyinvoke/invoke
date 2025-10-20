@@ -187,3 +187,11 @@ We're always trying to make this detection smarter; if upgrading to the latest
 version of Invoke doesn't fix the problem for you, please submit a bug report
 including details about the values and types of ``sys.stdin/stdout/stderr``.
 Hopefully we'll find another heuristic we can use!
+
+How to generate documetation with Sphinx?
+-----------------------------------------
+
+If you have an issue that sphinx autodoc does not see docstrings in tasks, then
+see `Invocations apidoc <https://invocations.readthedocs.io/en/latest/api/autodoc.html>` official page for more details.
+
+For now it's not perfect but should be good enough.
