@@ -309,6 +309,14 @@ class Context_:
             assert runner.run.call_args[0][0] == cmd
 
         @patch(local_path)
+        def optional_login_shell_argument_adds_i_flag(self, Local):
+            runner = Local.return_value
+            Context().sudo("wookie", login_shell=True)
+            cmd = "sudo -S -p '[sudo] password: ' -i wookie"
+            assert runner.run.called, "sudo() never called runner.run()!"
+            assert runner.run.call_args[0][0] == cmd
+
+        @patch(local_path)
         def honors_config_for_user_value(self, Local):
             runner = Local.return_value
             config = Config(overrides={"sudo": {"user": "rando"}})
