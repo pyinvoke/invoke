@@ -70,6 +70,15 @@ The command line says my task's first argument is invalid!
 
 See :ref:`bad-first-arg` - it's probably the same issue.
 
+.. _fabfile:
+
+Porting from Fabric v1, invoke says "Can't find any collection named 'tasks'!".
+-------------------------------------------------------------------------------
+
+You're probably still using `fabfile.py` to define your tasks.
+Invoke loads its tasks from a `tasks` module, not `fabfile`.
+Rename `fabfile.py` to `tasks.py`.
+
 
 Running local shell commands (``run``)
 ======================================
