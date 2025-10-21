@@ -412,10 +412,11 @@ class Program_:
             )
             p.execute = Mock(side_effect=oops)
             p.run("myapp foo")
-            # Expect NO repr printed, because stdout/err were not hidden, so we
-            # don't want to add extra annoying verbosity - we want to be more
-            # Make-like here.
-            assert sys.stderr.getvalue() == ""
+            # Expect basic error status printed, because stdout/err were not
+            # hidden, so we don't want to add extra annoying verbosity - we
+            # want to be more Make-like here.
+            # e.g. make: *** [Makefile:3: all] Error 2
+            assert sys.stderr.getvalue() == "UnexpectedExit with code: 17\n"
             # But we still exit with expected code (vs e.g. 1 or 0)
             mock_exit.assert_called_with(17)
 
