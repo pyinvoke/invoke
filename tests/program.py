@@ -582,7 +582,7 @@ Core options:
                                      sudo.password config value.
   --write-pyc                        Enable creation of .pyc files.
   -c STRING, --collection=STRING     Specify collection name to load.
-  -d, --debug                        Enable debug output.
+  -d, --debug                        Enable debug output (log level DEBUG).
   -D INT, --list-depth=INT           When listing tasks, only show the first
                                      INT levels.
   -e, --echo                         Echo executed commands before running.
@@ -599,6 +599,7 @@ Core options:
   -R, --dry                          Echo commands instead of running.
   -T INT, --command-timeout=INT      Specify a global command execution
                                      timeout, in seconds.
+  -v, --verbose                      Enable verbose output (log level INFO).
   -V, --version                      Show version and exit.
   -w, --warn-only                    Warn, instead of failing, when shell
                                      commands fail.

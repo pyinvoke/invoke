@@ -28,8 +28,8 @@ except ImportError:
 LOG_FORMAT = "%(name)s.%(module)s.%(funcName)s: %(message)s"
 
 
-def enable_logging() -> None:
-    logging.basicConfig(level=logging.DEBUG, format=LOG_FORMAT)
+def enable_logging(level: Union[int, str] = logging.DEBUG) -> None:
+    logging.basicConfig(level=level, format=LOG_FORMAT)
 
 
 # Allow from-the-start debugging (vs toggled during load of tasks module) via
