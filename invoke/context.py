@@ -9,6 +9,7 @@ from typing import (
     Generator,
     Iterator,
     List,
+    Dict,
     Optional,
     Union,
 )
@@ -71,6 +72,9 @@ class Context(DataProxy):
         #: docs for details.
         command_cwds: List[str] = list()
         self._set(command_cwds=command_cwds)
+        #: Keyword arguments for each 'sudo_scope' context.
+        command_sudos: List[Dict] = list()
+        self._set(command_sudos=command_sudos)
 
     @property
     def config(self) -> Config:
@@ -110,6 +114,7 @@ class Context(DataProxy):
         self, runner: "Runner", command: str, **kwargs: Any
     ) -> Optional[Result]:
         command = self._prefix_commands(command)
+        command = self._sudo_commands(command)
         return runner.run(command, **kwargs)
 
     def sudo(self, command: str, **kwargs: Any) -> Optional[Result]:
@@ -184,14 +189,12 @@ class Context(DataProxy):
         runner = self.config.runners.local(self)
         return self._sudo(runner, command, **kwargs)
 
-    # NOTE: this is for runner injection; see NOTE above _run().
-    def _sudo(
-        self, runner: "Runner", command: str, **kwargs: Any
-    ) -> Optional[Result]:
-        prompt = self.config.sudo.prompt
-        password = kwargs.pop("password", self.config.sudo.password)
-        user = kwargs.pop("user", self.config.sudo.user)
-        env = kwargs.get("env", {})
+    def _get_sudo_command(
+        self, command: str, prompt: str, user: str, env: Dict[str, str]
+    ) -> str:
+        """
+        Create the command prefixed by sudo from the arguments within kwargs.
+        """
         # TODO: allow subclassing for 'get the password' so users who REALLY
         # want lazy runtime prompting can have it easily implemented.
         # TODO: want to print a "cleaner" echo with just 'sudo <command>'; but
@@ -210,10 +213,22 @@ class Context(DataProxy):
         env_flags = ""
         if env:
             env_flags = "--preserve-env='{}' ".format(",".join(env.keys()))
-        command = self._prefix_commands(command)
         cmd_str = "sudo -S -p '{}' {}{}{}".format(
             prompt, env_flags, user_flags, command
         )
+
+        return cmd_str
+
+    # NOTE: this is for runner injection; see NOTE above _run().
+    def _sudo(
+        self, runner: "Runner", command: str, **kwargs: Any
+    ) -> Optional[Result]:
+        prompt = self.config.sudo.prompt
+        password = kwargs.pop("password", self.config.sudo.password)
+        user = kwargs.pop("user", self.config.sudo.user)
+        env = kwargs.get("env", {})
+        command = self._prefix_commands(command)
+        cmd_str = self._get_sudo_command(command, prompt, user, env)
         watcher = FailingResponder(
             pattern=re.escape(prompt),
             response="{}\n".format(password),
@@ -318,6 +333,35 @@ class Context(DataProxy):
             yield
         finally:
             self.command_prefixes.pop()
+
+    def _sudo_commands(self, command: str) -> str:
+        """
+        Prefixes ``command`` with the sudo found in ``command_sudos``.
+        """
+        if self.command_sudos == []:
+            return command
+
+        # Use only the nearest sudo context args
+        kwargs = self.command_sudos[-1]
+        prompt = self.config.sudo.prompt
+        user = kwargs.get("user", self.config.sudo.user)
+        env = kwargs.get("env", {})
+        cmd_str = self._get_sudo_command(command, prompt, user, env)
+
+        return cmd_str
+
+    @contextmanager
+    def sudo_scope(self, **kwargs: Any) -> Generator[None, None, None]:
+        """
+        Context manager to temporarily change sudo behavior.
+
+        See ``sudo`` for details on keyword arguments.
+        """
+        self.command_sudos.append(kwargs)
+        try:
+            yield
+        finally:
+            self.command_sudos.pop()
 
     @property
     def cwd(self) -> str:
