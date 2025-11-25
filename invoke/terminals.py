@@ -243,6 +243,7 @@ def bytes_to_read(input_: IO) -> int:
     # it's not a tty but has a fileno, or vice versa; neither is typically
     # going to work re: ioctl().
     if not WINDOWS and isatty(input_) and has_fileno(input_):
-        fionread = fcntl.ioctl(input_, termios.FIONREAD, b"  ")
-        return int(struct.unpack("h", fionread)[0])
+        arg = bytes(bytearray(struct.calcsize("i")))
+        fionread = fcntl.ioctl(input_, termios.FIONREAD, arg)
+        return int(struct.unpack("i", fionread)[0])
     return 1

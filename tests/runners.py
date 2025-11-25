@@ -1224,7 +1224,7 @@ stderr 25
                 # This works since each mocked attr will still be its own mock
                 # object with a distinct 'is' identity.
                 if cmd is termios.FIONREAD:
-                    return struct.pack("h", len(stdin_data))
+                    return struct.pack("i", len(stdin_data))
 
             ioctl.side_effect = fake_ioctl
             # Set up our runner as one w/ mocked stdin writing (simplest way to
