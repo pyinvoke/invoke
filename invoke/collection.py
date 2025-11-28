@@ -1,6 +1,6 @@
 import copy
 from types import ModuleType
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 from .util import Lexicon, helpline
 
@@ -284,14 +284,16 @@ class Collection:
 
     def add_collection(
         self,
-        coll: "Collection",
+        coll: Union["Collection", ModuleType],
         name: Optional[str] = None,
         default: Optional[bool] = None,
     ) -> None:
         """
         Add `.Collection` ``coll`` as a sub-collection of this one.
 
-        :param coll: The `.Collection` to add.
+        :param coll:
+            The `.Collection` to add. A `ModuleType` will be converted to a
+            `.Collection` using `.Collection.from_module`.
 
         :param str name:
             The name to attach the collection as. Defaults to the collection's
