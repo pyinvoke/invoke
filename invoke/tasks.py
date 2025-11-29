@@ -32,6 +32,14 @@ if TYPE_CHECKING:
 
 T = TypeVar("T", bound=Callable)
 
+class PreTaskDesc:
+    def __get__(self, obj, _type):
+        return obj._pre
+
+    def __set__(self, obj, value):
+        for p in value:
+            p._is_pre_of = obj
+        obj._pre = value
 
 class Task(Generic[T]):
     """
@@ -48,6 +56,7 @@ class Task(Generic[T]):
 
     .. versionadded:: 1.0
     """
+    pre = PreTaskDesc()
 
     # TODO: store these kwarg defaults central, refer to those values both here
     # and in @task.
@@ -395,6 +404,11 @@ class Call:
             Keyword arguments to call with, if any. Default: ``None``.
         """
         self.task = task
+        if hasattr(task, "_is_pre_of"):
+            self.make_context = _copy_attrs_to_return_val(
+                task,
+                "_is_pre_of"
+            )(self.make_context)
         self.called_as = called_as
         self.args = args or tuple()
         self.kwargs = kwargs or dict()
@@ -517,3 +531,18 @@ def call(task: "Task", *args: Any, **kwargs: Any) -> "Call":
     .. versionadded:: 1.0
     """
     return Call(task, args=args, kwargs=kwargs)
+
+def _copy_attrs_to_return_val(source, *attrs):
+    """
+    Copy attributes from a source to the return value of the decorated func
+    """
+    def _wrapper(func):
+        def _inner(*args, **kwargs):
+            target = func(*args, **kwargs)
+            for name in attrs:
+                value = getattr(source, name)
+                if value:
+                    setattr(target, name, value)
+            return target
+        return _inner
+    return _wrapper
