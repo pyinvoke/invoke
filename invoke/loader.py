@@ -122,7 +122,9 @@ class FilesystemLoader(Loader):
         # Lazily determine default CWD if configured value is falsey
         return self._start or os.getcwd()
 
-    def find(self, name: str) -> Optional[ModuleSpec]:
+    def find(self,
+             name: str,
+             look_into_sys_path: bool = False) -> Optional[ModuleSpec]:
         spec = None
         try:
             # walk the path upwards to check for dynamic import
@@ -132,20 +134,21 @@ class FilesystemLoader(Loader):
                 path = os.sep.join(paths[0:x])
                 if path == "":
                     continue
-                spec = self._get_module_or_package_spec_from_path(path, name)
+                spec = self._get_module_or_pkg_spec_from_path(path, name)
                 if spec:
                     debug("Found module: {!r}".format(spec))
                     return spec
 
             # if not found, check sys.path
-            for path in sys.path:
-                if path == self.start:
-                    continue
-                debug("FilesystemLoader checking sys.path {!r}".format(path))
-                spec = self._get_module_or_package_spec_from_path(path, name)
-                if spec:
-                    debug("Found module: {!r}".format(spec))
-                    return spec
+            if look_into_sys_path:
+                for path in sys.path:
+                    if path == self.start:
+                        continue
+                    debug("FilesystemLoader checks sys.path {!r}".format(path))
+                    spec = self._get_module_or_pkg_spec_from_path(path, name)
+                    if spec:
+                        debug("Found module: {!r}".format(spec))
+                        return spec
 
         except (FileNotFoundError, ModuleNotFoundError):
             msg = "ImportError loading {!r}, raising CollectionNotFound"
@@ -153,7 +156,7 @@ class FilesystemLoader(Loader):
             raise CollectionNotFound(name=name, start=self.start)
         return None
 
-    def _get_module_or_package_spec_from_path(self,
+    def _get_module_or_pkg_spec_from_path(self,
                     dir_path: str,
                     package_name: str) -> Optional[ModuleSpec]:
         spec = None
