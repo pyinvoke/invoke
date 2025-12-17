@@ -121,34 +121,59 @@ class FilesystemLoader(Loader):
         return self._start or os.getcwd()
 
     def find(self, name: str) -> Optional[ModuleSpec]:
-        debug("FilesystemLoader find starting at {!r}".format(self.start))
         spec = None
-        module = "{}.py".format(name)
-        paths = self.start.split(os.sep)
         try:
             # walk the path upwards to check for dynamic import
+            debug("FilesystemLoader find starting at {!r}".format(self.start))
+            paths = self.start.split(os.sep)
             for x in reversed(range(len(paths) + 1)):
                 path = os.sep.join(paths[0:x])
-                if module in os.listdir(path):
-                    spec = spec_from_file_location(
-                        name, os.path.join(path, module)
-                    )
-                    break
-                elif name in os.listdir(path) and os.path.exists(
-                    os.path.join(path, name, "__init__.py")
-                ):
-                    basepath = os.path.join(path, name)
-                    spec = spec_from_file_location(
-                        name,
-                        os.path.join(basepath, "__init__.py"),
-                        submodule_search_locations=[basepath],
-                    )
-                    break
-            if spec:
-                debug("Found module: {!r}".format(spec))
-                return spec
+                if path == "":
+                    continue
+                spec = self._get_module_or_pkg_spec_from_path(path, name)
+                if spec:
+                    debug("Found module: {!r}".format(spec))
+                    return spec
+
+            # if not found, check sys.path
+            for path in sys.path:
+                if path == self.start:
+                    continue
+                debug("FilesystemLoader checks sys.path {!r}".format(path))
+                spec = self._get_module_or_pkg_spec_from_path(path, name)
+                if spec:
+                    debug("Found module: {!r}".format(spec))
+                    return spec
+
         except (FileNotFoundError, ModuleNotFoundError):
             msg = "ImportError loading {!r}, raising CollectionNotFound"
             debug(msg.format(name))
             raise CollectionNotFound(name=name, start=self.start)
         return None
+
+    def _get_module_or_pkg_spec_from_path(self,
+                    dir_path: str,
+                    package_name: str) -> Optional[ModuleSpec]:
+        spec = None
+        module = "{}.py".format(package_name)
+
+        # If dir_path is a file, not a directory, return None
+        if os.path.isfile(dir_path):
+            return None
+
+        # Try get spec from module "package_name.py"
+        if module in os.listdir(dir_path):
+            spec = spec_from_file_location(
+                package_name, os.path.join(dir_path, module)
+            )
+        # Try get spec from package "package_name/__init__.py"
+        elif package_name in os.listdir(dir_path) and os.path.exists(
+            os.path.join(dir_path, package_name, "__init__.py")
+        ):
+            basepath = os.path.join(dir_path, package_name)
+            spec = spec_from_file_location(
+                package_name,
+                os.path.join(basepath, "__init__.py"),
+                submodule_search_locations=[basepath],
+            )
+        return spec
