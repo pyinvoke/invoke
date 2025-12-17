@@ -65,9 +65,11 @@ class Loader:
 
         .. versionadded:: 1.0
         """
+        should_look_into_sys_path = False
         if name is None:
             name = self.config.tasks.collection_name
-        spec = self.find(name)
+            should_look_into_sys_path = True
+        spec = self.find(name, should_look_into_sys_path)
         if spec and spec.loader and spec.origin:
             # Typically either tasks.py or tasks/__init__.py
             source_file = Path(spec.origin)
