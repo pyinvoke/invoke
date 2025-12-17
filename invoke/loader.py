@@ -65,11 +65,9 @@ class Loader:
 
         .. versionadded:: 1.0
         """
-        should_look_into_sys_path = False
         if name is None:
             name = self.config.tasks.collection_name
-            should_look_into_sys_path = True
-        spec = self.find(name, should_look_into_sys_path)
+        spec = self.find(name)
         if spec and spec.loader and spec.origin:
             # Typically either tasks.py or tasks/__init__.py
             source_file = Path(spec.origin)
@@ -122,9 +120,7 @@ class FilesystemLoader(Loader):
         # Lazily determine default CWD if configured value is falsey
         return self._start or os.getcwd()
 
-    def find(self,
-             name: str,
-             look_into_sys_path: bool = False) -> Optional[ModuleSpec]:
+    def find(self,name: str) -> Optional[ModuleSpec]:
         spec = None
         try:
             # walk the path upwards to check for dynamic import
@@ -140,15 +136,14 @@ class FilesystemLoader(Loader):
                     return spec
 
             # if not found, check sys.path
-            if look_into_sys_path:
-                for path in sys.path:
-                    if path == self.start:
-                        continue
-                    debug("FilesystemLoader checks sys.path {!r}".format(path))
-                    spec = self._get_module_or_pkg_spec_from_path(path, name)
-                    if spec:
-                        debug("Found module: {!r}".format(spec))
-                        return spec
+            for path in sys.path:
+                if path == self.start:
+                    continue
+                debug("FilesystemLoader checks sys.path {!r}".format(path))
+                spec = self._get_module_or_pkg_spec_from_path(path, name)
+                if spec:
+                    debug("Found module: {!r}".format(spec))
+                    return spec
 
         except (FileNotFoundError, ModuleNotFoundError):
             msg = "ImportError loading {!r}, raising CollectionNotFound"
