@@ -120,7 +120,7 @@ class FilesystemLoader(Loader):
         # Lazily determine default CWD if configured value is falsey
         return self._start or os.getcwd()
 
-    def find(self,name: str) -> Optional[ModuleSpec]:
+    def find(self, name: str) -> Optional[ModuleSpec]:
         spec = None
         try:
             # walk the path upwards to check for dynamic import
