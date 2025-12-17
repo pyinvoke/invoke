@@ -122,15 +122,16 @@ class FilesystemLoader(Loader):
 
     def find(self, name: str) -> Optional[ModuleSpec]:
         spec = None
-        
         try:
             # walk the path upwards to check for dynamic import
             debug("FilesystemLoader find starting at {!r}".format(self.start))
             paths = self.start.split(os.sep)
             for x in reversed(range(len(paths) + 1)):
                 path = os.sep.join(paths[0:x])
-                if path == "" : continue
-                if spec := self._try_get_module_or_package_spec_from_path(path, name):
+                if path == "":
+                    continue
+                spec = self._get_module_or_package_spec_from_path(path, name)
+                if spec:
                     debug("Found module: {!r}".format(spec))
                     return spec
 
@@ -138,21 +139,24 @@ class FilesystemLoader(Loader):
             for path in sys.path:
                 if path == self.start:
                     continue
-                debug("FilesystemLoader checking sys.path entry {!r}".format(path))
-                if spec := self._try_get_module_or_package_spec_from_path(path, name):
+                debug("FilesystemLoader checking sys.path {!r}".format(path))
+                spec = self._get_module_or_package_spec_from_path(path, name)
+                if spec:
                     debug("Found module: {!r}".format(spec))
-                    return spec     
+                    return spec
 
         except (FileNotFoundError, ModuleNotFoundError):
             msg = "ImportError loading {!r}, raising CollectionNotFound"
             debug(msg.format(name))
             raise CollectionNotFound(name=name, start=self.start)
         return None
-    
-    def _try_get_module_or_package_spec_from_path(self, dir_path: str, package_name: str) -> Optional[ModuleSpec]:
+
+    def _get_module_or_package_spec_from_path(self,
+                    dir_path: str,
+                    package_name: str) -> Optional[ModuleSpec]:
         spec = None
         module = "{}.py".format(package_name)
-        
+
         # If dir_path is a file, not a directory, return None
         if os.path.isfile(dir_path):
             return None
