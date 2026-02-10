@@ -1,0 +1,3 @@
+[codespell]
+skip = .git*,*.pdf,*.svg,*.css,*.min.*,.npm,.cache,*/vendor/*,*/build/*
+check-hidden = true
