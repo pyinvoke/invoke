@@ -10,4 +10,5 @@ htmlcov
 coverage.xml
 .cache
 .mypy_cache/
+.npm
 uv.lock
