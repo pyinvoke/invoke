@@ -1,56 +1,56 @@
 from pytest import raises
 
-from invoke.parser import Parser, Context, Argument, ParseError
+from invoke.parser import Argument, Context, ParseError, Parser
 
 
 class Parser_:
-    def can_take_initial_context(self):
+    def can_take_initial_context(self) -> None:
         c = Context()
         p = Parser(initial=c)
         assert p.initial == c
 
-    def can_take_initial_and_other_contexts(self):
+    def can_take_initial_and_other_contexts(self) -> None:
         c1 = Context("foo")
         c2 = Context("bar")
         p = Parser(initial=Context(), contexts=[c1, c2])
         assert p.contexts["foo"] == c1
         assert p.contexts["bar"] == c2
 
-    def can_take_just_other_contexts(self):
+    def can_take_just_other_contexts(self) -> None:
         c = Context("foo")
         p = Parser(contexts=[c])
         assert p.contexts["foo"] == c
 
-    def can_take_just_contexts_as_non_keyword_arg(self):
+    def can_take_just_contexts_as_non_keyword_arg(self) -> None:
         c = Context("foo")
         p = Parser([c])
         assert p.contexts["foo"] == c
 
-    def raises_ValueError_for_unnamed_Contexts_in_contexts(self):
+    def raises_ValueError_for_unnamed_Contexts_in_contexts(self) -> None:
         with raises(ValueError):
             Parser(initial=Context(), contexts=[Context()])
 
-    def raises_error_for_context_name_clashes(self):
+    def raises_error_for_context_name_clashes(self) -> None:
         with raises(ValueError):
             Parser(contexts=(Context("foo"), Context("foo")))
 
-    def raises_error_for_context_alias_and_name_clashes(self):
+    def raises_error_for_context_alias_and_name_clashes(self) -> None:
         with raises(ValueError):
             Parser((Context("foo", aliases=("bar",)), Context("bar")))
 
-    def raises_error_for_context_name_and_alias_clashes(self):
+    def raises_error_for_context_name_and_alias_clashes(self) -> None:
         # I.e. inverse of the above, which is a different code path.
         with raises(ValueError):
             Parser((Context("foo"), Context("bar", aliases=("foo",))))
 
-    def takes_ignore_unknown_kwarg(self):
+    def takes_ignore_unknown_kwarg(self) -> None:
         Parser(ignore_unknown=True)
 
-    def ignore_unknown_defaults_to_False(self):
+    def ignore_unknown_defaults_to_False(self) -> None:
         assert Parser().ignore_unknown is False
 
     class parse_argv:
-        def parses_sys_argv_style_list_of_strings(self):
+        def parses_sys_argv_style_list_of_strings(self) -> None:
             "parses sys.argv-style list of strings"
             # Doesn't-blow-up tests FTL
             mytask = Context(name="mytask")
@@ -58,35 +58,35 @@ class Parser_:
             p = Parser(contexts=[mytask])
             p.parse_argv(["mytask", "--arg", "value"])
 
-        def returns_only_contexts_mentioned(self):
+        def returns_only_contexts_mentioned(self) -> None:
             task1 = Context("mytask")
             task2 = Context("othertask")
             result = Parser((task1, task2)).parse_argv(["othertask"])
             assert len(result) == 1
             assert result[0].name == "othertask"
 
-        def raises_error_if_unknown_contexts_found(self):
+        def raises_error_if_unknown_contexts_found(self) -> None:
             with raises(ParseError):
                 Parser().parse_argv(["foo", "bar"])
 
-        def unparsed_does_not_share_state(self):
+        def unparsed_does_not_share_state(self) -> None:
             r = Parser(ignore_unknown=True).parse_argv(["self"])
             assert r.unparsed == ["self"]
             r2 = Parser(ignore_unknown=True).parse_argv(["contained"])
             assert r.unparsed == ["self"]  # NOT ['self', 'contained']
             assert r2.unparsed == ["contained"]  # NOT ['self', 'contained']
 
-        def ignore_unknown_returns_unparsed_argv_instead(self):
+        def ignore_unknown_returns_unparsed_argv_instead(self) -> None:
             r = Parser(ignore_unknown=True).parse_argv(["foo", "bar", "--baz"])
             assert r.unparsed == ["foo", "bar", "--baz"]
 
-        def ignore_unknown_does_not_mutate_rest_of_argv(self):
+        def ignore_unknown_does_not_mutate_rest_of_argv(self) -> None:
             p = Parser([Context("ugh")], ignore_unknown=True)
             r = p.parse_argv(["ugh", "what", "-nowai"])
             # NOT: ['what', '-n', '-w', '-a', '-i']
             assert r.unparsed == ["what", "-nowai"]
 
-        def always_includes_initial_context_if_one_was_given(self):
+        def always_includes_initial_context_if_one_was_given(self) -> None:
             # Even if no core/initial flags were seen
             t1 = Context("t1")
             init = Context()
@@ -94,17 +94,19 @@ class Parser_:
             assert result[0].name is None
             assert result[1].name == "t1"
 
-        def returned_contexts_are_in_order_given(self):
+        def returned_contexts_are_in_order_given(self) -> None:
             t1, t2 = Context("t1"), Context("t2")
             r = Parser((t1, t2)).parse_argv(["t2", "t1"])
             assert [x.name for x in r] == ["t2", "t1"]
 
-        def returned_context_member_arguments_contain_given_values(self):
+        def returned_context_member_arguments_contain_given_values(
+            self,
+        ) -> None:
             c = Context("mytask", args=(Argument("boolean", kind=bool),))
             result = Parser((c,)).parse_argv(["mytask", "--boolean"])
             assert result[0].args["boolean"].value is True
 
-        def inverse_bools_get_set_correctly(self):
+        def inverse_bools_get_set_correctly(self) -> None:
             arg = Argument("myarg", kind=bool, default=True)
             c = Context("mytask", args=(arg,))
             r = Parser((c,)).parse_argv(["mytask", "--no-myarg"])
@@ -112,7 +114,7 @@ class Parser_:
 
         def arguments_which_take_values_get_defaults_overridden_correctly(
             self,
-        ):  # noqa
+        ) -> None:  # noqa
             args = (Argument("arg", kind=str), Argument("arg2", kind=int))
             c = Context("mytask", args=args)
             argv = ["mytask", "--arg", "myval", "--arg2", "25"]
@@ -120,7 +122,7 @@ class Parser_:
             assert result[0].args["arg"].value == "myval"
             assert result[0].args["arg2"].value == 25
 
-        def returned_arguments_not_given_contain_default_values(self):
+        def returned_arguments_not_given_contain_default_values(self) -> None:
             # I.e. a Context with args A and B, invoked with no mention of B,
             # should result in B existing in the result, with its default value
             # intact, and not e.g. None, or the arg not existing.
@@ -130,14 +132,14 @@ class Parser_:
             Parser((c,)).parse_argv(["mytask", "--name", "blah"])
             assert c.args["age"].value == 7
 
-        def returns_remainder(self):
+        def returns_remainder(self) -> None:
             "returns -- style remainder string chunk"
             r = Parser((Context("foo"),)).parse_argv(
                 ["foo", "--", "bar", "biz"]
             )
             assert r.remainder == "bar biz"
 
-        def clones_initial_context(self):
+        def clones_initial_context(self) -> None:
             a = Argument("foo", kind=bool)
             assert a.value is None
             c = Context(args=(a,))
@@ -152,7 +154,7 @@ class Parser_:
             assert a.value is None
             assert a2.value is True
 
-        def clones_noninitial_contexts(self):
+        def clones_noninitial_contexts(self) -> None:
             a = Argument("foo")
             assert a.value is None
             c = Context(name="mytask", args=(a,))
@@ -168,36 +170,36 @@ class Parser_:
             assert a2.value == "val"
 
         class parsing_errors:
-            def setup_method(self):
+            def setup_method(self) -> None:
                 self.p = Parser([Context(name="foo", args=[Argument("bar")])])
 
-            def missing_flag_values_raise_ParseError(self):
+            def missing_flag_values_raise_ParseError(self) -> None:
                 with raises(ParseError):
                     self.p.parse_argv(["foo", "--bar"])
 
-            def attaches_context_to_ParseErrors(self):
+            def attaches_context_to_ParseErrors(self) -> None:
                 try:
                     self.p.parse_argv(["foo", "--bar"])
                 except ParseError as e:
                     assert e.context is not None
 
-            def attached_context_is_None_outside_contexts(self):
+            def attached_context_is_None_outside_contexts(self) -> None:
                 try:
                     Parser().parse_argv(["wat"])
                 except ParseError as e:
                     assert e.context is None
 
         class positional_arguments:
-            def _basic(self):
+            def _basic(self) -> Parser:
                 arg = Argument("pos", positional=True)
                 mytask = Context(name="mytask", args=[arg])
                 return Parser(contexts=[mytask])
 
-            def single_positional_arg(self):
+            def single_positional_arg(self) -> None:
                 r = self._basic().parse_argv(["mytask", "posval"])
                 assert r[0].args["pos"].value == "posval"
 
-            def omitted_positional_arg_raises_ParseError(self):
+            def omitted_positional_arg_raises_ParseError(self) -> None:
                 try:
                     self._basic().parse_argv(["mytask"])
                 except ParseError as e:
@@ -206,7 +208,7 @@ class Parser_:
                 else:
                     assert False, "Did not raise ParseError!"
 
-            def omitted_positional_args_raises_ParseError(self):
+            def omitted_positional_args_raises_ParseError(self) -> None:
                 try:
                     arg = Argument("pos", positional=True)
                     arg2 = Argument("morepos", positional=True)
@@ -218,7 +220,9 @@ class Parser_:
                 else:
                     assert False, "Did not raise ParseError!"
 
-            def positional_args_eat_otherwise_valid_context_names(self):
+            def positional_args_eat_otherwise_valid_context_names(
+                self,
+            ) -> None:
                 mytask = Context(
                     "mytask",
                     args=[
@@ -233,7 +237,7 @@ class Parser_:
                 assert r.args["nonpos"].value == "default"
                 assert len(result) == 1  # Not 2
 
-            def positional_args_can_still_be_given_as_flags(self):
+            def positional_args_can_still_be_given_as_flags(self) -> None:
                 # AKA "positional args can come anywhere in the context"
                 pos1 = Argument("pos1", positional=True)
                 pos2 = Argument("pos2", positional=True)
@@ -255,21 +259,21 @@ class Parser_:
                 assert r.args["nonpos"].value == "wut"
 
         class equals_signs:
-            def _compare(self, argname, invoke, value):
+            def _compare(self, argname: str, invoke: str, value: str) -> None:
                 c = Context("mytask", args=(Argument(argname, kind=str),))
                 r = Parser((c,)).parse_argv(["mytask", invoke])
                 assert r[0].args[argname].value == value
 
-            def handles_equals_style_long_flags(self):
+            def handles_equals_style_long_flags(self) -> None:
                 self._compare("foo", "--foo=bar", "bar")
 
-            def handles_equals_style_short_flags(self):
+            def handles_equals_style_short_flags(self) -> None:
                 self._compare("f", "-f=bar", "bar")
 
-            def does_not_require_escaping_equals_signs_in_value(self):
+            def does_not_require_escaping_equals_signs_in_value(self) -> None:
                 self._compare("f", "-f=biz=baz", "biz=baz")
 
-        def handles_multiple_boolean_flags_per_context(self):
+        def handles_multiple_boolean_flags_per_context(self) -> None:
             c = Context(
                 "mytask",
                 args=(Argument("foo", kind=bool), Argument("bar", kind=bool)),
@@ -280,10 +284,10 @@ class Parser_:
             assert a.bar.value is True
 
     class optional_arg_values:
-        def setup_method(self):
+        def setup_method(self) -> None:
             self.parser = self._parser()
 
-        def _parser(self, arguments=None):
+        def _parser(self, arguments=None) -> Parser:
             if arguments is None:
                 arguments = (
                     Argument(
@@ -294,19 +298,19 @@ class Parser_:
             self.parser = Parser([self.context])
             return self.parser
 
-        def _parse(self, argstr, parser=None):
+        def _parse(self, argstr, parser=None) -> Parser:
             parser = parser or self.parser
             return parser.parse_argv(["mytask"] + argstr.split())
 
-        def _expect(self, argstr, expected, parser=None):
+        def _expect(self, argstr, expected, parser=None) -> None:
             result = self._parse(argstr, parser)
             assert result[0].args.foo.value == expected
 
-        def no_value_becomes_True_not_default_value(self):
+        def no_value_becomes_True_not_default_value(self) -> None:
             self._expect("--foo", True)
             self._expect("-f", True)
 
-        def value_given_gets_preserved_normally(self):
+        def value_given_gets_preserved_normally(self) -> None:
             for argstr in (
                 "--foo whatever",
                 "--foo=whatever",
@@ -315,11 +319,11 @@ class Parser_:
             ):
                 self._expect(argstr, "whatever")
 
-        def not_given_at_all_uses_default_value(self):
+        def not_given_at_all_uses_default_value(self) -> None:
             self._expect("", "mydefault")
 
         class ambiguity_sanity_checks:
-            def _test_for_ambiguity(self, invoke, parser=None):
+            def _test_for_ambiguity(self, invoke, parser=None) -> None:
                 msg = "is ambiguous"
                 try:
                     self._parse(invoke, parser or self.parser)
@@ -331,7 +335,7 @@ class Parser_:
                     assert False
                 # Any other exceptions will naturally cause failure here.
 
-            def unfilled_posargs(self):
+            def unfilled_posargs(self) -> None:
                 p = self._parser(
                     (
                         Argument("foo", optional=True),
@@ -340,7 +344,7 @@ class Parser_:
                 )
                 self._test_for_ambiguity("--foo uhoh", p)
 
-            def no_ambiguity_if_option_val_already_given(self):
+            def no_ambiguity_if_option_val_already_given(self) -> None:
                 p = self._parser(
                     (
                         Argument("foo", optional=True),
@@ -352,7 +356,7 @@ class Parser_:
                 assert result[0].args["foo"].value == "hello"
                 assert result[0].args["bar"].value is True
 
-            def valid_argument_is_NOT_ambiguous(self):
+            def valid_argument_is_NOT_ambiguous(self) -> None:
                 # The one exception that proves the rule?
                 self._parser((Argument("foo", optional=True), Argument("bar")))
                 for form in ("--bar barval", "--bar=barval"):
@@ -362,7 +366,7 @@ class Parser_:
                     assert args["foo"].value is True
                     assert args["bar"].value == "barval"
 
-            def valid_flaglike_argument_is_NOT_ambiguous(self):
+            def valid_flaglike_argument_is_NOT_ambiguous(self) -> None:
                 # The OTHER exception that proves the rule?
                 self._parser(
                     (
@@ -376,12 +380,12 @@ class Parser_:
                 assert args["foo"].value is True
                 assert args["bar"].value is True
 
-            def invalid_flaglike_value_is_stored_as_value(self):
+            def invalid_flaglike_value_is_stored_as_value(self) -> None:
                 self._parser((Argument("foo", optional=True),))
                 result = self._parse("--foo --bar")
                 assert result[0].args["foo"].value == "--bar"
 
-            def task_name(self):
+            def task_name(self) -> None:
                 # mytask --foo myothertask
                 c1 = Context("mytask", args=(Argument("foo", optional=True),))
                 c2 = Context("othertask")
@@ -391,25 +395,27 @@ class Parser_:
     class list_type_arguments:
         "list-type (iterable) arguments"
 
-        def _parse(self, *args):
+        def _parse(self, *args) -> list:
             c = Context("mytask", args=(Argument("mylist", kind=list),))
             argv = ["mytask"] + list(args)
             return Parser([c]).parse_argv(argv)[0].args.mylist.value
 
-        def can_be_given_no_times_resulting_in_default_empty_list(self):
+        def can_be_given_no_times_resulting_in_default_empty_list(
+            self,
+        ) -> None:
             assert self._parse() == []
 
-        def given_once_becomes_single_item_list(self):
+        def given_once_becomes_single_item_list(self) -> None:
             assert self._parse("--mylist", "foo") == ["foo"]
 
-        def given_N_times_becomes_list_of_len_N(self):
+        def given_N_times_becomes_list_of_len_N(self) -> None:
             expected = ["foo", "bar", "biz"]
             got = self._parse(
                 "--mylist", "foo", "--mylist", "bar", "--mylist", "biz"
             )
             assert got == expected
 
-        def iterables_work_correctly_outside_a_vacuum(self):
+        def iterables_work_correctly_outside_a_vacuum(self) -> None:
             # Undetected bug where I was primarily focused on the -vvv use
             # case...'normal' incrementables never left 'waiting for value'
             # state in the parser! so _subsequent_ task names & such never got
@@ -436,14 +442,14 @@ class Parser_:
             assert result[1].name == "othertask"
 
     class task_repetition:
-        def is_happy_to_handle_same_task_multiple_times(self):
+        def is_happy_to_handle_same_task_multiple_times(self) -> None:
             task1 = Context("mytask")
             result = Parser((task1,)).parse_argv(["mytask", "mytask"])
             assert len(result) == 2
             for x in result:
                 assert x.name == "mytask"
 
-        def task_args_work_correctly(self):
+        def task_args_work_correctly(self) -> None:
             task1 = Context("mytask", args=(Argument("meh"),))
             result = Parser((task1,)).parse_argv(
                 ["mytask", "--meh", "mehval1", "mytask", "--meh", "mehval2"]
@@ -453,10 +459,10 @@ class Parser_:
 
     class per_task_core_flags:
         class general:
-            def _echo(self):
+            def _echo(self) -> Argument:
                 return Argument("echo", kind=bool, default=False)
 
-            def core_flags_work_normally_when_no_conflict(self):
+            def core_flags_work_normally_when_no_conflict(self) -> None:
                 # Initial parse context with an --echo, plus a no-args task
                 initial = Context(args=[self._echo()])
                 task1 = Context("mytask")
@@ -466,7 +472,7 @@ class Parser_:
                 result = parser.parse_argv(["mytask", "--echo"])
                 assert result[0].args.echo.value is True
 
-            def when_conflict_per_task_args_win_out(self):
+            def when_conflict_per_task_args_win_out(self) -> None:
                 # Initial parse context with an --echo, plus task w/ same
                 initial = Context(args=[self._echo()])
                 task1 = Context("mytask", args=[self._echo()])
@@ -477,7 +483,7 @@ class Parser_:
                 assert result[0].args.echo.value is False
                 assert result[1].args.echo.value is True
 
-            def value_requiring_core_flags_also_work_correctly(self):
+            def value_requiring_core_flags_also_work_correctly(self) -> None:
                 "value-requiring core flags also work correctly"
                 initial = Context(args=[Argument("hide")])
                 task1 = Context("mytask")
@@ -486,7 +492,7 @@ class Parser_:
                 assert result[0].args.hide.value == "both"
 
         class edge_cases:
-            def core_bool_but_per_task_string(self):
+            def core_bool_but_per_task_string(self) -> None:
                 # Initial parse context with bool --hide, and a task with a
                 # regular (string) --hide
                 initial = Context(
@@ -502,7 +508,7 @@ class Parser_:
                 assert result[1].args.hide.value == "both"
 
         class help_treats_context_name_as_its_value:
-            def by_itself_base_case(self):
+            def by_itself_base_case(self) -> None:
                 task1 = Context("mytask")
                 init = Context(args=[Argument("help", optional=True)])
                 parser = Parser(initial=init, contexts=[task1])
@@ -511,7 +517,7 @@ class Parser_:
                 assert result[0].args.help.value == "mytask"
                 assert "help" not in result[1].args
 
-            def other_tokens_afterwards_raise_parse_errors(self):
+            def other_tokens_afterwards_raise_parse_errors(self) -> None:
                 # NOTE: this is because of the special-casing where we supply
                 # the task name as the value when the flag is literally named
                 # "help".
@@ -525,16 +531,16 @@ class Parser_:
 class ParseResult_:
     "ParseResult"
 
-    def setup_method(self):
+    def setup_method(self) -> None:
         self.context = Context(
             "mytask", args=(Argument("foo", kind=str), Argument("bar"))
         )
         argv = ["mytask", "--foo", "foo-val", "--", "my", "remainder"]
         self.result = Parser((self.context,)).parse_argv(argv)
 
-    def acts_as_a_list_of_parsed_contexts(self):
+    def acts_as_a_list_of_parsed_contexts(self) -> None:
         assert len(self.result) == 1
         assert self.result[0].name == "mytask"
 
-    def exhibits_remainder_attribute(self):
+    def exhibits_remainder_attribute(self) -> None:
         assert self.result.remainder == "my remainder"
