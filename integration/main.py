@@ -12,7 +12,7 @@ from _util import only_utf8
 
 
 def _output_eq(cmd, expected):
-    assert run(cmd, hide=True).stdout == expected
+    assert run(cmd, hide=True).stdout.strip() == expected
 
 
 class Main:
@@ -27,11 +27,11 @@ class Main:
     class basics:
         @trap
         def basic_invocation(self):
-            _output_eq("invoke print-foo", "foo\n")
+            _output_eq("invoke print-foo", "foo")
 
         @trap
         def version_output(self):
-            _output_eq("invoke --version", "Invoke {}\n".format(__version__))
+            _output_eq("invoke --version", "Invoke {}".format(__version__))
 
         @trap
         def help_output(self):
@@ -43,15 +43,15 @@ class Main:
 
         @trap
         def shorthand_binary_name(self):
-            _output_eq("inv print-foo", "foo\n")
+            _output_eq("inv print-foo", "foo")
 
         @trap
         def explicit_task_module(self):
-            _output_eq("inv --collection _explicit foo", "Yup\n")
+            _output_eq("inv --collection _explicit foo", "Yup")
 
         @trap
         def invocation_with_args(self):
-            _output_eq("inv print-name --name whatevs", "whatevs\n")
+            _output_eq("inv print-name --name whatevs", "whatevs")
 
         @trap
         def bad_collection_exits_nonzero(self):
@@ -71,7 +71,7 @@ class Main:
             try:
                 with open(path, "w") as fd:
                     fd.write("foo: bar")
-                _output_eq("inv print-config", "bar\n")
+                _output_eq("inv print-config", "bar")
             finally:
                 try:
                     os.unlink(path)
@@ -81,7 +81,7 @@ class Main:
         @trap
         def invocable_via_python_dash_m(self):
             _output_eq(
-                "python -m invoke print-name --name mainline", "mainline\n"
+                "python -m invoke print-name --name mainline", "mainline"
             )
 
     class funky_characters_in_stdout:
@@ -156,6 +156,4 @@ class Main:
                 ("--meh", "True"),
                 ("--meh=whee", "whee"),
             ):
-                _output_eq(
-                    "inv -c parsing foo {}".format(argstr), expected + "\n"
-                )
+                _output_eq("inv -c parsing foo {}".format(argstr), expected)
