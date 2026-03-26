@@ -1,11 +1,11 @@
 from unittest.mock import Mock
-from pytest import raises, skip
-
-from invoke import Context, Config, task, Task, Call, Collection
-from invoke import FilesystemLoader as Loader
 
 from _util import support
+from pytest import raises, skip
 
+from invoke import Call, Collection, Config, Context, Task, task
+from invoke import FilesystemLoader as Loader
+from invoke.parser.parser import ParseResult
 
 #
 # NOTE: Most Task tests use @task as it's the primary interface and is a very

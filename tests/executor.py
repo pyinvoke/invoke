@@ -1,11 +1,10 @@
 from unittest.mock import Mock
+
 import pytest
+from _util import expect
 
 from invoke import Collection, Config, Context, Executor, Task, call, task
 from invoke.parser import ParserContext, ParseResult
-
-from _util import expect
-
 
 # TODO: why does this not work as a decorator? probably relaxed's fault - but
 # how?

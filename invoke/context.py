@@ -15,7 +15,7 @@ from typing import (
 from unittest.mock import Mock
 
 from .config import Config, DataProxy
-from .exceptions import Failure, AuthFailure, ResponseNotAccepted
+from .exceptions import AuthFailure, Failure, ResponseNotAccepted
 from .runners import Result
 from .watchers import FailingResponder
 

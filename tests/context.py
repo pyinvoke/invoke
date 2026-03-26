@@ -2,24 +2,22 @@ import os
 import pickle
 import re
 import sys
+from unittest.mock import Mock, call, patch
 
-from unittest.mock import patch, Mock, call
+from _util import _Dummy, mock_subprocess
+from pytest import mark, raises, skip
 from pytest_relaxed import trap
-from pytest import skip, raises, mark
 
 from invoke import (
     AuthFailure,
-    Context,
     Config,
+    Context,
     FailingResponder,
-    ResponseNotAccepted,
-    StreamWatcher,
     MockContext,
+    ResponseNotAccepted,
     Result,
+    StreamWatcher,
 )
-
-from _util import mock_subprocess, _Dummy
-
 
 local_path = "invoke.config.Local"
 _escaped_prompt = re.escape(Config().sudo.prompt)
