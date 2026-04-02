@@ -156,3 +156,29 @@ class Main:
                 ("--meh=whee", "whee"),
             ):
                 _output_eq("inv -c parsing foo {}".format(argstr), expected)
+
+        @pytest.mark.parametrize(
+            "argstr, expected",
+            [
+                # No 'optional' bool flag
+                (
+                    "val -- extra1 --extra2 -e3",
+                    "known='val', optional=False, remainder='extra1 --extra2 -e3'",  # noqa
+                ),
+                # Bool flag
+                (
+                    "val --optional -- extra1 --extra2 -e3",
+                    "known='val', optional=True, remainder='extra1 --extra2 -e3'",  # noqa
+                ),
+                # Explicit inverse bool flag, also tweak 'extra' order for fun
+                (
+                    "val -- --extra2 extra1 -e3",
+                    "known='val', optional=False, remainder='--extra2 extra1 -e3'",  # noqa
+                ),
+            ],
+        )
+        def tasks_can_access_the_parser_remainder_value(
+            self, argstr: str, expected: str
+        ) -> None:
+            # I.e., GH issue #250.
+            _output_eq(f"inv -c parsing use-remainder {argstr}", expected)

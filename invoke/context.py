@@ -43,37 +43,49 @@ class Context(DataProxy):
     .. versionadded:: 1.0
     """
 
-    def __init__(self, config: Optional[Config] = None) -> None:
+    # NOTE: sometime after Sphinx 1.7, autodoc stopped being able to see
+    # doc-comments inside __init__ (or something equivalent, anyway). Moving
+    # the type definitions up here seems to work better and /shouldn't/ mess up
+    # the DataProxy magic going on...
+
+    #: A list of commands to run (via "&&") before the main argument to any
+    #: `run` or `sudo` calls. Note that the primary API for manipulating
+    #: this list is `prefix`; see its docs for details.
+    command_prefixes: List[str]
+    #: A list of directories to 'cd' into before running commands with
+    #: `run` or `sudo`; intended for management via `cd`, please see its
+    #: docs for details.
+    command_cwds: List[str]
+    def __init__(
+        self,
+        config: Optional[Config] = None,
+    ) -> None:
         """
         :param config:
             `.Config` object to use as the base configuration.
 
             Defaults to an anonymous/default `.Config` instance.
         """
-        #: The fully merged `.Config` object appropriate for this context.
-        #:
-        #: `.Config` settings (see their documentation for details) may be
-        #: accessed like dictionary keys (``c.config['foo']``) or object
-        #: attributes (``c.config.foo``).
-        #:
-        #: As a convenience shorthand, the `.Context` object proxies to its
-        #: ``config`` attribute in the same way - e.g. ``c['foo']`` or
-        #: ``c.foo`` returns the same value as ``c.config['foo']``.
         config = config if config is not None else Config()
-        self._set(_config=config)
-        #: A list of commands to run (via "&&") before the main argument to any
-        #: `run` or `sudo` calls. Note that the primary API for manipulating
-        #: this list is `prefix`; see its docs for details.
-        command_prefixes: List[str] = list()
-        self._set(command_prefixes=command_prefixes)
-        #: A list of directories to 'cd' into before running commands with
-        #: `run` or `sudo`; intended for management via `cd`, please see its
-        #: docs for details.
-        command_cwds: List[str] = list()
-        self._set(command_cwds=command_cwds)
+        self._set(
+            _config=config,
+            command_prefixes=[],
+            command_cwds=[],
+        )
 
     @property
     def config(self) -> Config:
+        """
+        The fully merged `.Config` object appropriate for this context.
+
+        `.Config` settings (see their documentation for details) may be
+        accessed like dictionary keys (``c.config['foo']``) or object
+        attributes (``c.config.foo``).
+
+        As a convenience shorthand, the `.Context` object proxies to its
+        ``config`` attribute in the same way - e.g. ``c['foo']`` or
+        ``c.foo`` returns the same value as ``c.config['foo']``.
+        """
         # Allows Context to expose a .config attribute even though DataProxy
         # otherwise considers it a config key.
         return self._config
