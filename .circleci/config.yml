@@ -2,7 +2,7 @@ version: 2.1
 
 
 orbs:
-  orb: invocations/orb@1.6.0
+  orb: invocations/orb@1.7.0
 
 
 jobs:
@@ -44,6 +44,16 @@ jobs:
       - run: mypy .
       - orb/debug
 
+  downstream:
+    executor:
+      name: orb/default
+      version: "3.9"
+    steps:
+      - orb/downstream:
+          git_url: https://github.com/fabric/fabric
+          safety_check: fab --version
+          test_command: inv test
+
 
 workflows:
   main:
@@ -72,3 +82,7 @@ workflows:
       - doctests:
           name: "Doctests"
           requires: ["Docs"]
+      - downstream:
+          name: "Downstream test suites"
+          # No point testing downstream if we don't think we're whole.
+          requires: ["Test"]
