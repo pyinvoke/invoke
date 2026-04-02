@@ -90,7 +90,7 @@ class Runner:
                 minimum, this means values for each of the default
                 `.Runner.run` keyword arguments such as ``echo`` and ``warn``.
 
-        :raises exceptions.ValueError:
+        :raises ValueError:
             if not all expected default values are found in ``context``.
         """
         #: The `.Context` given to the same-named argument of `__init__`.
@@ -1051,7 +1051,7 @@ class Runner:
         execution on a remote system.
 
         In most cases, this method will also set subclass-specific member
-        variables used in other methods such as `wait` and/or `returncode`.
+        variables used in other methods such as `.wait` and/or `returncode`.
 
         :param str command:
             Command string to execute.
@@ -1169,9 +1169,9 @@ class Runner:
         """
         Perform final cleanup, if necessary.
 
-        This method is called within a ``finally`` clause inside the main `run`
-        method. Depending on the subclass, it may be a no-op, or it may do
-        things such as close network connections or open files.
+        This method is called within a ``finally`` clause inside the main
+        `~.Runner.run` method. Depending on the subclass, it may be a no-op, or
+        it may do things such as close network connections or open files.
 
         :returns: ``None``
 

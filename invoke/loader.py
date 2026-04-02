@@ -37,7 +37,7 @@ class Loader:
 
         Must return a ModuleSpec valid for use by `importlib`, which is
         typically a name string followed by the contents of the 3-tuple
-        returned by `importlib.module_from_spec` (``name``, ``loader``,
+        returned by `importlib.util.module_from_spec` (``name``, ``loader``,
         ``origin``.)
 
         For a sample implementation, see `.FilesystemLoader`.
