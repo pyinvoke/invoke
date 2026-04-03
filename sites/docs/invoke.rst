@@ -16,7 +16,8 @@ Core options and flags
 
 ``invoke``'s usage looks like::
 
-    $ inv[oke] [--core-opts] task1 [--task1-opts] ... taskN [--taskN-opts]
+    $ inv[oke] [--core-opts] task1 [--task1-opts] ... taskN [--taskN-opts] [--
+    remainder-opts-or-values]
 
 All core options & flags are below; almost all of them must be given *before*
 any task names, with a few (such as :option:`--help`) being specially looked
@@ -202,6 +203,19 @@ for anywhere in the command line. (For parsing details, see
 .. option:: -w, --warn-only
 
     Warn, instead of failing, when shell commands fail.
+
+.. _remainder:
+
+Unparsed input: the 'remainder'
+-------------------------------
+
+Invoke takes a page from the GNU command-line tradition and many shell
+builtins, and implements the concept of the *remainder* (aka the "end of
+options" signal): a 'bare' ``--`` not attached to any option name, followed by
+arbitrary text.
+
+Such text is not subject to Invoke's CLI parser, and is used to power features
+like :ref:`tab-completion` or :ref:`wrapper-tasks`
 
 
 .. _tab-completion:

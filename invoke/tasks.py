@@ -24,10 +24,11 @@ from typing import (
 )
 
 from .context import Context
-from .parser import Argument, translate_underscores
+from .parser import Argument, ParseResult, translate_underscores
 
 if TYPE_CHECKING:
     from inspect import Signature
+
     from .config import Config
 
 T = TypeVar("T", bound=Callable)
@@ -159,11 +160,10 @@ class Task(Generic[T]):
             returning an `inspect.Signature`.
         """
         # Handle callable-but-not-function objects
-        func = (
-            body
-            if isinstance(body, types.FunctionType)
-            else body.__call__  # type: ignore
-        )
+        if isinstance(body, types.FunctionType):
+            func = body
+        else:
+            func = body.__call__  # type: ignore
         # Rebuild signature with first arg dropped, or die usefully(ish trying
         sig = inspect.signature(func)
         params = list(sig.parameters.values())
@@ -428,13 +428,19 @@ class Call:
                 return False
         return True
 
-    def make_context(self, config: "Config") -> Context:
+    def make_context(
+        self,
+        config: "Config",
+        core_parse_result: "ParseResult",
+    ) -> Context:
         """
         Generate a `.Context` appropriate for this call, with given config.
 
         .. versionadded:: 1.0
+        .. versionchanged:: 3.0
+            Added the ``core_parse_result`` parameter.
         """
-        return Context(config=config)
+        return Context(config=config, remainder=core_parse_result.remainder)
 
     def clone_data(self) -> Dict[str, Any]:
         """

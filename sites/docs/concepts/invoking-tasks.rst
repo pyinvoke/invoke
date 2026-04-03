@@ -356,6 +356,60 @@ sets ``color=False``. Invoke handles this for you: when setting up CLI flags,
 booleans which default to ``True`` generate a ``--no-<name>`` flag instead.
 
 
+.. _wrapper-tasks:
+
+'Wrapper' tasks
+---------------
+
+An uncommon, but not rare, use case is one where your Invoke task is
+essentially "wrapping" an existing command-line tool - the task performs setup
+actions like "baking in" default arguments, setting shell env vars, or similar,
+and then finally calls the underlying command with the result.
+
+Prior to the addition of this feature, you had to use a clunky workaround:
+stuffing all "passthrough" arguments into a single argument string of its own,
+eg::
+
+    @task
+    def mywrapper(c, opts=""):
+        default_args = "--baked-in-arg baked-in-value"
+        c.run(f"some-command {default_args} {opts}")
+
+Such tasks might be invoked like so::
+
+    $ inv mywrapper
+    # runs 'somecommand --baked-in-arg baked-in-value'
+    $ inv mywrapper --opts "--foo --bar"
+    # runs 'somecommand --baked-in-arg baked-in-value --foo --bar'
+
+While this approach isn't *difficult*, it still carries friction, both in
+having to cart this pattern around, and in the care required to invoke such
+tasks properly - because it's easy to accidentally try the following::
+
+    $ inv mywrapper --opts --foo --bar
+    # will trigger a parsing exception! 'mywrapper' has no 'bar' argument!
+
+To support this use case (among others), Invoke's parser offers the
+:ref:`remainder` feature, letting you pass in a pile of unparsed text after a
+bare ``--`` signifier.
+
+The remainder string (or ``None`` if one wasn't given) is available in
+the task context argument, `~invoke.context.Context`, as a ``.remainder``
+attribute - giving us a somewhat cleaner wrapper task::
+
+    @task
+    def mywrapper(c):
+        c.run(f"somecommand --baked-in-arg baked-in-value {c.remainder}")
+
+Used like so::
+
+    $ inv mywrapper -- --foo --bar
+    # runs 'somecommand --baked-in-arg baked-in-value --foo --bar'
+
+The same result as before, but with a simpler task definition, and no need to
+remember quoting or similar - just the extra double-dash.
+
+
 .. _how-tasks-run:
 
 How tasks run

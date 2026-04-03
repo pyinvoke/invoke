@@ -32,6 +32,10 @@ class Context_:
             Context()
             Context(config={"foo": "bar"})
 
+        def takes_optional_remainder_arg(self):
+            # Tautology-tastic!
+            assert Context(remainder="stuff!").remainder == "stuff!"
+
     class methods_exposed:
         def _expect_attr(self, attr):
             c = Context()

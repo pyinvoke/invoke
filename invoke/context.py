@@ -56,21 +56,31 @@ class Context(DataProxy):
     #: `run` or `sudo`; intended for management via `cd`, please see its
     #: docs for details.
     command_cwds: List[str]
+    #: The CLI parser's 'remainder' value (text given after a standalone
+    #: ``--`` in the command line), or the empty string if not given.
+    remainder: str
+
     def __init__(
         self,
         config: Optional[Config] = None,
+        remainder: str = "",
     ) -> None:
         """
         :param config:
             `.Config` object to use as the base configuration.
 
             Defaults to an anonymous/default `.Config` instance.
+
+        :param remainder:
+            The invoking program's :ref:`parser remainder <remainder>` value,
+            if any was obtained.
         """
         config = config if config is not None else Config()
         self._set(
             _config=config,
             command_prefixes=[],
             command_cwds=[],
+            remainder=remainder,
         )
 
     @property

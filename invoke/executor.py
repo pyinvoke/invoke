@@ -1,14 +1,13 @@
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
 
 from .config import Config
-from .parser import ParserContext
+from .parser import ParserContext, ParseResult
 from .tasks import Call, Task
 from .util import debug
 
 if TYPE_CHECKING:
     from .collection import Collection
     from .runners import Result
-    from .parser import ParseResult
 
 
 class Executor:
@@ -41,10 +40,14 @@ class Executor:
         :param core:
             An optional `.ParseResult` holding parsed core program arguments.
             Defaults to ``None``.
+
+        .. versionchanged:: 3.0
+            The ``core`` attribute now defaults to an 'empty' `.ParseResult` if
+            ``None`` was given.
         """
         self.collection = collection
         self.config = config if config is not None else Config()
-        self.core = core
+        self.core = core if core is not None else ParseResult()
 
     def execute(
         self, *tasks: Union[str, Tuple[str, Dict[str, Any]], ParserContext]
@@ -135,7 +138,7 @@ class Executor:
             # Get final context from the Call (which will know how to generate
             # an appropriate one; e.g. subclasses might use extra data from
             # being parameterized), handing in this config for use there.
-            context = call.make_context(config)
+            context = call.make_context(config, core_parse_result=self.core)
             args = (context, *call.args)
             result = call.task(*args, **call.kwargs)
             if autoprint:
