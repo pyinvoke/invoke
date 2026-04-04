@@ -21,6 +21,7 @@ from typing import (
     Type,
     TypeVar,
     Union,
+    cast,
 )
 
 from .context import Context
@@ -286,7 +287,7 @@ class Task(Generic[T]):
         return args
 
 
-def task(*args: Any, **kwargs: Any) -> Callable:
+def task(*args: Any, **kwargs: Any) -> "Task[T]":
     """
     Marks wrapped callable object as a valid Invoke task.
 
@@ -357,7 +358,7 @@ def task(*args: Any, **kwargs: Any) -> Callable:
         return _task
 
     # update_wrapper(inner, klass)
-    return inner
+    return cast('Task["T"]', inner)
 
 
 class Call:

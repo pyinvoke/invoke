@@ -19,6 +19,7 @@ from typing import (
     Optional,
     Tuple,
     Type,
+    overload,
 )
 
 # Import some platform-specific things at top level so they can be mocked for
@@ -121,6 +122,16 @@ class Runner:
         # goes REAL bad during options parsing)
         self._asynchronous = False
         self._disowned = False
+
+    @overload
+    def run(self, command: str, *, disowned: None, **kwargs: Any) -> "Result":
+        ...
+
+    @overload
+    def run(
+        self, command: str, *, disowned: bool, **kwargs: Any
+    ) -> Optional["Result"]:
+        ...
 
     def run(self, command: str, **kwargs: Any) -> Optional["Result"]:
         """
@@ -1480,7 +1491,7 @@ class Result:
         exited: int = 0,
         pty: bool = False,
         hide: Tuple[str, ...] = tuple(),
-    ):
+    ) -> None:
         self.stdout = stdout
         self.stderr = stderr
         if encoding is None:
@@ -1504,6 +1515,9 @@ class Result:
 
     def __bool__(self) -> bool:
         return self.ok
+
+    def __int__(self) -> int:
+        return self.exited
 
     def __str__(self) -> str:
         if self.exited is not None:
