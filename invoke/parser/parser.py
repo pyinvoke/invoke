@@ -292,17 +292,9 @@ class ParseMachine(StateMachine):
                 )
             )  # noqa
             self.see_value(token)
-        # Positional args (must come above context-name check in case we still
-        # need a posarg and the user legitimately wants to give it a value that
-        # just happens to be a valid context name.)
-        elif self.context and self.context.missing_positional_args:
-            msg = "Context {!r} requires positional args, eating {!r}"
-            debug(msg.format(self.context, token))
-            self.see_positional_arg(token)
-        # New context
-        elif token in self.contexts:
-            self.see_context(token)
-        # Initial-context flag being given as per-task flag (e.g. --help)
+        # Initial-context flag being given as per-task flag (e.g. --help).
+        # Must come above positional-args check so that flag-like tokens
+        # aren't consumed as positional argument values.
         elif self.initial and token in self.initial.flags:
             debug("Saw (initial-context) flag {!r}".format(token))
             flag = self.initial.flags[token]
@@ -318,6 +310,16 @@ class ParseMachine(StateMachine):
                 # default-False 'dedupe') and it's up to us whether we actually
                 # put any in place.
                 self.switch_to_flag(token)
+        # Positional args (must come above context-name check in case we still
+        # need a posarg and the user legitimately wants to give it a value that
+        # just happens to be a valid context name.)
+        elif self.context and self.context.missing_positional_args:
+            msg = "Context {!r} requires positional args, eating {!r}"
+            debug(msg.format(self.context, token))
+            self.see_positional_arg(token)
+        # New context
+        elif token in self.contexts:
+            self.see_context(token)
         # Unknown
         else:
             if not self.ignore_unknown:
@@ -339,7 +341,18 @@ class ParseMachine(StateMachine):
             )
         )
         # Ensure all of context's positional args have been given.
-        if self.context and self.context.missing_positional_args:
+        # Skip validation when --help was requested (positional args aren't
+        # required just to ask for help).
+        help_was_requested = (
+            self.initial
+            and "--help" in self.initial.flags
+            and self.initial.flags["--help"].raw_value is not None
+        )
+        if (
+            self.context
+            and self.context.missing_positional_args
+            and not help_was_requested
+        ):
             err = "'{}' did not receive required positional arguments: {}"
             names = ", ".join(
                 "'{}'".format(x.name)

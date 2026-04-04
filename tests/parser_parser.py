@@ -511,6 +511,18 @@ class Parser_:
                 assert result[0].args.help.value == "mytask"
                 assert "help" not in result[1].args
 
+            def not_consumed_as_positional_arg_value(self):
+                # A task with a required positional arg should still treat
+                # --help as the initial-context help flag, not eat it as
+                # the positional arg's value. (GH #982)
+                pos = Argument("pos", positional=True)
+                task1 = Context("mytask", args=[pos])
+                init = Context(args=[Argument("help", optional=True)])
+                parser = Parser(initial=init, contexts=[task1])
+                result = parser.parse_argv(["mytask", "--help"])
+                assert len(result) == 2
+                assert result[0].args.help.value == "mytask"
+
             def other_tokens_afterwards_raise_parse_errors(self):
                 # NOTE: this is because of the special-casing where we supply
                 # the task name as the value when the flag is literally named
