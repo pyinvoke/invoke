@@ -2,6 +2,23 @@
 Changelog
 =========
 
+- :feature:`250` Add access to the core CLI parser's :ref:`remainder
+  <remainder>` value, via `Context.remainder
+  <invoke.context.Context.remainder>` - this allows for more elegant
+  :ref:`wrapper tasks <wrapper-tasks>`.
+
+  .. warning::
+    This change is technically backwards incompatible, but only if you were
+    overriding the `tasks.Call.make_context <invoke.tasks.Call.make_context>`
+    method. Updating such code to work with this version of Invoke is
+    straightforward; see `this Fabric commit
+    <https://github.com/fabric/fabric/commit/7fa309db9dd5dac69079c1fb83b6f579555f7d53>`_
+    for an example.
+
+- :support:`-` Fix a grab bag's worth of Sphinx doc render problems, among
+  which were some class attributes (eg `Context.command_cwds
+  <invoke.context.Context.command_cwds>`) that had silently disappeared from
+  the class' autodoc output after our 2.0 release.
 - :release:`2.2.1 <2025-10-10>`
 - :release:`2.1.4 <2025-10-10>`
 - :bug:`1038` (fixed in :issue:`1040`) Python 3.14 tweaked the behavior of
