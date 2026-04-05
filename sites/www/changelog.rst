@@ -3,9 +3,13 @@ Changelog
 =========
 
 - :release:`3.0.0 <2026-04-05>`
+- :support:`-` Dropped support for Python versions <3.9. That's right, we've
+  caught up to Python's own EOL regime...as of late 2024! As part of this
+  change, we also switched over to using ``pyproject.toml`` for packaging
+  metadata.
 - :support:`-` Expanded mypy type hint checking to more of the codebase &
   generally touched up some type hints here and there. More of this is planned
-  to occur after we drop a few older Python versions as well.
+  to occur as we go.
 - :feature:`779` `~invoke.runners.Runner.run` now includes local subprocess
   PIDs in `~invoke.runners.Result` objects (as ``.pid``), via the new
   `Runner.get_pid <invoke.runners.Runner.get_pid>` method. This may be
