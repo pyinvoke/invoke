@@ -2,6 +2,7 @@
 Changelog
 =========
 
+- :release:`3.0.0 <2026-04-05>`
 - :support:`-` Expanded mypy type hint checking to more of the codebase &
   generally touched up some type hints here and there. More of this is planned
   to occur after we drop a few older Python versions as well.
