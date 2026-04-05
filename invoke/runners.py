@@ -205,7 +205,7 @@ class Runner:
               ``nohup`` or (the shell builtin) ``disown``.
 
             .. versionadded:: 1.4
-            .. versionchanged:: 2.3
+            .. versionchanged:: 3.0
                 The return value when ``disown=True`` changed from `None` to
                 `Result`.
 
@@ -1484,7 +1484,7 @@ class Result:
         The process ID of the subprocess that was executed (normally) or is
         executing (when asynchronous or disowned).
 
-        .. versionadded:: 2.3
+        .. versionadded:: 3.0
 
     :param bool disowned:
         Whether the subprocess was 'disowned' or detached from ourselves; in
@@ -1493,7 +1493,7 @@ class Result:
         own methods to interrogate your operating system about this object's
         ``pid``, however, which will usually be valid.
 
-        .. versionadded:: 2.3
+        .. versionadded:: 3.0
 
     .. note::
         `Result` objects' truth evaluation is equivalent to their `.ok`

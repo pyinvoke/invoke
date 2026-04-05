@@ -23,7 +23,8 @@ Changelog
     - We determined that the behavior of ``disowned`` is such that it can live
       within regular `~invoke.runners.Result` without too many headaches (i.e.
       no need for a subclass like `~invoke.runners.Promise`) and have gone that
-      route, with option to expand the class tree at Invoke 3.0 time.
+      route, with option to expand the class tree in a future
+      backwards-incompatible release.
       `~invoke.runners.Runner.run`'s docstring has been updated to reflect what
       this variant of `~invoke.runners.Result` looks like.
     - While this change is technically **backwards incompatible**, ``disown``
@@ -35,6 +36,11 @@ Changelog
       causes frustrating static analysis 'bug' (analyzers can't assume you have
       a `~invoke.runners.Result` in hand even though it's the vastly more
       common case).
+
+  .. warning::
+    As noted above, this change is backwards incompatible **if** you were
+    relying on this method's return value to be ``None`` when ``disown=True``.
+    It is backwards compatible in all other situations.
 
 - :feature:`250` Add access to the core CLI parser's :ref:`remainder
   <remainder>` value, via `Context.remainder
