@@ -390,12 +390,12 @@ tasks properly - because it's easy to accidentally try the following::
     # will trigger a parsing exception! 'mywrapper' has no 'bar' argument!
 
 To support this use case (among others), Invoke's parser offers the
-:ref:`remainder` feature, letting you pass in a pile of unparsed text after a
-bare ``--`` signifier.
+:ref:`remainder <remainder>` feature, letting you pass in a pile of unparsed
+text after a bare ``--`` signifier.
 
-The remainder string (or ``None`` if one wasn't given) is available in
-the task context argument, `~invoke.context.Context`, as a ``.remainder``
-attribute - giving us a somewhat cleaner wrapper task::
+The remainder string is available in the task context argument,
+`~invoke.context.Context`, as a ``.remainder`` attribute - giving us a somewhat
+cleaner wrapper task::
 
     @task
     def mywrapper(c):
