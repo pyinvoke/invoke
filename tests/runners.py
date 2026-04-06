@@ -1830,6 +1830,12 @@ class Promise_:
         # Supports improved downstream typechecking.
         assert AbstractContextManager in Promise.__mro__
 
+    def repr_degrades_gracefully(self) -> None:
+        promise = _runner().run(
+            _, pty=True, encoding="utf-17", shell="sea", asynchronous=True
+        )
+        assert repr(promise) == f"<Promise cmd='{_}'>"
+
     def exposes_read_only_run_params(self):
         runner = _runner()
         promise = runner.run(

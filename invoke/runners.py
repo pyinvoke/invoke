@@ -1682,6 +1682,9 @@ class Promise(Result, AbstractContextManager):
     ) -> None:
         self.join()
 
+    def __repr__(self) -> str:
+        return f"<Promise cmd={self.command!r}>"
+
 
 def normalize_hide(
     val: Any,
