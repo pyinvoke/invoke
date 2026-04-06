@@ -6,6 +6,7 @@ import struct
 import sys
 import threading
 import time
+from contextlib import AbstractContextManager
 from subprocess import PIPE, Popen
 from types import TracebackType
 from typing import (
@@ -1614,7 +1615,7 @@ class Result:
         return "\n\n" + "\n".join(getattr(self, stream).splitlines()[-count:])
 
 
-class Promise(Result):
+class Promise(Result, AbstractContextManager):
     """
     A promise of some future `Result`, yielded from asynchronous execution.
 

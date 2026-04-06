@@ -6,6 +6,7 @@ import sys
 import termios
 import threading
 import types
+from contextlib import AbstractContextManager
 from io import BytesIO, StringIO
 from itertools import chain, repeat
 from unittest.mock import Mock, call, patch
@@ -1825,6 +1826,10 @@ class Result_:
 
 
 class Promise_:
+    def explicitly_inherits_from_abstract_base_class(self) -> None:
+        # Supports improved downstream typechecking.
+        assert AbstractContextManager in Promise.__mro__
+
     def exposes_read_only_run_params(self):
         runner = _runner()
         promise = runner.run(
