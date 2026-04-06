@@ -2,6 +2,7 @@
 Changelog
 =========
 
+- :release:`3.0.1 <2026-04-06>`
 - :support:`- backported` Minor tweaks to documentation and type
   hints/inheritance (mostly around `~invoke.runners.Promise`).
 - :release:`3.0.0 <2026-04-05>`
