@@ -2,6 +2,7 @@
 Changelog
 =========
 
+- :release:`3.0.2 <2026-04-06>`
 - :support:`- backported` Make the return value type hint for `@task
   <invoke.tasks.task>` more specific; as-is it would trigger typecheck errors
   when handing regular, decorated task functions as inputs to
