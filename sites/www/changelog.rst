@@ -2,6 +2,8 @@
 Changelog
 =========
 
+- :support:`- backported` Minor tweaks to documentation and type
+  hints/inheritance (mostly around `~invoke.runners.Promise`).
 - :release:`3.0.0 <2026-04-05>`
 - :support:`-` Dropped support for Python versions <3.9. That's right, we've
   caught up to Python's own EOL regime...as of late 2024! As part of this
