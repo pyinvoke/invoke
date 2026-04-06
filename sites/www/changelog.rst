@@ -2,6 +2,14 @@
 Changelog
 =========
 
+- :support:`- backported` Make the return value type hint for `@task
+  <invoke.tasks.task>` more specific; as-is it would trigger typecheck errors
+  when handing regular, decorated task functions as inputs to
+  `~invoke.collection.Collection.add_task` and similar methods.
+- :bug:`742` Define a custom ``__repr__`` for `~invoke.runners.Promise` so it
+  can be displayed in interactive sessions or other debug contexts, without
+  running afoul of ``AttributeError``. Thanks to Leonid Shvechikov for the
+  original bug report.
 - :release:`3.0.1 <2026-04-06>`
 - :support:`- backported` Minor tweaks to documentation and type
   hints/inheritance (mostly around `~invoke.runners.Promise`).
