@@ -1630,6 +1630,9 @@ class Promise(Result):
     .. versionadded:: 1.4
     """
 
+    #: The `.Runner` instance which made this `.Promise`.
+    runner: Runner
+
     def __init__(self, runner: "Runner") -> None:
         """
         Create a new promise.
