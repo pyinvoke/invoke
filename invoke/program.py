@@ -403,6 +403,8 @@ class Program:
             # problems.
             if isinstance(e, ParseError):
                 print(e, file=sys.stderr)
+                if e.context and e.context.name:
+                    self.print_task_help(e.context.name)
             if isinstance(e, Exit) and e.message:
                 print(e.message, file=sys.stderr)
             if isinstance(e, UnexpectedExit) and e.result.hide:

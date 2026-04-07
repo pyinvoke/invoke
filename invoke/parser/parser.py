@@ -296,6 +296,10 @@ class ParseMachine(StateMachine):
         # need a posarg and the user legitimately wants to give it a value that
         # just happens to be a valid context name.)
         elif self.context and self.context.missing_positional_args:
+            if self._is_token_help(token):
+                debug("--help passed, skip positional arg")
+                self._force_help()
+                return
             msg = "Context {!r} requires positional args, eating {!r}"
             debug(msg.format(self.context, token))
             self.see_positional_arg(token)
@@ -305,12 +309,11 @@ class ParseMachine(StateMachine):
         # Initial-context flag being given as per-task flag (e.g. --help)
         elif self.initial and token in self.initial.flags:
             debug("Saw (initial-context) flag {!r}".format(token))
-            flag = self.initial.flags[token]
             # Special-case for core --help flag: context name is used as value.
-            if flag.name == "help":
-                flag.value = self.context.name
-                msg = "Saw --help in a per-task context, setting task name ({!r}) as its value"  # noqa
-                debug(msg.format(flag.value))
+            if self._is_token_help(token):
+                debug("--help passed")
+                self._force_help()
+                return
             # All others: just enter the 'switch to flag' parser state
             else:
                 # TODO: handle inverse core flags too? There are none at the
@@ -338,15 +341,21 @@ class ParseMachine(StateMachine):
                 self.context.name if self.context else self.context
             )
         )
-        # Ensure all of context's positional args have been given.
-        if self.context and self.context.missing_positional_args:
+        if not self.context:
+            return
+
+        # Ensure all of context's positional args have been given
+        if (
+            not self.context.skip_checks
+            and self.context.missing_positional_args
+        ):
             err = "'{}' did not receive required positional arguments: {}"
             names = ", ".join(
                 "'{}'".format(x.name)
                 for x in self.context.missing_positional_args
             )
             self.error(err.format(self.context.name, names))
-        if self.context and self.context not in self.result:
+        if self.context not in self.result:
             self.result.append(self.context)
 
     def switch_to_context(self, name: str) -> None:
@@ -453,3 +462,18 @@ class ParseMachine(StateMachine):
 
     def error(self, msg: str) -> None:
         raise ParseError(msg, self.context)
+
+    def _is_token_help(self, token: str) -> bool:
+        try:
+            flag = self.initial.flags[token]
+            if flag.name == "help":
+                return True
+        except KeyError:
+            pass
+        except AttributeError:
+            pass
+        return False
+
+    def _force_help(self) -> None:
+        self.initial.flags["--help"].value = self.context.name
+        self.context.skip_checks = True
