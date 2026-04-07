@@ -322,7 +322,7 @@ class ParseMachine(StateMachine):
         else:
             if not self.ignore_unknown:
                 debug("Can't find context named {!r}, erroring".format(token))
-                self.error("No idea what {!r} is!".format(token))
+                self.error("Unknown what {!r} is.".format(token))
             else:
                 debug("Bottom-of-handle() see_unknown({!r})".format(token))
                 self.see_unknown(token)

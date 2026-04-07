@@ -358,7 +358,7 @@ class Program_:
         def does_not_seek_tasks_module_if_namespace_was_given(self):
             expect(
                 "foo",
-                err="No idea what 'foo' is!\n",
+                err="Unknown what 'foo' is.\n",
                 program=Program(namespace=Collection("blank")),
             )
 
@@ -400,7 +400,7 @@ class Program_:
             # "no idea what foo is!") and exit 1. (Intent is to display that
             # info w/o a full traceback, basically.)
             stderr = sys.stderr.getvalue()
-            assert stderr == "No idea what '{}' is!\n".format(nah)
+            assert stderr == "Unknown what '{}' is.\n".format(nah)
             mock_exit.assert_called_with(1)
 
         @trap
@@ -734,7 +734,7 @@ Options:
                 expect("-c decorators -h punch --list", out=expected)
 
             def complains_if_given_invalid_task_name(self):
-                expect("-h this", err="No idea what 'this' is!\n")
+                expect("-h this", err="Unknown what 'this' is.\n")
 
     class task_list:
         "--list"
