@@ -286,7 +286,7 @@ class Task(Generic[T]):
         return args
 
 
-def task(*args: Any, **kwargs: Any) -> Union[Task[T], Callable[[Callable], Task[T]]]:
+def task(*args: Any, **kwargs: Any) -> Callable:
     """
     Marks wrapped callable object as a valid Invoke task.
 

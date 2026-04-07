@@ -2,6 +2,9 @@
 Changelog
 =========
 
+- :support:`- backported` Reverted the `@task
+  <invoke.tasks.task>` return value type hint change; it actually just makes
+  things worse. Taking this one back to the drawing table for later.
 - :release:`3.0.2 <2026-04-06>`
 - :support:`- backported` Make the return value type hint for `@task
   <invoke.tasks.task>` more specific; as-is it would trigger typecheck errors
