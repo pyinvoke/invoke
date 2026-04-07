@@ -2,6 +2,7 @@
 Changelog
 =========
 
+- :release:`3.0.3 <2026-04-07>`
 - :support:`- backported` Reverted the `@task
   <invoke.tasks.task>` return value type hint change; it actually just makes
   things worse. Taking this one back to the drawing table for later.
