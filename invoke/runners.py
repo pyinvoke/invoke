@@ -1677,7 +1677,7 @@ class Promise(Result, AbstractContextManager):
     def __exit__(
         self,
         exc_type: Optional[Type[BaseException]],
-        exc_value: BaseException,
+        exc_value: Optional[BaseException],
         exc_tb: Optional[TracebackType],
     ) -> None:
         self.join()
