@@ -72,6 +72,7 @@ class Task(Generic[T]):
         autoprint: bool = False,
         iterable: Optional[Iterable[str]] = None,
         incrementable: Optional[Iterable[str]] = None,
+        hidden: bool = False,
     ) -> None:
         # Real callable
         self.body = body
@@ -93,6 +94,7 @@ class Task(Generic[T]):
         self.incrementable = incrementable or []
         self.auto_shortflags = auto_shortflags
         self.help = (help or {}).copy()
+        self.hidden = hidden
         # Call chain bidness
         self.pre = pre or []
         self.post = post or []
