@@ -781,6 +781,8 @@ class Program:
         ctx = self.parser.contexts[name]
         tuples = ctx.help_tuples()
         docstring = inspect.getdoc(self.collection[name])
+        pre_tasks = self.collection[name].pre
+        post_tasks = self.collection[name].post
         header = "Usage: {} [--core-opts] {} {}[other tasks here ...]"
         opts = "[--options] " if tuples else ""
         print(header.format(self.binary, name, opts))
@@ -800,6 +802,27 @@ class Program:
         print("Options:")
         if tuples:
             self.print_columns(tuples)
+        else:
+            print(self.leading_indent + "none")
+            print("")
+
+        print("Pre-tasks:")
+        if pre_tasks:
+            for pre in pre_tasks:
+                print(
+                    self.leading_indent + self.collection.transform(pre.name)
+                )
+            print("")
+        else:
+            print(self.leading_indent + "none")
+            print("")
+        print("Post-tasks:")
+        if post_tasks:
+            for post in post_tasks:
+                print(
+                    self.leading_indent + self.collection.transform(post.name)
+                )
+            print("")
         else:
             print(self.leading_indent + "none")
             print("")

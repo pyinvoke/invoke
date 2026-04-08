@@ -647,6 +647,12 @@ Options:
   -h STRING, --why=STRING   Motive
   -w STRING, --who=STRING   Who to punch
 
+Pre-tasks:
+  none
+
+Post-tasks:
+  none
+
 """.lstrip()
                 for flag in ["-h", "--help"]:
                     expect("-c decorators {} punch".format(flag), out=expected)
@@ -659,6 +665,12 @@ Docstring:
   none
 
 Options:
+  none
+
+Pre-tasks:
+  foo3
+
+Post-tasks:
   none
 
 """.lstrip()
@@ -680,6 +692,12 @@ Docstring:
 Options:
   none
 
+Pre-tasks:
+  none
+
+Post-tasks:
+  none
+
 """.lstrip()
                 expect("-c decorators -h foo", out=expected)
 
@@ -695,6 +713,12 @@ Docstring:
   Added in 1.0
 
 Options:
+  none
+
+Pre-tasks:
+  none
+
+Post-tasks:
   none
 
 """.lstrip()
@@ -714,6 +738,12 @@ Docstring:
 Options:
   none
 
+Pre-tasks:
+  none
+
+Post-tasks:
+  foo2
+
 """.lstrip()
                 expect("-c decorators -h foo3", out=expected)
 
@@ -729,6 +759,12 @@ Docstring:
 Options:
   -h STRING, --why=STRING   Motive
   -w STRING, --who=STRING   Who to punch
+
+Pre-tasks:
+  none
+
+Post-tasks:
+  none
 
 """.lstrip()
                 expect("-c decorators -h punch --list", out=expected)

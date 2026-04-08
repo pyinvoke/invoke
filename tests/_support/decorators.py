@@ -21,7 +21,7 @@ def foo2(c):
     pass
 
 
-@task
+@task(post=[foo2])
 def foo3(c):
     """Foo the other bar:
 
@@ -32,7 +32,7 @@ def foo3(c):
     pass
 
 
-@task(default=True)
+@task(default=True, pre=[foo3])
 def biz(c):
     pass
 
