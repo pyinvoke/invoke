@@ -105,6 +105,47 @@ class Program_:
             expect("--write-pyc -c foo mytask")
             assert not sys.dont_write_bytecode
 
+        class root_warning:
+            @trap
+            def prints_warning_to_tty_stderr(self):
+                program = Program()
+                with patch.object(program, "running_as_root", return_value=True):
+                    sys.stderr.isatty = Mock(return_value=True)
+                    program.warn_if_running_as_root(is_testing=False)
+                assert (
+                    sys.stderr.getvalue()
+                    == "WARNING: Running Invoke as root may create root-owned files and cause later I/O or permission errors. Re-run as a non-root user.\n"
+                )
+
+            @trap
+            def does_not_warn_when_stderr_is_not_a_tty(self):
+                program = Program()
+                with patch.object(program, "running_as_root", return_value=True):
+                    sys.stderr.isatty = Mock(return_value=False)
+                    program.warn_if_running_as_root(is_testing=False)
+                assert sys.stderr.getvalue() == ""
+
+            @trap
+            def skips_warning_for_exit_false(self):
+                program = Program()
+                with patch.object(program, "running_as_root", return_value=True):
+                    sys.stderr.isatty = Mock(return_value=True)
+                    program.warn_if_running_as_root(is_testing=True)
+                assert sys.stderr.getvalue() == ""
+
+            @patch("invoke.program.os")
+            def uses_geteuid_when_available(self, os_):
+                os_.geteuid.return_value = 0
+                assert Program().running_as_root() is True
+
+            @patch("invoke.program.os", spec=[])
+            @patch("invoke.program.getpass.getuser")
+            def falls_back_to_username_when_geteuid_is_missing(
+                self, getuser
+            ):
+                getuser.return_value = "root"
+                assert Program().running_as_root() is True
+
     class normalize_argv:
         @patch("invoke.program.sys")
         def defaults_to_sys_argv(self, mock_sys):

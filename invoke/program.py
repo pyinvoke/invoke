@@ -21,7 +21,7 @@ from .completion.complete import complete, print_completion_script
 from .exceptions import CollectionNotFound, Exit, ParseError, UnexpectedExit
 from .parser import Argument, Parser, ParserContext
 from .terminals import pty_size
-from .util import debug, enable_logging, helpline
+from .util import debug, enable_logging, helpline, isatty
 
 if TYPE_CHECKING:
     from .loader import Loader
@@ -186,6 +186,10 @@ class Program:
     indent_width = 4
     indent = " " * indent_width
     col_padding = 3
+    root_warning = (
+        "WARNING: Running Invoke as root may create root-owned files and "
+        "cause later I/O or permission errors. Re-run as a non-root user."
+    )
 
     def __init__(
         self,
@@ -373,6 +377,7 @@ class Program:
         .. versionadded:: 1.0
         """
         try:
+            self.warn_if_running_as_root(is_testing=not exit)
             # Create an initial config, which will hold defaults & values from
             # most config file locations (all but runtime.) Used to inform
             # loading & parsing behavior.
@@ -420,6 +425,22 @@ class Program:
                 debug("Invoked as run(..., exit=False), ignoring exception")
         except KeyboardInterrupt:
             sys.exit(1)  # Same behavior as Python itself outside of REPL
+
+    def warn_if_running_as_root(self, is_testing: bool = False) -> None:
+        """
+        Emit a warning when Invoke is executed as the root user.
+        """
+        if is_testing or not isatty(sys.stderr) or not self.running_as_root():
+            return
+        print(self.root_warning, file=sys.stderr)
+
+    def running_as_root(self) -> bool:
+        """
+        Return ``True`` when the current process is running as root.
+        """
+        if hasattr(os, "geteuid"):
+            return os.geteuid() == 0
+        return getpass.getuser() == "root"
 
     def parse_core(self, argv: Optional[List[str]]) -> None:
         debug("argv given to Program.run: {!r}".format(argv))
