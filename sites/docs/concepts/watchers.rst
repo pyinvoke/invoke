@@ -9,7 +9,7 @@ Background
 
 Command-line programs tend to be designed for interactive shells, which
 frequently manifests as waiting around for user input, or "prompts".
-Well-designed programs offer options for pre-empting such prompts, resulting in
+Well-designed programs offer options for preempting such prompts, resulting in
 an easily automated workflow -- but with the rest, interactivity is
 unavoidable.
 

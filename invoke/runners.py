@@ -1399,7 +1399,7 @@ class Local(Runner):
     def returncode(self) -> Optional[int]:
         if self.using_pty:
             # No subprocess.returncode available; use WIFEXITED/WIFSIGNALED to
-            # determine whch of WEXITSTATUS / WTERMSIG to use.
+            # determine which of WEXITSTATUS / WTERMSIG to use.
             # TODO: is it safe to just say "call all WEXITSTATUS/WTERMSIG and
             # return whichever one of them is nondefault"? Probably not?
             # NOTE: doing this in an arbitrary order should be safe since only

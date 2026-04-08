@@ -1,0 +1,7 @@
+[codespell]
+skip = .git*,*.pdf,*.svg,*.css,*.min.*,.npm,.cache,*/vendor/*,*/build/*
+check-hidden = true
+# halp - variable name for help parameter
+# welp - intentional test data key name
+# tye - person's name (Tye Wang)
+ignore-words-list = halp,welp,tye

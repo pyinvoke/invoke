@@ -135,7 +135,7 @@ Changelog
 - :bug:`376 major` Resolve equality comparison bug for non-collections. Patch
   via Jesse P. Johnson
 - :support:`906` Implement type hints and type checking tests with mypy to
-  reduce errors and impove code documentation. Patches by Jesse P. Johnson and
+  reduce errors and improve code documentation. Patches by Jesse P. Johnson and
   review by Sam Bull.
 - :support:`901 backported` (via :issue:`903`) Tweak test suite ``setup``
   methods to be named ``setup_method`` so pytest stops whining about it. Patch
@@ -408,7 +408,7 @@ Changelog
 - :release:`1.1.1 <2018-07-31>`
 - :release:`1.0.2 <2018-07-31>`
 - :bug:`556` (also `fabric/fabric#1823
-  <https://github.com/fabric/fabric/issues/1823>`_) Pre-emptively check for an
+  <https://github.com/fabric/fabric/issues/1823>`_) Preemptively check for an
   error condition involving an unpicklable config file value (Python config
   files and imported module objects) and raise a useful exception instead of
   allowing a confusing ``TypeError`` to bubble up later. Reported by Pham Cong

@@ -116,7 +116,7 @@ class DataProxy:
         try:
             return self._get(key)
         except KeyError:
-            # Proxy most special vars to config for dict procotol.
+            # Proxy most special vars to config for dict protocol.
             if key in self._proxies:
                 return getattr(self._config, key)
             # Otherwise, raise useful AttributeError to follow getattr proto.
@@ -360,7 +360,7 @@ class Config(DataProxy):
 
         - This step can be skipped by specifying ``lazy=True``.
 
-    At this point, `.Config` is fully usable - and because it pre-emptively
+    At this point, `.Config` is fully usable - and because it preemptively
     loads some config files, those config files can affect anything that
     comes after, like CLI parsing or loading of task collections.
 
