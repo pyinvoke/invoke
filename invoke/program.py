@@ -511,7 +511,7 @@ class Program:
             else:
                 # TODO: feels real dumb to factor this out of Parser, but...we
                 # should?
-                raise ParseError("No idea what '{}' is!".format(halp))
+                raise ParseError("'{}' command not recognised.".format(halp))
 
         # Print discovered tasks if necessary
         list_root = self.args.list.value  # will be True or string
