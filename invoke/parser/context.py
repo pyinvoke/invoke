@@ -214,6 +214,8 @@ class ParserContext:
             full_names.append(name + valuestr)
         namestr = ", ".join(sorted(full_names, key=len))
         helpstr = arg.help or ""
+        if helpstr == "SKIP":
+            return
         return namestr, helpstr
 
     def help_tuples(self) -> List[Tuple[str, Optional[str]]]:
@@ -244,9 +246,12 @@ class ParserContext:
         # To pass in an Argument object to help_for may require moderate
         # changes?
         return list(
-            map(
-                lambda x: self.help_for(to_flag(x.name)),
-                sorted(self.flags.values(), key=flag_key),
+            filter(
+                None,
+                map(
+                    lambda x: self.help_for(to_flag(x.name)),
+                    sorted(self.flags.values(), key=flag_key),
+                ),
             )
         )
 
