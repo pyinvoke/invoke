@@ -810,6 +810,21 @@ Available tasks:
                 ),
             )
 
+        def long_task_names_may_exhaust_terminal_width(self):
+            name = (
+                "my-very-long-task-name-that-is-completely-legit-but-make-"
+                "grep-crash-aaaaaa"
+            )
+
+            def body(c):
+                pass
+
+            program = Program(namespace=Collection(Task(body, name=name)))
+            with patch("invoke.program.pty_size", return_value=(80, 24)):
+                stdout, _ = run("--list", program=program)
+
+            assert "  {}\n".format(name) in stdout
+
         def empty_collections_say_no_tasks(self):
             expect(
                 "-c empty -l", err="No tasks found in collection 'empty'!\n"

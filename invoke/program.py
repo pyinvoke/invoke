@@ -954,12 +954,13 @@ class Program:
         # Calculate column sizes: don't wrap flag specs, give what's left over
         # to the descriptions.
         name_width = max(len(x[0]) for x in tuples)
-        desc_width = (
+        desc_width = max(
+            1,
             pty_size()[0]
             - name_width
             - self.leading_indent_width
             - self.col_padding
-            - 1
+            - 1,
         )
         wrapper = textwrap.TextWrapper(width=desc_width)
         for name, help_str in tuples:
