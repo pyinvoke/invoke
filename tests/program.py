@@ -817,7 +817,7 @@ Available tasks:
             )
 
             def body(c):
-                pass
+                pass  # pragma: no cover
 
             program = Program(namespace=Collection(Task(body, name=name)))
             with patch("invoke.program.pty_size", return_value=(80, 24)):
