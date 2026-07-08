@@ -116,7 +116,7 @@ class DataProxy:
         try:
             return self._get(key)
         except KeyError:
-            # Proxy most special vars to config for dict procotol.
+            # Proxy most special vars to config for dict protocol.
             if key in self._proxies:
                 return getattr(self._config, key)
             # Otherwise, raise useful AttributeError to follow getattr proto.
