@@ -19,9 +19,11 @@ import sys
 # more obvious. Requires packagers to leave invoke/vendor/__init__.py alone tho
 try:
     from .vendor.lexicon import Lexicon  # noqa
-    from .vendor import yaml  # noqa
 except ImportError:
     from lexicon import Lexicon  # type: ignore[no-redef] # noqa
+try:
+    from .vendor import yaml  # noqa
+except ImportError:
     import yaml  # type: ignore[no-redef] # noqa
 
 
