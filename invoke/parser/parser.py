@@ -3,9 +3,11 @@ from typing import TYPE_CHECKING, Any, Iterable, List, Optional
 
 try:
     from ..vendor.lexicon import Lexicon
-    from ..vendor.fluidity import StateMachine, state, transition
 except ImportError:
     from lexicon import Lexicon  # type: ignore[no-redef]
+try:
+    from ..vendor.fluidity import StateMachine, state, transition
+except ImportError:
     from fluidity import (  # type: ignore[no-redef]
         StateMachine,
         state,
