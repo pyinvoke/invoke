@@ -2,6 +2,14 @@
 Changelog
 =========
 
+- :bug:`1070` Fix a ``SystemError: buffer overflow`` raised by
+  `~invoke.terminals.bytes_to_read` under Python 3.14. The ``FIONREAD`` ioctl
+  writes back a C ``int`` (4 bytes) but was being handed a 2-byte buffer;
+  Python 3.14 tightened ``fcntl.ioctl`` to reject the undersized buffer,
+  whereas older Pythons silently truncated it. The buffer is now sized to a
+  full ``int``. This is the same root cause as the ``TIOCGWINSZ`` fix in
+  :issue:`1038`, which did not touch this code path. Thanks to Rémi Desgrange
+  for the report.
 - :release:`3.0.3 <2026-04-07>`
 - :support:`- backported` Reverted the `@task
   <invoke.tasks.task>` return value type hint change; it actually just makes

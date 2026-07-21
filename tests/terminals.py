@@ -1,4 +1,7 @@
 import fcntl
+import os
+import pty
+import struct
 import termios
 
 from unittest.mock import Mock, patch
@@ -71,8 +74,32 @@ class terminals:
             assert bytes_to_read(stream) == 1
             assert not fcntl.ioctl.called
 
-        def returns_FIONREAD_result_when_stream_is_a_tty(self):
-            skip()
+        @patch("invoke.terminals.fcntl.ioctl", wraps=fcntl.ioctl)
+        def returns_FIONREAD_result_when_stream_is_a_tty(self, ioctl):
+            # Regression for #1070: FIONREAD writes back a C int, so the
+            # buffer handed to ioctl must be int-sized. We exercise the *real*
+            # ioctl against a pty because a mock can't reproduce the buffer
+            # sizing - on Python 3.14 an undersized buffer raises SystemError
+            # here (the bug), while older Pythons silently truncated.
+            controller, worker = pty.openpty()
+            try:
+                os.write(worker, b"hi")
+                stream = os.fdopen(controller, "rb", buffering=0)
+                result = bytes_to_read(stream)
+            finally:
+                os.close(worker)
+                # os.fdopen above adopts `controller`; leave its close to GC to
+                # avoid a double-close of the same fd.
+            # The real ioctl must have run without raising and yielded a count
+            # (exact value is platform-dependent - e.g. FIONREAD on a pty
+            # reports 0 on macOS - so we assert the type/domain, not a number).
+            assert isinstance(result, int)
+            assert result >= 0
+            # Guard against the undersized-buffer regression directly: the
+            # buffer handed to FIONREAD must be int-sized (cf. the sibling
+            # TIOCGWINSZ fix in #1038 / #1040).
+            buf = ioctl.call_args_list[0][0][2]
+            assert len(buf) == struct.calcsize("i")
 
         def returns_1_on_windows(self):
             skip()

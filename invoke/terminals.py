@@ -243,6 +243,13 @@ def bytes_to_read(input_: IO) -> int:
     # it's not a tty but has a fileno, or vice versa; neither is typically
     # going to work re: ioctl().
     if not WINDOWS and isatty(input_) and has_fileno(input_):
-        fionread = fcntl.ioctl(input_, termios.FIONREAD, b"  ")
-        return int(struct.unpack("h", fionread)[0])
+        # NOTE: FIONREAD writes back a C int (4 bytes), so we must hand ioctl
+        # a buffer of that exact size. Prior to Python 3.14 an undersized
+        # buffer was silently tolerated (ioctl copied into a 1024-byte static
+        # buffer and returned the first N bytes); 3.14 tightened this to raise
+        # SystemError on the buffer mismatch. See #1070 (same root cause as
+        # the TIOCGWINSZ fix in #1038 / #1040, which did not touch this path).
+        buf = struct.pack("i", 0)
+        fionread = fcntl.ioctl(input_, termios.FIONREAD, buf)
+        return int(struct.unpack("i", fionread)[0])
     return 1
