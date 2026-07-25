@@ -651,6 +651,34 @@ Options:
                 for flag in ["-h", "--help"]:
                     expect("-c decorators {} punch".format(flag), out=expected)
 
+            def works_when_help_flag_comes_after_task_with_required_posargs(
+                self,
+            ):
+                """
+                Regression test for
+                https://github.com/pyinvoke/invoke/issues/982
+
+                `invoke punch --help` (--help *after* the task name)
+                must still print punch's help, even though punch has
+                required positional args ('who', 'why') that haven't
+                been supplied -- rather than either swallowing
+                "--help" as one of those args' literal value, or
+                raising a "did not receive required positional
+                arguments" error.
+                """
+                expected = """
+Usage: invoke [--core-opts] punch [--options] [other tasks here ...]
+
+Docstring:
+  none
+
+Options:
+  -h STRING, --why=STRING   Motive
+  -w STRING, --who=STRING   Who to punch
+
+""".lstrip()
+                expect("-c decorators punch --help", out=expected)
+
             def works_for_unparameterized_tasks(self):
                 expected = """
 Usage: invoke [--core-opts] biz [other tasks here ...]
