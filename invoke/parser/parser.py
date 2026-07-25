@@ -292,6 +292,28 @@ class ParseMachine(StateMachine):
                 )
             )  # noqa
             self.see_value(token)
+        # Initial-context --help, given as a per-task flag: this must be
+        # checked before the positional-arg branch below, or --help gets
+        # silently swallowed as a positional argument's value whenever the
+        # current task context still has required positional args left to
+        # fill (e.g. `invoke mytask --help` where mytask takes a required
+        # posarg would otherwise run mytask with that posarg set to the
+        # literal string "--help", instead of showing its help). Unlike
+        # other initial-context flags (handled further below, after
+        # positional args), --help is never a value any task legitimately
+        # wants to receive as positional input, so there's no corresponding
+        # ambiguity to preserve here. See GH #982.
+        elif (
+            self.context
+            and self.initial
+            and token in self.initial.flags
+            and self.initial.flags[token].name == "help"
+        ):
+            debug("Saw (initial-context) --help flag {!r}".format(token))
+            flag = self.initial.flags[token]
+            flag.value = self.context.name
+            msg = "Saw --help in a per-task context, setting task name ({!r}) as its value"  # noqa
+            debug(msg.format(flag.value))
         # Positional args (must come above context-name check in case we still
         # need a posarg and the user legitimately wants to give it a value that
         # just happens to be a valid context name.)
@@ -302,22 +324,15 @@ class ParseMachine(StateMachine):
         # New context
         elif token in self.contexts:
             self.see_context(token)
-        # Initial-context flag being given as per-task flag (e.g. --help)
+        # Initial-context flag being given as per-task flag (e.g. any core
+        # flag other than --help, which is handled earlier above)
         elif self.initial and token in self.initial.flags:
             debug("Saw (initial-context) flag {!r}".format(token))
-            flag = self.initial.flags[token]
-            # Special-case for core --help flag: context name is used as value.
-            if flag.name == "help":
-                flag.value = self.context.name
-                msg = "Saw --help in a per-task context, setting task name ({!r}) as its value"  # noqa
-                debug(msg.format(flag.value))
-            # All others: just enter the 'switch to flag' parser state
-            else:
-                # TODO: handle inverse core flags too? There are none at the
-                # moment (e.g. --no-dedupe is actually 'no_dedupe', not a
-                # default-False 'dedupe') and it's up to us whether we actually
-                # put any in place.
-                self.switch_to_flag(token)
+            # TODO: handle inverse core flags too? There are none at the
+            # moment (e.g. --no-dedupe is actually 'no_dedupe', not a
+            # default-False 'dedupe') and it's up to us whether we actually
+            # put any in place.
+            self.switch_to_flag(token)
         # Unknown
         else:
             if not self.ignore_unknown:
@@ -338,8 +353,25 @@ class ParseMachine(StateMachine):
                 self.context.name if self.context else self.context
             )
         )
-        # Ensure all of context's positional args have been given.
-        if self.context and self.context.missing_positional_args:
+        # Ensure all of context's positional args have been given -- unless
+        # --help was requested for this context, in which case we're not
+        # actually going to run the task, just print its help (handled later
+        # by Program.parse_cleanup(), which checks the same help flag value
+        # set below in handle()). Requiring positional args to be present
+        # just to *view the help for a task* would defeat the point of
+        # `invoke sometask --help` for any task with required args. See
+        # GH #982.
+        help_requested_for_this_context = (
+            self.context
+            and self.initial
+            and self.initial.flags.get("--help") is not None
+            and self.initial.flags["--help"].value == self.context.name
+        )
+        if (
+            self.context
+            and self.context.missing_positional_args
+            and not help_requested_for_this_context
+        ):
             err = "'{}' did not receive required positional arguments: {}"
             names = ", ".join(
                 "'{}'".format(x.name)

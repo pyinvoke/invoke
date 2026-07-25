@@ -2,6 +2,14 @@
 Changelog
 =========
 
+- :bug:`982` `~invoke.parser.parser.Parser` no longer swallows a core
+  ``--help`` flag as a task's positional argument value (or raises a
+  spurious "did not receive required positional arguments" error)
+  when ``--help`` is given *after* a task name whose positional
+  arguments haven't been supplied yet, e.g. ``invoke sometask --help``
+  for a task requiring positional args now correctly prints that
+  task's help instead of erroring or misinterpreting ``--help`` as
+  argument data.
 - :release:`3.0.3 <2026-04-07>`
 - :support:`- backported` Reverted the `@task
   <invoke.tasks.task>` return value type hint change; it actually just makes
