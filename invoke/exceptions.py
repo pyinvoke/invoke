@@ -286,6 +286,28 @@ class UnknownFileType(Exception):
     pass
 
 
+class ConfigFileNotFound(IOError):
+    """
+    A runtime config file was explicitly specified but could not be found.
+
+    Raised by `Config._load_file` when the user supplies an explicit path
+    (via ``--config`` on the CLI or ``runtime_path=`` kwarg) and that file
+    does not exist. Unlike the implicit search for system/user/project config
+    files — where a missing file simply means "not configured" — a missing
+    *explicit* runtime config is always a user error.
+
+    .. versionadded:: 2.3
+    """
+
+    def __init__(self, path: str) -> None:
+        self.path = path
+        msg = (
+            "Runtime config file {!r} was not found."
+            " Check the path for typos."
+        )
+        super().__init__(msg.format(path))
+
+
 class UnpicklableConfigMember(Exception):
     """
     A config file contained module objects, which can't be pickled/copied.

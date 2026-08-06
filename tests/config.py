@@ -12,6 +12,7 @@ from invoke.config import Config
 from invoke.exceptions import (
     AmbiguousEnvVar,
     UncastableEnvVar,
+    ConfigFileNotFound,
     UnknownFileType,
     UnpicklableConfigMember,
 )
@@ -619,6 +620,24 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
             c = Config(runtime_path=join(CONFIGS_PATH, "screw.ini"))
             c.load_runtime()
 
+        @raises(ConfigFileNotFound)
+        def missing_runtime_path_raises_config_file_not_found(self):
+            # Regression for #560: when the user provides an explicit runtime
+            # config path that doesn't exist, invoke should raise immediately
+            # instead of silently continuing with no config loaded.
+            c = Config(
+                runtime_path=join(CONFIGS_PATH, "nonexistent_typo.yaml")
+            )
+            c.load_runtime()
+
+        def missing_runtime_path_error_includes_path(self):
+            # ConfigFileNotFound.path must match what was supplied.
+            bad = join(CONFIGS_PATH, "nonexistent_typo.yaml")
+            c = Config(runtime_path=bad)
+            with pytest.raises(ConfigFileNotFound) as exc_info:
+                c.load_runtime()
+            assert exc_info.value.path == bad
+
         def python_modules_dont_load_special_vars(self):
             "Python modules don't load special vars"
             # Borrow another test's Python module.
@@ -639,13 +658,14 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
             with pytest.raises(UnpicklableConfigMember, match=expected):
                 c.load_runtime(merge=False)
 
-        @patch("invoke.config.debug")
-        def nonexistent_files_are_skipped_and_logged(self, mock_debug):
+        @raises(ConfigFileNotFound)
+        def missing_explicit_runtime_path_raises(self):
+            # Regression for #560: explicit runtime paths that don't exist must
+            # raise ConfigFileNotFound, not silently continue.
             c = Config()
             c._load_yml = Mock(side_effect=IOError(2, "aw nuts"))
             c.set_runtime_path("is-a.yml")  # Triggers use of _load_yml
             c.load_runtime()
-            mock_debug.assert_any_call("Didn't see any is-a.yml, skipping.")
 
         @raises(IOError)
         def non_missing_file_IOErrors_are_raised(self):

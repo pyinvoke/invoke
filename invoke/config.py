@@ -9,7 +9,11 @@ from types import ModuleType
 from typing import Any, Dict, Iterator, Optional, Tuple, Type, Union
 
 from .env import Environment
-from .exceptions import UnknownFileType, UnpicklableConfigMember
+from .exceptions import (
+    ConfigFileNotFound,
+    UnknownFileType,
+    UnpicklableConfigMember,
+)
 from .runners import Local
 from .terminals import WINDOWS
 from .util import debug, yaml
@@ -899,6 +903,11 @@ class Config(DataProxy):
             # Typically means 'no such file', so just note & skip past.
             except IOError as e:
                 if e.errno == 2:
+                    # Absolute paths (runtime config) were explicitly given by
+                    # the user; a missing file is an error,
+                    # not "not configured".
+                    if absolute:
+                        raise ConfigFileNotFound(str(filepath)) from e
                     err = "Didn't see any {}, skipping."
                     debug(err.format(filepath))
                 else:

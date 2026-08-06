@@ -8,6 +8,7 @@ from .exceptions import (  # noqa
     AmbiguousEnvVar,
     AuthFailure,
     CollectionNotFound,
+    ConfigFileNotFound,
     CommandTimedOut,
     Exit,
     ParseError,
