@@ -160,7 +160,7 @@ class DataProxy:
     def __len__(self) -> int:
         return len(self._config)
 
-    def __setitem__(self, key: str, value: str) -> None:
+    def __setitem__(self, key: str, value: Any) -> None:
         self._config[key] = value
         self._track_modification_of(key, value)
 
