@@ -2,6 +2,11 @@
 Changelog
 =========
 
+- :bug:`562` Invoking a default task that requires positional arguments,
+  without supplying those arguments (for example a custom
+  `~invoke.program.Program` binary given no argv), now raises
+  `~invoke.exceptions.ParseError` with the same message used when the
+  task is named explicitly, instead of leaking a ``TypeError`` traceback.
 - :release:`3.0.3 <2026-04-07>`
 - :support:`- backported` Reverted the `@task
   <invoke.tasks.task>` return value type hint change; it actually just makes

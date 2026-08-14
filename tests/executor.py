@@ -3,7 +3,16 @@ from unittest.mock import Mock
 import pytest
 from _util import expect
 
-from invoke import Collection, Config, Context, Executor, Task, call, task
+from invoke import (
+    Collection,
+    Config,
+    Context,
+    Executor,
+    ParseError,
+    Task,
+    call,
+    task,
+)
 from invoke.parser import ParserContext, ParseResult
 
 # TODO: why does this not work as a decorator? probably relaxed's fault - but
@@ -83,6 +92,25 @@ class Executor_:
             args = task.body.call_args[0]
             assert isinstance(args[0], Context)
             assert len(args) == 1
+
+        def default_task_missing_positionals_raises_ParseError(self):
+            # #562: invoking a default task with required positionals and no
+            # argv used to TypeError inside the task body.
+            @task(default=True)
+            def execute(c, export_type):
+                pass
+
+            executor = Executor(collection=Collection(execute))
+            with pytest.raises(ParseError, match="export_type"):
+                executor.execute()
+
+        def default_task_with_optional_args_still_runs(self):
+            @task(default=True)
+            def execute(c, verbose=False):
+                return "ok"
+
+            ret = Executor(collection=Collection(execute)).execute()
+            assert ret[execute] == "ok"
 
     class basic_pre_post:
         "basic pre/post task functionality"

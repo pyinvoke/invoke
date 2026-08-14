@@ -1,6 +1,8 @@
+import inspect
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
 
 from .config import Config
+from .exceptions import ParseError
 from .parser import ParserContext, ParseResult
 from .tasks import Call, Task
 from .util import debug
@@ -175,7 +177,27 @@ class Executor:
             c = Call(self.collection[name], kwargs=kwargs, called_as=name)
             calls.append(c)
         if not tasks and self.collection.default is not None:
-            calls = [Call(self.collection[self.collection.default])]
+            name = self.collection.default
+            task = self.collection[name]
+            # Default-task fallback skips the parser, so required positionals
+            # would otherwise surface as a TypeError traceback (see #562).
+            sig = task.argspec(task.body)
+            skip_kinds = (
+                inspect.Parameter.VAR_POSITIONAL,
+                inspect.Parameter.VAR_KEYWORD,
+            )
+            missing = [
+                param.name
+                for param in sig.parameters.values()
+                if param.name in task.positional
+                and param.default is inspect.Signature.empty
+                and param.kind not in skip_kinds
+            ]
+            if missing:
+                names = ", ".join("'{}'".format(x) for x in missing)
+                err = "'{}' did not receive required positional arguments: {}"
+                raise ParseError(err.format(name, names))
+            calls = [Call(task)]
         return calls
 
     def dedupe(self, calls: List["Call"]) -> List["Call"]:

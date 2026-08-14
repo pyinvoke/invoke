@@ -33,6 +33,7 @@ from invoke import (
     Task,
     UnexpectedExit,
     main,
+    task,
 )
 from invoke.config import merge_dicts
 from invoke.util import Lexicon, cd
@@ -386,6 +387,23 @@ class Program_:
                     "{} branch/ -c explicit lyrics".format(flag),
                     out="Don't swear!\n",
                 )
+
+        def default_task_missing_positionals_prints_parse_error(self):
+            # #562: custom Program + default task + missing required
+            # positionals should be a friendly parser error, not TypeError.
+            @task(default=True)
+            def execute(c, export_type):
+                pass
+
+            expect(
+                "myapp",
+                err=(
+                    "'execute' did not receive required positional "
+                    "arguments: 'export_type'\n"
+                ),
+                program=Program(namespace=Collection(execute), binary="myapp"),
+                invoke=False,
+            )
 
         @trap
         @patch("invoke.program.sys.exit")
