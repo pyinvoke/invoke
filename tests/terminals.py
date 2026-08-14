@@ -1,4 +1,5 @@
 import fcntl
+import struct
 import termios
 
 from unittest.mock import Mock, patch
@@ -70,6 +71,22 @@ class terminals:
             stream = Mock(isatty=lambda: False, fileno=lambda: 17)  # arbitrary
             assert bytes_to_read(stream) == 1
             assert not fcntl.ioctl.called
+
+        @patch("invoke.terminals.fcntl")
+        def uses_4_byte_buffer_for_FIONREAD(self, fcntl):
+            # FIONREAD writes a C int (4 bytes); the buffer must match to
+            # avoid SystemError on Python 3.14+ (#1070)
+            fcntl.ioctl.return_value = struct.pack("i", 42)
+            stream = Mock(isatty=lambda: True, fileno=lambda: 7)
+            assert bytes_to_read(stream) == 42
+            buf = fcntl.ioctl.call_args[0][2]
+            assert len(buf) == 4
+
+        @patch("invoke.terminals.fcntl")
+        def returns_0_when_FIONREAD_is_zero(self, fcntl):
+            fcntl.ioctl.return_value = struct.pack("i", 0)
+            stream = Mock(isatty=lambda: True, fileno=lambda: 7)
+            assert bytes_to_read(stream) == 0
 
         def returns_FIONREAD_result_when_stream_is_a_tty(self):
             skip()

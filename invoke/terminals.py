@@ -243,6 +243,12 @@ def bytes_to_read(input_: IO) -> int:
     # it's not a tty but has a fileno, or vice versa; neither is typically
     # going to work re: ioctl().
     if not WINDOWS and isatty(input_) and has_fileno(input_):
-        fionread = fcntl.ioctl(input_, termios.FIONREAD, b"  ")
-        return int(struct.unpack("h", fionread)[0])
+        # FIONREAD writes a C int (typically 4 bytes). Pass a 4-byte buffer
+        # and unpack as a signed int. The previous 2-byte buffer ("h")
+        # happened to work on <=3.13 thanks to CPython's internal 1024-byte
+        # static copy buffer, but CPython 3.14 tightened buffer-size checks
+        # (cpython#144206) so undersized mutable buffers now raise
+        # SystemError: buffer overflow. See pyinvoke/invoke#1070.
+        fionread = fcntl.ioctl(input_, termios.FIONREAD, b"\x00\x00\x00\x00")
+        return int(struct.unpack("i", fionread)[0])
     return 1
