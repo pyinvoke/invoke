@@ -982,6 +982,16 @@ stderr 25
             self._runner(klass=klass).run(_)
             assert not klass.write_proc_stdin.called
 
+        def no_watchers_skips_the_buffer_join(self):
+            # Regression test for #1079: respond() used to join the whole
+            # accumulated capture buffer on every chunk even with no watchers
+            # attached, an O(n^2) cost that made runs with large outputs
+            # (hundreds of MB) take hours. With no watchers it must return
+            # without touching the buffer -- the canary here is a non-string
+            # element, which raises TypeError if a join ever runs.
+            runner = self._runner()
+            runner.respond(["chunk", 42])
+
         def _expect_response(self, **kwargs):
             """
             Execute a run() w/ ``watchers`` set from ``responses``.
