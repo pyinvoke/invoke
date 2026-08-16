@@ -944,6 +944,11 @@ class Runner:
 
         .. versionadded:: 1.0
         """
+        # Nothing to do unless at least one watcher is attached; bail early so
+        # the (potentially O(n^2)) join below never runs in the common case of
+        # running without watchers while a subprocess emits lots of output.
+        if not self.watchers:
+            return
         # Join buffer contents into a single string; without this,
         # StreamWatcher subclasses can't do things like iteratively scan for
         # pattern matches.
