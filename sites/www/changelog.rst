@@ -2,6 +2,9 @@
 Changelog
 =========
 
+- :bug:`1084` Core flags given after a task name are no longer swallowed when
+  that task still has unfilled positional arguments. ``--help`` already had
+  this treatment; ``--dry`` and the rest of the core flags now do too.
 - :release:`3.0.3 <2026-04-07>`
 - :support:`- backported` Reverted the `@task
   <invoke.tasks.task>` return value type hint change; it actually just makes

@@ -491,6 +491,18 @@ class Parser_:
                 result = parser.parse_argv(["mytask", "--hide", "both"])
                 assert result[0].args.hide.value == "both"
 
+            def core_flags_are_not_eaten_as_unfilled_positionals(self) -> None:
+                initial = Context(
+                    args=[Argument("dry", kind=bool, default=False)]
+                )
+                task1 = Context(
+                    "mytask", args=[Argument("name", positional=True)]
+                )
+                parser = Parser(initial=initial, contexts=[task1])
+                result = parser.parse_argv(["mytask", "--dry", "alice"])
+                assert result[0].args.dry.value is True
+                assert result[1].args.name.value == "alice"
+
         class edge_cases:
             def core_bool_but_per_task_string(self) -> None:
                 # Initial parse context with bool --hide, and a task with a

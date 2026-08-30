@@ -292,17 +292,9 @@ class ParseMachine(StateMachine):
                 )
             )  # noqa
             self.see_value(token)
-        # Positional args (must come above context-name check in case we still
-        # need a posarg and the user legitimately wants to give it a value that
-        # just happens to be a valid context name.)
-        elif self.context and self.context.missing_positional_args:
-            msg = "Context {!r} requires positional args, eating {!r}"
-            debug(msg.format(self.context, token))
-            self.see_positional_arg(token)
-        # New context
-        elif token in self.contexts:
-            self.see_context(token)
-        # Initial-context flag being given as per-task flag (e.g. --help)
+        # Core flags after a task name (inv mytask --dry). Must run before the
+        # positional-arg eater, otherwise unfilled posargs swallow e.g. --dry.
+        # --help already had this path; other core flags did not.
         elif self.initial and token in self.initial.flags:
             debug("Saw (initial-context) flag {!r}".format(token))
             flag = self.initial.flags[token]
@@ -318,6 +310,16 @@ class ParseMachine(StateMachine):
                 # default-False 'dedupe') and it's up to us whether we actually
                 # put any in place.
                 self.switch_to_flag(token)
+        # Positional args (must come above context-name check in case we still
+        # need a posarg and the user legitimately wants to give it a value that
+        # just happens to be a valid context name.)
+        elif self.context and self.context.missing_positional_args:
+            msg = "Context {!r} requires positional args, eating {!r}"
+            debug(msg.format(self.context, token))
+            self.see_positional_arg(token)
+        # New context
+        elif token in self.contexts:
+            self.see_context(token)
         # Unknown
         else:
             if not self.ignore_unknown:
