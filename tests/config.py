@@ -583,6 +583,11 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
             assert "outer" in config._project
             assert "outer" not in config
 
+        def missing_file_marks_found_false(self):
+            config = Config(project_location=join(CONFIGS_PATH, "nope"), lazy=True)
+            config.load_project()
+            assert config._project_found is False
+
         def loads_no_project_specific_file_if_no_project_location_given(self):
             c = Config()
             assert c._project_path is None

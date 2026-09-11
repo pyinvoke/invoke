@@ -25,7 +25,7 @@ except ImportError:  # PyPy3
 
 def load_source(name: str, path: str) -> Dict[str, Any]:
     if not os.path.exists(path):
-        return {}
+        raise IOError(2, "No such file or directory: %r" % path)
     loader = SourceFileLoader("mod", path)
     mod = ModuleType("mod")
     mod.__spec__ = spec_from_loader("mod", loader)
