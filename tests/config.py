@@ -93,6 +93,8 @@ class Config_:
             expected = {
                 "run": {
                     "asynchronous": False,
+                    "decode_stdin": True,
+                    "decode_stdout": True,
                     "disown": False,
                     "dry": False,
                     "echo": False,

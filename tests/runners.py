@@ -415,6 +415,66 @@ class Runner_:
                 fake_locale.getpreferredencoding.return_value = "FALLBACK"
                 assert self._runner().default_encoding() == "FALLBACK"
 
+    class decode_options:
+        def decode_stdout_off_yields_raw_stdout(self):
+            runner = self._runner(out="hello")
+            assert runner.run(_, decode_stdout=False).stdout == b"hello"
+
+        def default_remains_decoded_text(self):
+            result = self._runner(out="hello", err="hi").run(_)
+            assert result.stdout == "hello"
+            assert result.stderr == "hi"
+
+        def streams_are_independent(self):
+            runner = self._runner(out="a", err="b")
+            result = runner.run(_, decode_stdout=False)
+            assert result.stdout == b"a"
+            assert result.stderr == "b"
+
+        def honors_config(self):
+            config = Config(overrides={"run": {"decode_stdout": False}})
+            runner = _Dummy(Context(config=config))
+            runner.read_proc_stdout = BytesIO(b"hello").read
+            runner.read_proc_stderr = BytesIO(b"").read
+            assert runner.run(_).stdout == b"hello"
+
+        def undecodable_bytes_survive_intact(self):
+            # None of these are valid UTF-8; decoding them is lossy.
+            payload = b"\x80\xff\x00binary"
+            runner = self._runner()
+            runner.read_proc_stdout = BytesIO(payload).read
+            assert runner.run(_, decode_stdout=False).stdout == payload
+
+        def decode_stdin_off_writes_through_unchanged(self):
+            payload = b"\x80\xff not text"
+
+            class MockedStdin(_Dummy):
+                pass
+
+            MockedStdin._write_proc_stdin = Mock()
+            self._run(
+                _,
+                klass=MockedStdin,
+                in_stream=BytesIO(payload),
+                decode_stdin=False,
+            )
+            written = b"".join(
+                args[0][0]
+                for args in MockedStdin._write_proc_stdin.call_args_list
+            )
+            assert written == payload
+
+        def watchers_are_not_run_against_raw_streams(self):
+            watcher = Mock(spec=StreamWatcher)
+            watcher.submit.return_value = []
+            runner = self._runner(out="hello")
+            runner.run(_, decode_stdout=False, watchers=[watcher])
+            assert not watcher.submit.called
+
+        def tail_decodes_raw_streams_for_display(self):
+            result = Result(stdout=b"\x80line one\nline two")
+            assert "line two" in result.tail("stdout")
+
     class output_hiding:
         @trap
         def _expect_hidden(self, hide, expect_out="", expect_err=""):

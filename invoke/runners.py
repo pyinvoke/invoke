@@ -20,6 +20,8 @@ from typing import (
     Optional,
     Tuple,
     Type,
+    Union,
+    cast,
 )
 
 # Import some platform-specific things at top level so they can be mocked for
@@ -57,6 +59,9 @@ from .util import ExceptionHandlingThread, has_fileno, isatty
 if TYPE_CHECKING:
     from .context import Context
     from .watchers import StreamWatcher
+
+# Decode text or raw bytes
+Chunk = Union[str, bytes]
 
 
 class Runner:
@@ -346,6 +351,18 @@ class Runner:
             Which shell binary to use. Default: ``/bin/bash`` (on Unix;
             ``COMSPEC`` or ``cmd.exe`` on Windows.)
 
+        :param bool decode_stdin:
+            If ``False``, stdin should be treated as raw binary data and will
+            therefore skip any encode/decode steps.
+
+            .. versionadded:: 3.1
+
+        :param bool decode_stdout:
+            If ``False``, stdin should be treated as raw binary data and will
+            therefore skip any encode/decode steps.
+
+            .. versionadded:: 3.1
+
         :param timeout:
             Cause the runner to submit an interrupt to the subprocess and raise
             `.CommandTimedOut`, if the command takes longer than ``timeout``
@@ -596,19 +613,33 @@ class Runner:
         self.opts = opts
         self.streams = {"out": out_stream, "err": err_stream, "in": in_stream}
 
+    @staticmethod
+    def _normalize_newlines(data: Chunk, decode: bool) -> Chunk:
+        if not decode:
+            return data
+        text = cast(str, data)
+        return text.replace("\r\n", "\n").replace("\r", "\n")
+
+    @staticmethod
+    def _join(chunks: List[Chunk], decode: bool) -> Chunk:
+        if decode:
+            return "".join(cast(List[str], chunks))
+        return b"".join(cast(List[bytes], chunks))
+
     def _collate_result(self, watcher_errors: List[WatcherError]) -> "Result":
         # At this point, we had enough success that we want to be returning or
         # raising detailed info about our execution; so we generate a Result.
-        stdout = "".join(self.stdout)
-        stderr = "".join(self.stderr)
+        decode_out = self.opts["decode_stdout"]
+        stdout = self._join(self.stdout, decode_out)
+        stderr = self._join(self.stderr, decode=True)
         if WINDOWS:
             # "Universal newlines" - replace all standard forms of
             # newline with \n. This is not technically Windows related
             # (\r as newline is an old Mac convention) but we only apply
             # the translation for Windows as that's the only platform
             # it is likely to matter for these days.
-            stdout = stdout.replace("\r\n", "\n").replace("\r", "\n")
-            stderr = stderr.replace("\r\n", "\n").replace("\r", "\n")
+            stdout = self._normalize_newlines(stdout, decode_out)
+            stderr = self._normalize_newlines(stderr, decode=True)
         # Get return/exit code, unless there were WatcherErrors to handle.
         # NOTE: In that case, returncode() may block waiting on the process
         # (which may be waiting for user input). Since most WatcherError
@@ -642,15 +673,17 @@ class Runner:
 
     def create_io_threads(
         self,
-    ) -> Tuple[Dict[Callable, ExceptionHandlingThread], List[str], List[str]]:
+    ) -> Tuple[
+        Dict[Callable, ExceptionHandlingThread], List[Chunk], List[Chunk]
+    ]:
         """
         Create and return a dictionary of IO thread worker objects.
 
         Caller is expected to handle persisting and/or starting the wrapped
         threads.
         """
-        stdout: List[str] = []
-        stderr: List[str] = []
+        stdout: List[Chunk] = []
+        stderr: List[Chunk] = []
         # Set up IO thread parameters (format - body_func: {kwargs})
         thread_args: Dict[Callable, Any] = {
             self.handle_stdout: {
@@ -694,7 +727,9 @@ class Runner:
         """
         return Result(**kwargs)
 
-    def read_proc_output(self, reader: Callable) -> Generator[str, None, None]:
+    def read_proc_output(
+        self, reader: Callable, decode: bool = True
+    ) -> Generator[Chunk, None, None]:
         """
         Iteratively read & decode bytes from a subprocess' out/err stream.
 
@@ -706,6 +741,11 @@ class Runner:
             ``reader`` should be a reference to either `read_proc_stdout` or
             `read_proc_stderr`, which perform the actual, platform/library
             specific read calls.
+
+        :param bool decode:
+            Whether to decode the bytes read, or yield them as-is.
+
+            .. versionadded:: 3.1
 
         :returns:
             A generator yielding strings.
@@ -725,9 +765,9 @@ class Runner:
             data = reader(self.read_chunk_size)
             if not data:
                 break
-            yield self.decode(data)
+            yield self.decode(data) if decode else data
 
-    def write_our_output(self, stream: IO, string: str) -> None:
+    def write_our_output(self, stream: IO, string: Chunk) -> None:
         """
         Write ``string`` to ``stream``.
 
@@ -738,24 +778,32 @@ class Runner:
             A file-like stream object, mapping to the ``out_stream`` or
             ``err_stream`` parameters of `run`.
 
-        :param string: A Unicode string object.
+        :param string:
+            A Unicode string object, or `bytes` when ``decode_stdout``
+            is ``False``.
 
         :returns: ``None``.
 
         .. versionadded:: 1.0
         """
+        if isinstance(string, bytes) and hasattr(stream, "buffer"):
+            # Text streams such as sys.stdout cannot accept raw bytes; use
+            # the underlying binary buffer when there is one.
+            stream.buffer.write(string)  # type: ignore[attr-defined]
+            stream.buffer.flush()  # type: ignore[attr-defined]
+            return
         stream.write(string)
         stream.flush()
 
     def _handle_output(
         self,
-        buffer_: List[str],
+        buffer_: List[Chunk],
         hide: bool,
         output: IO,
         reader: Callable,
+        decode: bool = True,
     ) -> None:
-        # TODO: store un-decoded/raw bytes somewhere as well...
-        for data in self.read_proc_output(reader):
+        for data in self.read_proc_output(reader, decode):
             # Echo to local stdout if necessary
             # TODO: should we rephrase this as "if you want to hide, give me a
             # dummy output stream, e.g. something like /dev/null"? Otherwise, a
@@ -769,10 +817,10 @@ class Runner:
             # the thread is join()'d.
             buffer_.append(data)
             # Run our specific buffer through the autoresponder framework
-            self.respond(buffer_)
+            self.respond(buffer_, decode)
 
     def handle_stdout(
-        self, buffer_: List[str], hide: bool, output: IO
+        self, buffer_: List[Chunk], hide: bool, output: IO
     ) -> None:
         """
         Read process' stdout, storing into a buffer & printing/parsing.
@@ -791,11 +839,15 @@ class Runner:
         .. versionadded:: 1.0
         """
         self._handle_output(
-            buffer_, hide, output, reader=self.read_proc_stdout
+            buffer_,
+            hide,
+            output,
+            reader=self.read_proc_stdout,
+            decode=self.opts["decode_stdout"],
         )
 
     def handle_stderr(
-        self, buffer_: List[str], hide: bool, output: IO
+        self, buffer_: List[Chunk], hide: bool, output: IO
     ) -> None:
         """
         Read process' stderr, storing into a buffer & printing/parsing.
@@ -806,10 +858,13 @@ class Runner:
         .. versionadded:: 1.0
         """
         self._handle_output(
-            buffer_, hide, output, reader=self.read_proc_stderr
+            buffer_,
+            hide,
+            output,
+            reader=self.read_proc_stderr,
         )
 
-    def read_our_stdin(self, input_: IO) -> Optional[str]:
+    def read_our_stdin(self, input_: IO) -> Optional[Chunk]:
         """
         Read & decode bytes from a local stdin stream.
 
@@ -820,8 +875,9 @@ class Runner:
 
         :returns:
             A Unicode string, the result of decoding the read bytes (this might
-            be the empty string if the pipe has closed/reached EOF); or
-            ``None`` if stdin wasn't ready for reading yet.
+            be the empty string if the pipe has closed/reached EOF); or the
+            raw bytes when ``decode_stdin`` is ``False``; or ``None`` if stdin
+            wasn't ready for reading yet.
 
         .. versionadded:: 1.0
         """
@@ -843,7 +899,11 @@ class Runner:
                     raise
             # Decode if it appears to be binary-type. (From real terminal
             # streams, usually yes; from file-like objects, often no.)
-            if bytes_ and isinstance(bytes_, bytes):
+            if (
+                self.opts["decode_stdin"]
+                and bytes_
+                and isinstance(bytes_, bytes)
+            ):
                 # TODO: will decoding 1 byte at a time break multibyte
                 # character encodings? How to square interactivity with that?
                 bytes_ = self.decode(bytes_)
@@ -929,7 +989,7 @@ class Runner:
         """
         return (not self.using_pty) and isatty(input_)
 
-    def respond(self, buffer_: List[str]) -> None:
+    def respond(self, buffer_: List[Chunk], decode: bool = True) -> None:
         """
         Write to the program's stdin in response to patterns in ``buffer_``.
 
@@ -940,10 +1000,20 @@ class Runner:
         :param buffer:
             The capture buffer for this thread's particular IO stream.
 
+        :param bool decode:
+            Whether the buffer holds text. An undecoded buffer holds raw
+            bytes, which the (text oriented) watchers cannot match against.
+
+            .. versionadded:: 3.1
+
         :returns: ``None``.
 
         .. versionadded:: 1.0
         """
+        # Nothing to match against, or nothing capable of matching: skip the
+        # join entirely, which also keeps large buffers cheap.
+        if not decode or not self.watchers:
+            return
         # Join buffer contents into a single string; without this,
         # StreamWatcher subclasses can't do things like iteratively scan for
         # pattern matches.
@@ -951,7 +1021,7 @@ class Runner:
         # speed and memory use. Should that become false, consider using
         # StringIO or cStringIO (tho the latter doesn't do Unicode well?) which
         # is apparently even more efficient.
-        stream = "".join(buffer_)
+        stream = "".join(cast(List[str], buffer_))
         for watcher in self.watchers:
             for response in watcher.submit(stream):
                 self.write_proc_stdin(response)
@@ -1020,19 +1090,25 @@ class Runner:
                 break
             time.sleep(self.input_sleep)
 
-    def write_proc_stdin(self, data: str) -> None:
+    def write_proc_stdin(self, data: Chunk) -> None:
         """
         Write encoded ``data`` to the running process' stdin.
 
-        :param data: A Unicode string.
+        :param data:
+            A Unicode string, or `bytes` when ``decode_stdin`` is ``False``,
+            in which case it is written through unchanged.
 
         :returns: ``None``.
 
         .. versionadded:: 1.0
         """
-        # Encode always, then request implementing subclass to perform the
-        # actual write to subprocess' stdin.
-        self._write_proc_stdin(data.encode(self.encoding))
+        # Encode unless we were handed bytes on purpose, then request
+        # implementing subclass to perform the actual write to subprocess'
+        # stdin.
+        if isinstance(data, bytes):
+            self._write_proc_stdin(data)
+        else:
+            self._write_proc_stdin(data.encode(self.encoding))
 
     def decode(self, data: bytes) -> str:
         """
@@ -1515,7 +1591,7 @@ class Result:
     # TODO: inherit from namedtuple instead? heh (or: use attrs from pypi)
     def __init__(
         self,
-        stdout: str = "",
+        stdout: Chunk = "",
         stderr: str = "",
         encoding: Optional[str] = None,
         command: str = "",
@@ -1612,7 +1688,11 @@ class Result:
         # TODO: preserve alternate line endings? Mehhhh
         # NOTE: no trailing \n preservation; easier for below display if
         # normalized
-        return "\n\n" + "\n".join(getattr(self, stream).splitlines()[-count:])
+        data = getattr(self, stream)
+        if isinstance(data, bytes):
+            # Undecoded stream: this is display output, so decode leniently.
+            data = data.decode(self.encoding, "replace")
+        return "\n\n" + "\n".join(data.splitlines()[-count:])
 
 
 class Promise(Result, AbstractContextManager):
