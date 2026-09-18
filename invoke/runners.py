@@ -72,7 +72,7 @@ class Runner:
 
     opts: Dict[str, Any]
     using_pty: bool
-    read_chunk_size = 1000
+    read_chunk_size = 64 * 1024
     input_sleep = 0.01
 
     def __init__(self, context: "Context") -> None:
@@ -336,6 +336,14 @@ class Runner:
                 result attribute. ``err_stream`` and ``stderr`` will always be
                 empty when ``pty=True``.
 
+        :param int read_chunk_size:
+            How many bytes to ask for per read of the subprocess' output
+            streams, and of local stdin. If ``None`` (the default),
+            `Runner.read_chunk_size` is used, which subclasses may
+            override.
+
+            .. versionadded:: 3.1
+
         :param bool replace_env:
             When ``True``, causes the subprocess to receive the dictionary
             given to ``env`` as its entire shell environment, instead of
@@ -420,6 +428,9 @@ class Runner:
         )
         # Arrive at final encoding if neither config nor kwargs had one
         self.encoding = self.opts["encoding"] or self.default_encoding()
+        self.read_chunk_size = (
+            self.opts["read_chunk_size"] or self.read_chunk_size
+        )
         # Echo running command (wants to be early to be included in dry-run)
         if self.opts["echo"]:
             self.echo(command)
@@ -830,8 +841,17 @@ class Runner:
         # read instead of once per session, which could be costly (?).
         bytes_ = None
         if ready_for_reading(input_):
+            if isatty(input_):
+                num_bytes = bytes_to_read(input_)
+                read = input_.read
+            else:
+                num_bytes = self.read_chunk_size
+                # read1 avoids blocking, but is not available on text streams.
+                read = (
+                    input_.read1 if hasattr(input_, "read1") else input_.read  # type: ignore[attr-defined]  # noqa: E501
+                )
             try:
-                bytes_ = input_.read(bytes_to_read(input_))
+                bytes_ = read(num_bytes)
             except OSError as e:
                 # Assume EBADF in this situation implies running under nohup or
                 # similar, where:
@@ -912,8 +932,10 @@ class Runner:
                 # race conditions re: unread stdin.)
                 if self.program_finished.is_set() and not data:
                     break
-                # Take a nap so we're not chewing CPU.
-                time.sleep(self.input_sleep)
+                # Sleep when there's no data ready to avoid chewing CPU. But,
+                # don't delay if there was data, as more may still be ready.
+                if not data:
+                    time.sleep(self.input_sleep)
 
     def should_echo_stdin(self, input_: IO, output: IO) -> bool:
         """

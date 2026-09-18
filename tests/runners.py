@@ -415,6 +415,95 @@ class Runner_:
                 fake_locale.getpreferredencoding.return_value = "FALLBACK"
                 assert self._runner().default_encoding() == "FALLBACK"
 
+    class read_chunk_size:
+        def defaults_to_class_attribute(self):
+            runner = self._runner()
+            runner.run(_)
+            assert runner.read_chunk_size == Runner.read_chunk_size
+
+        def honors_config(self):
+            c = Context(Config(overrides={"run": {"read_chunk_size": 1234}}))
+            runner = _Dummy(c)
+            runner.run(_)
+            assert runner.read_chunk_size == 1234
+
+        def kwarg_beats_config(self):
+            c = Context(Config(overrides={"run": {"read_chunk_size": 1234}}))
+            runner = _Dummy(c)
+            runner.run(_, read_chunk_size=4321)
+            assert runner.read_chunk_size == 4321
+
+        def subclass_attribute_still_honored(self):
+            # Subclasses (and our own tests) set this as a class attribute;
+            # that must keep working when neither config nor kwarg is given.
+            class Chunky(_Dummy):
+                read_chunk_size = 1234
+
+            runner = self._runner(klass=Chunky)
+            runner.run(_)
+            assert runner.read_chunk_size == 1234
+
+        def zero_falls_back_instead_of_truncating(self):
+            # A zero-byte read is indistinguishable from EOF, which would
+            # silently yield no output at all; treat it as "unset".
+            runner = self._runner()
+            runner.run(_, read_chunk_size=0)
+            assert runner.read_chunk_size == Runner.read_chunk_size
+
+        def is_handed_to_the_stream_reader(self):
+            runner = self._runner()
+            runner.read_proc_stdout = Mock(return_value="")
+            runner.run(_, read_chunk_size=1234)
+            runner.read_proc_stdout.assert_called_with(1234)
+
+        def _read_stdin(self, runner, stream):
+            with patch("invoke.runners.ready_for_reading", return_value=True):
+                return runner.read_our_stdin(stream)
+
+        def non_terminal_stdin_is_read_in_chunks(self):
+            # bytes_to_read() gives up and says 1 for non-terminals, which
+            # would cap throughput at a byte per input_sleep.
+            runner = self._runner()
+            runner.read_chunk_size = 1234
+            stream = Mock(spec=["read1", "isatty"])
+            stream.isatty.return_value = False
+            stream.read1.return_value = b""
+            self._read_stdin(runner, stream)
+            stream.read1.assert_called_once_with(1234)
+
+        def non_terminal_stdin_prefers_read1(self):
+            # read() on a buffered stream blocks until it has *all* n bytes,
+            # which would stall a slow pipe; read1() returns what is there.
+            runner = self._runner()
+            stream = Mock(spec=["read", "read1", "isatty"])
+            stream.isatty.return_value = False
+            stream.read1.return_value = b""
+            self._read_stdin(runner, stream)
+            assert stream.read1.called
+            assert not stream.read.called
+
+        def falls_back_to_read_without_read1(self):
+            # Text streams (StringIO, open(..., "r")) have no read1().
+            runner = self._runner()
+            runner.read_chunk_size = 1234
+            stream = Mock(spec=["read", "isatty"])
+            stream.isatty.return_value = False
+            stream.read.return_value = ""
+            self._read_stdin(runner, stream)
+            stream.read.assert_called_once_with(1234)
+
+        def terminal_stdin_still_asks_bytes_to_read(self):
+            # A tty knows exactly how much it has buffered, and asking for
+            # more than that would block.
+            runner = self._runner()
+            stream = Mock(spec=["read", "read1", "isatty"])
+            stream.isatty.return_value = True
+            stream.read.return_value = b""
+            with patch("invoke.runners.bytes_to_read", return_value=7):
+                self._read_stdin(runner, stream)
+            stream.read.assert_called_once_with(7)
+            assert not stream.read1.called
+
     class output_hiding:
         @trap
         def _expect_hidden(self, hide, expect_out="", expect_err=""):
@@ -550,10 +639,13 @@ class Runner_:
             self._runner(klass=klass).run(_, out_stream=StringIO())
             # Check that mocked writer was called w/ the data from our patched
             # sys.stdin.
-            # NOTE: this also tests that non-fileno-bearing streams read/write
-            # 1 byte at a time. See farther-down test for fileno-bearing stdin
-            calls = list(map(lambda x: call(x), "Text!"))
-            klass.write_proc_stdin.assert_has_calls(calls, any_order=False)
+            # NOTE: non-terminal streams are read in read_chunk_size chunks,
+            # so assert on the reassembled content rather than the number of
+            # writes. See farther-down test for fileno-bearing stdin
+            written = "".join(
+                c.args[0] for c in klass.write_proc_stdin.call_args_list
+            )
+            assert written == "Text!"
 
         def can_be_overridden(self):
             klass = self._mock_stdin_writer()
@@ -561,9 +653,11 @@ class Runner_:
             self._runner(klass=klass).run(
                 _, in_stream=in_stream, out_stream=StringIO()
             )
-            # stdin mirroring occurs char-by-char
-            calls = list(map(lambda x: call(x), "Hey, listen!"))
-            klass.write_proc_stdin.assert_has_calls(calls, any_order=False)
+            # stdin is forwarded in chunks, not char-by-char
+            written = "".join(
+                c.args[0] for c in klass.write_proc_stdin.call_args_list
+            )
+            assert written == "Hey, listen!"
 
         def can_be_disabled_entirely(self):
             # Mock handle_stdin so we can assert it's not even called
@@ -1111,6 +1205,38 @@ stderr 25
             # process. Still worth testing more than the first tho.
             assert mock_time.sleep.call_args_list[:3] == [call(0.007)] * 3
 
+        def _count_naps(self, chunks, finished_after):
+            runner = _Dummy(Context())
+            runner.using_pty = False
+            runner.encoding = "utf-8"
+            reads = iter(chunks)
+            calls = []
+
+            def read1(num_bytes):
+                calls.append(num_bytes)
+                if len(calls) >= finished_after:
+                    runner.program_finished.set()
+                return next(reads, b"")
+
+            stream = Mock(spec=["read1", "isatty"])
+            stream.isatty.return_value = False
+            stream.read1.side_effect = read1
+            with patch("invoke.runners.ready_for_reading", return_value=True):
+                with patch("invoke.runners.time") as mock_time:
+                    runner.handle_stdin(
+                        input_=stream, output=StringIO(), echo=False
+                    )
+            return mock_time.sleep.call_count
+
+        def does_not_nap_between_nonempty_stdin_reads(self):
+            # Data arrived, so more may be waiting: go straight round.
+            # Napping after every read caps throughput at a chunk per sleep.
+            assert self._count_naps([b"a", b"b", b"c"], finished_after=4) == 0
+
+        def naps_when_stdin_had_nothing_to_give(self):
+            # Nothing there; this is the nap that keeps us off the CPU.
+            assert self._count_naps([], finished_after=3) == 2
+
     class stdin_mirroring:
         def _test_mirroring(self, expect_mirroring, **kwargs):
             # Setup
@@ -1138,9 +1264,12 @@ stderr 25
             )
             # Examine mocked output stream to see if it was mirrored to
             if expect_mirroring:
-                calls = output.write.call_args_list
-                assert calls == list(map(lambda x: call(x), fake_in))
-                assert len(output.flush.call_args_list) == len(fake_in)
+                writes = output.write.call_args_list
+                # Mirrored a chunk at a time rather than a character at a
+                # time, so compare reassembled content, and expect one flush
+                # per write.
+                assert "".join(c.args[0] for c in writes) == fake_in
+                assert len(output.flush.call_args_list) == len(writes)
             # Or not mirrored to
             else:
                 assert output.write.call_args_list == []

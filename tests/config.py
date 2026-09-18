@@ -106,6 +106,7 @@ class Config_:
                     "in_stream": None,
                     "out_stream": None,
                     "pty": False,
+                    "read_chunk_size": None,
                     "replace_env": False,
                     "shell": "bash",
                     "warn": False,
