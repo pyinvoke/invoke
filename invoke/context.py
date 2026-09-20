@@ -16,6 +16,7 @@ from unittest.mock import Mock
 from .config import Config, DataProxy
 from .exceptions import AuthFailure, Failure, ResponseNotAccepted
 from .runners import Result, Runner
+from .terminals import WINDOWS
 from .watchers import FailingResponder
 
 
@@ -273,9 +274,21 @@ class Context(DataProxy):
         prefixes = list(self.command_prefixes)
         current_directory = self.cwd
         if current_directory:
-            prefixes.insert(0, "cd {}".format(current_directory))
+            prefixes.insert(0, self._cd_prefix(current_directory))
 
         return " && ".join(prefixes + [command])
+
+    def _cd_prefix(self, directory: str) -> str:
+        """
+        Build a ``cd <directory>`` prefix for the active shell.
+
+        POSIX shells accept a backslash-escaped space (applied in `cwd`).
+        ``cmd.exe`` does not, so Windows paths with spaces are quoted.
+        """
+        if WINDOWS and (" " in directory or '"' in directory):
+            quoted = directory.replace('"', '""')
+            return 'cd "{}"'.format(quoted)
+        return "cd {}".format(directory)
 
     @contextmanager
     def prefix(self, command: str) -> Generator[None, None, None]:
@@ -351,9 +364,11 @@ class Context(DataProxy):
             if path.startswith("~") or path.startswith("/"):
                 break
 
-        # TODO: see if there's a stronger "escape this path" function somewhere
-        # we can reuse. e.g., escaping tildes or slashes in filenames.
-        paths = [path.replace(" ", r"\ ") for path in self.command_cwds[i:]]
+        # POSIX `cd` needs spaces backslash-escaped. Windows quoting is done
+        # in `_cd_prefix` (`cmd.exe` does not treat `\ ` as a space escape).
+        paths = list(self.command_cwds[i:])
+        if not WINDOWS:
+            paths = [path.replace(" ", r"\ ") for path in paths]
         return str(os.path.join(*paths))
 
     @contextmanager
@@ -393,8 +408,8 @@ class Context(DataProxy):
                     c.run('ls')  # cd /var/www/website1 && ls
 
         .. note::
-            Space characters will be escaped automatically to make dealing with
-            such directory names easier.
+            Space characters are escaped automatically: POSIX shells get a
+            backslash escape, Windows ``cmd.exe`` gets a quoted path.
 
         .. versionadded:: 1.0
         .. versionchanged:: 1.5

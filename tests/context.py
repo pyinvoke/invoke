@@ -154,6 +154,16 @@ class Context_:
             self.c.command_cwds = ["a", "~b", "c"]
             assert self.c.cwd == os.path.join("~b", "c")
 
+        def posix_backslash_escapes_spaces(self):
+            with patch("invoke.context.WINDOWS", False):
+                self.c.command_cwds = ["foo bar"]
+                assert self.c.cwd == r"foo\ bar"
+
+        def windows_keeps_literal_spaces(self):
+            with patch("invoke.context.WINDOWS", True):
+                self.c.command_cwds = ["foo bar"]
+                assert self.c.cwd == "foo bar"
+
     class cd:
         _escaped_prompt = re.escape(Config().sudo.prompt)
 
@@ -226,6 +236,27 @@ class Context_:
 
             cmd = "cd foo && whoami"
             assert runner.run.call_args[0][0] == cmd
+
+        @patch(local_path)
+        def posix_backslash_escapes_spaces(self, Local):
+            runner = Local.return_value
+            c = Context()
+            with patch("invoke.context.WINDOWS", False):
+                with c.cd("foo bar"):
+                    c.run("whoami")
+            assert runner.run.call_args[0][0] == r"cd foo\ bar && whoami"
+
+        @patch(local_path)
+        def windows_quotes_paths_with_spaces(self, Local):
+            runner = Local.return_value
+            c = Context()
+            with patch("invoke.context.WINDOWS", True):
+                with c.cd(r"C:\Users\with space"):
+                    c.run("whoami")
+            assert (
+                runner.run.call_args[0][0]
+                == r'cd "C:\Users\with space" && whoami'
+            )
 
     class prefix:
         @patch(local_path)
