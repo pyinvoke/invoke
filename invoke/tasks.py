@@ -30,7 +30,8 @@ if TYPE_CHECKING:
     from inspect import Signature
     from .config import Config
 
-T = TypeVar("T", bound=Callable)
+T = TypeVar("T", bound=Callable, covariant=True)
+R = TypeVar("R")
 
 
 class Task(Generic[T]):
@@ -129,7 +130,9 @@ class Task(Generic[T]):
         # this for now.
         return hash(self.name) + hash(self.body)
 
-    def __call__(self, *args: Any, **kwargs: Any) -> T:
+    def __call__(
+        self: "Task[Callable[..., R]]", *args: Any, **kwargs: Any
+    ) -> R:
         # Guard against calling tasks with no context.
         if not isinstance(args[0], Context):
             err = "Task expected a Context as its first arg, got {} instead!"

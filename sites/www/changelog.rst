@@ -2,6 +2,10 @@
 Changelog
 =========
 
+- :bug:`1073` Correct the return type of `~invoke.tasks.Task.__call__` to
+  describe the wrapped body's result, instead of the body callable itself.
+  Existing ``Task[Callable[...]]`` annotations remain supported. Thanks to
+  ``@saitakarcesme`` for the patch.
 - :release:`2.2.1 <2025-10-10>`
 - :release:`2.1.4 <2025-10-10>`
 - :bug:`1038` (fixed in :issue:`1040`) Python 3.14 tweaked the behavior of
