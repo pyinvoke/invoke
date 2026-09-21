@@ -1,5 +1,6 @@
 import os
 import re
+import shlex
 from contextlib import contextmanager
 from itertools import cycle
 from os import PathLike
@@ -273,7 +274,9 @@ class Context(DataProxy):
         prefixes = list(self.command_prefixes)
         current_directory = self.cwd
         if current_directory:
-            prefixes.insert(0, "cd {}".format(current_directory))
+            # Security fix: use shlex.quote() to prevent shell injection via
+            # metacharacters ($, ;, |, etc.) in the path (CWE-78)
+            prefixes.insert(0, "cd {}".format(shlex.quote(current_directory)))
 
         return " && ".join(prefixes + [command])
 
@@ -351,9 +354,9 @@ class Context(DataProxy):
             if path.startswith("~") or path.startswith("/"):
                 break
 
-        # TODO: see if there's a stronger "escape this path" function somewhere
-        # we can reuse. e.g., escaping tildes or slashes in filenames.
-        paths = [path.replace(" ", r"\ ") for path in self.command_cwds[i:]]
+        # Security fix: removed manual space-only escaping; shlex.quote() in
+        # _prefix_commands handles all metacharacters correctly.
+        paths = list(self.command_cwds[i:])
         return str(os.path.join(*paths))
 
     @contextmanager
