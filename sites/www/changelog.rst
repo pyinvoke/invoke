@@ -2,6 +2,9 @@
 Changelog
 =========
 
+- :bug:`-` Allow ``Config.setdefault(key)`` to insert and track the implicit
+  ``None`` default without raising ``ValueError``. Patch by Muneeb Sheikh.
+
 - :release:`2.2.1 <2025-10-10>`
 - :release:`2.1.4 <2025-10-10>`
 - :bug:`1038` (fixed in :issue:`1040`) Python 3.14 tweaked the behavior of

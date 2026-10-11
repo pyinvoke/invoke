@@ -287,11 +287,8 @@ class DataProxy:
         # Key already existed -> nothing was mutated, short-circuit
         if key_existed:
             return ret
-        # Here, we can assume the key did not exist and thus user must have
-        # supplied a 'default' (if they did not, the real setdefault() above
-        # would have excepted.)
-        key, default = args
-        self._track_modification_of(key, default)
+        # The inserted value is None when no explicit default was supplied.
+        self._track_modification_of(args[0], ret)
         return ret
 
     def update(self, *args: Any, **kwargs: Any) -> None:
