@@ -16,6 +16,7 @@ from typing import (
     Iterable,
     List,
     Optional,
+    Sequence,
     Set,
     Tuple,
     Type,
@@ -67,8 +68,12 @@ class Task(Generic[T]):
         default: bool = False,
         auto_shortflags: bool = True,
         help: Optional[Dict[str, Any]] = None,
-        pre: Optional[Union[List[str], str]] = None,
-        post: Optional[Union[List[str], str]] = None,
+        pre: Optional[
+            Union[str, "Task[Any]", "Call", Sequence[Union[str, "Task[Any]", "Call"]]]
+        ] = None,
+        post: Optional[
+            Union[str, "Task[Any]", "Call", Sequence[Union[str, "Task[Any]", "Call"]]]
+        ] = None,
         autoprint: bool = False,
         iterable: Optional[Iterable[str]] = None,
         incrementable: Optional[Iterable[str]] = None,
