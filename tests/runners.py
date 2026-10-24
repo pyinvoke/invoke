@@ -1797,6 +1797,22 @@ class Result_:
 
 
 class Promise_:
+    def str_degrades_gracefully(self):
+        promise = _runner().run(_, asynchronous=True)
+        try:
+            assert str(promise) == "<Promise cmd={!r}>".format(_)
+        finally:
+            promise.join()
+
+    def printing_does_not_join_the_runner(self):
+        runner = Mock(result_kwargs={"command": "echo hello"})
+        promise = Promise(runner)
+        output = StringIO()
+        print(promise, file=output)
+        assert output.getvalue() == "<Promise cmd='echo hello'>\n"
+        runner._finish.assert_not_called()
+        runner.stop.assert_not_called()
+
     def exposes_read_only_run_params(self):
         runner = _runner()
         promise = runner.run(

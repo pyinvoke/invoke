@@ -2,6 +2,10 @@
 Changelog
 =========
 
+- :bug:`996` Avoid an ``AttributeError`` when printing an asynchronous
+  `~invoke.runners.Promise`, by displaying its command without requiring
+  execution-result attributes or waiting for completion. Patch by
+  ``@Hugohong258``.
 - :release:`2.2.1 <2025-10-10>`
 - :release:`2.1.4 <2025-10-10>`
 - :bug:`1038` (fixed in :issue:`1040`) Python 3.14 tweaked the behavior of

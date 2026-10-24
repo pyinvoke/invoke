@@ -1601,6 +1601,9 @@ class Promise(Result):
         for key, value in self.runner.result_kwargs.items():
             setattr(self, key, value)
 
+    def __str__(self) -> str:
+        return "<Promise cmd={!r}>".format(self.command)
+
     def join(self) -> Result:
         """
         Block until associated subprocess exits, returning/raising the result.
