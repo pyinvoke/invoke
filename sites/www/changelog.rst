@@ -2,6 +2,8 @@
 Changelog
 =========
 
+- :bug:`1017` Report missing required arguments using their command-line
+  names instead of their Python attribute names. Patch by ``@Hugohong258``.
 - :release:`2.2.1 <2025-10-10>`
 - :release:`2.1.4 <2025-10-10>`
 - :bug:`1038` (fixed in :issue:`1040`) Python 3.14 tweaked the behavior of

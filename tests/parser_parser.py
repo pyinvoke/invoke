@@ -1,4 +1,4 @@
-from pytest import raises
+from pytest import raises, mark
 
 from invoke.parser import Parser, Context, Argument, ParseError
 
@@ -188,6 +188,31 @@ class Parser_:
                     assert e.context is None
 
         class positional_arguments:
+            @mark.parametrize(
+                "cli_name,attr_name",
+                [
+                    ("param-1", "param_1"),
+                    ("param_1", None),
+                    ("public-name", "internal_name"),
+                ],
+            )
+            def omitted_positionals_report_cli_names(
+                self, cli_name, attr_name
+            ):
+                arg = Argument(
+                    names=(cli_name, "p"),
+                    attr_name=attr_name,
+                    positional=True,
+                )
+                context = Context("mytask", args=[arg])
+                with raises(ParseError) as error:
+                    Parser([context]).parse_argv(["mytask"])
+                expected = (
+                    "'mytask' did not receive required positional arguments: "
+                    "'{}'".format(cli_name)
+                )
+                assert str(error.value) == expected
+
             def _basic(self):
                 arg = Argument("pos", positional=True)
                 mytask = Context(name="mytask", args=[arg])

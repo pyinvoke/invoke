@@ -342,7 +342,7 @@ class ParseMachine(StateMachine):
         if self.context and self.context.missing_positional_args:
             err = "'{}' did not receive required positional arguments: {}"
             names = ", ".join(
-                "'{}'".format(x.name)
+                "'{}'".format(x.names[0])
                 for x in self.context.missing_positional_args
             )
             self.error(err.format(self.context.name, names))
