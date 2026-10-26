@@ -2,6 +2,9 @@
 Changelog
 =========
 
+- :bug:`1065` Type pre/post dependencies as sequences of tasks or calls,
+  including the tuple stored by positional decorator arguments. Patch by
+  ``@Hugohong258``, with thanks to ``@Eryx-Z`` for earlier investigation.
 - :release:`2.2.1 <2025-10-10>`
 - :release:`2.1.4 <2025-10-10>`
 - :bug:`1038` (fixed in :issue:`1040`) Python 3.14 tweaked the behavior of
