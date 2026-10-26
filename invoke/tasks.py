@@ -131,10 +131,12 @@ class Task(Generic[T]):
 
     def __call__(self, *args: Any, **kwargs: Any) -> T:
         # Guard against calling tasks with no context.
-        if not isinstance(args[0], Context):
+        if not args or not isinstance(args[0], Context):
             err = "Task expected a Context as its first arg, got {} instead!"
             # TODO: raise a custom subclass _of_ TypeError instead
-            raise TypeError(err.format(type(args[0])))
+            raise TypeError(
+                err.format(type(args[0]) if args else "no arguments")
+            )
         result = self.body(*args, **kwargs)
         self.times_called += 1
         return result

@@ -235,6 +235,11 @@ class Task_:
             with raises(TypeError):
                 mytask(5)
 
+        def errors_if_called_without_Context(self):
+            with raises(TypeError, match="Context as its first arg"):
+                self.task()
+            assert self.task.times_called == 0
+
         def errors_if_no_first_arg_at_all(self):
             with raises(TypeError):
 

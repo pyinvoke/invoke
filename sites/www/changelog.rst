@@ -2,6 +2,9 @@
 Changelog
 =========
 
+- :bug:`-` Raise the intended ``TypeError`` when calling a task without
+  its required context, instead of leaking an ``IndexError``. Patch by
+  ``@Hugohong258``.
 - :release:`2.2.1 <2025-10-10>`
 - :release:`2.1.4 <2025-10-10>`
 - :bug:`1038` (fixed in :issue:`1040`) Python 3.14 tweaked the behavior of
