@@ -37,7 +37,12 @@ from .runners import (
     Result as Result,
     Runner as Runner,
 )  # noqa
-from .tasks import Call as Call, Task as Task, call as call, task as task  # noqa
+from .tasks import (
+    Call as Call,
+    Task as Task,
+    call as call,
+    task as task,
+)  # noqa
 from .terminals import pty_size as pty_size  # noqa
 from .watchers import (
     FailingResponder as FailingResponder,

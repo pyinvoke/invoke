@@ -84,7 +84,5 @@ def test_parser_export_list_includes_expected_name(name):
     all_ = getattr(invoke.parser, "__all__", [])
     assert name in all_, (
         "invoke.parser.__all__ is missing {!r}; add it to __all__ in "
-        "invoke/parser/__init__.py so it is an explicit re-export".format(
-            name
-        )
+        "invoke/parser/__init__.py so it is an explicit re-export".format(name)
     )
