@@ -2,6 +2,8 @@
 Changelog
 =========
 
+- :bug:`697` Honor an explicit ``hide=None`` when configuration hides command
+  output. Thanks to ``SwampFalc`` for the report and Narek Khachikyan for the fix.
 - :release:`3.0.3 <2026-04-07>`
 - :support:`- backported` Reverted the `@task
   <invoke.tasks.task>` return value type hint change; it actually just makes
