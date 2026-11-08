@@ -17,6 +17,7 @@ from invoke import (
     ResponseNotAccepted,
     Result,
     StreamWatcher,
+    UnexpectedExit,
 )
 
 local_path = "invoke.config.Local"
@@ -573,6 +574,32 @@ class MockContext_:
         )
         assert c.run("string").stdout == "yup"
         assert c.run("foobar").stdout == "bar"
+
+    @mark.parametrize("method", ("run", "sudo"))
+    @mark.parametrize("results", (False, [False], {"command": False}))
+    def unsuccessful_results_raise_by_default(self, method, results):
+        if isinstance(results, dict):
+            results = results.copy()
+        context = MockContext(**{method: results})
+        for _ in range(2):
+            with raises(UnexpectedExit) as error:
+                getattr(context, method)("command")
+            assert error.value.result.exited == 1
+            assert error.value.result.command == "command"
+
+    @mark.parametrize("method", ("run", "sudo"))
+    @mark.parametrize("configured", (False, True))
+    @mark.parametrize("warn", (None, False, True))
+    def warn_setting_controls_failed_results(self, method, configured, warn):
+        context = MockContext(
+            config=Config(overrides={"run": {"warn": configured}}),
+            **{method: False},
+        )
+        if configured if warn is None else warn:
+            assert not getattr(context, method)("command", warn=warn).ok
+        else:
+            with raises(UnexpectedExit):
+                getattr(context, method)("command", warn=warn)
 
     class boolean_result_shorthand:
         def as_singleton_args(self):

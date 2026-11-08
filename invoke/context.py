@@ -14,7 +14,12 @@ from typing import (
 from unittest.mock import Mock
 
 from .config import Config, DataProxy
-from .exceptions import AuthFailure, Failure, ResponseNotAccepted
+from .exceptions import (
+    AuthFailure,
+    Failure,
+    ResponseNotAccepted,
+    UnexpectedExit,
+)
 from .runners import Result, Runner
 from .watchers import FailingResponder
 
@@ -532,7 +537,9 @@ class MockContext(Context):
     # worth. Maybe in situations where Context grows a _lot_ of methods (e.g.
     # in Fabric 2; though Fabric could do its own sub-subclass in that case...)
 
-    def _yield_result(self, attname: str, command: str) -> Result:
+    def _yield_result(
+        self, attname: str, command: str, warn: Optional[bool] = None
+    ) -> Result:
         try:
             obj = getattr(self, attname)
             # Dicts need to try direct lookup or regex matching
@@ -557,6 +564,10 @@ class MockContext(Context):
             # explicitly given
             if not result.command:
                 result.command = command
+            if warn is None:
+                warn = self.config.run.warn
+            if not (result or warn):
+                raise UnexpectedExit(result)
             return result
         except (AttributeError, IndexError, KeyError, StopIteration):
             # raise_from(NotImplementedError(command), None)
@@ -567,14 +578,14 @@ class MockContext(Context):
         # result? E.g. filling in .command, etc? Possibly useful for debugging
         # if one hits unexpected-order problems with what they passed in to
         # __init__.
-        return self._yield_result("__run", command)
+        return self._yield_result("__run", command, warn=kwargs.get("warn"))
 
     def sudo(self, command: str, *args: Any, **kwargs: Any) -> Result:
         # TODO: this completely nukes the top-level behavior of sudo(), which
         # could be good or bad, depending. Most of the time I think it's good.
         # No need to supply dummy password config, etc.
         # TODO: see the TODO from run() re: injecting arg/kwarg values
-        return self._yield_result("__sudo", command)
+        return self._yield_result("__sudo", command, warn=kwargs.get("warn"))
 
     def set_result_for(
         self, attname: str, command: str, result: Result
