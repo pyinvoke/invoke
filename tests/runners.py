@@ -20,7 +20,7 @@ from _util import (
     mock_subprocess,
     skip_if_windows,
 )
-from pytest import raises, skip
+from pytest import mark, raises, skip
 from pytest_relaxed import trap
 
 from invoke import (
@@ -205,6 +205,16 @@ class Runner_:
             r = runner.run(_, hide=True)
             assert r.stdout == "stuff"
             assert sys.stdout.getvalue() == ""
+
+        @mark.parametrize("hide", (True, "out", "err"))
+        @trap
+        def explicit_None_overrides_config(self, hide):
+            runner = self._runner(out="foo", err="bar", run={"hide": hide})
+            result = runner.run(_, hide=None)
+            assert sys.stdout.getvalue() == "foo"
+            assert sys.stderr.getvalue() == "bar"
+            assert result.stdout == "foo"
+            assert result.stderr == "bar"
 
     class pty:
         def pty_defaults_to_off(self):

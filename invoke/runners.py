@@ -547,8 +547,12 @@ class Runner:
         """
         opts = {}
         for key, value in self.context.config.run.items():
-            runtime = kwargs.pop(key, None)
-            opts[key] = value if runtime is None else runtime
+            if key == "hide":
+                # None explicitly disables hiding, just like False.
+                opts[key] = kwargs.pop(key, value)
+            else:
+                runtime = kwargs.pop(key, None)
+                opts[key] = value if runtime is None else runtime
         # Pull in command execution timeout, which stores config elsewhere,
         # but only use it if it's actually set (backwards compat)
         config_timeout = self.context.config.timeouts.command
