@@ -2,6 +2,10 @@
 Changelog
 =========
 
+- :bug:`960` Make `~invoke.context.MockContext` honor the ``warn``
+  setting when returning failed command results, matching `~invoke.context.Context`
+  for both ``run`` and ``sudo``. Reported by ``red8888`` and fixed by
+  Narek Khachikyan.
 - :release:`3.0.3 <2026-04-07>`
 - :support:`- backported` Reverted the `@task
   <invoke.tasks.task>` return value type hint change; it actually just makes
