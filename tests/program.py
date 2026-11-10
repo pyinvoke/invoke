@@ -276,7 +276,7 @@ class Program_:
 
     class core_args:
         def returns_core_args_list(self):
-            # Mostly so we encode explicity doc'd public API member in tests.
+            # Mostly so we encode explicitly doc'd public API member in tests.
             # Spot checks good enough, --help tests include the full deal.
             core_args = Program().core_args()
             core_arg_names = [x.names[0] for x in core_args]
