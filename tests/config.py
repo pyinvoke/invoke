@@ -1074,7 +1074,7 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
                     "oh": {"dear": {"god": object()}},
                     # And shallow-copy compound values
                     "shallow": {"objects": ["copy", "okay"]},
-                    # Will preserve refrences to the innermost dict, sadly. Not
+                    # Will preserve references to the innermost dict, sadly. Not
                     # much we can do without incurring deepcopy problems (or
                     # reimplementing it entirely)
                     "welp": {"cannot": ["have", {"everything": "we want"}]},
@@ -1094,7 +1094,7 @@ Valid real attributes: ['clear', 'clone', 'env_prefix', 'file_prefix', 'from_dat
             assert c.shallow.objects == c2.shallow.objects
             err = "Shallow list had same identity!"
             assert c.shallow.objects is not c2.shallow.objects, err
-            # Deeply nested non-dict objects are stil problematic, oh well
+            # Deeply nested non-dict objects are still problematic, oh well
             err = "Huh, a deeply nested dict-in-a-list had different identity?"
             assert c.welp.cannot[1] is c2.welp.cannot[1], err
             err = "Huh, a deeply nested dict-in-a-list value had different identity?"  # noqa
