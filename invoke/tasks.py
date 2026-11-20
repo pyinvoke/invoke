@@ -113,16 +113,8 @@ class Task(Generic[T]):
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Task) or self.name != other.name:
             return False
-        # Functions do not define __eq__ but func_code objects apparently do.
-        # (If we're wrapping some other callable, they will be responsible for
-        # defining equality on their end.)
-        if self.body == other.body:
-            return True
-        else:
-            try:
-                return self.body.__code__ == other.body.__code__
-            except AttributeError:
-                return False
+        # Code objects omit globals, closures and default argument values.
+        return self.body == other.body
 
     def __hash__(self) -> int:
         # Presumes name and body will never be changed. Hrm.

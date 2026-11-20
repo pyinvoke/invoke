@@ -4,6 +4,7 @@ from functools import reduce
 from pytest import raises
 
 from invoke.collection import Collection
+from invoke.context import Context
 from invoke.tasks import task, Task
 
 from _util import load, support_path
@@ -87,6 +88,11 @@ class Collection_:
 
     class useful_special_methods:
         def _meh(self):
+            task1, task2, task3 = self.tasks
+            submeh = Collection("submeh", task3)
+            return Collection("meh", task1, task2, submeh)
+
+        def setup_method(self):
             @task
             def task1(c):
                 pass
@@ -99,10 +105,7 @@ class Collection_:
             def task3(c):
                 pass
 
-            submeh = Collection("submeh", task3)
-            return Collection("meh", task1, task2, submeh)
-
-        def setup_method(self):
+            self.tasks = task1, task2, task3
             self.c = self._meh()
 
         def repr_(self):
@@ -128,6 +131,19 @@ class Collection_:
             difftasks = self._meh()
             del difftasks.tasks["task1"]
             assert difftasks != self.c
+
+        def collections_with_distinct_task_functions_are_not_equal(self):
+            def make_collection(value):
+                @task
+                def clean(c):
+                    return value
+
+                return Collection("tasks", clean)
+
+            first, second = make_collection("first"), make_collection("second")
+            assert first["clean"](Context()) == "first"
+            assert second["clean"](Context()) == "second"
+            assert first != second
 
         def boolean_is_equivalent_to_tasks_and_or_collections(self):
             # No tasks or colls? Empty/false
