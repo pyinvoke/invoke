@@ -545,6 +545,11 @@ Example output::
 Task deduplication
 ------------------
 
+Tasks are compared by their names and wrapped callables. Separate functions
+remain distinct even when they have identical code, since their globals,
+closures or default argument values may differ. Multiple references to the
+same function still compare equal when their task names match.
+
 By default, any task that would run more than once during a session (due e.g.
 to inclusion in pre/post tasks), will only be run once. Example task file::
 
