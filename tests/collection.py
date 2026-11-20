@@ -4,6 +4,7 @@ from functools import reduce
 from pytest import raises
 
 from invoke.collection import Collection
+from invoke.context import Context
 from invoke.tasks import task, Task
 
 from _util import load, support_path
@@ -139,7 +140,10 @@ class Collection_:
 
                 return Collection("tasks", clean)
 
-            assert make_collection("first") != make_collection("second")
+            first, second = make_collection("first"), make_collection("second")
+            assert first["clean"](Context()) == "first"
+            assert second["clean"](Context()) == "second"
+            assert first != second
 
         def boolean_is_equivalent_to_tasks_and_or_collections(self):
             # No tasks or colls? Empty/false

@@ -199,6 +199,8 @@ class Task_:
 
         first, second = make_task("first"), make_task("second")
         assert first.body.__code__ == second.body.__code__
+        assert first(Context()) == "first"
+        assert second(Context()) == "second"
         assert first != second
 
     def functions_with_different_defaults_are_not_equal(self):
@@ -211,6 +213,8 @@ class Task_:
 
         first, second = make_task("first"), make_task("second")
         assert first.body.__code__ == second.body.__code__
+        assert first(Context()) == "first"
+        assert second(Context()) == "second"
         assert first != second
 
     def equality_testing_false_for_non_task_objects(self):
