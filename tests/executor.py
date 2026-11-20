@@ -135,6 +135,28 @@ class Executor_:
             self._call_objs()
 
     class deduping_and_chaining:
+        def tasks_with_distinct_closures_are_not_deduped(self):
+            executed = []
+
+            def make_task(value):
+                @task
+                def clean(c):
+                    executed.append(value)
+                    return value
+
+                return clean
+
+            first, second = make_task("first"), make_task("second")
+
+            @task(pre=[first, second, first])
+            def clean_all(c):
+                pass
+
+            results = Executor(Collection(clean_all)).execute("clean-all")
+            assert executed == ["first", "second"]
+            assert results[first] == "first"
+            assert results[second] == "second"
+
         def chaining_is_depth_first(self):
             expect(
                 "-c depth_first deploy",

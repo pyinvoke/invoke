@@ -185,8 +185,33 @@ class Task_:
         t1 = Task(_func, name="foo")
         t2 = Task(_func, name="foo")
         assert t1 == t2
+        assert hash(t1) == hash(t2)
         t3 = Task(_func, name="bar")
         assert t1 != t3
+
+    def functions_with_different_closures_are_not_equal(self):
+        def make_task(value):
+            @task
+            def clean(c):
+                return value
+
+            return clean
+
+        first, second = make_task("first"), make_task("second")
+        assert first.body.__code__ == second.body.__code__
+        assert first != second
+
+    def functions_with_different_defaults_are_not_equal(self):
+        def make_task(value):
+            @task
+            def clean(c, label=value):
+                return label
+
+            return clean
+
+        first, second = make_task("first"), make_task("second")
+        assert first.body.__code__ == second.body.__code__
+        assert first != second
 
     def equality_testing_false_for_non_task_objects(self):
         t = Task(_func, name="foo")
