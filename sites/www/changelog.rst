@@ -2,6 +2,16 @@
 Changelog
 =========
 
+- :bug:`536` Compare tasks using their wrapped callables instead of their code
+  objects, so same-named tasks from different modules or factory calls are not
+  incorrectly deduplicated. References to the same callable still compare
+  equal when the task names match, and custom callable equality is respected.
+
+  This changes equality for distinct function objects with identical code,
+  including equality of collections containing those tasks. Collection name,
+  task and subcollection comparisons are otherwise unchanged. Thanks to
+  ``@dgrine`` and ``@asford`` for the reports, ``@mrdecav`` for the original
+  approach in :issue:`482`, and ``@wozhenbang2004`` for the update.
 - :release:`3.0.3 <2026-04-07>`
 - :support:`- backported` Reverted the `@task
   <invoke.tasks.task>` return value type hint change; it actually just makes
