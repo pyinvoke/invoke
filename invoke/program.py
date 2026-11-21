@@ -2,6 +2,7 @@ import getpass
 import inspect
 import json
 import os
+import shlex
 import sys
 import textwrap
 from importlib import import_module  # buffalo buffalo
@@ -712,6 +713,25 @@ class Program:
             config=self.config, start=start
         )
         coll_name = self.args.collection.value
+        if (
+            coll_name is None
+            and self.args.complete.value
+            and self.core.remainder
+        ):
+            # Shell completion scripts put the command being completed after
+            # '--'. Recover its collection before trying to load tasks, using
+            # the core parser so task flags cannot be mistaken for '-c'.
+            parser = Parser(initial=self.initial_context, ignore_unknown=True)
+            context: Optional[ParserContext]
+            try:
+                context = parser.parse_argv(
+                    shlex.split(self.core.remainder)[1:]
+                )[0]
+            except ParseError as e:
+                # Incomplete flags are normal while tab-completing.
+                context = e.context
+            if context is not None:
+                coll_name = context.args.collection.value
         try:
             module, parent = loader.load(coll_name)
             # This is the earliest we can load project config, so we should -
