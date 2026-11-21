@@ -7,7 +7,6 @@ import pytest
 
 from _util import expect, trap, ROOT
 
-
 pytestmark = pytest.mark.usefixtures("integration")
 
 
@@ -102,6 +101,45 @@ class ShellCompletion:
 
     def no_input_means_just_task_names(self):
         expect("-c simple_ns_list --complete", out="z-toplevel\na.b.subtask\n")
+
+    @pytest.mark.parametrize(
+        "selection",
+        ("-c foo", "--collection foo", "--collection=foo", "-cfoo"),
+    )
+    def collection_can_come_from_completion_input(self, selection):
+        output, _ = expect("--complete -- invoke {} my".format(selection))
+        assert "mytask\n" in output
+        assert "noop\n" not in output
+
+    def collection_in_completion_input_does_not_require_default_tasks(
+        self, tmp_path, monkeypatch
+    ):
+        (tmp_path / "custom.py").write_text(
+            "from invoke import task\n@task\ndef hello(c):\n    pass\n"
+        )
+        monkeypatch.chdir(tmp_path)
+        expect("--complete -- invoke -c custom", out="hello\n")
+
+    def collection_input_allows_other_core_flags(self):
+        output, _ = expect("--complete -- invoke --echo -c foo")
+        assert "mytask\n" in output
+
+    def partial_flag_keeps_collection_from_completion_input(self):
+        output, _ = expect("--complete -- invoke -c foo multiple-args --ot")
+        assert "--otherarg\n" in output
+
+    def incomplete_core_flag_keeps_collection_from_completion_input(self):
+        program = Program()
+        expect("--complete -- invoke -c foo --hide", out="", program=program)
+        assert "mytask" in program.collection.task_names
+
+    def explicit_collection_takes_precedence_over_completion_input(self):
+        output, _ = expect("-c integration --complete -- invoke -c foo")
+        assert "bar\n" in output
+        assert "mytask\n" not in output
+
+    def task_collection_flag_does_not_select_a_collection(self):
+        expect("--complete -- invoke noop -c foo", out="foo\nnoop\n")
 
     def custom_binary_name_completes(self):
         expect(

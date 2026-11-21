@@ -2,6 +2,9 @@
 Changelog
 =========
 
+- :bug:`238` Honor ``-c``/``--collection`` in the command being completed,
+  allowing Bash and Fish completion to use non-default task collections.
+  Reported by ``@bitprophet``.
 - :release:`3.0.3 <2026-04-07>`
 - :support:`- backported` Reverted the `@task
   <invoke.tasks.task>` return value type hint change; it actually just makes
